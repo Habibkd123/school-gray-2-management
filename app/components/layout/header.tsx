@@ -3,14 +3,17 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { useAppState, Role } from "../../context/store";
-import { Search, Bell, Sun, Moon, Calendar, BarChart2, ChevronDown } from "lucide-react";
+import { useAppState } from "../../context/store";
+import { useAuth } from "../../context/auth";
+import { Search, Bell, Sun, Moon, Calendar, BarChart2, ChevronDown, LogOut, User, Settings, Shield } from "lucide-react";
 
 export function Header() {
   const { theme, setTheme } = useTheme();
+  const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isAcademicYearOpen, setIsAcademicYearOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState("2024 / 2025");
 
   // Scroll detection for sticky header styles
@@ -170,20 +173,80 @@ export function Header() {
           <BarChart2 className="w-4.5 h-4.5" />
         </button>
 
-        {/* Avatar */}
-        <Link href="/dashboard/settings/profile" className="ml-1">
-          <div className="w-9 h-9 rounded-lg overflow-hidden bg-primary/10">
-            <img 
-              src="https://preskool.dreamstechnologies.com/html/assets/img/profiles/avatar-27.jpg" 
-              alt="Profile" 
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                // Fallback to UI Avatars if image fails
-                e.currentTarget.src = "https://ui-avatars.com/api/?name=Admin&background=5D6BEE&color=fff&bold=true&rounded=false";
-              }}
-            />
-          </div>
-        </Link>
+        {/* User Avatar + Dropdown */}
+        <div className="relative ml-1">
+          <button
+            id="header-profile-btn"
+            onClick={() => { setIsProfileOpen(!isProfileOpen); setIsNotifOpen(false); }}
+            className="flex items-center gap-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 px-1.5 py-1 transition-colors"
+          >
+            <div className="w-8 h-8 rounded-lg overflow-hidden bg-primary/10 shrink-0">
+              <img
+                src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || "Admin")}&background=5D6BEE&color=fff&bold=true&rounded=false`}
+                alt="Profile"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="hidden md:flex flex-col items-start">
+              <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 leading-tight">
+                {user?.name || "Admin"}
+              </span>
+              <span className="text-[11px] text-slate-400 capitalize leading-tight">
+                {user?.role?.replace("_", " ") || "Admin"}
+              </span>
+            </div>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 hidden md:block" />
+          </button>
+
+          {isProfileOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
+              <div className="absolute right-0 top-full mt-2 w-[220px] bg-white dark:bg-slate-900 border border-border dark:border-slate-800 rounded-xl shadow-lg z-50 overflow-hidden">
+                {/* User info */}
+                <div className="px-4 py-3 border-b border-border dark:border-slate-800">
+                  <p className="text-[13px] font-bold text-slate-800 dark:text-slate-100 truncate">{user?.name}</p>
+                  <p className="text-[12px] text-slate-400 truncate">{user?.email}</p>
+                  <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-[#5D6BEE]/10 text-[11px] font-semibold text-[#5D6BEE] capitalize">
+                    <Shield className="w-2.5 h-2.5" />
+                    {user?.role?.replace("_", " ")}
+                  </span>
+                </div>
+
+                {/* Menu items */}
+                <div className="py-1">
+                  <Link
+                    href="/dashboard/settings/profile"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-slate-400" />
+                    My Profile
+                  </Link>
+                  <Link
+                    href="/dashboard/settings"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-slate-400" />
+                    Settings
+                  </Link>
+                </div>
+
+                {/* Logout */}
+                <div className="border-t border-border dark:border-slate-800 py-1">
+                  <button
+                    id="header-logout-btn"
+                    onClick={() => { setIsProfileOpen(false); logout(); }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors font-medium"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );
