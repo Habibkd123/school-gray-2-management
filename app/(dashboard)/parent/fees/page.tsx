@@ -90,7 +90,7 @@ export default function ParentFeesPage() {
                     </div>
                     <div>
                       <p className="text-[12px] text-slate-500 uppercase font-semibold">Total Fees</p>
-                      <p className="text-lg font-bold text-slate-900 dark:text-white">₹{totalFees.toLocaleString()}</p>
+                      <p className="text-lg font-bold text-slate-900 dark:text-white">${totalFees.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
@@ -102,7 +102,7 @@ export default function ParentFeesPage() {
                     </div>
                     <div>
                       <p className="text-[12px] text-emerald-600 dark:text-emerald-400 uppercase font-semibold">Total Paid</p>
-                      <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">₹{totalPaid.toLocaleString()}</p>
+                      <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">${totalPaid.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
@@ -114,7 +114,7 @@ export default function ParentFeesPage() {
                     </div>
                     <div>
                       <p className="text-[12px] text-amber-600 dark:text-amber-400 uppercase font-semibold">Pending Dues</p>
-                      <p className="text-lg font-bold text-amber-700 dark:text-amber-300">₹{totalPending.toLocaleString()}</p>
+                      <p className="text-lg font-bold text-amber-700 dark:text-amber-300">${totalPending.toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
@@ -173,7 +173,7 @@ export default function ParentFeesPage() {
                               {master.due_date ? new Date(master.due_date).toLocaleDateString() : 'N/A'}
                             </td>
                             <td className="px-4 py-3 text-right font-semibold text-slate-900 dark:text-white">
-                              ₹{master.amount?.toLocaleString() || 0}
+                              ${master.amount?.toLocaleString() || 0}
                             </td>
                           </tr>
                         );
@@ -219,7 +219,7 @@ export default function ParentFeesPage() {
                             </span>
                           </td>
                           <td className="px-4 py-3 text-right font-bold text-emerald-600 dark:text-emerald-400">
-                            ₹{payment.amount_paid.toLocaleString()}
+                            ${payment.amount_paid.toLocaleString()}
                           </td>
                         </tr>
                       ))

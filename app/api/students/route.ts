@@ -8,7 +8,7 @@ import { requireAuth } from "@/lib/utils/auth";
 
 // ─── GET /api/students — List all students for the school ──────────
 export async function GET(request: NextRequest) {
-  const { schoolId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin"]);
+  const { schoolId, role, userId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin", "student", "parent"]);
   if (error) return error;
 
   try {
@@ -24,8 +24,23 @@ export async function GET(request: NextRequest) {
 
     // Build filter
     const filter: Record<string, any> = { school_id: schoolId };
-    const parentId = searchParams.get("parent_id");
     
+    if (role === "student") {
+      filter.user_id = userId;
+    } else if (role === "parent") {
+      const parentDoc = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
+      if (!parentDoc) {
+        return NextResponse.json({
+          success: true,
+          data: { students: [], total: 0, page, limit },
+        });
+      }
+      filter.parent_id = parentDoc._id;
+    } else {
+      const parentId = searchParams.get("parent_id");
+      if (parentId) filter.parent_id = parentId;
+    }
+
     if (classId && classId !== "all") {
       filter.class_id = classId;
     } else if (academic_year) {
@@ -33,8 +48,6 @@ export async function GET(request: NextRequest) {
       const classIds = classes.map(c => c._id);
       filter.class_id = { $in: classIds };
     }
-
-    if (parentId) filter.parent_id = parentId;
     
     const gender = searchParams.get("gender");
     if (gender && gender !== "all" && gender !== "Select") {

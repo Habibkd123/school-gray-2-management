@@ -9,7 +9,7 @@ type RouteParams = { params: Promise<{ id: string }> };
 
 // ─── GET /api/students/[id] — Single student detail ───────────────
 export async function GET(request: NextRequest, { params }: RouteParams) {
-  const { schoolId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin"]);
+  const { schoolId, role, userId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin", "student", "parent"]);
   if (error) return error;
 
   const { id } = await params;
@@ -42,6 +42,22 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         { success: false, message: "Student not found" },
         { status: 404 }
       );
+    }
+
+    // Role-based access checks
+    if (role === "student") {
+      const studentUserId = (student as any).user_id;
+      const sUserId = typeof studentUserId === "object" && studentUserId ? (studentUserId._id || studentUserId).toString() : studentUserId?.toString();
+      if (sUserId !== userId) {
+        return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+      }
+    } else if (role === "parent") {
+      const parentDoc = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
+      const studentParentId = (student as any).parent_id;
+      const sParentId = typeof studentParentId === "object" && studentParentId ? (studentParentId._id || studentParentId).toString() : studentParentId?.toString();
+      if (!parentDoc || sParentId !== parentDoc._id.toString()) {
+        return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+      }
     }
 
     return NextResponse.json({ success: true, data: student });

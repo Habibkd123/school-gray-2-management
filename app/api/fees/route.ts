@@ -4,7 +4,7 @@ import { FeesStructure } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 
 export async function GET(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
+  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin", "student", "parent", "accountant"]);
   if (error) return error;
 
   try {
