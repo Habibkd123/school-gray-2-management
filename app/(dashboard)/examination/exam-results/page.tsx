@@ -224,7 +224,7 @@ export default function ExamResultsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button onClick={() => fetchResults()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -262,7 +262,7 @@ export default function ExamResultsPage() {
         <div className="p-5 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Exam Results</h2>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {/* Exam filter */}
             <div className="relative">
               <select
@@ -482,7 +482,7 @@ export default function ExamResultsPage() {
             {/* Modal Header (Not Printed) */}
             <div className="flex items-center justify-between p-4 border-b border-border print:hidden">
               <h2 className="text-lg font-bold text-slate-800">Report Card</h2>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button 
                   onClick={() => window.print()}
                   className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors"

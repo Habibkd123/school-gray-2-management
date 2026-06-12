@@ -49,7 +49,7 @@ export default function SectionsPage() {
             <span className="text-slate-900 dark:text-white font-medium">Sections</span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -116,7 +116,7 @@ export default function SectionsPage() {
               ) : filtered.map(s => (
                 <tr key={s.name} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-[#F59E0B]/10 flex items-center justify-center font-bold text-[#F59E0B] text-[14px]">
                         {s.name}
                       </div>

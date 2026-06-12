@@ -246,7 +246,7 @@ export default function ExamSchedulePage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -291,7 +291,7 @@ export default function ExamSchedulePage() {
         <div className="p-5 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Exam Schedule</h2>
           
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {/* ── Date Range ── */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button 

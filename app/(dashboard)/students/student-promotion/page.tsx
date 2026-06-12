@@ -679,7 +679,7 @@ function StudentPromotionContent() {
                       </td>
                       <td className="px-5 py-3 text-slate-700 dark:text-slate-200">{s.roll_no || "-"}</td>
                       <td className="px-5 py-3">
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <img src={getStudentAvatar(s)} className="w-8 h-8 rounded-full object-cover shadow-sm border border-border" alt="Avatar" />
                           <span className="font-semibold text-slate-900 dark:text-white">{s.name}</span>
                         </div>
@@ -697,7 +697,7 @@ function StudentPromotionContent() {
                         </span>
                       </td>
                       <td className="px-5 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <select
                             value={promotionResults[s._id] || "promote"}
                             onChange={(e) => setPromotionResults(prev => ({ ...prev, [s._id]: e.target.value as "promote" | "no_promote" }))}

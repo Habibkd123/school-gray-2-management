@@ -48,7 +48,7 @@ export default function StudentsAttendanceTypePage() {
             <span className="text-slate-900 dark:text-white font-medium">Students Attendance Type</span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><RefreshCw className="w-4 h-4" /></button>
           <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><Printer className="w-4 h-4" /></button>
           <button className="px-4 py-2 bg-[#F59E0B] text-white text-[13px] font-bold rounded-lg hover:bg-[#D97706] transition-colors shadow-sm cursor-pointer flex items-center gap-2">
@@ -104,7 +104,7 @@ export default function StudentsAttendanceTypePage() {
                 return (
                   <tr key={s._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[11px] flex-shrink-0">{s.name.charAt(0)}</div>
                         <span className="font-semibold text-[#0F172A] dark:text-slate-100">{s.name}</span>
                       </div>

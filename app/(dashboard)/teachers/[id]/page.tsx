@@ -135,7 +135,7 @@ export default function TeacherDetailsPage() {
 
   const DocRow = ({ title, url }: { title: string; url?: string }) => (
     <div className="flex items-center justify-between p-3 border border-border rounded-lg bg-slate-50/30">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="w-8 h-8 bg-white dark:bg-slate-900 border border-border rounded flex items-center justify-center flex-shrink-0">
           <span className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">
             {title.split(".").pop() || "PDF"}
@@ -305,7 +305,7 @@ export default function TeacherDetailsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setIsLoginDetailsOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[12px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors"
@@ -400,7 +400,7 @@ export default function TeacherDetailsPage() {
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl overflow-hidden card-shadow text-left p-4">
             <h3 className="text-[14px] font-bold text-slate-900 dark:text-white mb-3">Employee ID / ID Number</h3>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center border border-slate-100 dark:border-slate-800/50 flex-shrink-0">
                   <FileText className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 </div>
@@ -438,7 +438,7 @@ export default function TeacherDetailsPage() {
             </div>
             <div className="p-4">
               {bottomTab === "Hostel" ? (
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center border border-slate-100 dark:border-slate-800/50 flex-shrink-0">
                     <Building2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                   </div>
@@ -448,7 +448,7 @@ export default function TeacherDetailsPage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center border border-slate-100 dark:border-slate-800/50 flex-shrink-0">
                     <Bus className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                   </div>
@@ -858,7 +858,7 @@ export default function TeacherDetailsPage() {
                   {/* Title & Top Controls */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">Attendance Detail</h2>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="flex items-center gap-2 text-[12px] font-medium text-slate-600 dark:text-slate-300">
                         <span>Last Updated on: Today</span>
                       </div>

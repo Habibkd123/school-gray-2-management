@@ -287,7 +287,7 @@ export default function GuardiansPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button onClick={fetchParents} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -318,7 +318,7 @@ export default function GuardiansPage() {
             Parents List
           </h3>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {/* ── Date Range ── */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => setIsDateRangeOpen(!isDateRangeOpen)} className={triggerCls(isDateRangeOpen)}>
@@ -368,7 +368,7 @@ export default function GuardiansPage() {
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={triggerCls(isFilterOpen)}>
                 <Filter className="w-4 h-4" />
-                <span>Filter</span>
+                <span className="whitespace-nowrap">Filter</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
               </button>
               {isFilterOpen && (
@@ -430,7 +430,7 @@ export default function GuardiansPage() {
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => setIsSortOpen(!isSortOpen)} className={triggerCls(isSortOpen)}>
                 <ArrowUpDown className="w-4 h-4" />
-                <span>Sort by A-Z</span>
+                <span className="whitespace-nowrap">Sort by A-Z</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isSortOpen ? "rotate-180" : ""}`} />
               </button>
               {isSortOpen && (
@@ -453,7 +453,7 @@ export default function GuardiansPage() {
 
         {/* Row Per Page + Search */}
         <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-[13px] text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span>Row Per Page</span>
             <div className="flex items-center gap-2 px-3 py-1.5 border border-border rounded bg-white dark:bg-slate-900 font-medium text-slate-700 dark:text-slate-200 cursor-pointer">
               10 <ChevronDown className="w-3.5 h-3.5" />
@@ -519,7 +519,7 @@ export default function GuardiansPage() {
 
                       {/* Parent Name */}
                       <td className="px-4 py-4">
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <img src={getAvatar(parent.name, parent.photo_url)} className="w-8 h-8 rounded-full object-cover border border-border" alt="" />
                           <div>
                             <div className="font-semibold text-slate-900 dark:text-white">{parent.name}</div>
@@ -554,7 +554,7 @@ export default function GuardiansPage() {
 
                       {/* Action */}
                       <td className="px-4 py-4">
-                        <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>
                           <div className="relative">
                             <button
                               onClick={() => setActiveDropdown(activeDropdown === parent._id ? null : parent._id)}
@@ -743,7 +743,7 @@ export default function GuardiansPage() {
               )}
 
               <div className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button type="button" disabled={uploadingPhoto} onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 border border-border rounded-lg text-[13px] font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors disabled:opacity-50">
                     Upload
                   </button>

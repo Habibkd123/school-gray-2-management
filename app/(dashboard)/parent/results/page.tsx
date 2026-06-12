@@ -230,7 +230,7 @@ export default function ParentResultsPage() {
 
                 {/* Exam header */}
                 <div className="p-5 border-b border-border bg-slate-50/60 dark:bg-slate-800/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="p-2.5 bg-primary/10 rounded-xl text-primary">
                       <Medal className="w-5 h-5" />
                     </div>
@@ -243,7 +243,7 @@ export default function ParentResultsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     {/* Overall percentage */}
                     <div className="text-right">
                       <p className="text-[11px] text-slate-500 font-bold uppercase">Score</p>
@@ -274,7 +274,7 @@ export default function ParentResultsPage() {
                       ? (result.marks_obtained / result.total_marks) * 100 : 0;
 
                     return (
-                      <div key={result._id} className="flex items-center gap-3">
+                      <div key={result._id} className="flex flex-wrap items-center gap-3">
                         {/* Subject name */}
                         <div className="w-36 shrink-0">
                           <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate">{subjectName}</p>

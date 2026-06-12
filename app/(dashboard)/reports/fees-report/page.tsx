@@ -67,7 +67,7 @@ export default function FeesReportPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <select 
             value={dateRange} 
             onChange={e => setDateRange(e.target.value)}

@@ -173,7 +173,7 @@ export default function StudentAttendancePage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -253,7 +253,7 @@ export default function StudentAttendancePage() {
                 className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span>{selectedDateRange}</span>
+                <span className="whitespace-nowrap">{selectedDateRange}</span>
               </button>
               {isDateRangeOpen && (
                 <>
@@ -372,7 +372,7 @@ export default function StudentAttendancePage() {
                       {item.roll_no || "—"}
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[12px] flex-shrink-0">
                           {item.name.charAt(0)}
                         </div>

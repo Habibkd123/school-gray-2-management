@@ -360,7 +360,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Action Panel */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {activeRole === "admin" && (
             <>
               <Link
@@ -420,7 +420,7 @@ export default function DashboardPage() {
           {/* Notification Alert Banner */}
           {showAlert && (
             <div className="flex items-center justify-between bg-[#E8F8E8] border border-[#BDE8B5] text-[#1D7F2C] rounded-full px-4 py-2 shadow-sm text-left">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <img src="/asset 14.webp" alt="Avatar" className="w-7 h-7 rounded-full bg-white dark:bg-slate-900 object-cover" />
                 <p className="text-[13px]">
                   Fahed III,C has paid Fees for the <span className="font-bold">"Term1"</span>
@@ -778,21 +778,21 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-4">
                   <div className="flex-1 space-y-3 border border-border rounded-xl p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]"></span>
                         <span className="text-[12px] text-slate-500 dark:text-slate-400">Top</span>
                       </div>
                       <span className="text-[14px] font-bold text-slate-900 dark:text-white">{topCount < 10 ? `0${topCount}` : topCount}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#FFB800]"></span>
                         <span className="text-[12px] text-slate-500 dark:text-slate-400">Average</span>
                       </div>
                       <span className="text-[14px] font-bold text-slate-900 dark:text-white">{avgCount < 10 ? `0${avgCount}` : avgCount}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#FF4A6B]"></span>
                         <span className="text-[12px] text-slate-500 dark:text-slate-400">Below Avg</span>
                       </div>
@@ -882,7 +882,7 @@ export default function DashboardPage() {
                   return (
                     <div key={leave._id} className="border border-slate-100 dark:border-slate-800/50 rounded-xl p-4 flex flex-col gap-3">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <div className="w-10 h-10 rounded bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold text-sm">
                             {((leaveUser as any)?.name || 'U').charAt(0).toUpperCase()}
                           </div>
@@ -1168,7 +1168,7 @@ export default function DashboardPage() {
               {/* Today's Class */}
               <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow text-left">
                 <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Today's Class</h3>
                     <div className="flex items-center gap-1">
                       <button className="w-6 h-6 rounded-full border border-border flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><ChevronLeft className="w-3.5 h-3.5" /></button>
@@ -1323,7 +1323,7 @@ export default function DashboardPage() {
 
                           return (
                             <div key={result._id || idx} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0">
-                              <div className="flex items-center gap-3">
+                              <div className="flex flex-wrap items-center gap-3">
                                 {studentPhoto ? (
                                   <img src={studentPhoto} alt={studentName} className="w-10 h-10 rounded-lg object-cover bg-slate-100 dark:bg-slate-800" />
                                 ) : (
@@ -1340,7 +1340,7 @@ export default function DashboardPage() {
                                   </p>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
                                 {result.is_pass !== false ? (
                                   <Award className="w-4 h-4 text-[#1DD04A]" />
                                 ) : (
@@ -1517,7 +1517,7 @@ export default function DashboardPage() {
             <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow text-left overflow-x-auto">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Student Marks</h3>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <button className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1">
                     <Users className="w-3.5 h-3.5" /> All Classes <ChevronRight className="w-3 h-3 rotate-90" />
                   </button>
@@ -1601,7 +1601,7 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 {/* Leave 1 */}
                 <div className="border border-border rounded-xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#FFEBF0] text-[#FF4A6B] flex items-center justify-center">
                       <X className="w-4 h-4" />
                     </div>
@@ -1615,7 +1615,7 @@ export default function DashboardPage() {
 
                 {/* Leave 2 */}
                 <div className="border border-border rounded-xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#EAEFFF] text-[#F59E0B] flex items-center justify-center">
                       <CalendarDays className="w-4 h-4" />
                     </div>
@@ -1629,7 +1629,7 @@ export default function DashboardPage() {
 
                 {/* Leave 3 */}
                 <div className="border border-border rounded-xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#EAEFFF] text-[#F59E0B] flex items-center justify-center">
                       <CalendarDays className="w-4 h-4" />
                     </div>
@@ -1643,7 +1643,7 @@ export default function DashboardPage() {
 
                 {/* Leave 4 */}
                 <div className="border border-border rounded-xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#FFEBF0] text-[#FF4A6B] flex items-center justify-center">
                       <X className="w-4 h-4" />
                     </div>
@@ -1785,7 +1785,7 @@ export default function DashboardPage() {
 
                         return (
                           <div key={cls._id || idx} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30">
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-3">
                               <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0">
                                 {(teacher as any)?.photo_url ? <img src={(teacher as any).photo_url} alt="Teacher" className="w-full h-full rounded object-cover" /> : subject.substring(0, 2).toUpperCase()}
                               </div>
@@ -2082,11 +2082,11 @@ export default function DashboardPage() {
 
                   {/* Legend */}
                   <div className="flex items-center justify-center gap-6 mt-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-[#F59E0B]"></div>
                       <span className="text-[11px] text-slate-500 font-medium">Avg. Exam Score</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-[#00B5FF]"></div>
                       <span className="text-[11px] text-slate-500 font-medium">Avg. Attendance</span>
                     </div>
@@ -2154,7 +2154,7 @@ export default function DashboardPage() {
               <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow relative">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Class Faculties</h3>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button className="w-6 h-6 border border-slate-200 dark:border-slate-700 rounded flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800">
                       <ChevronLeft className="w-3 h-3" />
                     </button>
@@ -2240,7 +2240,7 @@ export default function DashboardPage() {
 
                       return (
                         <div key={leave._id || idx} className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-wrap items-center gap-3">
                             <div className={`w-8 h-8 rounded flex items-center justify-center ${statusColor.replace('text', 'bg').replace('bg-', 'bg-opacity-20 text-')}`}>
                               {icon}
                             </div>
@@ -2326,7 +2326,7 @@ export default function DashboardPage() {
                       return sid === displayStudentId;
                     }).slice(0, 5).map((p, i) => (
                       <div key={(p as any)._id || i} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center">
                             <DollarSign className="w-4 h-4" />
                           </div>

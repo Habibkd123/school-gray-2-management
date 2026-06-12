@@ -242,7 +242,7 @@ export default function ParentAttendancePage() {
                 <CalendarIcon className="w-5 h-5 text-primary" />
                 {MONTH_NAMES[month]} {year}
               </h3>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
                   className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"

@@ -313,7 +313,7 @@ function StudentViewContent() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button 
             onClick={() => { setLoginModalTarget("student"); setIsLoginModalOpen(true); }} 
             className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[12px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors cursor-pointer"
@@ -436,7 +436,7 @@ function StudentViewContent() {
                 siblings.map((sib) => {
                   const classVal = typeof sib.class_id === "object" ? `${sib.class_id?.name}, ${sib.class_id?.section}` : getClassName(sib.class_id);
                   return (
-                    <div key={sib._id} className="flex items-center gap-3">
+                    <div key={sib._id} className="flex flex-wrap items-center gap-3">
                       <img src={sib.photo_url || getAvatar(sib.name)} className="w-9 h-9 rounded object-cover" alt="Sibling" />
                       <div>
                         <p className="text-[12px] font-bold text-slate-900 dark:text-white">{sib.name}</p>
@@ -467,7 +467,7 @@ function StudentViewContent() {
             </div>
             <div className="p-4">
               {bottomTab === "Hostel" ? (
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-[#F59E0B]/10 flex items-center justify-center flex-shrink-0">
                     <Building2 className="w-3.5 h-3.5 text-[#F59E0B]" />
                   </div>
@@ -477,7 +477,7 @@ function StudentViewContent() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-[#F59E0B]/10 flex items-center justify-center flex-shrink-0">
                     <Bus className="w-3.5 h-3.5 text-[#F59E0B]" />
                   </div>
@@ -1096,7 +1096,7 @@ function StudentViewContent() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-3xl overflow-hidden my-auto animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between p-5 border-b border-border">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">Collect Fees</h2>
                 <span className="px-2 py-0.5 bg-[#F59E0B] text-white text-[10px] font-bold rounded">{student.admission_no || "No Admission No"}</span>
               </div>
@@ -1106,7 +1106,7 @@ function StudentViewContent() {
             </div>
             <div className="p-6">
               <div className="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#0F172A] rounded-xl p-4 mb-6 border border-slate-100 dark:border-slate-800/50">
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                   <img src={student.photo_url || getAvatar(student.name)} className="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-slate-850" alt="Avatar" />
                   <div>
                     <h3 className="text-[13px] font-bold text-slate-900 dark:text-white">{student.name}</h3>
@@ -1345,7 +1345,7 @@ function ParentRow({ name, role, phone, email, hideBorder = false, onViewLogin, 
         <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-0.5">Email</p>
         <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium truncate">{email}</p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         {onViewLogin && (
           <button 
             type="button" 
@@ -1374,7 +1374,7 @@ function ParentRow({ name, role, phone, email, hideBorder = false, onViewLogin, 
 function DocRow({ title, url }: { title: string, url?: string }) {
   return (
     <div className="flex items-center justify-between p-3 border border-slate-100 dark:border-slate-800/50 rounded-xl hover:border-slate-200 dark:border-slate-800 transition-colors bg-white dark:bg-slate-900">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <div className="w-8 h-8 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800/50 flex items-center justify-center">
           <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500">FILE</span>
         </div>
@@ -1424,7 +1424,7 @@ function ExamCard({ title, initiallyExpanded, results = [] }: { title: string, i
   return (
     <div className="border border-border rounded-xl overflow-hidden shadow-sm transition-all duration-200">
       <div onClick={() => setExpanded(!expanded)} className="p-4 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className={`w-5 h-5 rounded ${isOverallPass ? "bg-[#10B981]" : "bg-[#EF4444]"} text-white flex items-center justify-center shadow-sm`}>
             {isOverallPass ? <Check className="w-3 h-3" /> : <X className="w-3 h-3" />}
           </div>
@@ -1555,7 +1555,7 @@ function AttSumCard({ title, value, icon, iconBg }: { title: string, value: stri
 
 function LegendBadge({ label, color, icon }: { label: string, color: string, icon: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <div className={`w-5 h-5 rounded flex items-center justify-center shadow-sm ${color}`}>
         {icon}
       </div>

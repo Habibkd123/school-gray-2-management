@@ -302,7 +302,7 @@ export default function ProfilePage() {
                   <Edit className="w-3.5 h-3.5" /> Edit
                 </button>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={handleCancel}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[13px] font-bold rounded-lg hover:bg-slate-200 transition-colors"

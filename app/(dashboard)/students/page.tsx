@@ -297,7 +297,7 @@ export default function StudentsPage() {
     { header: "DOB", accessorKey: "dobStr" },
     {
       header: "Action", sortable: false, render: (s) => (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); setSelectedStudent(s as ApiStudent); setIsCollectFeesOpen(true); }}
             className="px-3 py-1.5 rounded bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-[#E2E8F0] dark:hover:bg-slate-700 transition-colors"
@@ -396,7 +396,7 @@ export default function StudentsPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
             <RefreshCcw className="w-4 h-4" />
           </button>
@@ -427,14 +427,14 @@ export default function StudentsPage() {
         {/* Filters Row */}
         <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Students List</h3>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
               <button
                 onClick={() => setIsDateRangeOpen(!isDateRangeOpen)}
                 className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span>{selectedDateRange}</span>
+                <span className="whitespace-nowrap">{selectedDateRange}</span>
               </button>
               {isDateRangeOpen && (
                 <>
@@ -455,7 +455,7 @@ export default function StudentsPage() {
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
               >
                 <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span>Filter</span>
+                <span className="whitespace-nowrap">Filter</span>
                 <ChevronDown className="w-3.5 h-3.5" />
               </div>
 
@@ -536,7 +536,7 @@ export default function StudentsPage() {
                 className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
               >
                 <ArrowUpDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span>Sort by A-Z</span>
+                <span className="whitespace-nowrap">Sort by A-Z</span>
                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
               </button>
               {isSortOpen && (
@@ -641,7 +641,7 @@ export default function StudentsPage() {
                   <div key={student._id} className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 relative group flex flex-col hover:border-[#F59E0B]/50 transition-colors">
                     {/* Top Row */}
                     <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <input
                           type="checkbox"
                           checked={selectedIds.includes(student._id)}
@@ -656,7 +656,7 @@ export default function StudentsPage() {
                         />
                         <span className="text-[13px] font-bold text-[#F59E0B]">{student.admission_no || `AD${student._id.slice(-6).toUpperCase()}`}</span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${student.is_active ? "bg-[#E8F8E8] text-[#1D7F2C] dark:bg-[#1D7F2C]/20 dark:text-[#1DD04A]" : "bg-[#FFEBF0] text-[#FF4A6B] dark:bg-[#FF4A6B]/20"}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${student.is_active ? "bg-[#1DD04A]" : "bg-[#FF4A6B]"}`} /> {student.is_active ? "Active" : "Inactive"}
                         </span>
@@ -730,7 +730,7 @@ export default function StudentsPage() {
 
                     {/* Footer buttons */}
                     <div className="flex items-center justify-between mt-auto">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"><MessageSquare className="w-3.5 h-3.5" /></button>
                         <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"><Phone className="w-3.5 h-3.5" /></button>
                         <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"><Mail className="w-3.5 h-3.5" /></button>
@@ -1013,7 +1013,7 @@ export default function StudentsPage() {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                         <GraduationCap className="w-5 h-5" />
                       </div>
@@ -1025,7 +1025,7 @@ export default function StudentsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                         <Mail className="w-5 h-5" />
                       </div>
@@ -1037,7 +1037,7 @@ export default function StudentsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                         <Calendar className="w-5 h-5" />
                       </div>
@@ -1051,7 +1051,7 @@ export default function StudentsPage() {
                   </div>
 
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                         <User className="w-5 h-5" />
                       </div>
@@ -1063,7 +1063,7 @@ export default function StudentsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
                         <Phone className="w-5 h-5" />
                       </div>

@@ -132,7 +132,7 @@ export default function TimeTablePage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-border rounded-xl px-3.5 py-2 text-[13px] shadow-sm">
             <span className="font-bold text-slate-500 dark:text-slate-400 uppercase text-[11px] tracking-wider">Class:</span>
             <select

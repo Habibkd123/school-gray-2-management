@@ -94,7 +94,7 @@ function DocUploader({
         className="hidden"
         onChange={e => { const f = e.target.files?.[0]; if (f) onChange(f); e.target.value = ""; }}
       />
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
           onClick={() => ref.current?.click()}
@@ -105,7 +105,7 @@ function DocUploader({
           {uploading ? "Uploading…" : "Upload Document"}
         </button>
         {doc ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-[12px] text-slate-600 dark:text-slate-300 font-medium truncate max-w-full sm:w-[180px]">{doc.name}</span>
             <button type="button" onClick={() => onChange(null)}>
               <X className="w-4 h-4 text-rose-400 hover:text-rose-500 cursor-pointer" />

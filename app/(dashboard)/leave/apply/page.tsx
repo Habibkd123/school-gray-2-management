@@ -106,7 +106,7 @@ export default function ApplyLeavePage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => setIsModalOpen(true)}
             className="px-4 py-2 bg-primary text-white text-[13px] font-semibold rounded-lg hover:bg-[#4b58ce] transition-colors flex items-center gap-2 shadow-sm cursor-pointer"

@@ -292,7 +292,7 @@ export default function StudentProgressPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-border rounded-xl px-3.5 py-2 text-[13px] shadow-sm">
             <span className="font-bold text-slate-500 dark:text-slate-400 uppercase text-[11px] tracking-wider">Class Filter:</span>
             <select
@@ -453,7 +453,7 @@ export default function StudentProgressPage() {
                   <div className="relative" onClick={(e) => e.stopPropagation()}>
                     <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={triggerCls(isFilterOpen)}>
                       <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                      <span>Filter</span>
+                      <span className="whitespace-nowrap">Filter</span>
                       <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
                     </button>
                     {isFilterOpen && (
@@ -567,7 +567,7 @@ export default function StudentProgressPage() {
                       pag.paged.map(({ student, averagePercentage, grade, gpa, hasPassed, subjectsCount }) => (
                         <tr key={student._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                           <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
+                            <div className="flex flex-wrap items-center gap-3">
                               <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-slate-800 text-[#5D6BEE] flex items-center justify-center font-bold text-[12px]">
                                 {student.name.charAt(0)}
                               </div>

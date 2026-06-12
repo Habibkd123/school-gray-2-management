@@ -137,7 +137,7 @@ export default function BusDetailsPage() {
             <span className="text-slate-900 dark:text-white font-medium">Bus Details</span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button onClick={() => fetchBuses()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm"><RefreshCw className="w-4 h-4" /></button>
           <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm"><Printer className="w-4 h-4" /></button>
           <button className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 shadow-sm">
@@ -240,7 +240,7 @@ export default function BusDetailsPage() {
 
         {/* Search Row */}
         <div className="p-4 border-b border-border flex items-center justify-between gap-4 text-[13px] text-slate-500">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span>Row Per Page</span>
             <div className="flex items-center gap-1 px-3 py-1.5 border border-border rounded bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 cursor-pointer">
               10 <ChevronDown className="w-3.5 h-3.5" />

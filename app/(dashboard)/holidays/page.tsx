@@ -223,7 +223,7 @@ export default function HolidaysPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button onClick={() => fetchHolidays()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -320,7 +320,7 @@ export default function HolidaysPage() {
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={triggerCls(isFilterOpen)}>
                 <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span>Filter</span>
+                <span className="whitespace-nowrap">Filter</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
               </button>
               {isFilterOpen && (

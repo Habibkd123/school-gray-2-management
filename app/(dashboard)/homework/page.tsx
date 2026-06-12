@@ -231,7 +231,7 @@ export default function HomeworkPage() {
                       <span>Due: {new Date(hw.due_date).toLocaleDateString()}</span>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {activeRole !== "student" && (
                         <button
                           onClick={() => handleDelete(hw._id)}

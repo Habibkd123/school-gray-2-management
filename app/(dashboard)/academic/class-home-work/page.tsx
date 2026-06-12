@@ -194,7 +194,7 @@ export default function ClassHomeWorkPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button onClick={() => fetchHomework()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -239,7 +239,7 @@ export default function ClassHomeWorkPage() {
         <div className="p-5 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Home Work List</h2>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
               <select value={filterClass} onChange={e => setFilterClass(e.target.value)} className="px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer outline-none appearance-none pr-8">
                 <option value="">All Classes</option>
@@ -636,7 +636,7 @@ export default function ClassHomeWorkPage() {
                             {submission.feedback && <span className="block text-slate-500 font-normal text-[11px] truncate max-w-full sm:w-[150px]">{submission.feedback}</span>}
                           </div>
                         ) : (
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             <input
                               type="text"
                               placeholder="Grade (e.g. A+)"

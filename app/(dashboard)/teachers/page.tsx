@@ -174,7 +174,7 @@ export default function TeachersPage() {
   const columns: ColumnDef<typeof tableData[0]>[] = [
     { header: "ID", accessorKey: "displayId", render: (t) => <span className="font-semibold text-[#F59E0B] cursor-pointer hover:underline">{t.displayId}</span> },
     { header: "Name", accessorKey: "name", render: (t) => (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <img src={t.photo_url || "/asset 7.webp"} className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={t.name} />
           <span className="font-medium text-slate-900 dark:text-white group-hover:text-[#F59E0B] transition-colors cursor-pointer">{t.name}</span>
         </div>
@@ -503,7 +503,7 @@ export default function TeachersPage() {
                     <div key={teacher._id} className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-black/50 transition-all duration-300 relative text-left flex flex-col hover:border-[#F59E0B]/50">
                       {/* Top row: ID, Checkbox, Status, Actions */}
                       <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <input
                             type="checkbox"
                             checked={selectedIds.includes(teacher._id)}
@@ -518,7 +518,7 @@ export default function TeachersPage() {
                           />
                           <span className="text-[#F59E0B] font-semibold text-[13px] hover:underline cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>{displayId}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${status === "Active" ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBEB] text-[#E02424]"}`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${status === "Active" ? "bg-[#1DD04A]" : "bg-[#E02424]"}`} />
                             {status}

@@ -210,7 +210,7 @@ export default function ParentDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button onClick={() => setIsLoginModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[12px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors cursor-pointer">
             <Lock className="w-3.5 h-3.5" />
             <span>Login Details</span>
@@ -441,7 +441,7 @@ export default function ParentDetailPage() {
               )}
 
               <div className="flex flex-col gap-1.5">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button type="button" disabled={uploadingPhoto} onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 border border-border rounded-lg text-[13px] font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors disabled:opacity-50 cursor-pointer">
                     Upload
                   </button>

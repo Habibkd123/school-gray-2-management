@@ -152,7 +152,7 @@ function ModuleRow({
         onClick={onToggle}
       >
         <td className="py-3 px-4">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200">
               {MODULE_LABELS[module]}
             </span>
