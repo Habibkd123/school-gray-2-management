@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const { schoolId, user, error } = requireAuth(req, ["teacher", "school_admin", "super_admin"]);
+  const { schoolId, user, error } = requireAuth(req, ["teacher", "school_admin", "super_admin", "student", "parent"]);
   if (error) return error;
 
   try {

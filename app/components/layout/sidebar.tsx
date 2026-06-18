@@ -6,13 +6,14 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "../../context/auth";
 import {
   LayoutDashboard, Users, GraduationCap, Calendar, Clock, BookOpen,
-  ClipboardList, DollarSign, Megaphone, ChevronDown, ChevronRight, Building2,
+  ClipboardList, Megaphone, ChevronDown, ChevronRight, Building2,
   BarChart, LogOut, User, ChevronUp, Menu, Bus, X
 } from "lucide-react";
 
 // Map DB roles → sidebar role key
-function mapRole(role?: string): "admin" | "accountant" | "teacher" | "student" | "parent" {
-  if (role === "school_admin" || role === "super_admin") return "admin";
+function mapRole(role?: string): "super_admin" | "admin" | "accountant" | "teacher" | "student" | "parent" {
+  if (role === "super_admin") return "super_admin";
+  if (role === "school_admin") return "admin";
   if (role === "teacher") return "teacher";
   if (role === "accountant") return "accountant";
   if (role === "parent") return "parent";
@@ -29,6 +30,11 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
   const { user, logout } = useAuth();
   const activeRole = mapRole(user?.role);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  const superAdminLinks = [
+    { name: "Overview", href: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
+    { name: "All Schools", href: "/schools", icon: <Building2 className="w-4 h-4" /> },
+  ];
 
   const adminLinks = [
     { name: "Overview", href: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -182,13 +188,7 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
       // ]
     },
 
-    {
-      name: "Fees", href: "/fees", icon: <DollarSign className="w-4 h-4" />,
-      // Hidden (Issue 9)
-      // subItems: [
-      // { name: "My Fees", href: "/fees" }
-      // ]
-    },
+    // Fees link hidden — Issue 9
     { name: "Notice Board", href: "/notices", icon: <Megaphone className="w-4 h-4" /> }
   ];
 
@@ -204,13 +204,15 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
   ];
 
   const links =
-    activeRole === "admin" ? adminLinks
-      : activeRole === "teacher" ? teacherLinks
-        : activeRole === "accountant" ? accountantLinks
-          : activeRole === "parent" ? parentLinks
-            : studentLinks;
+    activeRole === "super_admin" ? superAdminLinks
+      : activeRole === "admin" ? adminLinks
+        : activeRole === "teacher" ? teacherLinks
+          : activeRole === "accountant" ? accountantLinks
+            : activeRole === "parent" ? parentLinks
+              : studentLinks;
 
-  const roleLabels: Record<"admin" | "accountant" | "teacher" | "student" | "parent", { text: string; badge: string }> = {
+  const roleLabels: Record<"super_admin" | "admin" | "accountant" | "teacher" | "student" | "parent", { text: string; badge: string }> = {
+    super_admin: { text: "Super Admin", badge: "bg-amber-500/20 text-amber-400" },
     admin: { text: "Principal / Admin", badge: "bg-blue-500/20 text-blue-400" },
     accountant: { text: "Accountant", badge: "bg-yellow-500/20 text-yellow-400" },
     teacher: { text: "Faculty Member", badge: "bg-emerald-500/20 text-emerald-400" },

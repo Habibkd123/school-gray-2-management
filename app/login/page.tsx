@@ -77,7 +77,7 @@ export default function LoginPage() {
 
       {/* Right Side - Form */}
       <div className="flex-1 flex flex-col relative bg-white dark:bg-slate-900">
-        
+
         {/* Theme Toggle */}
         {mounted && (
           <button
@@ -172,12 +172,12 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <p className="w-full text-center text-[13px] text-slate-600 dark:text-slate-300 font-medium mt-6">
+            {/* <p className="w-full text-center text-[13px] text-slate-600 dark:text-slate-300 font-medium mt-6">
               Don&apos;t have an account?{" "}
               <Link href="/register" className="text-primary hover:text-primary/80 transition-colors font-semibold">
                 Create Account
               </Link>
-            </p>
+            </p> */}
           </div>
 
           <div className="absolute bottom-8 left-0 right-0 text-center">

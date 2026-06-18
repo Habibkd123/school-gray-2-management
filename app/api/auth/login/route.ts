@@ -10,11 +10,15 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
+    // ─── Check if this is a super_admin login (no school_id needed) ─────────
+    const isSuperAdminAttempt = body.is_super_admin === true;
+
     // ─── Strict Validation ──────────────────────────────────────
     const errors = validate(body, {
       email: { required: true, isEmail: true },
       password: { required: true, minLength: 6 },
-      school_id: { required: true, isMongoId: true },
+      // school_id required only for non-super_admin logins
+      ...(isSuperAdminAttempt ? {} : { school_id: { required: true, isMongoId: true } }),
     });
 
     if (errors.length > 0) return validationErrorResponse(errors);
@@ -22,23 +26,40 @@ export async function POST(request: NextRequest) {
     const { email, password, school_id } = body as {
       email: string;
       password: string;
-      school_id: string;
+      school_id?: string;
     };
 
-    // ─── Find user scoped to this school ────────────────────────
-    // STRICT: same email in different school = different user
-    const user = await User.findOne({
-      email: email.toLowerCase().trim(),
-      school_id,
-      is_active: true,
-    }).select("+password_hash"); // password_hash is hidden by default, select it
+    // ─── Find user ────────────────────────────────────────────────────────────
+    let user;
 
-    if (!user) {
-      // Generic message — don't reveal if email exists or not
-      return NextResponse.json(
-        { success: false, message: "Invalid email or password" },
-        { status: 401 }
-      );
+    if (isSuperAdminAttempt) {
+      // Super Admin: look up globally by email + role, no school scope
+      user = await User.findOne({
+        email: email.toLowerCase().trim(),
+        role: "super_admin",
+        is_active: true,
+      }).select("+password_hash");
+
+      if (!user) {
+        return NextResponse.json(
+          { success: false, message: "Invalid credentials or not a Super Admin account" },
+          { status: 401 }
+        );
+      }
+    } else {
+      // Regular login: scoped to school
+      user = await User.findOne({
+        email: email.toLowerCase().trim(),
+        school_id,
+        is_active: true,
+      }).select("+password_hash");
+
+      if (!user) {
+        return NextResponse.json(
+          { success: false, message: "Invalid email or password" },
+          { status: 401 }
+        );
+      }
     }
 
     // ─── Verify password ─────────────────────────────────────────

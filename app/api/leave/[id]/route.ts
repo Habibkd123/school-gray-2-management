@@ -37,7 +37,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
+  const { schoolId, user, role, error } = requireAuth(req, ["school_admin", "teacher", "super_admin", "student", "parent"]);
   if (error) return error;
   const { id } = await params;
   if (!mongoose.Types.ObjectId.isValid(id))
@@ -45,8 +45,12 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
   try {
     await connectToDatabase();
-    const leave = await LeaveRequest.findOneAndDelete({ _id: id, school_id: schoolId });
-    if (!leave) return NextResponse.json({ success: false, message: "Leave request not found" }, { status: 404 });
+    const query: any = { _id: id, school_id: schoolId };
+    if (role === "student" || role === "parent") {
+      query.user_id = user.user_id;
+    }
+    const leave = await LeaveRequest.findOneAndDelete(query);
+    if (!leave) return NextResponse.json({ success: false, message: "Leave request not found or unauthorized" }, { status: 404 });
     return NextResponse.json({ success: true, message: "Leave request deleted" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
