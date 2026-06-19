@@ -122,8 +122,15 @@ export default function TeacherDetailsPage() {
   if (!teacher) return <div className="p-10 text-slate-500">Teacher not found.</div>;
 
   const getClassName = (cid: any) => {
-    const classVal = typeof cid === "object" ? cid?._id : cid;
-    return classes.find(c => c._id === classVal)?.name || "Unknown";
+    if (!cid) return "Not Assigned";
+    if (typeof cid === "object") {
+      if (cid.name) {
+        return `${cid.name} ${cid.section || ""}`.trim();
+      }
+      return "Not Assigned";
+    }
+    const found = classes.find(c => c._id === cid);
+    return found ? `${found.name} ${found.section || ""}`.trim() : "Not Assigned";
   };
 
   const InfoRow = ({ label, value }: { label: string; value: string }) => (

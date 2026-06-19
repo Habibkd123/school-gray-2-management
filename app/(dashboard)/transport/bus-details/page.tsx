@@ -255,7 +255,7 @@ export default function BusDetailsPage() {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className={`overflow-x-auto ${activeDropdown ? "pb-28" : ""}`}>
           <table className="w-full text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
               <tr>

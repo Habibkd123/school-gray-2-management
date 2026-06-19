@@ -56,7 +56,7 @@ export default function ParentFeesPage() {
           </h1>
           <p className="text-sm text-slate-500 mt-1">View pending dues and payment history</p>
         </div>
-        <div className="min-w-full sm:w-[250px]">
+        <div className="w-full sm:w-[250px]">
           <ChildSelector 
             childrenList={children} 
             selectedChildId={selectedChildId} 

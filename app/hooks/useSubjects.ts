@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 
@@ -15,7 +15,7 @@ export interface ApiSubject {
 }
 
 export function useSubjects(classId?: string) {
-  const [subjects, setSubjects] = useState<ApiSubject[]>([]);
+  const [rawSubjects, setRawSubjects] = useState<ApiSubject[]>([]);
   const [loading, setLoading] = useState(true);
 
   const { academicYear } = useAppState();
@@ -30,7 +30,7 @@ export function useSubjects(classId?: string) {
       if (!classId && academicYear) params.set("academic_year", academicYear);
       const res = await fetch(`/api/subjects?${params.toString()}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      if (data.success) setSubjects(data.data.subjects);
+      if (data.success) setRawSubjects(data.data.subjects);
     } catch (e) {
       console.error("useSubjects fetch error", e);
     } finally {
@@ -39,6 +39,18 @@ export function useSubjects(classId?: string) {
   }, [classId, academicYear]);
 
   useEffect(() => { fetchSubjects(); }, [fetchSubjects]);
+
+  // Deduplicate by name so dropdowns never show the same subject twice
+  // (subjects are stored per-section so classId queries return duplicates)
+  const subjects = useMemo(() => {
+    const seen = new Set<string>();
+    return rawSubjects.filter(s => {
+      const key = s.name.toLowerCase().trim();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [rawSubjects]);
 
   const createSubject = useCallback(async (payload: Partial<ApiSubject> & { type?: string }) => {
     const res = await fetch("/api/subjects", {

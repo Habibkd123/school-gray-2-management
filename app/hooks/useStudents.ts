@@ -26,7 +26,7 @@ export interface ApiStudent {
   admission_no?: string;
   academic_year?: string;
   is_active: boolean;
-  parent_id?: { _id: string; name: string; phone?: string; email?: string; relation?: string; photo_url?: string; user_id?: any } | string | null;
+  parent_id?: { _id: string; name: string; phone?: string; email?: string; relation?: string; photo_url?: string; occupation?: string; address?: string; user_id?: any } | string | null;
   user_id?: { _id: string; name: string; email: string; role: string; is_active: boolean } | string | null;
   createdAt?: string;
 
@@ -48,6 +48,22 @@ export interface ApiStudent {
   migration_cert?: { name: string; url: string } | null;
   transfer_cert?: { name: string; url: string } | null;
   birth_cert?: { name: string; url: string } | null;
+  father_name?: string;
+  father_phone?: string;
+  father_email?: string;
+  father_occupation?: string;
+  father_photo?: string;
+  mother_name?: string;
+  mother_phone?: string;
+  mother_email?: string;
+  mother_occupation?: string;
+  mother_photo?: string;
+  guardian_type?: string;
+  guardian_occupation?: string;
+  guardian_address?: string;
+  guardian_photo?: string;
+  permanent_address?: string;
+  other_info?: string;
 }
 
 export interface CreateStudentInput {

@@ -154,7 +154,10 @@ export async function POST(request: NextRequest) {
       religion, caste, category, mother_tongue, languages,
       prev_school_name, prev_school_address, bank_name, bank_branch,
       bank_ifsc, allergies, medications, medical_notes, house,
-      medical_cert, migration_cert, transfer_cert, birth_cert
+      medical_cert, migration_cert, transfer_cert, birth_cert,
+      father_name, father_phone, father_email, father_occupation, father_photo,
+      mother_name, mother_phone, mother_email, mother_occupation, mother_photo,
+      guardian_type, guardian_occupation, guardian_address, permanent_address, other_info
     } = body;
 
     if (!name?.trim()) {
@@ -254,9 +257,21 @@ export async function POST(request: NextRequest) {
 
       if (existingParent) {
         parentId = existingParent._id;
-        // Update photo if provided and not already set
+        // Update photo and details if provided and not already set
+        let needsSave = false;
         if (guardian_photo && !existingParent.photo_url) {
           existingParent.photo_url = guardian_photo;
+          needsSave = true;
+        }
+        if (guardian_occupation && !existingParent.occupation) {
+          existingParent.occupation = guardian_occupation.trim();
+          needsSave = true;
+        }
+        if (guardian_address && !existingParent.address) {
+          existingParent.address = guardian_address.trim();
+          needsSave = true;
+        }
+        if (needsSave) {
           await existingParent.save();
         }
       } else {
@@ -290,6 +305,8 @@ export async function POST(request: NextRequest) {
           email: guardian_email?.trim().toLowerCase(),
           relation: guardian_relation?.trim(),
           photo_url: guardian_photo,
+          occupation: guardian_occupation?.trim(),
+          address: guardian_address?.trim(),
           is_active: true,
         });
         parentId = newParent._id;
@@ -336,6 +353,22 @@ export async function POST(request: NextRequest) {
       migration_cert,
       transfer_cert,
       birth_cert,
+      father_name: father_name?.trim(),
+      father_phone: father_phone?.trim(),
+      father_email: father_email?.trim().toLowerCase(),
+      father_occupation: father_occupation?.trim(),
+      father_photo: father_photo,
+      mother_name: mother_name?.trim(),
+      mother_phone: mother_phone?.trim(),
+      mother_email: mother_email?.trim().toLowerCase(),
+      mother_occupation: mother_occupation?.trim(),
+      mother_photo: mother_photo,
+      guardian_type: guardian_type?.trim(),
+      guardian_occupation: guardian_occupation?.trim(),
+      guardian_address: guardian_address?.trim(),
+      guardian_photo: guardian_photo,
+      permanent_address: permanent_address?.trim(),
+      other_info: other_info?.trim(),
     });
 
     const populated = await Student.findById(student._id).populate("class_id", "name section").lean();

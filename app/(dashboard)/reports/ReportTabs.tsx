@@ -10,8 +10,6 @@ const REPORT_TABS = [
   { label: "Student Day Wise",        href: "/reports/student-day-wise" },
   { label: "Teacher Day Wise",        href: "/reports/teacher-day-wise" },
   { label: "Teacher Report",          href: "/reports/teacher-report" },
-  { label: "Staff Day Wise",          href: "/reports/staff-day-wise" },
-  { label: "Staff Report",            href: "/reports/staff-report" },
 ];
 
 export default function ReportTabs() {

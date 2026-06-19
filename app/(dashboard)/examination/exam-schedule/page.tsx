@@ -10,6 +10,7 @@ import { Modal } from "../../../components/ui/modal";
 import { useExams } from "../../../hooks/useExams";
 import { useClasses } from "../../../hooks/useClasses";
 import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar";
+import { useAppState } from "@/app/context/store";
 
 const DATE_RANGES = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year", "All Time", "Custom Range"] as const;
 
@@ -54,6 +55,7 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
 export default function ExamSchedulePage() {
   const { exams, loading: isLoading, createExam, deleteExam } = useExams();
   const { classes } = useClasses();
+  const { academicYear } = useAppState();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -118,6 +120,7 @@ export default function ExamSchedulePage() {
   const [formName, setFormName] = useState("");
   const [formClassId, setFormClassId] = useState("");
   const [formType, setFormType] = useState<"unit_test" | "mid_term" | "pre_board" | "annual" | "other">("other");
+  const [formAcademicYear, setFormAcademicYear] = useState("");
   const [formFrom, setFormFrom] = useState("");
   const [formTo, setFormTo] = useState("");
 
@@ -125,6 +128,7 @@ export default function ExamSchedulePage() {
     setFormName("");
     setFormClassId("");
     setFormType("other");
+    setFormAcademicYear(academicYear || "2025-2026");
     setFormFrom("");
     setFormTo("");
     setIsAddOpen(true);
@@ -144,6 +148,7 @@ export default function ExamSchedulePage() {
       name: formName,
       class_id: formClassId || undefined,
       type: formType as "unit_test" | "mid_term" | "pre_board" | "annual" | "other",
+      academic_year: formAcademicYear || academicYear || "2025-2026",
       start_date: formFrom,
       end_date: formTo,
     });
@@ -614,6 +619,18 @@ export default function ExamSchedulePage() {
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Academic Year</label>
+            <input
+              type="text"
+              value={formAcademicYear}
+              onChange={(e) => setFormAcademicYear(e.target.value)}
+              placeholder="e.g. 2025-2026"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200"
+              required
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

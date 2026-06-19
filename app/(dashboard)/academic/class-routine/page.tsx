@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSchedules } from "../../../hooks/useSchedules";
 import { useClasses } from "../../../hooks/useClasses";
 import { useTeachers } from "../../../hooks/useTeachers";
+import { useSubjects } from "../../../hooks/useSubjects";
 import { 
   Plus, Search, List, Grid, MoreVertical, Edit, Trash2,
   Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, ToggleRight, Trash, FileText, Loader2
@@ -30,6 +31,7 @@ export default function ClassRoutinePage() {
   const [formStartTime, setFormStartTime] = useState("09:30 AM");
   const [formEndTime, setFormEndTime] = useState("10:45 AM");
   const [formClassRoom, setFormClassRoom] = useState("101");
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (classes.length > 0 && !formClassId) {
@@ -43,14 +45,26 @@ export default function ClassRoutinePage() {
     }
   }, [teachers, formTeacherId]);
 
+  // Load subjects for the selected class in the form
+  const { subjects: formSubjects } = useSubjects(formClassId);
+
+  // Auto-select first subject when class or subject list changes
+  useEffect(() => {
+    if (formSubjects.length > 0) {
+      setFormSubject(formSubjects[0].name);
+    } else {
+      setFormSubject("");
+    }
+  }, [formSubjects]);
+
   const openAddModal = () => {
     if (classes.length > 0) setFormClassId(classes[0]._id);
     if (teachers.length > 0) setFormTeacherId(teachers[0]._id);
-    setFormSubject("English");
     setFormDay("Monday");
     setFormStartTime("09:30 AM");
     setFormEndTime("10:45 AM");
     setFormClassRoom("101");
+    setFormError(null);
     setIsAddOpen(true);
   };
 
@@ -58,17 +72,19 @@ export default function ClassRoutinePage() {
     setSelectedRoutineId(routine._id);
     setFormTeacherId(typeof routine.teacher_id === "object" ? routine.teacher_id._id : routine.teacher_id || "");
     setFormClassId(typeof routine.class_id === "object" ? routine.class_id._id : routine.class_id || "");
-    setFormSubject(typeof routine.subject_id === "object" ? routine.subject_id.name : routine.subject_id || "");
+    setFormSubject(routine.subject_id && typeof routine.subject_id === "object" ? routine.subject_id.name : routine.subject_id || "");
     setFormDay(routine.day.charAt(0).toUpperCase() + routine.day.slice(1));
     setFormStartTime(routine.start_time);
     setFormEndTime(routine.end_time);
     setFormClassRoom(routine.room || "");
+    setFormError(null);
     setIsEditOpen(true);
     setActionMenuId(null);
   };
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     const res = await createSchedule({
       classId: formClassId,
       subject: formSubject,
@@ -81,13 +97,14 @@ export default function ClassRoutinePage() {
     if (res.success) {
       setIsAddOpen(false);
     } else {
-      alert(res.message || "Failed to create routine");
+      setFormError(res.message || "Failed to create routine");
     }
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRoutineId) return;
+    setFormError(null);
     const res = await updateSchedule(selectedRoutineId, {
       classId: formClassId,
       subject: formSubject,
@@ -100,7 +117,7 @@ export default function ClassRoutinePage() {
     if (res.success) {
       setIsEditOpen(false);
     } else {
-      alert(res.message || "Failed to update routine");
+      setFormError(res.message || "Failed to update routine");
     }
   };
 
@@ -283,14 +300,28 @@ export default function ClassRoutinePage() {
 
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Subject</label>
-            <input 
-              type="text" 
-              required
-              value={formSubject} 
-              onChange={(e) => setFormSubject(e.target.value)} 
-              placeholder="e.g. English"
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200" 
-            />
+            <div className="relative">
+              {formSubjects.length > 0 ? (
+                <select
+                  value={formSubject}
+                  onChange={(e) => setFormSubject(e.target.value)}
+                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                  required
+                >
+                  <option value="">Select Subject</option>
+                  {formSubjects.map(s => (
+                    <option key={s._id} value={s.name}>{s.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <div className="w-full px-4 py-2.5 text-[13px] bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-slate-400 dark:text-slate-500 italic">
+                  No subjects available for this class — add subjects first
+                </div>
+              )}
+              {formSubjects.length > 0 && (
+                <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              )}
+            </div>
           </div>
 
           <div className="space-y-1.5">
@@ -326,25 +357,11 @@ export default function ClassRoutinePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Start Time</label>
-              <input 
-                type="text" 
-                required
-                value={formStartTime} 
-                onChange={(e) => setFormStartTime(e.target.value)} 
-                placeholder="09:30 AM"
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200 font-mono" 
-              />
+              <TimePicker value={formStartTime} onChange={setFormStartTime} />
             </div>
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">End Time</label>
-              <input 
-                type="text" 
-                required
-                value={formEndTime} 
-                onChange={(e) => setFormEndTime(e.target.value)} 
-                placeholder="10:45 AM"
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200 font-mono" 
-              />
+              <TimePicker value={formEndTime} onChange={setFormEndTime} />
             </div>
           </div>
 
@@ -359,10 +376,18 @@ export default function ClassRoutinePage() {
             />
           </div>
 
+          {/* Conflict / error banner */}
+          {formError && (
+            <div className="flex items-start gap-2.5 px-4 py-3 rounded-lg bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 text-[13px]">
+              <span className="mt-0.5 shrink-0 text-rose-500">⚠</span>
+              <span>{formError}</span>
+            </div>
+          )}
+
           <div className="flex items-center justify-end gap-3 pt-2">
             <button 
               type="button" 
-              onClick={() => { setIsAddOpen(false); setIsEditOpen(false); }}
+              onClick={() => { setIsAddOpen(false); setIsEditOpen(false); setFormError(null); }}
               className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               Cancel
@@ -377,6 +402,94 @@ export default function ClassRoutinePage() {
         </form>
       </Modal>
 
+
+    </div>
+  );
+}
+
+interface TimePickerProps {
+  value: string;
+  onChange: (val: string) => void;
+}
+
+function TimePicker({ value, onChange }: TimePickerProps) {
+  // Expected value format: "09:30 AM" or "10:45 AM"
+  const match = value?.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  let currentHour = "09";
+  let currentMinute = "00";
+  let currentPeriod = "AM";
+  if (match) {
+    let [, h, m, p] = match;
+    if (h.length === 1) h = `0${h}`;
+    currentHour = h;
+    currentMinute = m;
+    currentPeriod = p.toUpperCase();
+  }
+
+  const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
+  const periods = ["AM", "PM"];
+
+  const handleHourChange = (newHour: string) => {
+    onChange(`${newHour}:${currentMinute} ${currentPeriod}`);
+  };
+
+  const handleMinuteChange = (newMinute: string) => {
+    onChange(`${currentHour}:${newMinute} ${currentPeriod}`);
+  };
+
+  const handlePeriodChange = (newPeriod: string) => {
+    onChange(`${currentHour}:${currentMinute} ${newPeriod}`);
+  };
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="relative flex-1">
+        <select
+          value={currentHour}
+          onChange={(e) => handleHourChange(e.target.value)}
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+        >
+          {hours.map((h) => (
+            <option key={h} value={h}>
+              {h}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
+      
+      <span className="text-slate-400 font-bold">:</span>
+
+      <div className="relative flex-1">
+        <select
+          value={currentMinute}
+          onChange={(e) => handleMinuteChange(e.target.value)}
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+        >
+          {minutes.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
+
+      <div className="relative w-[75px]">
+        <select
+          value={currentPeriod}
+          onChange={(e) => handlePeriodChange(e.target.value)}
+          className="w-full pl-3 pr-7 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-semibold cursor-pointer"
+        >
+          {periods.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
     </div>
   );
 }

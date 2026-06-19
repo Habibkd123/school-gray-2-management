@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
     const body = await req.json();
+    console.log("[POST /api/exams] received body:", body);
     const { name, type, class_id, academic_year, start_date, end_date } = body;
 
     if (!name || !academic_year) {

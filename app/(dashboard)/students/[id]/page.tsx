@@ -255,8 +255,15 @@ function StudentViewContent() {
 
   const getAvatar = (name: string) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=F1F5F9&color=5D6BEE&bold=true`;
   const getClassName = (cid: any) => {
-    if (typeof cid === "object" && cid?.name) return cid.name;
-    return classes.find(c => c._id === cid)?.name || "Unknown";
+    if (!cid) return "Not Assigned";
+    if (typeof cid === "object") {
+      if (cid.name) {
+        return `${cid.name} ${cid.section || ""}`.trim();
+      }
+      return "Not Assigned";
+    }
+    const found = classes.find(c => c._id === cid);
+    return found ? `${found.name} ${found.section || ""}`.trim() : "Not Assigned";
   };
 
   if (loading) return <div className="p-10 flex items-center gap-3"><Loader2 className="w-5 h-5 animate-spin text-primary" /><span>Loading student...</span></div>;
@@ -358,6 +365,7 @@ function StudentViewContent() {
                   Active
                 </div>
                 <h2 className="text-[16px] leading-[19.2px] font-medium text-[#0F172A] dark:text-slate-100">{student.name}</h2>
+                <p className="text-[12px] text-slate-500 font-medium mt-0.5">{getClassName(student.class_id)}</p>
                 <p className="text-[12px] text-[#F59E0B] font-bold mt-0.5">{student.admission_no || "No Admission No"}</p>
               </div>
             </div>
@@ -370,6 +378,7 @@ function StudentViewContent() {
             </div>
             <div className="p-4 text-[12px]">
               <div className="space-y-3.5">
+                <InfoRow label="Class & Section" value={getClassName(student.class_id)} />
                 <InfoRow label="Roll No" value={student.roll_no || "—"} />
                 <InfoRow label="Gender" value={student.gender || "—"} />
                 <InfoRow label="Date Of Birth" value={student.dob ? new Date(student.dob).toLocaleDateString() : "—"} />
@@ -511,40 +520,99 @@ function StudentViewContent() {
               {/* Parents Information */}
               <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
                 <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
-                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Parents Information</h3>
+                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Parents & Guardian Information</h3>
                 </div>
-                <div className="p-5 space-y-4">
-                  {student.parent_id && typeof student.parent_id === "object" ? (
+                <div className="p-5 space-y-6">
+                  {/* Father Row */}
+                  {(student.father_name || (student.parent_id && typeof student.parent_id === "object" && student.parent_id.relation?.toLowerCase() === "father")) ? (
                     <ParentRow
-                      name={student.parent_id.name}
-                      role={student.parent_id.relation || "Parent"}
-                      phone={student.parent_id.phone || "—"}
-                      email={student.parent_id.email || "—"}
-                      hideBorder={!student.guardian_name}
-                      onViewLogin={() => {
+                      name={student.father_name || (student.parent_id && typeof student.parent_id === "object" ? student.parent_id.name : "")}
+                      role={`Father${student.father_occupation ? ` (${student.father_occupation})` : ""}`}
+                      phone={student.father_phone || (student.parent_id && typeof student.parent_id === "object" ? student.parent_id.phone : "") || "—"}
+                      email={student.father_email || (student.parent_id && typeof student.parent_id === "object" ? student.parent_id.email : "") || "—"}
+                      onViewLogin={student.parent_id && typeof student.parent_id === "object" && student.parent_id.relation?.toLowerCase() === "father" ? () => {
                         setLoginModalTarget("parent");
                         setIsLoginModalOpen(true);
-                      }}
-                      onResetPassword={() => {
+                      } : undefined}
+                      onResetPassword={student.parent_id && typeof student.parent_id === "object" && student.parent_id.relation?.toLowerCase() === "father" ? () => {
                         const pUser = student.parent_id && typeof student.parent_id === "object" ? student.parent_id.user_id : null;
                         const pUid = pUser && typeof pUser === "object" ? pUser._id : undefined;
                         const pEmail = pUser && typeof pUser === "object" ? pUser.email : (student.parent_id && typeof student.parent_id === "object" ? student.parent_id.email : "");
                         const pName = student.parent_id && typeof student.parent_id === "object" ? student.parent_id.name : "Parent";
                         setResetPassTarget({ userId: pUid, name: pName, email: pEmail });
                         setIsResetPassModalOpen(true);
-                      }}
+                      } : undefined}
                     />
                   ) : null}
-                  {student.guardian_name ? (
+
+                  {/* Mother Row */}
+                  {(student.mother_name || (student.parent_id && typeof student.parent_id === "object" && student.parent_id.relation?.toLowerCase() === "mother")) ? (
+                    <ParentRow
+                      name={student.mother_name || (student.parent_id && typeof student.parent_id === "object" ? student.parent_id.name : "")}
+                      role={`Mother${student.mother_occupation ? ` (${student.mother_occupation})` : ""}`}
+                      phone={student.mother_phone || (student.parent_id && typeof student.parent_id === "object" ? student.parent_id.phone : "") || "—"}
+                      email={student.mother_email || (student.parent_id && typeof student.parent_id === "object" ? student.parent_id.email : "") || "—"}
+                      onViewLogin={student.parent_id && typeof student.parent_id === "object" && student.parent_id.relation?.toLowerCase() === "mother" ? () => {
+                        setLoginModalTarget("parent");
+                        setIsLoginModalOpen(true);
+                      } : undefined}
+                      onResetPassword={student.parent_id && typeof student.parent_id === "object" && student.parent_id.relation?.toLowerCase() === "mother" ? () => {
+                        const pUser = student.parent_id && typeof student.parent_id === "object" ? student.parent_id.user_id : null;
+                        const pUid = pUser && typeof pUser === "object" ? pUser._id : undefined;
+                        const pEmail = pUser && typeof pUser === "object" ? pUser.email : (student.parent_id && typeof student.parent_id === "object" ? student.parent_id.email : "");
+                        const pName = student.parent_id && typeof student.parent_id === "object" ? student.parent_id.name : "Parent";
+                        setResetPassTarget({ userId: pUid, name: pName, email: pEmail });
+                        setIsResetPassModalOpen(true);
+                      } : undefined}
+                    />
+                  ) : null}
+
+                  {/* Guardian Row (if not father or mother, or if explicitly different) */}
+                  {student.guardian_name && (student.guardian_name !== student.father_name && student.guardian_name !== student.mother_name) ? (
                     <ParentRow
                       name={student.guardian_name}
-                      role={`Guardian (${student.guardian_relation || "Other"})`}
+                      role={`Guardian${student.guardian_relation ? ` (${student.guardian_relation})` : ""}${student.guardian_occupation ? ` - ${student.guardian_occupation}` : ""}`}
                       phone={student.guardian_phone || "—"}
                       email={student.guardian_email || "—"}
-                      hideBorder
+                      onViewLogin={student.parent_id && typeof student.parent_id === "object" && student.parent_id.relation?.toLowerCase() !== "father" && student.parent_id.relation?.toLowerCase() !== "mother" ? () => {
+                        setLoginModalTarget("parent");
+                        setIsLoginModalOpen(true);
+                      } : undefined}
+                      onResetPassword={student.parent_id && typeof student.parent_id === "object" && student.parent_id.relation?.toLowerCase() !== "father" && student.parent_id.relation?.toLowerCase() !== "mother" ? () => {
+                        const pUser = student.parent_id && typeof student.parent_id === "object" ? student.parent_id.user_id : null;
+                        const pUid = pUser && typeof pUser === "object" ? pUser._id : undefined;
+                        const pEmail = pUser && typeof pUser === "object" ? pUser.email : (student.parent_id && typeof student.parent_id === "object" ? student.parent_id.email : "");
+                        const pName = student.parent_id && typeof student.parent_id === "object" ? student.parent_id.name : "Parent";
+                        setResetPassTarget({ userId: pUid, name: pName, email: pEmail });
+                        setIsResetPassModalOpen(true);
+                      } : undefined}
                     />
-                  ) : null}
-                  {!student.parent_id && !student.guardian_name && (
+                  ) : (
+                    // Default fallback if we don't have separate father/mother fields populated but we do have parent_id
+                    (!student.father_name && !student.mother_name && student.parent_id && typeof student.parent_id === "object") ? (
+                      <ParentRow
+                        name={student.parent_id.name}
+                        role={student.parent_id.relation || "Parent"}
+                        phone={student.parent_id.phone || "—"}
+                        email={student.parent_id.email || "—"}
+                        onViewLogin={() => {
+                          setLoginModalTarget("parent");
+                          setIsLoginModalOpen(true);
+                        }}
+                        onResetPassword={() => {
+                          const pUser = student.parent_id && typeof student.parent_id === "object" ? student.parent_id.user_id : null;
+                          const pUid = pUser && typeof pUser === "object" ? pUser._id : undefined;
+                          const pEmail = pUser && typeof pUser === "object" ? pUser.email : (student.parent_id && typeof student.parent_id === "object" ? student.parent_id.email : "");
+                          const pName = student.parent_id && typeof student.parent_id === "object" ? student.parent_id.name : "Parent";
+                          setResetPassTarget({ userId: pUid, name: pName, email: pEmail });
+                          setIsResetPassModalOpen(true);
+                        }}
+                      />
+                    ) : null
+                  )}
+
+                  {/* Empty fallback */}
+                  {!student.father_name && !student.mother_name && !student.guardian_name && !student.parent_id && (
                     <p className="text-[12px] text-slate-400 font-medium">No parent or guardian registered.</p>
                   )}
                 </div>
@@ -589,7 +657,7 @@ function StudentViewContent() {
                       </div>
                       <div>
                         <p className="text-[12px] font-bold text-slate-900 dark:text-white mb-0.5">Permanent Address</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{student.address || "Not Specified"}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{student.permanent_address || student.address || "Not Specified"}</p>
                       </div>
                     </div>
                   </div>
@@ -680,7 +748,7 @@ function StudentViewContent() {
                 </div>
                 <div className="p-5">
                   <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                    Depending on the specific needs of your organization or system, additional information may be collected or tracked. It's important to ensure that any data collected complies with privacy regulations and policies to protect students' sensitive information.
+                    {student.other_info || "Depending on the specific needs of your organization or system, additional information may be collected or tracked. It's important to ensure that any data collected complies with privacy regulations and policies to protect students' sensitive information."}
                   </p>
                 </div>
               </div>

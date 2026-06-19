@@ -91,7 +91,7 @@ export default function ParentResultsPage() {
           </h1>
           <p className="text-sm text-slate-500 mt-1">Academic performance and grade report</p>
         </div>
-        <div className="min-w-full sm:w-[250px]">
+        <div className="w-full sm:w-[250px]">
           <ChildSelector
             childrenList={children}
             selectedChildId={selectedChildId}
@@ -194,19 +194,19 @@ export default function ParentResultsPage() {
 
                 <div className="flex gap-3 flex-wrap">
                   {/* Grade badge */}
-                  <div className="bg-white/20 backdrop-blur rounded-xl px-5 py-4 text-center min-w-full sm:w-[90px]">
+                  <div className="bg-white/20 backdrop-blur rounded-xl px-5 py-4 text-center w-full sm:w-[90px]">
                     <Star className="w-5 h-5 mx-auto mb-1 text-yellow-300" />
                     <p className="text-3xl font-black">{overallStats.grade}</p>
                     <p className="text-white/70 text-[11px] uppercase font-semibold">Grade</p>
                   </div>
                   {/* Pass count */}
-                  <div className="bg-emerald-500/30 backdrop-blur rounded-xl px-5 py-4 text-center min-w-full sm:w-[90px]">
+                  <div className="bg-emerald-500/30 backdrop-blur rounded-xl px-5 py-4 text-center w-full sm:w-[90px]">
                     <CheckCircle2 className="w-5 h-5 mx-auto mb-1 text-emerald-300" />
                     <p className="text-3xl font-black">{overallStats.passed}</p>
                     <p className="text-white/70 text-[11px] uppercase font-semibold">Passed</p>
                   </div>
                   {/* Fail count */}
-                  <div className={`${overallStats.failed > 0 ? 'bg-red-500/30' : 'bg-white/10'} backdrop-blur rounded-xl px-5 py-4 text-center min-w-full sm:w-[90px]`}>
+                  <div className={`${overallStats.failed > 0 ? 'bg-red-500/30' : 'bg-white/10'} backdrop-blur rounded-xl px-5 py-4 text-center w-full sm:w-[90px]`}>
                     <XCircle className={`w-5 h-5 mx-auto mb-1 ${overallStats.failed > 0 ? 'text-red-300' : 'text-white/40'}`} />
                     <p className="text-3xl font-black">{overallStats.failed}</p>
                     <p className="text-white/70 text-[11px] uppercase font-semibold">Failed</p>
@@ -252,7 +252,7 @@ export default function ParentResultsPage() {
                       </p>
                     </div>
                     {/* Percentage badge */}
-                    <div className={`px-4 py-2 rounded-xl text-center min-w-full sm:w-[72px] ${isPass ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40'}`}>
+                    <div className={`px-4 py-2 rounded-xl text-center w-full sm:w-[72px] ${isPass ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/40' : 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/40'}`}>
                       <p className={`text-[10px] font-bold uppercase ${isPass ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
                         {isPass ? "PASS" : "FAIL"}
                       </p>

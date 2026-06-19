@@ -10,6 +10,7 @@ import { Modal } from "../../../components/ui/modal";
 import { useExams } from "@/app/hooks/useExams";
 import { useClasses } from "@/app/hooks/useClasses";
 import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar";
+import { useAppState } from "@/app/context/store";
 
 const DATE_RANGES = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year", "All Time", "Custom Range"] as const;
 
@@ -52,6 +53,7 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
 export default function ExamListPage() {
   const { exams, loading, createExam, updateExam, deleteExam } = useExams();
   const { classes } = useClasses();
+  const { academicYear } = useAppState();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -96,7 +98,7 @@ export default function ExamListPage() {
   const [formExamName, setFormExamName] = useState("");
   const [formExamType, setFormExamType] = useState("other");
   const [formClassId, setFormClassId] = useState("");
-  const [formAcademicYear, setFormAcademicYear] = useState(new Date().getFullYear().toString());
+  const [formAcademicYear, setFormAcademicYear] = useState(academicYear || "");
   const [formStartDate, setFormStartDate] = useState("");
   const [formEndDate, setFormEndDate] = useState("");
 
@@ -104,6 +106,7 @@ export default function ExamListPage() {
     setFormExamName("");
     setFormExamType("other");
     setFormClassId("");
+    setFormAcademicYear(academicYear);
     setFormStartDate("");
     setFormEndDate("");
     setIsAddOpen(true);
@@ -451,8 +454,10 @@ export default function ExamListPage() {
                     <input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] cursor-pointer" />
                   </td>
                   <td className="px-6 py-4 font-semibold text-slate-800 dark:text-slate-100">{item.name}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                    {typeof item.class_id === "object" ? item.class_id?.name || "—" : "—"}
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">
+                    {typeof item.class_id === "object"
+                      ? `${item.class_id?.name || ""} - ${item.class_id?.section || ""}`
+                      : "—"}
                   </td>
                   <td className="px-6 py-4">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 capitalize">
@@ -543,7 +548,9 @@ export default function ExamListPage() {
               >
                 <option value="">Select Class</option>
                 {classes.map((cls) => (
-                  <option key={cls._id} value={cls._id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{cls.name}</option>
+                  <option key={cls._id} value={cls._id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                    {cls.name} - {cls.section}
+                  </option>
                 ))}
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />

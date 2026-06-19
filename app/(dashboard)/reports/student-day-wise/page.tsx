@@ -6,11 +6,14 @@ import {
 } from "lucide-react";
 import { useClasses } from "../../../hooks/useClasses";
 import { useStudents } from "../../../hooks/useStudents";
+import { useAuth } from "@/app/context/auth";
 import ReportTabs from "../ReportTabs";
 
 export default function StudentDayWiseReportPage() {
   const { classes, isLoading: classesLoading } = useClasses();
   const { students } = useStudents();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
@@ -82,7 +85,9 @@ export default function StudentDayWiseReportPage() {
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Monthly Attendance Grid</h2>
           <div className="flex items-center gap-3 flex-wrap">
-            <input type="month" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer" />
+            {!isAdmin && (
+              <input type="month" value={selectedMonth} onChange={e => setSelectedMonth(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer" />
+            )}
             <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer">
               <option value="">All Classes</option>
               {classes.map(c => <option key={c._id} value={c._id}>{c.name} - {c.section}</option>)}

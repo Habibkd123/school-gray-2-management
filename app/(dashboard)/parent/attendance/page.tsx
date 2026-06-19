@@ -151,7 +151,7 @@ export default function ParentAttendancePage() {
           </h1>
           <p className="text-sm text-slate-500 mt-1">Monitor your child's daily presence</p>
         </div>
-        <div className="min-w-full sm:w-[250px]">
+        <div className="w-full sm:w-[250px]">
           <ChildSelector
             childrenList={children}
             selectedChildId={selectedChildId}

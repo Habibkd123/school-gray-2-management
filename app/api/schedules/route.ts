@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { Timetable, Subject } from "@/lib/models/index";
+import Class from "@/lib/models/Class"; // must import to register with Mongoose before populate
 import Teacher from "@/lib/models/Teacher";
 import Student from "@/lib/models/Student";
 import Parent from "@/lib/models/Parent";
@@ -72,15 +73,16 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    if (classId) {
+    // For school_admin/super_admin: apply optional filters
+    if (classId && user.role !== "student" && user.role !== "parent") {
       andFilters.push({ class_id: classId });
     }
     if (teacherId) {
       andFilters.push({ teacher_id: teacherId });
     }
-    if (academic_year) {
-      andFilters.push({ academic_year });
-    }
+    // academic_year intentionally NOT filtered here — timetable records may have been
+    // created with different academic_year values and we want all to be visible.
+
 
     if (andFilters.length > 0) {
       query.$and = andFilters;
@@ -104,6 +106,18 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// Helper: convert "09:30 AM" → minutes since midnight for overlap comparison
+function parseTimeToMinutes(t: string): number {
+  const match = t.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return 0;
+  let [, h, m, period] = match;
+  let hours = parseInt(h, 10);
+  const mins = parseInt(m, 10);
+  if (period.toUpperCase() === "PM" && hours !== 12) hours += 12;
+  if (period.toUpperCase() === "AM" && hours === 12) hours = 0;
+  return hours * 60 + mins;
+}
+
 // POST: Add a new timetable/routine record
 export async function POST(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
@@ -122,22 +136,52 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Resolve or create subject
-    let subjectDoc = await Subject.findOne({
-      school_id: new mongoose.Types.ObjectId(schoolId as string),
-      name: new RegExp(`^${subject.trim()}$`, "i"),
-    });
+    // ── Conflict check: same class, same day, overlapping time ──────────────
+    const newStart = parseTimeToMinutes(startTime);
+    const newEnd   = parseTimeToMinutes(endTime);
 
-    if (!subjectDoc) {
-      subjectDoc = await Subject.create({
+    const existingOnDay = await Timetable.find({
+      school_id: new mongoose.Types.ObjectId(schoolId as string),
+      class_id:  new mongoose.Types.ObjectId(classId),
+      day:       day.toLowerCase(),
+    }).populate("class_id", "name section");
+
+    for (const entry of existingOnDay) {
+      const eStart = parseTimeToMinutes(entry.start_time);
+      const eEnd   = parseTimeToMinutes(entry.end_time);
+      // Overlap when: newStart < eEnd AND newEnd > eStart
+      if (newStart < eEnd && newEnd > eStart) {
+        const cls = entry.class_id as any;
+        const className = cls?.name ? `${cls.name} - ${cls.section}` : "This class";
+        return NextResponse.json(
+          {
+            success: false,
+            message: `${className} already has a schedule on ${day} from ${entry.start_time} to ${entry.end_time} that overlaps with this time slot. Please choose a different time.`,
+          },
+          { status: 409 }
+        );
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const subjectDoc = await Subject.findOneAndUpdate(
+      {
         school_id: new mongoose.Types.ObjectId(schoolId as string),
         class_id: new mongoose.Types.ObjectId(classId),
         name: subject.trim(),
-        type: "both",
-        full_marks: 100,
-        pass_marks: 33,
-      });
-    }
+      },
+      {
+        $setOnInsert: {
+          school_id: new mongoose.Types.ObjectId(schoolId as string),
+          class_id: new mongoose.Types.ObjectId(classId),
+          name: subject.trim(),
+          type: "both",
+          full_marks: 100,
+          pass_marks: 33,
+        },
+      },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+    );
 
     // Resolve teacher (find first if teacherId not provided)
     let selectedTeacherId = teacherId;

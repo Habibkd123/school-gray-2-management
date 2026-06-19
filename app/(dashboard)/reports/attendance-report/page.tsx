@@ -6,11 +6,14 @@ import {
 } from "lucide-react";
 import { useClasses } from "../../../hooks/useClasses";
 import { useStudents } from "../../../hooks/useStudents";
+import { useAuth } from "@/app/context/auth";
 import ReportTabs from "../ReportTabs";
 
 export default function AttendanceReportPage() {
   const { classes, isLoading } = useClasses();
   const { students } = useStudents();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -80,7 +83,9 @@ export default function AttendanceReportPage() {
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Class Attendance Summary</h2>
           <div className="flex flex-wrap items-center gap-3">
-            <input type="month" value={filterMonth} onChange={e => setFilterMonth(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300" />
+            {!isAdmin && (
+              <input type="month" value={filterMonth} onChange={e => setFilterMonth(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300" />
+            )}
           </div>
         </div>
 

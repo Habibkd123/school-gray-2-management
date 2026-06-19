@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense, useRef, useCallback } from "react
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTeachers } from "../../../hooks/useTeachers";
+import type { CreateTeacherInput } from "../../../hooks/useTeachers";
 import { useClasses } from "../../../hooks/useClasses";
 import { useUpload } from "../../../hooks/useUpload";
 import {
@@ -317,19 +318,68 @@ function AddTeacherContent() {
           setFirstName(first || "");
           setLastName(last.join(" ") || "");
           setEmployeeId(teacher.employee_id || "");
+          // class_id may be an object after populate or just a string id
+          const cid = teacher.class_id && typeof teacher.class_id === "object" ? (teacher.class_id as any)._id : teacher.class_id;
+          setClassId(cid ? String(cid) : "");
           setGender(teacher.gender ? (teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1)) : "Select");
           setDob(teacher.dob ? new Date(teacher.dob).toISOString().split("T")[0] : "");
           setPhone(teacher.phone || "");
           setEmail(teacher.email || "");
           setAddress(teacher.address || "");
+          setPermanentAddress(teacher.permanent_address || "");
           setPhotoUrl(teacher.photo_url || "");
           setBloodGroup(teacher.blood_group || "Select");
           setQualification(teacher.qualification || "");
           setSubject(teacher.subject_specialization || "Physics");
-          setExperienceYears(teacher.experience_years ? teacher.experience_years.toString() : "0");
+          setExperienceYears(teacher.experience_years != null ? teacher.experience_years.toString() : "0");
           setJoinDate(teacher.join_date ? new Date(teacher.join_date).toISOString().split("T")[0] : "");
           setLanguages(teacher.languages && teacher.languages.length > 0 ? teacher.languages : ["English"]);
           setStatus(teacher.is_active ? "Active" : "Inactive");
+          // Family
+          setFatherName(teacher.father_name || "");
+          setMotherName(teacher.mother_name || "");
+          setMaritalStatus(teacher.marital_status || "Select");
+          // Previous school
+          setPrevSchoolName(teacher.previous_school_name || "");
+          setPrevSchoolAddress(teacher.previous_school_address || "");
+          setPrevSchoolPhone(teacher.previous_school_phone || "");
+          // IDs / notes
+          setPanNumber(teacher.pan_number || "");
+          setNotes(teacher.notes || "");
+          // Payroll
+          setEpfNo(teacher.epf_no || "");
+          setBasicSalary(teacher.basic_salary != null ? teacher.basic_salary.toString() : "");
+          setContractType(teacher.contract_type || "Select");
+          setWorkShift(teacher.work_shift || "Select");
+          setWorkLocation(teacher.work_location || "");
+          setLeavingDate(teacher.date_of_leaving ? new Date(teacher.date_of_leaving).toISOString().split("T")[0] : "");
+          // Leaves
+          setMedicalLeaves(teacher.medical_leaves != null ? teacher.medical_leaves.toString() : "");
+          setCasualLeaves(teacher.casual_leaves != null ? teacher.casual_leaves.toString() : "");
+          setMaternityLeaves(teacher.maternity_leaves != null ? teacher.maternity_leaves.toString() : "");
+          setSickLeaves(teacher.sick_leaves != null ? teacher.sick_leaves.toString() : "");
+          // Bank
+          setAccountName(teacher.account_name || "");
+          setAccountNumber(teacher.account_number || "");
+          setBankName(teacher.bank_name || "");
+          setIfscCode(teacher.ifsc_code || "");
+          setBranchName(teacher.branch_name || "");
+          // Transport
+          setRoute(teacher.transport_route || "Select");
+          setVehicleNumber(teacher.transport_vehicle || "Select");
+          setPickupPoint(teacher.transport_pickup_point || "Select");
+          // Hostel
+          setHostel(teacher.hostel_name || "Select");
+          setRoomNo(teacher.hostel_room_no || "Select");
+          // Social
+          setFacebookUrl(teacher.facebook_url || "");
+          setInstagramUrl(teacher.instagram_url || "");
+          setLinkedinUrl(teacher.linkedin_url || "");
+          setYoutubeUrl(teacher.youtube_url || "");
+          setTwitterUrl(teacher.twitter_url || "");
+          // Documents
+          if (teacher.resume_url) setResumeFile({ name: "resume", url: teacher.resume_url });
+          if (teacher.joining_letter_url) setJoiningLetterFile({ name: "joining_letter", url: teacher.joining_letter_url });
         }
       }
     }
@@ -374,34 +424,81 @@ function AddTeacherContent() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const payload = {
+    const payload: Record<string, any> = {
+      // Personal
       name: `${firstName} ${lastName}`.trim() || "New Teacher",
       employee_id: employeeId || undefined,
+      class_id: classId || undefined,
       gender: gender !== "Select" ? gender.toLowerCase() : undefined,
       dob: dob || undefined,
       phone: phone || undefined,
       email: email || undefined,
       address: address || undefined,
+      permanent_address: permanentAddress || undefined,
       photo_url: photoUrl || undefined,
       blood_group: bloodGroup !== "Select" ? bloodGroup : undefined,
       qualification: qualification || undefined,
       subject_specialization: subject || "Physics",
       experience_years: experienceYears ? parseInt(experienceYears) : 0,
       join_date: joinDate || undefined,
-      languages: languages,
-      password: password || undefined,
+      languages,
       is_active: status === "Active",
+      // Family
+      father_name: fatherName || undefined,
+      mother_name: motherName || undefined,
+      marital_status: maritalStatus !== "Select" ? maritalStatus : undefined,
+      // Previous school
+      previous_school_name: prevSchoolName || undefined,
+      previous_school_address: prevSchoolAddress || undefined,
+      previous_school_phone: prevSchoolPhone || undefined,
+      // IDs / notes
+      pan_number: panNumber || undefined,
+      notes: notes || undefined,
+      // Payroll
+      epf_no: epfNo || undefined,
+      basic_salary: basicSalary ? parseFloat(basicSalary) : undefined,
+      contract_type: contractType !== "Select" ? contractType : undefined,
+      work_shift: workShift !== "Select" ? workShift : undefined,
+      work_location: workLocation || undefined,
+      date_of_leaving: leavingDate || undefined,
+      // Leaves
+      medical_leaves: medicalLeaves ? parseInt(medicalLeaves) : undefined,
+      casual_leaves: casualLeaves ? parseInt(casualLeaves) : undefined,
+      maternity_leaves: maternityLeaves ? parseInt(maternityLeaves) : undefined,
+      sick_leaves: sickLeaves ? parseInt(sickLeaves) : undefined,
+      // Bank
+      account_name: accountName || undefined,
+      account_number: accountNumber || undefined,
+      bank_name: bankName || undefined,
+      ifsc_code: ifscCode || undefined,
+      branch_name: branchName || undefined,
+      // Transport
+      transport_route: route !== "Select" ? route : undefined,
+      transport_vehicle: vehicleNumber !== "Select" ? vehicleNumber : undefined,
+      transport_pickup_point: pickupPoint !== "Select" ? pickupPoint : undefined,
+      // Hostel
+      hostel_name: hostel !== "Select" ? hostel : undefined,
+      hostel_room_no: roomNo !== "Select" ? roomNo : undefined,
+      // Social
+      facebook_url: facebookUrl || undefined,
+      instagram_url: instagramUrl || undefined,
+      linkedin_url: linkedinUrl || undefined,
+      youtube_url: youtubeUrl || undefined,
+      twitter_url: twitterUrl || undefined,
+      // Documents
+      resume_url: resumeFile?.url || undefined,
+      joining_letter_url: joiningLetterFile?.url || undefined,
     };
 
     if (editId) {
-      // Don't send password during normal update unless we specifically handle password reset
-      const { password, ...updatePayload } = payload;
-      const res = await updateTeacher(editId, updatePayload);
+      const res = await updateTeacher(editId, payload as Partial<CreateTeacherInput & { is_active: boolean }>);
       setIsSubmitting(false);
       if (res.success) router.push("/teachers");
       else alert(res.message || "Failed to update teacher");
     } else {
-      const res = await createTeacher(payload);
+      // Include password only on create
+      if (password) payload.password = password;
+      const res = await createTeacher(payload as CreateTeacherInput);
       setIsSubmitting(false);
       if (res.success) router.push("/teachers");
       else alert(res.message || "Failed to create teacher");

@@ -21,22 +21,29 @@ export default function GradeReportPage() {
   const [isExportOpen, setIsExportOpen] = useState(false);
 
   const getStudentName = (sid: any) => {
-    const id = typeof sid === "object" ? sid._id : sid;
+    if (sid && typeof sid === "object" && sid.name) {
+      return sid.name;
+    }
+    const id = typeof sid === "object" ? sid?._id : sid;
     const s = students.find(s => s._id === id);
     return s?.name || "—";
   };
 
   const getExamName = (eid: any) => {
-    const id = typeof eid === "object" ? eid._id : eid;
+    if (eid && typeof eid === "object") {
+      if (eid.name) return eid.name;
+      if (eid.title) return eid.title;
+    }
+    const id = typeof eid === "object" ? eid?._id : eid;
     const e = exams.find(x => x._id === id);
-    return e?.title || "—";
+    return e?.name || e?.title || "—";
   };
 
   const filteredResults = useMemo(() => {
     return results.filter(r => {
       const sid = typeof r.student_id === "object" ? r.student_id._id : r.student_id;
       const student = students.find(s => s._id === sid);
-      const studentName = student?.name || "";
+      const studentName = student?.name || (r.student_id && typeof r.student_id === "object" ? r.student_id.name : "") || "";
       const adminNo = student?.admission_no || "";
       const classId = student ? (typeof student.class_id === "object" ? student.class_id?._id : student.class_id) : undefined;
       const examId = typeof r.exam_id === "object" ? r.exam_id._id : r.exam_id;

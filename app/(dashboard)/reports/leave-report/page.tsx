@@ -20,18 +20,34 @@ export default function LeaveReportPage() {
   const [filterType, setFilterType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
-  const getUserDetails = (userId: string) => {
-    const student = students.find(s => s.user_id === userId || s._id === userId);
+  const getUserDetails = (userId: string, populatedUser?: any) => {
+    const student = students.find(s => {
+      const sUid = typeof s.user_id === "object" && s.user_id ? s.user_id._id : s.user_id;
+      return sUid === userId || s._id === userId;
+    });
     if (student) return { name: student.name, role: "Student", id: student.admission_no || student._id.slice(-6).toUpperCase() };
-    const teacher = teachers.find(t => t.user_id === userId || t._id === userId);
+    
+    const teacher = teachers.find(t => {
+      const tUid = typeof t.user_id === "object" && t.user_id ? t.user_id._id : t.user_id;
+      return tUid === userId || t._id === userId;
+    });
     if (teacher) return { name: teacher.name, role: "Teacher", id: teacher.employee_id || teacher._id.slice(-6).toUpperCase() };
+
+    if (populatedUser && typeof populatedUser === "object") {
+      const displayRole = populatedUser.role === "student" ? "Student" : populatedUser.role === "teacher" ? "Teacher" : populatedUser.role === "school_admin" ? "Admin" : populatedUser.role;
+      return {
+        name: populatedUser.name || "Unknown",
+        role: displayRole || "—",
+        id: userId.slice(-6).toUpperCase()
+      };
+    }
     return { name: "Unknown", role: "—", id: userId.slice(-6).toUpperCase() };
   };
 
   const filteredLeaves = useMemo(() => {
     return leaveRequests.filter(l => {
-      const uid = typeof l.user_id === "object" ? (l.user_id as any)._id : l.user_id;
-      const user = getUserDetails(uid);
+      const uid = typeof l.user_id === "object" && l.user_id ? (l.user_id as any)._id : l.user_id;
+      const user = getUserDetails(uid, l.user_id);
       const matchSearch =
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -185,8 +201,8 @@ export default function LeaveReportPage() {
               ) : filteredLeaves.length === 0 ? (
                 <tr><td colSpan={8} className="px-6 py-10 text-center text-slate-400">No leave requests found.</td></tr>
               ) : filteredLeaves.map(l => {
-                const uid = typeof l.user_id === "object" ? (l.user_id as any)._id : l.user_id;
-                const user = getUserDetails(uid);
+                const uid = typeof l.user_id === "object" && l.user_id ? (l.user_id as any)._id : l.user_id;
+                const user = getUserDetails(uid, l.user_id);
                 return (
                   <tr key={l._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="px-6 py-4">

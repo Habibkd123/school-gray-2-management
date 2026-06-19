@@ -88,6 +88,7 @@ export default function SubjectsPage() {
   const [selectedSort, setSelectedSort] = useState("Ascending");
   
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [selectedAllIds, setSelectedAllIds] = useState<string[]>([]);
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
 
   // Form states
@@ -111,8 +112,9 @@ export default function SubjectsPage() {
     setActionMenuId(null);
   };
 
-  const openDeleteModal = (id: string) => {
-    setSelectedSubjectId(id);
+  const openDeleteModal = (ids: string[]) => {
+    setSelectedSubjectId(ids[0]);
+    setSelectedAllIds(ids);
     setIsDeleteOpen(true);
     setActionMenuId(null);
   };
@@ -136,8 +138,10 @@ export default function SubjectsPage() {
 
   const handleDeleteConfirm = async () => {
     if (!selectedSubjectId) return;
-    await deleteSubject(selectedSubjectId);
+    const ids = selectedAllIds.length > 0 ? selectedAllIds : [selectedSubjectId];
+    await Promise.all(ids.map(id => deleteSubject(id)));
     setIsDeleteOpen(false);
+    setSelectedAllIds([]);
   };
 
   const formatDate = (d: string | Date) => {
@@ -155,15 +159,14 @@ export default function SubjectsPage() {
       ? "border-[#F59E0B] text-[#F59E0B]"
       : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
 
-  const filteredSubjects = useMemo(() => {
-    let list = subjects.filter(s => {
+  // Group subjects by name+code+type to collapse section duplicates into one row
+  const groupedSubjects = useMemo(() => {
+    const filtered = subjects.filter(s => {
       const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                             (s.code || "").toLowerCase().includes(searchTerm.toLowerCase());
-      
       const matchesType = filterType === "All"
         ? true
         : s.type.toLowerCase() === filterType.toLowerCase();
-
       let matchesDate = true;
       if (activeFrom && activeTo) {
         if (s.createdAt) {
@@ -173,26 +176,36 @@ export default function SubjectsPage() {
           matchesDate = false;
         }
       }
-
       return matchesSearch && matchesType && matchesDate;
     });
 
+    // Deduplicate: same name+code+type = one row, collect all IDs
+    const map = new Map<string, { key: string; ids: string[]; name: string; code: string; type: string; full_marks: number; createdAt?: string }>();
+    for (const s of filtered) {
+      const key = `${s.name}__${s.code || ""}__${s.type}`;
+      if (!map.has(key)) {
+        map.set(key, { key, ids: [], name: s.name, code: s.code || "", type: s.type, full_marks: s.full_marks, createdAt: s.createdAt });
+      }
+      map.get(key)!.ids.push(s._id);
+    }
+
+    let list = Array.from(map.values());
+
     if (selectedSort === "Ascending") {
-      list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+      list = list.sort((a, b) => a.name.localeCompare(b.name));
     } else if (selectedSort === "Descending") {
-      list = [...list].sort((a, b) => b.name.localeCompare(a.name));
+      list = list.sort((a, b) => b.name.localeCompare(a.name));
     } else if (selectedSort === "Recently Added") {
-      list = [...list].sort((a, b) => {
+      list = list.sort((a, b) => {
         const ad = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const bd = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return bd - ad;
       });
     }
-
     return list;
   }, [subjects, searchTerm, filterType, activeFrom, activeTo, selectedSort]);
 
-  const pag = usePagination(filteredSubjects, 10);
+  const pag = usePagination(groupedSubjects, 10);
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
@@ -371,7 +384,7 @@ export default function SubjectsPage() {
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
             <span>Total</span>
-            <span className="font-bold text-slate-700 dark:text-slate-200">{filteredSubjects.length}</span>
+            <span className="font-bold text-slate-700 dark:text-slate-200">{groupedSubjects.length}</span>
             <span>Subjects</span>
           </div>
 
@@ -417,7 +430,7 @@ export default function SubjectsPage() {
                   </td>
                 </tr>
               ) : pag.paged.map((subject) => (
-                <tr key={subject._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                <tr key={subject.key} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4">
                     <input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] cursor-pointer" />
                   </td>
@@ -437,19 +450,19 @@ export default function SubjectsPage() {
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{subject.full_marks}</td>
                   <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                     <button 
-                      onClick={() => setActionMenuId(actionMenuId === subject._id ? null : subject._id)}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === subject._id ? "bg-[#F59E0B] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                      onClick={() => setActionMenuId(actionMenuId === subject.key ? null : subject.key)}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === subject.key ? "bg-[#F59E0B] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
-                    {actionMenuId === subject._id && (
+                    {actionMenuId === subject.key && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                         <div className="absolute right-10 top-10 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
-                          <button onClick={() => openEditModal(subject)} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                          <button onClick={() => openEditModal({ _id: subject.ids[0], name: subject.name, code: subject.code, type: subject.type as any, full_marks: subject.full_marks, pass_marks: 40, class_id: "", createdAt: subject.createdAt || "" })} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
                             <Edit className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Edit
                           </button>
-                          <button onClick={() => openDeleteModal(subject._id)} className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                          <button onClick={() => openDeleteModal(subject.ids)} className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
                             <Trash2 className="w-4 h-4" /> Delete
                           </button>
                         </div>

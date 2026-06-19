@@ -26,9 +26,10 @@ function getAvatar(name: string) {
 export default function ProfilePage() {
   const { user } = useAuth();
   const isParent = user?.role === "parent";
+  const isTeacher = user?.role === "teacher";
 
   // Profile state
-  const [profile, setProfile] = useState<ParentProfile | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -73,6 +74,17 @@ export default function ProfilePage() {
           setOccupation(data.data.occupation || "");
           setPhotoUrl(data.data.photo_url || "");
         }
+      } else if (isTeacher) {
+        const res = await fetch("/api/teacher/profile", { headers: getAuthHeaders() });
+        const data = await res.json();
+        if (data.success) {
+          setProfile(data.data);
+          setName(data.data.name || "");
+          setEmail(data.data.email || "");
+          setPhone(data.data.phone || "");
+          setAddress(data.data.address || "");
+          setPhotoUrl(data.data.photo_url || "");
+        }
       } else {
         // For other roles — use auth user data
         setName(user?.name || "");
@@ -95,7 +107,13 @@ export default function ProfilePage() {
     setSaveError("");
     setSaveSuccess(false);
     try {
-      const res = await fetch("/api/parent/profile", {
+      const url = isParent ? "/api/parent/profile" : (isTeacher ? "/api/teacher/profile" : null);
+      if (!url) {
+        setSaveError("Profile edit not supported for this role.");
+        setSaving(false);
+        return;
+      }
+      const res = await fetch(url, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ name, email, phone, address, occupation, photo_url: photoUrl }),
@@ -127,6 +145,12 @@ export default function ProfilePage() {
       setAddress(profile.address || "");
       setOccupation(profile.occupation || "");
       setPhotoUrl(profile.photo_url || "");
+    } else {
+      setName(user?.name || "");
+      setEmail(user?.email || "");
+      setPhone("");
+      setAddress("");
+      setPhotoUrl("");
     }
   };
 

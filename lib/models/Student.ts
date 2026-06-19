@@ -40,6 +40,22 @@ export interface IStudent extends Document {
   migration_cert?: { name: string; url: string } | null;
   transfer_cert?: { name: string; url: string } | null;
   birth_cert?: { name: string; url: string } | null;
+  father_name?: string;
+  father_phone?: string;
+  father_email?: string;
+  father_occupation?: string;
+  father_photo?: string;
+  mother_name?: string;
+  mother_phone?: string;
+  mother_email?: string;
+  mother_occupation?: string;
+  mother_photo?: string;
+  guardian_type?: string;
+  guardian_occupation?: string;
+  guardian_address?: string;
+  guardian_photo?: string;
+  permanent_address?: string;
+  other_info?: string;
 }
 
 const studentSchema = new Schema<IStudent>(
@@ -61,6 +77,22 @@ const studentSchema = new Schema<IStudent>(
     guardian_phone: { type: String, trim: true },
     guardian_relation: { type: String, trim: true },
     guardian_email: { type: String, lowercase: true, trim: true },
+    father_name: { type: String, trim: true },
+    father_phone: { type: String, trim: true },
+    father_email: { type: String, lowercase: true, trim: true },
+    father_occupation: { type: String, trim: true },
+    father_photo: { type: String, default: null },
+    mother_name: { type: String, trim: true },
+    mother_phone: { type: String, trim: true },
+    mother_email: { type: String, lowercase: true, trim: true },
+    mother_occupation: { type: String, trim: true },
+    mother_photo: { type: String, default: null },
+    guardian_type: { type: String, trim: true },
+    guardian_occupation: { type: String, trim: true },
+    guardian_address: { type: String, trim: true },
+    guardian_photo: { type: String, default: null },
+    permanent_address: { type: String, trim: true },
+    other_info: { type: String, trim: true },
     admission_date: { type: Date, default: Date.now },
     admission_no: { type: String, trim: true },
     academic_year: { type: String },

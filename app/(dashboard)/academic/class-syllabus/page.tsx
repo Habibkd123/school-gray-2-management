@@ -31,6 +31,17 @@ export default function ClassSyllabusPage() {
   const [formCode, setFormCode] = useState("");
   const [formType, setFormType] = useState("theory");
   const [formClassId, setFormClassId] = useState("");
+  // For Add modal: select by class name (applies to all sections)
+  const [formClassName, setFormClassName] = useState("");
+
+  // Unique class names for the Add modal dropdown
+  const uniqueClassNames = useMemo(() => {
+    const seen = new Set<string>();
+    return classes
+      .map(c => c.name)
+      .filter(name => { if (seen.has(name)) return false; seen.add(name); return true; })
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+  }, [classes]);
 
   const getClassName = (classId: string) => {
     const c = classes.find(cls => cls._id === classId);
@@ -42,6 +53,7 @@ export default function ClassSyllabusPage() {
     setFormCode("");
     setFormType("theory");
     setFormClassId("");
+    setFormClassName("");
     setIsAddOpen(true);
   };
 
@@ -63,14 +75,21 @@ export default function ClassSyllabusPage() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await createSubject({
-      name: formName,
-      code: formCode,
-      type: formType as "theory" | "practical" | "both",
-      class_id: formClassId,
-      full_marks: 100,
-      pass_marks: 40
-    });
+    // Find all sections for the selected class name and create subject for each
+    const matchingSections = classes.filter(c => c.name === formClassName);
+    if (matchingSections.length === 0) return;
+    await Promise.all(
+      matchingSections.map(section =>
+        createSubject({
+          name: formName,
+          code: formCode,
+          type: formType as "theory" | "practical" | "both",
+          class_id: section._id,
+          full_marks: 100,
+          pass_marks: 40
+        })
+      )
+    );
     setIsAddOpen(false);
   };
 
@@ -89,16 +108,31 @@ export default function ClassSyllabusPage() {
 
   const handleDeleteConfirm = async () => {
     if (selectedSubject) {
-      await deleteSubject(selectedSubject._id);
+      const idsToDelete: string[] = selectedSubject._allIds || [selectedSubject._id];
+      await Promise.all(idsToDelete.map((id: string) => deleteSubject(id)));
     }
     setIsDeleteOpen(false);
   };
 
-  const filteredData = useMemo(() => {
-    return subjects.filter(s => 
+
+  // Group subjects by name+code+type so same subject across sections shows as one row
+  const groupedData = useMemo(() => {
+    const filtered = subjects.filter(s =>
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (s.code || "").toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const map = new Map<string, { key: string; ids: string[]; name: string; code: string; type: string; classIds: string[] }>();
+    for (const s of filtered) {
+      const key = `${s.name}__${s.code || ""}__${s.type}`;
+      if (!map.has(key)) {
+        map.set(key, { key, ids: [], name: s.name, code: s.code || "", type: s.type, classIds: [] });
+      }
+      const grp = map.get(key)!;
+      grp.ids.push(s._id);
+      grp.classIds.push(s.class_id);
+    }
+    return Array.from(map.values());
   }, [subjects, searchTerm]);
 
   return (
@@ -159,7 +193,7 @@ export default function ClassSyllabusPage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
         {/* Controls Section */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <span className="text-[13px] text-slate-500">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredData.length}</span> subjects</span>
+          <span className="text-[13px] text-slate-500">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{groupedData.length}</span> subjects</span>
 
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -188,37 +222,63 @@ export default function ClassSyllabusPage() {
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr><td colSpan={5} className="px-6 py-10 text-center text-slate-400"><Loader2 className="w-5 h-5 animate-spin inline" /></td></tr>
-              ) : filteredData.length === 0 ? (
+              ) : groupedData.length === 0 ? (
                 <tr><td colSpan={5} className="px-6 py-10 text-center text-slate-400">No subjects found.</td></tr>
-              ) : filteredData.map((item) => (
-                <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 text-slate-700 dark:text-slate-200 font-semibold">{item.name}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{item.code || "—"}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300 capitalize">{item.type || "theory"}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{getClassName(item.class_id)}</td>
-                  <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
-                    <button 
-                      onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-[#F59E0B] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                    {actionMenuId === item._id && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                        <div className="absolute right-10 top-10 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
-                          <button onClick={() => openEditModal(item)} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
-                            <Edit className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Edit
-                          </button>
-                          <button onClick={() => openDeleteModal(item)} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
-                            <Trash2 className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Delete
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              ) : groupedData.map((grp) => {
+                // Build display: group sections by class name, then show sections as badges
+                const sectionsByClassName = new Map<string, string[]>();
+                for (const cid of grp.classIds) {
+                  const cls = classes.find(c => c._id === cid);
+                  if (cls) {
+                    const existing = sectionsByClassName.get(cls.name) || [];
+                    existing.push(cls.section);
+                    sectionsByClassName.set(cls.name, existing);
+                  }
+                }
+                return (
+                  <tr key={grp.key} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="px-6 py-4 text-slate-700 dark:text-slate-200 font-semibold">{grp.name}</td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{grp.code || "—"}</td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 capitalize">{grp.type || "theory"}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        {Array.from(sectionsByClassName.entries()).map(([className, sections]) => (
+                          <div key={className} className="flex items-center gap-1">
+                            <span className="text-[12px] font-medium text-slate-600 dark:text-slate-300 whitespace-nowrap">{className}</span>
+                            {sections.sort().map(sec => (
+                              <span key={sec} className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#F59E0B]/10 text-[#92400E] dark:bg-amber-900/30 dark:text-amber-400 text-[11px] font-bold">
+                                {sec}
+                              </span>
+                            ))}
+                          </div>
+                        ))}
+                        {sectionsByClassName.size === 0 && <span className="text-slate-400">—</span>}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => setActionMenuId(actionMenuId === grp.key ? null : grp.key)}
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === grp.key ? "bg-[#F59E0B] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      {actionMenuId === grp.key && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
+                          <div className="absolute right-10 top-10 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
+                            <button onClick={() => openEditModal({ _id: grp.ids[0], name: grp.name, code: grp.code, type: grp.type, class_id: grp.classIds[0] })} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                              <Edit className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Edit
+                            </button>
+                            <button onClick={() => openDeleteModal({ _id: grp.ids[0], _allIds: grp.ids, name: grp.name })} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                              <Trash2 className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Delete
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -268,18 +328,41 @@ export default function ClassSyllabusPage() {
 
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class</label>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 -mt-0.5">Subject will be added to all sections of the selected class</p>
             <div className="relative">
-              <select 
-                value={formClassId}
-                onChange={(e) => setFormClassId(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
-                required
-              >
-                <option value="">Select Class</option>
-                {classes.map(c => <option key={c._id} value={c._id}>{c.name} - {c.section}</option>)}
-              </select>
+              {isAddOpen ? (
+                // Add modal: select by class name → applies to all sections
+                <select
+                  value={formClassName}
+                  onChange={(e) => setFormClassName(e.target.value)}
+                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                  required
+                >
+                  <option value="">Select Class</option>
+                  {uniqueClassNames.map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
+              ) : (
+                // Edit modal: select specific section as before
+                <select
+                  value={formClassId}
+                  onChange={(e) => setFormClassId(e.target.value)}
+                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                  required
+                >
+                  <option value="">Select Class</option>
+                  {classes.map(c => <option key={c._id} value={c._id}>{c.name} - {c.section}</option>)}
+                </select>
+              )}
               <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
+            {isAddOpen && formClassName && (
+              <p className="text-[12px] text-emerald-600 dark:text-emerald-400 font-medium">
+                ✓ Will be added to {classes.filter(c => c.name === formClassName).length} section(s):
+                {" "}{classes.filter(c => c.name === formClassName).map(c => c.section).join(", ")}
+              </p>
+            )}
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">

@@ -11,6 +11,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
+function cleanAttachmentUrl(url?: string): string {
+  if (!url) return "";
+  const match = url.match(/https?:\/\/res\.cloudinary\.com\/.*/);
+  if (match) {
+    return match[0];
+  }
+  return url;
+}
+
 export default function ParentHomeworkDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -128,7 +137,7 @@ export default function ParentHomeworkDetailPage() {
           </div>
 
           {/* Date box */}
-          <div className="flex flex-col gap-2 text-right min-w-full sm:w-[160px]">
+          <div className="flex flex-col gap-2 text-right w-full sm:w-[160px]">
             <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 text-left">
               <p className="text-[10px] font-bold text-slate-400 uppercase mb-1 flex items-center gap-1">
                 <Calendar className="w-3 h-3" /> Assigned
@@ -163,7 +172,7 @@ export default function ParentHomeworkDetailPage() {
         {/* Attachment */}
         {hw.attachment_url && (
           <a
-            href={hw.attachment_url}
+            href={cleanAttachmentUrl(hw.attachment_url)}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-fit"

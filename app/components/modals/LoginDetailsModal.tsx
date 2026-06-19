@@ -102,6 +102,10 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
         : true;
       badgeLabel = "👨‍👩‍👧 Parent";
       badgeStyle = "bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300";
+      defaultPassword    = "Parent@123";
+      showPasswordRow    = userExists;
+      mustChangePassword = !!(parentObj.user_id && typeof parentObj.user_id === "object"
+        && (parentObj.user_id as any).must_change_password);
     }
 
   } else if (target === "teacher" && teacher) {
@@ -117,6 +121,10 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
     photoUrl   = teacher.photo_url || "";
     badgeLabel = "💼 Teacher";
     badgeStyle = "bg-[#F59E0B]/10 text-[#F59E0B]";
+    defaultPassword    = "password123";
+    showPasswordRow    = userExists;
+    mustChangePassword = !!(teacher.user_id && typeof teacher.user_id === "object"
+      && (teacher.user_id as any).must_change_password);
   }
 
   const avatarUrl = photoUrl || getAvatar(name || "User");
@@ -217,9 +225,25 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
                 <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/10 border border-amber-200/60 dark:border-amber-700/30 rounded-lg p-2.5 mt-1">
                   <Info className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
                   <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-snug">
-                    Default password = <strong>Date of Birth</strong> in <strong>DDMMYYYY</strong> format.
-                    If DOB was not provided, password is <strong>student123</strong>.
-                    Student must change password on first login.
+                    {target === "student" && (
+                      <>
+                        Default password = <strong>Date of Birth</strong> in <strong>DDMMYYYY</strong> format.
+                        If DOB was not provided, password is <strong>student123</strong>.
+                        Student must change password on first login.
+                      </>
+                    )}
+                    {target === "teacher" && (
+                      <>
+                        Default password = <strong>password123</strong>.
+                        Teacher must change password on first login.
+                      </>
+                    )}
+                    {target === "parent" && (
+                      <>
+                        Default password = <strong>Parent@123</strong> or <strong>parent123</strong> (if created automatically during admission).
+                        Parent must change password on first login.
+                      </>
+                    )}
                   </p>
                 </div>
               )}

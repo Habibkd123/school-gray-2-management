@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Modal } from "../../../components/ui/modal";
 import { useGrades, ApiGrade } from "../../../hooks/useGrades";
+import { useAuth } from "@/app/context/auth";
 
 const DATE_RANGES = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year", "All Time", "Custom Range"] as const;
 
@@ -49,6 +50,8 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
 
 export default function GradeListPage() {
   const { grades, isLoading, createGrade, updateGrade, deleteGrade, fetchGrades } = useGrades();
+  const { user } = useAuth();
+  const canAddGrade = user?.role === "school_admin" || user?.role === "super_admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -265,12 +268,14 @@ export default function GradeListPage() {
             )}
           </div>
 
-          <button 
-            onClick={openAddModal}
-            className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Add Grade
-          </button>
+          {canAddGrade && (
+            <button 
+              onClick={openAddModal}
+              className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Add Grade
+            </button>
+          )}
         </div>
       </div>
 
@@ -463,20 +468,20 @@ export default function GradeListPage() {
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Marks Range</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Grade Points</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Status</th>
-                <th className="px-6 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Action</th>
+                {canAddGrade && <th className="px-6 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Action</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={canAddGrade ? 5 : 4} className="px-6 py-12 text-center text-slate-400">
                     <Loader2 className="w-5 h-5 animate-spin inline" />
                   </td>
                 </tr>
               ) : filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-slate-400">
-                    No grades found. Click "Add Grade" to create one.
+                  <td colSpan={canAddGrade ? 5 : 4} className="px-6 py-12 text-center text-slate-400">
+                    No grades found.{canAddGrade && " Click \"Add Grade\" to create one."}
                   </td>
                 </tr>
               ) : filteredData.map((item) => (
@@ -497,27 +502,29 @@ export default function GradeListPage() {
                       );
                     })()}
                   </td>
-                  <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
-                    <button 
-                      onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-[#F59E0B] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                    {actionMenuId === item._id && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                        <div className="absolute right-10 top-2 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
-                          <button onClick={() => openEditModal(item)} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
-                            <Edit className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Edit
-                          </button>
-                          <button onClick={() => openDeleteModal(item)} className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-2 font-medium transition-colors cursor-pointer">
-                            <Trash2 className="w-4 h-4 text-rose-600" /> Delete
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </td>
+                  {canAddGrade && (
+                    <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
+                      <button 
+                        onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-[#F59E0B] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                      {actionMenuId === item._id && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
+                          <div className="absolute right-10 top-2 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
+                            <button onClick={() => openEditModal(item)} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                              <Edit className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Edit
+                            </button>
+                            <button onClick={() => openDeleteModal(item)} className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                              <Trash2 className="w-4 h-4 text-rose-600" /> Delete
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

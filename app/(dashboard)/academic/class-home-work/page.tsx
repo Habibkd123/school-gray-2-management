@@ -14,6 +14,15 @@ import { useSubjects } from "../../../hooks/useSubjects";
 import { useStudents } from "../../../hooks/useStudents";
 import { useUpload } from "../../../hooks/useUpload";
 
+function cleanAttachmentUrl(url?: string): string {
+  if (!url) return "";
+  const match = url.match(/https?:\/\/res\.cloudinary\.com\/.*/);
+  if (match) {
+    return match[0];
+  }
+  return url;
+}
+
 export default function ClassHomeWorkPage() {
   const { homework, isLoading, createHomework, deleteHomework, fetchHomework, submitHomework, gradeHomework } = useHomework();
   const { uploading, uploadFile } = useUpload();
@@ -332,7 +341,7 @@ export default function ClassHomeWorkPage() {
                   </td>
                   <td className="px-6 py-4">
                     {item.attachment_url ? (
-                      <a href={item.attachment_url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[#F59E0B] hover:underline text-[13px] font-medium" onClick={e => e.stopPropagation()}>
+                      <a href={cleanAttachmentUrl(item.attachment_url)} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[#F59E0B] hover:underline text-[13px] font-medium" onClick={e => e.stopPropagation()}>
                         <Link2 className="w-4 h-4" /> Link
                       </a>
                     ) : (
@@ -451,7 +460,9 @@ export default function ClassHomeWorkPage() {
                     const file = e.target.files?.[0];
                     if (file) {
                       const url = await uploadFile(file);
-                      if (url) setFormAttachmentUrl(window.location.origin + url);
+                      if (url) {
+                        setFormAttachmentUrl(url.startsWith("http") ? url : window.location.origin + url);
+                      }
                     }
                   }}
                 />
@@ -548,7 +559,8 @@ export default function ClassHomeWorkPage() {
                   if (file) {
                     const url = await uploadFile(file);
                     if (url) {
-                      setSubmitContent(prev => prev ? `${prev}\nAttachment: ${window.location.origin}${url}` : `Attachment: ${window.location.origin}${url}`);
+                      const finalUrl = url.startsWith("http") ? url : window.location.origin + url;
+                      setSubmitContent(prev => prev ? `${prev}\nAttachment: ${finalUrl}` : `Attachment: ${finalUrl}`);
                     }
                   }
                 }}

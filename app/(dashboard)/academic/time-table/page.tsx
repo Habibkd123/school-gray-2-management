@@ -302,25 +302,11 @@ export default function TimeTablePage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Start Time</label>
-                  <input
-                    type="text"
-                    required
-                    value={formStartTime}
-                    onChange={(e) => setFormStartTime(e.target.value)}
-                    placeholder="09:00 AM"
-                    className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200 font-mono"
-                  />
+                  <TimePicker value={formStartTime} onChange={setFormStartTime} />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">End Time</label>
-                  <input
-                    type="text"
-                    required
-                    value={formEndTime}
-                    onChange={(e) => setFormEndTime(e.target.value)}
-                    placeholder="09:45 AM"
-                    className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200 font-mono"
-                  />
+                  <TimePicker value={formEndTime} onChange={setFormEndTime} />
                 </div>
               </div>
 
@@ -354,6 +340,93 @@ export default function TimeTablePage() {
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+interface TimePickerProps {
+  value: string;
+  onChange: (val: string) => void;
+}
+
+function TimePicker({ value, onChange }: TimePickerProps) {
+  // Expected value format: "09:30 AM" or "10:45 AM"
+  const match = value?.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  let currentHour = "09";
+  let currentMinute = "00";
+  let currentPeriod = "AM";
+  if (match) {
+    let [, h, m, p] = match;
+    if (h.length === 1) h = `0${h}`;
+    currentHour = h;
+    currentMinute = m;
+    currentPeriod = p.toUpperCase();
+  }
+
+  const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
+  const periods = ["AM", "PM"];
+
+  const handleHourChange = (newHour: string) => {
+    onChange(`${newHour}:${currentMinute} ${currentPeriod}`);
+  };
+
+  const handleMinuteChange = (newMinute: string) => {
+    onChange(`${currentHour}:${newMinute} ${currentPeriod}`);
+  };
+
+  const handlePeriodChange = (newPeriod: string) => {
+    onChange(`${currentHour}:${currentMinute} ${newPeriod}`);
+  };
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="relative flex-1">
+        <select
+          value={currentHour}
+          onChange={(e) => handleHourChange(e.target.value)}
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+        >
+          {hours.map((h) => (
+            <option key={h} value={h}>
+              {h}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
+      
+      <span className="text-slate-400 font-bold">:</span>
+
+      <div className="relative flex-1">
+        <select
+          value={currentMinute}
+          onChange={(e) => handleMinuteChange(e.target.value)}
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+        >
+          {minutes.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
+
+      <div className="relative w-[75px]">
+        <select
+          value={currentPeriod}
+          onChange={(e) => handlePeriodChange(e.target.value)}
+          className="w-full pl-3 pr-7 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-semibold cursor-pointer"
+        >
+          {periods.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
     </div>
   );
 }

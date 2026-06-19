@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { getAuthHeaders } from "@/lib/utils/session";
-import { useAppState } from "@/app/context/store";
 
 export interface ApiSchedule {
   _id: string;
@@ -33,8 +32,6 @@ export function useSchedules(classId?: string, teacherId?: string) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { academicYear } = useAppState();
-
   const fetchSchedules = useCallback(async (cId?: string, tId?: string) => {
     setIsLoading(true);
     setError(null);
@@ -42,7 +39,8 @@ export function useSchedules(classId?: string, teacherId?: string) {
       const params = new URLSearchParams();
       if (cId) params.set("classId", cId);
       if (tId) params.set("teacherId", tId);
-      params.set("academic_year", academicYear);
+      // Note: do NOT filter by academic_year here — timetable records may have
+      // different academic_year values and we want to show all for the class.
 
       const res = await fetch(`/api/schedules?${params.toString()}`, {
         headers: getAuthHeaders(),
@@ -55,7 +53,8 @@ export function useSchedules(classId?: string, teacherId?: string) {
     } finally {
       setIsLoading(false);
     }
-  }, [academicYear]);
+  }, []); // no academicYear dependency — avoids re-fetch race condition
+
 
   useEffect(() => {
     fetchSchedules(classId, teacherId);

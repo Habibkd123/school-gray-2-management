@@ -319,8 +319,6 @@ function AddStudentContent() {
           setClassId(typeof student.class_id === "object" ? student.class_id._id : student.class_id || "");
           setRollNo(student.roll_no || "");
           setEmail(student.email || "");
-          setFatherName(student.guardian_name || "");
-          setFatherPhone(student.guardian_phone || "");
           if (student.photo_url) setPhotoPreview(student.photo_url);
           if (student.gender) setGender(student.gender.charAt(0).toUpperCase() + student.gender.slice(1));
           if (student.dob) setDob(new Date(student.dob).toISOString().split("T")[0]);
@@ -337,7 +335,14 @@ function AddStudentContent() {
           if (student.phone) setPrimaryPhone(student.phone);
           if (student.address) {
             setCurrentAddress(student.address);
+          }
+          if (student.permanent_address) {
+            setPermanentAddress(student.permanent_address);
+          } else if (student.address) {
             setPermanentAddress(student.address);
+          }
+          if (student.other_info) {
+            setOtherInfo(student.other_info);
           }
           if (student.prev_school_name) setPrevSchoolName(student.prev_school_name);
           if (student.prev_school_address) setPrevSchoolAddress(student.prev_school_address);
@@ -364,27 +369,72 @@ function AddStudentContent() {
           // Parent / guardian details
           if (student.parent_id && typeof student.parent_id === "object") {
             const p = student.parent_id;
-            setFatherName(p.name || "");
-            setFatherPhone(p.phone || "");
-            setFatherEmail(p.email || "");
+            setFatherName(student.father_name || p.name || "");
+            setFatherPhone(student.father_phone || p.phone || "");
+            setFatherEmail(student.father_email || p.email || "");
+            setFatherOccupation(student.father_occupation || p.occupation || "");
+            setFatherPhoto(student.father_photo || p.photo_url || "");
+
+            setMotherName(student.mother_name || "");
+            setMotherPhone(student.mother_phone || "");
+            setMotherEmail(student.mother_email || "");
+            setMotherOccupation(student.mother_occupation || "");
+            setMotherPhoto(student.mother_photo || "");
+
             setGuardianName(student.guardian_name || p.name || "");
             setGuardianPhone(student.guardian_phone || p.phone || "");
             setGuardianEmail(student.guardian_email || p.email || "");
             setGuardianRelation(student.guardian_relation || p.relation || "");
+            setGuardianPhoto(student.guardian_photo || p.photo_url || "");
+            setGuardianOccupation(student.guardian_occupation || p.occupation || "");
+            setGuardianAddress(student.guardian_address || p.address || "");
+            setGuardianType(student.guardian_type || (p.relation?.toLowerCase() === "father" ? "father" : p.relation?.toLowerCase() === "mother" ? "mother" : "other"));
           } else {
-            setFatherName(student.guardian_name || "");
-            setFatherPhone(student.guardian_phone || "");
-            setFatherEmail(student.guardian_email || "");
+            setFatherName(student.father_name || student.guardian_name || "");
+            setFatherPhone(student.father_phone || student.guardian_phone || "");
+            setFatherEmail(student.father_email || student.guardian_email || "");
+            setFatherOccupation(student.father_occupation || "");
+            setFatherPhoto(student.father_photo || "");
+
+            setMotherName(student.mother_name || "");
+            setMotherPhone(student.mother_phone || "");
+            setMotherEmail(student.mother_email || "");
+            setMotherOccupation(student.mother_occupation || "");
+            setMotherPhoto(student.mother_photo || "");
+
             setGuardianName(student.guardian_name || "");
             setGuardianPhone(student.guardian_phone || "");
             setGuardianEmail(student.guardian_email || "");
             setGuardianRelation(student.guardian_relation || "");
+            setGuardianPhoto(student.guardian_photo || "");
+            setGuardianOccupation(student.guardian_occupation || "");
+            setGuardianAddress(student.guardian_address || "");
+            setGuardianType(student.guardian_type || "father");
           }
         }
       }
     }
     loadData();
   }, [editId]);
+
+  // Keep guardian in sync with selected parent
+  useEffect(() => {
+    if (guardianType === "father") {
+      setGuardianName(fatherName);
+      setGuardianPhone(fatherPhone);
+      setGuardianEmail(fatherEmail);
+      setGuardianRelation("Father");
+      setGuardianPhoto(fatherPhoto);
+      setGuardianOccupation(fatherOccupation);
+    } else if (guardianType === "mother") {
+      setGuardianName(motherName);
+      setGuardianPhone(motherPhone);
+      setGuardianEmail(motherEmail);
+      setGuardianRelation("Mother");
+      setGuardianPhoto(motherPhoto);
+      setGuardianOccupation(motherOccupation);
+    }
+  }, [guardianType, fatherName, fatherPhone, fatherEmail, fatherPhoto, fatherOccupation, motherName, motherPhone, motherEmail, motherPhoto, motherOccupation]);
 
   // Pre-populate admission date on create mode
   useEffect(() => {
@@ -455,11 +505,11 @@ function AddStudentContent() {
       const payload = {
         name: `${firstName} ${lastName}`.trim() || "New Student",
         email: email || undefined,
-        guardian_email: fatherEmail || guardianEmail || undefined,
+        guardian_email: guardianEmail || fatherEmail || undefined,
         class_id: classId || classOptions[0]?.value || "",
         roll_no: rollNo || undefined,
-        guardian_name: fatherName || guardianName || undefined,
-        guardian_phone: fatherPhone || guardianPhone || undefined,
+        guardian_name: guardianName || fatherName || undefined,
+        guardian_phone: guardianPhone || fatherPhone || undefined,
         guardian_relation: guardianRelation !== "Select" ? guardianRelation : undefined,
         photo_url: photoPreview || undefined,
         gender: gender !== "Select" ? gender.toLowerCase() : undefined,
@@ -468,6 +518,7 @@ function AddStudentContent() {
         admission_no: admissionNo || undefined,
         admission_date: admissionDate || undefined,
         address: currentAddress || undefined,
+        phone: primaryPhone || undefined,
         guardian_photo: guardianPhoto || fatherPhoto || motherPhoto || undefined,
         religion: religion !== "Select" ? religion : undefined,
         category: category !== "Select" ? category : undefined,
@@ -487,6 +538,21 @@ function AddStudentContent() {
         migration_cert: migrationCert,
         transfer_cert: transferCert,
         birth_cert: birthCert,
+        father_name: fatherName || undefined,
+        father_phone: fatherPhone || undefined,
+        father_email: fatherEmail || undefined,
+        father_occupation: fatherOccupation || undefined,
+        father_photo: fatherPhoto || undefined,
+        mother_name: motherName || undefined,
+        mother_phone: motherPhone || undefined,
+        mother_email: motherEmail || undefined,
+        mother_occupation: motherOccupation || undefined,
+        mother_photo: motherPhoto || undefined,
+        guardian_type: guardianType || undefined,
+        guardian_occupation: guardianOccupation || undefined,
+        guardian_address: guardianAddress || undefined,
+        permanent_address: permanentAddress || undefined,
+        other_info: otherInfo || undefined,
       };
 
       let result;

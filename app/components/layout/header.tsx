@@ -40,14 +40,24 @@ export function Header({ onMenuClick }: HeaderProps) {
             new Set<string>(data.data.classes.map((c: { academic_year: string }) => c.academic_year))
           ).sort((a, b) => b.localeCompare(a)); // latest first
           setAvailableYears(years);
-          // Auto-select latest year if current selection not in DB
-          if (years.length > 0 && !years.includes(academicYear)) {
+          // Auto-select latest year if current selection not in DB or is empty
+          if (years.length > 0 && (!academicYear || !years.includes(academicYear))) {
             setAcademicYear(years[0]);
+          }
+        } else {
+          const fallbackYears = ["2026-2027", "2025-2026", "2024-2025", "2023-2024"];
+          setAvailableYears(fallbackYears);
+          if (!academicYear || !fallbackYears.includes(academicYear)) {
+            setAcademicYear("2025-2026");
           }
         }
       } catch {
         // fallback to manual list if API fails
-        setAvailableYears(["2026-2027", "2025-2026", "2024-2025", "2023-2024"]);
+        const fallbackYears = ["2026-2027", "2025-2026", "2024-2025", "2023-2024"];
+        setAvailableYears(fallbackYears);
+        if (!academicYear || !fallbackYears.includes(academicYear)) {
+          setAcademicYear("2025-2026");
+        }
       }
     }
     fetchYears();
