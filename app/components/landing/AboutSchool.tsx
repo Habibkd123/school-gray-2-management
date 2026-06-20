@@ -14,21 +14,21 @@ export function AboutSchool() {
       <div className="absolute top-0 right-0 w-full sm:w-[500px] h-[500px] bg-[#F59E0B]/5 rounded-full blur-[100px] -z-10" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          
+
           {/* Left: Image Grid */}
           <div className="relative">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full sm:w-[120%] h-[120%] bg-[#0F172A]/5 rounded-full -z-10 border border-[#0F172A]/10" />
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <img 
-                src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1000&auto=format&fit=crop" 
-                alt="School Building" 
+              <img
+                src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop"
+                alt="School Building"
                 className="w-full h-[320px] object-cover rounded-sm shadow-xl"
               />
               <div className="flex flex-col gap-4 pt-12">
-                <img 
-                  src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop" 
-                  alt="Students studying" 
+                <img
+                  src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=1000&auto=format&fit=crop"
+                  alt="Students studying"
                   className="w-full h-[200px] object-cover rounded-sm shadow-xl"
                 />
                 {/* Year Badge */}
@@ -49,7 +49,7 @@ export function AboutSchool() {
             <p className="text-[15px] text-slate-600 leading-relaxed mb-8">
               Welcome to MySchoolLife Public School, a premier institution affiliated with the Central Board of Secondary Education (CBSE), New Delhi. We are committed to providing a transformative educational experience that combines rigorous academic standards with rich cultural values, preparing our students to excel in a rapidly changing world.
             </p>
-            
+
             <ul className="space-y-4 mb-10">
               {points.map((point, idx) => (
                 <li key={idx} className="flex items-start gap-3 text-slate-700 font-medium text-[14px]">
@@ -63,7 +63,7 @@ export function AboutSchool() {
               Read Chairman's Message <ArrowRight className="w-4 h-4 text-[#F59E0B]" />
             </button>
           </div>
-          
+
         </div>
       </div>
     </section>
