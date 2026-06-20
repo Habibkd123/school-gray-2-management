@@ -39,7 +39,7 @@ export default function NotFound() {
       </div>
 
       <div className="py-6 text-center text-[12px] text-gray-400">
-        Copyright © 2024 - PreSkool
+        Copyright © 2024 - MySchoolLife
       </div>
     </div>
   );

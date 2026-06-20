@@ -29,11 +29,11 @@ export function Header() {
           {/* Logo */}
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[#0F172A] flex items-center justify-center">
-              <img src="/logo.png" alt="EduVista Logo" className="w-full h-full object-contain p-1" />
+              <img src="/logo.png" alt="MySchoolLife Logo" className="w-full h-full object-contain p-1" />
             </div>
             <div className="flex flex-col">
               <span className="text-[22px] font-black tracking-tight text-[#0F172A] leading-none">
-                EduVista
+                MySchoolLife
               </span>
               <span className="text-[10px] font-bold tracking-widest text-[#F59E0B] uppercase">Public School</span>
             </div>
@@ -41,13 +41,14 @@ export function Header() {
 
           {/* Desktop Menu */}
           <div className="hidden lg:flex items-center gap-6 font-bold text-[13px] uppercase tracking-wide">
-            <a href="#home" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Home</a>
-            <a href="#about" className="text-slate-800 hover:text-[#F59E0B] transition-colors">About Us</a>
-            <a href="#academics" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Academics</a>
-            <a href="#admissions" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Admissions</a>
-            <a href="#facilities" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Facilities</a>
-            <a href="#gallery" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Gallery</a>
-            <a href="#contact" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Contact</a>
+            <Link href="/" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Home</Link>
+            <Link href="/about" className="text-slate-800 hover:text-[#F59E0B] transition-colors">About Us</Link>
+            <Link href="/academics" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Academics</Link>
+            <Link href="/admissions" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Admissions</Link>
+            <Link href="/student-life" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Student Life</Link>
+            <Link href="/news" className="text-slate-800 hover:text-[#F59E0B] transition-colors">News</Link>
+            <Link href="/gallery" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Gallery</Link>
+            <Link href="/contact" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Contact</Link>
           </div>
 
           {/* Buttons */}
@@ -75,13 +76,14 @@ export function Header() {
         {/* Mobile Menu Dropdown */}
         {isOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-2xl p-4 flex flex-col gap-4 max-h-[80vh] overflow-y-auto">
-            <a href="#home" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Home</a>
-            <a href="#about" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">About Us</a>
-            <a href="#academics" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Academics</a>
-            <a href="#admissions" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Admissions</a>
-            <a href="#facilities" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Facilities</a>
-            <a href="#gallery" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Gallery</a>
-            <a href="#contact" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Contact</a>
+            <Link href="/" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Home</Link>
+            <Link href="/about" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">About Us</Link>
+            <Link href="/academics" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Academics</Link>
+            <Link href="/admissions" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Admissions</Link>
+            <Link href="/student-life" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Student Life</Link>
+            <Link href="/news" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">News</Link>
+            <Link href="/gallery" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Gallery</Link>
+            <Link href="/contact" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Contact</Link>
 
             {/* Quick Links for Mobile */}
             <div className="pt-2 flex flex-col gap-3">

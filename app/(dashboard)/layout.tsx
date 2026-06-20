@@ -46,6 +46,14 @@ export default function DashboardLayout({
       return;
     }
 
+    // ── Portal-level role guard: block students & parents ──────────
+    // Students/parents must use the MyStudent portal, not this admin portal
+    const ADMIN_PORTAL_ROLES = ["super_admin", "school_admin", "accountant", "teacher"];
+    if (!isLoading && isAuthenticated && user?.role && !ADMIN_PORTAL_ROLES.includes(user.role)) {
+      router.replace("/login");
+      return;
+    }
+
     // ── Route-level permission guard ────────────────────────────────
     // If a user navigates to a restricted route, redirect them to /dashboard
     if (!isLoading && isAuthenticated && user?.role) {

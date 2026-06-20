@@ -42,12 +42,12 @@ export function AboutSchool() {
 
           {/* Right: Content */}
           <div className="max-w-xl">
-            <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">About EduVista</h2>
+            <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">About MySchoolLife</h2>
             <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] mb-6 leading-tight">
               Nurturing Excellence, <br />Rooted in Tradition
             </h3>
             <p className="text-[15px] text-slate-600 leading-relaxed mb-8">
-              Welcome to EduVista Public School, a premier institution affiliated with the Central Board of Secondary Education (CBSE), New Delhi. We are committed to providing a transformative educational experience that combines rigorous academic standards with rich cultural values, preparing our students to excel in a rapidly changing world.
+              Welcome to MySchoolLife Public School, a premier institution affiliated with the Central Board of Secondary Education (CBSE), New Delhi. We are committed to providing a transformative educational experience that combines rigorous academic standards with rich cultural values, preparing our students to excel in a rapidly changing world.
             </p>
             
             <ul className="space-y-4 mb-10">

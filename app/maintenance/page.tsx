@@ -17,7 +17,7 @@ export default function MaintenancePage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
             </svg>
           </div>
-          <span className="text-[22px] font-bold text-slate-800 dark:text-slate-100 tracking-tight">Pre<span className="text-slate-600 dark:text-slate-300">Skool</span></span>
+          <span className="text-[22px] font-bold text-slate-800 dark:text-slate-100 tracking-tight">MySchool<span className="text-[#5D6BEE]">Life</span></span>
         </div>
       </div>
 
@@ -63,7 +63,7 @@ export default function MaintenancePage() {
 
       {/* Footer Copyright */}
       <div className="w-full pb-8 pt-4 text-center">
-        <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Copyright © 2024 - Preskool</p>
+        <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Copyright © 2024 - MySchoolLife</p>
       </div>
 
     </div>

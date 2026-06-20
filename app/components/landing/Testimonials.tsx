@@ -3,8 +3,8 @@ import { Star, Quote } from "lucide-react";
 
 export function Testimonials() {
   const testimonials = [
-    { name: "Rajesh Sharma", role: "Parent of Class X Student", content: "The focus on both academics and values is what makes EduVista stand out. My son's transformation has been incredible, and the board results speak for themselves.", img: "https://i.pravatar.cc/150?u=1" },
-    { name: "Priya Patel", role: "Alumni (Batch of 2018)", content: "The foundation I received at EduVista helped me crack the JEE exams. The teachers here are true mentors who guide you beyond the syllabus.", img: "https://i.pravatar.cc/150?u=2" },
+    { name: "Rajesh Sharma", role: "Parent of Class X Student", content: "The focus on both academics and values is what makes MySchoolLife stand out. My son's transformation has been incredible, and the board results speak for themselves.", img: "https://i.pravatar.cc/150?u=1" },
+    { name: "Priya Patel", role: "Alumni (Batch of 2018)", content: "The foundation I received at MySchoolLife helped me crack the JEE exams. The teachers here are true mentors who guide you beyond the syllabus.", img: "https://i.pravatar.cc/150?u=2" },
     { name: "Amit Verma", role: "Parent of Class VI Student", content: "From state-of-the-art sports facilities to strict security measures, the school provides an environment where children can thrive safely.", img: "https://i.pravatar.cc/150?u=3" },
   ];
 

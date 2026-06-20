@@ -511,9 +511,9 @@ export default function ExamResultsPage() {
 
               {/* School Header */}
               <div className="text-center mb-8 border-b-2 border-slate-800 pb-6">
-                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-wider mb-2">Preskool Academy</h1>
+                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-wider mb-2">MySchoolLife Academy</h1>
                 <p className="text-slate-600 text-[14px]">123 Education Lane, Learning City, 10001</p>
-                <p className="text-slate-600 text-[14px]">Email: contact@preskool.edu | Phone: +1 234 567 8900</p>
+                <p className="text-slate-600 text-[14px]">Email: contact@myschoollife.edu | Phone: +1 234 567 8900</p>
                 <div className="mt-6 inline-block bg-slate-800 text-white px-6 py-2 rounded-full font-bold text-[15px] uppercase tracking-widest shadow-sm">
                   Academic Report Card
                 </div>

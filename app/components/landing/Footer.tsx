@@ -14,7 +14,7 @@ export function Footer() {
               </div>
               <div className="flex flex-col">
                 <span className="text-[22px] font-black tracking-tight text-white leading-none">
-                  EduVista
+                  MySchoolLife
                 </span>
                 <span className="text-[10px] font-bold tracking-widest text-[#F59E0B] uppercase">Public School</span>
               </div>
@@ -65,14 +65,14 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-[#F59E0B] shrink-0" />
-                <span>info@eduvista.edu.in</span>
+                <span>info@MySchoolLife.edu.in</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-[13px] font-medium">
-          <p>Copyright © 2024 EduVista Public School. All rights reserved.</p>
+          <p>Copyright © 2024 MySchoolLife Public School. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <a href="#" className="hover:text-[#F59E0B] transition-colors">Privacy Policy</a>
             <a href="#" className="hover:text-[#F59E0B] transition-colors">Terms of Service</a>

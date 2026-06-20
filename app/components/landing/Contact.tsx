@@ -73,7 +73,7 @@ export function Contact() {
               <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-[#0F172A] sm:col-span-2">
                 <Mail className="w-8 h-8 text-[#F59E0B] mb-4" />
                 <h4 className="font-bold text-[#0F172A] mb-2 text-[15px]">Email Address</h4>
-                <p className="text-slate-600 text-[14px]">admissions@eduvista.edu.in<br/>principal@eduvista.edu.in</p>
+                <p className="text-slate-600 text-[14px]">admissions@MySchoolLife.edu.in<br/>principal@MySchoolLife.edu.in</p>
               </div>
             </div>
           </div>

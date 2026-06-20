@@ -52,7 +52,7 @@ export default function EmailVerificationPage() {
 
         {/* Glassmorphism Card */}
         <div className="relative z-10 w-full max-w-full sm:w-[500px] bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-6 shadow-2xl">
-          <h2 className="text-xl font-bold text-white mb-6">What's New on Preskool !!!</h2>
+          <h2 className="text-xl font-bold text-white mb-6">What's New on MySchoolLife !!!</h2>
           
           <div className="space-y-3">
             {newsItems.map((item, idx) => (
@@ -77,7 +77,7 @@ export default function EmailVerificationPage() {
             <div className="w-10 h-10 rounded-xl overflow-hidden bg-white shadow-sm shrink-0">
               <img src="/logo.png" alt="Logo" className="w-full h-full object-contain p-1" />
             </div>
-            <span className="text-[24px] font-bold text-slate-800 dark:text-slate-100 tracking-tight">Pre<span className="text-slate-600 dark:text-slate-300">Skool</span></span>
+            <span className="text-[24px] font-bold text-slate-800 dark:text-slate-100 tracking-tight">MySchool<span className="text-[#5D6BEE]">Life</span></span>
           </div>
         </div>
 
@@ -114,7 +114,7 @@ export default function EmailVerificationPage() {
           
           {/* Footer Copyright */}
           <div className="mt-auto pt-8 text-center shrink-0 w-full mb-8">
-            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Copyright © 2024 - Preskool</p>
+            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Copyright © 2024 - MySchoolLife</p>
           </div>
         </div>
       </div>

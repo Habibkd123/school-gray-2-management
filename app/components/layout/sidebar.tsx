@@ -247,7 +247,7 @@ export function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-white tracking-tight text-[15px]">
-                  Preskool
+                  MySchoolLife
                 </span>
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 tracking-wider uppercase">
                   Management

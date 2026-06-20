@@ -215,7 +215,7 @@ export default function MeritListPage() {
 
       {/* Print Header (Only visible when printing) */}
       <div className="hidden print:block text-center mb-8 border-b-2 border-slate-800 pb-6">
-        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-wider mb-2">Preskool Academy</h1>
+        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-wider mb-2">MySchoolLife Academy</h1>
         <div className="mt-4 inline-block bg-slate-800 text-white px-6 py-2 rounded-full font-bold text-[15px] uppercase tracking-widest shadow-sm">
           Merit List
         </div>

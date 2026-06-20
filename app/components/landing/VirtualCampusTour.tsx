@@ -7,7 +7,7 @@ export function VirtualCampusTour() {
       <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 text-center">
-        <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Explore EduVista</h2>
+        <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Explore MySchoolLife</h2>
         <h3 className="text-4xl md:text-5xl font-serif font-bold mb-6 leading-tight">
           Virtual Campus Tour
         </h3>

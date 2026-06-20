@@ -19,7 +19,7 @@ export function Gallery() {
           <div className="max-w-2xl">
             <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Campus Life</h2>
             <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] leading-tight">
-              Life at EduVista
+              Life at MySchoolLife
             </h3>
           </div>
           <button className="hidden md:flex items-center gap-2 font-bold text-[#0F172A] hover:text-[#F59E0B] transition-colors uppercase tracking-wider text-[13px]">
