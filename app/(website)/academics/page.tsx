@@ -1,6 +1,7 @@
 import React from "react";
 import { BookOpen, Users, Calendar, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import ProgramsSlider from "@/app/components/landing/ProgramsSlider";
 
 async function getLanding() {
   try {
@@ -62,18 +63,7 @@ export default async function AcademicsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Programs</h2>
           <h3 className="text-3xl font-serif font-bold text-[#0F172A] mb-10">Classes & Programs</h3>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {programs.map((p: any, i: number) => (
-              <div key={i} className="bg-white rounded-sm border border-slate-200 shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                <div className="h-48 overflow-hidden"><img src={p.img || "https://images.unsplash.com/photo-1587691592099-24045742c181?q=80&w=600&auto=format&fit=crop"} alt={p.title} className="w-full h-full object-cover" /></div>
-                <div className="p-6">
-                  <span className="text-[11px] font-bold text-[#F59E0B] uppercase tracking-widest">{p.age}</span>
-                  <h4 className="text-xl font-bold text-[#0F172A] mt-1 mb-2">{p.title}</h4>
-                  <p className="text-slate-500 text-[13px] leading-relaxed">{p.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ProgramsSlider programs={programs} />
         </div>
       </section>
 
