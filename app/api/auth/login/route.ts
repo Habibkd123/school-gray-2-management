@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import User from "@/lib/models/User";
+import Student from "@/lib/models/Student";
+import Teacher from "@/lib/models/Teacher";
 import { generateAccessToken, generateRefreshToken } from "@/lib/utils/jwt";
 import { validate, validationErrorResponse } from "@/lib/utils/validate";
 
@@ -15,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     // ─── Strict Validation ──────────────────────────────────────
     const errors = validate(body, {
-      email: { required: true, isEmail: true },
+      email: { required: true },
       password: { required: true, minLength: 6 },
       // school_id required only for non-super_admin logins
       ...(isSuperAdminAttempt ? {} : { school_id: { required: true, isMongoId: true } }),
@@ -48,15 +50,50 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Regular login: scoped to school
-      user = await User.findOne({
-        email: email.toLowerCase().trim(),
-        school_id,
-        is_active: true,
-      }).select("+password_hash");
+      const credential = email.toLowerCase().trim();
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credential);
+
+      if (isEmail) {
+        user = await User.findOne({
+          email: credential,
+          school_id,
+          is_active: true,
+        }).select("+password_hash");
+      } else {
+        // Find student with this admission_no
+        const studentDoc = await Student.findOne({
+          school_id,
+          admission_no: { $regex: new RegExp(`^${credential}$`, "i") }
+        }).select("user_id").lean();
+
+        if (studentDoc && studentDoc.user_id) {
+          user = await User.findOne({
+            _id: studentDoc.user_id,
+            school_id,
+            is_active: true,
+          }).select("+password_hash");
+        }
+
+        if (!user) {
+          // Find teacher with this employee_id
+          const teacherDoc = await Teacher.findOne({
+            school_id,
+            employee_id: { $regex: new RegExp(`^${credential}$`, "i") }
+          }).select("user_id").lean();
+
+          if (teacherDoc && teacherDoc.user_id) {
+            user = await User.findOne({
+              _id: teacherDoc.user_id,
+              school_id,
+              is_active: true,
+            }).select("+password_hash");
+          }
+        }
+      }
 
       if (!user) {
         return NextResponse.json(
-          { success: false, message: "Invalid email or password" },
+          { success: false, message: "Invalid ID/email or password" },
           { status: 401 }
         );
       }

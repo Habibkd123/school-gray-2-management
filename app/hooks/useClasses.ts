@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -110,13 +110,15 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
   }, []);
 
   const { academicYear } = useAppState();
+  const authReady = useAuthReady();
 
   useEffect(() => {
     if (options?.skip) return;
+    if (!authReady) return; // Wait until the JWT token is in localStorage
     const params: FetchClassesParams = { limit: 500 };
     if (options?.filterByYear) params.academic_year = academicYear;
     fetchClasses(params);
-  }, [fetchClasses, academicYear, options?.skip, options?.filterByYear]);
+  }, [fetchClasses, academicYear, options?.skip, options?.filterByYear, authReady]);
 
   // ─── Create class ───────────────────────────────────────────────
   const createClass = async (

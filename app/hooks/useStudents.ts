@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -210,14 +210,16 @@ export function useStudents(options?: { skip?: boolean }) {
   }, []);
 
   const { academicYear } = useAppState();
+  const authReady = useAuthReady();
 
   useEffect(() => {
     if (options?.skip) return;
+    if (!authReady) return; // Wait until the JWT token is in localStorage
     fetchStudents({ academic_year: academicYear });
-  }, [fetchStudents, options?.skip, academicYear]);
+  }, [fetchStudents, options?.skip, academicYear, authReady]);
 
   // ─── Create student ─────────────────────────────────────────────
-  const createStudent = async (input: CreateStudentInput): Promise<{ success: boolean; message: string; data?: ApiStudent }> => {
+  const createStudent = async (input: CreateStudentInput): Promise<{ success: boolean; message: string; data?: ApiStudent; credentials?: { loginId: string; password?: string } }> => {
     try {
       const res = await fetch("/api/students", {
         method: "POST",
@@ -233,7 +235,7 @@ export function useStudents(options?: { skip?: boolean }) {
       _cacheTimestamp = Date.now();
       _listeners.forEach(fn => fn(newList));
 
-      return { success: true, message: "Student created successfully", data: data.data };
+      return { success: true, message: "Student created successfully", data: data.data, credentials: data.credentials };
     } catch {
       return { success: false, message: "Network error" };
     }

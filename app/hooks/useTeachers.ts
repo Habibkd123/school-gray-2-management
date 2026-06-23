@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 
 // ─── Types ────────────────────────────────────────────────────────
 export interface ApiTeacher {
@@ -188,6 +188,7 @@ export function useTeachers(options?: { skip?: boolean }) {
   const [total, setTotal] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(_teachersCache === null);
   const [error, setError] = useState<string | null>(null);
+  const authReady = useAuthReady();
 
   // Subscribe to cache broadcasts so all instances stay in sync
   useEffect(() => {
@@ -283,8 +284,9 @@ export function useTeachers(options?: { skip?: boolean }) {
 
   useEffect(() => {
     if (options?.skip) return;
+    if (!authReady) return; // Wait until the JWT token is in localStorage
     fetchTeachers();
-  }, [fetchTeachers, options?.skip]);
+  }, [fetchTeachers, options?.skip, authReady]);
 
   // ─── Create teacher ─────────────────────────────────────────────
   const createTeacher = async (input: CreateTeacherInput): Promise<{ success: boolean; message: string; data?: ApiTeacher }> => {

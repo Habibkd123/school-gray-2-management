@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 
 export interface ApiSubject {
@@ -19,6 +19,7 @@ export function useSubjects(classId?: string, options?: { skip?: boolean }) {
   const [loading, setLoading] = useState(options?.skip ? false : true);
 
   const { academicYear } = useAppState();
+  const authReady = useAuthReady();
 
   const fetchSubjects = useCallback(async () => {
     setLoading(true);
@@ -38,8 +39,9 @@ export function useSubjects(classId?: string, options?: { skip?: boolean }) {
 
   useEffect(() => {
     if (options?.skip) return;
+    if (!authReady) return; // Wait until the JWT token is in localStorage
     fetchSubjects();
-  }, [fetchSubjects, options?.skip]);
+  }, [fetchSubjects, options?.skip, authReady]);
 
   // Deduplicate by name so dropdowns never show the same subject twice
   // (subjects are stored per-section so classId queries return duplicates)

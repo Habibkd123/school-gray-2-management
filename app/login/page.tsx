@@ -35,7 +35,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    if (!email.trim()) { setError("Email is required"); return; }
+    if (!email.trim()) { setError("Email or Employee ID is required"); return; }
     if (!password) { setError("Password is required"); return; }
 
     setIsLoading(true);
@@ -107,15 +107,15 @@ export default function LoginPage() {
             <form onSubmit={handleLogin} className="space-y-4" noValidate>
               {/* Email */}
               <div className="space-y-1.5">
-                <label className="text-[13px] font-bold text-slate-900 dark:text-slate-100">Email Address</label>
+                <label className="text-[13px] font-bold text-slate-900 dark:text-slate-100">Email or Employee ID</label>
                 <div className="relative">
                   <input
                     id="login-email"
-                    type="email"
-                    autoComplete="email"
+                    type="text"
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => { setEmail(e.target.value); setError(""); }}
-                    placeholder="admin@school.com"
+                    placeholder="e.g., admin@school.com or EMP0001"
                     className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[13px] outline-none focus:border-primary dark:focus:border-primary transition-colors text-slate-800 dark:text-slate-100 placeholder:text-slate-400"
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-slate-400">

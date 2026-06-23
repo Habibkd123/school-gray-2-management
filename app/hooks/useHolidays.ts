@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 
 export interface ApiHoliday {
   _id: string;
@@ -19,6 +19,7 @@ export function useHolidays(options?: { skip?: boolean }) {
   const [holidays, setHolidays] = useState<ApiHoliday[]>([]);
   const [isLoading, setIsLoading] = useState(options?.skip ? false : true);
   const [error, setError] = useState<string | null>(null);
+  const authReady = useAuthReady();
 
   const fetchHolidays = useCallback(async () => {
     setIsLoading(true);
@@ -39,8 +40,9 @@ export function useHolidays(options?: { skip?: boolean }) {
 
   useEffect(() => {
     if (options?.skip) return;
+    if (!authReady) return; // Wait until the JWT token is in localStorage
     fetchHolidays();
-  }, [fetchHolidays, options?.skip]);
+  }, [fetchHolidays, options?.skip, authReady]);
 
   const createHoliday = async (payload: Partial<ApiHoliday>) => {
     try {

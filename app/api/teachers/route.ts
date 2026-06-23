@@ -5,6 +5,20 @@ import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
+const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG || "school";
+
+function generateTeacherLoginEmail(name: string, dob?: string): string {
+  const namePart = name.toLowerCase().trim().replace(/\s+/g, "");
+  let dobDay = "";
+  if (dob) {
+    const d = new Date(dob);
+    if (!isNaN(d.getTime())) {
+      dobDay = String(d.getDate());
+    }
+  }
+  return `${namePart}${dobDay}.${SCHOOL_SLUG}@gmail.com`;
+}
+
 // GET: Fetch all teachers for the logged-in user's school
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
@@ -135,19 +149,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Name is required" }, { status: 400 });
     }
 
+    // Always generate login email for teacher
+    const teacherLoginEmail = generateTeacherLoginEmail(name.trim(), dob);
+
     // Check if email already exists in User table
     let userId = undefined;
-    if (email) {
-      const existingUser = await User.findOne({ email: email.toLowerCase().trim(), school_id: schoolId });
-      if (existingUser) {
-        return NextResponse.json({ success: false, message: "Email already exists" }, { status: 400 });
-      }
-
+    const existingUser = await User.findOne({ email: teacherLoginEmail, school_id: schoolId });
+    if (existingUser) {
+      userId = existingUser._id;
+    } else {
       // Create user
       const user = await User.create({
         school_id: schoolId as string,
         name: name.trim(),
-        email: email.trim(),
+        email: teacherLoginEmail,
         password_hash: password || "password123", // use provided password or default
         role: "teacher",
         is_active: true,
@@ -165,7 +180,7 @@ export async function POST(req: NextRequest) {
       gender,
       dob: dob ? new Date(dob) : undefined,
       phone: phone?.trim(),
-      email: email?.trim().toLowerCase(),
+      email: email?.trim().toLowerCase() || teacherLoginEmail,
       address: address?.trim(),
       photo_url,
       blood_group: blood_group?.trim(),

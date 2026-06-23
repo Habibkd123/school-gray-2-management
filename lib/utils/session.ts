@@ -62,3 +62,43 @@ export const getAuthHeaders = (): HeadersInit => {
   const token = getAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
+
+// ─── useAuthReady ─────────────────────────────────────────────────
+// Returns true once the access token has been found in localStorage.
+// Hooks should skip their initial fetch until this is true to prevent
+// race conditions where the API call fires before the session is restored
+// (causing 401 / empty responses on first page load).
+import { useState, useEffect } from "react";
+
+export function useAuthReady(): boolean {
+  const [ready, setReady] = useState<boolean>(() => {
+    // On the server this is always false; on the client we can check immediately.
+    if (typeof window === "undefined") return false;
+    return !!localStorage.getItem(KEYS.ACCESS_TOKEN);
+  });
+
+  useEffect(() => {
+    if (ready) return; // Already confirmed — no polling needed.
+
+    // Poll every 50 ms until the token appears (handles SSR hydration gap).
+    const id = setInterval(() => {
+      if (localStorage.getItem(KEYS.ACCESS_TOKEN)) {
+        setReady(true);
+        clearInterval(id);
+      }
+    }, 50);
+
+    // Give up after 5 s to avoid infinite polling on unauthenticated pages.
+    const timeout = setTimeout(() => {
+      clearInterval(id);
+      setReady(true); // Let hooks run anyway — they'll get a 401 and handle it.
+    }, 5000);
+
+    return () => {
+      clearInterval(id);
+      clearTimeout(timeout);
+    };
+  }, [ready]);
+
+  return ready;
+}

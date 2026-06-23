@@ -223,20 +223,14 @@ export async function POST(request: NextRequest) {
       finalAdmissionNo = `ADM${String(maxNum + 1).padStart(4, "0")}`;
     }
 
-    // Determine login email for student (custom email or auto-generated)
-    const studentLoginEmail = email?.trim().toLowerCase() || generateStudentLoginEmail(name.trim(), dob);
+    // Determine login email for student (always auto-generated in custom format)
+    const studentLoginEmail = generateStudentLoginEmail(name.trim(), dob);
 
     // Check if email already exists in User table
     let userId = undefined;
     {
       const existingUser = await User.findOne({ email: studentLoginEmail, school_id: schoolId });
       if (existingUser) {
-        // If using a custom email and it's taken, reject
-        if (email?.trim()) {
-          return NextResponse.json({ success: false, message: "Email already exists" }, { status: 400 });
-        }
-        // For auto-generated email collision, append admission number suffix later
-        // For now just reuse the user (edge case)
         userId = existingUser._id;
       } else {
         // Generate default password based on DOB (DDMMYY format)
@@ -340,7 +334,7 @@ export async function POST(request: NextRequest) {
       user_id: userId,
       parent_id: parentId,
       name: name.trim(),
-      email: studentLoginEmail,
+      email: email?.trim().toLowerCase() || studentLoginEmail,
       class_id,
       roll_no: roll_no?.trim() || undefined,
       gender,
@@ -395,8 +389,28 @@ export async function POST(request: NextRequest) {
 
     const populated = await Student.findById(student._id).populate("class_id", "name section").lean();
 
+    // Generate password format for credentials output display (DDMMYY)
+    let studentPassword = "student123";
+    if (dob) {
+      const dateObj = new Date(dob);
+      if (!isNaN(dateObj.getTime())) {
+        const day = String(dateObj.getDate()).padStart(2, "0");
+        const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+        const yy = dateObj.getFullYear().toString().slice(-2);
+        studentPassword = `${day}${month}${yy}`;
+      }
+    }
+
     return NextResponse.json(
-      { success: true, message: "Student created successfully", data: populated },
+      {
+        success: true,
+        message: "Student created successfully",
+        data: populated,
+        credentials: {
+          loginId: studentLoginEmail,
+          password: studentPassword,
+        }
+      },
       { status: 201 }
     );
   } catch (err: unknown) {

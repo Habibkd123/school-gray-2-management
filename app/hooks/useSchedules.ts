@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 
 export interface ApiSchedule {
   _id: string;
@@ -31,6 +31,7 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
   const [schedules, setSchedules] = useState<ApiSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(options?.skip ? false : true);
   const [error, setError] = useState<string | null>(null);
+  const authReady = useAuthReady();
 
   const fetchSchedules = useCallback(async (cId?: string, tId?: string) => {
     setIsLoading(true);
@@ -58,8 +59,9 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
 
   useEffect(() => {
     if (options?.skip) return;
+    if (!authReady) return; // Wait until the JWT token is in localStorage
     fetchSchedules(classId, teacherId);
-  }, [fetchSchedules, classId, teacherId, options?.skip]);
+  }, [fetchSchedules, classId, teacherId, options?.skip, authReady]);
 
   const createSchedule = async (input: {
     classId: string;

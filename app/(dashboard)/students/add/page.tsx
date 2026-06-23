@@ -590,20 +590,10 @@ function AddStudentContent() {
       } else {
         result = await createStudent(payload as any);
         if (result?.success !== false) {
-          // Build login credentials to show in popup
-          const loginId = generateLoginId(firstName || studentName, dob);
-          // Password: DDMMYY format from DOB
-          let password = "student123";
-          if (dob) {
-            const dobDate = new Date(dob);
-            if (!isNaN(dobDate.getTime())) {
-              const dd = String(dobDate.getDate()).padStart(2, "0");
-              const mm = String(dobDate.getMonth() + 1).padStart(2, "0");
-              const yy = dobDate.getFullYear().toString().slice(-2);
-              password = `${dd}${mm}${yy}`;
-            }
-          }
-          setCreatedCredentials({ loginId: email || loginId, password });
+          // Use credentials returned directly from the API response
+          const loginId = result?.credentials?.loginId || generateLoginId(firstName || studentName, dob);
+          const password = result?.credentials?.password || "student123";
+          setCreatedCredentials({ loginId, password });
           setShowCredentials(true);
         } else {
           alert(result.message || "Failed to save student");

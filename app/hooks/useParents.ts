@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { IParent } from "@/lib/models/Parent";
 import { IStudent } from "@/lib/models/Student";
 
@@ -12,10 +12,12 @@ export function useParents() {
   const [parents, setParents] = useState<ApiParent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const authReady = useAuthReady();
 
   useEffect(() => {
+    if (!authReady) return; // Wait until JWT token is available
     fetchParents();
-  }, []);
+  }, [authReady]);
 
   const fetchParents = async () => {
     setIsLoading(true);
