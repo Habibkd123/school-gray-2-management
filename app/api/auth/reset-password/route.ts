@@ -37,7 +37,8 @@ export async function POST(request: NextRequest) {
     }
 
     // ─── Update password & clear token ───────────────────────────
-    user.password_hash = password; // pre-save hook will hash it
+    user.password_hash = password; // pre-save hook will bcrypt this
+    user.plain_password = password;
     user.reset_token = undefined;
     user.reset_token_expiry = undefined;
     await user.save();

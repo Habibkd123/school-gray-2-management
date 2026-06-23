@@ -92,6 +92,7 @@ export async function POST(request: NextRequest) {
           email: normalizedEmail,
           role: "parent",
           password_hash: "Parent@123", 
+          plain_password: "Parent@123",
         });
         userId = newUser._id;
       }

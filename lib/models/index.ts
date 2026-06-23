@@ -29,6 +29,45 @@ const subjectSchema = new Schema<ISubject>(
 
 subjectSchema.index({ school_id: 1, class_id: 1, name: 1 }, { unique: true });
 
+// ─── Syllabus ──────────────────────────────────────────────────────
+export interface ISyllabusChapter {
+  title: string;
+  description?: string;
+  hours_allocated?: number;
+  status: "pending" | "in_progress" | "completed";
+}
+
+export interface ISyllabus extends Document {
+  school_id: mongoose.Types.ObjectId;
+  class_id: mongoose.Types.ObjectId;
+  subject_id: mongoose.Types.ObjectId;
+  chapters: ISyllabusChapter[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const syllabusChapterSchema = new Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    description: { type: String, trim: true },
+    hours_allocated: { type: Number, default: 0 },
+    status: { type: String, enum: ["pending", "in_progress", "completed"], default: "pending" },
+  },
+  { _id: false }
+);
+
+const syllabusSchema = new Schema<ISyllabus>(
+  {
+    school_id: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true, index: true },
+    class_id: { type: mongoose.Schema.Types.ObjectId, ref: "Class", required: true },
+    subject_id: { type: mongoose.Schema.Types.ObjectId, ref: "Subject", required: true },
+    chapters: [syllabusChapterSchema],
+  },
+  { timestamps: true }
+);
+
+syllabusSchema.index({ school_id: 1, class_id: 1, subject_id: 1 }, { unique: true });
+
 // ─── Timetable ────────────────────────────────────────────────────
 export interface ITimetable extends Document {
   school_id: mongoose.Types.ObjectId;
@@ -380,6 +419,7 @@ roomSchema.index({ school_id: 1, room_no: 1 }, { unique: true });
 
 // ─── Export all models (with cache check for Next.js hot reload) ──
 export const Subject: Model<ISubject> = mongoose.models.Subject || mongoose.model("Subject", subjectSchema);
+export const Syllabus: Model<ISyllabus> = mongoose.models.Syllabus || mongoose.model("Syllabus", syllabusSchema);
 export const Timetable: Model<ITimetable> = mongoose.models.Timetable || mongoose.model("Timetable", timetableSchema);
 export const Attendance: Model<IAttendance> = mongoose.models.Attendance || mongoose.model("Attendance", attendanceSchema);
 export const Homework: Model<IHomework> = mongoose.models.Homework || mongoose.model("Homework", homeworkSchema);

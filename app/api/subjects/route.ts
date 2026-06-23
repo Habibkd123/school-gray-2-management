@@ -72,7 +72,10 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    const subjects = await Subject.find(query).sort({ name: 1 }).lean();
+    const subjects = await Subject.find(query)
+      .populate("class_id", "name section")
+      .sort({ name: 1 })
+      .lean();
     return NextResponse.json({ success: true, data: { subjects } });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
@@ -113,10 +116,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // class_id is required by model — if not provided use a placeholder
-    const effectiveClassId = class_id && mongoose.Types.ObjectId.isValid(class_id)
-      ? class_id
-      : new mongoose.Types.ObjectId();
+    if (!class_id || !mongoose.Types.ObjectId.isValid(class_id)) {
+      return NextResponse.json({ success: false, message: "Class ID is required and must be valid" }, { status: 400 });
+    }
+
+    const effectiveClassId = class_id;
 
     const subject = await Subject.create({
       school_id: schoolId as string,

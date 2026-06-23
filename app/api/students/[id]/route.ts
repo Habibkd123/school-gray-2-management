@@ -26,13 +26,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     const student = await Student.findOne({ _id: id, school_id: schoolId })
       .populate("class_id", "name section")
-      .populate("user_id", "name email role is_active")
+      .populate("user_id", "name email role is_active plain_password")
       .populate({
         path: "parent_id",
         select: "name phone email relation photo_url user_id",
         populate: {
           path: "user_id",
-          select: "name email role is_active"
+          select: "name email role is_active plain_password"
         }
       })
       .lean();

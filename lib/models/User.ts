@@ -8,6 +8,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password_hash: string;
+  plain_password?: string;
   role: UserRole;
   is_active: boolean;
   must_change_password: boolean; // true = first login, force password change
@@ -30,6 +31,7 @@ const userSchema = new Schema<IUser>(
     name: { type: String, required: [true, "Name is required"], trim: true },
     email: { type: String, required: [true, "Email is required"], lowercase: true, trim: true },
     password_hash: { type: String, required: true, select: false }, // Never returned by default
+    plain_password: { type: String, default: null },
     role: {
       type: String,
       enum: ["super_admin", "school_admin", "accountant", "teacher", "student", "parent"],

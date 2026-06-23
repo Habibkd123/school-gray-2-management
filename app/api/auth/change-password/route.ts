@@ -62,6 +62,7 @@ export async function POST(request: NextRequest) {
 
     // ─── Update password (pre-save hook will hash it) ─────────────
     dbUser.password_hash = new_password;
+    dbUser.plain_password = new_password;
     // ─── Clear first-login flag if set ────────────────────────────
     if (dbUser.must_change_password) {
       dbUser.must_change_password = false;

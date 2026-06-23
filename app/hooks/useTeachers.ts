@@ -28,6 +28,7 @@ export interface ApiTeacher {
   languages?: string[];
   is_active: boolean;
   class_id?: { _id: string; name: string; section: string } | string;
+  class_ids?: Array<{ _id: string; name: string; section: string } | string>;
   /** alias for class_id */
   classId?: string;
   department?: string;
@@ -109,6 +110,7 @@ export interface CreateTeacherInput {
   languages?: string[];
   password?: string;
   class_id?: string;
+  class_ids?: string[];
 
   // Family Info
   father_name?: string;

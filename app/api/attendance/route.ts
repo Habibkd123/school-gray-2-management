@@ -147,6 +147,32 @@ export async function POST(req: NextRequest) {
     const endOfDay = new Date(date);
     endOfDay.setUTCHours(23, 59, 59, 999);
 
+    // Check if record already exists
+    const filter: any = {
+      school_id: new mongoose.Types.ObjectId(schoolId as string),
+      date: { $gte: startOfDay, $lte: endOfDay },
+      type,
+    };
+    if (type === "student") {
+      filter.class_id = new mongoose.Types.ObjectId(classId);
+    }
+
+    const existingRecord = await Attendance.findOne(filter);
+
+    // Date check: requestDateStr vs Today (local and UTC)
+    const requestDateStr = date;
+    const d = new Date();
+    const localToday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const utcToday = d.toISOString().split("T")[0];
+    const isToday = (requestDateStr === localToday || requestDateStr === utcToday);
+
+    if (!existingRecord && !isToday) {
+      return NextResponse.json(
+        { success: false, message: "Attendance can only be marked for today. Past records cannot be created." },
+        { status: 400 }
+      );
+    }
+
     // Find the teacher ID if marked by a teacher
     let markedBy = userId;
     if (role === "teacher") {
@@ -162,16 +188,6 @@ export async function POST(req: NextRequest) {
       status: r.status.toLowerCase(), // frontend "Present" -> backend "present"
       note: r.note || null,
     }));
-
-    // Check if record already exists
-    const filter: any = {
-      school_id: new mongoose.Types.ObjectId(schoolId as string),
-      date: { $gte: startOfDay, $lte: endOfDay },
-      type,
-    };
-    if (type === "student") {
-      filter.class_id = new mongoose.Types.ObjectId(classId);
-    }
 
     const update: any = {
       $set: {

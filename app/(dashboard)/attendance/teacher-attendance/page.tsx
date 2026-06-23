@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  Search, List, ChevronDown, RefreshCw, Printer, Download, FileText, Calendar, Loader2, Save
+  Search, List, ChevronDown, RefreshCw, Printer, Download, FileText, Calendar, Loader2, Save, ShieldAlert
 } from "lucide-react";
 import { useTeachers } from "../../../hooks/useTeachers";
 import { useAttendanceSummary } from "../../../hooks/useAttendanceSummary";
@@ -44,11 +44,23 @@ export default function TeacherAttendancePage() {
   const [selectedDateRange, setSelectedDateRange] = useState("Today");
   const [isSaving, setIsSaving] = useState(false);
   const [localRecords, setLocalRecords] = useState<Record<string, LocalRecord>>({});
-  
+  const [hasExistingRecord, setHasExistingRecord] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState(false);
+  const [dbRecords, setDbRecords] = useState<Record<string, string>>({});
+
   const { fetchSummary, isLoading: summaryLoading } = useAttendanceSummary();
   const [summaryData, setSummaryData] = useState<Record<string, any>>({});
 
   const isReportMode = !["Today", "Yesterday"].includes(selectedDateRange);
+
+  const targetDate = useMemo(() => {
+    const d = new Date();
+    if (selectedDateRange === "Yesterday") d.setDate(d.getDate() - 1);
+    return d.toISOString().split("T")[0];
+  }, [selectedDateRange]);
+
+  const isToday = selectedDateRange === "Today";
+  const canMark = isToday || hasExistingRecord;
 
   // Fetch summary data in report mode
   React.useEffect(() => {
@@ -58,10 +70,10 @@ export default function TeacherAttendancePage() {
       if (selectedDateRange === "Last 7 Days") start.setDate(start.getDate() - 7);
       else if (selectedDateRange === "Last 30 Days") start.setDate(start.getDate() - 30);
       else if (selectedDateRange === "This Year") start.setMonth(0, 1);
-      
+
       const startDate = start.toISOString().split("T")[0];
       const endDate = end.toISOString().split("T")[0];
-      
+
       fetchSummary(startDate, endDate, "teacher").then(data => {
         if (data) setSummaryData(data);
       });
@@ -72,37 +84,50 @@ export default function TeacherAttendancePage() {
   React.useEffect(() => {
     if (!isReportMode) {
       const loadAttendance = async () => {
+        setLoadingExisting(true);
         try {
-          const targetDate = selectedDateRange === "Yesterday"
-            ? (() => { const d = new Date(); d.setDate(d.getDate() - 1); return d.toISOString().split("T")[0]; })()
-            : new Date().toISOString().split("T")[0];
-
           const { getAuthHeaders } = await import("@/lib/utils/session");
           const res = await fetch(`/api/attendance?date=${targetDate}&type=teacher`, {
             headers: getAuthHeaders(),
           });
           const data = await res.json();
-          if (res.ok && data.success && data.data && data.data.records) {
+          if (res.ok && data.success && data.data && data.data.records && data.data.records.length > 0) {
             const recordsMap: Record<string, LocalRecord> = {};
+            const dbMap: Record<string, string> = {};
             data.data.records.forEach((r: any) => {
+              if (!r.student_id) return;
               const teacherId = typeof r.student_id === "object" ? r.student_id._id : r.student_id;
+              if (!teacherId) return;
               recordsMap[teacherId] = {
                 teacherId,
                 status: r.status,
                 notes: r.note || "",
               };
+              dbMap[teacherId] = r.status;
             });
             setLocalRecords(recordsMap);
+            setDbRecords(dbMap);
+            setHasExistingRecord(true);
           } else {
             setLocalRecords({});
+            setDbRecords({});
+            setHasExistingRecord(false);
           }
         } catch (err) {
           console.error("Failed to load existing attendance:", err);
+          setLocalRecords({});
+          setDbRecords({});
+          setHasExistingRecord(false);
+        } finally {
+          setLoadingExisting(false);
         }
       };
       loadAttendance();
+    } else {
+      setLocalRecords({});
+      setHasExistingRecord(false);
     }
-  }, [selectedDateRange, isReportMode]);
+  }, [selectedDateRange, isReportMode, targetDate]);
 
   const filteredData = teachers.filter(
     (t) =>
@@ -146,6 +171,10 @@ export default function TeacherAttendancePage() {
   };
 
   const handleSave = async () => {
+    if (!canMark) {
+      alert("Attendance cannot be marked for this date.");
+      return;
+    }
     setIsSaving(true);
     // Teacher attendance uses same endpoint with type=teacher
     const records = teachers.map((t) => {
@@ -157,19 +186,23 @@ export default function TeacherAttendancePage() {
       const res = await fetch("/api/attendance", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ 
-          classId: "teacher", 
-          date: (() => {
-            const d = new Date();
-            if (selectedDateRange === "Yesterday") d.setDate(d.getDate() - 1);
-            return d.toISOString().split("T")[0];
-          })(), 
-          type: "teacher", 
-          records 
+        body: JSON.stringify({
+          classId: "teacher",
+          date: targetDate,
+          type: "teacher",
+          records
         }),
       });
       const data = await res.json();
-      if (res.ok && data.success) alert("Attendance saved successfully!");
+      if (res.ok && data.success) {
+        alert("Attendance saved successfully!");
+        setHasExistingRecord(true);
+        const dbMap: Record<string, string> = {};
+        teachers.forEach((t) => {
+          dbMap[t._id] = getRecord(t._id).status;
+        });
+        setDbRecords(dbMap);
+      }
       else alert(data.message || "Failed to save attendance.");
     } catch {
       alert("Failed to save attendance.");
@@ -188,7 +221,7 @@ export default function TeacherAttendancePage() {
       },
       {} as Record<string, number>
     );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teachers, localRecords]);
 
   return (
@@ -234,7 +267,7 @@ export default function TeacherAttendancePage() {
           {!isReportMode && (
             <button
               onClick={handleSave}
-              disabled={isSaving || teachers.length === 0}
+              disabled={isSaving || teachers.length === 0 || !canMark}
               className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold rounded-lg shadow-sm flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -244,9 +277,16 @@ export default function TeacherAttendancePage() {
         </div>
       </div>
 
+      {!teachersLoading && !loadingExisting && !isReportMode && !canMark && (
+        <div className="p-4 border border-rose-200 dark:border-rose-800/40 bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 rounded-xl flex items-center gap-2.5 text-[13.5px] font-semibold text-left">
+          <ShieldAlert className="w-4.5 h-4.5 shrink-0 text-rose-500" />
+          <span>Past attendance records cannot be created. You can only view them as no record exists for this date.</span>
+        </div>
+      )}
+
       {/* Summary stats */}
       {teachers.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 sm:grid-cols-5 gap-3">
           {STATUS_OPTIONS.map((opt) => (
             <div key={opt.value} className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm text-center">
               <div className={`w-2.5 h-2.5 rounded-full ${statusDot[opt.value]} mx-auto mb-2`} />
@@ -260,16 +300,25 @@ export default function TeacherAttendancePage() {
       {/* Main Content */}
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Teacher Attendance List</h2>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Teacher Attendance List</h2>
+            {!isReportMode && canMark && (
+              <span className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full border ${hasExistingRecord
+                ? "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/20 dark:border-amber-800/40 dark:text-amber-400"
+                : "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-800/40 dark:text-emerald-400"
+              }`}>
+                {hasExistingRecord ? "Editing Existing" : "New Register"}
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Date Range Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setIsDateRangeOpen(!isDateRangeOpen)}
-                className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${
-                  selectedDateRange !== "Today" ? "border-[#F59E0B] bg-[#FFF9E6] dark:bg-[#F59E0B]/10" : "border-border"
-                }`}
+                className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors ${selectedDateRange !== "Today" ? "border-[#F59E0B] bg-[#FFF9E6] dark:bg-[#F59E0B]/10" : "border-border"
+                  }`}
               >
                 <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <span className="whitespace-nowrap">{selectedDateRange}</span>
@@ -282,11 +331,10 @@ export default function TeacherAttendancePage() {
                       <button
                         key={item}
                         onClick={() => { setSelectedDateRange(item); setIsDateRangeOpen(false); }}
-                        className={`w-full px-4 py-2 text-[13px] text-left transition-colors ${
-                          item === selectedDateRange
-                            ? "bg-[#F59E0B] text-white font-semibold"
-                            : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        }`}
+                        className={`w-full px-4 py-2 text-[13px] text-left transition-colors ${item === selectedDateRange
+                          ? "bg-[#F59E0B] text-white font-semibold"
+                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          }`}
                       >
                         {item}
                       </button>
@@ -300,9 +348,8 @@ export default function TeacherAttendancePage() {
             <div className="relative">
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
-                className={`px-3 py-2 bg-white dark:bg-slate-900 border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer ${
-                  selectedSort !== "A–Z by Name" ? "border-[#F59E0B] bg-[#FFF9E6] dark:bg-[#F59E0B]/10" : "border-border"
-                }`}
+                className={`px-3 py-2 bg-white dark:bg-slate-900 border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer ${selectedSort !== "A–Z by Name" ? "border-[#F59E0B] bg-[#FFF9E6] dark:bg-[#F59E0B]/10" : "border-border"
+                  }`}
               >
                 <List className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Sort: {selectedSort} <ChevronDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
               </button>
@@ -314,11 +361,10 @@ export default function TeacherAttendancePage() {
                       <button
                         key={item}
                         onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
-                        className={`w-full px-4 py-2.5 text-[13px] text-left transition-colors cursor-pointer ${
-                          item === selectedSort
-                            ? "bg-[#F59E0B] text-white font-semibold"
-                            : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        }`}
+                        className={`w-full px-4 py-2.5 text-[13px] text-left transition-colors cursor-pointer ${item === selectedSort
+                          ? "bg-[#F59E0B] text-white font-semibold"
+                          : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          }`}
                       >
                         {item}
                       </button>
@@ -376,7 +422,7 @@ export default function TeacherAttendancePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {teachersLoading || summaryLoading ? (
+              {teachersLoading || summaryLoading || loadingExisting ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-10 text-center text-slate-400">
                     <Loader2 className="w-5 h-5 animate-spin inline" />
@@ -405,7 +451,28 @@ export default function TeacherAttendancePage() {
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[12px] flex-shrink-0">
                           {item.name.charAt(0)}
                         </div>
-                        <span className="text-slate-700 dark:text-slate-200 font-bold">{item.name}</span>
+                        <div className="flex flex-col">
+                          <span className="text-slate-700 dark:text-slate-200 font-bold">{item.name}</span>
+                          {!isReportMode && (
+                            <div className="mt-1 flex">
+                              {hasExistingRecord ? (
+                                rec.status === dbRecords[item._id] ? (
+                                  <span className="text-[9px] bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 px-1 py-0.2 rounded font-semibold">
+                                    ✓ Saved
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 px-1 py-0.2 rounded font-semibold">
+                                    ⚠ Unsaved
+                                  </span>
+                                )
+                              ) : (
+                                <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 px-1 py-0.2 rounded font-semibold">
+                                  New
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
@@ -416,19 +483,20 @@ export default function TeacherAttendancePage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-4">
                             {STATUS_OPTIONS.map((opt) => (
-                              <label key={opt.value} className="flex items-center gap-2 cursor-pointer group">
+                              <label key={opt.value} className={`flex items-center gap-2 group ${!canMark ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
                                 <div className="relative flex items-center justify-center">
                                   <input
                                     type="radio"
                                     name={`attendance-${item._id}`}
                                     value={opt.value}
                                     checked={rec.status === opt.value}
-                                    onChange={() => setStatus(item._id, opt.value)}
+                                    onChange={() => canMark && setStatus(item._id, opt.value)}
+                                    disabled={!canMark}
                                     className="peer sr-only"
                                   />
-                                  <div className="w-4 h-4 rounded-full border border-slate-300 dark:border-slate-600 peer-checked:border-[#F59E0B] peer-checked:border-[4px] transition-all" />
+                                  <div className={`w-4 h-4 rounded-full border transition-all ${rec.status === opt.value ? "border-[#F59E0B] border-[4px]" : "border-slate-300 dark:border-slate-600"}`} />
                                 </div>
-                                <span className="text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{opt.label}</span>
+                                <span className={`text-slate-700 dark:text-slate-300 transition-colors ${!canMark ? "" : "group-hover:text-slate-900 dark:group-hover:text-white"}`}>{opt.label}</span>
                               </label>
                             ))}
                           </div>
@@ -438,8 +506,9 @@ export default function TeacherAttendancePage() {
                             type="text"
                             value={rec.notes}
                             onChange={(e) => setNotes(item._id, e.target.value)}
-                            placeholder="Add notes..."
-                            className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-[13px] outline-none focus:border-[#F59E0B] focus:bg-white dark:focus:bg-slate-900 transition-all placeholder:text-slate-400"
+                            disabled={!canMark}
+                            placeholder={canMark ? "Add notes..." : ""}
+                            className={`w-full border rounded-lg px-3 py-1.5 text-[13px] outline-none transition-all placeholder:text-slate-400 ${!canMark ? "bg-slate-100 dark:bg-slate-800/20 border-slate-200 dark:border-slate-700 opacity-60 cursor-not-allowed" : "bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:border-[#F59E0B] focus:bg-white dark:focus:bg-slate-900"}`}
                           />
                         </td>
                       </>

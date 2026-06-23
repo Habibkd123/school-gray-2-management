@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     const parent = await Parent.findOne({ _id: id, school_id: schoolId })
-      .populate("user_id", "name email role is_active")
+      .populate("user_id", "name email role is_active plain_password")
       .lean();
 
     if (!parent) {

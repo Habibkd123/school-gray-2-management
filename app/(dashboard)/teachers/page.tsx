@@ -113,6 +113,16 @@ export default function TeachersPage() {
   };
 
   const getClassName = (teacher: ApiTeacher) => {
+    if (teacher.class_ids && Array.isArray(teacher.class_ids) && teacher.class_ids.length > 0) {
+      return teacher.class_ids
+        .map((cls: any) => {
+          if (typeof cls === "object" && cls) {
+            return cls.section ? `${cls.name} - ${cls.section}` : cls.name;
+          }
+          return "Class";
+        })
+        .join(", ");
+    }
     if (teacher.class_id && typeof teacher.class_id === "object") {
       return teacher.class_id.section 
         ? `${teacher.class_id.name} - ${teacher.class_id.section}`

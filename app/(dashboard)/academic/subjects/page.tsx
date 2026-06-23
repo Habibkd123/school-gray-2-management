@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Modal } from "../../../components/ui/modal";
 import { useSubjects } from "@/app/hooks/useSubjects";
+import { useClasses } from "../../../hooks/useClasses";
 import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar";
 
 const DATE_RANGES = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year", "All Time", "Custom Range"] as const;
@@ -49,7 +50,8 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
 }
 
 export default function SubjectsPage() {
-  const { subjects, loading, createSubject, updateSubject, deleteSubject } = useSubjects();
+  const { subjects, loading, createSubject, updateSubject, deleteSubject } = useSubjects(undefined, { all: true });
+  const { classes } = useClasses();
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -95,19 +97,22 @@ export default function SubjectsPage() {
   const [formName, setFormName] = useState("");
   const [formCode, setFormCode] = useState("");
   const [formType, setFormType] = useState<"theory" | "practical">("theory");
+  const [formClassId, setFormClassId] = useState("");
 
   const openAddModal = () => {
     setFormName("");
     setFormCode("");
     setFormType("theory");
+    setFormClassId("");
     setIsAddOpen(true);
   };
 
-  const openEditModal = (subject: (typeof subjects)[0]) => {
+  const openEditModal = (subject: any) => {
     setSelectedSubjectId(subject._id);
     setFormName(subject.name);
     setFormCode(subject.code || "");
     setFormType(subject.type === "practical" ? "practical" : "theory");
+    setFormClassId(subject.class_id && typeof subject.class_id === "object" ? subject.class_id._id : subject.class_id || "");
     setIsEditOpen(true);
     setActionMenuId(null);
   };
@@ -121,8 +126,12 @@ export default function SubjectsPage() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formClassId) {
+      alert("Please select a Class");
+      return;
+    }
     setSaving(true);
-    await createSubject({ name: formName, code: formCode, type: formType });
+    await createSubject({ name: formName, code: formCode, type: formType, class_id: formClassId });
     setSaving(false);
     setIsAddOpen(false);
   };
@@ -130,8 +139,12 @@ export default function SubjectsPage() {
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSubjectId) return;
+    if (!formClassId) {
+      alert("Please select a Class");
+      return;
+    }
     setSaving(true);
-    await updateSubject(selectedSubjectId, { name: formName, code: formCode, type: formType });
+    await updateSubject(selectedSubjectId, { name: formName, code: formCode, type: formType, class_id: formClassId });
     setSaving(false);
     setIsEditOpen(false);
   };
@@ -179,12 +192,13 @@ export default function SubjectsPage() {
       return matchesSearch && matchesType && matchesDate;
     });
 
-    // Deduplicate: same name+code+type = one row, collect all IDs
-    const map = new Map<string, { key: string; ids: string[]; name: string; code: string; type: string; full_marks: number; createdAt?: string }>();
+    // Deduplicate: same name+code+type+class = one row, collect all IDs
+    const map = new Map<string, { key: string; ids: string[]; name: string; code: string; type: string; class_id: any; full_marks: number; createdAt?: string }>();
     for (const s of filtered) {
-      const key = `${s.name}__${s.code || ""}__${s.type}`;
+      const cid = s.class_id && typeof s.class_id === "object" ? s.class_id._id : s.class_id;
+      const key = `${s.name}__${s.code || ""}__${s.type}__${cid || ""}`;
       if (!map.has(key)) {
-        map.set(key, { key, ids: [], name: s.name, code: s.code || "", type: s.type, full_marks: s.full_marks, createdAt: s.createdAt });
+        map.set(key, { key, ids: [], name: s.name, code: s.code || "", type: s.type, class_id: s.class_id, full_marks: s.full_marks, createdAt: s.createdAt });
       }
       map.get(key)!.ids.push(s._id);
     }
@@ -409,6 +423,7 @@ export default function SubjectsPage() {
                   <input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] cursor-pointer" />
                 </th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Name</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Code</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Type</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Full Marks</th>
@@ -418,14 +433,14 @@ export default function SubjectsPage() {
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center">
+                  <td colSpan={7} className="px-6 py-16 text-center">
                     <Loader2 className="w-8 h-8 animate-spin text-[#F59E0B] mx-auto" />
                     <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading subjects...</p>
                   </td>
                 </tr>
               ) : pag.paged.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center text-slate-500 dark:text-slate-400 text-[13px]">
+                  <td colSpan={7} className="px-6 py-16 text-center text-slate-500 dark:text-slate-400 text-[13px]">
                     No subjects found. Click "Add Subject" to create one.
                   </td>
                 </tr>
@@ -435,6 +450,11 @@ export default function SubjectsPage() {
                     <input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] cursor-pointer" />
                   </td>
                   <td className="px-6 py-4 font-semibold text-slate-800 dark:text-slate-100">{subject.name}</td>
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                    {subject.class_id && typeof subject.class_id === "object"
+                      ? (subject.class_id.section ? `${subject.class_id.name} - ${subject.class_id.section}` : subject.class_id.name)
+                      : subject.class_id || "—"}
+                  </td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-mono">{subject.code || "—"}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${
@@ -459,7 +479,7 @@ export default function SubjectsPage() {
                       <>
                         <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                         <div className="absolute right-10 top-10 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
-                          <button onClick={() => openEditModal({ _id: subject.ids[0], name: subject.name, code: subject.code, type: subject.type as any, full_marks: subject.full_marks, pass_marks: 40, class_id: "", createdAt: subject.createdAt || "" })} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                          <button onClick={() => openEditModal({ _id: subject.ids[0], name: subject.name, code: subject.code, type: subject.type as any, full_marks: subject.full_marks, pass_marks: 40, class_id: subject.class_id, createdAt: subject.createdAt || "" })} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
                             <Edit className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Edit
                           </button>
                           <button onClick={() => openDeleteModal(subject.ids)} className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
@@ -490,6 +510,26 @@ export default function SubjectsPage() {
         <form onSubmit={isAddOpen ? handleAddSubmit : handleEditSubmit} className="p-6 space-y-5 text-left">
           
           <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100 font-bold">Class <span className="text-rose-500">*</span></label>
+            <div className="relative">
+              <select 
+                value={formClassId}
+                onChange={(e) => setFormClassId(e.target.value)}
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                required
+              >
+                <option value="">Select Class</option>
+                {classes.map((cls) => (
+                  <option key={cls._id} value={cls._id}>
+                    {cls.name} {cls.section ? ` - ${cls.section}` : ""}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="space-y-1.5 font-bold">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Name</label>
             <input 
               type="text"

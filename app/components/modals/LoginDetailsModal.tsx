@@ -81,7 +81,8 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
     photoUrl           = student.photo_url || "";
     badgeLabel         = "🎓 Student";
     badgeStyle         = "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300";
-    defaultPassword    = getStudentDefaultPassword((student as any).dob);
+    const userPlainPassword = (student.user_id && typeof student.user_id === "object" && (student.user_id as any).plain_password);
+    defaultPassword    = userPlainPassword || getStudentDefaultPassword((student as any).dob);
     mustChangePassword = !!(student.user_id && typeof student.user_id === "object"
       && (student.user_id as any).must_change_password);
     showPasswordRow    = userExists;
@@ -103,7 +104,8 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
         : true;
       badgeLabel = "👨‍👩‍👧 Parent";
       badgeStyle = "bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300";
-      defaultPassword    = "Parent@123";
+      const userPlainPassword = (parentObj.user_id && typeof parentObj.user_id === "object" && (parentObj.user_id as any).plain_password);
+      defaultPassword    = userPlainPassword || "Parent@123";
       showPasswordRow    = userExists;
       mustChangePassword = !!(parentObj.user_id && typeof parentObj.user_id === "object"
         && (parentObj.user_id as any).must_change_password);
@@ -122,7 +124,8 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
     photoUrl   = teacher.photo_url || "";
     badgeLabel = "💼 Teacher";
     badgeStyle = "bg-[#F59E0B]/10 text-[#F59E0B]";
-    defaultPassword    = "password123";
+    const userPlainPassword = (teacher.user_id && typeof teacher.user_id === "object" && (teacher.user_id as any).plain_password);
+    defaultPassword    = userPlainPassword || "password123";
     showPasswordRow    = userExists;
     mustChangePassword = !!(teacher.user_id && typeof teacher.user_id === "object"
       && (teacher.user_id as any).must_change_password);
@@ -195,7 +198,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0 flex items-center gap-1">
                     <KeyRound className="w-3 h-3" />
-                    Default Password
+                    {mustChangePassword ? "Default Password" : "Password"}
                   </span>
                   <div className="flex items-center gap-1.5">
                     <span className="font-bold text-slate-900 dark:text-white font-mono text-[12px] tracking-widest">
@@ -222,7 +225,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
               )}
 
               {/* Password formula note */}
-              {showPasswordRow && (
+              {showPasswordRow && mustChangePassword && (
                 <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/10 border border-amber-200/60 dark:border-amber-700/30 rounded-lg p-2.5 mt-1">
                   <Info className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
                   <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-snug">

@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useRef, useCallback } from "react";
+import React, { useState, useEffect, Suspense, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTeachers } from "../../../hooks/useTeachers";
 import type { CreateTeacherInput } from "../../../hooks/useTeachers";
 import { useClasses } from "../../../hooks/useClasses";
+import { useSubjects } from "../../../hooks/useSubjects";
 import { useUpload } from "../../../hooks/useUpload";
 import {
   User, Briefcase, Calendar, CreditCard, Bus, Building2, Share2, FileText, Lock,
@@ -219,12 +220,118 @@ function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: 
   );
 }
 
+// ─── Multi Select ──────────────────────────────────────────────────
+function MultiSelect({
+  label,
+  options,
+  selectedValues,
+  onChange,
+  required,
+}: {
+  label: string;
+  options: { label: string; value: string }[];
+  selectedValues: string[];
+  onChange: (vals: string[]) => void;
+  required?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleToggle = (val: string) => {
+    if (selectedValues.includes(val)) {
+      onChange(selectedValues.filter(v => v !== val));
+    } else {
+      onChange([...selectedValues, val]);
+    }
+  };
+
+  const handleRemove = (val: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange(selectedValues.filter(v => v !== val));
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5 relative text-left" ref={containerRef}>
+      <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">
+        {label} {required && <span className="text-rose-500">*</span>}
+      </label>
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        className="min-h-[42px] w-full px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus-within:border-[#F59E0B]/50 transition-all flex flex-wrap gap-1.5 items-center cursor-pointer select-none"
+      >
+        {selectedValues.length === 0 ? (
+          <span className="text-slate-400 dark:text-slate-500">Select classes...</span>
+        ) : (
+          selectedValues.map(val => {
+            const option = options.find(opt => opt.value === val);
+            return (
+              <span
+                key={val}
+                className="px-2.5 py-1 bg-[#F1F5F9] dark:bg-slate-800 border border-border rounded-md text-[11px] font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1"
+              >
+                {option ? option.label : val}
+                <X
+                  className="w-3 h-3 text-slate-400 hover:text-rose-500 cursor-pointer"
+                  onClick={(e) => handleRemove(val, e)}
+                />
+              </span>
+            );
+          })
+        )}
+        <span className="ml-auto pointer-events-none text-slate-400">▾</span>
+      </div>
+
+      {isOpen && (
+        <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white dark:bg-slate-900 border border-border rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto p-1.5 space-y-0.5">
+          {options.length === 0 ? (
+            <div className="text-center py-3 text-[12px] text-slate-400">No classes found</div>
+          ) : (
+            options.map(opt => {
+              const isSelected = selectedValues.includes(opt.value);
+              return (
+                <div
+                  key={opt.value}
+                  onClick={() => handleToggle(opt.value)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-[13px] font-medium cursor-pointer transition-colors ${
+                    isSelected
+                      ? "bg-[#F59E0B]/10 text-[#F59E0B]"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => {}}
+                    className="accent-[#F59E0B] rounded cursor-pointer"
+                  />
+                  <span>{opt.label}</span>
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main page ─────────────────────────────────────────────────────
 function AddTeacherContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
   const { classes: apiClasses } = useClasses();
+  const { subjects: apiSubjects } = useSubjects(undefined, { all: true });
   const { createTeacher, updateTeacher, getTeacher } = useTeachers();
   const { uploadFile } = useUpload();
 
@@ -235,12 +342,20 @@ function AddTeacherContent() {
 
   const classOptions = apiClasses.map(c => ({ label: `${c.name} - ${c.section}`, value: c._id }));
 
+  const subjectOptions = useMemo(() => {
+    const names = new Set<string>();
+    apiSubjects.forEach(s => {
+      if (s.name) names.add(s.name.trim());
+    });
+    return Array.from(names).sort();
+  }, [apiSubjects]);
+
   // ── Personal Info ─────────────────────────────────────────────
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [employeeId, setEmployeeId] = useState("");
-  const [classId, setClassId] = useState("");
-  const [subject, setSubject] = useState("Physics");
+  const [classIds, setClassIds] = useState<string[]>([]);
+  const [subjectSpecialization, setSubjectSpecialization] = useState("");
   const [gender, setGender] = useState("Select");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -330,9 +445,15 @@ function AddTeacherContent() {
           setFirstName(first || "");
           setLastName(last.join(" ") || "");
           setEmployeeId(teacher.employee_id || "");
-          // class_id may be an object after populate or just a string id
-          const cid = teacher.class_id && typeof teacher.class_id === "object" ? (teacher.class_id as any)._id : teacher.class_id;
-          setClassId(cid ? String(cid) : "");
+          if (teacher.class_ids && Array.isArray(teacher.class_ids)) {
+            const ids = teacher.class_ids.map((cls: any) =>
+              typeof cls === "object" && cls ? String(cls._id) : String(cls)
+            );
+            setClassIds(ids);
+          } else {
+            const cid = teacher.class_id && typeof teacher.class_id === "object" ? (teacher.class_id as any)._id : teacher.class_id;
+            setClassIds(cid ? [String(cid)] : []);
+          }
           setGender(teacher.gender ? (teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1)) : "Select");
           setDob(teacher.dob ? new Date(teacher.dob).toISOString().split("T")[0] : "");
           setPhone(teacher.phone || "");
@@ -342,7 +463,7 @@ function AddTeacherContent() {
           setPhotoUrl(teacher.photo_url || "");
           setBloodGroup(teacher.blood_group || "Select");
           setQualification(teacher.qualification || "");
-          setSubject(teacher.subject_specialization || "Physics");
+          setSubjectSpecialization(teacher.subject_specialization || "");
           setExperienceYears(teacher.experience_years != null ? teacher.experience_years.toString() : "0");
           setJoinDate(teacher.join_date ? new Date(teacher.join_date).toISOString().split("T")[0] : "");
           setLanguages(teacher.languages && teacher.languages.length > 0 ? teacher.languages : ["English"]);
@@ -406,6 +527,13 @@ function AddTeacherContent() {
     }
   }, [joinDate, editId]);
 
+  // ── Set default Subject Specialization ────────────────────────
+  useEffect(() => {
+    if (!editId && subjectOptions.length > 0 && !subjectSpecialization) {
+      setSubjectSpecialization(subjectOptions[0]);
+    }
+  }, [subjectOptions, editId, subjectSpecialization]);
+
   // ── Handle photo upload ───────────────────────────────────────
   const handlePhotoUpload = useCallback(async (file: File) => {
     setUploadingPhoto(true);
@@ -440,7 +568,8 @@ function AddTeacherContent() {
       // Personal
       name: `${firstName} ${lastName}`.trim() || "New Teacher",
       employee_id: employeeId || undefined,
-      class_id: classId || undefined,
+      class_ids: classIds && classIds.length > 0 ? classIds : [],
+      class_id: classIds && classIds.length > 0 ? classIds[0] : undefined,
       gender: gender !== "Select" ? gender.toLowerCase() : undefined,
       dob: dob || undefined,
       phone: phone || undefined,
@@ -450,7 +579,7 @@ function AddTeacherContent() {
       photo_url: photoUrl || undefined,
       blood_group: bloodGroup !== "Select" ? bloodGroup : undefined,
       qualification: qualification || undefined,
-      subject_specialization: subject || "Physics",
+      subject_specialization: subjectSpecialization || undefined,
       experience_years: experienceYears ? parseInt(experienceYears) : 0,
       join_date: joinDate || undefined,
       languages,
@@ -560,8 +689,8 @@ function AddTeacherContent() {
                 <InputGroup label="Teacher ID" value={employeeId} onChange={e => setEmployeeId(e.target.value)} />
                 <InputGroup label="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} required />
                 <InputGroup label="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
-                <InputGroup label="Class" type="select" value={classId} onChange={e => setClassId(e.target.value)} options={[{ label: "Select", value: "" }, ...classOptions]} />
-                <InputGroup label="Subject" type="select" value={subject} onChange={e => setSubject(e.target.value)} options={["Physics", "Chemistry", "Maths", "English", "Spanish", "Biology", "Computer"]} />
+                <MultiSelect label="Classes" options={classOptions} selectedValues={classIds} onChange={setClassIds} />
+                <InputGroup label="Subject Specialization" type="select" value={subjectSpecialization} onChange={e => setSubjectSpecialization(e.target.value)} options={subjectOptions.length > 0 ? subjectOptions : ["No subjects found"]} />
                 <InputGroup label="Gender" type="select" value={gender} onChange={e => setGender(e.target.value)} options={["Select", "Male", "Female", "Other"]} />
                 <InputGroup label="Primary Contact Number" value={phone} onChange={e => setPhone(e.target.value)} />
                 <InputGroup label="Email Address" type="email" value={email} onChange={e => setEmail(e.target.value)} />

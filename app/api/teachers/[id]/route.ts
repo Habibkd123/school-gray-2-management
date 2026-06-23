@@ -36,8 +36,9 @@ export async function GET(
     }
 
     const teacher = await Teacher.findOne(query)
-      .populate("user_id", "name email role is_active")
-      .populate("class_id", "name section");
+      .populate("user_id", "name email role is_active plain_password")
+      .populate("class_id", "name section")
+      .populate("class_ids", "name section");
 
     console.log("[GET /api/teachers/[id]] query result:", teacher);
 
@@ -110,6 +111,13 @@ export async function PUT(
       }
     }
 
+    // Sync class_ids and class_id in update payload
+    if (body.class_ids) {
+      body.class_id = Array.isArray(body.class_ids) && body.class_ids.length > 0 ? body.class_ids[0] : null;
+    } else if (body.class_id) {
+      body.class_ids = [body.class_id];
+    }
+
     const query: any = { _id: id };
     if (role !== "super_admin") {
       query.school_id = schoolId;
@@ -119,16 +127,18 @@ export async function PUT(
       query,
       { $set: body },
       { new: true, runValidators: true }
-    ).populate("class_id", "name section");
+    ).populate("class_id", "name section")
+     .populate("class_ids", "name section");
 
     if (!teacher) {
       return NextResponse.json({ success: false, message: "Teacher not found" }, { status: 404 });
     }
 
     // If class_id is updated, optionally set this teacher as the class teacher of that class
-    if (body.class_id) {
+    const classIdToSet = body.class_id || (Array.isArray(body.class_ids) && body.class_ids.length > 0 ? body.class_ids[0] : null);
+    if (classIdToSet) {
       await mongoose.model("Class").findOneAndUpdate(
-        { _id: body.class_id, school_id: teacher.school_id },
+        { _id: classIdToSet, school_id: teacher.school_id },
         { class_teacher_id: teacher._id }
       );
     }

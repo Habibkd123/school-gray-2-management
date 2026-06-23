@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  Search, List, Filter, ChevronDown, RefreshCw, Printer, Download, FileText, Calendar, Loader2, Save
+  Search, List, Filter, ChevronDown, RefreshCw, Printer, Download, FileText, Calendar, Loader2, Save, ShieldAlert
 } from "lucide-react";
 import { useStudents } from "../../../hooks/useStudents";
 import { useClasses } from "../../../hooks/useClasses";
@@ -41,7 +41,7 @@ export default function StudentAttendancePage() {
 
   const { students, isLoading: studentsLoading } = useStudents();
   const { classes } = useClasses();
-  const { saveAttendance, isLoading: saving } = useAttendance();
+  const { fetchAttendance, saveAttendance, isLoading: saving } = useAttendance();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
@@ -52,11 +52,23 @@ export default function StudentAttendancePage() {
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
   const [selectedDateRange, setSelectedDateRange] = useState("Today");
   const [localRecords, setLocalRecords] = useState<Record<string, LocalRecord>>({});
+  const [hasExistingRecord, setHasExistingRecord] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState(false);
+  const [dbRecords, setDbRecords] = useState<Record<string, string>>({});
 
   const { fetchSummary, isLoading: summaryLoading } = useAttendanceSummary();
   const [summaryData, setSummaryData] = useState<Record<string, any>>({});
 
   const isReportMode = !["Today", "Yesterday"].includes(selectedDateRange);
+
+  const targetDate = useMemo(() => {
+    const d = new Date();
+    if (selectedDateRange === "Yesterday") d.setDate(d.getDate() - 1);
+    return d.toISOString().split("T")[0];
+  }, [selectedDateRange]);
+
+  const isToday = selectedDateRange === "Today";
+  const canMark = isToday || hasExistingRecord;
 
   // Set default class for teachers
   React.useEffect(() => {
@@ -64,6 +76,51 @@ export default function StudentAttendancePage() {
       setSelectedClassId(classes[0]._id);
     }
   }, [isTeacher, classes, selectedClassId]);
+
+  // Fetch today/yesterday attendance
+  React.useEffect(() => {
+    if (!isReportMode && selectedClassId) {
+      const loadAttendance = async () => {
+        setLoadingExisting(true);
+        try {
+          const dbAttendance = await fetchAttendance(selectedClassId, targetDate);
+          if (dbAttendance && dbAttendance.records && dbAttendance.records.length > 0) {
+            const recordsMap: Record<string, LocalRecord> = {};
+            const dbMap: Record<string, string> = {};
+            dbAttendance.records.forEach((rec) => {
+              if (!rec.student_id) return;
+              const sId = typeof rec.student_id === "object" ? rec.student_id._id : rec.student_id;
+              if (!sId) return;
+              recordsMap[sId] = {
+                studentId: sId,
+                status: rec.status as AttendanceStatus,
+                notes: rec.note || "",
+              };
+              dbMap[sId] = rec.status;
+            });
+            setLocalRecords(recordsMap);
+            setDbRecords(dbMap);
+            setHasExistingRecord(true);
+          } else {
+            setLocalRecords({});
+            setDbRecords({});
+            setHasExistingRecord(false);
+          }
+        } catch (err) {
+          console.error("Failed to load student attendance:", err);
+          setLocalRecords({});
+          setDbRecords({});
+          setHasExistingRecord(false);
+        } finally {
+          setLoadingExisting(false);
+        }
+      };
+      loadAttendance();
+    } else {
+      setLocalRecords({});
+      setHasExistingRecord(false);
+    }
+  }, [selectedClassId, targetDate, isReportMode, fetchAttendance]);
 
   React.useEffect(() => {
     if (isReportMode && selectedClassId) {
@@ -119,6 +176,10 @@ export default function StudentAttendancePage() {
   };
 
   const handleSave = async () => {
+    if (!canMark) {
+      alert("Attendance cannot be marked for this date.");
+      return;
+    }
     if (!selectedClassId) {
       alert("Please select a class first.");
       return;
@@ -128,14 +189,16 @@ export default function StudentAttendancePage() {
       return { studentId: s._id, status: r.status, note: r.notes };
     });
 
-    const dateToSave = (() => {
-      const d = new Date();
-      if (selectedDateRange === "Yesterday") d.setDate(d.getDate() - 1);
-      return d.toISOString().split("T")[0];
-    })();
-
-    const res = await saveAttendance(selectedClassId, dateToSave, records);
-    if (res.success) alert("Attendance saved successfully!");
+    const res = await saveAttendance(selectedClassId, targetDate, records);
+    if (res.success) {
+      alert("Attendance saved successfully!");
+      setHasExistingRecord(true);
+      const dbMap: Record<string, string> = {};
+      classStudents.forEach((s) => {
+        dbMap[s._id] = getRecord(s._id).status;
+      });
+      setDbRecords(dbMap);
+    }
     else alert(res.message || "Failed to save attendance.");
   };
 
@@ -201,7 +264,7 @@ export default function StudentAttendancePage() {
           {!isReportMode && (
             <button
               onClick={handleSave}
-              disabled={saving || !selectedClassId || classStudents.length === 0}
+              disabled={saving || !selectedClassId || classStudents.length === 0 || !canMark}
               className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold rounded-lg shadow-sm flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
@@ -211,9 +274,16 @@ export default function StudentAttendancePage() {
         </div>
       </div>
 
+      {!studentsLoading && !loadingExisting && !isReportMode && selectedClassId && !canMark && (
+        <div className="p-4 border border-rose-200 dark:border-rose-800/40 bg-rose-50 dark:bg-rose-950/20 text-rose-700 dark:text-rose-400 rounded-xl flex items-center gap-2.5 text-[13.5px] font-semibold text-left">
+          <ShieldAlert className="w-4.5 h-4.5 shrink-0 text-rose-500" />
+          <span>Past attendance records cannot be created. You can only view them as no record exists for this date.</span>
+        </div>
+      )}
+
       {/* Summary stats */}
       {classStudents.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 sm:grid-cols-5 gap-3">
           {STATUS_OPTIONS.map((opt) => (
             <div key={opt.value} className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm text-center">
               <div className={`w-2.5 h-2.5 rounded-full ${statusDot[opt.value]} mx-auto mb-2`} />
@@ -228,7 +298,17 @@ export default function StudentAttendancePage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
         {/* Table Header Section */}
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Student Attendance List</h2>
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Student Attendance List</h2>
+            {!isReportMode && selectedClassId && canMark && (
+              <span className={`text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-full border ${hasExistingRecord
+                ? "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/20 dark:border-amber-800/40 dark:text-amber-400"
+                : "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/20 dark:border-emerald-800/40 dark:text-emerald-400"
+              }`}>
+                {hasExistingRecord ? "Editing Existing" : "New Register"}
+              </span>
+            )}
+          </div>
 
           <div className="flex items-center gap-3 flex-wrap">
             {/* Class select */}
@@ -344,7 +424,7 @@ export default function StudentAttendancePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {studentsLoading || summaryLoading ? (
+              {studentsLoading || summaryLoading || loadingExisting ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-10 text-center text-slate-400">
                     <Loader2 className="w-5 h-5 animate-spin inline" />
@@ -376,7 +456,28 @@ export default function StudentAttendancePage() {
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[12px] flex-shrink-0">
                           {item.name.charAt(0)}
                         </div>
-                        <span className="text-slate-700 dark:text-slate-200 font-bold">{item.name}</span>
+                        <div className="flex flex-col">
+                          <span className="text-slate-700 dark:text-slate-200 font-bold">{item.name}</span>
+                          {!isReportMode && (
+                            <div className="mt-1 flex">
+                              {hasExistingRecord ? (
+                                rec.status === dbRecords[item._id] ? (
+                                  <span className="text-[9px] bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 px-1 py-0.2 rounded font-semibold">
+                                    ✓ Saved
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/40 px-1 py-0.2 rounded font-semibold">
+                                    ⚠ Unsaved
+                                  </span>
+                                )
+                              ) : (
+                                <span className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 px-1 py-0.2 rounded font-semibold">
+                                  New
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
@@ -387,8 +488,8 @@ export default function StudentAttendancePage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3 text-slate-600 dark:text-slate-300 font-medium">
                             {STATUS_OPTIONS.map((opt) => (
-                              <label key={opt.value} className="flex items-center gap-1.5 cursor-pointer group">
-                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${rec.status === opt.value ? "border-[#F59E0B]" : "border-slate-300 dark:border-slate-600 group-hover:border-[#F59E0B]/50"}`}>
+                              <label key={opt.value} className={`flex items-center gap-1.5 group ${!canMark ? "opacity-60 cursor-not-allowed" : "cursor-pointer"}`}>
+                                <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${rec.status === opt.value ? "border-[#F59E0B]" : "border-slate-300 dark:border-slate-600" + (!canMark ? "" : " group-hover:border-[#F59E0B]/50")}`}>
                                   {rec.status === opt.value && <div className="w-2 h-2 rounded-full bg-[#F59E0B]" />}
                                 </div>
                                 <span className="text-[12px]">{opt.label}</span>
@@ -397,7 +498,8 @@ export default function StudentAttendancePage() {
                                   name={`attendance-${item._id}`}
                                   value={opt.value}
                                   checked={rec.status === opt.value}
-                                  onChange={() => setStatus(item._id, opt.value)}
+                                  onChange={() => canMark && setStatus(item._id, opt.value)}
+                                  disabled={!canMark}
                                   className="hidden"
                                 />
                               </label>
@@ -407,10 +509,11 @@ export default function StudentAttendancePage() {
                         <td className="px-6 py-4">
                           <input
                             type="text"
-                            placeholder="Optional note…"
+                            placeholder={canMark ? "Optional note…" : ""}
                             value={rec.notes}
                             onChange={(e) => setNotes(item._id, e.target.value)}
-                            className="w-full px-3 py-1.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200"
+                            disabled={!canMark}
+                            className={`w-full px-3 py-1.5 border border-border rounded-lg text-[13px] outline-none transition-colors bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 ${!canMark ? "opacity-60 cursor-not-allowed" : "focus:border-[#F59E0B]"}`}
                           />
                         </td>
                       </>

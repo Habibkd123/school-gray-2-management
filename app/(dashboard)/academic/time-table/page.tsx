@@ -299,7 +299,7 @@ export default function TimeTablePage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div className="space-y-1.5">
                   <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Start Time</label>
                   <TimePicker value={formStartTime} onChange={setFormStartTime} />
@@ -395,7 +395,7 @@ function TimePicker({ value, onChange }: TimePickerProps) {
         </select>
         <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
       </div>
-      
+
       <span className="text-slate-400 font-bold">:</span>
 
       <div className="relative flex-1">

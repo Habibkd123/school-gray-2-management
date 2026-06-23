@@ -254,6 +254,7 @@ export async function POST(request: NextRequest) {
           name: name.trim(),
           email: studentLoginEmail,
           password_hash: studentPassword,
+          plain_password: studentPassword,
           role: "student",
           is_active: true,
           must_change_password: true,
@@ -308,6 +309,7 @@ export async function POST(request: NextRequest) {
               name: guardian_name.trim(),
               email: parentEmail,
               password_hash: "parent123", // default — admin should share this
+              plain_password: "parent123",
               role: "parent",
               is_active: true,
               must_change_password: true, // force password change on first login

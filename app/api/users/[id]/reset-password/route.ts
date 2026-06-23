@@ -45,6 +45,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     user.password_hash = password;
+    user.plain_password = password;
     await user.save();
 
     return NextResponse.json({

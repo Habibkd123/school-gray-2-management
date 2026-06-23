@@ -8,13 +8,13 @@ export interface ApiSubject {
   name: string;
   code?: string;
   type: "theory" | "practical" | "both";
-  class_id: string;
+  class_id: { _id: string; name: string; section?: string } | string;
   full_marks: number;
   pass_marks: number;
   createdAt: string;
 }
 
-export function useSubjects(classId?: string, options?: { skip?: boolean }) {
+export function useSubjects(classId?: string, options?: { skip?: boolean; all?: boolean }) {
   const [rawSubjects, setRawSubjects] = useState<ApiSubject[]>([]);
   const [loading, setLoading] = useState(options?.skip ? false : true);
 
@@ -46,6 +46,7 @@ export function useSubjects(classId?: string, options?: { skip?: boolean }) {
   // Deduplicate by name so dropdowns never show the same subject twice
   // (subjects are stored per-section so classId queries return duplicates)
   const subjects = useMemo(() => {
+    if (options?.all) return rawSubjects;
     const seen = new Set<string>();
     return rawSubjects.filter(s => {
       const key = s.name.toLowerCase().trim();
@@ -53,7 +54,7 @@ export function useSubjects(classId?: string, options?: { skip?: boolean }) {
       seen.add(key);
       return true;
     });
-  }, [rawSubjects]);
+  }, [rawSubjects, options?.all]);
 
   const createSubject = useCallback(async (payload: Partial<ApiSubject> & { type?: string }) => {
     const res = await fetch("/api/subjects", {
@@ -87,5 +88,5 @@ export function useSubjects(classId?: string, options?: { skip?: boolean }) {
     return data;
   }, [fetchSubjects]);
 
-  return { subjects, loading, fetchSubjects, createSubject, updateSubject, deleteSubject };
+  return { subjects, rawSubjects, loading, fetchSubjects, createSubject, updateSubject, deleteSubject };
 }

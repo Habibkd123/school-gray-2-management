@@ -4,6 +4,7 @@ export interface ITeacher extends Document {
   school_id: mongoose.Types.ObjectId;
   user_id?: mongoose.Types.ObjectId;
   class_id?: mongoose.Types.ObjectId;
+  class_ids?: mongoose.Types.ObjectId[];
   name: string;
   employee_id?: string;
   gender?: "male" | "female" | "other";
@@ -84,6 +85,7 @@ const teacherSchema = new Schema<ITeacher>(
     school_id: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true, index: true },
     user_id: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     class_id: { type: mongoose.Schema.Types.ObjectId, ref: "Class", default: null },
+    class_ids: { type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Class" }], default: [] },
     name: { type: String, required: true, trim: true },
     employee_id: { type: String, trim: true },
     gender: { type: String, enum: ["male", "female", "other"] },
@@ -165,7 +167,7 @@ teacherSchema.index({ school_id: 1, employee_id: 1 }, { unique: true, sparse: tr
 
 if (mongoose.models && mongoose.models.Teacher) {
   const registeredSchema = mongoose.models.Teacher.schema;
-  if (!registeredSchema.paths.class_id) {
+  if (!registeredSchema.paths.class_ids) {
     delete mongoose.models.Teacher;
     if ((mongoose.connection as any).models && (mongoose.connection as any).models.Teacher) {
       delete (mongoose.connection as any).models.Teacher;

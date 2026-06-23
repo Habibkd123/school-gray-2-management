@@ -106,12 +106,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const { user: userData, access_token, refresh_token } = data.data;
 
-      // ─── Role Guard: Block students & parents from admin portal ───────
-      const ADMIN_PORTAL_ROLES = ["super_admin", "school_admin", "accountant", "teacher"];
+      // Allow student and parent logins on this portal as requested
+      const ADMIN_PORTAL_ROLES = ["super_admin", "school_admin", "accountant", "teacher", "student", "parent"];
       if (!ADMIN_PORTAL_ROLES.includes(userData.role)) {
         return {
           success: false,
-          message: "Access denied. This portal is for school staff only. Students and parents should use the MyStudent portal.",
+          message: "Access denied.",
         };
       }
 

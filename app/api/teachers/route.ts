@@ -104,7 +104,9 @@ export async function GET(req: NextRequest) {
 
     const [teachers, total] = await Promise.all([
       Teacher.find(query)
-        .populate("user_id", "name email role is_active")
+        .populate("user_id", "name email role is_active plain_password")
+        .populate("class_id", "name section")
+        .populate("class_ids", "name section")
         .sort(sortObj)
         .skip(skip)
         .limit(limit)
@@ -136,7 +138,7 @@ export async function POST(req: NextRequest) {
     const {
       name, employee_id, gender, dob, phone, email, address,
       photo_url, blood_group, qualification, subject_specialization,
-      experience_years, join_date, languages, password, class_id,
+      experience_years, join_date, languages, password, class_id, class_ids,
       father_name, mother_name, marital_status, previous_school_name,
       previous_school_address, previous_school_phone, permanent_address,
       pan_number, notes, epf_no, basic_salary, contract_type,
@@ -167,6 +169,7 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         email: teacherLoginEmail,
         password_hash: password || "password123", // use provided password or default
+        plain_password: password || "password123",
         role: "teacher",
         is_active: true,
         must_change_password: true, // force password change on first login
@@ -174,10 +177,15 @@ export async function POST(req: NextRequest) {
       userId = user._id;
     }
 
+    // Determine primary class_id and class_ids array
+    const resolvedClassIds = Array.isArray(class_ids) ? class_ids : (class_id ? [class_id] : []);
+    const resolvedClassId = resolvedClassIds.length > 0 ? resolvedClassIds[0] : undefined;
+
     const teacher = await Teacher.create({
       school_id: schoolId as string,
       user_id: userId,
-      class_id: class_id || undefined,
+      class_id: resolvedClassId,
+      class_ids: resolvedClassIds,
       name: name.trim(),
       employee_id: employee_id?.trim(),
       gender,
@@ -230,9 +238,9 @@ export async function POST(req: NextRequest) {
       joining_letter_url: joining_letter_url?.trim(),
     });
 
-    if (class_id) {
+    if (resolvedClassId) {
       await mongoose.model("Class").findOneAndUpdate(
-        { _id: class_id, school_id: schoolId },
+        { _id: resolvedClassId, school_id: schoolId },
         { class_teacher_id: teacher._id }
       );
     }
