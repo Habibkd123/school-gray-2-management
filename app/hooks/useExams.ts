@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 
 export interface ApiExam {
@@ -53,7 +53,8 @@ export function useExams(classId?: string) {
     }
   }, [classId, academicYear]);
 
-  useEffect(() => { fetchExams(); }, [fetchExams]);
+  const authReady = useAuthReady();
+  useEffect(() => { if (!authReady) return; fetchExams(); }, [fetchExams, authReady]);
 
   const createExam = useCallback(async (payload: Partial<ApiExam>) => {
     const res = await fetch("/api/exams", {
@@ -116,7 +117,8 @@ export function useResults(examId?: string, studentId?: string) {
     }
   }, [examId, studentId, academicYear]);
 
-  useEffect(() => { fetchResults(); }, [fetchResults]);
+  const authReady = useAuthReady();
+  useEffect(() => { if (!authReady) return; fetchResults(); }, [fetchResults, authReady]);
 
   const createResults = useCallback(async (entries: Partial<ApiResult>[]) => {
     const res = await fetch("/api/results", {

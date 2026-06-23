@@ -289,7 +289,7 @@ export function useTeachers(options?: { skip?: boolean }) {
   }, [fetchTeachers, options?.skip, authReady]);
 
   // ─── Create teacher ─────────────────────────────────────────────
-  const createTeacher = async (input: CreateTeacherInput): Promise<{ success: boolean; message: string; data?: ApiTeacher }> => {
+  const createTeacher = async (input: CreateTeacherInput): Promise<{ success: boolean; message: string; data?: ApiTeacher; credentials?: { loginId: string; password?: string } }> => {
     try {
       const res = await fetch("/api/teachers", {
         method: "POST",
@@ -305,7 +305,7 @@ export function useTeachers(options?: { skip?: boolean }) {
       _listeners.forEach(fn => fn(newList));
 
       setTeachers((prev) => [data.data, ...prev]);
-      return { success: true, message: "Teacher created successfully", data: data.data };
+      return { success: true, message: "Teacher created successfully", data: data.data, credentials: data.credentials };
     } catch {
       return { success: false, message: "Network error" };
     }

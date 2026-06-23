@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 
 // ─── Types ────────────────────────────────────────────────────────
 export interface ApiResult {
@@ -60,10 +60,12 @@ export function useResults(options?: { skip?: boolean }) {
     }
   }, []);
 
+  const authReady = useAuthReady();
   useEffect(() => {
     if (options?.skip) return;
+    if (!authReady) return;
     fetchResults();
-  }, [fetchResults, options?.skip]);
+  }, [fetchResults, options?.skip, authReady]);
 
   // ─── Create result(s) ───────────────────────────────────────────
   const createResult = async (input: CreateResultInput | CreateResultInput[]): Promise<{ success: boolean; message: string }> => {

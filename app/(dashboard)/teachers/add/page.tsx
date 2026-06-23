@@ -9,7 +9,7 @@ import { useClasses } from "../../../hooks/useClasses";
 import { useUpload } from "../../../hooks/useUpload";
 import {
   User, Briefcase, Calendar, CreditCard, Bus, Building2, Share2, FileText, Lock,
-  XCircle, Upload, X, Loader2, ImageIcon
+  XCircle, Upload, X, Loader2, ImageIcon, Copy, Check, KeyRound
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────────────────
@@ -308,6 +308,18 @@ function AddTeacherContent() {
   const [resumeFile, setResumeFile] = useState<DocFile | null>(null);
   const [joiningLetterFile, setJoiningLetterFile] = useState<DocFile | null>(null);
 
+  // ── Login Credentials Popup ────────────────────────────────────
+  const [showCredentials, setShowCredentials] = useState(false);
+  const [createdCredentials, setCreatedCredentials] = useState<{ loginId: string; password: string } | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const handleCopyCredential = (text: string, field: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    });
+  };
+
   // ── Load edit data ────────────────────────────────────────────
   useEffect(() => {
     async function loadData() {
@@ -500,8 +512,15 @@ function AddTeacherContent() {
       if (password) payload.password = password;
       const res = await createTeacher(payload as CreateTeacherInput);
       setIsSubmitting(false);
-      if (res.success) router.push("/teachers");
-      else alert(res.message || "Failed to create teacher");
+      if (res.success) {
+        // Use credentials returned from the backend API response
+        const loginId = res?.credentials?.loginId || `${(firstName + lastName).toLowerCase().trim().replace(/\s+/g, "")}.school@gmail.com`;
+        const pswd = res?.credentials?.password || password || "password123";
+        setCreatedCredentials({ loginId, password: pswd });
+        setShowCredentials(true);
+      } else {
+        alert(res.message || "Failed to create teacher");
+      }
     }
   };
 
@@ -680,6 +699,83 @@ function AddTeacherContent() {
         </div>
 
       </form>
+
+      {/* ── Login Credentials Popup ── */}
+      {showCredentials && createdCredentials && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-border animate-in fade-in zoom-in-95 duration-300">
+            {/* Header */}
+            <div className="flex items-center gap-3 p-5 border-b border-border">
+              <div className="w-10 h-10 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center">
+                <Lock className="w-5 h-5 text-[#F59E0B]" />
+              </div>
+              <div>
+                <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">Teacher Created Successfully! 🎉</h2>
+                <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Save these login credentials before closing</p>
+              </div>
+            </div>
+
+            {/* Credentials */}
+            <div className="p-5 space-y-4">
+              {/* Login ID */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-border">
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Login ID (Username)</p>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[13px] font-bold text-slate-900 dark:text-white font-mono break-all">{createdCredentials.loginId}</span>
+                  <button
+                    onClick={() => handleCopyCredential(createdCredentials.loginId, "loginId")}
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-[#F59E0B]/10 hover:bg-[#F59E0B]/20 text-[#F59E0B] transition-colors"
+                    title="Copy Login ID"
+                  >
+                    {copiedField === "loginId" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-border">
+                <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                  <KeyRound className="w-3 h-3" /> Default Password
+                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[13px] font-bold text-slate-900 dark:text-white font-mono">{createdCredentials.password}</span>
+                  <button
+                    onClick={() => handleCopyCredential(createdCredentials.password, "password")}
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-[#F59E0B]/10 hover:bg-[#F59E0B]/20 text-[#F59E0B] transition-colors"
+                    title="Copy Password"
+                  >
+                    {copiedField === "password" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="p-5 border-t border-border flex items-center justify-between gap-3">
+              <button
+                onClick={() => {
+                  const combinedText = `Login ID: ${createdCredentials.loginId}\nPassword: ${createdCredentials.password}`;
+                  handleCopyCredential(combinedText, "all");
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-[12px] font-semibold hover:bg-slate-50 transition-colors cursor-pointer"
+              >
+                {copiedField === "all" ? (
+                  <><Check className="w-3.5 h-3.5 text-green-500" /> Copied!</>
+                ) : (
+                  <><Copy className="w-3.5 h-3.5" /> Copy All</>
+                )}
+              </button>
+              <button
+                onClick={() => { setShowCredentials(false); router.push("/teachers"); }}
+                className="px-5 py-2 bg-slate-950 dark:bg-white text-white dark:text-slate-950 text-[12px] font-semibold rounded-lg hover:bg-slate-900 dark:hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Done — Go to Teachers
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

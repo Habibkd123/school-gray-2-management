@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 
 export interface ApiHomeworkSubmission {
@@ -68,10 +68,12 @@ export function useHomework(classId?: string, options?: { skip?: boolean }) {
     }
   }, [academicYear]);
 
+  const authReady = useAuthReady();
   useEffect(() => {
     if (options?.skip) return;
+    if (!authReady) return;
     fetchHomework(classId);
-  }, [fetchHomework, classId, options?.skip]);
+  }, [fetchHomework, classId, options?.skip, authReady]);
 
   const createHomework = async (input: {
     title: string;

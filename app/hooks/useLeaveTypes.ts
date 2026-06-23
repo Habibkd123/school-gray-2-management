@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 
 export interface ApiLeaveType {
   _id: string;
@@ -34,9 +34,11 @@ export function useLeaveTypes() {
     }
   }, []);
 
+  const authReady = useAuthReady();
   useEffect(() => {
+    if (!authReady) return;
     fetchLeaveTypes();
-  }, [fetchLeaveTypes]);
+  }, [fetchLeaveTypes, authReady]);
 
   const createLeaveType = async (payload: Partial<ApiLeaveType>) => {
     try {

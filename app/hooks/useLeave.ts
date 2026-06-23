@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 
 export interface ApiLeaveRequest {
   _id: string;
@@ -38,10 +38,12 @@ export function useLeave(statusFilter?: string, userId?: string, options?: { ski
     }
   }, [statusFilter, userId]);
 
+  const authReady = useAuthReady();
   useEffect(() => {
     if (options?.skip) return;
+    if (!authReady) return;
     fetchLeave();
-  }, [fetchLeave, options?.skip]);
+  }, [fetchLeave, options?.skip, authReady]);
 
   const submitLeave = useCallback(async (payload: Partial<ApiLeaveRequest>) => {
     const res = await fetch("/api/leave", {

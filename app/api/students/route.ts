@@ -10,7 +10,8 @@ import { requireAuth } from "@/lib/utils/auth";
 const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG || "school";
 
 function generateStudentLoginEmail(name: string, dob?: string): string {
-  const namePart = name.toLowerCase().trim().replace(/\s+/g, "");
+  // Use only first name word, max 10 chars, no special chars
+  const firstName = name.trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10);
   let dobDay = "";
   if (dob) {
     const d = new Date(dob);
@@ -18,7 +19,9 @@ function generateStudentLoginEmail(name: string, dob?: string): string {
       dobDay = String(d.getDate());
     }
   }
-  return `${namePart}${dobDay}.${SCHOOL_SLUG}@gmail.com`;
+  // Strip hyphens/spaces from school slug
+  const slug = SCHOOL_SLUG.replace(/[\s-]+/g, "");
+  return `${firstName}${dobDay}.${slug}@gmail.com`;
 }
 
 

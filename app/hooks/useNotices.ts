@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 
 export interface ApiNotice {
   _id: string;
@@ -31,7 +31,8 @@ export function useNotices() {
     }
   }, []);
 
-  useEffect(() => { fetchNotices(); }, [fetchNotices]);
+  const authReady = useAuthReady();
+  useEffect(() => { if (!authReady) return; fetchNotices(); }, [fetchNotices, authReady]);
 
   const createNotice = useCallback(async (payload: Partial<ApiNotice>) => {
     const res = await fetch("/api/notices", {

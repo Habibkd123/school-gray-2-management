@@ -8,7 +8,8 @@ import mongoose from "mongoose";
 const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG || "school";
 
 function generateTeacherLoginEmail(name: string, dob?: string): string {
-  const namePart = name.toLowerCase().trim().replace(/\s+/g, "");
+  // Use only first name word, max 10 chars, no special chars
+  const firstName = name.trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10);
   let dobDay = "";
   if (dob) {
     const d = new Date(dob);
@@ -16,7 +17,9 @@ function generateTeacherLoginEmail(name: string, dob?: string): string {
       dobDay = String(d.getDate());
     }
   }
-  return `${namePart}${dobDay}.${SCHOOL_SLUG}@gmail.com`;
+  // Strip hyphens/spaces from school slug
+  const slug = SCHOOL_SLUG.replace(/[\s-]+/g, "");
+  return `${firstName}${dobDay}.${slug}@gmail.com`;
 }
 
 // GET: Fetch all teachers for the logged-in user's school
@@ -234,7 +237,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true, data: teacher }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        data: teacher,
+        credentials: {
+          loginId: teacherLoginEmail,
+          password: password || "password123",
+        }
+      },
+      { status: 201 }
+    );
   } catch (error: any) {
     if (error.code === 11000) {
       return NextResponse.json(

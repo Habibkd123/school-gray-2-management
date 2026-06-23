@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 
 export interface ApiGrade {
   _id: string;
@@ -37,9 +37,11 @@ export function useGrades() {
     }
   }, []);
 
+  const authReady = useAuthReady();
   useEffect(() => {
+    if (!authReady) return;
     fetchGrades();
-  }, [fetchGrades]);
+  }, [fetchGrades, authReady]);
 
   const createGrade = async (payload: Partial<ApiGrade>) => {
     try {

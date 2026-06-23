@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 
 export interface ApiRoom {
   _id: string;
@@ -27,7 +27,8 @@ export function useRooms() {
     }
   }, []);
 
-  useEffect(() => { fetchRooms(); }, [fetchRooms]);
+  const authReady = useAuthReady();
+  useEffect(() => { if (!authReady) return; fetchRooms(); }, [fetchRooms, authReady]);
 
   const createRoom = useCallback(async (payload: { room_no: string; capacity: number; is_active: boolean }) => {
     const res = await fetch("/api/rooms", {
