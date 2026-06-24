@@ -6,6 +6,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useTeachers } from "../../../../hooks/useTeachers";
 import { useClasses } from "../../../../hooks/useClasses";
 import { useUpload } from "../../../../hooks/useUpload";
+import { useSubjectMaster } from "../../../../hooks/useSubjectMaster";
 import { LoginDetailsModal } from "../../../../components/modals/LoginDetailsModal";
 import { ResetPasswordModal } from "../../../../components/modals/ResetPasswordModal";
 import {
@@ -149,6 +150,84 @@ function TagInput({ tags, onChange, placeholder }: { tags: string[]; onChange: (
   );
 }
 
+// ─── Subject Specialization Input ──────────────────────────────────
+function SubjectSpecializationInput({
+  selectedSubjects,
+  onChange,
+  subjectOptions,
+}: {
+  selectedSubjects: string[];
+  onChange: (subs: string[]) => void;
+  subjectOptions: string[];
+}) {
+  const addSubject = (sub: string) => {
+    const trimmed = sub.trim();
+    if (trimmed && !selectedSubjects.includes(trimmed)) {
+      onChange([...selectedSubjects, trimmed]);
+    }
+  };
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val && val !== "Select Subject") {
+      addSubject(val);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5 col-span-1 md:col-span-2 xl:col-span-4">
+      <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">
+        Subject/Specialization
+      </label>
+      <div className="flex flex-col sm:flex-row gap-2">
+        {/* Dropdown for existing catalog */}
+        <div className="relative flex-1">
+          <select
+            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all appearance-none cursor-pointer"
+            value="Select Subject"
+            onChange={handleSelectChange}
+          >
+            <option disabled value="Select Subject">Select from Catalog...</option>
+            {subjectOptions.filter(opt => !selectedSubjects.includes(opt)).length === 0 ? (
+              <option disabled value="">All catalog subjects added</option>
+            ) : (
+              subjectOptions
+                .filter(opt => !selectedSubjects.includes(opt))
+                .map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))
+            )}
+          </select>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">▾</span>
+        </div>
+      </div>
+
+      {/* Selected Subjects Tags */}
+      <div className="flex flex-wrap gap-2 mt-1">
+        {selectedSubjects.length === 0 ? (
+          <span className="text-[12px] text-slate-400 dark:text-slate-500 italic">No subjects added yet</span>
+        ) : (
+          selectedSubjects.map(sub => (
+            <span
+              key={sub}
+              className="px-3 py-1 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-md text-[12px] font-medium text-amber-700 dark:text-amber-300 flex items-center gap-1.5"
+            >
+              {sub}
+              <button
+                type="button"
+                onClick={() => onChange(selectedSubjects.filter(x => x !== sub))}
+                className="text-amber-500 hover:text-rose-500 transition-colors"
+              >
+                <XCircle className="w-3.5 h-3.5" />
+              </button>
+            </span>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Edit Page Component ───────────────────────────────────────────
 export default function EditTeacherPage() {
   const router = useRouter();
@@ -157,6 +236,15 @@ export default function EditTeacherPage() {
   const { createTeacher, updateTeacher, getTeacher } = useTeachers();
   const { classes } = useClasses();
   const { uploadFile } = useUpload();
+  const { subjects: apiSubjects } = useSubjectMaster();
+
+  const subjectOptions = React.useMemo(() => {
+    const names = new Set<string>();
+    apiSubjects.forEach(s => {
+      if (s.name && s.status === "Active") names.add(s.name.trim());
+    });
+    return Array.from(names).sort();
+  }, [apiSubjects]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [teacherObj, setTeacherObj] = useState<any>(null);
@@ -169,7 +257,7 @@ export default function EditTeacherPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [classId, setClassId] = useState("");
-  const [subject, setSubject] = useState("");
+  const [specializations, setSpecializations] = useState<string[]>([]);
   const [gender, setGender] = useState("Select");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -252,7 +340,10 @@ export default function EditTeacherPage() {
         setFirstName(first || "");
         setLastName(last.join(" ") || "");
         setEmail(teacher.email || "");
-        setSubject(teacher.subject_specialization || "");
+        const specs = teacher.subject_specialization
+          ? teacher.subject_specialization.split(",").map((s: string) => s.trim()).filter(Boolean)
+          : [];
+        setSpecializations(specs);
         const cid = typeof teacher.class_id === "object" ? teacher.class_id?._id : teacher.class_id;
         setClassId(cid || "");
         setStatus(teacher.is_active ? "Active" : "Inactive");
@@ -366,7 +457,7 @@ export default function EditTeacherPage() {
     const payload = {
       name: `${firstName} ${lastName}`.trim() || "New Teacher",
       email: email || undefined,
-      subject_specialization: subject !== "Select" ? subject : "General",
+      subject_specialization: specializations.join(", ") || "General",
       class_id: classId || undefined,
       is_active: status === "Active",
       employee_id: employeeId || undefined,
@@ -516,12 +607,10 @@ export default function EditTeacherPage() {
                   ]} 
                 />
                 
-                <InputGroup 
-                  label="Subject" 
-                  type="select" 
-                  value={subject} 
-                  onChange={(e) => setSubject(e.target.value)} 
-                  options={["Select", "Physics", "Chemistry", "Maths", "English", "Spanish", "Biology", "Computer"]} 
+                <SubjectSpecializationInput
+                  selectedSubjects={specializations}
+                  onChange={setSpecializations}
+                  subjectOptions={subjectOptions}
                 />
 
                 <InputGroup label="Gender" type="select" value={gender} onChange={(e) => setGender(e.target.value)} options={["Select", "Male", "Female", "Other"]} />

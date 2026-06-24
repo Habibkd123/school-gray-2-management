@@ -83,7 +83,7 @@ export default function StudentReportPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-4 sm:grid-cols-4 gap-3">
         {[
           { label: "Total Students", value: students.length, color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
           { label: "Active", value: students.filter(s => s.is_active).length, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },

@@ -18,6 +18,39 @@ export async function GET(req: NextRequest) {
     const search = url.searchParams.get("search");
     const academic_year = url.searchParams.get("academic_year");
 
+    // Self-healing sync: Ensure all SubjectAssignment entries exist in Subject collection
+    if (classId && mongoose.Types.ObjectId.isValid(classId)) {
+      const { SubjectAssignment } = require("@/lib/models/index");
+      const assignments = await SubjectAssignment.find({ school_id: schoolId, class_id: classId })
+        .populate("subject_master_id", "name subject_code")
+        .lean();
+
+      for (const assign of assignments) {
+        const sm = assign.subject_master_id as any;
+        if (sm?.name) {
+          await Subject.findOneAndUpdate(
+            {
+              school_id: new mongoose.Types.ObjectId(schoolId as string),
+              class_id: new mongoose.Types.ObjectId(classId),
+              name: sm.name.trim(),
+            },
+            {
+              $setOnInsert: {
+                school_id: new mongoose.Types.ObjectId(schoolId as string),
+                class_id: new mongoose.Types.ObjectId(classId),
+                name: sm.name.trim(),
+                code: sm.subject_code?.trim().toUpperCase(),
+                type: "both",
+                full_marks: 100,
+                pass_marks: 33,
+              },
+            },
+            { upsert: true }
+          );
+        }
+      }
+    }
+
     const query: any = { school_id: schoolId };
 
     // Resolve class IDs for the selected academic year

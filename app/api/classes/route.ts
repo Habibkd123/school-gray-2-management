@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       { success: true, data: { classes, total, page, limit, totalPages: Math.ceil(total / limit) } },
-      { headers: { "Cache-Control": "private, max-age=120, stale-while-revalidate=300" } }
+      { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } }
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";

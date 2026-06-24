@@ -165,6 +165,32 @@ export async function POST(req: NextRequest) {
     }
     // ─────────────────────────────────────────────────────────────────────────
 
+    // ── Conflict check: same room, same day, overlapping time ──────────────
+    if (room?.trim()) {
+      const existingInRoom = await Timetable.find({
+        school_id: new mongoose.Types.ObjectId(schoolId as string),
+        room:      room.trim(),
+        day:       day.toLowerCase(),
+      }).populate("class_id", "name section").lean();
+
+      for (const entry of existingInRoom) {
+        const eStart = parseTimeToMinutes(entry.start_time);
+        const eEnd   = parseTimeToMinutes(entry.end_time);
+        if (newStart < eEnd && newEnd > eStart) {
+          const cls = entry.class_id as any;
+          const className = cls?.name ? `${cls.name} - ${cls.section}` : "Another class";
+          return NextResponse.json(
+            {
+              success: false,
+              message: `Room ${room} is already booked on ${day} from ${entry.start_time} to ${entry.end_time} by ${className}.`,
+            },
+            { status: 409 }
+          );
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     const subjectDoc = await Subject.findOneAndUpdate(
       {
         school_id: new mongoose.Types.ObjectId(schoolId as string),

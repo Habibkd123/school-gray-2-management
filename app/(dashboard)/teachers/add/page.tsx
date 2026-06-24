@@ -5,18 +5,78 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTeachers } from "../../../hooks/useTeachers";
 import type { CreateTeacherInput } from "../../../hooks/useTeachers";
-import { useClasses } from "../../../hooks/useClasses";
-import { useSubjects } from "../../../hooks/useSubjects";
+import { useSubjectMaster } from "../../../hooks/useSubjectMaster";
 import { useUpload } from "../../../hooks/useUpload";
 import {
-  User, Briefcase, Calendar, CreditCard, Bus, Building2, Share2, FileText, Lock,
-  XCircle, Upload, X, Loader2, ImageIcon, Copy, Check, KeyRound
+  User, Briefcase, Phone, GraduationCap,
+  XCircle, Loader2, ImageIcon, Copy, Check, KeyRound, Lock, ScanLine
 } from "lucide-react";
 
-// ─── Types ─────────────────────────────────────────────────────────
-interface DocFile { name: string; url: string; }
+// ─── Generic Image Uploader ────────────────────────────────────────
+function ImageUploader({
+  label, sublabel, preview, onChange, onRemove, uploading, aspect = "landscape",
+}: {
+  label: string;
+  sublabel?: string;
+  preview: string;
+  onChange: (file: File) => void;
+  onRemove: () => void;
+  uploading?: boolean;
+  aspect?: "square" | "landscape";
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const isLandscape = aspect === "landscape";
+  return (
+    <div className="flex flex-col gap-2">
+      <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">{label}</label>
+      {sublabel && <p className="text-[11px] text-slate-400 dark:text-slate-500 -mt-1">{sublabel}</p>}
+      <input
+        ref={ref}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/webp"
+        className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) onChange(f); e.target.value = ""; }}
+      />
+      <div
+        onClick={() => !uploading && ref.current?.click()}
+        className={`w-full ${isLandscape ? "h-36" : "h-32 w-32"
+          } bg-[#F1F5F9] dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 overflow-hidden relative cursor-pointer hover:border-[#F59E0B]/70 hover:bg-[#F59E0B]/5 transition-all group`}
+      >
+        {uploading ? (
+          <Loader2 className="w-7 h-7 animate-spin text-[#F59E0B]" />
+        ) : preview ? (
+          <img src={preview} alt={label} className="w-full h-full object-cover" />
+        ) : (
+          <div className="flex flex-col items-center gap-2 opacity-50 group-hover:opacity-70 transition-opacity">
+            <ImageIcon className="w-8 h-8" />
+            <span className="text-[11px] font-medium">Click to upload</span>
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => ref.current?.click()}
+          disabled={uploading}
+          className="flex-1 px-3 py-1.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-semibold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+        >
+          {uploading ? "Uploading…" : preview ? "Change" : "Upload"}
+        </button>
+        {preview && !uploading && (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="px-3 py-1.5 bg-rose-500/10 text-rose-500 text-[11px] font-semibold rounded-lg hover:bg-rose-500 hover:text-white transition-colors"
+          >
+            Remove
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
-// ─── Photo Uploader (calls /api/upload) ────────────────────────────
+// ─── Photo Uploader (square, for profile photo) ────────────────────
 function PhotoUploader({
   label, preview, onChange, onRemove, uploading,
 }: {
@@ -75,52 +135,6 @@ function PhotoUploader({
   );
 }
 
-// ─── Doc Uploader (calls /api/upload) ─────────────────────────────
-function DocUploader({
-  label, doc, onChange, uploading,
-}: {
-  label: string;
-  doc: DocFile | null;
-  onChange: (file: File | null) => void;
-  uploading?: boolean;
-}) {
-  const ref = useRef<HTMLInputElement>(null);
-  return (
-    <div>
-      <label className="block text-[12px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5">{label}</label>
-      <p className="text-[10px] text-slate-400 dark:text-slate-500 mb-3">Upload — JPEG, PNG, or PDF (Max 5MB)</p>
-      <input
-        ref={ref}
-        type="file"
-        accept="image/*,.pdf"
-        className="hidden"
-        onChange={e => { const f = e.target.files?.[0]; if (f) onChange(f); e.target.value = ""; }}
-      />
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => ref.current?.click()}
-          disabled={uploading}
-          className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[11px] font-semibold rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
-        >
-          {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
-          {uploading ? "Uploading…" : "Upload Document"}
-        </button>
-        {doc ? (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[12px] text-slate-600 dark:text-slate-300 font-medium truncate max-w-full sm:w-[180px]">{doc.name}</span>
-            <button type="button" onClick={() => onChange(null)}>
-              <X className="w-4 h-4 text-rose-400 hover:text-rose-500 cursor-pointer" />
-            </button>
-          </div>
-        ) : (
-          <span className="text-[12px] text-slate-400">No file chosen</span>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // ─── Tag input ─────────────────────────────────────────────────────
 function TagInput({ tags, onChange, placeholder }: { tags: string[]; onChange: (t: string[]) => void; placeholder?: string }) {
   const [input, setInput] = useState("");
@@ -151,18 +165,98 @@ function TagInput({ tags, onChange, placeholder }: { tags: string[]; onChange: (
   );
 }
 
+// ─── Subject Specialization Input ──────────────────────────────────
+function SubjectSpecializationInput({
+  selectedSubjects,
+  onChange,
+  subjectOptions,
+}: {
+  selectedSubjects: string[];
+  onChange: (subs: string[]) => void;
+  subjectOptions: string[];
+}) {
+  const addSubject = (sub: string) => {
+    const trimmed = sub.trim();
+    if (trimmed && !selectedSubjects.includes(trimmed)) {
+      onChange([...selectedSubjects, trimmed]);
+    }
+  };
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val && val !== "Select Subject") {
+      addSubject(val);
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1.5 col-span-1 md:col-span-2 xl:col-span-1">
+      <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">
+        Subject/Specialization
+      </label>
+      <div className="flex flex-col sm:flex-row gap-2">
+        {/* Dropdown for existing catalog */}
+        <div className="relative flex-1">
+          <select
+            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all appearance-none cursor-pointer"
+            value="Select Subject"
+            onChange={handleSelectChange}
+          >
+            <option disabled value="Select Subject">Select from Catalog...</option>
+            {subjectOptions.filter(opt => !selectedSubjects.includes(opt)).length === 0 ? (
+              <option disabled value="">All catalog subjects added</option>
+            ) : (
+              subjectOptions
+                .filter(opt => !selectedSubjects.includes(opt))
+                .map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))
+            )}
+          </select>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">▾</span>
+        </div>
+      </div>
+
+      {/* Selected Subjects Tags */}
+      <div className="flex flex-wrap gap-2 mt-1">
+        {selectedSubjects.length === 0 ? (
+          <span className="text-[12px] text-slate-400 dark:text-slate-500 italic">No subjects added yet</span>
+        ) : (
+          selectedSubjects.map(sub => (
+            <span
+              key={sub}
+              className="px-3 py-1 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-md text-[12px] font-medium text-amber-700 dark:text-amber-300 flex items-center gap-1.5"
+            >
+              {sub}
+              <button
+                type="button"
+                onClick={() => onChange(selectedSubjects.filter(x => x !== sub))}
+                className="text-amber-500 hover:text-rose-500 transition-colors"
+              >
+                <XCircle className="w-3.5 h-3.5" />
+              </button>
+            </span>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Input group ───────────────────────────────────────────────────
 function InputGroup({
-  label, type = "text", placeholder, options, value, onChange, required, datalistOptions,
+  label, type = "text", placeholder, options, value, onChange, required, datalistOptions, disabled, hint,
 }: {
   label: string;
-  type?: "text" | "email" | "date" | "select" | "password" | "number";
+  type?: "text" | "email" | "date" | "select" | "password" | "number" | "tel";
   placeholder?: string;
   options?: (string | { label: string; value: string })[];
   datalistOptions?: string[];
   value?: string;
   onChange?: (e: any) => void;
   required?: boolean;
+  disabled?: boolean;
+  hint?: string;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -172,9 +266,10 @@ function InputGroup({
       {type === "select" ? (
         <div className="relative">
           <select
-            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all appearance-none cursor-pointer"
+            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all appearance-none cursor-pointer disabled:opacity-60"
             value={value}
             onChange={onChange}
+            disabled={disabled}
           >
             {options?.map(opt => {
               const isObj = typeof opt === "object" && opt !== null;
@@ -194,7 +289,8 @@ function InputGroup({
             value={value}
             onChange={onChange}
             required={required}
-            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all"
+            disabled={disabled}
+            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           />
           {datalistOptions && (
             <datalist id={`${label.replace(/\s+/g, '-')}-list`}>
@@ -203,6 +299,7 @@ function InputGroup({
           )}
         </>
       )}
+      {hint && <p className="text-[11px] text-slate-400 dark:text-slate-500">{hint}</p>}
     </div>
   );
 }
@@ -220,210 +317,55 @@ function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: 
   );
 }
 
-// ─── Multi Select ──────────────────────────────────────────────────
-function MultiSelect({
-  label,
-  options,
-  selectedValues,
-  onChange,
-  required,
-}: {
-  label: string;
-  options: { label: string; value: string }[];
-  selectedValues: string[];
-  onChange: (vals: string[]) => void;
-  required?: boolean;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleToggle = (val: string) => {
-    if (selectedValues.includes(val)) {
-      onChange(selectedValues.filter(v => v !== val));
-    } else {
-      onChange([...selectedValues, val]);
-    }
-  };
-
-  const handleRemove = (val: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    onChange(selectedValues.filter(v => v !== val));
-  };
-
-  return (
-    <div className="flex flex-col gap-1.5 relative text-left" ref={containerRef}>
-      <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">
-        {label} {required && <span className="text-rose-500">*</span>}
-      </label>
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        className="min-h-[42px] w-full px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus-within:border-[#F59E0B]/50 transition-all flex flex-wrap gap-1.5 items-center cursor-pointer select-none"
-      >
-        {selectedValues.length === 0 ? (
-          <span className="text-slate-400 dark:text-slate-500">Select classes...</span>
-        ) : (
-          selectedValues.map(val => {
-            const option = options.find(opt => opt.value === val);
-            return (
-              <span
-                key={val}
-                className="px-2.5 py-1 bg-[#F1F5F9] dark:bg-slate-800 border border-border rounded-md text-[11px] font-semibold text-slate-700 dark:text-slate-200 flex items-center gap-1"
-              >
-                {option ? option.label : val}
-                <X
-                  className="w-3 h-3 text-slate-400 hover:text-rose-500 cursor-pointer"
-                  onClick={(e) => handleRemove(val, e)}
-                />
-              </span>
-            );
-          })
-        )}
-        <span className="ml-auto pointer-events-none text-slate-400">▾</span>
-      </div>
-
-      {isOpen && (
-        <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white dark:bg-slate-900 border border-border rounded-lg shadow-xl z-50 max-h-60 overflow-y-auto p-1.5 space-y-0.5">
-          {options.length === 0 ? (
-            <div className="text-center py-3 text-[12px] text-slate-400">No classes found</div>
-          ) : (
-            options.map(opt => {
-              const isSelected = selectedValues.includes(opt.value);
-              return (
-                <div
-                  key={opt.value}
-                  onClick={() => handleToggle(opt.value)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-md text-[13px] font-medium cursor-pointer transition-colors ${
-                    isSelected
-                      ? "bg-[#F59E0B]/10 text-[#F59E0B]"
-                      : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => {}}
-                    className="accent-[#F59E0B] rounded cursor-pointer"
-                  />
-                  <span>{opt.label}</span>
-                </div>
-              );
-            })
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Main page ─────────────────────────────────────────────────────
 function AddTeacherContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
-  const { classes: apiClasses } = useClasses();
-  const { subjects: apiSubjects } = useSubjects(undefined, { all: true });
+  const { subjects: apiSubjects } = useSubjectMaster();
   const { createTeacher, updateTeacher, getTeacher } = useTeachers();
   const { uploadFile } = useUpload();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [uploadingResume, setUploadingResume] = useState(false);
-  const [uploadingJoinLetter, setUploadingJoinLetter] = useState(false);
-
-  const classOptions = apiClasses.map(c => ({ label: `${c.name} - ${c.section}`, value: c._id }));
+  const [uploadingAadhaarFront, setUploadingAadhaarFront] = useState(false);
+  const [uploadingAadhaarBack, setUploadingAadhaarBack] = useState(false);
 
   const subjectOptions = useMemo(() => {
     const names = new Set<string>();
     apiSubjects.forEach(s => {
-      if (s.name) names.add(s.name.trim());
+      if (s.name && s.status === "Active") names.add(s.name.trim());
     });
     return Array.from(names).sort();
   }, [apiSubjects]);
 
-  // ── Personal Info ─────────────────────────────────────────────
+  // ── Professional Information ──────────────────────────────────
+  const [teacherId, setTeacherId] = useState("");          // auto-generated, display only
+  const [employeeCode, setEmployeeCode] = useState("");    // manual, unique
+  const [qualification, setQualification] = useState("");
+  const [specializations, setSpecializations] = useState<string[]>([]);
+  const [experienceYears, setExperienceYears] = useState("");
+  const [trainingDetails, setTrainingDetails] = useState<string[]>([]);
+
+  // ── Personal Information ──────────────────────────────────────
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [employeeId, setEmployeeId] = useState("");
-  const [classIds, setClassIds] = useState<string[]>([]);
-  const [subjectSpecialization, setSubjectSpecialization] = useState("");
   const [gender, setGender] = useState("Select");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [bloodGroup, setBloodGroup] = useState("Select");
-  const [joinDate, setJoinDate] = useState("");
-  const [fatherName, setFatherName] = useState("");
-  const [motherName, setMotherName] = useState("");
   const [dob, setDob] = useState("");
-  const [maritalStatus, setMaritalStatus] = useState("Select");
-  const [languages, setLanguages] = useState<string[]>(["English"]);
-  const [qualification, setQualification] = useState("");
-  const [experienceYears, setExperienceYears] = useState("");
-  const [prevSchoolName, setPrevSchoolName] = useState("");
-  const [prevSchoolAddress, setPrevSchoolAddress] = useState("");
-  const [prevSchoolPhone, setPrevSchoolPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [permanentAddress, setPermanentAddress] = useState("");
-  const [panNumber, setPanNumber] = useState("");
-  const [status, setStatus] = useState<"Active" | "Inactive">("Active");
-  const [notes, setNotes] = useState("");
+  const [aadhaarFrontUrl, setAadhaarFrontUrl] = useState("");
+  const [aadhaarBackUrl, setAadhaarBackUrl] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
 
-  // ── Payroll ───────────────────────────────────────────────────
-  const [epfNo, setEpfNo] = useState("");
-  const [basicSalary, setBasicSalary] = useState("");
-  const [contractType, setContractType] = useState("Select");
-  const [workShift, setWorkShift] = useState("Select");
-  const [workLocation, setWorkLocation] = useState("");
-  const [leavingDate, setLeavingDate] = useState("");
+  // ── Contact Information ───────────────────────────────────────
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
 
-  // ── Leaves ────────────────────────────────────────────────────
-  const [medicalLeaves, setMedicalLeaves] = useState("");
-  const [casualLeaves, setCasualLeaves] = useState("");
-  const [maternityLeaves, setMaternityLeaves] = useState("");
-  const [sickLeaves, setSickLeaves] = useState("");
+  // ── Employment Information ────────────────────────────────────
+  const [joinDate, setJoinDate] = useState("");
+  const [status, setStatus] = useState<"Active" | "Inactive">("Active");
 
-  // ── Bank ──────────────────────────────────────────────────────
-  const [accountName, setAccountName] = useState("");
-  const [accountNumber, setAccountNumber] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [ifscCode, setIfscCode] = useState("");
-  const [branchName, setBranchName] = useState("");
-
-  // ── Transport ─────────────────────────────────────────────────
-  const [route, setRoute] = useState("Select");
-  const [vehicleNumber, setVehicleNumber] = useState("Select");
-  const [pickupPoint, setPickupPoint] = useState("Select");
-
-  // ── Hostel ────────────────────────────────────────────────────
-  const [hostel, setHostel] = useState("Select");
-  const [roomNo, setRoomNo] = useState("Select");
-
-  // ── Social ────────────────────────────────────────────────────
-  const [facebookUrl, setFacebookUrl] = useState("");
-  const [instagramUrl, setInstagramUrl] = useState("");
-  const [linkedinUrl, setLinkedinUrl] = useState("");
-  const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [twitterUrl, setTwitterUrl] = useState("");
-
-  // ── Password ──────────────────────────────────────────────────
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-  // ── Documents ─────────────────────────────────────────────────
-  const [resumeFile, setResumeFile] = useState<DocFile | null>(null);
-  const [joiningLetterFile, setJoiningLetterFile] = useState<DocFile | null>(null);
-
-  // ── Login Credentials Popup ────────────────────────────────────
+  // ── Login Credentials Popup ───────────────────────────────────
   const [showCredentials, setShowCredentials] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState<{ loginId: string; password: string } | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -444,95 +386,32 @@ function AddTeacherContent() {
           const [first, ...last] = teacher.name.split(" ");
           setFirstName(first || "");
           setLastName(last.join(" ") || "");
-          setEmployeeId(teacher.employee_id || "");
-          if (teacher.class_ids && Array.isArray(teacher.class_ids)) {
-            const ids = teacher.class_ids.map((cls: any) =>
-              typeof cls === "object" && cls ? String(cls._id) : String(cls)
-            );
-            setClassIds(ids);
-          } else {
-            const cid = teacher.class_id && typeof teacher.class_id === "object" ? (teacher.class_id as any)._id : teacher.class_id;
-            setClassIds(cid ? [String(cid)] : []);
-          }
+          setTeacherId(teacher._id || "");
+          setEmployeeCode(teacher.employee_id || "");
           setGender(teacher.gender ? (teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1)) : "Select");
           setDob(teacher.dob ? new Date(teacher.dob).toISOString().split("T")[0] : "");
           setPhone(teacher.phone || "");
           setEmail(teacher.email || "");
           setAddress(teacher.address || "");
-          setPermanentAddress(teacher.permanent_address || "");
           setPhotoUrl(teacher.photo_url || "");
-          setBloodGroup(teacher.blood_group || "Select");
           setQualification(teacher.qualification || "");
-          setSubjectSpecialization(teacher.subject_specialization || "");
-          setExperienceYears(teacher.experience_years != null ? teacher.experience_years.toString() : "0");
+          const specs = teacher.subject_specialization
+            ? teacher.subject_specialization.split(",").map((s: string) => s.trim()).filter(Boolean)
+            : [];
+          setSpecializations(specs);
+          setExperienceYears(teacher.experience_years != null ? teacher.experience_years.toString() : "");
+          setTrainingDetails(teacher.training_details && Array.isArray(teacher.training_details) ? teacher.training_details : []);
           setJoinDate(teacher.join_date ? new Date(teacher.join_date).toISOString().split("T")[0] : "");
-          setLanguages(teacher.languages && teacher.languages.length > 0 ? teacher.languages : ["English"]);
           setStatus(teacher.is_active ? "Active" : "Inactive");
-          // Family
-          setFatherName(teacher.father_name || "");
-          setMotherName(teacher.mother_name || "");
-          setMaritalStatus(teacher.marital_status || "Select");
-          // Previous school
-          setPrevSchoolName(teacher.previous_school_name || "");
-          setPrevSchoolAddress(teacher.previous_school_address || "");
-          setPrevSchoolPhone(teacher.previous_school_phone || "");
-          // IDs / notes
-          setPanNumber(teacher.pan_number || "");
-          setNotes(teacher.notes || "");
-          // Payroll
-          setEpfNo(teacher.epf_no || "");
-          setBasicSalary(teacher.basic_salary != null ? teacher.basic_salary.toString() : "");
-          setContractType(teacher.contract_type || "Select");
-          setWorkShift(teacher.work_shift || "Select");
-          setWorkLocation(teacher.work_location || "");
-          setLeavingDate(teacher.date_of_leaving ? new Date(teacher.date_of_leaving).toISOString().split("T")[0] : "");
-          // Leaves
-          setMedicalLeaves(teacher.medical_leaves != null ? teacher.medical_leaves.toString() : "");
-          setCasualLeaves(teacher.casual_leaves != null ? teacher.casual_leaves.toString() : "");
-          setMaternityLeaves(teacher.maternity_leaves != null ? teacher.maternity_leaves.toString() : "");
-          setSickLeaves(teacher.sick_leaves != null ? teacher.sick_leaves.toString() : "");
-          // Bank
-          setAccountName(teacher.account_name || "");
-          setAccountNumber(teacher.account_number || "");
-          setBankName(teacher.bank_name || "");
-          setIfscCode(teacher.ifsc_code || "");
-          setBranchName(teacher.branch_name || "");
-          // Transport
-          setRoute(teacher.transport_route || "Select");
-          setVehicleNumber(teacher.transport_vehicle || "Select");
-          setPickupPoint(teacher.transport_pickup_point || "Select");
-          // Hostel
-          setHostel(teacher.hostel_name || "Select");
-          setRoomNo(teacher.hostel_room_no || "Select");
-          // Social
-          setFacebookUrl(teacher.facebook_url || "");
-          setInstagramUrl(teacher.instagram_url || "");
-          setLinkedinUrl(teacher.linkedin_url || "");
-          setYoutubeUrl(teacher.youtube_url || "");
-          setTwitterUrl(teacher.twitter_url || "");
-          // Documents
-          if (teacher.resume_url) setResumeFile({ name: "resume", url: teacher.resume_url });
-          if (teacher.joining_letter_url) setJoiningLetterFile({ name: "joining_letter", url: teacher.joining_letter_url });
+          setAadhaarFrontUrl((teacher as any).aadhaar_front_url || "");
+          setAadhaarBackUrl((teacher as any).aadhaar_back_url || "");
         }
       }
     }
     loadData();
   }, [editId, getTeacher]);
 
-  // ── Auto-generate Teacher ID based on Join Date ───────────────
-  useEffect(() => {
-    if (joinDate && !editId) {
-      const formattedDate = joinDate.replace(/-/g, "");
-      setEmployeeId(`T-${formattedDate}`);
-    }
-  }, [joinDate, editId]);
 
-  // ── Set default Subject Specialization ────────────────────────
-  useEffect(() => {
-    if (!editId && subjectOptions.length > 0 && !subjectSpecialization) {
-      setSubjectSpecialization(subjectOptions[0]);
-    }
-  }, [subjectOptions, editId, subjectSpecialization]);
 
   // ── Handle photo upload ───────────────────────────────────────
   const handlePhotoUpload = useCallback(async (file: File) => {
@@ -542,93 +421,51 @@ function AddTeacherContent() {
     if (url) setPhotoUrl(url);
   }, [uploadFile]);
 
-  // ── Handle document upload ────────────────────────────────────
-  const handleResumeUpload = useCallback(async (file: File | null) => {
-    if (!file) { setResumeFile(null); return; }
-    setUploadingResume(true);
+  // ── Handle Aadhaar uploads ────────────────────────────────────
+  const handleAadhaarFrontUpload = useCallback(async (file: File) => {
+    setUploadingAadhaarFront(true);
     const url = await uploadFile(file);
-    setUploadingResume(false);
-    if (url) setResumeFile({ name: file.name, url });
+    setUploadingAadhaarFront(false);
+    if (url) setAadhaarFrontUrl(url);
   }, [uploadFile]);
 
-  const handleJoinLetterUpload = useCallback(async (file: File | null) => {
-    if (!file) { setJoiningLetterFile(null); return; }
-    setUploadingJoinLetter(true);
+  const handleAadhaarBackUpload = useCallback(async (file: File) => {
+    setUploadingAadhaarBack(true);
     const url = await uploadFile(file);
-    setUploadingJoinLetter(false);
-    if (url) setJoiningLetterFile({ name: file.name, url });
+    setUploadingAadhaarBack(false);
+    if (url) setAadhaarBackUrl(url);
   }, [uploadFile]);
 
   // ── Submit ────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validation
+    if (!firstName.trim()) { alert("First Name is required."); return; }
+    if (gender === "Select") { alert("Gender is required."); return; }
+    if (!phone.trim()) { alert("Mobile Number is required."); return; }
+    if (!qualification.trim()) { alert("Highest Qualification is required."); return; }
+    if (!joinDate) { alert("Joining Date is required."); return; }
+
     setIsSubmitting(true);
 
     const payload: Record<string, any> = {
-      // Personal
       name: `${firstName} ${lastName}`.trim() || "New Teacher",
-      employee_id: employeeId || undefined,
-      class_ids: classIds && classIds.length > 0 ? classIds : [],
-      class_id: classIds && classIds.length > 0 ? classIds[0] : undefined,
+      employee_id: employeeCode || undefined,
       gender: gender !== "Select" ? gender.toLowerCase() : undefined,
       dob: dob || undefined,
       phone: phone || undefined,
       email: email || undefined,
       address: address || undefined,
-      permanent_address: permanentAddress || undefined,
       photo_url: photoUrl || undefined,
-      blood_group: bloodGroup !== "Select" ? bloodGroup : undefined,
       qualification: qualification || undefined,
-      subject_specialization: subjectSpecialization || undefined,
+      subject_specialization: specializations.join(", ") || undefined,
       experience_years: experienceYears ? parseInt(experienceYears) : 0,
+      training_details: trainingDetails.length > 0 ? trainingDetails : undefined,
       join_date: joinDate || undefined,
-      languages,
       is_active: status === "Active",
-      // Family
-      father_name: fatherName || undefined,
-      mother_name: motherName || undefined,
-      marital_status: maritalStatus !== "Select" ? maritalStatus : undefined,
-      // Previous school
-      previous_school_name: prevSchoolName || undefined,
-      previous_school_address: prevSchoolAddress || undefined,
-      previous_school_phone: prevSchoolPhone || undefined,
-      // IDs / notes
-      pan_number: panNumber || undefined,
-      notes: notes || undefined,
-      // Payroll
-      epf_no: epfNo || undefined,
-      basic_salary: basicSalary ? parseFloat(basicSalary) : undefined,
-      contract_type: contractType !== "Select" ? contractType : undefined,
-      work_shift: workShift !== "Select" ? workShift : undefined,
-      work_location: workLocation || undefined,
-      date_of_leaving: leavingDate || undefined,
-      // Leaves
-      medical_leaves: medicalLeaves ? parseInt(medicalLeaves) : undefined,
-      casual_leaves: casualLeaves ? parseInt(casualLeaves) : undefined,
-      maternity_leaves: maternityLeaves ? parseInt(maternityLeaves) : undefined,
-      sick_leaves: sickLeaves ? parseInt(sickLeaves) : undefined,
-      // Bank
-      account_name: accountName || undefined,
-      account_number: accountNumber || undefined,
-      bank_name: bankName || undefined,
-      ifsc_code: ifscCode || undefined,
-      branch_name: branchName || undefined,
-      // Transport
-      transport_route: route !== "Select" ? route : undefined,
-      transport_vehicle: vehicleNumber !== "Select" ? vehicleNumber : undefined,
-      transport_pickup_point: pickupPoint !== "Select" ? pickupPoint : undefined,
-      // Hostel
-      hostel_name: hostel !== "Select" ? hostel : undefined,
-      hostel_room_no: roomNo !== "Select" ? roomNo : undefined,
-      // Social
-      facebook_url: facebookUrl || undefined,
-      instagram_url: instagramUrl || undefined,
-      linkedin_url: linkedinUrl || undefined,
-      youtube_url: youtubeUrl || undefined,
-      twitter_url: twitterUrl || undefined,
-      // Documents
-      resume_url: resumeFile?.url || undefined,
-      joining_letter_url: joiningLetterFile?.url || undefined,
+      aadhaar_front_url: aadhaarFrontUrl || undefined,
+      aadhaar_back_url: aadhaarBackUrl || undefined,
     };
 
     if (editId) {
@@ -637,14 +474,11 @@ function AddTeacherContent() {
       if (res.success) router.push("/teachers");
       else alert(res.message || "Failed to update teacher");
     } else {
-      // Include password only on create
-      if (password) payload.password = password;
       const res = await createTeacher(payload as CreateTeacherInput);
       setIsSubmitting(false);
       if (res.success) {
-        // Use credentials returned from the backend API response
         const loginId = res?.credentials?.loginId || `${(firstName + lastName).toLowerCase().trim().replace(/\s+/g, "")}.school@gmail.com`;
-        const pswd = res?.credentials?.password || password || "password123";
+        const pswd = res?.credentials?.password || "password123";
         setCreatedCredentials({ loginId, password: pswd });
         setShowCredentials(true);
       } else {
@@ -671,139 +505,154 @@ function AddTeacherContent() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* 1. Personal Information */}
+        {/* 1. Professional Information */}
+        <SectionCard icon={<GraduationCap className="w-4 h-4" />} title="Professional Information">
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-5 text-left">
+            <InputGroup
+              label="Teacher ID"
+              value={editId ? teacherId : "Auto Generated"}
+              disabled
+              hint="Automatically assigned by the system"
+            />
+            <InputGroup
+              label="Employee Code"
+              placeholder="e.g. EMP-001"
+              value={employeeCode}
+              onChange={e => setEmployeeCode(e.target.value)}
+              hint="Must be unique"
+            />
+            <InputGroup
+              label="Highest Qualification"
+              value={qualification}
+              onChange={e => setQualification(e.target.value)}
+              required
+              datalistOptions={["B.Ed", "M.Ed", "B.Sc", "M.Sc", "B.A", "M.A", "Ph.D", "B.Tech", "M.Tech", "Diploma"]}
+              placeholder="e.g. M.Ed"
+            />
+            <SubjectSpecializationInput
+              selectedSubjects={specializations}
+              onChange={setSpecializations}
+              subjectOptions={subjectOptions}
+            />
+            <InputGroup
+              label="Experience (Years)"
+              type="number"
+              placeholder="e.g. 5"
+              value={experienceYears}
+              onChange={e => setExperienceYears(e.target.value)}
+            />
+            <div className="col-span-1 md:col-span-2 xl:col-span-3">
+              <label className="block text-[12px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5">
+                Training Details
+              </label>
+              <TagInput tags={trainingDetails} onChange={setTrainingDetails} placeholder="Add training (press Enter)..." />
+            </div>
+          </div>
+        </SectionCard>
+
+        {/* 2. Personal Information */}
         <SectionCard icon={<User className="w-4 h-4" />} title="Personal Information">
-          <div className="p-6">
+          <div className="p-6 space-y-6">
+            {/* Row 1: Photo + Basic Fields */}
             <div className="flex flex-col lg:flex-row gap-8">
-              {/* Photo */}
               <PhotoUploader
-                label="JPEG, JPG, PNG, GIF — Max 5MB"
+                label="JPEG, JPG, PNG — Max 5MB"
                 preview={photoUrl}
                 onChange={handlePhotoUpload}
                 onRemove={() => setPhotoUrl("")}
                 uploading={uploadingPhoto}
               />
-
-              {/* Form Grid */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-5 text-left">
-                <InputGroup label="Teacher ID" value={employeeId} onChange={e => setEmployeeId(e.target.value)} />
-                <InputGroup label="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} required />
-                <InputGroup label="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
-                <MultiSelect label="Classes" options={classOptions} selectedValues={classIds} onChange={setClassIds} />
-                <InputGroup label="Subject Specialization" type="select" value={subjectSpecialization} onChange={e => setSubjectSpecialization(e.target.value)} options={subjectOptions.length > 0 ? subjectOptions : ["No subjects found"]} />
-                <InputGroup label="Gender" type="select" value={gender} onChange={e => setGender(e.target.value)} options={["Select", "Male", "Female", "Other"]} />
-                <InputGroup label="Primary Contact Number" value={phone} onChange={e => setPhone(e.target.value)} />
-                <InputGroup label="Email Address" type="email" value={email} onChange={e => setEmail(e.target.value)} />
-                <InputGroup label="Blood Group" type="select" value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} options={["Select", "A+", "A-", "O+", "O-", "B+", "B-", "AB+", "AB-"]} />
-                <InputGroup label="Date of Joining" type="date" value={joinDate} onChange={e => setJoinDate(e.target.value)} />
-                <InputGroup label="Father's Name" value={fatherName} onChange={e => setFatherName(e.target.value)} />
-                <InputGroup label="Date of Birth" type="date" value={dob} onChange={e => setDob(e.target.value)} />
-                <InputGroup label="Marital Status" type="select" value={maritalStatus} onChange={e => setMaritalStatus(e.target.value)} options={["Select", "Single", "Married"]} />
-                <div className="col-span-1">
-                  <label className="block text-[12px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Language Known</label>
-                  <TagInput tags={languages} onChange={setLanguages} placeholder="Add language..." />
-                </div>
-                <InputGroup 
-                  label="Qualification" 
-                  value={qualification} 
-                  onChange={e => setQualification(e.target.value)} 
-                  datalistOptions={["B.Ed", "M.Ed", "B.Sc", "M.Sc", "B.A", "M.A", "Ph.D", "B.Tech", "M.Tech", "Diploma"]}
+              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-5 text-left">
+                <InputGroup label="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} required placeholder="Enter first name" />
+                <InputGroup label="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Enter last name" />
+                <InputGroup
+                  label="Gender"
+                  type="select"
+                  value={gender}
+                  onChange={e => setGender(e.target.value)}
+                  options={["Select", "Male", "Female", "Other"]}
+                  required
                 />
-                <InputGroup label="Work Experience (Years)" type="number" value={experienceYears} onChange={e => setExperienceYears(e.target.value)} />
-                <InputGroup label="Previous School Name" value={prevSchoolName} onChange={e => setPrevSchoolName(e.target.value)} />
-                <InputGroup label="Previous School Address" value={prevSchoolAddress} onChange={e => setPrevSchoolAddress(e.target.value)} />
-                <InputGroup label="Previous School Phone" value={prevSchoolPhone} onChange={e => setPrevSchoolPhone(e.target.value)} />
-                <InputGroup label="Address" value={address} onChange={e => setAddress(e.target.value)} />
-                <InputGroup label="Permanent Address" value={permanentAddress} onChange={e => setPermanentAddress(e.target.value)} />
-                <InputGroup label="Status" type="select" value={status} onChange={e => setStatus(e.target.value as "Active" | "Inactive")} options={["Active", "Inactive"]} />
-                <div className="col-span-1 md:col-span-2 xl:col-span-4">
-                  <label className="block text-[12px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Notes</label>
-                  <textarea
-                    placeholder="Other information"
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    className="w-full h-24 px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all"
-                  />
-                </div>
+                <InputGroup label="Date of Birth" type="date" value={dob} onChange={e => setDob(e.target.value)} />
+              </div>
+            </div>
+
+            {/* Row 2: Aadhaar Card — full width, front & back side by side */}
+            <div className="pt-5 border-t border-border">
+              <div className="flex items-center gap-2 mb-4">
+                <ScanLine className="w-4 h-4 text-slate-400" />
+                <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200">Aadhaar Card</span>
+                <span className="text-[11px] text-slate-400">(Optional)</span>
+              </div>
+              <div className="grid grid-cols-2 gap-5">
+                <ImageUploader
+                  label="Front Side"
+                  sublabel="Upload front of Aadhaar card"
+                  preview={aadhaarFrontUrl}
+                  onChange={handleAadhaarFrontUpload}
+                  onRemove={() => setAadhaarFrontUrl("")}
+                  uploading={uploadingAadhaarFront}
+                />
+                <ImageUploader
+                  label="Back Side"
+                  sublabel="Upload back of Aadhaar card"
+                  preview={aadhaarBackUrl}
+                  onChange={handleAadhaarBackUpload}
+                  onRemove={() => setAadhaarBackUrl("")}
+                  uploading={uploadingAadhaarBack}
+                />
               </div>
             </div>
           </div>
         </SectionCard>
 
-        {/* 2. Payroll */}
-        <SectionCard icon={<Briefcase className="w-4 h-4" />} title="Payroll">
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 text-left">
-            <InputGroup label="EPF No" value={epfNo} onChange={e => setEpfNo(e.target.value)} />
-            <InputGroup label="Contract Type" type="select" value={contractType} onChange={e => setContractType(e.target.value)} options={["Select", "Permanent", "Contract"]} />
-            <InputGroup label="Work Shift" type="select" value={workShift} onChange={e => setWorkShift(e.target.value)} options={["Select", "Morning", "Evening"]} />
-            <InputGroup label="Work Location" value={workLocation} onChange={e => setWorkLocation(e.target.value)} />
-            <InputGroup label="Date of Leaving" type="date" value={leavingDate} onChange={e => setLeavingDate(e.target.value)} />
-          </div>
-        </SectionCard>
-
-        {/* 3. Leaves */}
-        <SectionCard icon={<Calendar className="w-4 h-4" />} title="Leaves">
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 text-left">
-            <InputGroup label="Medical Leaves" type="number" value={medicalLeaves} onChange={e => setMedicalLeaves(e.target.value)} />
-            <InputGroup label="Casual Leaves" type="number" value={casualLeaves} onChange={e => setCasualLeaves(e.target.value)} />
-            <InputGroup label="Maternity Leaves" type="number" value={maternityLeaves} onChange={e => setMaternityLeaves(e.target.value)} />
-            <InputGroup label="Sick Leaves" type="number" value={sickLeaves} onChange={e => setSickLeaves(e.target.value)} />
-          </div>
-        </SectionCard>
-
-        {/* 4. Bank Account */}
-        <SectionCard icon={<CreditCard className="w-4 h-4" />} title="Bank Account Detail">
-          <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-            <InputGroup label="Account Name" value={accountName} onChange={e => setAccountName(e.target.value)} />
-            <InputGroup label="Account Number" value={accountNumber} onChange={e => setAccountNumber(e.target.value)} />
-            <InputGroup label="Bank Name" value={bankName} onChange={e => setBankName(e.target.value)} />
-            <InputGroup label="IFSC Code" value={ifscCode} onChange={e => setIfscCode(e.target.value)} />
-            <InputGroup label="Branch Name" value={branchName} onChange={e => setBranchName(e.target.value)} />
-          </div>
-        </SectionCard>
-
-        {/* 6. Hostel */}
-        <SectionCard icon={<Building2 className="w-4 h-4" />} title="Hostel Information">
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-            <InputGroup label="Hostel" type="select" value={hostel} onChange={e => setHostel(e.target.value)} options={["Select", "HI-Hostel", "Boys Hostel"]} />
-            <InputGroup label="Room No" type="select" value={roomNo} onChange={e => setRoomNo(e.target.value)} options={["Select", "Room 25", "Room 30"]} />
-          </div>
-        </SectionCard>
-
-        {/* 7. Social Media */}
-        <SectionCard icon={<Share2 className="w-4 h-4" />} title="Social Media Links">
-          <div className="p-6 grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-6 text-left">
-            <InputGroup label="Facebook" value={facebookUrl} onChange={e => setFacebookUrl(e.target.value)} />
-            <InputGroup label="Instagram" value={instagramUrl} onChange={e => setInstagramUrl(e.target.value)} />
-            <InputGroup label="LinkedIn" value={linkedinUrl} onChange={e => setLinkedinUrl(e.target.value)} />
-            <InputGroup label="YouTube" value={youtubeUrl} onChange={e => setYoutubeUrl(e.target.value)} />
-            <InputGroup label="Twitter" value={twitterUrl} onChange={e => setTwitterUrl(e.target.value)} />
-          </div>
-        </SectionCard>
-
-        {/* 8. Documents */}
-        <SectionCard icon={<FileText className="w-4 h-4" />} title="Documents">
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-            <DocUploader
-              label="Upload Resume"
-              doc={resumeFile}
-              onChange={handleResumeUpload}
-              uploading={uploadingResume}
+        {/* 3. Contact Information */}
+        <SectionCard icon={<Phone className="w-4 h-4" />} title="Contact Information">
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-5 text-left">
+            <InputGroup
+              label="Mobile Number"
+              type="tel"
+              placeholder="Enter mobile number"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              required
             />
-            <DocUploader
-              label="Upload Joining Letter"
-              doc={joiningLetterFile}
-              onChange={handleJoinLetterUpload}
-              uploading={uploadingJoinLetter}
+            <InputGroup
+              label="Email"
+              type="email"
+              placeholder="Optional"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
             />
+            <div className="col-span-1 md:col-span-2 xl:col-span-3">
+              <label className="block text-[12px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Address</label>
+              <textarea
+                placeholder="Enter full address"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                className="w-full h-20 px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all resize-none"
+              />
+            </div>
           </div>
         </SectionCard>
 
-        {/* 9. Password */}
-        <SectionCard icon={<Lock className="w-4 h-4" />} title="Password">
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-            <InputGroup label="New Password" type="password" value={password} onChange={e => setPassword(e.target.value)} />
-            <InputGroup label="Confirm Password" type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+        {/* 4. Employment Information */}
+        <SectionCard icon={<Briefcase className="w-4 h-4" />} title="Employment Information">
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-5 text-left">
+            <InputGroup
+              label="Joining Date"
+              type="date"
+              value={joinDate}
+              onChange={e => setJoinDate(e.target.value)}
+              required
+            />
+            <InputGroup
+              label="Status"
+              type="select"
+              value={status}
+              onChange={e => setStatus(e.target.value as "Active" | "Inactive")}
+              options={["Active", "Inactive"]}
+            />
           </div>
         </SectionCard>
 
@@ -818,7 +667,7 @@ function AddTeacherContent() {
           </button>
           <button
             type="submit"
-            disabled={isSubmitting || uploadingPhoto || uploadingResume || uploadingJoinLetter}
+            disabled={isSubmitting || uploadingPhoto || uploadingAadhaarFront || uploadingAadhaarBack}
             className="px-6 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (

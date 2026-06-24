@@ -6,7 +6,6 @@ import Teacher from "@/lib/models/Teacher";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
-// GET: Fetch attendance for a class on a specific date
 export async function GET(req: NextRequest) {
   const { schoolId, userId, role, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
@@ -15,32 +14,25 @@ export async function GET(req: NextRequest) {
     await connectToDatabase();
 
     const url = new URL(req.url);
-    const classId = url.searchParams.get("classId");
+    const academic_year = url.searchParams.get("academic_year");
     const dateParam = url.searchParams.get("date"); // YYYY-MM-DD
-    const type = url.searchParams.get("type") || "student";
+    const classId = url.searchParams.get("classId");
+    const streamId = url.searchParams.get("streamId");
+    const sectionId = url.searchParams.get("sectionId");
 
-    if (type === "student" && !classId) {
+    if (!academic_year || !dateParam || !classId) {
       return NextResponse.json(
-        { success: false, message: "classId and date are required for students" },
-        { status: 400 }
-      );
-    }
-    if (!dateParam) {
-      return NextResponse.json(
-        { success: false, message: "date is required" },
+        { success: false, message: "academic_year, date, and classId are required" },
         { status: 400 }
       );
     }
 
-    if (type === "student" && !mongoose.Types.ObjectId.isValid(classId!)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid classId format" },
-        { status: 400 }
-      );
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return NextResponse.json({ success: false, message: "Invalid classId format" }, { status: 400 });
     }
 
     // Verify teacher assignment for student attendance
-    if (type === "student" && role === "teacher") {
+    if (role === "teacher") {
       const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
       if (!teacher) {
         return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
@@ -54,7 +46,7 @@ export async function GET(req: NextRequest) {
         ]
       }).distinct("_id");
 
-      const hasAccess = teacherClassIds.map(id => id.toString()).includes(classId!);
+      const hasAccess = teacherClassIds.map(id => id.toString()).includes(classId);
       if (!hasAccess) {
         return NextResponse.json({ success: false, message: "You are not assigned to this class" }, { status: 403 });
       }
@@ -62,17 +54,27 @@ export async function GET(req: NextRequest) {
 
     const startOfDay = new Date(dateParam);
     startOfDay.setUTCHours(0, 0, 0, 0);
-
     const endOfDay = new Date(dateParam);
     endOfDay.setUTCHours(23, 59, 59, 999);
 
     const query: any = {
       school_id: schoolId as string,
+      academic_year,
+      class_id: classId,
       date: { $gte: startOfDay, $lte: endOfDay },
-      type,
+      type: "student",
     };
-    if (type === "student") {
-      query.class_id = classId;
+
+    if (streamId && mongoose.Types.ObjectId.isValid(streamId)) {
+      query.stream_id = streamId;
+    } else {
+      query.stream_id = null;
+    }
+
+    if (sectionId && mongoose.Types.ObjectId.isValid(sectionId)) {
+      query.section_id = sectionId;
+    } else {
+      query.section_id = null;
     }
 
     const attendanceRecord = await Attendance.findOne(query).populate("records.student_id", "name roll_no");
@@ -82,14 +84,10 @@ export async function GET(req: NextRequest) {
       data: attendanceRecord || null,
     });
   } catch (err: any) {
-    return NextResponse.json(
-      { success: false, message: err.message || "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: err.message || "Internal server error" }, { status: 500 });
   }
 }
 
-// POST: Save or Update attendance for a class on a specific date
 export async function POST(req: NextRequest) {
   const { schoolId, userId, role, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
@@ -98,30 +96,21 @@ export async function POST(req: NextRequest) {
     await connectToDatabase();
 
     const body = await req.json();
-    const { classId, date, records, type = "student" } = body;
+    const { academic_year, date, classId, streamId, sectionId, records } = body;
 
-    if (type === "student" && !classId) {
+    if (!academic_year || !date || !classId || !records) {
       return NextResponse.json(
-        { success: false, message: "classId, date, and records are required for students" },
-        { status: 400 }
-      );
-    }
-    if (!date || !records) {
-      return NextResponse.json(
-        { success: false, message: "date, and records are required" },
+        { success: false, message: "academic_year, date, classId, and records are required" },
         { status: 400 }
       );
     }
 
-    if (type === "student" && !mongoose.Types.ObjectId.isValid(classId)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid classId format" },
-        { status: 400 }
-      );
+    if (!mongoose.Types.ObjectId.isValid(classId)) {
+      return NextResponse.json({ success: false, message: "Invalid classId format" }, { status: 400 });
     }
 
     // Verify teacher assignment for student attendance
-    if (type === "student" && role === "teacher") {
+    if (role === "teacher") {
       const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
       if (!teacher) {
         return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
@@ -143,66 +132,56 @@ export async function POST(req: NextRequest) {
 
     const startOfDay = new Date(date);
     startOfDay.setUTCHours(0, 0, 0, 0);
-
     const endOfDay = new Date(date);
     endOfDay.setUTCHours(23, 59, 59, 999);
 
-    // Check if record already exists
     const filter: any = {
       school_id: new mongoose.Types.ObjectId(schoolId as string),
+      academic_year,
+      class_id: new mongoose.Types.ObjectId(classId),
       date: { $gte: startOfDay, $lte: endOfDay },
-      type,
+      type: "student",
     };
-    if (type === "student") {
-      filter.class_id = new mongoose.Types.ObjectId(classId);
-    }
+    filter.stream_id = streamId && mongoose.Types.ObjectId.isValid(streamId) ? new mongoose.Types.ObjectId(streamId) : null;
+    filter.section_id = sectionId && mongoose.Types.ObjectId.isValid(sectionId) ? new mongoose.Types.ObjectId(sectionId) : null;
 
     const existingRecord = await Attendance.findOne(filter);
 
-    // Date check: requestDateStr vs Today (local and UTC)
+    // Date check: only allow today if not editing
     const requestDateStr = date;
     const d = new Date();
     const localToday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const utcToday = d.toISOString().split("T")[0];
     const isToday = (requestDateStr === localToday || requestDateStr === utcToday);
 
-    if (!existingRecord && !isToday) {
+    if (!existingRecord && !isToday && role !== "school_admin" && role !== "super_admin") {
       return NextResponse.json(
-        { success: false, message: "Attendance can only be marked for today. Past records cannot be created." },
+        { success: false, message: "Teachers can only mark attendance for today. Admins can mark past dates." },
         { status: 400 }
       );
     }
 
-    // Find the teacher ID if marked by a teacher
-    let markedBy = userId;
-    if (role === "teacher") {
-      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
-      if (teacher) {
-        markedBy = teacher._id.toString();
-      }
-    }
-
-    // Format records to match schema: { student_id, status, note }
     const formattedRecords = records.map((r: any) => ({
-      student_id: new mongoose.Types.ObjectId(r.studentId),
-      status: r.status.toLowerCase(), // frontend "Present" -> backend "present"
+      student_id: new mongoose.Types.ObjectId(r.student_id),
+      status: r.status.toLowerCase(),
       note: r.note || null,
     }));
 
     const update: any = {
       $set: {
-        marked_by: new mongoose.Types.ObjectId(markedBy),
+        marked_by: new mongoose.Types.ObjectId(userId as string),
         records: formattedRecords,
       },
       $setOnInsert: {
         school_id: new mongoose.Types.ObjectId(schoolId as string),
+        academic_year,
+        class_id: new mongoose.Types.ObjectId(classId),
+        stream_id: filter.stream_id,
+        section_id: filter.section_id,
         date: startOfDay,
-        type,
+        type: "student",
       }
     };
-    if (type === "student") {
-      update.$setOnInsert.class_id = new mongoose.Types.ObjectId(classId);
-    }
 
     const attendanceRecord = await Attendance.findOneAndUpdate(filter, update, {
       upsert: true,
@@ -212,13 +191,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Attendance saved successfully",
+      message: "Student attendance saved successfully",
       data: attendanceRecord,
     });
   } catch (err: any) {
-    return NextResponse.json(
-      { success: false, message: err.message || "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: err.message || "Internal server error" }, { status: 500 });
   }
 }

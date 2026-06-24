@@ -7,10 +7,12 @@ import { useAppState } from "@/app/context/store";
 // ─── Types ────────────────────────────────────────────────────────
 export interface ApiClass {
   _id: string;
-  school_id: string;
+  school_id?: string;
   name: string;
   section: string;
+  class_code?: string;
   academic_year: string;
+  status: "Active" | "Inactive";
   class_teacher_id?: { _id: string; name: string; employee_id?: string } | null;
   capacity: number;
   createdAt?: string;

@@ -19,6 +19,9 @@ export interface ITeacher extends Document {
   experience_years: number;
   join_date: Date;
   languages?: string[];
+  training_details?: string[];
+  aadhaar_front_url?: string;
+  aadhaar_back_url?: string;
   is_active: boolean;
 
   // Family Info
@@ -100,6 +103,9 @@ const teacherSchema = new Schema<ITeacher>(
     experience_years: { type: Number, default: 0 },
     join_date: { type: Date, default: Date.now },
     languages: { type: [String], default: [] },
+    training_details: { type: [String], default: [] },
+    aadhaar_front_url: { type: String, trim: true },
+    aadhaar_back_url: { type: String, trim: true },
     is_active: { type: Boolean, default: true },
 
     // Family Info

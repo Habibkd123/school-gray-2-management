@@ -12,6 +12,9 @@ import { useClasses, ApiClass } from "@/app/hooks/useClasses";
 import { useTeachers } from "@/app/hooks/useTeachers";
 import { useAuth } from "../../context/auth";
 import { useAppState } from "@/app/context/store";
+import { useSections } from "@/app/hooks/useSections";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
+import { useStreams } from "@/app/hooks/useStreams";
 
 export default function ClassesPage() {
   const { user } = useAuth();
@@ -19,6 +22,11 @@ export default function ClassesPage() {
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
   const { classes, isLoading, error, total, totalPages, currentPage, fetchClasses, createClass, updateClass, deleteClass } = useClasses({ skip: true });
   const { teachers } = useTeachers();
+  const { config } = useAcademicConfig();
+  const { sections, createSection } = useSections();
+  const enableSections = config.enable_sections;
+  const enableStreams = config.enable_streams;
+  const { streams } = useStreams({ skip: !enableStreams });
 
   // ── Modal / action states ──────────────────────────────────────────
   const [isAddClassOpen, setIsAddClassOpen] = useState(false);
@@ -109,22 +117,56 @@ export default function ClassesPage() {
   // ── Form states ────────────────────────────────────────────────────
   const [formName, setFormName] = useState("");
   const [formSection, setFormSection] = useState("");
+  const [formSections, setFormSections] = useState<string[]>([]);
   const [formAcademicYear, setFormAcademicYear] = useState("");
   const [formTeacherId, setFormTeacherId] = useState("");
   const [formCapacity, setFormCapacity] = useState("40");
+  const [formStreams, setFormStreams] = useState<string[]>([]);
+  const [formStream, setFormStream] = useState("");
+
+  const [quickSectionName, setQuickSectionName] = useState("");
+  const [addingSection, setAddingSection] = useState(false);
+
+  const handleQuickAddSection = async () => {
+    const name = quickSectionName.trim().toUpperCase();
+    if (!name) return;
+    setAddingSection(true);
+    const result = await createSection({ name, status: "Active" });
+    setAddingSection(false);
+    if (result.success) {
+      setQuickSectionName("");
+      setFormSections(prev => [...prev, name]);
+    } else {
+      alert(result.message || "Failed to add section.");
+    }
+  };
 
   const resetForm = () => {
     setFormName("");
     setFormSection("");
+    setFormSections([]);
     setFormAcademicYear("");
     setFormTeacherId("");
     setFormCapacity("40");
     setFormError("");
+    setQuickSectionName("");
+    setFormStreams([]);
+    setFormStream("");
   };
 
   const openEdit = (cls: ApiClass) => {
+    let baseName = cls.name;
+    let streamName = "";
+    if (cls.name.startsWith("Class 11") || cls.name.startsWith("Class 12")) {
+      const match = cls.name.match(/^(Class 11|Class 12)\s*(.*)$/);
+      if (match) {
+        baseName = match[1];
+        streamName = match[2]?.trim() || "";
+      }
+    }
     setSelectedClass(cls);
-    setFormName(cls.name);
+    setFormName(baseName);
+    setFormStream(streamName);
     setFormSection(cls.section);
     setFormAcademicYear(cls.academic_year);
     setFormTeacherId(cls.class_teacher_id?._id || "");
@@ -147,20 +189,37 @@ export default function ClassesPage() {
       return;
     }
     setSubmitting(true);
-    const result = await createClass({
-      name: formName.trim(),
-      section: formSection,
-      academic_year: formAcademicYear.trim(),
-      class_teacher_id: formTeacherId || undefined,
-      capacity: parseInt(formCapacity) || 40,
-    });
+    
+    const isHigherClass = formName === "Class 11" || formName === "Class 12";
+    const streamsToCreate = enableStreams && isHigherClass && formStreams.length > 0 ? formStreams : [""];
+    const sectionsToCreate = enableSections && formSections.length > 0 ? formSections : [""];
+    let hasError = false;
+    let lastError = "";
+
+    for (const stream of streamsToCreate) {
+      for (const sec of sectionsToCreate) {
+        const finalClassName = stream ? `${formName.trim()} ${stream}` : formName.trim();
+        const result = await createClass({
+          name: finalClassName,
+          section: sec,
+          academic_year: formAcademicYear.trim(),
+          class_teacher_id: formTeacherId || undefined,
+          capacity: parseInt(formCapacity) || 40,
+        });
+        if (!result.success) {
+          hasError = true;
+          lastError = result.message;
+        }
+      }
+    }
+
     setSubmitting(false);
-    if (result.success) {
+    if (!hasError) {
       setIsAddClassOpen(false);
       resetForm();
       doFetch();
     } else {
-      setFormError(result.message);
+      setFormError(lastError || "Some classes could not be created.");
     }
   };
 
@@ -172,9 +231,11 @@ export default function ClassesPage() {
       return;
     }
     setSubmitting(true);
+    const isHigherClass = formName === "Class 11" || formName === "Class 12";
+    const finalClassName = enableStreams && isHigherClass && formStream ? `${formName.trim()} ${formStream.trim()}` : formName.trim();
     const result = await updateClass(selectedClass._id, {
-      name: formName.trim(),
-      section: formSection,
+      name: finalClassName,
+      section: enableSections ? formSection : "",
       academic_year: formAcademicYear.trim(),
       class_teacher_id: formTeacherId || undefined,
       capacity: parseInt(formCapacity) || 40,
@@ -198,33 +259,40 @@ export default function ClassesPage() {
     doFetch();
   };
 
-  const baseColumns: ColumnDef<ApiClass>[] = [
-    {
-      header: "Class",
-      accessorKey: "name",
-      render: (c) => <span className="font-bold text-[#F59E0B]">{c.name}</span>,
-    },
-    { 
-      header: "Section", 
-      accessorKey: "section",
-      render: (c) => <span>{c.section || "—"}</span>
-    },
-    { header: "Academic Year", accessorKey: "academic_year" },
-    {
-      header: "Class Teacher",
-      accessorKey: "class_teacher_id",
-      render: (c) => (
-        <span className="text-slate-600 dark:text-slate-300">
-          {c.class_teacher_id ? c.class_teacher_id.name : <span className="text-slate-400 italic">Not assigned</span>}
-        </span>
-      ),
-    },
-    { header: "Capacity", accessorKey: "capacity" },
-  ];
+  const columns: ColumnDef<ApiClass>[] = React.useMemo(() => {
+    const baseCols: ColumnDef<ApiClass>[] = [
+      {
+        header: "Class",
+        accessorKey: "name",
+        render: (c) => <span className="font-bold text-[#F59E0B]">{c.name}</span>,
+      },
+    ];
 
-  const columns: ColumnDef<ApiClass>[] = isAdmin
-    ? [
-        ...baseColumns,
+    if (enableSections) {
+      baseCols.push({
+        header: "Section",
+        accessorKey: "section",
+        render: (c) => <span>{c.section || "—"}</span>
+      });
+    }
+
+    baseCols.push(
+      { header: "Academic Year", accessorKey: "academic_year" },
+      {
+        header: "Class Teacher",
+        accessorKey: "class_teacher_id",
+        render: (c) => (
+          <span className="text-slate-600 dark:text-slate-300">
+            {c.class_teacher_id ? c.class_teacher_id.name : <span className="text-slate-400 italic">Not assigned</span>}
+          </span>
+        ),
+      },
+      { header: "Capacity", accessorKey: "capacity" }
+    );
+
+    if (isAdmin) {
+      return [
+        ...baseCols,
         {
           header: "Action",
           sortable: false,
@@ -258,8 +326,11 @@ export default function ClassesPage() {
             </div>
           ),
         },
-      ]
-    : baseColumns;
+      ];
+    }
+
+    return baseCols;
+  }, [enableSections, isAdmin, actionMenuId]);
 
   return (
     <div className="space-y-6">
@@ -338,9 +409,8 @@ export default function ClassesPage() {
             <div className="relative">
               <button
                 onClick={() => { setIsFilterOpen(!isFilterOpen); setPendingSection(filterSection); }}
-                className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors ${
-                  filterSection ? "border-[#F59E0B] bg-[#FFF9E6] text-[#D97706]" : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                }`}
+                className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors ${filterSection ? "border-[#F59E0B] bg-[#FFF9E6] text-[#D97706]" : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                  }`}
               >
                 <Filter className="w-4 h-4" />
                 <span>Filter{filterSection ? `: ${filterSection}` : ""}</span>
@@ -394,9 +464,8 @@ export default function ClassesPage() {
                   <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                     {(["asc", "desc"] as const).map((o) => (
                       <button key={o} onClick={() => handleSort(o)}
-                        className={`w-full px-4 py-2.5 text-[13px] text-left transition-colors font-medium ${
-                          o === sortOrder ? "bg-[#F59E0B] text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                        }`}>
+                        className={`w-full px-4 py-2.5 text-[13px] text-left transition-colors font-medium ${o === sortOrder ? "bg-[#F59E0B] text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          }`}>
                         {o === "asc" ? "A → Z (Ascending)" : "Z → A (Descending)"}
                       </button>
                     ))}
@@ -482,11 +551,10 @@ export default function ClassesPage() {
                         <button
                           key={p}
                           onClick={() => handlePageChange(p as number)}
-                          className={`w-8 h-8 rounded-lg text-[13px] font-bold transition-colors ${
-                            p === currentPage
+                          className={`w-8 h-8 rounded-lg text-[13px] font-bold transition-colors ${p === currentPage
                               ? "bg-[#F59E0B] text-white shadow-sm"
                               : "border border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
-                          }`}
+                            }`}
                         >
                           {p}
                         </button>
@@ -532,18 +600,85 @@ export default function ClassesPage() {
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
               </div>
             </div>
+          </div>
+
+          {enableSections && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Section</label>
-              <div className="relative">
-                <select value={formSection} onChange={(e) => setFormSection(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
-                  <option value="">No Section</option>
-                  {["A","B","C","D","E"].map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Sections <span className="text-slate-400 text-[11px]">(optional, select one or more)</span></label>
+              <div className="space-y-3 p-3 border border-border rounded-lg bg-[#F8FAFC] dark:bg-slate-900/50">
+                {/* Quick Add Section Input */}
+                <div className="flex gap-2">
+                  <input type="text" value={quickSectionName} onChange={(e) => setQuickSectionName(e.target.value)}
+                    placeholder="Add new section (e.g. A, B, C)"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleQuickAddSection();
+                      }
+                    }}
+                    className="px-3 py-1.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 bg-white dark:bg-slate-900 flex-1 uppercase" />
+                  <button type="button" onClick={handleQuickAddSection} disabled={addingSection || !quickSectionName.trim()}
+                    className="px-4 py-1.5 bg-[#F59E0B] hover:bg-[#D97706] disabled:opacity-55 text-white text-[13px] font-bold rounded-lg transition-colors flex items-center gap-1.5">
+                    {addingSection ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "+ Add"}
+                  </button>
+                </div>
+
+                {/* Checkboxes List */}
+                <div className="flex flex-wrap gap-2.5 pt-1.5">
+                  {sections.filter(s => s.status === "Active").map(s => {
+                    const checked = formSections.includes(s.name);
+                    return (
+                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#F59E0B]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
+                        <input type="checkbox" checked={checked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormSections([...formSections, s.name]);
+                            } else {
+                              setFormSections(formSections.filter(x => x !== s.name));
+                            }
+                          }}
+                          className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4" />
+                        <span>Section {s.name}</span>
+                      </label>
+                    );
+                  })}
+                  {sections.filter(s => s.status === "Active").length === 0 && (
+                    <span className="text-[12px] text-slate-400 italic">No sections created yet. Type above to add!</span>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {enableStreams && (formName === "Class 11" || formName === "Class 12") && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Streams <span className="text-slate-400 text-[11px]">(optional, select one or more)</span></label>
+              <div className="space-y-3 p-3 border border-border rounded-lg bg-[#F8FAFC] dark:bg-slate-900/50">
+                <div className="flex flex-wrap gap-2.5">
+                  {streams.filter(s => s.status === "Active").map(s => {
+                    const checked = formStreams.includes(s.name);
+                    return (
+                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#F59E0B]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
+                        <input type="checkbox" checked={checked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormStreams([...formStreams, s.name]);
+                            } else {
+                              setFormStreams(formStreams.filter(x => x !== s.name));
+                            }
+                          }}
+                          className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4" />
+                        <span>{s.name}</span>
+                      </label>
+                    );
+                  })}
+                  {streams.filter(s => s.status === "Active").length === 0 && (
+                    <span className="text-[12px] text-slate-400 italic">No active streams found. Please configure them in settings.</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
@@ -566,21 +701,6 @@ export default function ClassesPage() {
                 className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
           </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Class Teacher</label>
-            <div className="relative">
-              <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
-                <option value="">Not assigned</option>
-                {teachers.filter(t => t.is_active).map(t => (
-                  <option key={t._id} value={t._id}>{t.name}{t.employee_id ? ` (${t.employee_id})` : ""}</option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
-            </div>
-          </div>
-
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button type="button" onClick={() => { setIsAddClassOpen(false); resetForm(); }}
               className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">
@@ -621,18 +741,38 @@ export default function ClassesPage() {
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
               </div>
             </div>
+            {enableSections && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Section <span className="text-slate-400 text-[11px]">(optional)</span></label>
+                <div className="relative">
+                  <select value={formSection} onChange={(e) => setFormSection(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                    <option value="">No Section</option>
+                    {sections.filter(s => s.status === "Active").map(s => (
+                      <option key={s._id} value={s.name}>{s.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {enableStreams && (formName === "Class 11" || formName === "Class 12") && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Section</label>
+              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Stream</label>
               <div className="relative">
-                <select value={formSection} onChange={(e) => setFormSection(e.target.value)}
+                <select value={formStream} onChange={(e) => setFormStream(e.target.value)}
                   className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
-                  <option value="">No Section</option>
-                  {["A","B","C","D","E"].map(s => <option key={s} value={s}>{s}</option>)}
+                  <option value="">No Stream</option>
+                  {streams.filter(s => s.status === "Active").map(s => (
+                    <option key={s._id} value={s.name}>{s.name}</option>
+                  ))}
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
               </div>
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">

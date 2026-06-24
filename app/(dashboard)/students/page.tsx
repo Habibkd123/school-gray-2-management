@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { useStudents, ApiStudent } from "../../hooks/useStudents";
-import { useClasses } from "../../hooks/useClasses";
-import { useAppState } from "../../context/store";
-import { Modal } from "../../components/ui/modal";
+import { useStudents, ApiStudent } from "@/app/hooks/useStudents";
+import { useClasses } from "@/app/hooks/useClasses";
+import { useAppState } from "@/app/context/store";
+import { Modal } from "@/app/components/ui/modal";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CollectFeesModal } from "../../components/modals/CollectFeesModal";
-import { LoginDetailsModal } from "../../components/modals/LoginDetailsModal";
-import { ResetPasswordModal } from "../../components/modals/ResetPasswordModal";
-import { ConfirmModal } from "../../components/modals/ConfirmModal";
+import { CollectFeesModal } from "@/app/components/modals/CollectFeesModal";
+import { LoginDetailsModal } from "@/app/components/modals/LoginDetailsModal";
+import { ResetPasswordModal } from "@/app/components/modals/ResetPasswordModal";
+import { ConfirmModal } from "@/app/components/modals/ConfirmModal";
 import { Loader2, AlertCircle, Lock } from "lucide-react";
 import {
   Search,
@@ -242,31 +242,30 @@ export default function StudentsPage() {
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  const getSection = (id: string) => id.includes("1") ? "A" : id.includes("2") ? "B" : "C";
-  const getGender = (name: string) => name.toLowerCase().match(/^[a-m]/) ? "Female" : "Male";
-  const getAvatar = (name: string) => name.toLowerCase().match(/^[a-m]/) ? "/asset 12.webp" : "/asset 14.webp";
+  const getAvatar = (name: string) => {
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=5D6BEE&color=fff&bold=true`;
+  };
   const formatDate = (dateString: string) => {
-    if (!dateString) return "10 Jan 2015";
+    if (!dateString) return "—";
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString;
     return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
   };
-  const getDob = (id: string) => id.includes("1") ? "10 Jan 2015" : id.includes("2") ? "19 Aug 2014" : "05 Dec 2017";
 
   const tableData = React.useMemo(() => {
     return students.map((student) => ({
       ...student,
       id: student._id,
-      displayId: student.admission_no || `AD${student._id?.slice(-6).toUpperCase()}`,
+      displayId: student.admission_no || "—",
       avatar: student.photo_url || getAvatar(student.name),
       classNameStr: getClassName(student),
-      section: typeof student.class_id === "object" ? student.class_id?.section : "A",
-      gender: student.gender || getGender(student.name),
+      section: (typeof student.class_id === "object" ? student.class_id?.section : classes.find((c) => c._id === student.class_id)?.section) || "—",
+      gender: student.gender || "—",
       joinDateStr: formatDate(student.admission_date || student.createdAt || ""),
-      dobStr: student.dob ? formatDate(student.dob) : "N/A",
+      dobStr: student.dob ? formatDate(student.dob) : "—",
       status: student.is_active ? "Active" : "Inactive",
     }));
-  }, [students]);
+  }, [students, classes]);
 
   const PAGE_SIZE = 10;
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -390,7 +389,7 @@ export default function StudentsPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <span>Students</span>
+            <span>Student Management</span>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">All Students</span>
           </div>
@@ -637,7 +636,7 @@ export default function StudentsPage() {
                   No students registered or matching filters.
                 </div>
               ) : (
-                students.map((student) => (
+                tableData.map((student) => (
                   <div key={student._id} className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 relative group flex flex-col hover:border-[#F59E0B]/50 transition-colors">
                     {/* Top Row */}
                     <div className="flex items-center justify-between mb-4">
@@ -654,7 +653,7 @@ export default function StudentsPage() {
                           }}
                           className="rounded border-slate-300 w-3.5 h-3.5 accent-[#F59E0B]"
                         />
-                        <span className="text-[13px] font-bold text-[#F59E0B]">{student.admission_no || `AD${student._id.slice(-6).toUpperCase()}`}</span>
+                        <span className="text-[13px] font-bold text-[#F59E0B]">{student.displayId}</span>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${student.is_active ? "bg-[#E8F8E8] text-[#1D7F2C] dark:bg-[#1D7F2C]/20 dark:text-[#1DD04A]" : "bg-[#FFEBF0] text-[#FF4A6B] dark:bg-[#FF4A6B]/20"}`}>
@@ -675,7 +674,7 @@ export default function StudentsPage() {
                               <button onClick={() => { router.push(`/students/add?edit=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
                                 <Edit className="w-4 h-4 text-slate-400" /> Edit
                               </button>
-                              <button onClick={() => { setSelectedStudent(student); setLoginModalTarget("student"); setIsLoginDetailsOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setLoginModalTarget("student"); setIsLoginDetailsOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
                                 <User className="w-4 h-4 text-slate-400" /> Login Details
                               </button>
                               <button onClick={() => {
@@ -688,13 +687,13 @@ export default function StudentsPage() {
                               }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
                                 <Lock className="w-4 h-4 text-slate-400" /> Reset Password
                               </button>
-                              <button onClick={() => { setSelectedStudent(student); setIsDisableOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDisableOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
                                 <XCircle className="w-4 h-4 text-slate-400" /> Disable
                               </button>
                               <button onClick={() => { router.push(`/students/student-promotion?studentId=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
                                 <GraduationCap className="w-4 h-4 text-slate-400" /> Promote Student
                               </button>
-                              <button onClick={() => { setSelectedStudent(student); setIsDeleteOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3">
+                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDeleteOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3">
                                 <Trash2 className="w-4 h-4 text-rose-400" /> Delete
                               </button>
                             </div>
@@ -705,10 +704,10 @@ export default function StudentsPage() {
 
                     {/* Profile info */}
                     <div className="flex items-center gap-4 mb-5 cursor-pointer" onClick={() => router.push(`/students/${student._id}`)}>
-                      <img src={student.photo_url || getAvatar(student.name)} alt="Avatar" className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" />
+                      <img src={student.avatar} alt="Avatar" className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" />
                       <div>
                         <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-[#F59E0B] transition-colors">{student.name}</h3>
-                        <p className="text-[12px] font-medium text-slate-500">{getClassName(student)}</p>
+                        <p className="text-[12px] font-medium text-slate-500">{student.classNameStr}</p>
                       </div>
                     </div>
 
@@ -716,15 +715,15 @@ export default function StudentsPage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-5 border-t border-b border-slate-100 dark:border-slate-700/50 py-4">
                       <div>
                         <p className="text-[11px] text-slate-500 mb-1">Roll No</p>
-                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.roll_no || "N/A"}</p>
+                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.roll_no || "—"}</p>
                       </div>
                       <div>
                         <p className="text-[11px] text-slate-500 mb-1">Gender</p>
-                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.gender || getGender(student.name)}</p>
+                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.gender}</p>
                       </div>
                       <div>
                         <p className="text-[11px] text-slate-500 mb-1">Joined On</p>
-                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{formatDate(student.admission_date || student.createdAt || "")}</p>
+                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.joinDateStr}</p>
                       </div>
                     </div>
 
@@ -735,7 +734,7 @@ export default function StudentsPage() {
                         <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"><Phone className="w-3.5 h-3.5" /></button>
                         <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"><Mail className="w-3.5 h-3.5" /></button>
                       </div>
-                      <button onClick={() => { setSelectedStudent(student); setIsCollectFeesOpen(true); }} className="px-3 py-1.5 rounded bg-[#F1F5F9] dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                      <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsCollectFeesOpen(true); }} className="px-3 py-1.5 rounded bg-[#F1F5F9] dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
                         Add Fees
                       </button>
                     </div>

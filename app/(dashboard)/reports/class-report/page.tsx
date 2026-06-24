@@ -8,21 +8,16 @@ import { useClasses } from "../../../hooks/useClasses";
 import { useStudents } from "../../../hooks/useStudents";
 
 export default function ClassReportPage() {
-  const { classes, isLoading } = useClasses();
-  const { students } = useStudents();
+  const { classes, isLoading, fetchClasses } = useClasses();
+  const { students, fetchStudents } = useStudents();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
-
-  const filteredClasses = useMemo(() => {
-    return classes.filter(c =>
-      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c.section.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      c._id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [classes, searchTerm]);
+  const [selectedSort, setSelectedSort] = useState<"A–Z" | "Most Students" | "Least Students">("A–Z");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   const getStudentsInClass = (classId: string) =>
     students.filter(s => {
@@ -30,8 +25,65 @@ export default function ClassReportPage() {
       return cid === classId;
     });
 
+  const sortedClasses = useMemo(() => {
+    const list = classes.filter(c =>
+      c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.section.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c._id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    if (selectedSort === "A–Z") {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (selectedSort === "Most Students") {
+      list.sort((a, b) => getStudentsInClass(b._id).length - getStudentsInClass(a._id).length);
+    } else if (selectedSort === "Least Students") {
+      list.sort((a, b) => getStudentsInClass(a._id).length - getStudentsInClass(b._id).length);
+    }
+
+    return list;
+  }, [classes, searchTerm, selectedSort, students]);
+
+  const totalPages = Math.ceil(sortedClasses.length / PAGE_SIZE);
+  
+  const paginatedClasses = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return sortedClasses.slice(start, start + PAGE_SIZE);
+  }, [sortedClasses, page]);
+
   const selectedClass = classes.find(c => c._id === selectedClassId);
   const modalStudents = selectedClassId ? getStudentsInClass(selectedClassId) : [];
+
+  const handleRefresh = () => {
+    fetchClasses();
+    fetchStudents();
+  };
+
+  const handleExport = () => {
+    if (sortedClasses.length === 0) {
+      alert("No class records available to export.");
+      return;
+    }
+
+    // Convert to CSV format
+    const headers = ["Class ID", "Class Name", "Section", "Number of Students"];
+    const rows = sortedClasses.map(c => [
+      c._id.slice(-6).toUpperCase(),
+      c.name,
+      c.section,
+      getStudentsInClass(c._id).length
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + [headers.join(","), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `class_report_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
@@ -46,8 +98,8 @@ export default function ClassReportPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><RefreshCw className="w-4 h-4" /></button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><Printer className="w-4 h-4" /></button>
+          <button onClick={handleRefresh} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={() => window.print()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><Printer className="w-4 h-4" /></button>
           <div className="relative">
             <button onClick={() => setIsExportOpen(!isExportOpen)} className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer">
               <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400" />
@@ -56,8 +108,7 @@ export default function ClassReportPage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-2">
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 flex items-center gap-3 cursor-pointer"><FileText className="w-4 h-4 text-slate-500" /> Export as PDF</button>
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 flex items-center gap-3 cursor-pointer"><FileText className="w-4 h-4 text-slate-500" /> Export as Excel</button>
+                  <button onClick={() => { handleExport(); setIsExportOpen(false); }} className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 cursor-pointer"><FileText className="w-4 h-4 text-slate-500" /> Export as CSV</button>
                 </div>
               </>
             )}
@@ -66,11 +117,11 @@ export default function ClassReportPage() {
       </div>
 
       {/* Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left">
         {[
-          { label: "Total Classes", value: classes.length, color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
-          { label: "Total Students", value: students.length, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
-          { label: "Avg per Class", value: classes.length ? Math.round(students.length / classes.length) : 0, color: "text-amber-600 bg-amber-50 border-amber-100" },
+          { label: "Total Classes", value: classes.length, color: "text-indigo-600 bg-indigo-50 border-indigo-100 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-900/30" },
+          { label: "Total Students", value: students.length, color: "text-emerald-600 bg-emerald-50 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900/30" },
+          { label: "Avg per Class", value: classes.length ? Math.round(students.length / classes.length) : 0, color: "text-amber-600 bg-amber-50 border-amber-100 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30" },
         ].map(card => (
           <div key={card.label} className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm">
             <p className={`text-2xl font-bold border rounded-lg px-3 py-1.5 inline-block mb-2 ${card.color}`}>{card.value}</p>
@@ -84,14 +135,14 @@ export default function ClassReportPage() {
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Class Report List</h2>
           <div className="relative">
             <button onClick={() => setIsSortOpen(!isSortOpen)} className="px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer">
-              <List className="w-4 h-4 text-slate-400" /> Sort <ChevronDown className="w-3 h-3 text-slate-400" />
+              <List className="w-4 h-4 text-slate-400" /> Sort: {selectedSort} <ChevronDown className="w-3 h-3 text-slate-400" />
             </button>
             {isSortOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-1.5">
-                  {["A–Z", "Most Students", "Least Students"].map(opt => (
-                    <button key={opt} onClick={() => setIsSortOpen(false)} className="w-full px-4 py-2.5 text-[14px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 text-left font-medium cursor-pointer">{opt}</button>
+                  {(["A–Z", "Most Students", "Least Students"] as const).map(opt => (
+                    <button key={opt} onClick={() => { setSelectedSort(opt); setPage(1); setIsSortOpen(false); }} className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left font-medium cursor-pointer ${selectedSort === opt ? "text-[#F59E0B]" : "text-slate-700 dark:text-slate-200"}`}>{opt}</button>
                   ))}
                 </div>
               </>
@@ -100,10 +151,10 @@ export default function ClassReportPage() {
         </div>
 
         <div className="p-5 flex items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <span className="text-[13px] text-slate-500 dark:text-slate-400">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredClasses.length}</span> classes</span>
+          <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{sortedClasses.length}</span> classes</span>
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input type="text" placeholder="Search class or section…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors" />
+            <input type="text" placeholder="Search class or section…" value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1); }} className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors" />
           </div>
         </div>
 
@@ -122,9 +173,9 @@ export default function ClassReportPage() {
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr><td colSpan={6} className="px-6 py-10 text-center text-slate-400"><Loader2 className="w-5 h-5 animate-spin inline" /></td></tr>
-              ) : filteredClasses.length === 0 ? (
+              ) : paginatedClasses.length === 0 ? (
                 <tr><td colSpan={6} className="px-6 py-10 text-center text-slate-400">No classes found.</td></tr>
-              ) : filteredClasses.map(cls => (
+              ) : paginatedClasses.map(cls => (
                 <tr key={cls._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4"><input type="checkbox" className="rounded border-slate-300 text-[#F59E0B]" /></td>
                   <td className="px-6 py-4 font-semibold text-[#F59E0B]">{cls._id.slice(-6).toUpperCase()}</td>
@@ -141,18 +192,45 @@ export default function ClassReportPage() {
             </tbody>
           </table>
         </div>
-        <div className="p-5 border-t border-border flex items-center justify-end gap-2">
-          <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 transition-colors">Prev</button>
-          <button className="w-7 h-7 rounded-lg bg-[#F59E0B] text-white text-[13px] font-medium flex items-center justify-center">1</button>
-          <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 transition-colors">Next</button>
-        </div>
+
+        {totalPages > 1 && (
+          <div className="p-5 border-t border-border flex items-center justify-end gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(p - 1, 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 disabled:opacity-50 transition-colors"
+            >
+              Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`w-7 h-7 rounded-lg text-[13px] font-medium flex items-center justify-center ${
+                  page === p
+                    ? "bg-[#F59E0B] text-white"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+              disabled={page === totalPages}
+              className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 disabled:opacity-50 transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Students Modal */}
       {selectedClassId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
-            <div className="p-5 flex items-center justify-between border-b border-border bg-slate-50/50 dark:bg-slate-800/50 rounded-t-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden text-left border border-border">
+            <div className="p-5 flex items-center justify-between border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
               <h3 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">
                 {selectedClass?.name} {selectedClass?.section} — Students ({modalStudents.length})
               </h3>
@@ -162,8 +240,8 @@ export default function ClassReportPage() {
             </div>
             <div className="overflow-x-auto overflow-y-auto flex-1">
               <table className="w-full text-[13px] whitespace-nowrap">
-                <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] sticky top-0">
-                  <tr className="border-b border-border">
+                <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] sticky top-0 border-b border-border">
+                  <tr>
                     <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Admission No</th>
                     <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Roll No</th>
                     <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Name</th>
@@ -201,7 +279,7 @@ export default function ClassReportPage() {
                 </tbody>
               </table>
             </div>
-            <div className="p-4 border-t border-border bg-white dark:bg-slate-900 rounded-b-xl flex justify-end">
+            <div className="p-4 border-t border-border bg-white dark:bg-slate-900 flex justify-end">
               <button onClick={() => setSelectedClassId(null)} className="px-5 py-2 bg-[#F59E0B] text-white text-[13px] font-bold rounded-lg cursor-pointer">Close</button>
             </div>
           </div>

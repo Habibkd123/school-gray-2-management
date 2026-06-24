@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import { getAuthHeaders } from "@/lib/utils/session";
 import {
   Plus, Search, List, Grid, MoreVertical, Edit, Trash2,
   Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, Trash, FileText, ToggleRight, Loader2,
@@ -47,9 +48,15 @@ export default function ClassHomeWorkPage() {
   const [formDescription, setFormDescription] = useState("");
   const [formClassId, setFormClassId] = useState("");
   const [formSubject, setFormSubject] = useState("");
+  const [formSyllabusId, setFormSyllabusId] = useState("");
+  const [formChapterId, setFormChapterId] = useState("");
   const [formDueDate, setFormDueDate] = useState("");
   const [formAttachmentUrl, setFormAttachmentUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // Syllabus/chapter cascade state
+  const [syllabusChapters, setSyllabusChapters] = useState<{ _id?: string; chapter_no: number; chapter_name: string }[]>([]);
+  const [syllabusLoading, setSyllabusLoading] = useState(false);
 
   // Submit Homework States (Student)
   const [isSubmitOpen, setIsSubmitOpen] = useState(false);
@@ -62,6 +69,44 @@ export default function ClassHomeWorkPage() {
   // Fetch subjects dynamically based on selected class in the form
   const { subjects: allSubjects } = useSubjects();
   const { subjects: availableSubjects } = useSubjects(formClassId);
+
+  // When class changes, reset subject + syllabus cascade
+  React.useEffect(() => {
+    setFormSubject("");
+    setFormChapterId("");
+    setSyllabusChapters([]);
+  }, [formClassId]);
+
+  // When subject changes, reset chapter and fetch syllabus
+  React.useEffect(() => {
+    setFormChapterId("");
+    setSyllabusChapters([]);
+    if (!formClassId || !formSubject) return;
+
+    setSyllabusLoading(true);
+    fetch(`/api/syllabus-by-class?class_id=${formClassId}&subject_name=${encodeURIComponent(formSubject)}`, {
+      headers: getAuthHeaders(),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data?.chapters?.length) {
+          setSyllabusChapters(data.data.chapters);
+        } else {
+          setSyllabusChapters([]);
+        }
+      })
+      .catch(() => setSyllabusChapters([]))
+      .finally(() => setSyllabusLoading(false));
+  }, [formClassId, formSubject]);
+
+  // When chapter changes, auto-fill title from chapter name
+  React.useEffect(() => {
+    if (!formChapterId) return;
+    const chapter = syllabusChapters.find(c => (c._id || String(c.chapter_no)) === formChapterId);
+    if (chapter) {
+      setFormTitle(`Ch ${chapter.chapter_no}: ${chapter.chapter_name} - Homework`);
+    }
+  }, [formChapterId, syllabusChapters]);
 
   const viewClassId = viewSubmissionsHw ? (typeof viewSubmissionsHw.class_id === 'object' ? viewSubmissionsHw.class_id?._id : viewSubmissionsHw.class_id) as string : undefined;
   const { students, fetchStudents } = useStudents();
@@ -110,6 +155,8 @@ export default function ClassHomeWorkPage() {
     setFormDescription("");
     setFormClassId("");
     setFormSubject("");
+    setFormChapterId("");
+    setSyllabusChapters([]);
     setFormDueDate("");
     setFormAttachmentUrl("");
     setIsAddOpen(true);
@@ -381,20 +428,9 @@ export default function ClassHomeWorkPage() {
 
       {/* Add Modal */}
       <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Add Homework">
-        <form onSubmit={handleAddSubmit} className="p-6 space-y-5 text-left max-h-[80vh] overflow-y-auto custom-scrollbar">
+        <form onSubmit={handleAddSubmit} className="p-6 space-y-5 text-left max-h-[95vh] overflow-y-auto custom-scrollbar">
 
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Title</label>
-            <input
-              type="text"
-              value={formTitle}
-              onChange={(e) => setFormTitle(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200"
-              required
-              placeholder="e.g. Chapter 1 Exercise"
-            />
-          </div>
-
+          {/* Class */}
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class</label>
             <div className="relative">
@@ -411,6 +447,7 @@ export default function ClassHomeWorkPage() {
             </div>
           </div>
 
+          {/* Subject — filtered by class */}
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Subject</label>
             <div className="relative">
@@ -426,8 +463,63 @@ export default function ClassHomeWorkPage() {
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
+            {formClassId && availableSubjects.length === 0 && (
+              <p className="text-[12px] text-slate-400 italic">No subjects available for this class.</p>
+            )}
           </div>
 
+          {/* Syllabus / Chapter */}
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">
+              Chapter
+              {syllabusLoading && <span className="ml-2 text-[11px] text-slate-400 font-normal italic">Loading...</span>}
+            </label>
+            <div className="relative">
+              {syllabusChapters.length > 0 ? (
+                <select
+                  value={formChapterId}
+                  onChange={(e) => setFormChapterId(e.target.value)}
+                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                >
+                  <option value="">Select Chapter (optional)</option>
+                  {syllabusChapters.map(ch => (
+                    <option key={ch._id || ch.chapter_no} value={ch._id || String(ch.chapter_no)}>
+                      Ch {ch.chapter_no}: {ch.chapter_name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="w-full px-4 py-2.5 text-[13px] bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-slate-400 dark:text-slate-500 italic">
+                  {!formSubject
+                    ? "Select a subject to load chapters"
+                    : syllabusLoading
+                    ? "Loading chapters..."
+                    : "No syllabus found for this subject"}
+                </div>
+              )}
+              {syllabusChapters.length > 0 && (
+                <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              )}
+            </div>
+          </div>
+
+          {/* Title — auto-filled from chapter, but editable */}
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">
+              Title
+              {formChapterId && <span className="ml-1.5 text-[11px] text-emerald-500 font-normal">(auto-filled from chapter)</span>}
+            </label>
+            <input
+              type="text"
+              value={formTitle}
+              onChange={(e) => setFormTitle(e.target.value)}
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200"
+              required
+              placeholder="e.g. Chapter 1 Exercise"
+            />
+          </div>
+
+          {/* Due Date */}
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Due Date</label>
             <input
@@ -439,6 +531,7 @@ export default function ClassHomeWorkPage() {
             />
           </div>
 
+          {/* Attachment */}
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Attachment (Optional)</label>
             <div className="flex gap-3">
@@ -470,6 +563,7 @@ export default function ClassHomeWorkPage() {
             </div>
           </div>
 
+          {/* Description */}
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Description</label>
             <textarea

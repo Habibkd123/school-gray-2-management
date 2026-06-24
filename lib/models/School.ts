@@ -1,5 +1,11 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
+// ─── Academic Config Sub-document ─────────────────────────────────
+export interface IAcademicConfig {
+  enable_streams: boolean;
+  enable_sections: boolean;
+}
+
 // ─── School Interface ──────────────────────────────────────────────
 export interface ISchool extends Document {
   name: string;
@@ -10,9 +16,18 @@ export interface ISchool extends Document {
   email?: string;
   timezone: string;
   is_active: boolean;
+  academic_config: IAcademicConfig;
   createdAt: Date;
   updatedAt: Date;
 }
+
+const academicConfigSchema = new Schema<IAcademicConfig>(
+  {
+    enable_streams: { type: Boolean, default: false },
+    enable_sections: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
 
 const schoolSchema = new Schema<ISchool>(
   {
@@ -24,6 +39,7 @@ const schoolSchema = new Schema<ISchool>(
     email: { type: String, lowercase: true, trim: true },
     timezone: { type: String, default: "Asia/Kolkata" },
     is_active: { type: Boolean, default: true },
+    academic_config: { type: academicConfigSchema, default: () => ({ enable_streams: false, enable_sections: false }) },
   },
   { timestamps: true }
 );

@@ -423,7 +423,7 @@ export default function RolesPermissionsPage() {
       </div>
 
       {/* ── Role Cards ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
         {ALL_ROLES.map((role) => (
           <RoleCard
             key={role}
@@ -443,8 +443,8 @@ export default function RolesPermissionsPage() {
         <button
           onClick={() => setActiveTab("detail")}
           className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-all ${activeTab === "detail"
-              ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-transparent"
-              : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white"
+            ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-transparent"
+            : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white"
             }`}
         >
           Role Detail
@@ -452,8 +452,8 @@ export default function RolesPermissionsPage() {
         <button
           onClick={() => setActiveTab("compare")}
           className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-all ${activeTab === "compare"
-              ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-transparent"
-              : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white"
+            ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-transparent"
+            : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white"
             }`}
         >
           Compare All Roles

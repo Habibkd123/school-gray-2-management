@@ -103,7 +103,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       "father_name", "father_phone", "father_email", "father_occupation", "father_photo",
       "mother_name", "mother_phone", "mother_email", "mother_occupation", "mother_photo",
       "guardian_type", "guardian_occupation", "guardian_address", "guardian_photo",
-      "permanent_address", "other_info"
+      "permanent_address", "other_info", "aadhaar_no"
     ];
 
     const updateData: Record<string, unknown> = {};
@@ -166,7 +166,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
     }
 
-    // Roll number class-level uniqueness check on update
+    // Fetch existing student
     const existingStudent = await Student.findOne({ _id: id, school_id: schoolId });
     if (!existingStudent) {
       return NextResponse.json(
@@ -175,22 +175,27 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const targetClassId = updateData.class_id || existingStudent.class_id;
-    const targetRollNo = updateData.roll_no !== undefined ? (updateData.roll_no as string) : existingStudent.roll_no;
-
-    if (targetRollNo && (targetRollNo as string).trim()) {
-      const duplicateRollNo = await Student.findOne({
+    // Admission number uniqueness validation
+    if (updateData.admission_no !== undefined) {
+      const admNo = (updateData.admission_no as string || "").trim();
+      if (!admNo) {
+        return NextResponse.json(
+          { success: false, message: "Admission number is required" },
+          { status: 400 }
+        );
+      }
+      const duplicateAdmissionNo = await Student.findOne({
         school_id: schoolId,
-        class_id: targetClassId,
-        roll_no: (targetRollNo as string).trim(),
+        admission_no: admNo,
         _id: { $ne: id }
       });
-      if (duplicateRollNo) {
+      if (duplicateAdmissionNo) {
         return NextResponse.json(
-          { success: false, message: "Roll number already exists in this class" },
+          { success: false, message: "Admission number already exists" },
           { status: 409 }
         );
       }
+      updateData.admission_no = admNo;
     }
 
     const student = await Student.findOneAndUpdate(
@@ -215,7 +220,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     console.error("[PUT /api/students/[id]]", err);
     if ((err as { code?: number }).code === 11000) {
       return NextResponse.json(
-        { success: false, message: "Roll number already exists in this class" },
+        { success: false, message: "A student with these unique details already exists" },
         { status: 409 }
       );
     }

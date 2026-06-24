@@ -26,7 +26,7 @@ export default function LeaveReportPage() {
       return sUid === userId || s._id === userId;
     });
     if (student) return { name: student.name, role: "Student", id: student.admission_no || student._id.slice(-6).toUpperCase() };
-    
+
     const teacher = teachers.find(t => {
       const tUid = typeof t.user_id === "object" && t.user_id ? t.user_id._id : t.user_id;
       return tUid === userId || t._id === userId;
@@ -97,7 +97,7 @@ export default function LeaveReportPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1  sm:grid-cols-4 gap-3">
         {[
           { label: "Total Requests", value: stats.total, color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
           { label: "Approved", value: stats.approved, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },

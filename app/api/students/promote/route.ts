@@ -45,19 +45,6 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      // Roll number uniqueness check in target class
-      if (student.roll_no && student.roll_no.trim()) {
-        const duplicateRollNo = await Student.findOne({
-          school_id: schoolId,
-          class_id: new mongoose.Types.ObjectId(classId),
-          roll_no: student.roll_no.trim(),
-          _id: { $ne: studentId }
-        });
-        if (duplicateRollNo) {
-          errors.push(`Roll number '${student.roll_no}' already exists in target class for student '${student.name}'`);
-          continue;
-        }
-      }
 
       // Update student
       await Student.updateOne(

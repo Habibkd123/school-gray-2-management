@@ -64,6 +64,7 @@ export interface ApiStudent {
   guardian_photo?: string;
   permanent_address?: string;
   other_info?: string;
+  aadhaar_no?: string;
 }
 
 export interface CreateStudentInput {
@@ -83,17 +84,25 @@ export interface CreateStudentInput {
   admission_no?: string;
   academic_year?: string;
   photo_url?: string;
+  aadhaar_no?: string;
 }
 
 // ─── Module-level cache (shared across all useStudents() instances) ──
 let _studentsCache: ApiStudent[] | null = null;
 let _cacheTimestamp = 0;
 const CACHE_TTL_MS = 60_000; // 60 seconds
+let _version = 0; // bumped after every mutation
 const _listeners = new Set<(students: ApiStudent[]) => void>();
+const _versionListeners = new Set<(v: number) => void>();
 
 function invalidateCache() {
   _studentsCache = null;
   _cacheTimestamp = 0;
+}
+
+function bumpVersion() {
+  _version++;
+  _versionListeners.forEach(fn => fn(_version));
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────
@@ -102,6 +111,7 @@ export function useStudents(options?: { skip?: boolean }) {
   const [total, setTotal] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(_studentsCache === null);
   const [error, setError] = useState<string | null>(null);
+  const [mutationVersion, setMutationVersion] = useState(_version);
 
   // Register/unregister this instance as a listener for cache updates
   useEffect(() => {
@@ -110,11 +120,20 @@ export function useStudents(options?: { skip?: boolean }) {
     return () => { _listeners.delete(listener); };
   }, []);
 
+  // Subscribe to version bumps so all instances auto-refetch after mutations
+  useEffect(() => {
+    const vListener = (v: number) => setMutationVersion(v);
+    _versionListeners.add(vListener);
+    return () => { _versionListeners.delete(vListener); };
+  }, []);
+
   // ─── Fetch all students ─────────────────────────────────────────
   const fetchStudents = useCallback(async (
     arg1?: string | {
       search?: string;
       classId?: string;
+      streamId?: string;
+      sectionId?: string;
       gender?: string;
       status?: string;
       dateRange?: string;
@@ -127,6 +146,8 @@ export function useStudents(options?: { skip?: boolean }) {
   ) => {
     let search = "";
     let classId = "";
+    let streamId = "";
+    let sectionId = "";
     let gender = "";
     let status = "";
     let dateRange = "";
@@ -141,6 +162,8 @@ export function useStudents(options?: { skip?: boolean }) {
       const p = arg1 as any;
       search = p.search ?? "";
       classId = p.classId ?? "";
+      streamId = p.streamId ?? "";
+      sectionId = p.sectionId ?? "";
       gender = p.gender ?? "";
       status = p.status ?? "";
       dateRange = p.dateRange ?? "";
@@ -171,6 +194,8 @@ export function useStudents(options?: { skip?: boolean }) {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (classId && classId !== "all") params.set("class_id", classId);
+      if (streamId) params.set("stream_id", streamId);
+      if (sectionId) params.set("section_id", sectionId);
       if (gender && gender !== "all" && gender !== "Select") params.set("gender", gender);
       if (status && status !== "all" && status !== "Select") params.set("status", status);
       if (dateRange && dateRange !== "All Time") params.set("dateRange", dateRange);
@@ -216,7 +241,7 @@ export function useStudents(options?: { skip?: boolean }) {
     if (options?.skip) return;
     if (!authReady) return; // Wait until the JWT token is in localStorage
     fetchStudents({ academic_year: academicYear });
-  }, [fetchStudents, options?.skip, academicYear, authReady]);
+  }, [fetchStudents, options?.skip, academicYear, authReady, mutationVersion]);
 
   // ─── Create student ─────────────────────────────────────────────
   const createStudent = async (input: CreateStudentInput): Promise<{ success: boolean; message: string; data?: ApiStudent; credentials?: { loginId: string; password?: string } }> => {
@@ -234,6 +259,7 @@ export function useStudents(options?: { skip?: boolean }) {
       _studentsCache = newList;
       _cacheTimestamp = Date.now();
       _listeners.forEach(fn => fn(newList));
+      bumpVersion();
 
       return { success: true, message: "Student created successfully", data: data.data, credentials: data.credentials };
     } catch {
@@ -260,6 +286,7 @@ export function useStudents(options?: { skip?: boolean }) {
       } else {
         invalidateCache();
       }
+      bumpVersion();
 
       return { success: true, message: "Student updated successfully" };
     } catch {
@@ -285,6 +312,7 @@ export function useStudents(options?: { skip?: boolean }) {
       } else {
         invalidateCache();
       }
+      bumpVersion();
 
       return { success: true, message: "Student deleted successfully" };
     } catch {

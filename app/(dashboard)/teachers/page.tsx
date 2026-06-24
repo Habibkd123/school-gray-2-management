@@ -35,6 +35,10 @@ import {
   FileText
 } from "lucide-react";
 
+function getAvatar(name: string) {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=5D6BEE&color=fff&bold=true`;
+}
+
 export default function TeachersPage() {
   const router = useRouter();
   const {
@@ -133,17 +137,17 @@ export default function TeachersPage() {
 
   // Prepare data for DataTable
   const tableData = useMemo(() => {
-    return teachers.map((teacher, i) => ({
+    return teachers.map((teacher) => ({
       ...teacher,
       id: teacher._id,
-      displayId: teacher.employee_id || `T8491${(page - 1) * 10 + 27 - i}`,
-      mockPhone: teacher.phone || "+1 82392 37359",
-      mockJoinDate: teacher.join_date ? new Date(teacher.join_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "25 Mar 2024",
+      displayId: teacher.employee_id || "—",
+      phoneStr: teacher.phone || "—",
+      joinDateStr: teacher.join_date ? new Date(teacher.join_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—",
       classNameStr: getClassName(teacher),
-      subject: teacher.subject_specialization || "General",
+      subject: teacher.subject_specialization || "—",
       status: teacher.is_active ? "Active" : "Inactive"
     }));
-  }, [teachers, page]);
+  }, [teachers]);
 
   const handleExport = () => {
     const dataToExport = selectedIds.length > 0
@@ -163,8 +167,8 @@ export default function TeachersPage() {
       t.classNameStr,
       t.subject,
       t.email || "",
-      t.mockPhone,
-      t.mockJoinDate,
+      t.phoneStr,
+      t.joinDateStr,
       t.status
     ]);
 
@@ -187,15 +191,15 @@ export default function TeachersPage() {
     { header: "ID", accessorKey: "displayId", render: (t) => <span className="font-semibold text-[#F59E0B] cursor-pointer hover:underline">{t.displayId}</span> },
     { header: "Name", accessorKey: "name", render: (t) => (
         <div className="flex flex-wrap items-center gap-3">
-          <img src={t.photo_url || "/asset 7.webp"} className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={t.name} />
+          <img src={t.photo_url || getAvatar(t.name)} className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={t.name} />
           <span className="font-medium text-slate-900 dark:text-white group-hover:text-[#F59E0B] transition-colors cursor-pointer">{t.name}</span>
         </div>
     ) },
     { header: "Class", accessorKey: "classNameStr" },
     { header: "Subject", accessorKey: "subject" },
-    { header: "Email", accessorKey: "email", render: (t) => t.email ? t.email.toLowerCase() : "n/a" },
-    { header: "Phone", accessorKey: "mockPhone" },
-    { header: "Date of Join", accessorKey: "mockJoinDate" },
+    { header: "Email", accessorKey: "email", render: (t) => t.email ? t.email.toLowerCase() : "—" },
+    { header: "Phone", accessorKey: "phoneStr" },
+    { header: "Date of Join", accessorKey: "joinDateStr" },
     { header: "Status", accessorKey: "status", render: (t) => (
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${t.status === "Active" ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBEB] text-[#E02424]"}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${t.status === "Active" ? "bg-[#1DD04A]" : "bg-[#E02424]"}`} />
@@ -505,11 +509,11 @@ export default function TeachersPage() {
                   No faculty records matching filter.
                 </div>
               ) : (
-                teachers.map((teacher, i) => {
-                  const displayId = teacher.employee_id || `T8491${(page - 1) * 10 + 27 - i}`;
-                  const mockPhone = teacher.phone || "+1 82392 37359";
+                teachers.map((teacher) => {
+                  const displayId = teacher.employee_id || "—";
+                  const phoneStr = teacher.phone || "—";
                   const status = teacher.is_active ? "Active" : "Inactive";
-                  const subject = teacher.subject_specialization || "General";
+                  const subject = teacher.subject_specialization || "—";
 
                   return (
                     <div key={teacher._id} className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-black/50 transition-all duration-300 relative text-left flex flex-col hover:border-[#F59E0B]/50">
@@ -575,7 +579,7 @@ export default function TeachersPage() {
 
                       {/* Avatar & Info */}
                       <div className="flex items-center gap-3 mb-5 cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>
-                        <img src={teacher.photo_url || "/asset 7.webp"} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={teacher.name} />
+                        <img src={teacher.photo_url || getAvatar(teacher.name)} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={teacher.name} />
                         <div>
                           <h3 className="font-bold text-[#0F172A] dark:text-slate-100 text-[14px] group-hover:text-[#F59E0B] transition-colors">{teacher.name}</h3>
                           <p className="text-slate-500 dark:text-slate-400 text-[12px] font-medium">{getClassName(teacher)}</p>
@@ -590,7 +594,7 @@ export default function TeachersPage() {
                         </div>
                         <div>
                           <p className="text-slate-500 dark:text-slate-400 mb-0.5">Phone</p>
-                          <p className="text-[#0F172A] dark:text-slate-100 font-medium">{mockPhone}</p>
+                          <p className="text-[#0F172A] dark:text-slate-100 font-medium">{phoneStr}</p>
                         </div>
                       </div>
 

@@ -56,6 +56,7 @@ export interface IStudent extends Document {
   guardian_photo?: string;
   permanent_address?: string;
   other_info?: string;
+  aadhaar_no?: string;
 }
 
 const studentSchema = new Schema<IStudent>(
@@ -73,6 +74,7 @@ const studentSchema = new Schema<IStudent>(
     photo_url: { type: String, default: null },
     address: { type: String, trim: true },
     phone: { type: String, trim: true },
+    aadhaar_no: { type: String, trim: true },
     guardian_name: { type: String, trim: true },
     guardian_phone: { type: String, trim: true },
     guardian_relation: { type: String, trim: true },
@@ -119,7 +121,7 @@ const studentSchema = new Schema<IStudent>(
   { timestamps: true }
 );
 
-studentSchema.index({ school_id: 1, class_id: 1, roll_no: 1 }, { unique: true, sparse: true });
+studentSchema.index({ school_id: 1, class_id: 1, roll_no: 1 });
 studentSchema.index({ school_id: 1, name: 1 });
 studentSchema.index({ name: 1 });
 studentSchema.index({ parent_id: 1 });

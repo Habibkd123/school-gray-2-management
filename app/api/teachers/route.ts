@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(
       { success: true, data: { teachers, total, page, limit } },
-      { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } }
+      { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } }
     );
   } catch (error: any) {
     return NextResponse.json(
@@ -138,7 +138,8 @@ export async function POST(req: NextRequest) {
     const {
       name, employee_id, gender, dob, phone, email, address,
       photo_url, blood_group, qualification, subject_specialization,
-      experience_years, join_date, languages, password, class_id, class_ids,
+      experience_years, join_date, languages, training_details, password,
+      class_id, class_ids,
       father_name, mother_name, marital_status, previous_school_name,
       previous_school_address, previous_school_phone, permanent_address,
       pan_number, notes, epf_no, basic_salary, contract_type,
@@ -147,7 +148,8 @@ export async function POST(req: NextRequest) {
       account_number, bank_name, ifsc_code, branch_name, transport_route,
       transport_vehicle, transport_pickup_point, hostel_name, hostel_room_no,
       facebook_url, instagram_url, linkedin_url, youtube_url, twitter_url,
-      resume_url, joining_letter_url
+      resume_url, joining_letter_url,
+      aadhaar_front_url, aadhaar_back_url
     } = body;
 
     if (!name) {
@@ -200,6 +202,9 @@ export async function POST(req: NextRequest) {
       experience_years: experience_years ? parseInt(experience_years) : 0,
       join_date: join_date ? new Date(join_date) : undefined,
       languages: Array.isArray(languages) ? languages : undefined,
+      training_details: Array.isArray(training_details) ? training_details : undefined,
+      aadhaar_front_url: aadhaar_front_url?.trim() || undefined,
+      aadhaar_back_url: aadhaar_back_url?.trim() || undefined,
       father_name: father_name?.trim(),
       mother_name: mother_name?.trim(),
       marital_status: marital_status?.trim(),

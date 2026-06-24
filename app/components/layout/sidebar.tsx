@@ -4,10 +4,11 @@ import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "../../context/auth";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import {
   LayoutDashboard, Users, GraduationCap, Calendar, Clock, BookOpen,
   ClipboardList, Megaphone, ChevronDown, ChevronRight, Building2,
-  BarChart, LogOut, User, ChevronUp, Menu, Bus, X, Globe
+  BarChart, LogOut, User, ChevronUp, Menu, Bus, X, Globe, Layers, LayoutGrid, Link2, Settings2
 } from "lucide-react";
 
 // Map DB roles → sidebar role key
@@ -30,6 +31,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
   const { user, logout } = useAuth();
   const activeRole = mapRole(user?.role);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const { enableStreams, enableSections } = useAcademicConfig();
 
   const superAdminLinks = [
     { name: "Overview", href: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -41,25 +43,21 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
     { name: "Students", href: "/students", icon: <GraduationCap className="w-4 h-4" /> },
     { name: "Teachers", href: "/teachers", icon: <Users className="w-4 h-4" /> },
     { name: "Parents", href: "/guardians", icon: <User className="w-4 h-4" /> },
-    {
-      name: "Classes & HRM", icon: <Calendar className="w-4 h-4" />, subItems: [
-        { name: "All Classes", href: "/classes" },
-        { name: "Schedule", href: "/classes/schedule" },
-        { name: "Approve Leave Request", href: "/leave/approve-leave-request" },
-        { name: "Leave Type", href: "/leave/leave-type" },
-        { name: "Holidays", href: "/holidays" }
-      ]
-    },
+
     {
       name: "Academic", icon: <Building2 className="w-4 h-4" />, subItems: [
+        { name: "Classes", href: "/academic-mgmt/classes" },
+        ...(enableStreams ? [{ name: "Streams", href: "/academic-mgmt/streams" }] : []),
+        ...(enableSections ? [{ name: "Sections", href: "/academic-mgmt/sections" }] : []),
+        { name: "Subjects", href: "/academic-mgmt/subjects" },
+        { name: "Subject Assignment", href: "/academic-mgmt/subject-assignment" },
+        { name: "Teacher Assignment", href: "/academic-mgmt/teacher-assignment" },
+        { name: "Syllabus", href: "/academic-mgmt/syllabus" },
         { name: "Class Room", href: "/academic/class-room" },
         { name: "Class Routine", href: "/academic/class-routine" },
-        { name: "Sections", href: "/academic/sections" },
-        { name: "Subjects", href: "/academic/subjects" },
-        { name: "Class Syllabus", href: "/academic/class-syllabus" },
         { name: "Time Table", href: "/academic/time-table" },
         { name: "Class Home Work", href: "/academic/class-home-work" },
-        { name: "Progress & Grading", href: "/academic/progress" }
+        { name: "Progress & Grading", href: "/academic/progress" },
       ]
     },
     {
@@ -74,8 +72,9 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
     },
     {
       name: "Attendance", icon: <Clock className="w-4 h-4" />, subItems: [
-        { name: "Teacher Attendance List", href: "/attendance/teacher-attendance" },
-        { name: "Student Attendance List", href: "/attendance/student-attendance" }
+        { name: "Student Attendance", href: "/attendance/student" },
+        { name: "Teacher Attendance", href: "/attendance/teacher" },
+        { name: "Reports", href: "/attendance/reports" }
       ]
     },
 
@@ -101,6 +100,14 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Leave Report", href: "/reports/leave-report" }
       ]
     },
+    {
+      name: "HR Management", icon: <Calendar className="w-4 h-4" />, subItems: [
+        { name: "Approve Leave Request", href: "/leave/approve-leave-request" },
+        { name: "Leave Type", href: "/leave/leave-type" },
+        { name: "Holidays", href: "/holidays" }
+
+      ]
+    },
     { name: "Notice Board", href: "/notices", icon: <Megaphone className="w-4 h-4" /> },
     {
       name: "Website", icon: <Globe className="w-4 h-4" />, subItems: [
@@ -114,12 +121,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Contact Us", href: "/website/contact" },
       ]
     },
-    {
-      name: "Settings", icon: <User className="w-4 h-4" />, subItems: [
-        { name: "Profile", href: "/settings/profile" },
-        { name: "Roles & Permissions", href: "/settings/roles" }
-      ]
-    }
+    { name: "Settings", icon: <Settings2 className="w-4 h-4" />, href: "/settings/profile" }
   ];
 
   const teacherLinks = [
@@ -132,7 +134,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
     },
     {
       name: "Academic", icon: <Building2 className="w-4 h-4" />, subItems: [
-        { name: "Class Syllabus", href: "/academic/class-syllabus" },
+        { name: "Syllabus", href: "/academic-mgmt/syllabus" },
         { name: "Home Work", href: "/academic/class-home-work" },
         { name: "Progress & Grading", href: "/academic/progress" }
       ]
@@ -148,8 +150,9 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
     },
     {
       name: "Attendance", icon: <Clock className="w-4 h-4" />, subItems: [
-        { name: "Student Attendance", href: "/attendance/student-attendance" },
-        { name: "My Attendance", href: "/attendance/my-attendance" }
+        { name: "Student Attendance", href: "/attendance/student" },
+        { name: "My Attendance", href: "/attendance/my-attendance" },
+        { name: "Reports", href: "/attendance/reports" }
       ]
     },
     {
@@ -175,7 +178,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
     {
       name: "Academic", icon: <Building2 className="w-4 h-4" />, subItems: [
         { name: "My Routine", href: "/academic/class-routine" },
-        { name: "My Syllabus", href: "/academic/class-syllabus" },
+        { name: "My Syllabus", href: "/academic-mgmt/syllabus" },
         { name: "My Subjects", href: "/academic/subjects" },
         { name: "Home Work", href: "/academic/class-home-work" },
         { name: "Progress & Grading", href: "/academic/progress" }
@@ -215,8 +218,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
     { name: "Notice Board", href: "/notices", icon: <Megaphone className="w-4 h-4" /> }
   ];
 
-  // Memoize links array — only recomputes when the user's role changes,
-  // not on every render triggered by usePathname()
+  // Memoize links array — recomputes when role or academic config changes
   const links = useMemo(() =>
     activeRole === "super_admin" ? superAdminLinks
       : activeRole === "admin" ? adminLinks
@@ -224,16 +226,16 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
           : activeRole === "accountant" ? accountantLinks
             : activeRole === "parent" ? parentLinks
               : studentLinks
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  , [activeRole]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    , [activeRole, enableStreams, enableSections]);
 
   const roleLabels = useMemo<Record<"super_admin" | "admin" | "accountant" | "teacher" | "student" | "parent", { text: string; badge: string }>>(() => ({
-    super_admin: { text: "Super Admin",        badge: "bg-amber-500/20 text-amber-400" },
-    admin:       { text: "Principal / Admin",   badge: "bg-blue-500/20 text-blue-400" },
-    accountant:  { text: "Accountant",          badge: "bg-yellow-500/20 text-yellow-400" },
-    teacher:     { text: "Faculty Member",      badge: "bg-emerald-500/20 text-emerald-400" },
-    parent:      { text: "Parent Portal",       badge: "bg-purple-500/20 text-purple-400" },
-    student:     { text: "Student Profile",     badge: "bg-amber-500/20 text-amber-400" },
+    super_admin: { text: "Super Admin", badge: "bg-amber-500/20 text-amber-400" },
+    admin: { text: "Principal / Admin", badge: "bg-blue-500/20 text-blue-400" },
+    accountant: { text: "Accountant", badge: "bg-yellow-500/20 text-yellow-400" },
+    teacher: { text: "Faculty Member", badge: "bg-emerald-500/20 text-emerald-400" },
+    parent: { text: "Parent Portal", badge: "bg-purple-500/20 text-purple-400" },
+    student: { text: "Student Profile", badge: "bg-amber-500/20 text-amber-400" },
   }), []);
 
   const [expandedMenu, setExpandedMenu] = React.useState<string | null>(null);
@@ -247,7 +249,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
     <>
       {/* Mobile Backdrop Overlay */}
       {isMobileOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300"
           onClick={onClose}
         />
@@ -271,7 +273,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
               </div>
             </div>
           )}
-          
+
           {/* Collapse toggle for desktop, close button for mobile */}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
@@ -289,142 +291,142 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
           </button>
         </div>
 
-      {/* Navigation Links */}
-      {/* Navigation Links */}
-      <nav className={`flex-1 ${isCollapsed ? 'px-2' : 'px-4'} py-6 space-y-1 overflow-y-auto`}>
-        {!isCollapsed && (
-          <div className="px-2 mb-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-            Main Menu
-          </div>
-        )}
-        {links.map((link) => {
-          if ('subItems' in link && link.subItems) {
-            const isExpanded = expandedMenu === link.name;
-            const isChildActive = link.subItems.some((sub: { href: string }) => pathname === sub.href);
-            return (
-              <div key={link.name} className="flex flex-col gap-1">
-                <button
-                  onClick={() => {
-                    if (isCollapsed) setIsCollapsed(false);
-                    setExpandedMenu(isExpanded && !isCollapsed ? null : link.name);
-                  }}
-                  className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} w-full ${isCollapsed ? 'px-0 py-3' : 'px-3 py-2.5'} text-[13px] rounded-lg transition-all duration-200 font-medium ${isChildActive && !isExpanded
-                    ? "bg-primary/10 text-primary"
-                    : "text-slate-400 dark:text-slate-500 hover:text-slate-200 hover:bg-slate-800/50"
-                    }`}
-                  title={isCollapsed ? link.name : undefined}
-                >
-                  <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
-                    <span className={`${isChildActive ? "text-primary" : "text-slate-400 dark:text-slate-500"}`}>
-                      {link.icon}
-                    </span>
-                    {!isCollapsed && <span>{link.name}</span>}
-                  </div>
-                  {!isCollapsed && (isExpanded ? <ChevronDown className="w-4 h-4 text-slate-500 dark:text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-500 dark:text-slate-400" />)}
-                </button>
-
-                {isExpanded && !isCollapsed && (
-                  <div className="ml-9 flex flex-col gap-1 border-l border-slate-700/50 pl-3 py-1">
-                    {link.subItems.map((sub: { name: string, href: string }) => {
-                      const isSubActive = pathname === sub.href;
-                      return (
-                        <Link
-                          key={sub.name}
-                          href={sub.href}
-                          onClick={onClose}
-                          className={`text-[12px] font-medium transition-colors py-1.5 ${isSubActive ? "text-primary" : "text-slate-500 dark:text-slate-400 hover:text-slate-300"
-                            }`}
-                        >
-                          {sub.name}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          }
-
-          const isActive = pathname === (link as { href: string }).href;
-          return (
-            <Link
-              key={link.name}
-              href={(link as { href: string }).href}
-              onClick={onClose}
-              className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'px-0 py-3' : 'px-3 py-2.5'} text-[13px] rounded-lg transition-all duration-200 font-medium ${isActive
-                ? "bg-primary/10 text-primary"
-                : "text-slate-400 dark:text-slate-500 hover:text-slate-200 hover:bg-slate-800/50"
-                }`}
-              title={isCollapsed ? link.name : undefined}
-            >
-              <span className={`${isActive ? "text-primary" : "text-slate-400 dark:text-slate-500"}`}>
-                {link.icon}
-              </span>
-              {!isCollapsed && <span>{link.name}</span>}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* Role Indicator Footer & Profile Menu */}
-      <div className={`relative ${isCollapsed ? 'p-2' : 'p-4'} border-t border-slate-800/50`}>
-        {isProfileMenuOpen && !isCollapsed && (
-          <>
-            <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)} />
-            <div className="absolute bottom-full left-4 right-4 mb-2 bg-slate-800 border border-slate-700 rounded-xl shadow-lg z-50 overflow-hidden py-1">
-              <Link
-                href="/settings/profile"
-                onClick={() => { setIsProfileMenuOpen(false); onClose?.(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors cursor-pointer"
-              >
-                <User className="w-4 h-4" /> My Profile
-              </Link>
-              <div className="h-px w-full bg-slate-700/50 my-1" />
-              <button
-                onClick={() => { setIsProfileMenuOpen(false); logout(); onClose?.(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-rose-400 hover:text-rose-300 hover:bg-slate-700/50 transition-colors cursor-pointer text-left"
-              >
-                <LogOut className="w-4 h-4" /> Logout
-              </button>
+        {/* Navigation Links */}
+        {/* Navigation Links */}
+        <nav className={`flex-1 ${isCollapsed ? 'px-2' : 'px-4'} py-6 space-y-1 overflow-y-auto`}>
+          {!isCollapsed && (
+            <div className="px-2 mb-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Main Menu
             </div>
-          </>
-        )}
+          )}
+          {links.map((link) => {
+            if ('subItems' in link && link.subItems) {
+              const isExpanded = expandedMenu === link.name;
+              const isChildActive = link.subItems.some((sub: { href: string }) => pathname === sub.href);
+              return (
+                <div key={link.name} className="flex flex-col gap-1">
+                  <button
+                    onClick={() => {
+                      if (isCollapsed) setIsCollapsed(false);
+                      setExpandedMenu(isExpanded && !isCollapsed ? null : link.name);
+                    }}
+                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'justify-between'} w-full ${isCollapsed ? 'px-0 py-3' : 'px-3 py-2.5'} text-[13px] rounded-lg transition-all duration-200 font-medium ${isChildActive && !isExpanded
+                      ? "bg-primary/10 text-primary"
+                      : "text-slate-400 dark:text-slate-500 hover:text-slate-200 hover:bg-slate-800/50"
+                      }`}
+                    title={isCollapsed ? link.name : undefined}
+                  >
+                    <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                      <span className={`${isChildActive ? "text-primary" : "text-slate-400 dark:text-slate-500"}`}>
+                        {link.icon}
+                      </span>
+                      {!isCollapsed && <span>{link.name}</span>}
+                    </div>
+                    {!isCollapsed && (isExpanded ? <ChevronDown className="w-4 h-4 text-slate-500 dark:text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-500 dark:text-slate-400" />)}
+                  </button>
 
-        <button
-          onClick={() => {
-            if (isCollapsed) setIsCollapsed(false);
-            else setIsProfileMenuOpen(!isProfileMenuOpen);
-          }}
-          className={`w-full ${isCollapsed ? 'p-2 justify-center' : 'p-3 justify-between'} rounded-xl bg-slate-800/30 border border-slate-700/50 flex items-center hover:bg-slate-800/50 transition-colors cursor-pointer`}
-          title={isCollapsed ? (user?.name || roleLabels[activeRole].text) : undefined}
-        >
-          {isCollapsed ? (
-            <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
-              <User className="w-5 h-5 text-slate-400" />
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-col gap-1.5 text-left">
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500">Logged in as</span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${roleLabels[activeRole].badge}`}>
-                    {activeRole.toUpperCase()}
-                  </span>
+                  {isExpanded && !isCollapsed && (
+                    <div className="ml-9 flex flex-col gap-1 border-l border-slate-700/50 pl-3 py-1">
+                      {link.subItems.map((sub: { name: string, href: string }) => {
+                        const isSubActive = pathname === sub.href;
+                        return (
+                          <Link
+                            key={sub.name}
+                            href={sub.href}
+                            onClick={onClose}
+                            className={`text-[12px] font-medium transition-colors py-1.5 ${isSubActive ? "text-primary" : "text-slate-500 dark:text-slate-400 hover:text-slate-300"
+                              }`}
+                          >
+                            {sub.name}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-                <span className="text-sm font-semibold text-white truncate max-w-full sm:w-[140px]">
-                  {user?.name || roleLabels[activeRole].text}
+              );
+            }
+
+            const isActive = pathname === (link as { href: string }).href;
+            return (
+              <Link
+                key={link.name}
+                href={(link as { href: string }).href}
+                onClick={onClose}
+                className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'px-0 py-3' : 'px-3 py-2.5'} text-[13px] rounded-lg transition-all duration-200 font-medium ${isActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-slate-400 dark:text-slate-500 hover:text-slate-200 hover:bg-slate-800/50"
+                  }`}
+                title={isCollapsed ? link.name : undefined}
+              >
+                <span className={`${isActive ? "text-primary" : "text-slate-400 dark:text-slate-500"}`}>
+                  {link.icon}
                 </span>
+                {!isCollapsed && <span>{link.name}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Role Indicator Footer & Profile Menu */}
+        <div className={`relative ${isCollapsed ? 'p-2' : 'p-4'} border-t border-slate-800/50`}>
+          {isProfileMenuOpen && !isCollapsed && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setIsProfileMenuOpen(false)} />
+              <div className="absolute bottom-full left-4 right-4 mb-2 bg-slate-800 border border-slate-700 rounded-xl shadow-lg z-50 overflow-hidden py-1">
+                <Link
+                  href="/settings/profile"
+                  onClick={() => { setIsProfileMenuOpen(false); onClose?.(); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors cursor-pointer"
+                >
+                  <User className="w-4 h-4" /> My Profile
+                </Link>
+                <div className="h-px w-full bg-slate-700/50 my-1" />
+                <button
+                  onClick={() => { setIsProfileMenuOpen(false); logout(); onClose?.(); }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-rose-400 hover:text-rose-300 hover:bg-slate-700/50 transition-colors cursor-pointer text-left"
+                >
+                  <LogOut className="w-4 h-4" /> Logout
+                </button>
               </div>
-              {isProfileMenuOpen ? (
-                <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-              ) : (
-                <ChevronUp className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-              )}
             </>
           )}
-        </button>
-      </div>
-    </aside>
+
+          <button
+            onClick={() => {
+              if (isCollapsed) setIsCollapsed(false);
+              else setIsProfileMenuOpen(!isProfileMenuOpen);
+            }}
+            className={`w-full ${isCollapsed ? 'p-2 justify-center' : 'p-3 justify-between'} rounded-xl bg-slate-800/30 border border-slate-700/50 flex items-center hover:bg-slate-800/50 transition-colors cursor-pointer`}
+            title={isCollapsed ? (user?.name || roleLabels[activeRole].text) : undefined}
+          >
+            {isCollapsed ? (
+              <div className="w-10 h-10 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
+                <User className="w-5 h-5 text-slate-400" />
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-1.5 text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">Logged in as</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${roleLabels[activeRole].badge}`}>
+                      {activeRole.toUpperCase()}
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-white truncate max-w-full sm:w-[140px]">
+                    {user?.name || roleLabels[activeRole].text}
+                  </span>
+                </div>
+                {isProfileMenuOpen ? (
+                  <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                ) : (
+                  <ChevronUp className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                )}
+              </>
+            )}
+          </button>
+        </div>
+      </aside>
     </>
   );
 }); // React.memo

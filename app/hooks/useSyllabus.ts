@@ -1,115 +1,60 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
+import { useState, useCallback } from "react";
+import { getAuthHeaders } from "@/lib/utils/session";
 
-export interface ApiSyllabusChapter {
-  title: string;
+export interface SyllabusChapter {
+  chapter_no: number;
+  chapter_name: string;
   description?: string;
-  hours_allocated?: number;
-  status: "pending" | "in_progress" | "completed";
+  start_date: string;
+  target_date: string;
+  status: "Not Started" | "In Progress" | "Completed";
+  _id?: string;
 }
 
-export interface ApiSyllabus {
-  _id: string;
-  school_id: string;
-  class_id: { _id: string; name: string; section?: string } | string;
-  subject_id: { _id: string; name: string; code?: string; type: string } | string;
-  chapters: ApiSyllabusChapter[];
-  createdAt: string;
-  updatedAt: string;
+export interface SyllabusData {
+  _id?: string;
+  school_id?: string;
+  teacher_assignment_id: string;
+  chapters: SyllabusChapter[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export function useSyllabus(classId?: string, subjectId?: string, options?: { skip?: boolean }) {
-  const [syllabi, setSyllabi] = useState<ApiSyllabus[]>([]);
-  const [loading, setLoading] = useState(options?.skip ? false : true);
+export function useSyllabus() {
+  const [syllabus, setSyllabus] = useState<SyllabusData | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const authReady = useAuthReady();
-
-  const fetchSyllabi = useCallback(async (cId?: string, sId?: string) => {
-    setLoading(true);
-    setError(null);
+  const fetchSyllabus = useCallback(async (teacher_assignment_id: string) => {
+    setIsLoading(true); setError(null);
     try {
-      const activeClassId = cId || classId;
-      const activeSubjectId = sId || subjectId;
-
-      const params = new URLSearchParams();
-      if (activeClassId) params.set("class_id", activeClassId);
-      if (activeSubjectId) params.set("subject_id", activeSubjectId);
-
-      const res = await fetch(`/api/syllabus?${params.toString()}`, {
-        headers: getAuthHeaders(),
-      });
+      const res = await fetch(`/api/syllabus?teacher_assignment_id=${teacher_assignment_id}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      if (data.success) {
-        setSyllabi(data.data);
-      } else {
-        setError(data.message || "Failed to fetch syllabus data");
-      }
-    } catch (e: any) {
-      console.error("useSyllabus fetch error", e);
-      setError(e.message || "An error occurred while fetching syllabus");
+      if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch");
+
+      setSyllabus(data.data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load syllabus");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  }, [classId, subjectId]);
+  }, []);
 
-  useEffect(() => {
-    if (options?.skip) return;
-    if (!authReady) return; // Wait until authentication token is loaded
-    fetchSyllabi();
-  }, [fetchSyllabi, options?.skip, authReady]);
-
-  const createSyllabus = useCallback(async (payload: { class_id: string; subject_id: string; chapters: ApiSyllabusChapter[] }) => {
+  const saveSyllabus = async (teacher_assignment_id: string, chapters: SyllabusChapter[]) => {
     try {
       const res = await fetch("/api/syllabus", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ teacher_assignment_id, chapters }),
       });
       const data = await res.json();
-      if (data.success) {
-        await fetchSyllabi();
-      }
-      return data;
-    } catch (e: any) {
-      return { success: false, message: e.message || "Failed to create syllabus" };
-    }
-  }, [fetchSyllabi]);
+      if (!res.ok || !data.success) return { success: false, message: data.message || "Failed" };
+      setSyllabus(data.data);
+      return { success: true, message: "Syllabus saved successfully", data: data.data };
+    } catch { return { success: false, message: "Network error" }; }
+  };
 
-  const updateSyllabus = useCallback(async (id: string, payload: { chapters: ApiSyllabusChapter[] }) => {
-    try {
-      const res = await fetch(`/api/syllabus/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
-      if (data.success) {
-        await fetchSyllabi();
-      }
-      return data;
-    } catch (e: any) {
-      return { success: false, message: e.message || "Failed to update syllabus" };
-    }
-  }, [fetchSyllabi]);
-
-  const deleteSyllabus = useCallback(async (id: string) => {
-    try {
-      const res = await fetch(`/api/syllabus/${id}`, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      });
-      const data = await res.json();
-      if (data.success) {
-        await fetchSyllabi();
-      }
-      return data;
-    } catch (e: any) {
-      return { success: false, message: e.message || "Failed to delete syllabus" };
-    }
-  }, [fetchSyllabi]);
-
-  return { syllabi, loading, error, fetchSyllabi, createSyllabus, updateSyllabus, deleteSyllabus };
+  return { syllabus, isLoading, error, fetchSyllabus, saveSyllabus };
 }

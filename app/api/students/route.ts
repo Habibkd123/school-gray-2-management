@@ -73,6 +73,16 @@ export async function GET(request: NextRequest) {
       filter.gender = gender.toLowerCase();
     }
 
+    const streamId = searchParams.get("stream_id");
+    if (streamId) {
+      filter.stream_id = streamId;
+    }
+
+    const sectionId = searchParams.get("section_id");
+    if (sectionId) {
+      filter.section_id = sectionId;
+    }
+
     const status = searchParams.get("status");
     if (status && status !== "all" && status !== "Select") {
       filter.is_active = status === "Active";
@@ -146,7 +156,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       { success: true, data: { students, total, page, limit } },
-      { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } }
+      { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } }
     );
   } catch (err) {
     console.error("[GET /api/students]", err);
@@ -177,7 +187,8 @@ export async function POST(request: NextRequest) {
       medical_cert, migration_cert, transfer_cert, birth_cert,
       father_name, father_phone, father_email, father_occupation, father_photo,
       mother_name, mother_phone, mother_email, mother_occupation, mother_photo,
-      guardian_type, guardian_occupation, guardian_address, permanent_address, other_info
+      guardian_type, guardian_occupation, guardian_address, permanent_address, other_info,
+      aadhaar_no
     } = body;
 
     if (!name?.trim()) {
@@ -193,39 +204,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Roll number class-level uniqueness check
-    if (roll_no && roll_no.trim()) {
-      const existingRollNo = await Student.findOne({
-        school_id: schoolId,
-        class_id,
-        roll_no: roll_no.trim()
-      });
-      if (existingRollNo) {
-        return NextResponse.json(
-          { success: false, message: "Roll number already exists in this class" },
-          { status: 409 }
-        );
-      }
+    // Require admission number and check for uniqueness
+    if (!admission_no || !admission_no.trim()) {
+      return NextResponse.json(
+        { success: false, message: "Admission number is required" },
+        { status: 400 }
+      );
     }
 
-    // Auto-generate admission number if not provided — O(1) via sort+limit
-    let finalAdmissionNo = admission_no;
-    if (!finalAdmissionNo || !finalAdmissionNo.trim()) {
-      const lastStudent = await Student.findOne({
-        school_id: schoolId,
-        admission_no: { $exists: true, $ne: "" },
-      })
-        .sort({ createdAt: -1 })
-        .select("admission_no")
-        .lean();
-
-      let maxNum = 0;
-      if (lastStudent?.admission_no) {
-        const numPart = lastStudent.admission_no.replace(/\D/g, "");
-        if (numPart) maxNum = parseInt(numPart, 10) || 0;
-      }
-      finalAdmissionNo = `ADM${String(maxNum + 1).padStart(4, "0")}`;
+    const existingAdmissionNo = await Student.findOne({
+      school_id: schoolId,
+      admission_no: admission_no.trim()
+    });
+    if (existingAdmissionNo) {
+      return NextResponse.json(
+        { success: false, message: "Admission number already exists" },
+        { status: 409 }
+      );
     }
+    const finalAdmissionNo = admission_no.trim();
 
     // Determine login email for student (always auto-generated in custom format)
     const studentLoginEmail = generateStudentLoginEmail(name.trim(), dob);
@@ -348,6 +345,7 @@ export async function POST(request: NextRequest) {
       blood_group,
       address,
       phone,
+      aadhaar_no: aadhaar_no?.trim() || undefined,
       guardian_name,
       guardian_phone,
       guardian_relation,
@@ -423,7 +421,7 @@ export async function POST(request: NextRequest) {
     console.error("[POST /api/students]", err);
     if ((err as { code?: number }).code === 11000) {
       return NextResponse.json(
-        { success: false, message: "A student with this roll number already exists in this class" },
+        { success: false, message: "A student with these unique details already exists" },
         { status: 409 }
       );
     }

@@ -646,9 +646,9 @@ export default function DashboardPage() {
             <div className="relative z-10">
               <h2 className="text-2xl font-semibold flex items-center gap-3">
                 Welcome Back, {user?.name?.split(' ')[0] || 'Admin'}
-                <span className="bg-white/10 p-1.5 rounded-lg border border-white/20">
+                <Link href="/settings/profile" title="Edit Profile" className="bg-white/10 p-1.5 rounded-lg border border-white/20 hover:bg-white/20 transition-colors cursor-pointer">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-                </span>
+                </Link>
               </h2>
               <p className="text-[13px] text-slate-300 mt-2">Have a Good day at work</p>
             </div>
@@ -825,7 +825,7 @@ export default function DashboardPage() {
                   <div className="absolute bottom-5 text-white text-[11px] font-bold">{attendanceRateMock}%</div>
                 </div>
                 <div className="mt-4 flex justify-center">
-                  <Link href="/attendance/student-attendance" className="bg-[#F1F3F5] dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-[12px] px-4 py-2 rounded-lg flex items-center gap-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                  <Link href="/attendance/student" className="bg-[#F1F3F5] dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-[12px] px-4 py-2 rounded-lg flex items-center gap-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                     <CalendarIcon className="w-3.5 h-3.5" /> View All
                   </Link>
                 </div>
@@ -863,7 +863,7 @@ export default function DashboardPage() {
                     </div>
                     <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 text-center leading-tight">Exam Result</span>
                   </Link>
-                  <Link href="/attendance/student-attendance" className="flex flex-col items-center gap-2 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg group">
+                  <Link href="/attendance/student" className="flex flex-col items-center gap-2 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg group">
                     <div className="w-12 h-12 rounded-full bg-[#FFF7E6] border border-[#FFE7B3] text-[#F59E0B] flex items-center justify-center group-hover:scale-105 transition-transform">
                       <UserCheck className="w-5 h-5" />
                     </div>
@@ -976,7 +976,7 @@ export default function DashboardPage() {
               BOTTOM ROW 2: ACTION BUTTONS
               ---------------------------------------------------- */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link href="/attendance/student-attendance" className="bg-[#FFF7E6] hover:bg-[#ffeed1] transition-colors rounded-xl p-4 flex items-center justify-between border border-[#FFE7B3]">
+            <Link href="/attendance/student" className="bg-[#FFF7E6] hover:bg-[#ffeed1] transition-colors rounded-xl p-4 flex items-center justify-between border border-[#FFE7B3]">
               <div className="flex items-center gap-3 text-[#F59E0B] font-bold text-[13px]">
                 <div className="w-10 h-10 bg-[#F59E0B] rounded-lg text-white flex items-center justify-center shadow-sm">
                   <UserCheck className="w-5 h-5" />

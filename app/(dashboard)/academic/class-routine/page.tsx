@@ -6,6 +6,7 @@ import { useSchedules } from "../../../hooks/useSchedules";
 import { useClasses } from "../../../hooks/useClasses";
 import { useTeachers } from "../../../hooks/useTeachers";
 import { useSubjects } from "../../../hooks/useSubjects";
+import { useRooms } from "../../../hooks/useRooms";
 import {
   Plus, Search, List, Grid, MoreVertical, Edit, Trash2,
   Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, ToggleRight, Trash, FileText, Loader2
@@ -16,6 +17,7 @@ export default function ClassRoutinePage() {
   const { classes, isLoading: classesLoading } = useClasses();
   const { teachers, isLoading: teachersLoading } = useTeachers();
   const { schedules, isLoading: schedulesLoading, fetchSchedules, createSchedule, updateSchedule, deleteSchedule } = useSchedules();
+  const { rooms, loading: roomsLoading } = useRooms();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -30,7 +32,7 @@ export default function ClassRoutinePage() {
   const [formDay, setFormDay] = useState("Monday");
   const [formStartTime, setFormStartTime] = useState("09:30 AM");
   const [formEndTime, setFormEndTime] = useState("10:45 AM");
-  const [formClassRoom, setFormClassRoom] = useState("101");
+  const [formClassRoom, setFormClassRoom] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -63,7 +65,7 @@ export default function ClassRoutinePage() {
     setFormDay("Monday");
     setFormStartTime("09:30 AM");
     setFormEndTime("10:45 AM");
-    setFormClassRoom("101");
+    setFormClassRoom("");
     setFormError(null);
     setIsAddOpen(true);
   };
@@ -85,6 +87,10 @@ export default function ClassRoutinePage() {
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
+    if (!formClassRoom) {
+      setFormError("Please select a classroom.");
+      return;
+    }
     const res = await createSchedule({
       classId: formClassId,
       subject: formSubject,
@@ -162,7 +168,7 @@ export default function ClassRoutinePage() {
     return rId.includes(search) || sName.includes(search) || cName.includes(search) || tName.includes(search);
   });
 
-  const isLoading = classesLoading || teachersLoading || schedulesLoading;
+  const isLoading = classesLoading || teachersLoading || schedulesLoading || roomsLoading;
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
@@ -367,13 +373,30 @@ export default function ClassRoutinePage() {
 
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class Room</label>
-            <input
-              type="text"
-              value={formClassRoom}
-              onChange={(e) => setFormClassRoom(e.target.value)}
-              placeholder="e.g. 101"
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200"
-            />
+            <div className="relative">
+              {rooms.filter(r => r.is_active).length > 0 ? (
+                <select
+                  value={formClassRoom}
+                  onChange={(e) => setFormClassRoom(e.target.value)}
+                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                  required
+                >
+                  <option value="">Select Classroom</option>
+                  {rooms.filter(r => r.is_active).map(r => (
+                    <option key={r._id} value={r.room_no}>
+                      Room {r.room_no} {r.capacity ? `(Cap: ${r.capacity})` : ""}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <div className="w-full px-4 py-2.5 text-[13px] bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-slate-400 dark:text-slate-500 italic">
+                  No classrooms found — add rooms in Classroom Management first
+                </div>
+              )}
+              {rooms.filter(r => r.is_active).length > 0 && (
+                <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              )}
+            </div>
           </div>
 
           {/* Conflict / error banner */}

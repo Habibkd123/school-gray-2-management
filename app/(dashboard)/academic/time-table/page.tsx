@@ -6,6 +6,7 @@ import { useSchedules } from "../../../hooks/useSchedules";
 import { useClasses } from "../../../hooks/useClasses";
 import { useTeachers } from "../../../hooks/useTeachers";
 import { useSubjects } from "../../../hooks/useSubjects";
+import { useRooms } from "../../../hooks/useRooms";
 import {
   Plus, Search, List, Grid, MoreVertical, Edit, Trash2,
   Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, Trash, FileText, Clock, Loader2
@@ -17,10 +18,22 @@ const pastelColors = [
   "bg-rose-50 dark:bg-slate-800", "bg-blue-50 dark:bg-slate-800", "bg-green-50 dark:bg-slate-800", "bg-yellow-50 dark:bg-slate-800", "bg-purple-50 dark:bg-slate-800", "bg-orange-50 dark:bg-slate-800"
 ];
 
+function parseTimeToMinutes(t: string): number {
+  const match = t.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  if (!match) return 0;
+  let [, h, m, period] = match;
+  let hours = parseInt(h, 10);
+  const mins = parseInt(m, 10);
+  if (period.toUpperCase() === "PM" && hours !== 12) hours += 12;
+  if (period.toUpperCase() === "AM" && hours === 12) hours = 0;
+  return hours * 60 + mins;
+}
+
 export default function TimeTablePage() {
   const { classes, isLoading: classesLoading } = useClasses();
   const { teachers, isLoading: teachersLoading } = useTeachers();
   const { schedules, isLoading: schedulesLoading, createSchedule } = useSchedules();
+  const { rooms, loading: roomsLoading } = useRooms();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState("");
@@ -32,7 +45,7 @@ export default function TimeTablePage() {
   const [formDay, setFormDay] = useState("Monday");
   const [formStartTime, setFormStartTime] = useState("09:00 AM");
   const [formEndTime, setFormEndTime] = useState("09:45 AM");
-  const [formRoom, setFormRoom] = useState("101");
+  const [formRoom, setFormRoom] = useState("");
 
   const { subjects } = useSubjects(formClassId);
 
@@ -64,6 +77,14 @@ export default function TimeTablePage() {
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formRoom) {
+      alert("Please select a classroom.");
+      return;
+    }
+    if (isRoomOccupied) {
+      alert(`Room ${formRoom} is already occupied on ${formDay} at this time.`);
+      return;
+    }
     const res = await createSchedule({
       classId: formClassId,
       subject: formSubject,
@@ -115,7 +136,24 @@ export default function TimeTablePage() {
     };
   });
 
-  const isLoading = classesLoading || teachersLoading || schedulesLoading;
+  // Check if classroom is occupied at selected time/day
+  const isRoomOccupied = React.useMemo(() => {
+    if (!formRoom.trim()) return false;
+    const newStart = parseTimeToMinutes(formStartTime);
+    const newEnd = parseTimeToMinutes(formEndTime);
+
+    return schedules.some((s) => {
+      if (!s.room || s.room.trim().toLowerCase() !== formRoom.trim().toLowerCase()) return false;
+      if (s.day.toLowerCase() !== formDay.toLowerCase()) return false;
+
+      const eStart = parseTimeToMinutes(s.start_time);
+      const eEnd = parseTimeToMinutes(s.end_time);
+
+      return newStart < eEnd && newEnd > eStart;
+    });
+  }, [formRoom, formDay, formStartTime, formEndTime, schedules]);
+
+  const isLoading = classesLoading || teachersLoading || schedulesLoading || roomsLoading;
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
@@ -179,8 +217,15 @@ export default function TimeTablePage() {
                 {days.map(day => (
                   <div key={day} className="space-y-4">
                     {timeTableData.filter(d => d.day === day).length === 0 ? (
-                      <div className="p-4 text-center text-[12px] text-slate-400 dark:text-slate-600 bg-slate-50/50 dark:bg-slate-800/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-                        No period
+                      <div
+                        onClick={() => {
+                          setFormDay(day);
+                          setIsAddOpen(true);
+                        }}
+                        className="p-4 text-center text-[12px] text-slate-400 dark:text-slate-600 bg-slate-50/50 dark:bg-slate-800/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors group"
+                      >
+                        <Plus className="w-4 h-4 mx-auto mb-1 opacity-50 group-hover:opacity-100 group-hover:text-[#F59E0B] transition-colors" />
+                        <span className="group-hover:text-[#F59E0B] transition-colors">Add period</span>
                       </div>
                     ) : (
                       timeTableData.filter(d => d.day === day).map((item, index) => (
@@ -213,7 +258,7 @@ export default function TimeTablePage() {
       {isAddOpen && (
         <>
           <div className="fixed inset-0 bg-slate-900/50 z-[60] backdrop-blur-sm" onClick={() => setIsAddOpen(false)} />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-full sm:w-[500px] bg-white dark:bg-slate-900 rounded-2xl shadow-xl z-[70] overflow-hidden text-left flex flex-col max-h-[90vh]">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-full sm:w-[500px] bg-white dark:bg-slate-900 rounded-2xl shadow-xl z-[70] overflow-hidden text-left flex flex-col max-h-[95vh]">
             <div className="flex items-center justify-between p-6 border-b border-border bg-white dark:bg-slate-900">
               <h2 className="text-xl font-bold text-[#0F172A] dark:text-slate-100">Add Time Table Entry</h2>
               <button onClick={() => setIsAddOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-500 dark:text-slate-400 transition-colors cursor-pointer">
@@ -312,13 +357,42 @@ export default function TimeTablePage() {
 
               <div className="space-y-1.5">
                 <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Room</label>
-                <input
-                  type="text"
-                  value={formRoom}
-                  onChange={(e) => setFormRoom(e.target.value)}
-                  placeholder="e.g. 101"
-                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200"
-                />
+                <div className="relative">
+                  {rooms.filter(r => r.is_active).length > 0 ? (
+                    <select
+                      value={formRoom}
+                      onChange={(e) => setFormRoom(e.target.value)}
+                      className={`w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer ${
+                        isRoomOccupied ? "border-red-500 focus:border-red-500" : "border-border"
+                      }`}
+                      required
+                    >
+                      <option value="">Select Classroom</option>
+                      {rooms.filter(r => r.is_active).map(r => (
+                        <option key={r._id} value={r.room_no}>
+                          Room {r.room_no} {r.capacity ? `(Cap: ${r.capacity})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="w-full px-4 py-2.5 text-[13px] bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-slate-400 dark:text-slate-500 italic">
+                      No classrooms found — add rooms in Classroom Management first
+                    </div>
+                  )}
+                  {rooms.filter(r => r.is_active).length > 0 && (
+                    <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  )}
+                </div>
+                {isRoomOccupied && (
+                  <p className="text-[12px] text-red-500 font-semibold flex items-center gap-1 mt-1">
+                    ⚠️ Room {formRoom} is not available (occupied by another class at this time).
+                  </p>
+                )}
+                {formRoom.trim() && !isRoomOccupied && (
+                  <p className="text-[12px] text-emerald-500 font-semibold flex items-center gap-1 mt-1">
+                    ✓ Room {formRoom} is available.
+                  </p>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-border">

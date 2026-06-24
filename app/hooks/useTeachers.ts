@@ -26,6 +26,9 @@ export interface ApiTeacher {
   experience_years: number;
   join_date: string;
   languages?: string[];
+  training_details?: string[];
+  aadhaar_front_url?: string;
+  aadhaar_back_url?: string;
   is_active: boolean;
   class_id?: { _id: string; name: string; section: string } | string;
   class_ids?: Array<{ _id: string; name: string; section: string } | string>;
@@ -177,11 +180,18 @@ export interface CreateTeacherInput {
 let _teachersCache: ApiTeacher[] | null = null;
 let _cacheTimestamp = 0;
 const CACHE_TTL_MS = 60_000; // 60 seconds
+let _version = 0; // bumped after every mutation
 const _listeners = new Set<(teachers: ApiTeacher[]) => void>();
+const _versionListeners = new Set<(v: number) => void>();
 
 function invalidateCache() {
   _teachersCache = null;
   _cacheTimestamp = 0;
+}
+
+function bumpVersion() {
+  _version++;
+  _versionListeners.forEach(fn => fn(_version));
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────
@@ -190,6 +200,7 @@ export function useTeachers(options?: { skip?: boolean }) {
   const [total, setTotal] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(_teachersCache === null);
   const [error, setError] = useState<string | null>(null);
+  const [mutationVersion, setMutationVersion] = useState(_version);
   const authReady = useAuthReady();
 
   // Subscribe to cache broadcasts so all instances stay in sync
@@ -197,6 +208,13 @@ export function useTeachers(options?: { skip?: boolean }) {
     const listener = (data: ApiTeacher[]) => setTeachers(data);
     _listeners.add(listener);
     return () => { _listeners.delete(listener); };
+  }, []);
+
+  // Subscribe to version bumps so all instances auto-refetch after mutations
+  useEffect(() => {
+    const vListener = (v: number) => setMutationVersion(v);
+    _versionListeners.add(vListener);
+    return () => { _versionListeners.delete(vListener); };
   }, []);
 
   // ─── Fetch all teachers ─────────────────────────────────────────
@@ -288,7 +306,7 @@ export function useTeachers(options?: { skip?: boolean }) {
     if (options?.skip) return;
     if (!authReady) return; // Wait until the JWT token is in localStorage
     fetchTeachers();
-  }, [fetchTeachers, options?.skip, authReady]);
+  }, [fetchTeachers, options?.skip, authReady, mutationVersion]);
 
   // ─── Create teacher ─────────────────────────────────────────────
   const createTeacher = async (input: CreateTeacherInput): Promise<{ success: boolean; message: string; data?: ApiTeacher; credentials?: { loginId: string; password?: string } }> => {
@@ -305,6 +323,7 @@ export function useTeachers(options?: { skip?: boolean }) {
       _teachersCache = newList;
       _cacheTimestamp = Date.now();
       _listeners.forEach(fn => fn(newList));
+      bumpVersion();
 
       setTeachers((prev) => [data.data, ...prev]);
       return { success: true, message: "Teacher created successfully", data: data.data, credentials: data.credentials };
@@ -331,6 +350,7 @@ export function useTeachers(options?: { skip?: boolean }) {
       } else {
         invalidateCache();
       }
+      bumpVersion();
 
       setTeachers((prev) => prev.map((t) => (t._id === id ? data.data : t)));
       return { success: true, message: "Teacher updated successfully" };
@@ -356,6 +376,7 @@ export function useTeachers(options?: { skip?: boolean }) {
       } else {
         invalidateCache();
       }
+      bumpVersion();
 
       setTeachers((prev) => prev.filter((t) => t._id !== id));
       return { success: true, message: "Teacher deleted successfully" };

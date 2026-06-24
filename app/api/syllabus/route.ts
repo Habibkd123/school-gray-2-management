@@ -1,77 +1,73 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { Syllabus } from "@/lib/models/index";
+import { Syllabus, TeacherAssignment } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
-// GET: Fetch all syllabus documents, optionally filtered by class_id or subject_id
+// GET — fetch syllabus for a specific teacher assignment
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin", "student", "parent"]);
   if (error) return error;
 
   try {
     await connectToDatabase();
+    const url = new URL(req.url);
+    const teacher_assignment_id = url.searchParams.get("teacher_assignment_id");
 
-    const { searchParams } = new URL(req.url);
-    const classId = searchParams.get("class_id");
-    const subjectId = searchParams.get("subject_id");
-
-    const query: any = { school_id: schoolId };
-    if (classId && mongoose.Types.ObjectId.isValid(classId)) {
-      query.class_id = classId;
-    }
-    if (subjectId && mongoose.Types.ObjectId.isValid(subjectId)) {
-      query.subject_id = subjectId;
+    if (!teacher_assignment_id || !mongoose.Types.ObjectId.isValid(teacher_assignment_id)) {
+      return NextResponse.json({ success: false, message: "Valid teacher_assignment_id is required" }, { status: 400 });
     }
 
-    const syllabi = await Syllabus.find(query)
-      .populate("class_id", "name section")
-      .populate("subject_id", "name code type")
-      .lean();
-
-    return NextResponse.json({ success: true, data: syllabi });
+    const syllabus = await Syllabus.findOne({ teacher_assignment_id, school_id: schoolId }).lean();
+    
+    return NextResponse.json({
+      success: true,
+      data: syllabus || { teacher_assignment_id, chapters: [] },
+    });
   } catch (err: any) {
-    return NextResponse.json({ success: false, message: err.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }
 }
 
-// POST: Create a syllabus for a class + subject
+// POST — create or update a syllabus for a teacher assignment
 export async function POST(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
 
   try {
     await connectToDatabase();
+    const { teacher_assignment_id, chapters } = await req.json();
 
-    const body = await req.json();
-    const { class_id, subject_id, chapters } = body;
-
-    if (!class_id || !mongoose.Types.ObjectId.isValid(class_id)) {
-      return NextResponse.json({ success: false, message: "Valid Class ID is required" }, { status: 400 });
-    }
-    if (!subject_id || !mongoose.Types.ObjectId.isValid(subject_id)) {
-      return NextResponse.json({ success: false, message: "Valid Subject ID is required" }, { status: 400 });
+    if (!teacher_assignment_id || !mongoose.Types.ObjectId.isValid(teacher_assignment_id)) {
+      return NextResponse.json({ success: false, message: "Valid teacher_assignment_id is required" }, { status: 400 });
     }
 
-    // Check if syllabus already exists for this class + subject combination
-    const existing = await Syllabus.findOne({ school_id: schoolId, class_id, subject_id });
-    if (existing) {
-      return NextResponse.json({ success: false, message: "Syllabus already exists for this class and subject. Please update the existing one." }, { status: 409 });
+    // Verify the teacher assignment exists
+    const assignmentExists = await TeacherAssignment.exists({ _id: teacher_assignment_id, school_id: schoolId });
+    if (!assignmentExists) {
+      return NextResponse.json({ success: false, message: "Teacher assignment not found" }, { status: 404 });
     }
 
-    const syllabus = await Syllabus.create({
-      school_id: schoolId as string,
-      class_id,
-      subject_id,
-      chapters: Array.isArray(chapters) ? chapters : [],
-    });
+    // Validate chapters array
+    if (!Array.isArray(chapters)) {
+      return NextResponse.json({ success: false, message: "chapters must be an array" }, { status: 400 });
+    }
 
-    const populated = await Syllabus.findById(syllabus._id)
-      .populate("class_id", "name section")
-      .populate("subject_id", "name code type");
+    for (const ch of chapters) {
+      if (!ch.chapter_no || !ch.chapter_name || !ch.start_date || !ch.target_date) {
+        return NextResponse.json({ success: false, message: "Each chapter requires chapter_no, chapter_name, start_date, and target_date" }, { status: 400 });
+      }
+    }
 
-    return NextResponse.json({ success: true, data: populated }, { status: 201 });
+    // Upsert syllabus
+    const updatedSyllabus = await Syllabus.findOneAndUpdate(
+      { teacher_assignment_id, school_id: schoolId },
+      { $set: { chapters } },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    return NextResponse.json({ success: true, data: updatedSyllabus }, { status: 200 });
   } catch (err: any) {
-    return NextResponse.json({ success: false, message: err.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }
 }

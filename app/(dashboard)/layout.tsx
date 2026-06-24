@@ -18,6 +18,7 @@ const ROUTE_MODULE_MAP: { prefix: string; module: PermissionModule }[] = [
   { prefix: "/guardians", module: "parents" },
   { prefix: "/classes", module: "classes" },
   { prefix: "/academic", module: "academic" },
+  { prefix: "/academic-mgmt", module: "academic" },
   { prefix: "/examination", module: "examination" },
   { prefix: "/attendance", module: "attendance" },
   { prefix: "/fees", module: "fees" },

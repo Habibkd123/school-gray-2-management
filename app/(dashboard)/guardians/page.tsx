@@ -17,7 +17,7 @@ import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar
 // ─── Helpers ──────────────────────────────────────────────────────────────
 function getAvatar(name: string, photo_url?: string) {
   if (photo_url) return photo_url;
-  return name.toLowerCase().match(/^[a-m]/) ? "/asset 12.webp" : "/asset 14.webp";
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=5D6BEE&color=fff&bold=true`;
 }
 
 function formatDate(d?: string | Date) {
