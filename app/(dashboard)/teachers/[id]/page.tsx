@@ -49,7 +49,7 @@ export default function TeacherDetailsPage() {
 
   // Attendance summary & details state
   const { fetchSummary, fetchDetail } = useAttendanceSummary();
-  const [selectedYear, setSelectedYear] = useState("2025-2026");
+  const [selectedYear, setSelectedYear] = useState("2026-2027");
   const [attendanceSummary, setAttendanceSummary] = useState({ present: 0, absent: 0, late: 0, holiday: 0, half_day: 0 });
   const [dailyAttendance, setDailyAttendance] = useState<Array<{ date: string; status: string; note?: string }>>([]);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
@@ -874,8 +874,6 @@ export default function TeacherDetailsPage() {
                         onChange={(e) => setSelectedYear(e.target.value)}
                         className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-[12px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 shadow-sm outline-none cursor-pointer"
                       >
-                        <option value="2024-2025">Year : 2024 / 2025</option>
-                        <option value="2025-2026">Year : 2025 / 2026</option>
                         <option value="2026-2027">Year : 2026 / 2027</option>
                       </select>
                     </div>

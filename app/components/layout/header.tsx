@@ -33,7 +33,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   useEffect(() => {
     async function fetchYears() {
       // Always include fallback years so 2026-2027 is selectable even before DB has data
-      const fallbackYears = ["2026-2027", "2025-2026", "2024-2025", "2023-2024"];
+      const fallbackYears = ["2026-2027"];
       try {
         const res = await fetch("/api/classes?limit=1000", { headers: getAuthHeaders() });
         const data = await res.json();
@@ -41,9 +41,9 @@ export function Header({ onMenuClick }: HeaderProps) {
           const dbYears: string[] = Array.from(
             new Set<string>(data.data.classes.map((c: { academic_year: string }) => c.academic_year))
           );
-          // Merge DB years with fallback years so future years are always available
+          // Merge DB years with fallback years and filter to only allow 2026-2027
           const merged = Array.from(new Set([...dbYears, ...fallbackYears]))
-            .sort((a, b) => b.localeCompare(a)); // latest first
+            .filter(year => year === "2026-2027");
           setAvailableYears(merged);
           // Only auto-select if academicYear is completely empty (first load with no saved pref)
           if (!academicYear) {

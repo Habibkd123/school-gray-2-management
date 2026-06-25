@@ -23,7 +23,7 @@ const CLASS_OPTIONS = [
   "Class 11", "Class 12",
 ];
 
-const ACADEMIC_YEARS = ["2023-2024", "2024-2025", "2025-2026", "2026-2027", "2027-2028"];
+const ACADEMIC_YEARS = ["2026-2027"];
 
 export default function AcademicClassesPage() {
   const { user } = useAuth();

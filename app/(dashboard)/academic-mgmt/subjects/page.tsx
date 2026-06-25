@@ -67,7 +67,13 @@ export default function SubjectMasterPage() {
     e.preventDefault();
     if (!formName.trim()) { setFormError("Subject name is required."); return; }
     setSubmitting(true);
-    const res = await createSubject({ name: formName.trim(), subject_code: formCode, description: formDesc, status: formStatus } as any);
+    const res = await createSubject({
+      name: formName.trim(),
+      subject_code: formCode,
+      description: formDesc,
+      status: formStatus,
+      allowed_streams: enableStreams ? formAllowedStreams : undefined,
+    });
     setSubmitting(false);
     if (res.success) { setIsAddOpen(false); resetForm(); doFetch(); }
     else setFormError(res.message);
@@ -77,9 +83,15 @@ export default function SubjectMasterPage() {
     e.preventDefault();
     if (!selected || !formName.trim()) { setFormError("Subject name is required."); return; }
     setSubmitting(true);
-    const res = await updateSubject(selected._id, { name: formName.trim(), subject_code: formCode, description: formDesc, status: formStatus } as any);
+    const res = await updateSubject(selected._id, {
+      name: formName.trim(),
+      subject_code: formCode,
+      description: formDesc,
+      status: formStatus,
+      allowed_streams: enableStreams ? formAllowedStreams : undefined,
+    });
     setSubmitting(false);
-    if (res.success) { setIsEditOpen(false); resetForm(); }
+    if (res.success) { setIsEditOpen(false); resetForm(); doFetch(); }
     else setFormError(res.message);
   };
 
@@ -101,7 +113,27 @@ export default function SubjectMasterPage() {
     { header: "Subject Name", accessorKey: "name", render: (s) => <span className="font-bold text-[#F59E0B]">{s.name}</span> },
     { header: "Subject Code", accessorKey: "subject_code", render: (s) => <span className="font-mono text-[12px] text-slate-500 dark:text-slate-400">{s.subject_code || "—"}</span> },
     { header: "Description", accessorKey: "description", render: (s) => <span className="text-[13px] text-slate-500 dark:text-slate-400 max-w-[200px] truncate block">{s.description || "—"}</span> },
-
+    ...(enableStreams ? [{
+      header: "Allowed Streams",
+      accessorKey: "allowed_streams",
+      render: (s: ApiSubjectMaster) => {
+        if (!s.allowed_streams || s.allowed_streams.length === 0) {
+          return <span className="text-[12px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400 italic">All Streams (Common)</span>;
+        }
+        return (
+          <div className="flex flex-wrap gap-1">
+            {s.allowed_streams.map(id => {
+              const streamName = streams.find(str => str._id === id)?.name || id;
+              return (
+                <span key={id} className="text-[11px] font-semibold bg-purple-50 dark:bg-purple-900/20 border border-purple-200/50 dark:border-purple-800/30 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded">
+                  {streamName}
+                </span>
+              );
+            })}
+          </div>
+        );
+      }
+    } as ColumnDef<ApiSubjectMaster>] : []),
     { header: "Status", accessorKey: "status", render: (s) => <StatusBadge status={s.status} /> },
     ...(isAdmin ? [{
       header: "Action", sortable: false,
@@ -226,6 +258,37 @@ export default function SubjectMasterPage() {
               placeholder="Brief description of this subject..."
               className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 resize-none" />
           </div>
+          {enableStreams && (
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">
+                Allowed Streams <span className="text-slate-400 text-[11px]">(leave blank to allow for all streams)</span>
+              </label>
+              <div className="space-y-3 p-3 border border-border rounded-lg bg-[#F8FAFC] dark:bg-slate-900/50">
+                <div className="flex flex-wrap gap-2.5">
+                  {streams.filter(s => s.status === "Active").map(s => {
+                    const checked = formAllowedStreams.includes(s._id);
+                    return (
+                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#F59E0B]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
+                        <input type="checkbox" checked={checked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormAllowedStreams([...formAllowedStreams, s._id]);
+                            } else {
+                              setFormAllowedStreams(formAllowedStreams.filter(x => x !== s._id));
+                            }
+                          }}
+                          className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4 cursor-pointer" />
+                        <span>{s.name}</span>
+                      </label>
+                    );
+                  })}
+                  {streams.filter(s => s.status === "Active").length === 0 && (
+                    <span className="text-[12px] text-slate-400 italic">No active streams found.</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Status <span className="text-red-500">*</span></label>
             <div className="flex gap-3">
@@ -275,6 +338,37 @@ export default function SubjectMasterPage() {
               placeholder="Brief description of this subject..."
               className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 resize-none" />
           </div>
+          {enableStreams && (
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">
+                Allowed Streams <span className="text-slate-400 text-[11px]">(leave blank to allow for all streams)</span>
+              </label>
+              <div className="space-y-3 p-3 border border-border rounded-lg bg-[#F8FAFC] dark:bg-slate-900/50">
+                <div className="flex flex-wrap gap-2.5">
+                  {streams.filter(s => s.status === "Active").map(s => {
+                    const checked = formAllowedStreams.includes(s._id);
+                    return (
+                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#F59E0B]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
+                        <input type="checkbox" checked={checked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormAllowedStreams([...formAllowedStreams, s._id]);
+                            } else {
+                              setFormAllowedStreams(formAllowedStreams.filter(x => x !== s._id));
+                            }
+                          }}
+                          className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4 cursor-pointer" />
+                        <span>{s.name}</span>
+                      </label>
+                    );
+                  })}
+                  {streams.filter(s => s.status === "Active").length === 0 && (
+                    <span className="text-[12px] text-slate-400 italic">No active streams found.</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Status <span className="text-red-500">*</span></label>
             <div className="flex gap-3">

@@ -68,7 +68,7 @@ export function useSubjectMaster(options?: { skip?: boolean }) {
     fetchSubjects({ limit: 100 });
   }, [fetchSubjects, options?.skip, authReady]);
 
-  const createSubject = async (input: { name: string; subject_code?: string; description?: string; status?: string }) => {
+  const createSubject = async (input: { name: string; subject_code?: string; description?: string; status?: string; allowed_streams?: string[] }) => {
     try {
       const res = await fetch("/api/subject-master", {
         method: "POST",

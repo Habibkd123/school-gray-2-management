@@ -688,7 +688,7 @@ export default function ClassesPage() {
                   className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="">Select Year</option>
                   {[
-                    "2023-2024", "2024-2025", "2025-2026", "2026-2027", "2027-2028"
+                    "2026-2027"
                   ].map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
@@ -782,7 +782,7 @@ export default function ClassesPage() {
                   className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="">Select Year</option>
                   {[
-                    "2023-2024", "2024-2025", "2025-2026", "2026-2027", "2027-2028"
+                    "2026-2027"
                   ].map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />

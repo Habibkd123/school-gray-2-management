@@ -59,7 +59,7 @@ function StudentViewContent() {
 
   // Custom states
   const [siblings, setSiblings] = useState<ApiStudent[]>([]);
-  const [selectedYear, setSelectedYear] = useState("2025-2026");
+  const [selectedYear, setSelectedYear] = useState("2026-2027");
   const [attendanceSummary, setAttendanceSummary] = useState({ present: 0, absent: 0, late: 0, holiday: 0, half_day: 0 });
   const [dailyAttendance, setDailyAttendance] = useState<Array<{ date: string; status: string; note?: string }>>([]);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
@@ -1060,8 +1060,7 @@ function StudentViewContent() {
                           onChange={(e) => setSelectedYear(e.target.value)}
                           className="px-3 py-1.5 border border-border rounded-lg outline-none bg-white dark:bg-slate-900 font-bold text-slate-700 dark:text-slate-200 cursor-pointer shadow-sm focus:border-amber-500/50"
                         >
-                          <option value="2024-2025">2024 / 2025</option>
-                          <option value="2025-2026">2025 / 2026</option>
+                          <option value="2026-2027">2026 / 2027</option>
                         </select>
                       </div>
                     </div>
