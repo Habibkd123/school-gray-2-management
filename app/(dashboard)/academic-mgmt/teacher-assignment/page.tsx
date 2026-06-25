@@ -426,7 +426,7 @@ export default function TeacherAssignmentPage() {
             </div>
 
             {enableStreams && filteredStreams.length > 0 && (
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5" style={{ display: "none" }}>
                 <label className="text-[13px] font-semibold text-slate-900 dark:text-white font-medium">Stream</label>
                 <select value={formStreamId} onChange={(e) => setFormStreamId(e.target.value)}
                   className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium shadow-sm">
@@ -437,7 +437,7 @@ export default function TeacherAssignmentPage() {
             )}
 
             {enableSections && (
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-1.5" style={{ display: "none" }}>
                 <label className="text-[13px] font-semibold text-slate-900 dark:text-white font-medium">Section</label>
                 <select value={formSectionId} onChange={(e) => setFormSectionId(e.target.value)}
                   className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium shadow-sm">
