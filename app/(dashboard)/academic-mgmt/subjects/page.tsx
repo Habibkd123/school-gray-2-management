@@ -8,11 +8,15 @@ import {
 import { Modal } from "@/app/components/ui/modal";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
 import { useSubjectMaster, ApiSubjectMaster } from "@/app/hooks/useSubjectMaster";
+import { useStreams } from "@/app/hooks/useStreams";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { useAuth } from "@/app/context/auth";
 
 export default function SubjectMasterPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
+  const { enableStreams } = useAcademicConfig();
+  const { streams } = useStreams({ skip: !enableStreams });
   const { subjects, isLoading, error, total, totalPages, currentPage, fetchSubjects, createSubject, updateSubject, deleteSubject } = useSubjectMaster({ skip: true });
 
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -27,6 +31,7 @@ export default function SubjectMasterPage() {
   const [formCode, setFormCode] = useState("");
   const [formDesc, setFormDesc] = useState("");
   const [formStatus, setFormStatus] = useState<"Active" | "Inactive">("Active");
+  const [formAllowedStreams, setFormAllowedStreams] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
@@ -47,11 +52,13 @@ export default function SubjectMasterPage() {
 
   const handlePageChange = (p: number) => { setPage(p); fetchSubjects({ search: searchQuery, page: p, limit: PAGE_SIZE }); };
 
-  const resetForm = () => { setFormName(""); setFormCode(""); setFormDesc(""); setFormStatus("Active"); setFormError(""); };
+  const resetForm = () => { setFormName(""); setFormCode(""); setFormDesc(""); setFormStatus("Active"); setFormAllowedStreams([]); setFormError(""); };
 
   const openEdit = (s: ApiSubjectMaster) => {
     setSelected(s); setFormName(s.name); setFormCode(s.subject_code || "");
-    setFormDesc(s.description || ""); setFormStatus(s.status); setFormError("");
+    setFormDesc(s.description || ""); setFormStatus(s.status);
+    setFormAllowedStreams(s.allowed_streams || []);
+    setFormError("");
     setIsEditOpen(true); setActionMenuId(null);
   };
   const openDelete = (s: ApiSubjectMaster) => { setSelected(s); setIsDeleteOpen(true); setActionMenuId(null); };
@@ -60,7 +67,7 @@ export default function SubjectMasterPage() {
     e.preventDefault();
     if (!formName.trim()) { setFormError("Subject name is required."); return; }
     setSubmitting(true);
-    const res = await createSubject({ name: formName.trim(), subject_code: formCode, description: formDesc, status: formStatus });
+    const res = await createSubject({ name: formName.trim(), subject_code: formCode, description: formDesc, status: formStatus } as any);
     setSubmitting(false);
     if (res.success) { setIsAddOpen(false); resetForm(); doFetch(); }
     else setFormError(res.message);
@@ -70,7 +77,7 @@ export default function SubjectMasterPage() {
     e.preventDefault();
     if (!selected || !formName.trim()) { setFormError("Subject name is required."); return; }
     setSubmitting(true);
-    const res = await updateSubject(selected._id, { name: formName.trim(), subject_code: formCode, description: formDesc, status: formStatus });
+    const res = await updateSubject(selected._id, { name: formName.trim(), subject_code: formCode, description: formDesc, status: formStatus } as any);
     setSubmitting(false);
     if (res.success) { setIsEditOpen(false); resetForm(); }
     else setFormError(res.message);
@@ -94,6 +101,7 @@ export default function SubjectMasterPage() {
     { header: "Subject Name", accessorKey: "name", render: (s) => <span className="font-bold text-[#F59E0B]">{s.name}</span> },
     { header: "Subject Code", accessorKey: "subject_code", render: (s) => <span className="font-mono text-[12px] text-slate-500 dark:text-slate-400">{s.subject_code || "—"}</span> },
     { header: "Description", accessorKey: "description", render: (s) => <span className="text-[13px] text-slate-500 dark:text-slate-400 max-w-[200px] truncate block">{s.description || "—"}</span> },
+
     { header: "Status", accessorKey: "status", render: (s) => <StatusBadge status={s.status} /> },
     ...(isAdmin ? [{
       header: "Action", sortable: false,
@@ -229,6 +237,7 @@ export default function SubjectMasterPage() {
               ))}
             </div>
           </div>
+
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button type="button" onClick={() => { setIsAddOpen(false); resetForm(); }}
               className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
@@ -277,6 +286,7 @@ export default function SubjectMasterPage() {
               ))}
             </div>
           </div>
+
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button type="button" onClick={() => { setIsEditOpen(false); resetForm(); }}
               className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>

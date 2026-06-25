@@ -67,16 +67,20 @@ export async function POST(req: NextRequest) {
     const subject = await SubjectMaster.findOne({ _id: subject_master_id, school_id: schoolId }).lean();
     if (!subject) return NextResponse.json({ success: false, message: "Subject not found" }, { status: 404 });
 
-    if (stream_id) {
+    const isHigherClass = cls.name.startsWith("Class 11") || cls.name.startsWith("Class 12");
+    let finalStreamId = undefined;
+
+    if (isHigherClass && stream_id) {
       const stream = await Stream.findOne({ _id: stream_id, school_id: schoolId }).lean();
       if (!stream) return NextResponse.json({ success: false, message: "Stream not found" }, { status: 404 });
+      finalStreamId = stream_id;
     }
 
     const assignment = await SubjectAssignment.create({
       school_id: String(schoolId),
       academic_year: academic_year.trim(),
       class_id,
-      ...(stream_id ? { stream_id } : {}),
+      ...(finalStreamId ? { stream_id: finalStreamId } : {}),
       subject_master_id,
     });
 

@@ -25,12 +25,13 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
   if (error) return error;
   try {
     await connectToDatabase();
-    const { name, subject_code, description, status } = await req.json();
+    const { name, subject_code, description, status, allowed_streams } = await req.json();
     const update: any = {};
     if (name?.trim()) update.name = name.trim();
     if (subject_code !== undefined) update.subject_code = subject_code?.trim().toUpperCase() || undefined;
     if (description !== undefined) update.description = description?.trim() || undefined;
     if (status) update.status = status;
+    if (allowed_streams !== undefined) update.allowed_streams = Array.isArray(allowed_streams) ? allowed_streams : [];
 
     const subject = await SubjectMaster.findOneAndUpdate(
       { _id: id, school_id: schoolId },

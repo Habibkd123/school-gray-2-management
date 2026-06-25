@@ -155,9 +155,13 @@ export default function AcademicClassesPage() {
     if (!formName.trim() || !formAcademicYear.trim()) {
       setFormError("Class name and academic year are required."); return;
     }
-    setSubmitting(true);
-    
     const isHigherClass = formName === "Class 11" || formName === "Class 12";
+    // Stream is mandatory for Class 11 and Class 12
+    if (isHigherClass && formStreams.length === 0) {
+      setFormError("Stream is required for Class 11 and Class 12."); return;
+    }
+    setSubmitting(true);
+
     const streamsToCreate = enableStreams && isHigherClass && formStreams.length > 0 ? formStreams : [""];
     const sectionsToCreate = enableSections && formSections.length > 0 ? formSections : [""];
     let hasError = false;
@@ -197,8 +201,12 @@ export default function AcademicClassesPage() {
     if (!selectedClass || !formName.trim() || !formAcademicYear.trim()) {
       setFormError("Class name and academic year are required."); return;
     }
-    setSubmitting(true);
     const isHigherClass = formName === "Class 11" || formName === "Class 12";
+    // Stream is mandatory for Class 11 and Class 12
+    if (isHigherClass && !formStream.trim()) {
+      setFormError("Stream is required for Class 11 and Class 12."); return;
+    }
+    setSubmitting(true);
     const finalClassName = enableStreams && isHigherClass && formStream ? `${formName.trim()} ${formStream.trim()}` : formName.trim();
     const result = await updateClass(selectedClass._id, {
       name: finalClassName,
@@ -225,8 +233,8 @@ export default function AcademicClassesPage() {
 
   const StatusBadge = ({ status }: { status?: string }) => (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${status === "Inactive"
-        ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-        : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+      ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+      : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
       }`}>
       {status || "Active"}
     </span>
@@ -515,9 +523,9 @@ export default function AcademicClassesPage() {
             </div>
           )}
 
-          {enableStreams && (formName === "Class 11" || formName === "Class 12") && (
+          {(formName === "Class 11" || formName === "Class 12") && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Streams <span className="text-slate-400 text-[11px]">(optional, select one or more)</span></label>
+              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Streams <span className="text-red-500">*</span> <span className="text-slate-400 text-[11px]">(select one or more)</span></label>
               <div className="space-y-3 p-3 border border-border rounded-lg bg-[#F8FAFC] dark:bg-slate-900/50">
                 <div className="flex flex-wrap gap-2.5">
                   {streams.filter(s => s.status === "Active").map(s => {
@@ -630,9 +638,9 @@ export default function AcademicClassesPage() {
             )}
           </div>
 
-          {enableStreams && (formName === "Class 11" || formName === "Class 12") && (
+          {(formName === "Class 11" || formName === "Class 12") && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Stream</label>
+              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Stream <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={formStream} onChange={(e) => setFormStream(e.target.value)}
                   className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
@@ -676,7 +684,7 @@ export default function AcademicClassesPage() {
               <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)} min={1} max={200}
                 className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
-            <div className="flex flex-col gap-1.5">
+            {/* <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Class Teacher</label>
               <div className="relative">
                 <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)}
@@ -688,7 +696,7 @@ export default function AcademicClassesPage() {
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
               </div>
-            </div>
+            </div> */}
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button type="button" onClick={() => { setIsEditOpen(false); resetForm(); }}

@@ -68,37 +68,63 @@ export default function TeacherAssignmentPage() {
 
   useEffect(() => { doFetch(); }, [doFetch]);
 
-  // Trigger auto stream selection on class select
+  // Trigger auto stream and section selection on class select
   useEffect(() => {
-    if (!formClassId || !enableStreams) {
+    if (!formClassId) {
       setFormStreamId("");
+      setFormSectionId("");
       return;
     }
     const selectedClass = classes.find(c => c._id === formClassId);
     if (!selectedClass) {
       setFormStreamId("");
+      setFormSectionId("");
       return;
     }
 
-    const activeStreams = streams.filter(s => s.status === "Active");
-    let foundStreamId = "";
-    for (const stream of activeStreams) {
-      const escapedStreamName = stream.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const regex = new RegExp(`\\b${escapedStreamName}\\b`, 'i');
-      if (regex.test(selectedClass.name)) {
-        foundStreamId = stream._id;
-        break;
+    // Auto stream selection for Class 11/12
+    if (enableStreams) {
+      const isHigherClass = selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12");
+      if (isHigherClass) {
+        const activeStreams = streams.filter(s => s.status === "Active");
+        let foundStreamId = "";
+        for (const stream of activeStreams) {
+          const escapedStreamName = stream.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+          const regex = new RegExp(`\\b${escapedStreamName}\\b`, 'i');
+          if (regex.test(selectedClass.name)) {
+            foundStreamId = stream._id;
+            break;
+          }
+        }
+        setFormStreamId(foundStreamId);
+      } else {
+        setFormStreamId("");
       }
+    } else {
+      setFormStreamId("");
     }
-    setFormStreamId(foundStreamId);
-  }, [formClassId, classes, streams, enableStreams]);
+
+    // Auto section selection based on class section
+    if (enableSections && selectedClass.section) {
+      const matchedSec = sections.find(s => s.name.toLowerCase() === selectedClass.section.toLowerCase());
+      if (matchedSec) {
+        setFormSectionId(matchedSec._id);
+      } else {
+        setFormSectionId("");
+      }
+    } else {
+      setFormSectionId("");
+    }
+  }, [formClassId, classes, streams, enableStreams, sections, enableSections]);
 
   const filteredStreams = useMemo(() => {
-    if (!enableStreams) return [];
-    if (!formClassId) return streams.filter(s => s.status === "Active");
+    if (!enableStreams || !formClassId) return [];
 
     const selectedClass = classes.find(c => c._id === formClassId);
-    if (!selectedClass) return streams.filter(s => s.status === "Active");
+    if (!selectedClass) return [];
+
+    const isHigherClass = selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12");
+    if (!isHigherClass) return [];
 
     const activeStreams = streams.filter(s => s.status === "Active");
     const matchedStreams = activeStreams.filter(stream => {
@@ -111,33 +137,22 @@ export default function TeacherAssignmentPage() {
       return matchedStreams;
     }
 
-    const isHigherClass = selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12");
-    if (isHigherClass) {
-      return activeStreams;
-    }
-
-    return [];
+    return activeStreams;
   }, [formClassId, classes, streams, enableStreams]);
 
   const filteredSubjectList = useMemo(() => {
-    if (!enableStreams || !formStreamId) return subjectList;
-    const selectedStream = streams.find(s => s._id === formStreamId);
-    if (!selectedStream) return subjectList;
+    const selectedClass = classes.find(c => c._id === formClassId);
+    const isHigherClass = selectedClass ? (selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12")) : false;
 
-    const streamNameLower = selectedStream.name.toLowerCase();
+    if (!enableStreams || !formStreamId || !isHigherClass) return subjectList;
+
     return subjectList.filter(s => {
-      const subjectNameLower = s.name.toLowerCase();
-      return (
-        subjectNameLower.includes(streamNameLower) ||
-        streamNameLower.includes(subjectNameLower) ||
-        !streams.some(activeStream => {
-          if (activeStream.status !== "Active") return false;
-          const activeStreamNameLower = activeStream.name.toLowerCase();
-          return subjectNameLower.includes(activeStreamNameLower) || activeStreamNameLower.includes(subjectNameLower);
-        })
-      );
+      // Common subject (not restricted to any stream)
+      if (!s.allowed_streams || s.allowed_streams.length === 0) return true;
+      // Stream-specific subject
+      return s.allowed_streams.includes(formStreamId);
     });
-  }, [subjectList, formStreamId, streams, enableStreams]);
+  }, [subjectList, formStreamId, enableStreams, formClassId, classes]);
 
   const resetForm = () => {
     setFormYear(academicYear);
@@ -154,12 +169,15 @@ export default function TeacherAssignmentPage() {
     if (!formYear || !formTeacherId || !formClassId || !formSubjectId) {
       setFormError("Academic year, teacher, class, and subject are all required."); return;
     }
+    const selectedClass = classes.find(c => c._id === formClassId);
+    const isHigherClass = selectedClass ? (selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12")) : false;
+
     setSubmitting(true);
     const res = await createAssignment({
       academic_year: formYear,
       teacher_id: formTeacherId,
       class_id: formClassId,
-      stream_id: enableStreams && formStreamId ? formStreamId : undefined,
+      stream_id: enableStreams && isHigherClass && formStreamId ? formStreamId : undefined,
       section_id: enableSections && formSectionId ? formSectionId : undefined,
       subject_master_id: formSubjectId,
     });

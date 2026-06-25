@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { TeacherAssignment } from "@/lib/models/index";
+import { TeacherAssignment, Class } from "@/lib/models/index";
+import Stream from "@/lib/models/Stream"; // register Stream model for populate
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
@@ -68,12 +69,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid IDs" }, { status: 400 });
     }
 
+    const cls = await Class.findOne({ _id: class_id, school_id: schoolId }).lean();
+    if (!cls) {
+      return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
+    }
+
+    const isHigherClass = cls.name.startsWith("Class 11") || cls.name.startsWith("Class 12");
+    const finalStreamId = isHigherClass ? (stream_id || null) : null;
+
     const newAssignment = new TeacherAssignment({
       school_id: schoolId,
       academic_year,
       teacher_id,
       class_id,
-      stream_id: stream_id || null,
+      stream_id: finalStreamId,
       section_id: section_id || null,
       subject_master_id,
     });

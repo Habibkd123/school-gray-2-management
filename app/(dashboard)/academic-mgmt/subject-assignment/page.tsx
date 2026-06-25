@@ -71,6 +71,12 @@ export default function SubjectAssignmentPage() {
       return;
     }
 
+    const isHigherClass = selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12");
+    if (!isHigherClass) {
+      setFormStreamId("");
+      return;
+    }
+
     const activeStreams = streams.filter(s => s.status === "Active");
     let foundStreamId = "";
     for (const stream of activeStreams) {
@@ -85,11 +91,13 @@ export default function SubjectAssignmentPage() {
   }, [formClassId, classes, streams, enableStreams]);
 
   const filteredStreams = useMemo(() => {
-    if (!enableStreams) return [];
-    if (!formClassId) return streams.filter(s => s.status === "Active");
+    if (!enableStreams || !formClassId) return [];
 
     const selectedClass = classes.find(c => c._id === formClassId);
-    if (!selectedClass) return streams.filter(s => s.status === "Active");
+    if (!selectedClass) return [];
+
+    const isHigherClass = selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12");
+    if (!isHigherClass) return [];
 
     const activeStreams = streams.filter(s => s.status === "Active");
     const matchedStreams = activeStreams.filter(stream => {
@@ -102,33 +110,23 @@ export default function SubjectAssignmentPage() {
       return matchedStreams;
     }
 
-    const isHigherClass = selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12");
-    if (isHigherClass) {
-      return activeStreams;
-    }
-
-    return [];
+    return activeStreams;
   }, [formClassId, classes, streams, enableStreams]);
 
+  // Strict stream filtering based on SubjectMaster allowed_streams
   const filteredSubjectList = useMemo(() => {
-    if (!enableStreams || !formStreamId) return subjectList;
-    const selectedStream = streams.find(s => s._id === formStreamId);
-    if (!selectedStream) return subjectList;
+    const selectedClass = classes.find(c => c._id === formClassId);
+    const isHigherClass = selectedClass ? (selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12")) : false;
 
-    const streamNameLower = selectedStream.name.toLowerCase();
+    if (!enableStreams || !formStreamId || !isHigherClass) return subjectList;
+
     return subjectList.filter(s => {
-      const subjectNameLower = s.name.toLowerCase();
-      return (
-        subjectNameLower.includes(streamNameLower) ||
-        streamNameLower.includes(subjectNameLower) ||
-        !streams.some(activeStream => {
-          if (activeStream.status !== "Active") return false;
-          const activeStreamNameLower = activeStream.name.toLowerCase();
-          return subjectNameLower.includes(activeStreamNameLower) || activeStreamNameLower.includes(subjectNameLower);
-        })
-      );
+      // Common subject (not restricted to any stream)
+      if (!s.allowed_streams || s.allowed_streams.length === 0) return true;
+      // Stream-specific subject
+      return s.allowed_streams.includes(formStreamId);
     });
-  }, [subjectList, formStreamId, streams, enableStreams]);
+  }, [subjectList, formStreamId, enableStreams, formClassId, classes]);
 
   const resetForm = () => { setFormYear(academicYear); setFormClassId(""); setFormStreamId(""); setFormSubjectId(""); setFormError(""); };
 
@@ -137,11 +135,40 @@ export default function SubjectAssignmentPage() {
     if (!formYear || !formClassId || !formSubjectId) {
       setFormError("Academic year, class, and subject are all required."); return;
     }
+
+    // Stream-conflict check: subject must not already be assigned to a DIFFERENT stream for same class+year
+    if (enableStreams && formStreamId && formSubjectId) {
+      const conflict = assignments.find(a => {
+        const aSubjectId = typeof a.subject_master_id === "object" ? a.subject_master_id?._id : a.subject_master_id;
+        const aClassId = typeof a.class_id === "object" ? a.class_id._id : a.class_id;
+        const aStreamId = typeof a.stream_id === "object" ? a.stream_id?._id : a.stream_id;
+        return (
+          aSubjectId === formSubjectId &&
+          aClassId === formClassId &&
+          a.academic_year === formYear &&
+          aStreamId != null &&
+          aStreamId !== formStreamId
+        );
+      });
+      if (conflict) {
+        const conflictStreamName = typeof conflict.stream_id === "object" ? conflict.stream_id?.name : conflict.stream_id;
+        const selectedSubjectName = subjectList.find(s => s._id === formSubjectId)?.name || "This subject";
+        const selectedStreamName = streams.find(s => s._id === formStreamId)?.name || "selected stream";
+        setFormError(
+          `"${selectedSubjectName}" is already assigned to the ${conflictStreamName} stream for this class. It cannot be added to ${selectedStreamName} as well.`
+        );
+        return;
+      }
+    }
+
+    const selectedClass = classes.find(c => c._id === formClassId);
+    const isHigherClass = selectedClass ? (selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12")) : false;
+
     setSubmitting(true);
     const res = await createAssignment({
       academic_year: formYear,
       class_id: formClassId,
-      stream_id: enableStreams && formStreamId ? formStreamId : undefined,
+      stream_id: enableStreams && isHigherClass && formStreamId ? formStreamId : undefined,
       subject_master_id: formSubjectId,
     });
     setSubmitting(false);
@@ -389,8 +416,16 @@ export default function SubjectAssignmentPage() {
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
             </div>
-            {filteredSubjectList.length === 0 && (
-              <p className="text-[12px] text-amber-600 dark:text-amber-400">No matching subjects in catalog. Please add subjects first.</p>
+            {enableStreams && formStreamId && filteredSubjectList.filter(s => s.status === "Active").length === 0 && (
+              <p className="text-[12px] text-red-500 dark:text-red-400 font-medium">
+                ⚠ No active subjects are available for the {streams.find(s => s._id === formStreamId)?.name} stream.
+                Ensure a subject matching the stream's name or keywords exists in the Subject Master.
+              </p>
+            )}
+            {enableStreams && formStreamId && filteredSubjectList.filter(s => s.status === "Active").length > 0 && (
+              <p className="text-[12px] text-slate-400">
+                Showing {filteredSubjectList.filter(s => s.status === "Active").length} subject(s) allowed for {streams.find(s => s._id === formStreamId)?.name} stream
+              </p>
             )}
           </div>
 

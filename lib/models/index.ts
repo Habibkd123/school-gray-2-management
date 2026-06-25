@@ -497,6 +497,7 @@ export interface ISubjectMaster extends Document {
   subject_code?: string;
   description?: string;
   status: "Active" | "Inactive";
+  allowed_streams: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -508,6 +509,7 @@ const subjectMasterSchema = new Schema<ISubjectMaster>(
     subject_code: { type: String, trim: true, uppercase: true },
     description: { type: String, trim: true },
     status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    allowed_streams: [{ type: mongoose.Schema.Types.ObjectId, ref: "Stream", default: [] }],
   },
   { timestamps: true }
 );

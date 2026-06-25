@@ -32,31 +32,35 @@ export function Header({ onMenuClick }: HeaderProps) {
   // Fetch available academic years from actual DB data
   useEffect(() => {
     async function fetchYears() {
+      // Always include fallback years so 2026-2027 is selectable even before DB has data
+      const fallbackYears = ["2026-2027", "2025-2026", "2024-2025", "2023-2024"];
       try {
         const res = await fetch("/api/classes?limit=1000", { headers: getAuthHeaders() });
         const data = await res.json();
         if (res.ok && data.success && data.data?.classes?.length > 0) {
-          const years: string[] = Array.from(
+          const dbYears: string[] = Array.from(
             new Set<string>(data.data.classes.map((c: { academic_year: string }) => c.academic_year))
-          ).sort((a, b) => b.localeCompare(a)); // latest first
-          setAvailableYears(years);
-          // Auto-select latest year if current selection not in DB or is empty
-          if (years.length > 0 && (!academicYear || !years.includes(academicYear))) {
-            setAcademicYear(years[0]);
+          );
+          // Merge DB years with fallback years so future years are always available
+          const merged = Array.from(new Set([...dbYears, ...fallbackYears]))
+            .sort((a, b) => b.localeCompare(a)); // latest first
+          setAvailableYears(merged);
+          // Only auto-select if academicYear is completely empty (first load with no saved pref)
+          if (!academicYear) {
+            setAcademicYear(merged[0]);
           }
         } else {
-          const fallbackYears = ["2026-2027", "2025-2026", "2024-2025", "2023-2024"];
           setAvailableYears(fallbackYears);
-          if (!academicYear || !fallbackYears.includes(academicYear)) {
-            setAcademicYear("2025-2026");
+          // Only auto-select if no year saved yet
+          if (!academicYear) {
+            setAcademicYear("2026-2027");
           }
         }
       } catch {
         // fallback to manual list if API fails
-        const fallbackYears = ["2026-2027", "2025-2026", "2024-2025", "2023-2024"];
         setAvailableYears(fallbackYears);
-        if (!academicYear || !fallbackYears.includes(academicYear)) {
-          setAcademicYear("2025-2026");
+        if (!academicYear) {
+          setAcademicYear("2026-2027");
         }
       }
     }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { SubjectMaster } from "@/lib/models/index";
+import Stream from "@/lib/models/Stream";
 import { requireAuth } from "@/lib/utils/auth";
 
 // GET — list subject masters
@@ -48,10 +49,38 @@ export async function POST(req: NextRequest) {
 
   try {
     await connectToDatabase();
-    const { name, subject_code, description, status } = await req.json();
+    const { name, subject_code, description, status, allowed_streams } = await req.json();
 
     if (!name?.trim()) {
       return NextResponse.json({ success: false, message: "Subject name is required" }, { status: 400 });
+    }
+
+    let finalAllowedStreams = Array.isArray(allowed_streams) ? allowed_streams : [];
+
+    // Auto-tagging logic: If no streams were manually selected, try to auto-detect based on subject name
+    if (finalAllowedStreams.length === 0) {
+      const lowerName = name.trim().toLowerCase();
+      
+      const scienceKeywords = ["physics", "chemistry", "biology", "math", "mathematics", "computer", "botany", "zoology", "science"];
+      const artsKeywords = ["history", "geograph", "geography", "political", "sociology", "psychology", "philosophy", "arts", "literature", "social", "civics", "drawing", "music", "home science"];
+      const commerceKeywords = ["account", "business", "economics", "commerce", "finance", "accounts", "bookkeeping", "entrepreneurship"];
+
+      let targetStreamName = "";
+      if (scienceKeywords.some(kw => lowerName.includes(kw))) targetStreamName = "Science";
+      else if (artsKeywords.some(kw => lowerName.includes(kw))) targetStreamName = "Arts";
+      else if (commerceKeywords.some(kw => lowerName.includes(kw))) targetStreamName = "Commerce";
+
+      if (targetStreamName) {
+        // Find the stream in the database by name (case-insensitive)
+        const matchedStream = await Stream.findOne({ 
+          school_id: schoolId, 
+          name: { $regex: new RegExp(`^${targetStreamName}$`, "i") } 
+        }).lean();
+        
+        if (matchedStream) {
+          finalAllowedStreams = [matchedStream._id.toString()];
+        }
+      }
     }
 
     const subject = await SubjectMaster.create({
@@ -60,6 +89,7 @@ export async function POST(req: NextRequest) {
       subject_code: subject_code?.trim().toUpperCase() || undefined,
       description: description?.trim() || undefined,
       status: status || "Active",
+      allowed_streams: finalAllowedStreams,
     });
 
     return NextResponse.json({ success: true, data: subject }, { status: 201 });

@@ -10,6 +10,7 @@ export interface ApiSubjectMaster {
   subject_code?: string;
   description?: string;
   status: "Active" | "Inactive";
+  allowed_streams?: string[];
   createdAt?: string;
 }
 
