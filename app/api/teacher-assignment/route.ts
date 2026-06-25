@@ -7,6 +7,11 @@ import Teacher from "@/lib/models/Teacher"; // register Teacher model for popula
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
+// Ensure models are registered and not tree-shaken by bundlers
+const registerModels = () => {
+  return [Stream.modelName, Section.modelName, Teacher.modelName];
+};
+
 // GET — list teacher assignments
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
@@ -14,6 +19,7 @@ export async function GET(req: NextRequest) {
 
   try {
     await connectToDatabase();
+    registerModels();
     const url = new URL(req.url);
     const class_id = url.searchParams.get("class_id");
     const stream_id = url.searchParams.get("stream_id");
@@ -58,6 +64,7 @@ export async function POST(req: NextRequest) {
 
   try {
     await connectToDatabase();
+    registerModels();
     const { academic_year, teacher_id, class_id, stream_id, section_id, subject_master_id } = await req.json();
 
     if (!academic_year?.trim() || !teacher_id || !class_id || !subject_master_id) {
