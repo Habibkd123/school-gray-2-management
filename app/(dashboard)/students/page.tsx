@@ -43,7 +43,7 @@ import { PaginationBar } from "@/app/components/ui/pagination-bar";
 export default function StudentsPage() {
   const { academicYear } = useAppState();
   const { students, total, isLoading, error, createStudent, updateStudent: updateStudentApi, deleteStudent: deleteStudentApi, fetchStudents } = useStudents({ skip: true });
-  const { classes } = useClasses();
+  const { classes } = useClasses({ filterByYear: true });
 
   const router = useRouter();
   const activeRole = "admin";

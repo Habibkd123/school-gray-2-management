@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTeachers, ApiTeacher } from "../../hooks/useTeachers";
+import { useAppState } from "@/app/context/store";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
 import { Loader2, AlertCircle } from "lucide-react";
 import { PaginationBar } from "@/app/components/ui/pagination-bar";
@@ -41,6 +42,7 @@ function getAvatar(name: string) {
 
 export default function TeachersPage() {
   const router = useRouter();
+  const { academicYear } = useAppState();
   const {
     teachers,
     total,
@@ -89,8 +91,9 @@ export default function TeachersPage() {
       sort: selectedSort,
       page,
       limit: 10,
+      academic_year: academicYear,
     });
-  }, [fetchTeachers, debouncedSearch, statusFilter, selectedDateRange, selectedSort, page]);
+  }, [fetchTeachers, debouncedSearch, statusFilter, selectedDateRange, selectedSort, page, academicYear]);
 
   const handleDateRangeChange = (val: string) => {
     setSelectedDateRange(val);
@@ -288,7 +291,7 @@ export default function TeachersPage() {
 
         {activeRole === "admin" && (
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => fetchTeachers()} className="p-2 border border-border bg-white dark:bg-slate-900 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors">
+            <button onClick={() => fetchTeachers({ academic_year: academicYear })} className="p-2 border border-border bg-white dark:bg-slate-900 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors">
               <RefreshCcw className="w-4 h-4" />
             </button>
             <button className="p-2 border border-border bg-white dark:bg-slate-900 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors">
@@ -641,7 +644,7 @@ export default function TeachersPage() {
         userId={resetPassTarget?.userId}
         userName={resetPassTarget?.name || ""}
         userEmail={resetPassTarget?.email || ""}
-        onSuccess={() => fetchTeachers({ search: debouncedSearch, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 10 })}
+        onSuccess={() => fetchTeachers({ search: debouncedSearch, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 10, academic_year: academicYear })}
       />
     </div>
   );

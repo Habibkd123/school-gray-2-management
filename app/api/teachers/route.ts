@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import Teacher from "@/lib/models/Teacher";
 import User from "@/lib/models/User";
+import { TeacherAssignment } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
@@ -113,6 +114,36 @@ export async function GET(req: NextRequest) {
         .lean(),
       Teacher.countDocuments(query),
     ]);
+
+    const academic_year = url.searchParams.get("academic_year");
+    if (academic_year) {
+      const teacherIds = teachers.map((t: any) => t._id);
+      const assignments = await TeacherAssignment.find({
+        school_id: schoolId,
+        academic_year,
+        teacher_id: { $in: teacherIds }
+      }).populate("class_id", "name section").lean();
+
+      const classesByTeacher: Record<string, any[]> = {};
+      for (const assign of assignments) {
+        const tid = String(assign.teacher_id);
+        if (!classesByTeacher[tid]) {
+          classesByTeacher[tid] = [];
+        }
+        if (assign.class_id) {
+          const exists = classesByTeacher[tid].some((c: any) => String(c._id) === String((assign.class_id as any)._id));
+          if (!exists) {
+            classesByTeacher[tid].push(assign.class_id);
+          }
+        }
+      }
+
+      for (const teacher of teachers as any[]) {
+        const assignedClasses = classesByTeacher[String(teacher._id)] ?? [];
+        teacher.class_ids = assignedClasses;
+        teacher.class_id = assignedClasses.length > 0 ? assignedClasses[0] : null;
+      }
+    }
 
     return NextResponse.json(
       { success: true, data: { teachers, total, page, limit } },

@@ -4,6 +4,7 @@ import React, { useState, useMemo, useRef } from "react";
 import { useParents, ApiParent } from "../../hooks/useParents";
 import { useClasses } from "../../hooks/useClasses";
 import { useUpload } from "../../hooks/useUpload";
+import { useAppState } from "@/app/context/store";
 import { Modal } from "../../components/ui/modal";
 import { useRouter } from "next/navigation";
 import {
@@ -52,9 +53,10 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
 
 // ─── Page ─────────────────────────────────────────────────────────────────
 export default function GuardiansPage() {
-  const { parents, isLoading, fetchParents, createParent, updateParent, deleteParent } = useParents();
+  const { academicYear } = useAppState();
+  const { parents, isLoading, fetchParents, createParent, updateParent, deleteParent } = useParents({ filterByYear: true });
   const { uploadFile } = useUpload();
-  const { classes } = useClasses();
+  const { classes } = useClasses({ filterByYear: true });
   const router = useRouter();
 
   const getClassName = (s: any) => {
@@ -161,7 +163,7 @@ export default function GuardiansPage() {
         photo_url: formPhoto,
       });
       setIsAddOpen(false);
-      fetchParents(); // refresh
+      fetchParents({ academic_year: academicYear }); // refresh
     } catch (err) {
       console.error("Failed to add parent", err);
       alert("Failed to add parent");
@@ -182,7 +184,7 @@ export default function GuardiansPage() {
         photo_url: formPhoto,
       });
       setEditParent(null);
-      fetchParents(); // refresh
+      fetchParents({ academic_year: academicYear }); // refresh
     } catch (err) {
       console.error("Failed to update parent", err);
       alert("Failed to update parent");
@@ -288,7 +290,7 @@ export default function GuardiansPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={fetchParents} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
+          <button onClick={() => fetchParents({ academic_year: academicYear })} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
             <RefreshCw className="w-4 h-4" />
           </button>
           <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">

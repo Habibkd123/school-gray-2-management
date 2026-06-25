@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
-import { Parent } from "@/lib/models";
+import { Parent, Class } from "@/lib/models";
 import Student from "@/lib/models/Student";
 import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
+import mongoose from "mongoose";
 
 // ─── GET /api/parents — List all parents ──────────────────────────────
 export async function GET(request: NextRequest) {
@@ -15,8 +16,9 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search");
+    const academic_year = searchParams.get("academic_year");
 
-    const filter: Record<string, unknown> = { school_id: schoolId };
+    const filter: Record<string, any> = { school_id: schoolId };
     if (search) {
       filter.$or = [
         { name: { $regex: search, $options: "i" } },
@@ -25,18 +27,32 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    if (academic_year) {
+      const classes = await Class.find({ academic_year, school_id: schoolId }).select("_id").lean();
+      const classIds = classes.map(c => c._id);
+      const students = await Student.find({ class_id: { $in: classIds }, school_id: schoolId }).select("parent_id").lean();
+      const parentIdsInYear = students.map(s => s.parent_id).filter(Boolean);
+      filter._id = { $in: parentIdsInYear };
+    }
+
     const parents = await Parent.find(filter)
       .populate("user_id", "name email role is_active plain_password must_change_password")
       .sort({ name: 1 })
       .lean();
     
-    // Fetch ALL children for these parents in a single query (avoids N+1)
     const parentIds = parents.map((p: any) => p._id);
-    const allChildren = await Student.find({ parent_id: { $in: parentIds } })
+    const childrenQuery: any = { parent_id: { $in: parentIds } };
+
+    if (academic_year) {
+      const classes = await Class.find({ academic_year, school_id: schoolId }).select("_id").lean();
+      const classIds = classes.map(c => c._id);
+      childrenQuery.class_id = { $in: classIds };
+    }
+
+    const allChildren = await Student.find(childrenQuery)
       .populate("class_id", "name section")
       .lean();
 
-    // Group children by parent_id
     const childrenByParent: Record<string, any[]> = {};
     for (const child of allChildren) {
       const pid = String((child as any).parent_id);

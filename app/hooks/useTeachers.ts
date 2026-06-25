@@ -226,6 +226,7 @@ export function useTeachers(options?: { skip?: boolean }) {
       sort?: string;
       page?: number;
       limit?: number;
+      academic_year?: string;
     }
   ) => {
     let search = "";
@@ -234,6 +235,7 @@ export function useTeachers(options?: { skip?: boolean }) {
     let sort = "";
     let page = 1;
     let limit = 10;
+    let academic_year = "";
 
     const isObject = arg1 && typeof arg1 === "object";
 
@@ -245,12 +247,13 @@ export function useTeachers(options?: { skip?: boolean }) {
       sort = p.sort ?? "";
       page = p.page ?? 1;
       limit = p.limit ?? 10;
+      academic_year = p.academic_year ?? "";
     } else {
       search = (arg1 as string) ?? "";
       limit = 500;
     }
 
-    const isFiltered = !!(search || status || dateRange || sort || isObject);
+    const isFiltered = !!(search || status || dateRange || sort || academic_year || isObject);
     const isFresh = _teachersCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
 
     // Use cache only for unfiltered legacy fetch (same strategy as useStudents)
@@ -266,9 +269,10 @@ export function useTeachers(options?: { skip?: boolean }) {
     try {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
-      if (status && status !== "all") params.set("status", status);
+      if (status && status !== "all" && status !== "Select") params.set("status", status);
       if (dateRange && dateRange !== "All Time") params.set("dateRange", dateRange);
       if (sort) params.set("sort", sort);
+      if (academic_year) params.set("academic_year", academic_year);
       params.set("page", page.toString());
       params.set("limit", limit.toString());
 

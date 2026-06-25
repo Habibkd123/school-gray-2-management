@@ -1,28 +1,30 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { IParent } from "@/lib/models/Parent";
 import { IStudent } from "@/lib/models/Student";
+import { useAppState } from "@/app/context/store";
 
 export type ApiParent = Omit<IParent, "school_id" | "user_id"> & {
   _id: string;
   children: (IStudent & { _id: string, class_id: any })[];
 };
 
-export function useParents() {
+export function useParents(options?: { skip?: boolean; filterByYear?: boolean }) {
   const [parents, setParents] = useState<ApiParent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const authReady = useAuthReady();
+  const { academicYear } = useAppState();
 
-  useEffect(() => {
-    if (!authReady) return; // Wait until JWT token is available
-    fetchParents();
-  }, [authReady]);
-
-  const fetchParents = async () => {
+  const fetchParents = useCallback(async (params: { academic_year?: string; search?: string } = {}) => {
     setIsLoading(true);
+    setError(null);
     try {
-      const res = await fetch("/api/parents", {
+      const qs = new URLSearchParams();
+      if (params.academic_year) qs.set("academic_year", params.academic_year);
+      if (params.search) qs.set("search", params.search);
+
+      const res = await fetch(`/api/parents?${qs.toString()}`, {
         headers: getAuthHeaders(),
       });
       const data = await res.json();
@@ -36,7 +38,15 @@ export function useParents() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (options?.skip) return;
+    if (!authReady) return; // Wait until JWT token is available
+    const params: { academic_year?: string } = {};
+    if (options?.filterByYear) params.academic_year = academicYear;
+    fetchParents(params);
+  }, [fetchParents, academicYear, options?.skip, options?.filterByYear, authReady]);
 
   const createParent = async (payload: Partial<ApiParent> & { children_ids?: string[] }) => {
     const res = await fetch("/api/parents", {
