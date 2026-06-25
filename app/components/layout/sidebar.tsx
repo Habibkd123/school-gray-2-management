@@ -53,7 +53,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Subject Assignment", href: "/academic-mgmt/subject-assignment" },
         { name: "Teacher Assignment", href: "/academic-mgmt/teacher-assignment" },
         { name: "Syllabus", href: "/academic-mgmt/syllabus" },
-        { name: "Class Room", href: "/academic/class-room" },
+        // { name: "Class Room", href: "/academic/class-room" },
         { name: "Class Routine", href: "/academic/class-routine" },
         { name: "Time Table", href: "/academic/time-table" },
         { name: "Class Home Work", href: "/academic/class-home-work" },
