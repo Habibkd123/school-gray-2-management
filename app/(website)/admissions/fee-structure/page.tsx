@@ -16,7 +16,7 @@ export default async function FeeStructurePage() {
   return (
     <main className="py-20 px-4 md:px-8 max-w-5xl mx-auto min-h-[60vh]">
       <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Fee Structure</h1>
-      <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-10">Annual & Monthly Fee Details</p>
+      <p className="text-[#1E3A5F] font-bold uppercase tracking-widest text-[12px] mb-10">Annual & Monthly Fee Details</p>
       {fees.length > 0 ? (
         <div className="overflow-x-auto rounded-sm border border-slate-200 shadow-md">
           <table className="w-full text-[14px]">

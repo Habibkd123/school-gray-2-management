@@ -146,7 +146,7 @@ export default function ApproveLeaveRequestPage() {
   const triggerCls = (open: boolean) =>
     `flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors cursor-pointer
      ${open
-      ? "border-[#F59E0B] text-[#F59E0B]"
+      ? "border-[#1E3A5F] text-[#1E3A5F]"
       : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
 
   const filteredData = useMemo(() => {
@@ -218,17 +218,17 @@ export default function ApproveLeaveRequestPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/leave" className="hover:text-[#F59E0B]">HRM</Link>
+            <Link href="/leave" className="hover:text-[#1E3A5F]">HRM</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Leave Requests</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => window.location.reload()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => window.location.reload()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
           
@@ -291,7 +291,7 @@ export default function ApproveLeaveRequestPage() {
                           <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
                             className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
                           <button onClick={applyCustomRange} disabled={!customFrom || !customTo}
-                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-[#F59E0B] hover:bg-[#D97706] rounded transition-colors disabled:opacity-50 cursor-pointer">
+                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded transition-colors disabled:opacity-50 cursor-pointer">
                             Apply
                           </button>
                         </div>
@@ -368,7 +368,7 @@ export default function ApproveLeaveRequestPage() {
                       </button>
                       <button 
                         onClick={() => setIsFilterOpen(false)}
-                        className="px-5 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+                        className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
                       >
                         Apply
                       </button>
@@ -421,7 +421,7 @@ export default function ApproveLeaveRequestPage() {
               placeholder="Search..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
             />
           </div>
         </div>
@@ -432,7 +432,7 @@ export default function ApproveLeaveRequestPage() {
             <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">
-                  <input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] cursor-pointer" />
+                  <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />
                 </th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Submitted By</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Leave Type</th>
@@ -447,7 +447,7 @@ export default function ApproveLeaveRequestPage() {
               {loading ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-16 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#F59E0B] mx-auto" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F] mx-auto" />
                     <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading leave requests...</p>
                   </td>
                 </tr>
@@ -460,7 +460,7 @@ export default function ApproveLeaveRequestPage() {
               ) : pag.paged.map((item) => (
                 <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4">
-                    <input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] cursor-pointer" />
+                    <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />
                   </td>
                   <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-200">
                     {getUserName(item)}
@@ -485,7 +485,7 @@ export default function ApproveLeaveRequestPage() {
                   <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                     <button 
                       onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-[#F59E0B] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-[#1E3A5F] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
@@ -565,8 +565,8 @@ export default function ApproveLeaveRequestPage() {
               <div className="flex items-center gap-6">
                 {(["pending", "approved", "rejected"] as const).map((status) => (
                   <label key={status} className="flex items-center gap-2 cursor-pointer group">
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${formStatus === status ? "border-[#F59E0B]" : "border-slate-300 group-hover:border-[#F59E0B]/50"}`}>
-                      {formStatus === status && <div className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />}
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${formStatus === status ? "border-[#1E3A5F]" : "border-slate-300 group-hover:border-[#1E3A5F]/50"}`}>
+                      {formStatus === status && <div className="w-2.5 h-2.5 rounded-full bg-[#1E3A5F]" />}
                     </div>
                     <span className="text-[14px] text-slate-700 dark:text-slate-200 capitalize">{status}</span>
                     <input 
@@ -586,7 +586,7 @@ export default function ApproveLeaveRequestPage() {
                 placeholder="Add Comment"
                 value={formNote}
                 onChange={(e) => setFormNote(e.target.value)}
-                className="w-full h-24 p-3 border border-border rounded-lg outline-none focus:border-[#F59E0B] bg-white dark:bg-slate-800 text-[14px] text-slate-700 dark:text-slate-200 resize-none transition-colors"
+                className="w-full h-24 p-3 border border-border rounded-lg outline-none focus:border-[#1E3A5F] bg-white dark:bg-slate-800 text-[14px] text-slate-700 dark:text-slate-200 resize-none transition-colors"
               />
             </div>
 
@@ -601,7 +601,7 @@ export default function ApproveLeaveRequestPage() {
               <button 
                 type="submit" 
                 disabled={saving}
-                className="px-6 py-2.5 bg-[#F59E0B] text-white text-[14px] font-bold rounded-lg hover:bg-[#D97706] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
+                className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
               >
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
                 Submit

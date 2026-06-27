@@ -27,7 +27,7 @@ export default async function StudentLifeCulturalPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <span className="inline-block px-4 py-1.5 bg-[#F59E0B]/20 border border-[#F59E0B]/30 text-[#FDBA74] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Creative Expression</span>
+          <span className="inline-block px-4 py-1.5 bg-[#1E3A5F]/20 border border-[#1E3A5F]/30 text-[#FCA5A5] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Creative Expression</span>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">Cultural Activities</h1>
         </div>
       </section>
@@ -83,13 +83,13 @@ export default async function StudentLifeCulturalPage() {
               <div className="bg-[#0F172A] text-white p-8 rounded-sm shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500 rounded-full blur-[70px] opacity-20" />
                 <h4 className="text-lg font-serif font-bold mb-4 relative z-10 text-white flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-[#F59E0B]" />
+                  <Sparkles className="w-5 h-5 text-[#1E3A5F]" />
                   Annual Fest & Events
                 </h4>
                 <p className="text-slate-400 text-[13px] leading-relaxed mb-4 relative z-10">
                   Every year, our students organize and host inter-school cultural festivals, art exhibitions, and musical performances that attract participation from all across the region.
                 </p>
-                <div className="text-[12px] text-[#F59E0B] font-bold tracking-wide border-t border-white/10 pt-4 relative z-10">
+                <div className="text-[12px] text-[#1E3A5F] font-bold tracking-wide border-t border-white/10 pt-4 relative z-10">
                   CHORUS &bull; ART MEETS &bull; DEBATE CHAMPIONSHIPS
                 </div>
               </div>
@@ -99,7 +99,7 @@ export default async function StudentLifeCulturalPage() {
           </div>
 
           <div className="mt-16 pt-8 border-t border-slate-100 text-center">
-            <Link href="/student-life" className="inline-flex items-center gap-2 text-[#F59E0B] font-bold text-[14px] hover:text-[#D97706] transition-colors">
+            <Link href="/student-life" className="inline-flex items-center gap-2 text-[#1E3A5F] font-bold text-[14px] hover:text-[#162C47] transition-colors">
               &larr; Back to Student Life
             </Link>
           </div>

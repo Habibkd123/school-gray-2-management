@@ -27,7 +27,7 @@ export default function ReportTabs() {
               className={`
                 relative px-4 py-3.5 text-[13px] font-semibold whitespace-nowrap transition-colors
                 ${isActive
-                  ? "text-[#F59E0B] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#F59E0B] after:rounded-t"
+                  ? "text-[#1E3A5F] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-[#1E3A5F] after:rounded-t"
                   : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                 }
               `}

@@ -23,7 +23,7 @@ export function TransportTabs() {
             href={href}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all duration-200 ${
               isActive
-                ? "bg-[#F59E0B] text-white shadow-sm"
+                ? "bg-[#1E3A5F] text-white shadow-sm"
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"
             }`}
           >

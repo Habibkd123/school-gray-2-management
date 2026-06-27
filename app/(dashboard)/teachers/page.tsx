@@ -37,7 +37,7 @@ import {
 } from "lucide-react";
 
 function getAvatar(name: string) {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=5D6BEE&color=fff&bold=true`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=D2232A&color=fff&bold=true`;
 }
 
 export default function TeachersPage() {
@@ -191,11 +191,11 @@ export default function TeachersPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const columns: ColumnDef<typeof tableData[0]>[] = [
-    { header: "ID", accessorKey: "displayId", render: (t) => <span className="font-semibold text-[#F59E0B] cursor-pointer hover:underline">{t.displayId}</span> },
+    { header: "ID", accessorKey: "displayId", render: (t) => <span className="font-semibold text-[#1E3A5F] cursor-pointer hover:underline">{t.displayId}</span> },
     { header: "Name", accessorKey: "name", render: (t) => (
         <div className="flex flex-wrap items-center gap-3">
           <img src={t.photo_url || getAvatar(t.name)} className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={t.name} />
-          <span className="font-medium text-slate-900 dark:text-white group-hover:text-[#F59E0B] transition-colors cursor-pointer">{t.name}</span>
+          <span className="font-medium text-slate-900 dark:text-white group-hover:text-[#1E3A5F] transition-colors cursor-pointer">{t.name}</span>
         </div>
     ) },
     { header: "Class", accessorKey: "classNameStr" },
@@ -214,7 +214,7 @@ export default function TeachersPage() {
           <div className="flex justify-center">
             <button
               onClick={() => setActionMenuId(actionMenuId === t.id ? null : t.id)}
-              className={`p-1.5 rounded-lg transition-colors ${actionMenuId === t.id ? "bg-[#F59E0B] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+              className={`p-1.5 rounded-lg transition-colors ${actionMenuId === t.id ? "bg-[#1E3A5F] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
             >
               <MoreVertical className="w-4 h-4" />
             </button>
@@ -255,7 +255,7 @@ export default function TeachersPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#F59E0B]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F]" />
         <p className="text-slate-500 dark:text-slate-400 text-sm">Loading teachers...</p>
       </div>
     );
@@ -267,7 +267,7 @@ export default function TeachersPage() {
         <AlertCircle className="w-10 h-10 text-rose-500" />
         <h3 className="font-semibold text-slate-800 dark:text-slate-100">Failed to Load Teachers</h3>
         <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md">{error}</p>
-        <button onClick={() => fetchTeachers()} className="mt-2 px-4 py-2 bg-[#F59E0B] text-white rounded-lg text-sm font-semibold hover:bg-[#D97706] transition-colors">
+        <button onClick={() => fetchTeachers()} className="mt-2 px-4 py-2 bg-[#1E3A5F] text-white rounded-lg text-sm font-semibold hover:bg-[#162C47] transition-colors">
           Retry
         </button>
       </div>
@@ -317,7 +317,7 @@ export default function TeachersPage() {
             </div>
             <button
               onClick={() => router.push('/teachers/add')}
-              className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-[#F59E0B] hover:bg-[#D97706] rounded-lg shadow-sm transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded-lg shadow-sm transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add Teacher</span>
@@ -345,7 +345,7 @@ export default function TeachersPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsDateRangeOpen(false)} />
                   <div className="absolute left-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                     {["All Time", "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year"].map((item) => (
-                      <button key={item} onClick={() => { handleDateRangeChange(item); setIsDateRangeOpen(false); }} className={`w-full px-4 py-2 text-[13px] text-left transition-colors ${item === selectedDateRange ? "bg-[#F59E0B] text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                      <button key={item} onClick={() => { handleDateRangeChange(item); setIsDateRangeOpen(false); }} className={`w-full px-4 py-2 text-[13px] text-left transition-colors ${item === selectedDateRange ? "bg-[#1E3A5F] text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
                         {item}
                       </button>
                     ))}
@@ -391,7 +391,7 @@ export default function TeachersPage() {
                         Reset
                       </button>
 
-                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer">
+                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer">
                         Apply
                       </button>
                     </div>
@@ -401,8 +401,8 @@ export default function TeachersPage() {
             </div>
 
             <div className="flex items-center border border-border rounded-lg p-0.5 bg-slate-50 dark:bg-slate-800/50">
-              <button onClick={() => setViewMode("list")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "list" ? "bg-[#F59E0B] text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><List className="w-4 h-4" /></button>
-              <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "grid" ? "bg-[#F59E0B] text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><Grid className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode("list")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "list" ? "bg-[#1E3A5F] text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><List className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "grid" ? "bg-[#1E3A5F] text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><Grid className="w-4 h-4" /></button>
             </div>
 
             <div className="relative">
@@ -421,7 +421,7 @@ export default function TeachersPage() {
                       <button 
                         key={item} 
                         onClick={() => { handleSortChange(item); setIsSortOpen(false); }}
-                        className={`w-full px-4 py-2.5 text-[14px] text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "bg-[#F59E0B] text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
+                        className={`w-full px-4 py-2.5 text-[14px] text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "bg-[#1E3A5F] text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
                       >
                         {item}
                       </button>
@@ -450,7 +450,7 @@ export default function TeachersPage() {
               placeholder="Search Name/ID/Email/Subject"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-[#F59E0B]/50 focus:ring-2 focus:ring-[#F59E0B]/10 transition-all bg-white dark:bg-slate-900"
+              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-[#1E3A5F]/50 focus:ring-2 focus:ring-[#1E3A5F]/10 transition-all bg-white dark:bg-slate-900"
             />
           </div>
         </div>
@@ -477,7 +477,7 @@ export default function TeachersPage() {
                       });
                     }
                   }}
-                  className="rounded border-slate-300 w-4 h-4 accent-[#F59E0B] cursor-pointer"
+                  className="rounded border-slate-300 w-4 h-4 accent-[#1E3A5F] cursor-pointer"
                 />
               }
               renderSelection={(t) => (
@@ -491,7 +491,7 @@ export default function TeachersPage() {
                         : [...prev, t.id]
                     );
                   }}
-                  className="rounded border-slate-300 w-4 h-4 accent-[#F59E0B] cursor-pointer"
+                  className="rounded border-slate-300 w-4 h-4 accent-[#1E3A5F] cursor-pointer"
                 />
               )}
               noDataMessage="No faculty records matching filter."
@@ -519,7 +519,7 @@ export default function TeachersPage() {
                   const subject = teacher.subject_specialization || "—";
 
                   return (
-                    <div key={teacher._id} className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-black/50 transition-all duration-300 relative text-left flex flex-col hover:border-[#F59E0B]/50">
+                    <div key={teacher._id} className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-black/50 transition-all duration-300 relative text-left flex flex-col hover:border-[#1E3A5F]/50">
                       {/* Top row: ID, Checkbox, Status, Actions */}
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex flex-wrap items-center gap-2">
@@ -533,9 +533,9 @@ export default function TeachersPage() {
                                   : [...prev, teacher._id]
                               );
                             }}
-                            className="rounded border-slate-300 w-3.5 h-3.5 accent-[#F59E0B] cursor-pointer"
+                            className="rounded border-slate-300 w-3.5 h-3.5 accent-[#1E3A5F] cursor-pointer"
                           />
-                          <span className="text-[#F59E0B] font-semibold text-[13px] hover:underline cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>{displayId}</span>
+                          <span className="text-[#1E3A5F] font-semibold text-[13px] hover:underline cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>{displayId}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
                           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${status === "Active" ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBEB] text-[#E02424]"}`}>
@@ -543,7 +543,7 @@ export default function TeachersPage() {
                             {status}
                           </span>
                           <div className="relative">
-                            <button onClick={() => setActionMenuId(actionMenuId === teacher._id ? null : teacher._id)} className={`p-1.5 rounded-lg transition-colors ${actionMenuId === teacher._id ? "bg-[#F59E0B] text-white" : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"}`}>
+                            <button onClick={() => setActionMenuId(actionMenuId === teacher._id ? null : teacher._id)} className={`p-1.5 rounded-lg transition-colors ${actionMenuId === teacher._id ? "bg-[#1E3A5F] text-white" : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"}`}>
                               <MoreVertical className="w-4 h-4" />
                             </button>
 
@@ -584,7 +584,7 @@ export default function TeachersPage() {
                       <div className="flex items-center gap-3 mb-5 cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>
                         <img src={teacher.photo_url || getAvatar(teacher.name)} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={teacher.name} />
                         <div>
-                          <h3 className="font-bold text-[#0F172A] dark:text-slate-100 text-[14px] group-hover:text-[#F59E0B] transition-colors">{teacher.name}</h3>
+                          <h3 className="font-bold text-[#0F172A] dark:text-slate-100 text-[14px] group-hover:text-[#1E3A5F] transition-colors">{teacher.name}</h3>
                           <p className="text-slate-500 dark:text-slate-400 text-[12px] font-medium">{getClassName(teacher)}</p>
                         </div>
                       </div>

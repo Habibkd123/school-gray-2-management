@@ -17,12 +17,12 @@ export default async function DocumentsPage() {
   return (
     <main className="py-20 px-4 md:px-8 max-w-5xl mx-auto min-h-[60vh]">
       <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Documents Required</h1>
-      <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-10">Bring the following documents at the time of admission</p>
+      <p className="text-[#1E3A5F] font-bold uppercase tracking-widest text-[12px] mb-10">Bring the following documents at the time of admission</p>
       {docs.length > 0 ? (
         <ul className="grid sm:grid-cols-2 gap-4">
           {docs.map((doc: string, i: number) => (
             <li key={i} className="flex items-start gap-3 bg-white p-5 rounded-sm border border-slate-200 shadow-sm">
-              <CheckCircle2 className="w-5 h-5 text-[#F59E0B] shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 text-[#1E3A5F] shrink-0 mt-0.5" />
               <span className="text-slate-700 font-medium text-[14px]">{doc}</span>
             </li>
           ))}

@@ -110,7 +110,7 @@ export default function SubjectMasterPage() {
 
   const columns: ColumnDef<ApiSubjectMaster>[] = [
     { header: "#", accessorKey: "_id", render: (s: ApiSubjectMaster) => <span className="text-slate-400 text-[13px]">—</span> },
-    { header: "Subject Name", accessorKey: "name", render: (s) => <span className="font-bold text-[#F59E0B]">{s.name}</span> },
+    { header: "Subject Name", accessorKey: "name", render: (s) => <span className="font-semibold text-slate-800 dark:text-slate-200">{s.name}</span> },
     { header: "Subject Code", accessorKey: "subject_code", render: (s) => <span className="font-mono text-[12px] text-slate-500 dark:text-slate-400">{s.subject_code || "—"}</span> },
     { header: "Description", accessorKey: "description", render: (s) => <span className="text-[13px] text-slate-500 dark:text-slate-400 max-w-[200px] truncate block">{s.description || "—"}</span> },
     ...(enableStreams ? [{
@@ -176,7 +176,7 @@ export default function SubjectMasterPage() {
           </button>
           {isAdmin && (
             <button onClick={() => { resetForm(); setIsAddOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
+              className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
               <Plus className="w-4 h-4" /><span>Add Subject</span>
             </button>
           )}
@@ -191,7 +191,7 @@ export default function SubjectMasterPage() {
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input type="text" placeholder="Search subjects..." value={searchQuery} onChange={(e) => handleSearch(e.target.value)}
-              className="pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none w-full sm:w-64 focus:border-[#F59E0B]/50 transition-colors shadow-sm bg-[#F8FAFC] dark:bg-[#0F172A]" />
+              className="pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none w-full sm:w-64 focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-[#F8FAFC] dark:bg-[#0F172A]" />
           </div>
         </div>
 
@@ -208,13 +208,13 @@ export default function SubjectMasterPage() {
             <BookOpen className="w-10 h-10 opacity-30" />
             <p className="text-[14px] font-medium">No subjects in catalog</p>
             <p className="text-[12px] text-slate-400">Add Physics, Chemistry, Mathematics and more</p>
-            {isAdmin && <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="px-4 py-2 text-[13px] font-bold bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-lg">Add First Subject</button>}
+            {isAdmin && <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="px-4 py-2 text-[13px] font-bold bg-[#1E3A5F] hover:bg-[#162C47] text-white rounded-lg">Add First Subject</button>}
           </div>
         ) : (
           <>
             <DataTable columns={columns} data={subjects}
-              selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4" />}
-              renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4" />}
+              selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4" />}
+              renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4" />}
             />
             {totalPages > 1 && (
               <div className="px-5 py-4 border-t border-border flex items-center justify-between gap-3">
@@ -243,20 +243,20 @@ export default function SubjectMasterPage() {
               <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Subject Name <span className="text-red-500">*</span></label>
               <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)}
                 placeholder="e.g. Physics, Mathematics"
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Subject Code <span className="text-slate-400 text-[11px]">(optional)</span></label>
               <input type="text" value={formCode} onChange={(e) => setFormCode(e.target.value.toUpperCase())}
                 placeholder="e.g. PHY, MATH"
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Description <span className="text-slate-400 text-[11px]">(optional)</span></label>
             <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)} rows={2}
               placeholder="Brief description of this subject..."
-              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 resize-none" />
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 resize-none" />
           </div>
           {enableStreams && (
             <div className="flex flex-col gap-1.5 text-left">
@@ -268,7 +268,7 @@ export default function SubjectMasterPage() {
                   {streams.filter(s => s.status === "Active").map(s => {
                     const checked = formAllowedStreams.includes(s._id);
                     return (
-                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#F59E0B]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
+                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#1E3A5F]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
                         <input type="checkbox" checked={checked}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -277,7 +277,7 @@ export default function SubjectMasterPage() {
                               setFormAllowedStreams(formAllowedStreams.filter(x => x !== s._id));
                             }
                           }}
-                          className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4 cursor-pointer" />
+                          className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4 cursor-pointer" />
                         <span>{s.name}</span>
                       </label>
                     );
@@ -294,7 +294,7 @@ export default function SubjectMasterPage() {
             <div className="flex gap-3">
               {(["Active", "Inactive"] as const).map(s => (
                 <button key={s} type="button" onClick={() => setFormStatus(s)}
-                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${formStatus === s ? "bg-[#F59E0B] border-[#F59E0B] text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${formStatus === s ? "bg-[#1E3A5F] border-[#1E3A5F] text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
                   {s}
                 </button>
               ))}
@@ -305,7 +305,7 @@ export default function SubjectMasterPage() {
             <button type="button" onClick={() => { setIsAddOpen(false); resetForm(); }}
               className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
             <button type="submit" disabled={submitting}
-              className="px-5 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
+              className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Add Subject
             </button>
           </div>
@@ -323,20 +323,20 @@ export default function SubjectMasterPage() {
               <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Subject Name <span className="text-red-500">*</span></label>
               <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)}
                 placeholder="e.g. Physics, Mathematics"
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Subject Code <span className="text-slate-400 text-[11px]">(optional)</span></label>
               <input type="text" value={formCode} onChange={(e) => setFormCode(e.target.value.toUpperCase())}
                 placeholder="e.g. PHY, MATH"
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Description <span className="text-slate-400 text-[11px]">(optional)</span></label>
             <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)} rows={2}
               placeholder="Brief description of this subject..."
-              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 resize-none" />
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 resize-none" />
           </div>
           {enableStreams && (
             <div className="flex flex-col gap-1.5 text-left">
@@ -348,7 +348,7 @@ export default function SubjectMasterPage() {
                   {streams.filter(s => s.status === "Active").map(s => {
                     const checked = formAllowedStreams.includes(s._id);
                     return (
-                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#F59E0B]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
+                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#1E3A5F]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
                         <input type="checkbox" checked={checked}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -357,7 +357,7 @@ export default function SubjectMasterPage() {
                               setFormAllowedStreams(formAllowedStreams.filter(x => x !== s._id));
                             }
                           }}
-                          className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4 cursor-pointer" />
+                          className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4 cursor-pointer" />
                         <span>{s.name}</span>
                       </label>
                     );
@@ -374,7 +374,7 @@ export default function SubjectMasterPage() {
             <div className="flex gap-3">
               {(["Active", "Inactive"] as const).map(s => (
                 <button key={s} type="button" onClick={() => setFormStatus(s)}
-                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${formStatus === s ? "bg-[#F59E0B] border-[#F59E0B] text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${formStatus === s ? "bg-[#1E3A5F] border-[#1E3A5F] text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
                   {s}
                 </button>
               ))}
@@ -385,7 +385,7 @@ export default function SubjectMasterPage() {
             <button type="button" onClick={() => { setIsEditOpen(false); resetForm(); }}
               className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
             <button type="submit" disabled={submitting}
-              className="px-5 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
+              className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Save Changes
             </button>
           </div>

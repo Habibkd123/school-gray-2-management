@@ -36,10 +36,10 @@ function PhotoUploader({
       />
       <div
         onClick={() => !uploading && ref.current?.click()}
-        className="w-28 h-28 bg-[#F1F5F9] dark:bg-slate-800 border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3 overflow-hidden relative cursor-pointer hover:border-[#F59E0B]/60 transition-colors"
+        className="w-28 h-28 bg-[#F1F5F9] dark:bg-slate-800 border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3 overflow-hidden relative cursor-pointer hover:border-[#1E3A5F]/60 transition-colors"
       >
         {uploading ? (
-          <Loader2 className="w-8 h-8 animate-spin text-[#F59E0B]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F]" />
         ) : preview ? (
           <img src={preview} alt="preview" className="w-full h-full object-cover" />
         ) : (
@@ -86,7 +86,7 @@ function InputGroup({ label, type = "text", placeholder, options, value, onChang
       </label>
       {type === "select" ? (
         <div className="relative">
-          <select className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all appearance-none cursor-pointer" value={value} onChange={onChange as any}>
+          <select className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F]/50 transition-all appearance-none cursor-pointer" value={value} onChange={onChange as any}>
             {options?.map(opt => {
               const isObj = typeof opt === "object" && opt !== null;
               const val = isObj ? opt.value : opt;
@@ -98,7 +98,7 @@ function InputGroup({ label, type = "text", placeholder, options, value, onChang
         </div>
       ) : (
         <input type={type} placeholder={placeholder} value={value} onChange={onChange as any} required={required}
-          className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all" />
+          className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F]/50 transition-all" />
       )}
     </div>
   );
@@ -369,7 +369,7 @@ function AddStudentContent() {
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">{editId ? "Edit Student" : "Add Student"}</h1>
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span><span>/</span>
-            <Link href="/students" className="hover:text-[#F59E0B]">Students</Link>
+            <Link href="/students" className="hover:text-[#1E3A5F]">Students</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">{editId ? "Edit Student" : "Add Student"}</span>
           </div>
@@ -431,7 +431,7 @@ function AddStudentContent() {
                   <textarea
                     value={address}
                     onChange={e => setAddress(e.target.value)}
-                    className="w-full mt-1.5 px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all resize-none h-20"
+                    className="w-full mt-1.5 px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F]/50 transition-all resize-none h-20"
                     placeholder="Enter full address"
                   />
                 </div>
@@ -461,7 +461,7 @@ function AddStudentContent() {
                 <label className="font-semibold">Is Guardian?</label>
                 {["father", "mother", "other"].map(g => (
                   <label key={g} className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="guardian" className="accent-[#F59E0B]" checked={guardianType === g} onChange={() => setGuardianType(g)} />
+                    <input type="radio" name="guardian" className="accent-[#1E3A5F]" checked={guardianType === g} onChange={() => setGuardianType(g)} />
                     {g.charAt(0).toUpperCase() + g.slice(1)}
                   </label>
                 ))}
@@ -482,7 +482,7 @@ function AddStudentContent() {
                   <InputGroup label="Occupation" value={guardianOccupation} onChange={e => setGuardianOccupation(e.target.value)} />
                   <div className="col-span-1 md:col-span-2 xl:col-span-3">
                     <label className="block text-[12px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Address</label>
-                    <textarea value={guardianAddress} onChange={e => setGuardianAddress(e.target.value)} className="w-full h-10 px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all resize-none" />
+                    <textarea value={guardianAddress} onChange={e => setGuardianAddress(e.target.value)} className="w-full h-10 px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F]/50 transition-all resize-none" />
                   </div>
                 </div>
               </div>
@@ -502,7 +502,7 @@ function AddStudentContent() {
           <button
             type="submit"
             disabled={isSubmitting || anyUploading}
-            className="px-6 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors disabled:opacity-70 flex items-center gap-2"
+            className="px-6 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors disabled:opacity-70 flex items-center gap-2"
           >
             {(isSubmitting || anyUploading) && <Loader2 className="w-4 h-4 animate-spin" />}
             {anyUploading ? "Uploading…" : isSubmitting ? "Saving…" : editId ? "Update Student" : "Add Student"}
@@ -518,8 +518,8 @@ function AddStudentContent() {
           <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-border animate-in fade-in zoom-in-95 duration-300">
             {/* Header */}
             <div className="flex items-center gap-3 p-5 border-b border-border">
-              <div className="w-10 h-10 rounded-xl bg-[#F59E0B]/10 flex items-center justify-center">
-                <Lock className="w-5 h-5 text-[#F59E0B]" />
+              <div className="w-10 h-10 rounded-xl bg-[#1E3A5F]/10 flex items-center justify-center">
+                <Lock className="w-5 h-5 text-[#1E3A5F]" />
               </div>
               <div>
                 <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">Student Created Successfully! 🎉</h2>
@@ -536,7 +536,7 @@ function AddStudentContent() {
                   <span className="text-[13px] font-bold text-slate-900 dark:text-white font-mono break-all">{createdCredentials.loginId}</span>
                   <button
                     onClick={() => handleCopyCredential(createdCredentials.loginId, "loginId")}
-                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-[#F59E0B]/10 hover:bg-[#F59E0B]/20 text-[#F59E0B] transition-colors"
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-[#1E3A5F]/10 hover:bg-[#1E3A5F]/20 text-[#1E3A5F] transition-colors"
                     title="Copy Login ID"
                   >
                     {copiedField === "loginId" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
@@ -553,7 +553,7 @@ function AddStudentContent() {
                   <span className="text-[13px] font-bold text-slate-900 dark:text-white font-mono tracking-widest">{createdCredentials.password}</span>
                   <button
                     onClick={() => handleCopyCredential(createdCredentials.password, "password")}
-                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-[#F59E0B]/10 hover:bg-[#F59E0B]/20 text-[#F59E0B] transition-colors"
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-[#1E3A5F]/10 hover:bg-[#1E3A5F]/20 text-[#1E3A5F] transition-colors"
                     title="Copy Password"
                   >
                     {copiedField === "password" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
@@ -567,7 +567,7 @@ function AddStudentContent() {
                   `Login ID: ${createdCredentials.loginId}\nPassword: ${createdCredentials.password}`,
                   "all"
                 )}
-                className="w-full py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
+                className="w-full py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-xl transition-colors flex items-center justify-center gap-2"
               >
                 {copiedField === "all" ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 {copiedField === "all" ? "Copied!" : "Copy All to Clipboard"}

@@ -44,16 +44,16 @@ export default function SectionsPage() {
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Sections</h1>
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span><span>/</span>
-            <Link href="/academic" className="hover:text-[#F59E0B]">Academic</Link>
+            <Link href="/academic" className="hover:text-[#1E3A5F]">Academic</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Sections</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
           <div className="relative">
@@ -70,7 +70,7 @@ export default function SectionsPage() {
               </>
             )}
           </div>
-          <Link href="/classes" className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer">
+          <Link href="/classes" className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer">
             <Plus className="w-4 h-4" /> Add via Classes
           </Link>
         </div>
@@ -94,7 +94,7 @@ export default function SectionsPage() {
               placeholder="Search section…"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
             />
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function SectionsPage() {
                 <tr key={s.name} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-[#F59E0B]/10 flex items-center justify-center font-bold text-[#F59E0B] text-[14px]">
+                      <div className="w-8 h-8 rounded-lg bg-[#1E3A5F]/10 flex items-center justify-center font-bold text-[#1E3A5F] text-[14px]">
                         {s.name}
                       </div>
                       <span className="font-semibold text-slate-700 dark:text-slate-200">Section {s.name}</span>

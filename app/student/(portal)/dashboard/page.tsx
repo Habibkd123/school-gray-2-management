@@ -90,7 +90,7 @@ export default function StudentDashboardPage() {
       label: "Pending Homework",
       value: pendingHomework.length,
       icon: BookOpen,
-      color: "#f59e0b",
+      color: "#1E3A5F",
       bgColor: "rgba(245,158,11,0.1)",
       borderColor: "rgba(245,158,11,0.2)",
     },
@@ -197,7 +197,7 @@ export default function StudentDashboardPage() {
                 {todaysClasses.map((cls, idx) => {
                   const subject = typeof cls.subject_id === "object" ? cls.subject_id.name : String(cls.subject_id);
                   const teacher = typeof cls.teacher_id === "object" ? cls.teacher_id.name : "";
-                  const colors = ["#6366f1", "#f59e0b", "#10b981", "#f43f5e", "#8b5cf6"];
+                  const colors = ["#6366f1", "#1E3A5F", "#10b981", "#f43f5e", "#8b5cf6"];
                   const color = colors[idx % colors.length];
 
                   return (
@@ -321,7 +321,7 @@ export default function StudentDashboardPage() {
               {[
                 { href: "/student/results", icon: Award, label: "Results", color: "#10b981", bg: "rgba(16,185,129,0.1)" },
                 { href: "/student/attendance", icon: UserCheck, label: "Attendance", color: "#6366f1", bg: "rgba(99,102,241,0.1)" },
-                { href: "/student/fees", icon: CreditCard, label: "Fees", color: "#f59e0b", bg: "rgba(245,158,11,0.1)" },
+                { href: "/student/fees", icon: CreditCard, label: "Fees", color: "#1E3A5F", bg: "rgba(245,158,11,0.1)" },
               ].map((link) => {
                 const Icon = link.icon;
                 return (

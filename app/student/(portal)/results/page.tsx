@@ -32,7 +32,7 @@ export default function StudentResultsPage() {
   const overallPercent = totalMarks > 0 ? Math.round((obtainedMarks / totalMarks) * 100) : 0;
   const passCount = myResults.filter((r) => r.is_pass !== false && r.total_marks > 0 && r.marks_obtained >= (r.passing_marks || r.total_marks * 0.33)).length;
 
-  const colors = ["#6366f1", "#f59e0b", "#10b981", "#f43f5e", "#8b5cf6", "#0ea5e9"];
+  const colors = ["#6366f1", "#1E3A5F", "#10b981", "#f43f5e", "#8b5cf6", "#0ea5e9"];
 
   return (
     <div className="space-y-6">

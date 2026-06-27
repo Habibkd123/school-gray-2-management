@@ -30,7 +30,7 @@ export default async function AdmissionsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <span className="inline-block px-4 py-1.5 bg-[#F59E0B]/20 border border-[#F59E0B]/30 text-[#FDBA74] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Join Our Legacy</span>
+          <span className="inline-block px-4 py-1.5 bg-[#1E3A5F]/20 border border-[#1E3A5F]/30 text-[#FCA5A5] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Join Our Legacy</span>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight mb-4">Admissions</h1>
           {admissionOpen ? (
             <span className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-[13px] font-bold rounded-sm">
@@ -48,12 +48,12 @@ export default async function AdmissionsPage() {
       {howToApply && (
         <section className="py-16 bg-white">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Process</h2>
+            <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Process</h2>
             <h3 className="text-3xl font-serif font-bold text-[#0F172A] mb-6">How to Apply</h3>
             <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{howToApply}</p>
             {admissionOpen && (
               <a href={applyUrl} target={applyUrl.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
-                className="mt-8 inline-flex items-center gap-2 px-8 py-3.5 bg-[#F59E0B] text-white font-bold rounded-sm hover:bg-[#D97706] transition-all shadow-lg shadow-[#F59E0B]/20 uppercase tracking-wide">
+                className="mt-8 inline-flex items-center gap-2 px-8 py-3.5 bg-[#1E3A5F] text-white font-bold rounded-sm hover:bg-[#162C47] transition-all shadow-lg shadow-[#1E3A5F]/20 uppercase tracking-wide">
                 Apply Now <ArrowRight className="w-5 h-5" />
               </a>
             )}
@@ -65,12 +65,12 @@ export default async function AdmissionsPage() {
       {docs.length > 0 && (
         <section className="py-16 bg-slate-50">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Documents</h2>
+            <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Documents</h2>
             <h3 className="text-3xl font-serif font-bold text-[#0F172A] mb-8">Documents Required</h3>
             <ul className="grid sm:grid-cols-2 gap-4">
               {docs.map((doc: string, i: number) => (
                 <li key={i} className="flex items-start gap-3 bg-white p-4 rounded-sm border border-slate-200 shadow-sm">
-                  <CheckCircle2 className="w-5 h-5 text-[#F59E0B] shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-[#1E3A5F] shrink-0 mt-0.5" />
                   <span className="text-slate-700 text-[14px] font-medium">{doc}</span>
                 </li>
               ))}
@@ -83,7 +83,7 @@ export default async function AdmissionsPage() {
       {fees.length > 0 && (
         <section className="py-16 bg-white">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
-            <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Fees</h2>
+            <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Fees</h2>
             <h3 className="text-3xl font-serif font-bold text-[#0F172A] mb-8">Fee Structure</h3>
             <div className="overflow-x-auto rounded-sm border border-slate-200 shadow-md">
               <table className="w-full text-[14px]">
@@ -119,9 +119,9 @@ export default async function AdmissionsPage() {
               { href: "/admissions/fee-structure", label: "Fee Structure" },
               { href: "/admissions/online-form", label: "Online Enquiry" },
             ].map((l) => (
-              <Link key={l.href} href={l.href} className="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-sm hover:bg-[#F59E0B]/10 hover:border-[#F59E0B]/30 transition-all group">
+              <Link key={l.href} href={l.href} className="flex items-center justify-between p-5 bg-white/5 border border-white/10 rounded-sm hover:bg-[#1E3A5F]/10 hover:border-[#1E3A5F]/30 transition-all group">
                 <span className="text-white font-bold text-[14px]">{l.label}</span>
-                <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-[#F59E0B]" />
+                <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-[#1E3A5F]" />
               </Link>
             ))}
           </div>

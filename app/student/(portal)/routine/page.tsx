@@ -11,7 +11,7 @@ const DAY_LABELS: Record<string, string> = {
   thursday: "Thursday", friday: "Friday", saturday: "Saturday",
 };
 const DAY_COLORS: Record<string, string> = {
-  monday: "#6366f1", tuesday: "#f59e0b", wednesday: "#10b981",
+  monday: "#6366f1", tuesday: "#1E3A5F", wednesday: "#10b981",
   thursday: "#f43f5e", friday: "#8b5cf6", saturday: "#0ea5e9",
 };
 

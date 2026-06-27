@@ -27,7 +27,7 @@ export default async function StudentLifeClubsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <span className="inline-block px-4 py-1.5 bg-[#F59E0B]/20 border border-[#F59E0B]/30 text-[#FDBA74] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Student Groups</span>
+          <span className="inline-block px-4 py-1.5 bg-[#1E3A5F]/20 border border-[#1E3A5F]/30 text-[#FCA5A5] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Student Groups</span>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">Clubs & Societies</h1>
         </div>
       </section>
@@ -110,7 +110,7 @@ export default async function StudentLifeClubsPage() {
                 <p className="text-slate-400 text-[13px] leading-relaxed mb-6 relative z-10">
                   Every student is encouraged to participate in at least one club to build specialized skills, network with peers, and follow their passions outside of textbooks.
                 </p>
-                <div className="text-[12px] text-[#F59E0B] font-bold tracking-wide border-t border-white/10 pt-4 relative z-10">
+                <div className="text-[12px] text-[#1E3A5F] font-bold tracking-wide border-t border-white/10 pt-4 relative z-10">
                   WEEKLY SESSIONS &bull; SKILL SHARING &bull; COMPETITIONS
                 </div>
               </div>
@@ -120,7 +120,7 @@ export default async function StudentLifeClubsPage() {
           </div>
 
           <div className="mt-16 pt-8 border-t border-slate-100 text-center">
-            <Link href="/student-life" className="inline-flex items-center gap-2 text-[#F59E0B] font-bold text-[14px] hover:text-[#D97706] transition-colors">
+            <Link href="/student-life" className="inline-flex items-center gap-2 text-[#1E3A5F] font-bold text-[14px] hover:text-[#162C47] transition-colors">
               &larr; Back to Student Life
             </Link>
           </div>

@@ -222,9 +222,11 @@ export default function SubjectAssignmentPage() {
     } as ColumnDef<PopulatedAssignment>] : []),
     { header: "Subject", accessorKey: "subject_master_id", render: (a) => (
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 bg-[#F59E0B]/10 rounded flex items-center justify-center"><BookOpen className="w-3.5 h-3.5 text-[#F59E0B]" /></div>
+        <div className="w-6 h-6 bg-slate-100 dark:bg-slate-700 rounded flex items-center justify-center">
+          <BookOpen className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+        </div>
         <div>
-          <span className="font-bold text-[#F59E0B]">{a.subject_master_id?.name || "—"}</span>
+          <span className="font-semibold text-slate-800 dark:text-slate-200">{a.subject_master_id?.name || "—"}</span>
           {a.subject_master_id?.subject_code && (
             <span className="ml-2 text-[11px] font-mono text-slate-400">({a.subject_master_id.subject_code})</span>
           )}
@@ -259,7 +261,7 @@ export default function SubjectAssignmentPage() {
           </button>
           {isAdmin && (
             <button onClick={() => { resetForm(); setIsAddOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
+              className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
               <Plus className="w-4 h-4" /><span>Assign Subject</span>
             </button>
           )}
@@ -273,7 +275,7 @@ export default function SubjectAssignmentPage() {
             <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Academic Year</label>
             <div className="relative">
               <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
+                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
                 <option value="">All Years</option>
                 {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
@@ -284,7 +286,7 @@ export default function SubjectAssignmentPage() {
             <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Class</label>
             <div className="relative">
               <select value={filterClassId} onChange={(e) => setFilterClassId(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
+                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
                 <option value="">All Classes</option>
                 {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
               </select>
@@ -296,7 +298,7 @@ export default function SubjectAssignmentPage() {
               <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Stream</label>
               <div className="relative">
                 <select value={filterStreamId} onChange={(e) => setFilterStreamId(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
+                  className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
                   <option value="">All Streams</option>
                   {streams.filter(s => s.status === "Active").map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
                 </select>
@@ -309,11 +311,11 @@ export default function SubjectAssignmentPage() {
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input type="text" placeholder="Search subjects..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none w-full focus:border-[#F59E0B]/50 transition-colors bg-[#F8FAFC] dark:bg-[#0F172A]" />
+                className="pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none w-full focus:border-[#1E3A5F]/50 transition-colors bg-[#F8FAFC] dark:bg-[#0F172A]" />
             </div>
           </div>
           <button onClick={doFetch}
-            className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 h-[38px]">
+            className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 h-[38px]">
             <Filter className="w-4 h-4" /> Apply
           </button>
         </div>
@@ -341,15 +343,15 @@ export default function SubjectAssignmentPage() {
             <p className="text-[14px] font-medium">No subject assignments found</p>
             <p className="text-[12px] text-slate-400">Assign subjects to classes to get started</p>
             {isAdmin && (
-              <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="px-4 py-2 text-[13px] font-bold bg-[#F59E0B] hover:bg-[#D97706] text-white rounded-lg">
+              <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="px-4 py-2 text-[13px] font-bold bg-[#1E3A5F] hover:bg-[#162C47] text-white rounded-lg">
                 Assign First Subject
               </button>
             )}
           </div>
         ) : (
           <DataTable columns={columns} data={filteredAssignments}
-            selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4" />}
-            renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4" />}
+            selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4" />}
+            renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4" />}
           />
         )}
       </div>
@@ -368,7 +370,7 @@ export default function SubjectAssignmentPage() {
               <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Academic Year <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={formYear} onChange={(e) => setFormYear(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="">Select Year</option>
                   {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
@@ -379,7 +381,7 @@ export default function SubjectAssignmentPage() {
               <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Class <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={formClassId} onChange={(e) => setFormClassId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="">Select Class</option>
                   {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
                 </select>
@@ -395,7 +397,7 @@ export default function SubjectAssignmentPage() {
               </label>
               <div className="relative">
                 <select value={formStreamId} onChange={(e) => setFormStreamId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="">No specific stream</option>
                   {filteredStreams.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
                 </select>
@@ -408,7 +410,7 @@ export default function SubjectAssignmentPage() {
             <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Subject <span className="text-red-500">*</span></label>
             <div className="relative">
               <select value={formSubjectId} onChange={(e) => setFormSubjectId(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                 <option value="">Select Subject</option>
                 {filteredSubjectList.filter(s => s.status === "Active").map(s => (
                   <option key={s._id} value={s._id}>{s.name}{s.subject_code ? ` (${s.subject_code})` : ""}</option>
@@ -433,7 +435,7 @@ export default function SubjectAssignmentPage() {
             <button type="button" onClick={() => { setIsAddOpen(false); resetForm(); }}
               className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
             <button type="submit" disabled={submitting}
-              className="px-5 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
+              className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Assign Subject
             </button>
           </div>
@@ -444,7 +446,7 @@ export default function SubjectAssignmentPage() {
       <Modal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="Remove Assignment">
         <div className="space-y-5 text-left">
           <p className="text-[14px] text-slate-600 dark:text-slate-300">
-            Remove <span className="font-bold text-[#F59E0B]">{selected?.subject_master_id?.name}</span> from{" "}
+            Remove <span className="font-bold text-[#1E3A5F]">{selected?.subject_master_id?.name}</span> from{" "}
             <span className="font-bold text-[#0F172A] dark:text-white">{selected?.class_id?.name}</span>
             {selected?.stream_id && <> — {selected.stream_id.name}</>}?
           </p>

@@ -54,13 +54,13 @@ export default function ExaminationReportPage() {
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Examination Report</h1>
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span><span>/</span>
-            <span className="hover:text-[#F59E0B] cursor-pointer">Reports</span><span>/</span>
+            <span className="hover:text-[#1E3A5F] cursor-pointer">Reports</span><span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Examination Report</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><RefreshCw className="w-4 h-4" /></button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><Printer className="w-4 h-4" /></button>
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer"><RefreshCw className="w-4 h-4" /></button>
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer"><Printer className="w-4 h-4" /></button>
           <div className="relative">
             <button onClick={() => setIsExportOpen(!isExportOpen)} className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer">
               <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400" />
@@ -81,7 +81,7 @@ export default function ExaminationReportPage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-[#F59E0B]" />
+            <BookOpen className="w-5 h-5 text-[#1E3A5F]" />
             Examinations Overview
           </h2>
           <div className="flex items-center gap-3 flex-wrap">
@@ -100,7 +100,7 @@ export default function ExaminationReportPage() {
           <span className="text-[13px] text-slate-500">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredExams.length}</span> exams</span>
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input type="text" placeholder="Search exam…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors" />
+            <input type="text" placeholder="Search exam…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors" />
           </div>
         </div>
 
@@ -125,7 +125,7 @@ export default function ExaminationReportPage() {
               ) : filteredExams.map(e => {
                 return (
                   <tr key={e._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-4 font-bold text-[#F59E0B]">{e.title || e.name || "Untitled Exam"}</td>
+                    <td className="px-6 py-4 font-bold text-[#1E3A5F]">{e.title || e.name || "Untitled Exam"}</td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">
                       {formatExamType(e.type)}
                     </td>

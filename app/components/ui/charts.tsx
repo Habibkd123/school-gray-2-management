@@ -231,7 +231,7 @@ interface DoughnutChartProps {
   colors?: string[]; // e.g. ["#2563EB", "#10B981", "#EF4444"]
 }
 
-export function DoughnutChart({ data, colors = ["#2563EB", "#10B981", "#F59E0B", "#EF4444"] }: DoughnutChartProps) {
+export function DoughnutChart({ data, colors = ["#2563EB", "#10B981", "#1E3A5F", "#EF4444"] }: DoughnutChartProps) {
   const total = data.reduce((acc, curr) => acc + curr.value, 0);
   const size = 180;
   const radius = 55;

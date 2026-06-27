@@ -19,7 +19,7 @@ export default async function AboutHistoryPage() {
     <main className="py-20 px-4 md:px-8 max-w-5xl mx-auto min-h-[60vh]">
       <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Our History</h1>
       {foundedYear && (
-        <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-8">
+        <p className="text-[#1E3A5F] font-bold uppercase tracking-widest text-[12px] mb-8">
           Established {foundedYear} · {new Date().getFullYear() - foundedYear}+ Years of Excellence
         </p>
       )}

@@ -27,7 +27,7 @@ export default async function StudentLifeSportsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <span className="inline-block px-4 py-1.5 bg-[#F59E0B]/20 border border-[#F59E0B]/30 text-[#FDBA74] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Athletic Program</span>
+          <span className="inline-block px-4 py-1.5 bg-[#1E3A5F]/20 border border-[#1E3A5F]/30 text-[#FCA5A5] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Athletic Program</span>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">Sports & Athletics</h1>
         </div>
       </section>
@@ -39,11 +39,11 @@ export default async function StudentLifeSportsPage() {
             {/* Left/Middle Column: Details */}
             <div className="lg:col-span-2 space-y-8">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-[#F59E0B]/10 rounded-sm">
-                  <Trophy className="w-6 h-6 text-[#F59E0B]" />
+                <div className="p-3 bg-[#1E3A5F]/10 rounded-sm">
+                  <Trophy className="w-6 h-6 text-[#1E3A5F]" />
                 </div>
                 <div>
-                  <h2 className="text-[12px] font-bold text-[#F59E0B] uppercase tracking-wider">Physical Development</h2>
+                  <h2 className="text-[12px] font-bold text-[#1E3A5F] uppercase tracking-wider">Physical Development</h2>
                   <h3 className="text-2xl font-serif font-bold text-[#0F172A]">Sports at Our Campus</h3>
                 </div>
               </div>
@@ -76,18 +76,18 @@ export default async function StudentLifeSportsPage() {
             {/* Right Column: Visual Callouts */}
             <div className="space-y-6">
               <div className="bg-[#0F172A] text-white p-8 rounded-sm shadow-xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-[#F59E0B] rounded-full blur-[70px] opacity-20" />
+                <div className="absolute top-0 right-0 w-32 h-32 bg-[#1E3A5F] rounded-full blur-[70px] opacity-20" />
                 <h4 className="text-lg font-serif font-bold mb-4 relative z-10 text-white">Our Athletic Philosophy</h4>
                 <p className="text-slate-400 text-[13px] leading-relaxed mb-6 relative z-10">
                   We believe physical education and sports are integral to character building. Teamwork, discipline, resilience, and respect are cultivated on our sports fields daily.
                 </p>
                 <div className="space-y-3 relative z-10 border-t border-white/10 pt-4">
                   <div className="flex items-center gap-3 text-[13px]">
-                    <Target className="w-4 h-4 text-[#F59E0B]" />
+                    <Target className="w-4 h-4 text-[#1E3A5F]" />
                     <span>Focus on Fitness & Wellness</span>
                   </div>
                   <div className="flex items-center gap-3 text-[13px]">
-                    <Shield className="w-4 h-4 text-[#F59E0B]" />
+                    <Shield className="w-4 h-4 text-[#1E3A5F]" />
                     <span>Certified Physical Coaches</span>
                   </div>
                 </div>
@@ -98,7 +98,7 @@ export default async function StudentLifeSportsPage() {
           </div>
 
           <div className="mt-16 pt-8 border-t border-slate-100 text-center">
-            <Link href="/student-life" className="inline-flex items-center gap-2 text-[#F59E0B] font-bold text-[14px] hover:text-[#D97706] transition-colors">
+            <Link href="/student-life" className="inline-flex items-center gap-2 text-[#1E3A5F] font-bold text-[14px] hover:text-[#162C47] transition-colors">
               &larr; Back to Student Life
             </Link>
           </div>

@@ -247,7 +247,7 @@ export default function RegisterPage() {
                     type="checkbox"
                     checked={agreeTerms}
                     onChange={(e) => { setAgreeTerms(e.target.checked); setError(""); }}
-                    className="rounded border-slate-300 text-primary focus:ring-[#5D6BEE] w-3.5 h-3.5 mt-0.5 shrink-0"
+                    className="rounded border-slate-300 text-primary focus:ring-[#1E3A5F] w-3.5 h-3.5 mt-0.5 shrink-0"
                   />
                   <span className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">
                     I agree to the{" "}

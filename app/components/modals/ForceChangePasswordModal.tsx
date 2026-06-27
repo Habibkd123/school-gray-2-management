@@ -19,7 +19,7 @@ function getStrength(pw: string): { score: number; label: string; color: string 
   if (/[^A-Za-z0-9]/.test(pw)) score++;
 
   if (score <= 1) return { score, label: "Weak",   color: "#EF4444" };
-  if (score <= 2) return { score, label: "Fair",   color: "#F59E0B" };
+  if (score <= 2) return { score, label: "Fair",   color: "#1E3A5F" };
   if (score <= 3) return { score, label: "Good",   color: "#3B82F6" };
   return            { score, label: "Strong", color: "#10B981" };
 }
@@ -94,7 +94,7 @@ export function ForceChangePasswordModal({ isOpen, onSuccess }: ForceChangePassw
   const inputBorder = (hasError: boolean) =>
     hasError
       ? "border border-red-400/70 focus:border-red-400"
-      : "border border-slate-200 dark:border-slate-700/60 focus:border-[#F59E0B]";
+      : "border border-slate-200 dark:border-slate-700/60 focus:border-[#1E3A5F]";
 
   return (
     /* Full-screen non-dismissable overlay */
@@ -143,7 +143,7 @@ export function ForceChangePasswordModal({ isOpen, onSuccess }: ForceChangePassw
                 boxShadow: "0 8px 28px rgba(245,158,11,0.22)",
               }}
             >
-              <ShieldAlert className="w-8 h-8 text-[#F59E0B]" />
+              <ShieldAlert className="w-8 h-8 text-[#1E3A5F]" />
             </div>
           </div>
 
@@ -313,7 +313,7 @@ export function ForceChangePasswordModal({ isOpen, onSuccess }: ForceChangePassw
             style={{
               background: isLoading
                 ? "rgba(245,158,11,0.4)"
-                : "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
+                : "linear-gradient(135deg, #1E3A5F 0%, #162C47 100%)",
               boxShadow: isLoading ? "none" : "0 8px 24px rgba(245,158,11,0.35)",
             }}
           >

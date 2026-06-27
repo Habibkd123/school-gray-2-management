@@ -106,7 +106,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
   if (!isOpen) return null;
 
   const getAvatar = (name: string) =>
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=F1F5F9&color=5D6BEE&bold=true`;
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=F1F5F9&color=D2232A&bold=true`;
 
   const getClassName = (cid: any) => {
     if (typeof cid === "object" && cid?.name) return `${cid.name} - ${cid.section || ""}`;
@@ -204,7 +204,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
       : teacher.is_active;
     photoUrl = teacher.photo_url || "";
     badgeLabel = "💼 Teacher";
-    badgeStyle = "bg-[#F59E0B]/10 text-[#F59E0B]";
+    badgeStyle = "bg-[#1E3A5F]/10 text-[#1E3A5F]";
     showPasswordRow = userExists;
 
     if (liveUser) {
@@ -233,7 +233,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border">
           <h2 className="text-[16px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Lock className="w-4 h-4 text-[#F59E0B]" />
+            <Lock className="w-4 h-4 text-[#1E3A5F]" />
             <span>Login Details</span>
           </h2>
           <div className="flex items-center gap-2">
@@ -268,7 +268,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
           {/* Loading skeleton */}
           {loadingUser && !liveUser && (
             <div className="p-4 border border-border bg-slate-50/50 dark:bg-slate-800/20 rounded-xl flex items-center justify-center gap-3 text-slate-400 text-[13px]">
-              <Loader2 className="w-4 h-4 animate-spin text-[#F59E0B]" />
+              <Loader2 className="w-4 h-4 animate-spin text-[#1E3A5F]" />
               <span>Fetching latest login data...</span>
             </div>
           )}
@@ -298,7 +298,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
                     {email && (
                       <button
                         onClick={() => copyToClipboard(email, "email")}
-                        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-[#F59E0B] transition-colors"
+                        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-[#1E3A5F] transition-colors"
                         title="Copy email"
                       >
                         {copiedField === "email" ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
@@ -320,7 +320,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
                       </span>
                       <button
                         onClick={() => setShowPassword(v => !v)}
-                        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-[#F59E0B] transition-colors"
+                        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-[#1E3A5F] transition-colors"
                         title={showPassword ? "Hide password" : "Show password"}
                       >
                         {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
@@ -328,7 +328,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
                       {showPassword && (
                         <button
                           onClick={() => copyToClipboard(defaultPassword, "password")}
-                          className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-[#F59E0B] transition-colors"
+                          className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-[#1E3A5F] transition-colors"
                           title="Copy password"
                         >
                           {copiedField === "password" ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}

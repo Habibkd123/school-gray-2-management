@@ -247,9 +247,9 @@ export default function TeacherAssignmentPage() {
     {
       header: "Subject", accessorKey: "subject_master_id", render: (a) => (
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-[#F59E0B]/10 rounded flex items-center justify-center"><BookOpen className="w-3.5 h-3.5 text-[#F59E0B]" /></div>
+          <div className="w-6 h-6 bg-slate-100 dark:bg-slate-700 rounded flex items-center justify-center"><BookOpen className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /></div>
           <div>
-            <span className="font-bold text-[#F59E0B]">{a.subject_master_id?.name || "—"}</span>
+            <span className="font-semibold text-slate-800 dark:text-slate-200">{a.subject_master_id?.name || "—"}</span>
           </div>
         </div>
       )
@@ -282,7 +282,7 @@ export default function TeacherAssignmentPage() {
           </button>
           {isAdmin && (
             <button onClick={() => { resetForm(); setIsAddOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-[#f59e0b] hover:bg-[#d68600] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
+              className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] hover:bg-[#d68600] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
               <Plus className="w-4 h-4" /><span>Assign Teacher</span>
             </button>
           )}
@@ -368,7 +368,7 @@ export default function TeacherAssignmentPage() {
             <User className="w-10 h-10 opacity-30" />
             <p className="text-[14px] font-medium">No teacher assignments found</p>
             {isAdmin && (
-              <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="mt-2 px-4 py-2 text-[13px] font-bold bg-[#f59e0b] hover:bg-[#d68600] text-white rounded-lg">
+              <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="mt-2 px-4 py-2 text-[13px] font-bold bg-[#1E3A5F] hover:bg-[#d68600] text-white rounded-lg">
                 Assign First Teacher
               </button>
             )}
@@ -452,7 +452,7 @@ export default function TeacherAssignmentPage() {
             <button type="button" onClick={() => { setIsAddOpen(false); resetForm(); }}
               className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
             <button type="submit" disabled={submitting}
-              className="px-5 py-2.5 bg-[#f59e0b] hover:bg-[#d68600] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
+              className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#d68600] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Assign Teacher
             </button>
           </div>

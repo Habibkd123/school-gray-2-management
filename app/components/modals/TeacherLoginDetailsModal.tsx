@@ -66,7 +66,7 @@ export function TeacherLoginDetailsModal({ isOpen, onClose, teacher }: TeacherLo
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border">
           <h2 className="text-[18px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Lock className="w-5 h-5 text-[#F59E0B]" />
+            <Lock className="w-5 h-5 text-[#1E3A5F]" />
             <span>Teacher Login Details & Password</span>
           </h2>
           <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
@@ -96,7 +96,7 @@ export function TeacherLoginDetailsModal({ isOpen, onClose, teacher }: TeacherLo
           <div className="space-y-5">
             <div className="p-4 border border-border bg-slate-50/50 dark:bg-slate-800/20 rounded-xl space-y-4 text-left">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F59E0B]/10 text-[#F59E0B] text-[11px] font-bold">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#1E3A5F]/10 text-[#1E3A5F] text-[11px] font-bold">
                   💼 Teacher Login
                 </span>
                 <span className="text-[12px] text-slate-600 dark:text-slate-300 font-bold font-mono break-all">
@@ -111,13 +111,13 @@ export function TeacherLoginDetailsModal({ isOpen, onClose, teacher }: TeacherLo
                       placeholder="Enter new teacher password (min 6 chars)"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-colors"
+                      className="w-full px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F]/50 transition-colors"
                     />
                   </div>
                   <button
                     onClick={handleUpdatePassword}
                     disabled={updating || !password}
-                    className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] disabled:opacity-50 text-white text-[12px] font-bold rounded-lg transition-colors shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap"
+                    className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] disabled:opacity-50 text-white text-[12px] font-bold rounded-lg transition-colors shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap"
                   >
                     {updating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <span>Update Password</span>

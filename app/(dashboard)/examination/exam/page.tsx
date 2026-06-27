@@ -180,7 +180,7 @@ export default function ExamListPage() {
   const triggerCls = (open: boolean) =>
     `flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors cursor-pointer
      ${open
-      ? "border-[#F59E0B] text-[#F59E0B]"
+      ? "border-[#1E3A5F] text-[#1E3A5F]"
       : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
 
   const filteredData = useMemo(() => {
@@ -231,17 +231,17 @@ export default function ExamListPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/examination" className="hover:text-[#F59E0B]">Examination</Link>
+            <Link href="/examination" className="hover:text-[#1E3A5F]">Examination</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Exam</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => window.location.reload()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => window.location.reload()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
           
@@ -269,7 +269,7 @@ export default function ExamListPage() {
 
           <button 
             onClick={openAddModal}
-            className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+            className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add Exam
           </button>
@@ -309,7 +309,7 @@ export default function ExamListPage() {
                           <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
                             className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
                           <button onClick={applyCustomRange} disabled={!customFrom || !customTo}
-                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-[#F59E0B] hover:bg-[#D97706] rounded transition-colors disabled:opacity-50 cursor-pointer">
+                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded transition-colors disabled:opacity-50 cursor-pointer">
                             Apply
                           </button>
                         </div>
@@ -363,7 +363,7 @@ export default function ExamListPage() {
                     </div>
                     <div className="p-4 flex justify-end gap-3 bg-white dark:bg-slate-900 rounded-b-lg border-t border-border mt-2">
                       <button onClick={() => { setFilterType("All"); setIsFilterOpen(false); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-[#0F172A] dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer">Reset</button>
-                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer">Apply</button>
+                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer">Apply</button>
                     </div>
                   </div>
                 </>
@@ -385,7 +385,7 @@ export default function ExamListPage() {
                       <button 
                         key={item} 
                         onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
-                        className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-[#F59E0B] font-bold" : "text-slate-700 dark:text-slate-200"}`}
+                        className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-[#1E3A5F] font-bold" : "text-slate-700 dark:text-slate-200"}`}
                       >
                         {item}
                       </button>
@@ -412,7 +412,7 @@ export default function ExamListPage() {
               placeholder="Search exams..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
             />
           </div>
         </div>
@@ -423,7 +423,7 @@ export default function ExamListPage() {
             <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">
-                  <input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] cursor-pointer" />
+                  <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />
                 </th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Exam Name</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
@@ -438,7 +438,7 @@ export default function ExamListPage() {
               {loading ? (
                 <tr>
                   <td colSpan={7} className="px-6 py-16 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#F59E0B] mx-auto" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F] mx-auto" />
                     <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading exams...</p>
                   </td>
                 </tr>
@@ -451,7 +451,7 @@ export default function ExamListPage() {
               ) : pag.paged.map((item) => (
                 <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4">
-                    <input type="checkbox" className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] cursor-pointer" />
+                    <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />
                   </td>
                   <td className="px-6 py-4 font-semibold text-slate-800 dark:text-slate-100">{item.name}</td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">
@@ -470,7 +470,7 @@ export default function ExamListPage() {
                   <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                     <button 
                       onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-[#F59E0B] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-[#1E3A5F] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
@@ -514,7 +514,7 @@ export default function ExamListPage() {
               type="text"
               value={formExamName}
               onChange={(e) => setFormExamName(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
               required
               placeholder="e.g. Mid Term Exam"
             />
@@ -526,7 +526,7 @@ export default function ExamListPage() {
               <select 
                 value={formExamType}
                 onChange={(e) => setFormExamType(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
               >
                 <option value="unit_test">Unit Test</option>
                 <option value="mid_term">Mid Term</option>
@@ -543,7 +543,7 @@ export default function ExamListPage() {
               <select 
                 value={formClassId}
                 onChange={(e) => setFormClassId(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                 required
               >
                 <option value="">Select Class</option>
@@ -562,7 +562,7 @@ export default function ExamListPage() {
               type="text"
               value={formAcademicYear}
               onChange={(e) => setFormAcademicYear(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
               required
               placeholder="2026"
             />
@@ -575,7 +575,7 @@ export default function ExamListPage() {
                 type="date"
                 value={formStartDate}
                 onChange={(e) => setFormStartDate(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
               />
             </div>
             <div className="space-y-1.5">
@@ -584,7 +584,7 @@ export default function ExamListPage() {
                 type="date"
                 value={formEndDate}
                 onChange={(e) => setFormEndDate(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
               />
             </div>
           </div>
@@ -600,7 +600,7 @@ export default function ExamListPage() {
             <button 
               type="submit" 
               disabled={saving}
-              className="px-6 py-2.5 bg-[#F59E0B] text-white text-[14px] font-bold rounded-lg hover:bg-[#D97706] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
+              className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {isAddOpen ? "Add Exam" : "Save Changes"}

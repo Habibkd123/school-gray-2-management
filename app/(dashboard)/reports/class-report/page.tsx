@@ -93,13 +93,13 @@ export default function ClassReportPage() {
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Class Report</h1>
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span><span>/</span>
-            <span className="hover:text-[#F59E0B] cursor-pointer">Reports</span><span>/</span>
+            <span className="hover:text-[#1E3A5F] cursor-pointer">Reports</span><span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Class Report</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={handleRefresh} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><RefreshCw className="w-4 h-4" /></button>
-          <button onClick={() => window.print()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><Printer className="w-4 h-4" /></button>
+          <button onClick={handleRefresh} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer"><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={() => window.print()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer"><Printer className="w-4 h-4" /></button>
           <div className="relative">
             <button onClick={() => setIsExportOpen(!isExportOpen)} className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer">
               <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400" />
@@ -142,7 +142,7 @@ export default function ClassReportPage() {
                 <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-1.5">
                   {(["A–Z", "Most Students", "Least Students"] as const).map(opt => (
-                    <button key={opt} onClick={() => { setSelectedSort(opt); setPage(1); setIsSortOpen(false); }} className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left font-medium cursor-pointer ${selectedSort === opt ? "text-[#F59E0B]" : "text-slate-700 dark:text-slate-200"}`}>{opt}</button>
+                    <button key={opt} onClick={() => { setSelectedSort(opt); setPage(1); setIsSortOpen(false); }} className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left font-medium cursor-pointer ${selectedSort === opt ? "text-[#1E3A5F]" : "text-slate-700 dark:text-slate-200"}`}>{opt}</button>
                   ))}
                 </div>
               </>
@@ -154,7 +154,7 @@ export default function ClassReportPage() {
           <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{sortedClasses.length}</span> classes</span>
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input type="text" placeholder="Search class or section…" value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1); }} className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors" />
+            <input type="text" placeholder="Search class or section…" value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setPage(1); }} className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors" />
           </div>
         </div>
 
@@ -162,7 +162,7 @@ export default function ClassReportPage() {
           <table className="w-full text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
               <tr>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12"><input type="checkbox" className="rounded border-slate-300 text-[#F59E0B]" /></th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12"><input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F]" /></th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">ID</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Section</th>
@@ -177,8 +177,8 @@ export default function ClassReportPage() {
                 <tr><td colSpan={6} className="px-6 py-10 text-center text-slate-400">No classes found.</td></tr>
               ) : paginatedClasses.map(cls => (
                 <tr key={cls._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4"><input type="checkbox" className="rounded border-slate-300 text-[#F59E0B]" /></td>
-                  <td className="px-6 py-4 font-semibold text-[#F59E0B]">{cls._id.slice(-6).toUpperCase()}</td>
+                  <td className="px-6 py-4"><input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F]" /></td>
+                  <td className="px-6 py-4 font-semibold text-[#1E3A5F]">{cls._id.slice(-6).toUpperCase()}</td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{cls.name}</td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{cls.section}</td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{getStudentsInClass(cls._id).length}</td>
@@ -208,7 +208,7 @@ export default function ClassReportPage() {
                 onClick={() => setPage(p)}
                 className={`w-7 h-7 rounded-lg text-[13px] font-medium flex items-center justify-center ${
                   page === p
-                    ? "bg-[#F59E0B] text-white"
+                    ? "bg-[#1E3A5F] text-white"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
                 }`}
               >
@@ -256,7 +256,7 @@ export default function ClassReportPage() {
                     <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-400">No students in this class.</td></tr>
                   ) : modalStudents.map(s => (
                     <tr key={s._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-[#F59E0B]">{s.admission_no || s._id.slice(-6).toUpperCase()}</td>
+                      <td className="px-6 py-4 font-semibold text-[#1E3A5F]">{s.admission_no || s._id.slice(-6).toUpperCase()}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{s.roll_no || "—"}</td>
                       <td className="px-6 py-4">
                         <div className="flex flex-wrap items-center gap-2">
@@ -280,7 +280,7 @@ export default function ClassReportPage() {
               </table>
             </div>
             <div className="p-4 border-t border-border bg-white dark:bg-slate-900 flex justify-end">
-              <button onClick={() => setSelectedClassId(null)} className="px-5 py-2 bg-[#F59E0B] text-white text-[13px] font-bold rounded-lg cursor-pointer">Close</button>
+              <button onClick={() => setSelectedClassId(null)} className="px-5 py-2 bg-[#1E3A5F] text-white text-[13px] font-bold rounded-lg cursor-pointer">Close</button>
             </div>
           </div>
         </div>

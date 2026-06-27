@@ -324,7 +324,7 @@ export default function DashboardPage() {
         date: new Date(n.publish_date),
         type: 'notice',
         icon: 'Users',
-        color: '#F59E0B',
+        color: '#1E3A5F',
         bgColor: '#EAEFFF'
       }))
   ]
@@ -420,7 +420,7 @@ export default function DashboardPage() {
             <>
               <Link
                 href="/students"
-                className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-[#F59E0B] hover:bg-[#D97706] rounded-lg shadow-sm transition-colors cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded-lg shadow-sm transition-colors cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add New Student</span>
@@ -724,7 +724,7 @@ export default function DashboardPage() {
               <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow flex flex-col">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Schedules</h3>
-                  <Link href="/classes/schedule" className="text-[12px] font-semibold text-[#F59E0B] flex items-center gap-1 hover:text-[#D97706]">
+                  <Link href="/classes/schedule" className="text-[12px] font-semibold text-[#1E3A5F] flex items-center gap-1 hover:text-[#162C47]">
                     <Plus className="w-3.5 h-3.5" />
                     Add New
                   </Link>
@@ -747,7 +747,7 @@ export default function DashboardPage() {
                       const hasHoliday = holidays.some(h => new Date(h.date).toDateString() === d.toDateString());
                       return (
                         <div key={i} className={`p-2 rounded-lg font-medium text-[12px] transition-colors ${isToday
-                          ? 'bg-[#F59E0B] text-white font-bold shadow-sm'
+                          ? 'bg-[#1E3A5F] text-white font-bold shadow-sm'
                           : hasHoliday
                             ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400'
                             : isCurrentMonth
@@ -819,7 +819,7 @@ export default function DashboardPage() {
                 {/* Attendance % gauge */}
                 <div className="flex-1 mt-6 flex flex-col items-center justify-end overflow-hidden relative min-h-[140px]">
                   <svg viewBox="0 0 100 50" className="w-full sm:w-[80%] h-auto drop-shadow-md">
-                    <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#F59E0B" strokeWidth="20" />
+                    <path d="M 10 50 A 40 40 0 0 1 90 50" fill="none" stroke="#1E3A5F" strokeWidth="20" />
                     <path d="M 85 50 A 40 40 0 0 0 90 50" fill="none" stroke="#1DD04A" strokeWidth="20" />
                   </svg>
                   <div className="absolute bottom-5 text-white text-[11px] font-bold">{attendanceRateMock}%</div>
@@ -864,7 +864,7 @@ export default function DashboardPage() {
                     <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200 text-center leading-tight">Exam Result</span>
                   </Link>
                   <Link href="/attendance/student" className="flex flex-col items-center gap-2 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg group">
-                    <div className="w-12 h-12 rounded-full bg-[#FFF7E6] border border-[#FFE7B3] text-[#F59E0B] flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <div className="w-12 h-12 rounded-full bg-[#FFF7E6] border border-[#FFE7B3] text-[#1E3A5F] flex items-center justify-center group-hover:scale-105 transition-transform">
                       <UserCheck className="w-5 h-5" />
                     </div>
                     <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">Attendance</span>
@@ -889,7 +889,7 @@ export default function DashboardPage() {
               <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow flex flex-col text-left">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Class Routine</h3>
-                  <Link href="/classes/schedule" className="text-[12px] font-semibold text-[#F59E0B] flex items-center gap-1 hover:text-[#D97706]">
+                  <Link href="/classes/schedule" className="text-[12px] font-semibold text-[#1E3A5F] flex items-center gap-1 hover:text-[#162C47]">
                     <Plus className="w-3.5 h-3.5" />
                     Add New
                   </Link>
@@ -902,7 +902,7 @@ export default function DashboardPage() {
                     const subjectInfo = typeof schedule.subject_id === 'object' ? schedule?.subject_id?.name : String(schedule?.subject_id || '');
                     const teacherInfo = typeof schedule.teacher_id === 'object' ? schedule?.teacher_id : null;
                     const teacherName = teacherInfo?.name || 'Unknown Teacher';
-                    const colors = ['#F59E0B', '#FFB800', '#1DD04A'];
+                    const colors = ['#1E3A5F', '#FFB800', '#1DD04A'];
                     const avatars = ['/asset 12.webp', '/asset 14.webp', '/asset 13.webp'];
                     const teacherPhoto = teacherInfo?.photo_url || avatars[i % avatars.length];
 
@@ -938,7 +938,7 @@ export default function DashboardPage() {
             <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow flex flex-col text-left">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Leave Requests</h3>
-                <Link href="/leave/approve-leave-request" className="text-[12px] font-medium text-[#F59E0B] hover:text-[#D97706]">View All</Link>
+                <Link href="/leave/approve-leave-request" className="text-[12px] font-medium text-[#1E3A5F] hover:text-[#162C47]">View All</Link>
               </div>
               <div className="flex-1 space-y-4">
                 {leaves.filter(l => l.status === 'pending').slice(0, 3).length === 0 ? (
@@ -956,7 +956,7 @@ export default function DashboardPage() {
                           <div>
                             <h4 className="text-[13px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
                               {(leaveUser as any)?.name || 'Unknown'}
-                              <span className="bg-[#FFF7E6] text-[#F59E0B] text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">{leaveTypeName}</span>
+                              <span className="bg-[#FFF7E6] text-[#1E3A5F] text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">{leaveTypeName}</span>
                             </h4>
                             <p className="text-[11px] text-slate-500 dark:text-slate-400">{(leaveUser as any)?.role || ''}</p>
                           </div>
@@ -977,13 +977,13 @@ export default function DashboardPage() {
               ---------------------------------------------------- */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link href="/attendance/student" className="bg-[#FFF7E6] hover:bg-[#ffeed1] transition-colors rounded-xl p-4 flex items-center justify-between border border-[#FFE7B3]">
-              <div className="flex items-center gap-3 text-[#F59E0B] font-bold text-[13px]">
-                <div className="w-10 h-10 bg-[#F59E0B] rounded-lg text-white flex items-center justify-center shadow-sm">
+              <div className="flex items-center gap-3 text-[#1E3A5F] font-bold text-[13px]">
+                <div className="w-10 h-10 bg-[#1E3A5F] rounded-lg text-white flex items-center justify-center shadow-sm">
                   <UserCheck className="w-5 h-5" />
                 </div>
                 View Attendance
               </div>
-              <div className="w-6 h-6 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center text-[#F59E0B]"><ChevronRight className="w-3 h-3" /></div>
+              <div className="w-6 h-6 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center text-[#1E3A5F]"><ChevronRight className="w-3 h-3" /></div>
             </Link>
 
             <Link href="/notices" className="bg-[#E8F8E8] hover:bg-[#d5f3d5] transition-colors rounded-xl p-4 flex items-center justify-between border border-[#BDE8B5]">
@@ -1026,7 +1026,7 @@ export default function DashboardPage() {
                   const icons = [FileText, Megaphone, CalendarDays, BookOpen, Clock];
                   const Icon = icons[i % icons.length];
                   const bgColors = ['bg-[#EAEFFF]', 'bg-[#E8F8E8]', 'bg-[#FFEBF0]', 'bg-[#E6F8FF]', 'bg-[#FFF7E6]'];
-                  const textColors = ['text-[#3B66FF]', 'text-[#1DD04A]', 'text-[#FF4A6B]', 'text-[#00B5FF]', 'text-[#F59E0B]'];
+                  const textColors = ['text-[#3B66FF]', 'text-[#1DD04A]', 'text-[#FF4A6B]', 'text-[#00B5FF]', 'text-[#1E3A5F]'];
 
                   return (
                     <div key={notice._id} className="py-3.5 first:pt-0 flex items-center justify-between">
@@ -1091,13 +1091,13 @@ export default function DashboardPage() {
 
               <img src={(user as any)?.photo_url || "/asset 12.webp"} alt="Profile" className="w-full sm:w-[72px] h-[72px] rounded-lg object-cover border-2 border-slate-700 z-10 bg-slate-800" />
               <div className="z-10 text-left">
-                <span className="bg-white text-[#F59E0B] text-[9px] font-bold px-2 py-0.5 rounded uppercase">#{(user as any)?.employee_id || "T094001"}</span>
+                <span className="bg-white text-[#1E3A5F] text-[9px] font-bold px-2 py-0.5 rounded uppercase">#{(user as any)?.employee_id || "T094001"}</span>
                 <h3 className="text-[15px] font-bold text-white mt-1.5">{user?.name || "Teacher Name"}</h3>
                 <p className="text-[11px] text-slate-300 mt-0.5 line-clamp-1" title={`Classes : ${uniqueClasses.join(', ')} • ${uniqueSubjects.join(', ')}`}>
                   Classes : {uniqueClasses.length > 0 ? uniqueClasses.slice(0, 2).join(', ') : "None"}  <span className="mx-1">•</span> {uniqueSubjects.length > 0 ? uniqueSubjects[0] : "No Subject"}
                 </p>
               </div>
-              <button className="absolute bottom-4 right-4 bg-[#F59E0B] text-white text-[11px] font-bold px-3 py-1.5 rounded z-10 hover:bg-[#D97706]">
+              <button className="absolute bottom-4 right-4 bg-[#1E3A5F] text-white text-[11px] font-bold px-3 py-1.5 rounded z-10 hover:bg-[#162C47]">
                 Edit Profile
               </button>
             </div>
@@ -1107,7 +1107,7 @@ export default function DashboardPage() {
               <div className="w-full sm:w-[80px] h-[80px] relative shrink-0">
                 <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
                   <circle cx="50" cy="50" r="40" fill="none" stroke="#FF4A6B" strokeWidth="16" />
-                  <circle cx="50" cy="50" r="40" fill="none" stroke="#F59E0B" strokeWidth="16" strokeDasharray="251.2" strokeDashoffset="12.56" />
+                  <circle cx="50" cy="50" r="40" fill="none" stroke="#1E3A5F" strokeWidth="16" strokeDasharray="251.2" strokeDashoffset="12.56" />
                   {/* ~95% filled */}
                 </svg>
               </div>
@@ -1115,7 +1115,7 @@ export default function DashboardPage() {
                 <h3 className="text-[14px] font-bold text-slate-900 dark:text-white mb-3">Syllabus</h3>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-[12px] font-semibold text-slate-700 dark:text-slate-200">
-                    <span className="w-2 h-2 rounded-full bg-[#F59E0B]"></span> Completed : 95%
+                    <span className="w-2 h-2 rounded-full bg-[#1E3A5F]"></span> Completed : 95%
                   </div>
                   <div className="flex items-center gap-2 text-[12px] font-semibold text-slate-700 dark:text-slate-200">
                     <span className="w-2 h-2 rounded-full bg-[#FF4A6B]"></span> Pending : 5%
@@ -1153,7 +1153,7 @@ export default function DashboardPage() {
                       // Alternate colors for variety
                       const colors = [
                         { bg: "bg-[#FF4A6B]", text: "text-[#FF4A6B]" },
-                        { bg: "bg-[#F59E0B]", text: "text-[#F59E0B]" },
+                        { bg: "bg-[#1E3A5F]", text: "text-[#1E3A5F]" },
                         { bg: "bg-[#1DD04A]", text: "text-[#1DD04A]" },
                         { bg: "bg-[#00B5FF]", text: "text-[#00B5FF]" },
                       ];
@@ -1197,7 +1197,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="text-center p-4 bg-[#F8FAFC] dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800/50">
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase mb-1">Pending Requests</p>
-                      <p className="text-[20px] font-bold text-[#F59E0B]">{pendingLeaves}</p>
+                      <p className="text-[20px] font-bold text-[#1E3A5F]">{pendingLeaves}</p>
                     </div>
                   </div>
 
@@ -1214,7 +1214,7 @@ export default function DashboardPage() {
                           </div>
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded capitalize ${leave.status === 'approved' ? 'bg-[#E8F8E8] text-[#1D7F2C]' :
                             leave.status === 'rejected' ? 'bg-[#FFEBF0] text-[#FF4A6B]' :
-                              'bg-[#FFF7E6] text-[#F59E0B]'
+                              'bg-[#FFF7E6] text-[#1E3A5F]'
                             }`}>
                             {leave.status}
                           </span>
@@ -1231,14 +1231,14 @@ export default function DashboardPage() {
                   <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow text-left">
                     <div className="flex items-center justify-between mb-6">
                       <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Best Performers</h3>
-                      <Link href="/examination/result" className="text-[12px] font-semibold text-[#F59E0B]">View All</Link>
+                      <Link href="/examination/result" className="text-[12px] font-semibold text-[#1E3A5F]">View All</Link>
                     </div>
 
                     <div className="space-y-5">
                       {bestPerformers.length > 0 ? (
                         bestPerformers.map((result, idx) => {
                           const colors = [
-                            { bg: 'bg-[#F59E0B]', bgTrack: 'bg-[#EAEFFF] dark:bg-[#F59E0B]/20' },
+                            { bg: 'bg-[#1E3A5F]', bgTrack: 'bg-[#EAEFFF] dark:bg-[#1E3A5F]/20' },
                             { bg: 'bg-[#FFB800]', bgTrack: 'bg-[#FFF7E6] dark:bg-[#FFB800]/20' },
                             { bg: 'bg-[#00B5FF]', bgTrack: 'bg-[#E6F8FF] dark:bg-[#00B5FF]/20' },
                           ];
@@ -1336,7 +1336,7 @@ export default function DashboardPage() {
               <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow flex flex-col">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Schedules</h3>
-                  <button className="text-[12px] font-semibold text-[#F59E0B] flex items-center gap-1 hover:text-[#D97706]">
+                  <button className="text-[12px] font-semibold text-[#1E3A5F] flex items-center gap-1 hover:text-[#162C47]">
                     <Plus className="w-3.5 h-3.5" />
                     Add New
                   </button>
@@ -1363,7 +1363,7 @@ export default function DashboardPage() {
                       const isCurrentMonth = calDate.getMonth() === today.getMonth();
                       const isToday = calDate.toDateString() === today.toDateString();
                       return (
-                        <div key={idx} className={`p-2 ${!isCurrentMonth ? 'text-slate-400 dark:text-slate-500' : ''} ${isToday ? 'bg-[#F59E0B] text-white rounded-lg font-bold shadow-sm' : ''}`}>
+                        <div key={idx} className={`p-2 ${!isCurrentMonth ? 'text-slate-400 dark:text-slate-500' : ''} ${isToday ? 'bg-[#1E3A5F] text-white rounded-lg font-bold shadow-sm' : ''}`}>
                           {calDate.getDate()}
                         </div>
                       );
@@ -1405,7 +1405,7 @@ export default function DashboardPage() {
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow text-left">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Syllabus / Lesson Plan</h3>
-              <Link href="#" className="text-[12px] font-semibold text-[#F59E0B]">View All</Link>
+              <Link href="#" className="text-[12px] font-semibold text-[#1E3A5F]">View All</Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1417,7 +1417,7 @@ export default function DashboardPage() {
                 </div>
                 <h4 className="text-[13px] font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">Introduction Note to Physics on Tech</h4>
                 <div className="flex items-center justify-between border-t border-border pt-3 mt-auto">
-                  <button className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:text-[#F59E0B]">
+                  <button className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:text-[#1E3A5F]">
                     <RefreshCcw className="w-3 h-3" /> Reschedule
                   </button>
                   <button className="text-[11px] font-semibold text-[#00B5FF] flex items-center gap-1.5 hover:text-[#0091cc]">
@@ -1428,12 +1428,12 @@ export default function DashboardPage() {
 
               {/* Lesson 2 */}
               <div className="border border-border rounded-xl p-4 flex flex-col justify-between h-[140px] hover:shadow-md transition-shadow">
-                <div className="bg-[#FFF7E6] text-[#F59E0B] text-[11px] font-bold text-center py-1.5 rounded-md mb-3">
+                <div className="bg-[#FFF7E6] text-[#1E3A5F] text-[11px] font-bold text-center py-1.5 rounded-md mb-3">
                   Class V, A
                 </div>
                 <h4 className="text-[13px] font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">Biometric & their Working Functionality</h4>
                 <div className="flex items-center justify-between border-t border-border pt-3 mt-auto">
-                  <button className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:text-[#F59E0B]">
+                  <button className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:text-[#1E3A5F]">
                     <RefreshCcw className="w-3 h-3" /> Reschedule
                   </button>
                   <button className="text-[11px] font-semibold text-[#00B5FF] flex items-center gap-1.5 hover:text-[#0091cc]">
@@ -1449,7 +1449,7 @@ export default function DashboardPage() {
                 </div>
                 <h4 className="text-[13px] font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">Analyze and interpret literary texts skills</h4>
                 <div className="flex items-center justify-between border-t border-border pt-3 mt-auto">
-                  <button className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:text-[#F59E0B]">
+                  <button className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:text-[#1E3A5F]">
                     <RefreshCcw className="w-3 h-3" /> Reschedule
                   </button>
                   <button className="text-[11px] font-semibold text-[#00B5FF] flex items-center gap-1.5 hover:text-[#0091cc]">
@@ -1465,7 +1465,7 @@ export default function DashboardPage() {
                 </div>
                 <h4 className="text-[13px] font-bold text-slate-900 dark:text-white mb-2 line-clamp-2">Enhance vocabulary and grammar skills</h4>
                 <div className="flex items-center justify-between border-t border-border pt-3 mt-auto">
-                  <button className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:text-[#F59E0B]">
+                  <button className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5 hover:text-[#1E3A5F]">
                     <RefreshCcw className="w-3 h-3" /> Reschedule
                   </button>
                   <button className="text-[11px] font-semibold text-[#00B5FF] flex items-center gap-1.5 hover:text-[#0091cc]">
@@ -1583,7 +1583,7 @@ export default function DashboardPage() {
                 {/* Leave 2 */}
                 <div className="border border-border rounded-xl p-4 flex items-center justify-between">
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#EAEFFF] text-[#F59E0B] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-[#EAEFFF] text-[#1E3A5F] flex items-center justify-center">
                       <CalendarDays className="w-4 h-4" />
                     </div>
                     <div>
@@ -1597,7 +1597,7 @@ export default function DashboardPage() {
                 {/* Leave 3 */}
                 <div className="border border-border rounded-xl p-4 flex items-center justify-between">
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#EAEFFF] text-[#F59E0B] flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-[#EAEFFF] text-[#1E3A5F] flex items-center justify-center">
                       <CalendarDays className="w-4 h-4" />
                     </div>
                     <div>
@@ -1693,7 +1693,7 @@ export default function DashboardPage() {
                         }
                       </div>
                       <div>
-                        <span className="bg-white text-[#F59E0B] text-[9px] font-bold px-2 py-0.5 rounded uppercase">#{(displayStudent as any)?.roll_no || "ST123456"}</span>
+                        <span className="bg-white text-[#1E3A5F] text-[9px] font-bold px-2 py-0.5 rounded uppercase">#{(displayStudent as any)?.roll_no || "ST123456"}</span>
                         <h3 className="text-[16px] font-bold mt-1.5">{(displayStudent as any)?.name}</h3>
                         <p className="text-[11px] text-white/70 mt-0.5">
                           Class : {(displayStudent as any)?.class_id ? `${(displayStudent as any).class_id?.name} ${(displayStudent as any).class_id?.section}` : "N/A"}
@@ -1737,8 +1737,8 @@ export default function DashboardPage() {
                         const endMins = parseInt(endParts[0]) * 60 + parseInt(endParts[1] || "0");
 
                         let status = "Yet to Start";
-                        let statusColor = "bg-[#FFF5E6] text-[#F59E0B]";
-                        let dotColor = "bg-[#F59E0B]";
+                        let statusColor = "bg-[#FFF5E6] text-[#1E3A5F]";
+                        let dotColor = "bg-[#1E3A5F]";
 
                         if (currentTime >= endMins) {
                           status = "Completed";
@@ -1787,7 +1787,7 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="bg-[#F8FAFC] dark:bg-slate-800/50 rounded flex items-center gap-2 p-2 mb-4">
-                      <CalendarIcon className="w-4 h-4 text-[#F59E0B]" />
+                      <CalendarIcon className="w-4 h-4 text-[#1E3A5F]" />
                       <span className="text-[12px] font-bold text-slate-700 dark:text-slate-300">
                         {today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} Attendance
                       </span>
@@ -1882,7 +1882,7 @@ export default function DashboardPage() {
                     </Link>
                     <Link href="/academic/class-routine" className="bg-white dark:bg-slate-900 border border-border rounded-xl p-3 flex items-center gap-2 justify-center hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
                       <div className="w-6 h-6 rounded bg-[#FFF5E6] flex items-center justify-center">
-                        <CalendarIcon className="w-3.5 h-3.5 text-[#F59E0B]" />
+                        <CalendarIcon className="w-3.5 h-3.5 text-[#1E3A5F]" />
                       </div>
                       <span className="text-[12px] font-bold text-slate-700 dark:text-slate-200">Calendar</span>
                     </Link>
@@ -1920,7 +1920,7 @@ export default function DashboardPage() {
                         const hasHoliday = holidays.some(h => new Date(h.date).toDateString() === d.toDateString());
                         return (
                           <div key={i} className={`text-[12px] py-1.5 flex justify-center`}>
-                            <span className={`w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'bg-[#F59E0B] text-white font-bold shadow-md shadow-[#F59E0B]/30'
+                            <span className={`w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'bg-[#1E3A5F] text-white font-bold shadow-md shadow-[#1E3A5F]/30'
                               : hasHoliday ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-600'
                                 : isCurrentMonth ? 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer'
                                   : 'text-slate-300 dark:text-slate-600'
@@ -2006,8 +2006,8 @@ export default function DashboardPage() {
                           <stop offset="100%" stopColor="#00B5FF" stopOpacity="0" />
                         </linearGradient>
                         <linearGradient id="gradNavy" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.2" />
-                          <stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+                          <stop offset="0%" stopColor="#1E3A5F" stopOpacity="0.2" />
+                          <stop offset="100%" stopColor="#1E3A5F" stopOpacity="0" />
                         </linearGradient>
                       </defs>
 
@@ -2023,13 +2023,13 @@ export default function DashboardPage() {
 
                       {/* Avg Exam Score (Navy Blue) line + area */}
                       <path d="M0,85 Q15,80 25,70 T50,60 T75,80 T100,50 L100,85 L0,85 Z" fill="url(#gradNavy)" />
-                      <path d="M0,85 Q15,80 25,70 T50,60 T75,80 T100,50" fill="none" stroke="#F59E0B" strokeWidth="2" />
+                      <path d="M0,85 Q15,80 25,70 T50,60 T75,80 T100,50" fill="none" stroke="#1E3A5F" strokeWidth="2" />
 
                       {/* Dots for navy line */}
-                      <circle cx="25" cy="70" r="1.5" fill="#F59E0B" />
-                      <circle cx="50" cy="60" r="1.5" fill="#F59E0B" />
-                      <circle cx="75" cy="80" r="1.5" fill="#F59E0B" />
-                      <circle cx="100" cy="50" r="1.5" fill="#F59E0B" />
+                      <circle cx="25" cy="70" r="1.5" fill="#1E3A5F" />
+                      <circle cx="50" cy="60" r="1.5" fill="#1E3A5F" />
+                      <circle cx="75" cy="80" r="1.5" fill="#1E3A5F" />
+                      <circle cx="100" cy="50" r="1.5" fill="#1E3A5F" />
                     </svg>
 
                     {/* X-axis labels */}
@@ -2045,7 +2045,7 @@ export default function DashboardPage() {
                   {/* Legend */}
                   <div className="flex items-center justify-center gap-6 mt-4">
                     <div className="flex flex-wrap items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-[#F59E0B]"></div>
+                      <div className="w-2 h-2 rounded-full bg-[#1E3A5F]"></div>
                       <span className="text-[11px] text-slate-500 font-medium">Avg. Exam Score</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -2258,7 +2258,7 @@ export default function DashboardPage() {
                     {studentResults.length > 0 ? studentResults.slice(0, 5).map((r, i) => {
                       const subName = typeof r.subject_id === 'object' ? (r.subject_id as any)?.name : 'Sub';
                       const pct = r.total_marks > 0 ? Math.round((r.marks_obtained / r.total_marks) * 100) : 0;
-                      const barColor = pct >= 90 ? "bg-[#1DD04A]" : pct >= 75 ? "bg-[#F59E0B]" : pct >= 50 ? "bg-[#3B82F6]" : "bg-[#EF4444]";
+                      const barColor = pct >= 90 ? "bg-[#1DD04A]" : pct >= 75 ? "bg-[#1E3A5F]" : pct >= 50 ? "bg-[#3B82F6]" : "bg-[#EF4444]";
                       return (
                         <div key={i} className="flex flex-col items-center gap-1 z-10">
                           <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{pct}%</span>
@@ -2276,7 +2276,7 @@ export default function DashboardPage() {
                 <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex flex-col">
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Recent Payments</h3>
-                    <Link href={activeRole === "parent" ? "/parent/fees" : "/fees"} className="text-[12px] font-semibold text-[#F59E0B]">View All</Link>
+                    <Link href={activeRole === "parent" ? "/parent/fees" : "/fees"} className="text-[12px] font-semibold text-[#1E3A5F]">View All</Link>
                   </div>
 
                   <div className="space-y-3 flex-1">
@@ -2314,7 +2314,7 @@ export default function DashboardPage() {
                       {studentResults.slice(0, 7).map((r, i) => {
                         const subName = typeof r.subject_id === 'object' ? (r.subject_id as any)?.name : 'Subject';
                         const pct = r.total_marks > 0 ? Math.round((r.marks_obtained / r.total_marks) * 100) : 0;
-                        const color = pct >= 80 ? '#1DD04A' : pct >= 60 ? '#F59E0B' : pct >= 40 ? '#00B5FF' : '#EF4444';
+                        const color = pct >= 80 ? '#1DD04A' : pct >= 60 ? '#1E3A5F' : pct >= 40 ? '#00B5FF' : '#EF4444';
                         return (
                           <div key={r._id || i}>
                             <div className="flex items-center justify-between mb-1">
@@ -2342,13 +2342,13 @@ export default function DashboardPage() {
                 <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex flex-col text-left">
                   <div className="flex items-center justify-between mb-5">
                     <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Notice Board</h3>
-                    <Link href="/notices" className="text-[12px] font-semibold text-[#F59E0B]">View All</Link>
+                    <Link href="/notices" className="text-[12px] font-semibold text-[#1E3A5F]">View All</Link>
                   </div>
 
                   <div className="space-y-4">
                     {notices.filter(n => n.is_published).sort((a, b) => new Date(b.publish_date).getTime() - new Date(a.publish_date).getTime()).slice(0, 5).length > 0
                       ? notices.filter(n => n.is_published).sort((a, b) => new Date(b.publish_date).getTime() - new Date(a.publish_date).getTime()).slice(0, 5).map((notice, i) => {
-                        const colors = ['bg-[#EAEFFF] text-[#F59E0B]', 'bg-[#E8F8E8] text-[#1DD04A]', 'bg-[#FFEBF0] text-[#EF4444]', 'bg-[#E6F8FF] text-[#00B5FF]', 'bg-[#FFF5E6] text-[#F59E0B]'];
+                        const colors = ['bg-[#EAEFFF] text-[#1E3A5F]', 'bg-[#E8F8E8] text-[#1DD04A]', 'bg-[#FFEBF0] text-[#EF4444]', 'bg-[#E6F8FF] text-[#00B5FF]', 'bg-[#FFF5E6] text-[#1E3A5F]'];
                         return (
                           <div key={notice._id || i} className="flex items-start gap-3">
                             <div className={`w-8 h-8 rounded flex items-center justify-center shrink-0 ${colors[i % colors.length]}`}>
@@ -2382,7 +2382,7 @@ export default function DashboardPage() {
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
-                        <div className="w-4 h-4 rounded bg-[#F59E0B] flex items-center justify-center text-white shrink-0 mt-0.5">
+                        <div className="w-4 h-4 rounded bg-[#1E3A5F] flex items-center justify-center text-white shrink-0 mt-0.5">
                           <CheckCircle2 className="w-3 h-3" />
                         </div>
                         <div>
@@ -2412,7 +2412,7 @@ export default function DashboardPage() {
                           <p className="text-[10px] text-slate-500 mt-0.5">04:55 PM</p>
                         </div>
                       </div>
-                      <span className="bg-[#FFF5E6] text-[#F59E0B] text-[9px] font-bold px-2 py-0.5 rounded ml-2 shrink-0">Yet to Start</span>
+                      <span className="bg-[#FFF5E6] text-[#1E3A5F] text-[9px] font-bold px-2 py-0.5 rounded ml-2 shrink-0">Yet to Start</span>
                     </div>
 
                     <div className="flex items-start justify-between">
@@ -2423,7 +2423,7 @@ export default function DashboardPage() {
                           <p className="text-[10px] text-slate-500 mt-0.5">04:55 PM</p>
                         </div>
                       </div>
-                      <span className="bg-[#FFF5E6] text-[#F59E0B] text-[9px] font-bold px-2 py-0.5 rounded ml-2 shrink-0">Yet to Start</span>
+                      <span className="bg-[#FFF5E6] text-[#1E3A5F] text-[9px] font-bold px-2 py-0.5 rounded ml-2 shrink-0">Yet to Start</span>
                     </div>
 
                     <div className="flex items-start justify-between">
@@ -2434,7 +2434,7 @@ export default function DashboardPage() {
                           <p className="text-[10px] text-slate-500 mt-0.5">05:55 PM</p>
                         </div>
                       </div>
-                      <span className="bg-[#FFF5E6] text-[#F59E0B] text-[9px] font-bold px-2 py-0.5 rounded ml-2 shrink-0">Yet to Start</span>
+                      <span className="bg-[#FFF5E6] text-[#1E3A5F] text-[9px] font-bold px-2 py-0.5 rounded ml-2 shrink-0">Yet to Start</span>
                     </div>
                   </div>
                 </div>

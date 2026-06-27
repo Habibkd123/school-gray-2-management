@@ -19,14 +19,14 @@ export default async function VisionMissionPage() {
   return (
     <main className="py-20 px-4 md:px-8 max-w-5xl mx-auto min-h-[60vh]">
       <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Vision & Mission</h1>
-      <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-12">Our Purpose & Goals</p>
+      <p className="text-[#1E3A5F] font-bold uppercase tracking-widest text-[12px] mb-12">Our Purpose & Goals</p>
 
       {(vision || mission) ? (
         <div className="grid md:grid-cols-2 gap-10">
           {vision && (
-            <div className="bg-white p-10 rounded-sm border border-slate-200 shadow-md border-t-4 border-t-[#F59E0B]">
-              <div className="w-14 h-14 bg-[#F59E0B]/10 rounded-full flex items-center justify-center mb-6">
-                <Eye className="w-7 h-7 text-[#F59E0B]" />
+            <div className="bg-white p-10 rounded-sm border border-slate-200 shadow-md border-t-4 border-t-[#1E3A5F]">
+              <div className="w-14 h-14 bg-[#1E3A5F]/10 rounded-full flex items-center justify-center mb-6">
+                <Eye className="w-7 h-7 text-[#1E3A5F]" />
               </div>
               <h2 className="text-2xl font-serif font-bold text-[#0F172A] mb-4">Our Vision</h2>
               <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{vision}</p>

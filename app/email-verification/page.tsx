@@ -48,7 +48,7 @@ export default function EmailVerificationPage() {
         style={{ backgroundImage: `url('https://preskool.dreamstechnologies.com/html/assets/img/authentication/authentication-01.jpg')` }}
       >
         {/* Blue Tint Overlay */}
-        <div className="absolute inset-0 bg-[#5D6BEE]/80 dark:bg-slate-900/80 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-[#1E3A5F]/80 dark:bg-slate-900/80 backdrop-blur-[2px]" />
 
         {/* Glassmorphism Card */}
         <div className="relative z-10 w-full max-w-full sm:w-[500px] bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-6 shadow-2xl">
@@ -77,7 +77,7 @@ export default function EmailVerificationPage() {
             <div className="w-10 h-10 rounded-xl overflow-hidden bg-white shadow-sm shrink-0">
               <img src="/logo.png" alt="Logo" className="w-full h-full object-contain p-1" />
             </div>
-            <span className="text-[24px] font-bold text-slate-800 dark:text-slate-100 tracking-tight">MySchool<span className="text-[#5D6BEE]">Life</span></span>
+            <span className="text-[24px] font-bold text-slate-800 dark:text-slate-100 tracking-tight">MySchool<span className="text-[#1E3A5F]">Life</span></span>
           </div>
         </div>
 
@@ -93,7 +93,7 @@ export default function EmailVerificationPage() {
 
             <p className="text-[13px] text-slate-600 dark:text-slate-300 font-medium mb-6">
               Didn't receive an email?{" "}
-              <button className="text-[#5D6BEE] hover:text-[#4b58ce] transition-colors">
+              <button className="text-[#1E3A5F] hover:text-[#4b58ce] transition-colors">
                 Resend Link
               </button>
             </p>
@@ -101,7 +101,7 @@ export default function EmailVerificationPage() {
             <button
               onClick={handleSkip}
               disabled={isLoading}
-              className="w-full flex items-center justify-center py-2.5 bg-[#5D6BEE] hover:bg-[#4b58ce] text-white rounded-lg text-[13px] font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+              className="w-full flex items-center justify-center py-2.5 bg-[#1E3A5F] hover:bg-[#4b58ce] text-white rounded-lg text-[13px] font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
             >
               {isLoading ? (
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

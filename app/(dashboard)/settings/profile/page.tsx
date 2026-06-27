@@ -22,7 +22,7 @@ interface ParentProfile {
 }
 
 function getAvatar(name: string) {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=5D6BEE&color=fff&bold=true&size=200`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=D2232A&color=fff&bold=true&size=200`;
 }
 
 export default function ProfilePage() {
@@ -361,7 +361,7 @@ export default function ProfilePage() {
                   <button
                     onClick={() => handleConfigToggle("enable_streams", !config.enable_streams)}
                     disabled={savingConfig !== null}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_streams ? "bg-[#F59E0B]" : "bg-slate-300 dark:bg-slate-700"}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_streams ? "bg-[#1E3A5F]" : "bg-slate-300 dark:bg-slate-700"}`}
                   >
                     {savingConfig === "streams" && <Loader2 className="absolute left-0 right-0 mx-auto w-3 h-3 animate-spin text-white" />}
                     <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${config.enable_streams ? "translate-x-6" : "translate-x-1"}`} />
@@ -377,7 +377,7 @@ export default function ProfilePage() {
                   <button
                     onClick={() => handleConfigToggle("enable_sections", !config.enable_sections)}
                     disabled={savingConfig !== null}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_sections ? "bg-[#F59E0B]" : "bg-slate-300 dark:bg-slate-700"}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_sections ? "bg-[#1E3A5F]" : "bg-slate-300 dark:bg-slate-700"}`}
                   >
                     {savingConfig === "sections" && <Loader2 className="absolute left-0 right-0 mx-auto w-3 h-3 animate-spin text-white" />}
                     <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${config.enable_sections ? "translate-x-6" : "translate-x-1"}`} />

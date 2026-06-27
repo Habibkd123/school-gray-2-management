@@ -188,7 +188,7 @@ export default function MyAttendancePage() {
 
       {pageLoading && records.length === 0 ? (
         <div className="py-20 flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#F59E0B]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F]" />
           <span>Loading your attendance...</span>
         </div>
       ) : (
@@ -243,7 +243,7 @@ export default function MyAttendancePage() {
                 Detailed Attendance Records
               </h2>
               {pageLoading && (
-                <Loader2 className="w-4 h-4 animate-spin text-[#F59E0B]" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#1E3A5F]" />
               )}
             </div>
             {records.length === 0 ? (

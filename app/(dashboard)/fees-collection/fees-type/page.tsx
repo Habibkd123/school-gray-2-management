@@ -54,7 +54,7 @@ export default function FeesTypePage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/fees-collection" className="hover:text-[#F59E0B]">Fees Collection</Link>
+            <Link href="/fees-collection" className="hover:text-[#1E3A5F]">Fees Collection</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Fees Type</span>
           </div>
@@ -62,7 +62,7 @@ export default function FeesTypePage() {
 
         <button 
           onClick={() => { setEditItem(null); setForm({ name: "", description: "" }); setIsAddOpen(true); }}
-          className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+          className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Add Fee Type
         </button>
@@ -84,7 +84,7 @@ export default function FeesTypePage() {
               placeholder="Search by name..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
             />
           </div>
         </div>
@@ -114,7 +114,7 @@ export default function FeesTypePage() {
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{t.description || "—"}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => handleEdit(t)} className="p-1.5 text-slate-400 hover:text-[#F59E0B] transition-colors"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => handleEdit(t)} className="p-1.5 text-slate-400 hover:text-[#1E3A5F] transition-colors"><Edit2 className="w-4 h-4" /></button>
                       <button onClick={() => handleDelete(t._id)} className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </td>
@@ -135,15 +135,15 @@ export default function FeesTypePage() {
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Name</label>
-                <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors" placeholder="e.g. Tuition Fee" />
+                <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors" placeholder="e.g. Tuition Fee" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Description</label>
-                <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors min-h-[100px]" placeholder="Optional description..." />
+                <textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors min-h-[100px]" placeholder="Optional description..." />
               </div>
               <div className="flex justify-end gap-3 pt-4 border-t border-border mt-6">
                 <button type="button" onClick={() => setIsAddOpen(false)} className="px-4 py-2 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">Cancel</button>
-                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50">
+                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
                 </button>
               </div>

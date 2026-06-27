@@ -18,7 +18,7 @@ import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar
 // ─── Helpers ──────────────────────────────────────────────────────────────
 function getAvatar(name: string, photo_url?: string) {
   if (photo_url) return photo_url;
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=5D6BEE&color=fff&bold=true`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=D2232A&color=fff&bold=true`;
 }
 
 function formatDate(d?: string | Date) {
@@ -250,7 +250,7 @@ export default function GuardiansPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex items-center gap-3 text-slate-500">
-          <Loader2 className="w-6 h-6 animate-spin text-[#F59E0B]" />
+          <Loader2 className="w-6 h-6 animate-spin text-[#1E3A5F]" />
           <span className="text-[14px] font-medium">Loading parents...</span>
         </div>
       </div>
@@ -270,7 +270,7 @@ export default function GuardiansPage() {
   const triggerCls = (open: boolean) =>
     `flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors
      ${open
-      ? "border-[#F59E0B] text-[#F59E0B]"
+      ? "border-[#1E3A5F] text-[#1E3A5F]"
       : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
 
   return (
@@ -340,7 +340,7 @@ export default function GuardiansPage() {
                           <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
                             className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900" />
                           <button onClick={applyCustomRange} disabled={!customFrom || !customTo}
-                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-[#F59E0B] hover:bg-[#D97706] rounded transition-colors disabled:opacity-50">
+                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded transition-colors disabled:opacity-50">
                             Apply
                           </button>
                         </div>
@@ -377,12 +377,12 @@ export default function GuardiansPage() {
                       <div className="flex flex-col gap-1.5 text-left">
                         <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Parent Name</label>
                         <input value={filterParent} onChange={e => setFilterParent(e.target.value)} placeholder="Search..."
-                          className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none appearance-none bg-white dark:bg-slate-900 focus:border-[#F59E0B]/50 transition-all" />
+                          className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none appearance-none bg-white dark:bg-slate-900 focus:border-[#1E3A5F]/50 transition-all" />
                       </div>
                       <div className="flex flex-col gap-1.5 text-left">
                         <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Child Name</label>
                         <input value={filterChild} onChange={e => setFilterChild(e.target.value)} placeholder="Search..."
-                          className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none bg-white dark:bg-slate-900 focus:border-[#F59E0B]/50 transition-all" />
+                          className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none bg-white dark:bg-slate-900 focus:border-[#1E3A5F]/50 transition-all" />
                       </div>
                       <div className="flex flex-col gap-1.5 text-left col-span-2">
                         <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Status</label>
@@ -400,7 +400,7 @@ export default function GuardiansPage() {
                         Reset
                       </button>
                       <button onClick={() => setIsFilterOpen(false)}
-                        className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white bg-[#F59E0B] hover:bg-[#D97706] transition-colors shadow-sm">
+                        className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C47] transition-colors shadow-sm">
                         Apply
                       </button>
                     </div>
@@ -412,11 +412,11 @@ export default function GuardiansPage() {
             {/* ── View Toggle ── */}
             <div className="flex items-center border border-border rounded-lg bg-white dark:bg-slate-900 p-1">
               <button onClick={() => setViewMode("list")} title="List view"
-                className={`p-1 rounded transition-colors ${viewMode === "list" ? "bg-[#F59E0B] text-white" : "text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+                className={`p-1 rounded transition-colors ${viewMode === "list" ? "bg-[#1E3A5F] text-white" : "text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
                 <List className="w-4 h-4" />
               </button>
               <button onClick={() => setViewMode("grid")} title="Grid view"
-                className={`p-1 rounded transition-colors ${viewMode === "grid" ? "bg-[#F59E0B] text-white" : "text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+                className={`p-1 rounded transition-colors ${viewMode === "grid" ? "bg-[#1E3A5F] text-white" : "text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
                 <LayoutGrid className="w-4 h-4" />
               </button>
             </div>
@@ -435,7 +435,7 @@ export default function GuardiansPage() {
                     {["Ascending", "Descending", "Recently Added"].map((item) => (
                       <button key={item} onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
                         className={`w-full px-4 py-2.5 text-[14px] text-left transition-colors font-medium cursor-pointer
-                          ${item === selectedSort ? "bg-[#F59E0B] text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                          ${item === selectedSort ? "bg-[#1E3A5F] text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
                         {item}
                       </button>
                     ))}
@@ -462,7 +462,7 @@ export default function GuardiansPage() {
               placeholder="Search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-[250px] pl-9 pr-4 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all"
+              className="w-full sm:w-[250px] pl-9 pr-4 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F]/50 transition-all"
             />
           </div>
         </div>
@@ -474,7 +474,7 @@ export default function GuardiansPage() {
               <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
                 <tr>
                   <th className="px-4 py-4 text-left w-10">
-                    <input type="checkbox" className="rounded border-slate-300 w-4 h-4 accent-[#F59E0B]" />
+                    <input type="checkbox" className="rounded border-slate-300 w-4 h-4 accent-[#1E3A5F]" />
                   </th>
                   <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">
                     <div className="flex items-center gap-1">ID <ArrowUpDown className="w-3 h-3 text-slate-400" /></div>
@@ -499,14 +499,14 @@ export default function GuardiansPage() {
                   return (
                     <tr key={parent._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-4 py-4">
-                        <input type="checkbox" className="rounded border-slate-300 w-4 h-4 accent-[#F59E0B]" />
+                        <input type="checkbox" className="rounded border-slate-300 w-4 h-4 accent-[#1E3A5F]" />
                       </td>
 
                       {/* Parent ID — amber, clickable → View Details */}
                       <td className="px-4 py-4">
                         <button
                           onClick={(e) => { e.stopPropagation(); router.push(`/guardians/${parent._id}`); }}
-                          className="font-semibold text-[#F59E0B] hover:text-[#D97706] hover:underline transition-colors"
+                          className="font-semibold text-[#1E3A5F] hover:text-[#162C47] hover:underline transition-colors"
                         >
                           {parent._id.slice(-6).toUpperCase()}
                         </button>
@@ -532,7 +532,7 @@ export default function GuardiansPage() {
                           >
                             <img src={getAvatar(firstChild.name)} className="w-7 h-7 rounded-full object-cover border border-border" alt="" />
                             <div className="text-left">
-                              <div className="font-semibold text-slate-900 dark:text-white group-hover/child:text-[#F59E0B] transition-colors">
+                              <div className="font-semibold text-slate-900 dark:text-white group-hover/child:text-[#1E3A5F] transition-colors">
                                 {firstChild.name}
                                 {parent.children && parent.children.length > 1 && (
                                   <span className="ml-1.5 text-[11px] text-slate-400 font-normal">+{parent.children.length - 1} more</span>
@@ -553,7 +553,7 @@ export default function GuardiansPage() {
                           <div className="relative">
                             <button
                               onClick={() => setActiveDropdown(activeDropdown === parent._id ? null : parent._id)}
-                              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-[#F59E0B] text-white hover:bg-[#D97706]"
+                              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-[#1E3A5F] text-white hover:bg-[#162C47]"
                             >
                               <MoreVertical className="w-4 h-4" />
                             </button>
@@ -602,13 +602,13 @@ export default function GuardiansPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {gridPag.paged.map((parent) => (
                   <div key={parent._id}
-                    className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 relative group flex flex-col hover:border-[#F59E0B]/50 transition-colors">
+                    className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 relative group flex flex-col hover:border-[#1E3A5F]/50 transition-colors">
 
                     {/* Card top row */}
                     <div className="flex items-center justify-between mb-4">
                       <button
                         onClick={() => router.push(`/guardians/${parent._id}`)}
-                        className="font-bold text-[13px] text-[#F59E0B] hover:underline"
+                        className="font-bold text-[13px] text-[#1E3A5F] hover:underline"
                       >
                         {parent._id.slice(-6).toUpperCase()}
                       </button>
@@ -641,7 +641,7 @@ export default function GuardiansPage() {
                     <div className="flex items-center gap-4 mb-5 cursor-pointer" onClick={() => router.push(`/guardians/${parent._id}`)}>
                       <img src={getAvatar(parent.name, parent.photo_url)} className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" alt="" />
                       <div>
-                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-[#F59E0B] transition-colors">{parent.name}</h3>
+                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-[#1E3A5F] transition-colors">{parent.name}</h3>
                         <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400">{parent.relation || "Parent"}</p>
                       </div>
                     </div>
@@ -677,7 +677,7 @@ export default function GuardiansPage() {
                           <button
                             key={child._id}
                             onClick={(e) => { e.stopPropagation(); router.push(`/students/${child._id}`); }}
-                            className="inline-flex items-center px-2.5 py-1 bg-[#FFF3CD] hover:bg-[#F59E0B] text-[#92400E] hover:text-white text-[11px] font-semibold rounded transition-colors cursor-pointer"
+                            className="inline-flex items-center px-2.5 py-1 bg-[#FFF3CD] hover:bg-[#1E3A5F] text-[#92400E] hover:text-white text-[11px] font-semibold rounded transition-colors cursor-pointer"
                             title={`View ${child.name}'s profile`}
                           >
                             {child.name}
@@ -727,7 +727,7 @@ export default function GuardiansPage() {
             <div className="flex items-center gap-4 p-4 border border-border rounded-xl bg-slate-50/50 dark:bg-slate-800/30">
               {uploadingPhoto ? (
                 <div className="w-16 h-16 rounded-lg border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-slate-900">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#F59E0B]" />
+                  <Loader2 className="w-6 h-6 animate-spin text-[#1E3A5F]" />
                 </div>
               ) : formPhoto ? (
                 <img src={formPhoto} className="w-16 h-16 rounded-lg object-cover border border-border shadow-sm" alt="Parent Photo" />
@@ -761,7 +761,7 @@ export default function GuardiansPage() {
                 <div key={label} className="flex flex-col gap-1.5 text-left">
                   <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">{label}</label>
                   <input required={required} type={type} value={value} onChange={e => set(e.target.value)} placeholder={placeholder}
-                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#F59E0B]/50 transition-all shadow-sm" />
+                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#1E3A5F]/50 transition-all shadow-sm" />
                 </div>
               ))}
 
@@ -785,7 +785,7 @@ export default function GuardiansPage() {
                 Cancel
               </button>
               <button type="submit" disabled={isSaving || uploadingPhoto}
-                className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer disabled:opacity-70">
+                className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer disabled:opacity-70">
                 {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editParent ? "Save Changes" : "Add Parent"}
               </button>

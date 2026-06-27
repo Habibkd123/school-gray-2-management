@@ -3,52 +3,85 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  /* Core SaaS Theme - Light Mode */
-  --background: #F8FAFC;
-  --foreground: #0F172A;
-  
-  --primary: #F59E0B;
-  --success: #10B981;
-  --danger: #EF4444;
-  --warning: #F59E0B;
-  --info: #3B82F6;
-  
-  --card-bg: #FFFFFF;
-  --border-color: #E2E8F0;
-  --sidebar-bg: #0F172A;
+  /* ═══════════════════════════════════════════════════
+     NAVY BLUE THEME — School Management System
+     ═══════════════════════════════════════════════════ */
+
+  /* Primary Navy Blues */
+  --navy-primary:  #1E3A5F;
+  --navy-deep:     #162C47;
+  --navy-dark:     #0F2336;
+  --navy-light:    #E8EFF8;
+
+  /* Neutrals — Light */
+  --white:         #FFFFFF;
+  --grey-50:       #F5F5F5;
+  --grey-100:      #F4F4F5;
+  --grey-200:      #F0F0F0;
+  --grey-250:      #EFEFEF;
+  --grey-400:      #E5E7EB;
+  --grey-450:      #E0E0E0;
+  --grey-500:      #D9D9D9;
+  --grey-600:      #CCCCCC;
+  --grey-700:      #999999;
+  --grey-750:      #828283;
+  --grey-850:      #666666;
+  --grey-900:      #5C5D5D;
+
+  /* Dark */
+  --charcoal:      #231F20;
+  --near-black:    #07070A;
+
+  /* Accent Colors */
+  --gold:          #FFD700;
+  --green:         #1FC16B;
+  --blue-link:     #0088CC;
+
+  /* ── Light Mode Tokens ─────────────────────────────── */
+  --background:    #FFFFFF;
+  --foreground:    #231F20;
+  --card-bg:       #F5F5F5;
+  --border-color:  #E0E0E0;
+  --sidebar-bg:    #0F2336;
+  --primary:       #1E3A5F;
+  --primary-hover: #162C47;
+  --success:       #1FC16B;
+  --danger:        #DC3545;
+  --warning:       #FFD700;
+  --info:          #0088CC;
+  --muted-text:    #5C5D5D;
+  --section-alt:   #F0F4F9;
 }
 
 .dark {
-  /* Core SaaS Theme - Dark Mode */
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  
-  --primary: #F59E0B;
-  --success: #10B981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --info: #3b82f6;
-  
-  --card-bg: #0F172A;
-  --border-color: #334155;
-  --sidebar-bg: #0f172a;
+  /* ── Dark Mode Tokens ──────────────────────────────── */
+  --background:    #07070A;
+  --foreground:    #E8EFF8;
+  --card-bg:       #0F2336;
+  --border-color:  #1E3A5F;
+  --sidebar-bg:    #07070A;
+  --primary:       #1E3A5F;
+  --primary-hover: #162C47;
+  --success:       #1FC16B;
+  --danger:        #DC3545;
+  --warning:       #FFD700;
+  --info:          #0088CC;
+  --muted-text:    #999999;
+  --section-alt:   #0F2336;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  
-  --color-primary: var(--primary);
-  --color-success: var(--success);
-  --color-danger: var(--danger);
-  --color-warning: var(--warning);
-  --color-info: var(--info);
-  
-  --color-card: var(--card-bg);
-  --color-border: var(--border-color);
-  --color-sidebar: var(--sidebar-bg);
-
-  --font-sans: var(--font-roboto);
+  --color-primary:    var(--primary);
+  --color-success:    var(--success);
+  --color-danger:     var(--danger);
+  --color-warning:    var(--warning);
+  --color-info:       var(--info);
+  --color-card:       var(--card-bg);
+  --color-border:     var(--border-color);
+  --color-sidebar:    var(--sidebar-bg);
+  --font-sans:        var(--font-roboto);
 }
 
 body {
@@ -58,7 +91,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Base custom utilities */
+/* ── Utility Classes ─────────────────────────────────── */
 .card-shadow {
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
@@ -71,13 +104,30 @@ body {
   font-size: 20px;
   line-height: 24px;
   font-weight: 600;
-  color: #0F172A;
+  color: var(--foreground);
 }
 
 .page-desc {
   font-size: 14px;
   line-height: 21px;
-  color: #68718a;
+  color: var(--muted-text);
   font-weight: 400;
   margin-top: 4px;
+}
+
+/* ── Section Label (Navy Uppercase Tag) ──────────────── */
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+/* ── Divider Line with Navy ──────────────────────────── */
+.navy-divider {
+  width: 48px;
+  height: 3px;
+  background: var(--primary);
+  margin-top: 8px;
 }

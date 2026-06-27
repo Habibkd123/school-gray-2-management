@@ -141,7 +141,7 @@ export default function ApplyLeavePage() {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#5D6BEE] mx-auto" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F] mx-auto" />
                     <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading your leaves...</p>
                   </td>
                 </tr>
@@ -253,7 +253,7 @@ export default function ApplyLeavePage() {
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2.5 bg-[#5D6BEE] text-white text-[13px] font-bold rounded-lg hover:bg-[#4b58ce] transition-colors shadow-sm disabled:opacity-60 flex items-center gap-2"
+              className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[13px] font-bold rounded-lg hover:bg-[#4b58ce] transition-colors shadow-sm disabled:opacity-60 flex items-center gap-2"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               Submit Request

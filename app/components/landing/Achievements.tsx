@@ -14,9 +14,9 @@ interface StudentLifeData {
 }
 
 const DEFAULT_ACHIEVEMENTS = [
-  { number: "Top 1%", label: "CBSE National Rankers", color: "text-[#F59E0B]" },
+  { number: "Top 1%", label: "CBSE National Rankers", color: "text-[#1E3A5F]" },
   { number: "50+", label: "IIT-JEE / NEET Selections", color: "text-[#0F172A]" },
-  { number: "120+", label: "State Level Sports Medals", color: "text-[#F59E0B]" },
+  { number: "120+", label: "State Level Sports Medals", color: "text-[#1E3A5F]" },
   { number: "No. 1", label: "Ranked School in District", color: "text-[#0F172A]" },
 ];
 
@@ -31,7 +31,7 @@ export function Achievements({ data }: { data?: StudentLifeData | null }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Our Pride</h2>
+          <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Our Pride</h2>
           <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] mb-6 leading-tight">
             Milestones & Achievements
           </h3>
@@ -45,9 +45,9 @@ export function Achievements({ data }: { data?: StudentLifeData | null }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {apiAchievements.slice(0, 6).map((item, idx) => {
               const IconComp = ICONS[idx % ICONS.length];
-              const altColors = idx % 2 === 0 ? "text-[#F59E0B]" : "text-[#0F172A]";
+              const altColors = idx % 2 === 0 ? "text-[#1E3A5F]" : "text-[#0F172A]";
               return (
-                <div key={item._id ?? idx} className="flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-sm border border-slate-200 hover:border-[#F59E0B] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                <div key={item._id ?? idx} className="flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-sm border border-slate-200 hover:border-[#1E3A5F] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                   <div className="w-24 h-24 rounded-full bg-white shadow-md flex items-center justify-center mb-6 border-4 border-slate-100">
                     <IconComp className={`w-8 h-8 ${altColors}`} />
                   </div>
@@ -63,7 +63,7 @@ export function Achievements({ data }: { data?: StudentLifeData | null }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {DEFAULT_ACHIEVEMENTS.map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-sm border border-slate-200 hover:border-[#F59E0B] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+              <div key={idx} className="flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-sm border border-slate-200 hover:border-[#1E3A5F] hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
                 <div className="w-24 h-24 rounded-full bg-white shadow-md flex items-center justify-center mb-6 border-4 border-slate-100">
                   <Star className={`w-8 h-8 ${item.color}`} fill="currentColor" />
                 </div>

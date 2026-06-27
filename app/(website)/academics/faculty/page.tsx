@@ -17,7 +17,7 @@ export default async function FacultyPage() {
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
       <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Our Faculty</h1>
-      <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-12">Expert Educators</p>
+      <p className="text-[#1E3A5F] font-bold uppercase tracking-widest text-[12px] mb-12">Expert Educators</p>
       {faculty.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {faculty.map((m: any, i: number) => (
@@ -29,9 +29,9 @@ export default async function FacultyPage() {
                   <div className="w-full h-full flex items-center justify-center"><Users className="w-14 h-14 text-slate-300" /></div>
                 )}
               </div>
-              <div className="p-5 border-t-4 border-t-[#F59E0B]">
+              <div className="p-5 border-t-4 border-t-[#1E3A5F]">
                 <h3 className="font-bold text-[#0F172A] text-[16px]">{m.name}</h3>
-                <p className="text-[#F59E0B] text-[12px] font-bold uppercase tracking-wide mt-1">{m.subject}</p>
+                <p className="text-[#1E3A5F] text-[12px] font-bold uppercase tracking-wide mt-1">{m.subject}</p>
                 {m.qualification && <p className="text-slate-400 text-[12px] mt-1">{m.qualification}</p>}
               </div>
             </div>

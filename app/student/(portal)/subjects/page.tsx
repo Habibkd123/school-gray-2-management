@@ -19,7 +19,7 @@ export default function StudentSubjectsPage() {
     return subClassId === classId;
   });
 
-  const colors = ["#6366f1", "#f59e0b", "#10b981", "#f43f5e", "#8b5cf6", "#0ea5e9", "#ec4899", "#14b8a6"];
+  const colors = ["#6366f1", "#1E3A5F", "#10b981", "#f43f5e", "#8b5cf6", "#0ea5e9", "#ec4899", "#14b8a6"];
 
   return (
     <div className="space-y-6">

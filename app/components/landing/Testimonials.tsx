@@ -26,25 +26,27 @@ export function Testimonials({ data }: TestimonialsProps) {
     : defaultTestimonials;
 
   return (
-    <section className="py-24 bg-white relative border-b border-slate-200">
-      <div className="absolute top-0 right-0 w-full sm:w-[600px] h-[600px] bg-[#F59E0B]/5 rounded-full blur-[120px] -z-10" />
+    <section className="py-20 bg-[#F0F4F9] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Parent & Alumni Stories</h2>
-          <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] leading-tight">
-            Trusted by Families
+
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <div className="inline-block mb-3">
+            <span className="text-[12px] font-bold text-[#1E3A5F] uppercase tracking-[0.15em]">Parent & Alumni Stories</span>
+            <div className="h-0.5 bg-[#1E3A5F] mt-1 w-full" />
+          </div>
+          <h3 className="text-4xl font-black text-[#231F20] leading-tight">
+            Trusted by Thousands of Families
           </h3>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-6">
           {testimonials.map((test, idx) => (
-            <div key={idx} className="bg-slate-50 p-10 rounded-sm border border-slate-200 relative group hover:border-[#0F172A] hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
-              <Quote className="w-12 h-12 text-[#F59E0B]/20 absolute top-8 right-8 group-hover:text-[#F59E0B]/40 transition-colors" fill="currentColor" />
+            <div key={idx} className="bg-[#FFFFFF] p-8 border border-[#E0E0E0] relative group hover:shadow-lg hover:border-[#1E3A5F] transition-all duration-300">
+              <Quote className="w-10 h-10 text-[#CCCCCC] absolute top-6 right-6 group-hover:text-[#1E3A5F]/30 transition-colors" fill="currentColor" />
               
               <div className="flex gap-1 mb-6">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 text-[#F59E0B]" fill="currentColor" />
+                  <Star key={i} className="w-4 h-4 text-[#FFD700]" fill="currentColor" />
                 ))}
               </div>
               
@@ -52,11 +54,11 @@ export function Testimonials({ data }: TestimonialsProps) {
                 "{test.content}"
               </p>
               
-              <div className="flex items-center gap-4 pt-6 border-t border-slate-200">
-                <img src={test.img} alt={test.name} className="w-12 h-12 rounded-full border-2 border-white shadow-md object-cover" />
+              <div className="flex items-center gap-4 pt-5 border-t border-[#E0E0E0]">
+                <img src={test.img} alt={test.name} className="w-11 h-11 rounded-full border-2 border-[#1E3A5F] object-cover" />
                 <div>
-                  <h4 className="font-bold text-[#0F172A] text-[15px]">{test.name}</h4>
-                  <p className="text-[#F59E0B] text-[12px] font-bold uppercase tracking-wider">{test.role}</p>
+                  <h4 className="font-bold text-[#231F20] text-[14px]">{test.name}</h4>
+                  <p className="text-[#828283] text-[11px] font-semibold uppercase tracking-wider">{test.role}</p>
                 </div>
               </div>
             </div>

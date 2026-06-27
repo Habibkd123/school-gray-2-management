@@ -198,7 +198,7 @@ export default function StudentProgressPage() {
   const triggerCls = (open: boolean) =>
     `flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors cursor-pointer
      ${open
-      ? "border-[#F59E0B] text-[#F59E0B]"
+      ? "border-[#1E3A5F] text-[#1E3A5F]"
       : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
 
   // Filter student metrics by search term, status, grade, and sorting
@@ -286,7 +286,7 @@ export default function StudentProgressPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/academic" className="hover:text-[#F59E0B]">Academic</Link>
+            <Link href="/academic" className="hover:text-[#1E3A5F]">Academic</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Progress & Grading</span>
           </div>
@@ -312,7 +312,7 @@ export default function StudentProgressPage() {
 
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
-          <Loader2 className="w-8 h-8 animate-spin text-[#F59E0B]" />
+          <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F]" />
           <span>Analyzing progress ledger reports...</span>
         </div>
       ) : (
@@ -321,7 +321,7 @@ export default function StudentProgressPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-left">
             <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 shadow-sm flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 dark:bg-slate-800 dark:border-slate-700 text-[#5D6BEE] flex items-center justify-center">
+                <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-100 dark:bg-slate-800 dark:border-slate-700 text-[#1E3A5F] flex items-center justify-center">
                   <Award className="w-6 h-6" />
                 </div>
                 <div>
@@ -430,7 +430,7 @@ export default function StudentProgressPage() {
                                 <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
                                   className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
                                 <button onClick={applyCustomRange} disabled={!customFrom || !customTo}
-                                  className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-[#F59E0B] hover:bg-[#D97706] rounded transition-colors disabled:opacity-50 cursor-pointer">
+                                  className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded transition-colors disabled:opacity-50 cursor-pointer">
                                   Apply
                                 </button>
                               </div>
@@ -498,7 +498,7 @@ export default function StudentProgressPage() {
                           </div>
                           <div className="p-4 flex justify-end gap-3 bg-white dark:bg-slate-900 rounded-b-lg border-t border-border mt-2">
                             <button onClick={() => { setFilterStatus("All"); setFilterGrade("All"); setIsFilterOpen(false); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-[#0F172A] dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer">Reset</button>
-                            <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer">Apply</button>
+                            <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer">Apply</button>
                           </div>
                         </div>
                       </>
@@ -520,7 +520,7 @@ export default function StudentProgressPage() {
                             <button 
                               key={item} 
                               onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
-                              className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-[#F59E0B] font-bold" : "text-slate-700 dark:text-slate-200"}`}
+                              className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-[#1E3A5F] font-bold" : "text-slate-700 dark:text-slate-200"}`}
                             >
                               {item}
                             </button>
@@ -538,7 +538,7 @@ export default function StudentProgressPage() {
                       placeholder="Search student ledger..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-9 pr-4 py-2 w-full sm:w-[200px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200"
+                      className="pl-9 pr-4 py-2 w-full sm:w-[200px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
                     />
                   </div>
                 </div>
@@ -568,7 +568,7 @@ export default function StudentProgressPage() {
                         <tr key={student._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex flex-wrap items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-slate-800 text-[#5D6BEE] flex items-center justify-center font-bold text-[12px]">
+                              <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-slate-800 text-[#1E3A5F] flex items-center justify-center font-bold text-[12px]">
                                 {student.name.charAt(0)}
                               </div>
                               <div>
@@ -603,7 +603,7 @@ export default function StudentProgressPage() {
                           <td className="px-6 py-4 text-right">
                             <button
                               onClick={() => setSelectedStudentId(student._id)}
-                              className="px-3.5 py-1.5 bg-[#F59E0B]/10 hover:bg-[#F59E0B]/20 text-[#F59E0B] rounded-lg transition-colors cursor-pointer text-[12px] font-bold"
+                              className="px-3.5 py-1.5 bg-[#1E3A5F]/10 hover:bg-[#1E3A5F]/20 text-[#1E3A5F] rounded-lg transition-colors cursor-pointer text-[12px] font-bold"
                             >
                               Report Card
                             </button>
@@ -633,7 +633,7 @@ export default function StudentProgressPage() {
             {/* Header info */}
             <div className="flex flex-col sm:flex-row items-center justify-between pb-6 border-b border-border gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 text-[#5D6BEE] flex items-center justify-center font-bold text-lg">
+                <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 text-[#1E3A5F] flex items-center justify-center font-bold text-lg">
                   {selectedStudentMetric.student.name.charAt(0)}
                 </div>
                 <div>
@@ -644,7 +644,7 @@ export default function StudentProgressPage() {
 
               <div className="text-right flex sm:flex-col gap-2 sm:gap-1.5 items-center sm:items-end">
                 <span className="text-[11px] uppercase font-bold text-slate-400">Ledger GPA</span>
-                <span className="text-3xl font-black font-mono text-[#F59E0B]">{selectedStudentMetric.gpa.toFixed(2)}</span>
+                <span className="text-3xl font-black font-mono text-[#1E3A5F]">{selectedStudentMetric.gpa.toFixed(2)}</span>
               </div>
             </div>
 

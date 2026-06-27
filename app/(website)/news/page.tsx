@@ -13,7 +13,7 @@ async function getLanding() {
 }
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  announcement: { label: "Announcement", color: "text-[#F59E0B]", bg: "bg-[#F59E0B]" },
+  announcement: { label: "Announcement", color: "text-[#1E3A5F]", bg: "bg-[#1E3A5F]" },
   circular: { label: "Circular", color: "text-blue-500", bg: "bg-blue-500" },
   result: { label: "Result", color: "text-emerald-500", bg: "bg-emerald-500" },
 };
@@ -40,7 +40,7 @@ export default async function NewsPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <span className="inline-block px-4 py-1.5 bg-[#F59E0B]/20 border border-[#F59E0B]/30 text-[#FDBA74] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Notice Board</span>
+          <span className="inline-block px-4 py-1.5 bg-[#1E3A5F]/20 border border-[#1E3A5F]/30 text-[#FCA5A5] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Notice Board</span>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">News & Circulars</h1>
         </div>
       </section>
@@ -54,7 +54,7 @@ export default async function NewsPage() {
             { href: "/news/circulars", label: "Circulars" },
             { href: "/news/results", label: "Results" },
           ].map(t => (
-            <Link key={t.href} href={t.href} className="px-5 py-2 text-[13px] font-bold uppercase tracking-wide rounded-sm whitespace-nowrap border border-slate-200 hover:bg-[#F59E0B] hover:text-white hover:border-[#F59E0B] transition-all">
+            <Link key={t.href} href={t.href} className="px-5 py-2 text-[13px] font-bold uppercase tracking-wide rounded-sm whitespace-nowrap border border-slate-200 hover:bg-[#1E3A5F] hover:text-white hover:border-[#1E3A5F] transition-all">
               {t.label}
             </Link>
           ))}
@@ -79,10 +79,10 @@ export default async function NewsPage() {
                       <div className="flex items-center gap-2 text-slate-400 text-[12px] font-bold mb-2 uppercase tracking-wider">
                         <Calendar className="w-3.5 h-3.5" />{dateStr}
                       </div>
-                      <h3 className="font-bold text-[#0F172A] text-[16px] mb-3 leading-snug group-hover:text-[#F59E0B] transition-colors line-clamp-2">{item.title}</h3>
+                      <h3 className="font-bold text-[#0F172A] text-[16px] mb-3 leading-snug group-hover:text-[#1E3A5F] transition-colors line-clamp-2">{item.title}</h3>
                       {item.content && <p className="text-slate-500 text-[13px] leading-relaxed mb-4 line-clamp-2">{item.content}</p>}
                       {item.pdf_url && (
-                        <a href={item.pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[13px] font-bold text-[#F59E0B] hover:text-[#D97706] uppercase tracking-wider">
+                        <a href={item.pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[13px] font-bold text-[#1E3A5F] hover:text-[#162C47] uppercase tracking-wider">
                           Download PDF <ChevronRight className="w-4 h-4" />
                         </a>
                       )}

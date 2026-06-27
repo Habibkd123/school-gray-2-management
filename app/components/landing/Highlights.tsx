@@ -29,14 +29,14 @@ export function Highlights({ data }: { data?: LandingData | null }) {
     : defaultHighlights;
 
   return (
-    <section className="py-12 bg-white relative z-20 border-b border-slate-200">
+    <section className="py-10 bg-[#F0F4F9] border-y border-[#E0E0E0]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 divide-y md:divide-y-0 md:divide-x divide-slate-200">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-[#D9D9D9]">
           {highlights.map((item, idx) => (
-            <div key={idx} className={`flex flex-col items-center justify-center text-center ${idx !== 0 && idx !== 2 ? 'pt-8 md:pt-0' : ''}`}>
+            <div key={idx} className="flex flex-col items-center justify-center text-center px-6 py-6 group hover:bg-white transition-colors duration-300">
               <div className="text-3xl mb-3">{item.icon}</div>
-              <h3 className="text-3xl lg:text-4xl font-black text-[#0F172A] tracking-tight mb-1">{item.value}</h3>
-              <p className="font-bold text-[#F59E0B] uppercase tracking-wider text-[11px] md:text-[12px]">{item.label}</p>
+              <h3 className="text-3xl lg:text-4xl font-black text-[#1E3A5F] tracking-tight mb-1">{item.value}</h3>
+              <p className="font-bold text-[#5C5D5D] uppercase tracking-wider text-[11px]">{item.label}</p>
             </div>
           ))}
         </div>

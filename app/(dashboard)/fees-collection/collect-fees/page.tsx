@@ -98,7 +98,7 @@ export default function CollectFeesPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/fees-collection" className="hover:text-[#F59E0B]">Fees Collection</Link>
+            <Link href="/fees-collection" className="hover:text-[#1E3A5F]">Fees Collection</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Collect Fees</span>
           </div>
@@ -110,13 +110,13 @@ export default function CollectFeesPage() {
         <div className="space-y-6">
           {/* Search Box */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm p-5 relative">
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-3 flex items-center gap-2"><Search className="w-4 h-4 text-[#F59E0B]" /> Search Student</h2>
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 mb-3 flex items-center gap-2"><Search className="w-4 h-4 text-[#1E3A5F]" /> Search Student</h2>
             <input 
               type="text" 
               placeholder="Search by Name or Admission No (min 3 chars)..." 
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors"
+              className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
             />
             
             {/* Search Results Dropdown */}
@@ -159,7 +159,7 @@ export default function CollectFeesPage() {
             <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden">
               <div className="p-5 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
                 <h2 className="text-[14px] font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                  <DollarSign className="w-4 h-4 text-[#F59E0B]" /> Pending Fees
+                  <DollarSign className="w-4 h-4 text-[#1E3A5F]" /> Pending Fees
                 </h2>
               </div>
               
@@ -201,7 +201,7 @@ export default function CollectFeesPage() {
                                 <CheckCircle2 className="w-3 h-3" /> Paid
                               </span>
                             ) : (
-                              <button onClick={() => handlePayClick(m, balance)} className="px-3 py-1.5 bg-[#F59E0B] hover:bg-[#D97706] text-white rounded text-[12px] font-semibold transition-colors">Pay</button>
+                              <button onClick={() => handlePayClick(m, balance)} className="px-3 py-1.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white rounded text-[12px] font-semibold transition-colors">Pay</button>
                             )}
                           </td>
                         </tr>
@@ -232,11 +232,11 @@ export default function CollectFeesPage() {
               </div>
               <div className="space-y-1.5">
                 <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Amount Paying Now <span className="text-rose-500">*</span></label>
-                <input required type="number" min="1" step="0.01" value={form.amount_paid} onChange={e => setForm({...form, amount_paid: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors" />
+                <input required type="number" min="1" step="0.01" value={form.amount_paid} onChange={e => setForm({...form, amount_paid: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Payment Method <span className="text-rose-500">*</span></label>
-                <select required value={form.payment_method} onChange={e => setForm({...form, payment_method: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors">
+                <select required value={form.payment_method} onChange={e => setForm({...form, payment_method: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors">
                   <option value="Cash">Cash</option>
                   <option value="Cheque">Cheque</option>
                   <option value="Bank Transfer">Bank Transfer</option>
@@ -245,12 +245,12 @@ export default function CollectFeesPage() {
               </div>
               <div className="space-y-1.5">
                 <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Remarks</label>
-                <input type="text" value={form.remarks} onChange={e => setForm({...form, remarks: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors" placeholder="Optional details..." />
+                <input type="text" value={form.remarks} onChange={e => setForm({...form, remarks: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors" placeholder="Optional details..." />
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-border mt-6">
                 <button type="button" onClick={() => setPayModalOpen(false)} className="px-4 py-2 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">Cancel</button>
-                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50">
+                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Confirm Payment
                 </button>
               </div>
@@ -301,7 +301,7 @@ export default function CollectFeesPage() {
 
               <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg flex justify-between items-center print:bg-slate-100 print:text-black">
                 <span className="font-bold text-slate-700 dark:text-slate-300">Amount Paid:</span>
-                <span className="text-2xl font-black text-[#F59E0B]">${lastReceipt.amount_paid.toFixed(2)}</span>
+                <span className="text-2xl font-black text-[#1E3A5F]">${lastReceipt.amount_paid.toFixed(2)}</span>
               </div>
 
               <div className="mt-8 pt-8 border-t border-border flex justify-between items-end text-sm text-slate-500">
@@ -318,7 +318,7 @@ export default function CollectFeesPage() {
             {/* Action Buttons (Hidden on print) */}
             <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-border flex justify-end gap-3 print:hidden">
               <button onClick={() => setReceiptModalOpen(false)} className="px-4 py-2 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">Close</button>
-              <button onClick={handlePrintReceipt} className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm">
+              <button onClick={handlePrintReceipt} className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm">
                 <Printer className="w-4 h-4" /> Print Receipt
               </button>
             </div>

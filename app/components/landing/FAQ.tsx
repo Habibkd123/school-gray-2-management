@@ -34,7 +34,7 @@ export function FAQ({ data }: FAQProps) {
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         
         <div className="text-center mb-16">
-          <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Got Questions?</h2>
+          <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Got Questions?</h2>
           <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] leading-tight">
             Frequently Asked Questions
           </h3>
@@ -44,16 +44,16 @@ export function FAQ({ data }: FAQProps) {
           {faqs.map((faq, idx) => (
             <div 
               key={idx} 
-              className={`border rounded-sm transition-all duration-300 ${openIdx === idx ? 'border-[#F59E0B] shadow-md' : 'border-slate-200 hover:border-[#0F172A]/30'}`}
+              className={`border transition-all duration-300 ${openIdx === idx ? 'border-[#231F20] shadow-md' : 'border-[#E0E0E0] hover:border-[#CCCCCC]'}`}
             >
               <button 
                 className="w-full flex items-center justify-between p-6 text-left bg-white"
                 onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
               >
-                <span className={`font-bold text-[16px] pr-8 ${openIdx === idx ? 'text-[#F59E0B]' : 'text-[#0F172A]'}`}>
+                <span className={`font-bold text-[15px] pr-8 ${openIdx === idx ? 'text-[#231F20]' : 'text-[#5C5D5D]'}`}>
                   {faq.question}
                 </span>
-                <ChevronDown className={`w-5 h-5 shrink-0 transition-transform duration-300 ${openIdx === idx ? 'rotate-180 text-[#F59E0B]' : 'text-slate-400'}`} />
+                <ChevronDown className={`w-5 h-5 shrink-0 transition-transform duration-300 ${openIdx === idx ? 'rotate-180 text-[#1E3A5F]' : 'text-[#CCCCCC]'}`} />
               </button>
               
               <div 

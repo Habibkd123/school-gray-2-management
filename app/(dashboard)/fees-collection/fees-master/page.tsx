@@ -76,7 +76,7 @@ export default function FeesMasterPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/fees-collection" className="hover:text-[#F59E0B]">Fees Collection</Link>
+            <Link href="/fees-collection" className="hover:text-[#1E3A5F]">Fees Collection</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Fees Master</span>
           </div>
@@ -84,7 +84,7 @@ export default function FeesMasterPage() {
 
         <button 
           onClick={() => { setEditItem(null); setForm({ fee_group_id: "", fee_type_id: "", amount: "", due_date: "" }); setIsAddOpen(true); }}
-          className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+          className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
         >
           <Plus className="w-4 h-4" /> Add Fee Master
         </button>
@@ -106,7 +106,7 @@ export default function FeesMasterPage() {
               placeholder="Search by group or type..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
             />
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function FeesMasterPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => handleEdit(m)} className="p-1.5 text-slate-400 hover:text-[#F59E0B] transition-colors"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => handleEdit(m)} className="p-1.5 text-slate-400 hover:text-[#1E3A5F] transition-colors"><Edit2 className="w-4 h-4" /></button>
                       <button onClick={() => handleDelete(m._id)} className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </td>
@@ -169,7 +169,7 @@ export default function FeesMasterPage() {
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div className="space-y-1.5">
                 <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Fee Group</label>
-                <select required value={form.fee_group_id} onChange={e => setForm({...form, fee_group_id: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors">
+                <select required value={form.fee_group_id} onChange={e => setForm({...form, fee_group_id: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors">
                   <option value="">Select Fee Group</option>
                   {groups.map(g => <option key={g._id} value={g._id}>{g.name}</option>)}
                 </select>
@@ -177,7 +177,7 @@ export default function FeesMasterPage() {
 
               <div className="space-y-1.5">
                 <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Fee Type</label>
-                <select required value={form.fee_type_id} onChange={e => setForm({...form, fee_type_id: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors">
+                <select required value={form.fee_type_id} onChange={e => setForm({...form, fee_type_id: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors">
                   <option value="">Select Fee Type</option>
                   {types.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
                 </select>
@@ -185,17 +185,17 @@ export default function FeesMasterPage() {
 
               <div className="space-y-1.5">
                 <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Amount</label>
-                <input required type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors" placeholder="0.00" />
+                <input required type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm({...form, amount: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors" placeholder="0.00" />
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Due Date</label>
-                <input required type="date" value={form.due_date} onChange={e => setForm({...form, due_date: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors" />
+                <input required type="date" value={form.due_date} onChange={e => setForm({...form, due_date: e.target.value})} className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors" />
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-border mt-6">
                 <button type="button" onClick={() => setIsAddOpen(false)} className="px-4 py-2 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">Cancel</button>
-                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50">
+                <button type="submit" disabled={saving} className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save
                 </button>
               </div>

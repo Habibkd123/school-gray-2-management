@@ -69,7 +69,7 @@ export function PaginationBar({
               onClick={() => onPageChange(p as number)}
               className={`w-8 h-8 rounded-lg text-[13px] font-bold transition-colors ${
                 p === currentPage
-                  ? "bg-[#F59E0B] text-white shadow-sm shadow-[#F59E0B]/30"
+                  ? "bg-[#1E3A5F] text-white shadow-sm shadow-[#1E3A5F]/30"
                   : "border border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
               }`}
             >

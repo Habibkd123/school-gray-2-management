@@ -35,19 +35,19 @@ export function Gallery({ data }: { data?: GalleryData | null }) {
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div className="max-w-2xl">
-            <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Campus Life</h2>
+            <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Campus Life</h2>
             <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] leading-tight">
               Life at {schoolName}
             </h3>
           </div>
-          <a href="/gallery" className="hidden md:flex items-center gap-2 font-bold text-[#0F172A] hover:text-[#F59E0B] transition-colors uppercase tracking-wider text-[13px]">
+          <a href="/gallery" className="hidden md:flex items-center gap-2 font-bold text-[#0F172A] hover:text-[#1E3A5F] transition-colors uppercase tracking-wider text-[13px]">
             View All Photos <ChevronRight className="w-5 h-5" />
           </a>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {photos.map((img, idx) => (
-            <div key={idx} className="relative h-72 rounded-sm overflow-hidden group cursor-pointer border-2 border-transparent hover:border-[#F59E0B] transition-colors">
+            <div key={idx} className="relative h-72 rounded-sm overflow-hidden group cursor-pointer border-2 border-transparent hover:border-[#1E3A5F] transition-colors">
               <img 
                 src={img.src} 
                 alt={img.label} 

@@ -22,23 +22,23 @@ export default async function AnnouncementsPage() {
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
       <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Announcements</h1>
-      <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-12">Latest School Announcements</p>
+      <p className="text-[#1E3A5F] font-bold uppercase tracking-widest text-[12px] mb-12">Latest School Announcements</p>
       {items.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {items.map((item: any, idx: number) => (
             <div key={item._id ?? idx} className="bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <div className="h-48 overflow-hidden relative">
                 <img src={IMGS[idx % IMGS.length]} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute top-4 left-4 bg-[#F59E0B] text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded-sm">Announcement</div>
+                <div className="absolute top-4 left-4 bg-[#1E3A5F] text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded-sm">Announcement</div>
               </div>
               <div className="p-6">
                 <div className="flex items-center gap-2 text-slate-400 text-[12px] font-bold mb-2 uppercase tracking-wider">
                   <Calendar className="w-3.5 h-3.5" />
                   {item.published_at ? new Date(item.published_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : ""}
                 </div>
-                <h3 className="font-bold text-[#0F172A] text-[16px] mb-3 leading-snug group-hover:text-[#F59E0B] transition-colors line-clamp-2">{item.title}</h3>
+                <h3 className="font-bold text-[#0F172A] text-[16px] mb-3 leading-snug group-hover:text-[#1E3A5F] transition-colors line-clamp-2">{item.title}</h3>
                 {item.content && <p className="text-slate-500 text-[13px] leading-relaxed mb-4 line-clamp-3">{item.content}</p>}
-                {item.pdf_url && <a href={item.pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[13px] font-bold text-[#F59E0B] uppercase tracking-wider">Download PDF <ChevronRight className="w-4 h-4" /></a>}
+                {item.pdf_url && <a href={item.pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[13px] font-bold text-[#1E3A5F] uppercase tracking-wider">Download PDF <ChevronRight className="w-4 h-4" /></a>}
               </div>
             </div>
           ))}

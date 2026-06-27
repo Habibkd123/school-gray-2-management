@@ -43,7 +43,7 @@ export function Facilities({ data }: FacilitiesProps) {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Campus Infrastructure</h2>
+          <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Campus Infrastructure</h2>
           <h3 className="text-4xl md:text-5xl font-serif font-bold text-white mb-6 leading-tight">
             World-Class Facilities
           </h3>
@@ -54,7 +54,7 @@ export function Facilities({ data }: FacilitiesProps) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-6">
           {facilities.map((fac, idx) => (
-            <div key={idx} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-sm p-8 flex flex-col items-center justify-center text-center hover:bg-[#F59E0B] transition-colors cursor-pointer group">
+            <div key={idx} className="bg-white/5 backdrop-blur-md border border-white/10 rounded-sm p-8 flex flex-col items-center justify-center text-center hover:bg-[#1E3A5F] transition-colors cursor-pointer group">
               <div className="w-16 h-16 rounded-full bg-white/10 text-white flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                 {renderIcon(fac.icon)}
               </div>

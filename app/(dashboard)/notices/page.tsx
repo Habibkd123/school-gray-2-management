@@ -166,17 +166,17 @@ export default function NoticesPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <span className="hover:text-[#F59E0B] cursor-pointer">Announcement</span>
+            <span className="hover:text-[#1E3A5F] cursor-pointer">Announcement</span>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Notice Board</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
           
@@ -204,7 +204,7 @@ export default function NoticesPage() {
           
           <button 
             onClick={() => setIsAddMessageOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] text-white text-[13px] font-semibold rounded-lg hover:bg-[#D97706] transition-colors shadow-sm cursor-pointer"
+            className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] text-white text-[13px] font-semibold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add Message
           </button>
@@ -218,7 +218,7 @@ export default function NoticesPage() {
             type="checkbox" 
             checked={selectAll}
             onChange={toggleSelectAll}
-            className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4 cursor-pointer"
+            className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4 cursor-pointer"
           />
           <span className="text-[13px] font-medium text-slate-600 dark:text-slate-300">Mark & Delete All</span>
         </label>
@@ -236,7 +236,7 @@ export default function NoticesPage() {
                 <div className="fixed inset-0 z-40" onClick={() => setIsDateRangeOpen(false)} />
                 <div className="absolute right-0 sm:left-0 sm:right-auto top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                   {["Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year", "Next Year", "Custom Range"].map((item) => (
-                    <button key={item} onClick={() => { setSelectedDateRange(item); setIsDateRangeOpen(false); }} className={`w-full px-4 py-2 text-[13px] text-left transition-colors cursor-pointer ${item === selectedDateRange ? "bg-[#F59E0B] text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                    <button key={item} onClick={() => { setSelectedDateRange(item); setIsDateRangeOpen(false); }} className={`w-full px-4 py-2 text-[13px] text-left transition-colors cursor-pointer ${item === selectedDateRange ? "bg-[#1E3A5F] text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
                       {item}
                     </button>
                   ))}
@@ -276,7 +276,7 @@ export default function NoticesPage() {
                   </div>
                   <div className="p-4 flex justify-end gap-3 bg-white dark:bg-slate-900 rounded-b-lg border-t border-border mt-2">
                     <button onClick={() => setIsFilterOpen(false)} className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-[#0F172A] dark:text-slate-200 text-[13px] font-bold rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">Reset</button>
-                    <button onClick={() => setIsFilterOpen(false)} className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-bold rounded-md transition-colors shadow-sm cursor-pointer">Apply</button>
+                    <button onClick={() => setIsFilterOpen(false)} className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-md transition-colors shadow-sm cursor-pointer">Apply</button>
                   </div>
                 </div>
               </>
@@ -289,7 +289,7 @@ export default function NoticesPage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm text-left mt-4">
         {loading ? (
           <div className="px-6 py-16 text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-[#F59E0B] mx-auto" />
+            <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F] mx-auto" />
             <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading notices...</p>
           </div>
         ) : notices.length === 0 ? (
@@ -301,7 +301,7 @@ export default function NoticesPage() {
             columns={[
               { header: "Title", accessorKey: "title", render: (item) => (
                   <div className="flex flex-wrap items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0 text-[#F59E0B]">
+                    <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0 text-[#1E3A5F]">
                       <FileText className="w-5 h-5" />
                     </div>
                     <div>
@@ -322,7 +322,7 @@ export default function NoticesPage() {
                   <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => openEditModal(item)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-[#F59E0B] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
@@ -336,15 +336,15 @@ export default function NoticesPage() {
               )}
             ]}
             data={notices}
-            selectionHeader={<input type="checkbox" checked={selectAll} onChange={toggleSelectAll} className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] cursor-pointer" />}
-            renderSelection={(item) => <input type="checkbox" checked={selectedNotices.includes(item._id)} onChange={() => toggleSelect(item._id)} className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] cursor-pointer" />}
+            selectionHeader={<input type="checkbox" checked={selectAll} onChange={toggleSelectAll} className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />}
+            renderSelection={(item) => <input type="checkbox" checked={selectedNotices.includes(item._id)} onChange={() => toggleSelect(item._id)} className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />}
           />
         )}
       </div>
 
       {/* Load More */}
       <div className="flex justify-center pt-4 pb-8">
-        <button className="px-6 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer">
+        <button className="px-6 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer">
           <RefreshCw className="w-4 h-4" /> Load More
         </button>
       </div>
@@ -383,7 +383,7 @@ export default function NoticesPage() {
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
               placeholder="e.g. Parent-Teacher Meeting"
-              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200 text-[14px]" 
+              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200 text-[14px]" 
             />
           </div>
 
@@ -393,14 +393,14 @@ export default function NoticesPage() {
               type="date" 
               value={formDate}
               onChange={(e) => setFormDate(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200 text-[14px]" 
+              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200 text-[14px]" 
             />
           </div>
 
           <div className="p-5 bg-[#EEF2FF] dark:bg-indigo-900/20 border border-[#E0E7FF] dark:border-indigo-500/20 rounded-xl space-y-3">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Attachment</label>
             <p className="text-[13px] text-slate-500 dark:text-slate-400">Upload size of 4MB, Accepted Format PDF</p>
-            <label className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer shadow-sm">
+            <label className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer shadow-sm">
               <FileText className="w-4 h-4" /> 
               {attachmentFile ? attachmentFile.name : "Choose File"}
               <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)} />
@@ -414,7 +414,7 @@ export default function NoticesPage() {
               value={formContent}
               onChange={(e) => setFormContent(e.target.value)}
               placeholder="Write your notice here..."
-              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200 text-[14px] min-h-[120px] resize-y" 
+              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200 text-[14px] min-h-[120px] resize-y" 
             />
           </div>
 
@@ -430,7 +430,7 @@ export default function NoticesPage() {
                       if (e.target.checked) setFormAudience([...formAudience, role]);
                       else setFormAudience(formAudience.filter(r => r !== role));
                     }}
-                    className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4 cursor-pointer" 
+                    className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4 cursor-pointer" 
                   />
                   <span className="text-[14px] text-slate-700 dark:text-slate-300">{role}</span>
                 </label>
@@ -443,7 +443,7 @@ export default function NoticesPage() {
             <button 
               type="submit"
               disabled={saving || uploading}
-              className="px-6 py-2.5 bg-[#F59E0B] text-white text-[14px] font-bold rounded-lg hover:bg-[#D97706] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
+              className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
             >
               {(saving || uploading) && <Loader2 className="w-4 h-4 animate-spin" />}
               Add New Message
@@ -468,7 +468,7 @@ export default function NoticesPage() {
               value={editTitle}
               onChange={(e) => setEditTitle(e.target.value)}
               placeholder="e.g. Parent-Teacher Meeting"
-              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200 text-[14px]" 
+              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200 text-[14px]" 
             />
           </div>
 
@@ -478,7 +478,7 @@ export default function NoticesPage() {
               type="date" 
               value={editDate}
               onChange={(e) => setEditDate(e.target.value)}
-              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200 text-[14px]" 
+              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200 text-[14px]" 
             />
           </div>
 
@@ -489,7 +489,7 @@ export default function NoticesPage() {
                 ? "Current file attached. Upload new to replace."
                 : "Upload size of 4MB, Accepted Format PDF"}
             </p>
-            <label className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer shadow-sm">
+            <label className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer shadow-sm">
               <FileText className="w-4 h-4" /> 
               {editAttachmentFile ? editAttachmentFile.name : (editingNotice?.attachment_url ? "Replace File" : "Choose File")}
               <input type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={(e) => setEditAttachmentFile(e.target.files?.[0] || null)} />
@@ -503,7 +503,7 @@ export default function NoticesPage() {
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               placeholder="Write your notice here..."
-              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200 text-[14px] min-h-[120px] resize-y" 
+              className="w-full px-4 py-2.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200 text-[14px] min-h-[120px] resize-y" 
             />
           </div>
 
@@ -519,7 +519,7 @@ export default function NoticesPage() {
                       if (e.target.checked) setEditAudience([...editAudience, role]);
                       else setEditAudience(editAudience.filter(r => r !== role));
                     }}
-                    className="rounded border-slate-300 text-[#F59E0B] focus:ring-[#F59E0B] w-4 h-4 cursor-pointer" 
+                    className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4 cursor-pointer" 
                   />
                   <span className="text-[14px] text-slate-700 dark:text-slate-300">{role}</span>
                 </label>
@@ -532,7 +532,7 @@ export default function NoticesPage() {
             <button 
               type="submit"
               disabled={saving || uploading}
-              className="px-6 py-2.5 bg-[#F59E0B] text-white text-[14px] font-bold rounded-lg hover:bg-[#D97706] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
+              className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
             >
               {(saving || uploading) && <Loader2 className="w-4 h-4 animate-spin" />}
               Save Changes

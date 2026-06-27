@@ -64,7 +64,7 @@ export function Contact({ data }: { data?: ContactData | null }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Get in Touch</h2>
+          <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Get in Touch</h2>
           <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] leading-tight">
             Contact Admissions Office
           </h3>
@@ -80,30 +80,30 @@ export function Contact({ data }: { data?: ContactData | null }) {
             
             <div className="grid sm:grid-cols-2 gap-6">
               <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-[#0F172A]">
-                <MapPin className="w-8 h-8 text-[#F59E0B] mb-4" />
+                <MapPin className="w-8 h-8 text-[#1E3A5F] mb-4" />
                 <h4 className="font-bold text-[#0F172A] mb-2 text-[15px]">Campus Address</h4>
                 <p className="text-slate-600 text-[14px] whitespace-pre-line">{address}</p>
               </div>
               
               <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-[#0F172A]">
-                <Phone className="w-8 h-8 text-[#F59E0B] mb-4" />
+                <Phone className="w-8 h-8 text-[#1E3A5F] mb-4" />
                 <h4 className="font-bold text-[#0F172A] mb-2 text-[15px]">Contact Numbers</h4>
                 <p className="text-slate-600 text-[14px]">
-                  <a href={`tel:${phone.replace(/\s/g, "")}`} className="hover:text-[#F59E0B] transition-colors">
+                  <a href={`tel:${phone.replace(/\s/g, "")}`} className="hover:text-[#1E3A5F] transition-colors">
                     {phone}
                   </a>
                 </p>
               </div>
               
               <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-[#0F172A] sm:col-span-2">
-                <Mail className="w-8 h-8 text-[#F59E0B] mb-4" />
+                <Mail className="w-8 h-8 text-[#1E3A5F] mb-4" />
                 <h4 className="font-bold text-[#0F172A] mb-2 text-[15px]">Email Address</h4>
                 <p className="text-slate-600 text-[14px]">
-                  <a href={`mailto:${email}`} className="hover:text-[#F59E0B] transition-colors">{email}</a>
+                  <a href={`mailto:${email}`} className="hover:text-[#1E3A5F] transition-colors">{email}</a>
                 </p>
                 {website && (
                   <p className="text-slate-600 text-[14px] mt-1">
-                    <a href={website} target="_blank" rel="noopener noreferrer" className="hover:text-[#F59E0B] transition-colors flex items-center gap-1">
+                    <a href={website} target="_blank" rel="noopener noreferrer" className="hover:text-[#1E3A5F] transition-colors flex items-center gap-1">
                       <Globe className="w-4 h-4" /> {website}
                     </a>
                   </p>
@@ -116,22 +116,22 @@ export function Contact({ data }: { data?: ContactData | null }) {
               <div className="flex items-center gap-4 pt-2">
                 <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Follow us:</span>
                 {social.facebook && (
-                  <a href={social.facebook} target="_blank" rel="noopener noreferrer" title="Facebook" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-[#F59E0B] hover:text-white transition-all">
+                  <a href={social.facebook} target="_blank" rel="noopener noreferrer" title="Facebook" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-[#1E3A5F] hover:text-white transition-all">
                     <Share2 className="w-5 h-5" />
                   </a>
                 )}
                 {social.twitter && (
-                  <a href={social.twitter} target="_blank" rel="noopener noreferrer" title="Twitter / X" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-[#F59E0B] hover:text-white transition-all">
+                  <a href={social.twitter} target="_blank" rel="noopener noreferrer" title="Twitter / X" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-[#1E3A5F] hover:text-white transition-all">
                     <Link2 className="w-5 h-5" />
                   </a>
                 )}
                 {social.instagram && (
-                  <a href={social.instagram} target="_blank" rel="noopener noreferrer" title="Instagram" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-[#F59E0B] hover:text-white transition-all">
+                  <a href={social.instagram} target="_blank" rel="noopener noreferrer" title="Instagram" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-[#1E3A5F] hover:text-white transition-all">
                     <ExternalLink className="w-5 h-5" />
                   </a>
                 )}
                 {social.youtube && (
-                  <a href={social.youtube} target="_blank" rel="noopener noreferrer" title="YouTube" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-[#F59E0B] hover:text-white transition-all">
+                  <a href={social.youtube} target="_blank" rel="noopener noreferrer" title="YouTube" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-[#1E3A5F] hover:text-white transition-all">
                     <Video className="w-5 h-5" />
                   </a>
                 )}
@@ -157,7 +157,7 @@ export function Contact({ data }: { data?: ContactData | null }) {
 
           {/* Right: Contact Form */}
           <div className="bg-[#0F172A] p-10 rounded-sm shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[#F59E0B] rounded-full blur-[100px] opacity-20 -z-0" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#1E3A5F] rounded-full blur-[100px] opacity-20 -z-0" />
             <div className="relative z-10">
               <h4 className="text-2xl font-serif font-bold text-white mb-6">Send an Enquiry</h4>
               
@@ -178,20 +178,20 @@ export function Contact({ data }: { data?: ContactData | null }) {
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-[13px] font-bold text-slate-300 uppercase tracking-wide">Parent's Name</label>
-                    <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#F59E0B] transition-colors" placeholder="John Doe" />
+                    <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#1E3A5F] transition-colors" placeholder="John Doe" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[13px] font-bold text-slate-300 uppercase tracking-wide">Phone Number</label>
-                    <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#F59E0B] transition-colors" placeholder="+91 98765 43210" />
+                    <input type="tel" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#1E3A5F] transition-colors" placeholder="+91 98765 43210" />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[13px] font-bold text-slate-300 uppercase tracking-wide">Email Address</label>
-                  <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#F59E0B] transition-colors" placeholder="john@example.com" />
+                  <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#1E3A5F] transition-colors" placeholder="john@example.com" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[13px] font-bold text-slate-300 uppercase tracking-wide">Grade Applying For</label>
-                  <select value={formData.grade} onChange={(e) => setFormData({...formData, grade: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#F59E0B] transition-colors appearance-none">
+                  <select value={formData.grade} onChange={(e) => setFormData({...formData, grade: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-[#1E3A5F] transition-colors appearance-none">
                     <option className="bg-[#0F172A]">Pre-Primary</option>
                     <option className="bg-[#0F172A]">Primary (I-V)</option>
                     <option className="bg-[#0F172A]">Middle (VI-VIII)</option>
@@ -199,7 +199,7 @@ export function Contact({ data }: { data?: ContactData | null }) {
                     <option className="bg-[#0F172A]">Senior Secondary (XI-XII)</option>
                   </select>
                 </div>
-                <button type="submit" disabled={status === "loading"} className="w-full flex items-center justify-center gap-2 py-4 rounded-sm bg-[#F59E0B] text-white font-bold text-[15px] hover:bg-[#D97706] transition-all duration-300 shadow-lg shadow-[#F59E0B]/20 uppercase tracking-wide disabled:opacity-70 disabled:cursor-not-allowed">
+                <button type="submit" disabled={status === "loading"} className="w-full flex items-center justify-center gap-2 py-4 rounded-sm bg-[#1E3A5F] text-white font-bold text-[15px] hover:bg-[#162C47] transition-all duration-300 shadow-lg shadow-[#1E3A5F]/20 uppercase tracking-wide disabled:opacity-70 disabled:cursor-not-allowed">
                   {status === "loading" ? <Loader2 className="w-5 h-5 animate-spin" /> : "Submit Enquiry"}
                 </button>
               </form>

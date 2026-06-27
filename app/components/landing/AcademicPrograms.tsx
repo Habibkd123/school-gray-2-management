@@ -43,7 +43,7 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div className="max-w-2xl">
-            <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Our Curriculum</h2>
+            <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Our Curriculum</h2>
             <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] leading-tight">
               Academic Programs
             </h3>
@@ -51,7 +51,7 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
               <p className="text-[14px] text-slate-600 mt-4 leading-relaxed max-w-xl">{overview}</p>
             )}
           </div>
-          <a href="/academics" className="hidden md:flex items-center gap-2 font-bold text-[#0F172A] hover:text-[#F59E0B] transition-colors uppercase tracking-wider text-[13px]">
+          <a href="/academics" className="hidden md:flex items-center gap-2 font-bold text-[#0F172A] hover:text-[#1E3A5F] transition-colors uppercase tracking-wider text-[13px]">
             View Syllabus <ChevronRight className="w-5 h-5" />
           </a>
         </div>
@@ -98,7 +98,7 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
                   <div className="p-6 flex-1 flex flex-col">
                     <h4 className="text-xl font-bold text-[#0F172A] mb-2">{prog.title}</h4>
                     <p className="text-slate-600 text-[13px] leading-relaxed mb-4 flex-1">{prog.desc}</p>
-                    <a href="/academics" className="inline-flex items-center gap-1 text-[13px] font-bold text-[#F59E0B] hover:text-[#D97706] uppercase tracking-wider">
+                    <a href="/academics" className="inline-flex items-center gap-1 text-[13px] font-bold text-[#0088CC] hover:text-[#005F8F] uppercase tracking-wider">
                       Learn More <ChevronRight className="w-4 h-4" />
                     </a>
                   </div>

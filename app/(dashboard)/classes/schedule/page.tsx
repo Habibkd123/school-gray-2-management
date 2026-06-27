@@ -174,20 +174,20 @@ export default function SchedulePage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/classes" className="hover:text-[#F59E0B]">Classes</Link>
+            <Link href="/classes" className="hover:text-[#1E3A5F]">Classes</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Schedule</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchSchedules()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#F59E0B] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => fetchSchedules()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
           {isAdmin && (
             <button 
               onClick={openAddModal}
-              className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+              className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Add Schedule
             </button>
@@ -207,7 +207,7 @@ export default function SchedulePage() {
               placeholder="Search schedules" 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
             />
           </div>
         </div>
@@ -216,7 +216,7 @@ export default function SchedulePage() {
         <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
           {isLoading ? (
             <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
-              <Loader2 className="w-8 h-8 animate-spin text-[#F59E0B]" />
+              <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F]" />
               <span>Fetching class schedules...</span>
             </div>
           ) : (
@@ -244,7 +244,7 @@ export default function SchedulePage() {
                 ) : (
                   filteredSchedules.map((schedule) => (
                     <tr key={schedule._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-[#F59E0B]">{schedule._id.substring(schedule._id.length - 8)}</td>
+                      <td className="px-6 py-4 font-semibold text-[#1E3A5F]">{schedule._id.substring(schedule._id.length - 8)}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-bold">{getClassName(schedule.class_id)}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-semibold">{getSubjectName(schedule.subject_id)}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{getTeacherName(schedule.teacher_id)}</td>
@@ -256,7 +256,7 @@ export default function SchedulePage() {
                         <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                           <button 
                             onClick={() => setActionMenuId(actionMenuId === schedule._id ? null : schedule._id)}
-                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === schedule._id ? "bg-[#F59E0B] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === schedule._id ? "bg-[#1E3A5F] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
                           >
                             <MoreVertical className="w-4 h-4" />
                           </button>
@@ -294,7 +294,7 @@ export default function SchedulePage() {
               <select 
                 value={formClassId}
                 onChange={(e) => setFormClassId(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                 required
               >
                 {classes.map(c => <option key={c._id} value={c._id}>{c.name} - {c.section}</option>)}
@@ -309,7 +309,7 @@ export default function SchedulePage() {
               <select 
                 value={formSubject}
                 onChange={(e) => setFormSubject(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer disabled:opacity-50"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer disabled:opacity-50"
                 required
                 disabled={!formClassId || availableSubjects.length === 0}
               >
@@ -326,7 +326,7 @@ export default function SchedulePage() {
               <select 
                 value={formTeacherId}
                 onChange={(e) => setFormTeacherId(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                 required
               >
                 {teachers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
@@ -341,7 +341,7 @@ export default function SchedulePage() {
               <select 
                 value={formDay}
                 onChange={(e) => setFormDay(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                 required
               >
                 {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(d => <option key={d} value={d}>{d}</option>)}
@@ -357,7 +357,7 @@ export default function SchedulePage() {
                 <select 
                   value={formStartTime}
                   onChange={(e) => setFormStartTime(e.target.value)}
-                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer font-mono"
+                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer font-mono"
                   required
                 >
                   <option value="">Select Start Time</option>
@@ -372,7 +372,7 @@ export default function SchedulePage() {
                 <select 
                   value={formEndTime}
                   onChange={(e) => setFormEndTime(e.target.value)}
-                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer font-mono"
+                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer font-mono"
                   required
                 >
                   <option value="">Select End Time</option>
@@ -390,7 +390,7 @@ export default function SchedulePage() {
               value={formRoom} 
               onChange={(e) => setFormRoom(e.target.value)} 
               placeholder="e.g. 101"
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B] transition-colors text-slate-700 dark:text-slate-200" 
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200" 
             />
           </div>
 
@@ -404,7 +404,7 @@ export default function SchedulePage() {
             </button>
             <button 
               type="submit" 
-              className="px-6 py-2.5 bg-[#F59E0B] text-white text-[14px] font-bold rounded-lg hover:bg-[#D97706] transition-colors shadow-sm cursor-pointer"
+              className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer"
             >
               {isAddOpen ? "Add Schedule" : "Save Changes"}
             </button>

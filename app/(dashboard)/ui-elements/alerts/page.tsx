@@ -15,7 +15,7 @@ export default function AlertsPage() {
         <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
           <span>Dashboard</span>
           <span>/</span>
-          <span className="hover:text-[#F59E0B] cursor-pointer">UI Elements</span>
+          <span className="hover:text-[#1E3A5F] cursor-pointer">UI Elements</span>
           <span>/</span>
           <span className="text-slate-900 dark:text-white font-medium">Alerts</span>
         </div>

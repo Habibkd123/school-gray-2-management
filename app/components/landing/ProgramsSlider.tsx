@@ -92,7 +92,7 @@ export default function ProgramsSlider({ programs }: { programs: Program[] }) {
                   </div>
                 </div>
                 <div className="p-6 flex-1 flex flex-col">
-                  <span className="text-[11px] font-bold text-[#F59E0B] uppercase tracking-widest">{p.age}</span>
+                  <span className="text-[11px] font-bold text-[#1E3A5F] uppercase tracking-widest">{p.age}</span>
                   <h4 className="text-xl font-bold text-[#0F172A] mt-1 mb-2">{p.title}</h4>
                   <p className="text-slate-500 text-[13px] leading-relaxed flex-1">{p.desc}</p>
                 </div>
@@ -131,7 +131,7 @@ export default function ProgramsSlider({ programs }: { programs: Program[] }) {
               onClick={() => setCurrentIndex(idx)}
               className={`h-2.5 rounded-full transition-all duration-300 ${
                 currentIndex === idx 
-                  ? "w-8 bg-[#F59E0B]" 
+                  ? "w-8 bg-[#1E3A5F]" 
                   : "w-2.5 bg-slate-300 hover:bg-slate-400"
               }`}
               aria-label={`Go to slide ${idx + 1}`}

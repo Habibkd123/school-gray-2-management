@@ -27,10 +27,10 @@ export default async function PhotosPage() {
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
       <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Photo Gallery</h1>
-      <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-12">{photos.length} Photos</p>
+      <p className="text-[#1E3A5F] font-bold uppercase tracking-widest text-[12px] mb-12">{photos.length} Photos</p>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {photos.map((img: any, idx: number) => (
-          <div key={idx} className="relative aspect-square rounded-sm overflow-hidden group border-2 border-transparent hover:border-[#F59E0B] transition-colors">
+          <div key={idx} className="relative aspect-square rounded-sm overflow-hidden group border-2 border-transparent hover:border-[#1E3A5F] transition-colors">
             <img src={img.src} alt={img.label} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
               <span className="text-white font-bold text-[13px]">{img.label}</span>

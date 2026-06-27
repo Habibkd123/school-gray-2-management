@@ -72,13 +72,13 @@ export default function LeaveReportPage() {
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Leave Report</h1>
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span><span>/</span>
-            <span className="hover:text-[#F59E0B] cursor-pointer">Reports</span><span>/</span>
+            <span className="hover:text-[#1E3A5F] cursor-pointer">Reports</span><span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Leave Report</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><RefreshCw className="w-4 h-4" /></button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#F59E0B] transition-colors shadow-sm cursor-pointer"><Printer className="w-4 h-4" /></button>
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer"><RefreshCw className="w-4 h-4" /></button>
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer"><Printer className="w-4 h-4" /></button>
           <div className="relative">
             <button onClick={() => setIsExportOpen(!isExportOpen)} className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer">
               <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400" />
@@ -148,7 +148,7 @@ export default function LeaveReportPage() {
                     </div>
                     <div className="p-4 flex justify-end gap-3 border-t border-border">
                       <button onClick={() => { setFilterType(""); setFilterStatus(""); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] text-[13px] font-bold rounded-lg cursor-pointer">Reset</button>
-                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-[#F59E0B] text-white text-[13px] font-bold rounded-lg cursor-pointer">Apply</button>
+                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-[#1E3A5F] text-white text-[13px] font-bold rounded-lg cursor-pointer">Apply</button>
                     </div>
                   </div>
                 </>
@@ -177,7 +177,7 @@ export default function LeaveReportPage() {
           <span className="text-[13px] text-slate-500">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredLeaves.length}</span> requests</span>
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input type="text" placeholder="Search applicant…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B] transition-colors" />
+            <input type="text" placeholder="Search applicant…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors" />
           </div>
         </div>
 
@@ -233,7 +233,7 @@ export default function LeaveReportPage() {
         </div>
         <div className="p-5 border-t border-border flex items-center justify-end gap-2">
           <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 transition-colors">Prev</button>
-          <button className="w-7 h-7 rounded-lg bg-[#F59E0B] text-white text-[13px] font-medium flex items-center justify-center">1</button>
+          <button className="w-7 h-7 rounded-lg bg-[#1E3A5F] text-white text-[13px] font-medium flex items-center justify-center">1</button>
           <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 transition-colors">Next</button>
         </div>
       </div>

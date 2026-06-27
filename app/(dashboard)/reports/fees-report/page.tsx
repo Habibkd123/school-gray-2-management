@@ -61,7 +61,7 @@ export default function FeesReportPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/reports" className="hover:text-[#F59E0B]">Reports</Link>
+            <Link href="/reports" className="hover:text-[#1E3A5F]">Reports</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Fees Report</span>
           </div>
@@ -71,8 +71,8 @@ export default function FeesReportPage() {
           <select 
             value={dateRange} 
             onChange={e => setDateRange(e.target.value)}
-            className={`px-3 py-2 bg-white dark:bg-slate-900 border text-[13px] text-slate-900 dark:text-white rounded-lg outline-none focus:border-[#F59E0B] transition-colors ${
-              dateRange !== "all" ? "border-[#F59E0B] bg-[#FFF9E6] dark:bg-[#F59E0B]/10" : "border-border"
+            className={`px-3 py-2 bg-white dark:bg-slate-900 border text-[13px] text-slate-900 dark:text-white rounded-lg outline-none focus:border-[#1E3A5F] transition-colors ${
+              dateRange !== "all" ? "border-[#1E3A5F] bg-[#FFF9E6] dark:bg-[#1E3A5F]/10" : "border-border"
             }`}
           >
             <option value="all" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Time</option>
@@ -82,7 +82,7 @@ export default function FeesReportPage() {
           </select>
           <button 
             onClick={handlePrint}
-            className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+            className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm"
           >
             <Printer className="w-4 h-4" /> Print Report
           </button>
@@ -91,7 +91,7 @@ export default function FeesReportPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-40">
-          <Loader2 className="w-8 h-8 text-[#F59E0B] animate-spin" />
+          <Loader2 className="w-8 h-8 text-[#1E3A5F] animate-spin" />
         </div>
       ) : (
         <>

@@ -1,82 +1,149 @@
 import React from "react";
-import { MapPin, Phone, Mail } from "lucide-react";
+import { MapPin, Phone, Mail, ExternalLink } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-[#020617] pt-20 pb-10 border-t border-slate-800 text-slate-400">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
-          
-          <div className="col-span-1 lg:col-span-1">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-white shrink-0 flex items-center justify-center p-1 border-2 border-slate-700">
+    <footer className="bg-[#231F20] text-[#CCCCCC]">
+      
+      {/* ── Red Top Bar ─────────────────────────────────── */}
+      <div className="w-full h-1 bg-[#1E3A5F]" />
+
+      {/* ── Pre-Footer CTA Strip ─────────────────────────── */}
+      <div className="bg-[#1E3A5F] py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <div className="text-[11px] font-bold text-white/70 uppercase tracking-widest mb-1">
+              New Academic Year 2026-27
+            </div>
+            <div className="text-[22px] font-black text-white">
+              Admissions are now open — Apply Today!
+            </div>
+          </div>
+          <a
+            href="#admissions"
+            className="flex-shrink-0 px-8 py-3 rounded-sm bg-[#231F20] text-white font-bold text-[14px] hover:bg-[#07070A] transition-colors uppercase tracking-wider border border-white/20"
+          >
+            Apply Now →
+          </a>
+        </div>
+      </div>
+
+      {/* ── Main Footer ─────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+
+          {/* Brand Column */}
+          <div className="col-span-1">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-white shrink-0 flex items-center justify-center p-1 border-2 border-[#1E3A5F]">
                 <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
-                <span className="text-[22px] font-black tracking-tight text-white leading-none">
+                <span className="text-[20px] font-black tracking-tight text-white leading-none">
                   MySchoolLife
                 </span>
-                <span className="text-[10px] font-bold tracking-widest text-[#F59E0B] uppercase">Public School</span>
+                <span className="text-[10px] font-bold tracking-widest text-[#1E3A5F] uppercase">Public School</span>
               </div>
             </div>
-            <p className="leading-relaxed mb-6 text-[14px]">
-              Affiliated to CBSE, New Delhi.<br/>Affiliation No: 1234567<br/>School Code: 98765
+            <p className="leading-relaxed mb-5 text-[13px] text-[#999999]">
+              Affiliated to CBSE, New Delhi.<br />
+              Affiliation No: 1234567<br />
+              School Code: 98765
             </p>
-            <div className="flex items-center gap-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#F59E0B] hover:text-white transition-colors"><FacebookIcon className="w-4 h-4" /></a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#F59E0B] hover:text-white transition-colors"><TwitterIcon className="w-4 h-4" /></a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#F59E0B] hover:text-white transition-colors"><InstagramIcon className="w-4 h-4" /></a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#F59E0B] hover:text-white transition-colors"><LinkedinIcon className="w-4 h-4" /></a>
+            {/* Social Icons */}
+            <div className="flex items-center gap-3">
+              {[FacebookIcon, TwitterIcon, InstagramIcon, LinkedinIcon].map((Icon, i) => (
+                <a key={i} href="#" className="w-9 h-9 rounded-sm bg-[#07070A] border border-[#5C5D5D] flex items-center justify-center hover:bg-[#1E3A5F] hover:border-[#1E3A5F] transition-all duration-300">
+                  <Icon className="w-4 h-4" />
+                </a>
+              ))}
             </div>
           </div>
 
+          {/* Quick Links */}
           <div>
-            <h4 className="font-bold text-white mb-6 text-[16px] uppercase tracking-wider">Quick Links</h4>
-            <ul className="space-y-3 font-medium text-[14px]">
-              <li><a href="#about" className="hover:text-[#F59E0B] transition-colors">About Management</a></li>
-              <li><a href="#admissions" className="hover:text-[#F59E0B] transition-colors">Admission Enquiry</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Fee Structure 2024-25</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">CBSE Mandatory Public Disclosures</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Transfer Certificate (TC) List</a></li>
+            <h4 className="font-black text-white mb-5 text-[14px] uppercase tracking-wider flex items-center gap-2">
+              <span className="w-4 h-0.5 bg-[#1E3A5F] inline-block" />
+              Quick Links
+            </h4>
+            <ul className="space-y-2.5 text-[13px]">
+              {[
+                "About Management", "Admission Enquiry",
+                "Fee Structure 2025-26", "CBSE Mandatory Disclosures",
+                "Transfer Certificate List", "Student Login",
+              ].map((link) => (
+                <li key={link}>
+                  <a href="#" className="flex items-center gap-2 text-[#999999] hover:text-[#1E3A5F] transition-colors group">
+                    <span className="w-1 h-1 rounded-full bg-[#1E3A5F] group-hover:w-2 transition-all" />
+                    {link}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
+          {/* Academics */}
           <div>
-            <h4 className="font-bold text-white mb-6 text-[16px] uppercase tracking-wider">Academics</h4>
-            <ul className="space-y-3 font-medium text-[14px]">
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Pre-Primary Wing</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Primary Wing</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Middle Wing</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Secondary Wing</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Senior Secondary Wing</a></li>
+            <h4 className="font-black text-white mb-5 text-[14px] uppercase tracking-wider flex items-center gap-2">
+              <span className="w-4 h-0.5 bg-[#1E3A5F] inline-block" />
+              Academics
+            </h4>
+            <ul className="space-y-2.5 text-[13px]">
+              {[
+                "Pre-Primary Wing", "Primary Wing",
+                "Middle Wing", "Secondary Wing",
+                "Senior Secondary Wing", "Sports & Co-curricular",
+              ].map((link) => (
+                <li key={link}>
+                  <a href="#" className="flex items-center gap-2 text-[#999999] hover:text-[#1E3A5F] transition-colors group">
+                    <span className="w-1 h-1 rounded-full bg-[#1E3A5F] group-hover:w-2 transition-all" />
+                    {link}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
+          {/* Contact */}
           <div>
-            <h4 className="font-bold text-white mb-6 text-[16px] uppercase tracking-wider">Contact Us</h4>
-            <ul className="space-y-4 font-medium text-[14px]">
+            <h4 className="font-black text-white mb-5 text-[14px] uppercase tracking-wider flex items-center gap-2">
+              <span className="w-4 h-0.5 bg-[#1E3A5F] inline-block" />
+              Contact Us
+            </h4>
+            <ul className="space-y-4 text-[13px]">
               <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-[#F59E0B] shrink-0 mt-0.5" />
-                <span>Sector 62, Knowledge Park,<br />New Delhi, 110001, India</span>
+                <MapPin className="w-4 h-4 text-[#1E3A5F] shrink-0 mt-0.5" />
+                <span className="text-[#999999]">Sector 62, Knowledge Park,<br />New Delhi, 110001, India</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-[#F59E0B] shrink-0" />
-                <span>+91 98765 43210</span>
+                <Phone className="w-4 h-4 text-[#1E3A5F] shrink-0" />
+                <a href="tel:+919876543210" className="text-[#999999] hover:text-[#0088CC] transition-colors">+91 98765 43210</a>
               </li>
               <li className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-[#F59E0B] shrink-0" />
-                <span>info@MySchoolLife.edu.in</span>
+                <Mail className="w-4 h-4 text-[#1E3A5F] shrink-0" />
+                <a href="mailto:info@myschoollife.edu.in" className="text-[#999999] hover:text-[#0088CC] transition-colors">info@myschoollife.edu.in</a>
+              </li>
+              <li>
+                <a href="#" className="inline-flex items-center gap-1.5 text-[#0088CC] hover:underline text-[13px] font-semibold">
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  View on Google Maps
+                </a>
               </li>
             </ul>
           </div>
+
         </div>
 
-        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-[13px] font-medium">
-          <p>Copyright © 2024 MySchoolLife Public School. All rights reserved.</p>
-          <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-[#F59E0B] transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-[#F59E0B] transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-[#F59E0B] transition-colors">Sitemap</a>
+        {/* ── Bottom Bar ─────────────────────────────────── */}
+        <div className="pt-6 border-t border-[#5C5D5D]/50 flex flex-col md:flex-row items-center justify-between gap-4 text-[12px]">
+          <p className="text-[#828283]">Copyright © {new Date().getFullYear()} MySchoolLife Public School. All rights reserved.</p>
+          <div className="flex items-center gap-4 text-[#828283]">
+            {["Privacy Policy", "Terms of Service", "Sitemap"].map((item, i, arr) => (
+              <React.Fragment key={item}>
+                <a href="#" className="hover:text-[#1E3A5F] transition-colors">{item}</a>
+                {i < arr.length - 1 && <span className="text-[#5C5D5D]">·</span>}
+              </React.Fragment>
+            ))}
           </div>
         </div>
       </div>
@@ -84,23 +151,21 @@ export function Footer() {
   );
 }
 
-function FacebookIcon(props: any) {
+function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
     </svg>
   );
 }
-
-function TwitterIcon(props: any) {
+function TwitterIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
     </svg>
   );
 }
-
-function InstagramIcon(props: any) {
+function InstagramIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
@@ -109,8 +174,7 @@ function InstagramIcon(props: any) {
     </svg>
   );
 }
-
-function LinkedinIcon(props: any) {
+function LinkedinIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>

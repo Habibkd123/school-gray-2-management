@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
         <h3>Password Reset Request</h3>
         <p>Hello ${user.name},</p>
         <p>You requested a password reset. Click the link below to set a new password:</p>
-        <p><a href="${resetUrl}" target="_blank" style="display:inline-block;padding:10px 20px;background-color:#F59E0B;color:white;text-decoration:none;border-radius:5px;">Reset Password</a></p>
+        <p><a href="${resetUrl}" target="_blank" style="display:inline-block;padding:10px 20px;background-color:#1E3A5F;color:white;text-decoration:none;border-radius:5px;">Reset Password</a></p>
         <p>If you did not request this, please ignore this email. The link will expire in 1 hour.</p>
         <br/>
         <p>Thank you,<br/>School ERP Team</p>
