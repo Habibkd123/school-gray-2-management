@@ -36,23 +36,14 @@ export default async function AcademicsPage() {
   return (
     <main className="w-full">
       {/* Hero */}
-<<<<<<< Updated upstream
-      <section className="relative py-28 bg-[#0F172A]">
-=======
       <section className="relative py-28 bg-white">
->>>>>>> Stashed changes
         <div className="absolute inset-0">
           <img src={academics?.hero_image_url || "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1920&auto=format&fit=crop"} alt="Academics" className="w-full h-full object-cover" style={{ filter: "blur(3px)", transform: "scale(1.05)" }} />
           <div className="absolute inset-0 z-0 pointer-events-none" style={{ backgroundColor: "color-mix(in oklab, #ffffff6b 90%, transparent)" }} />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-<<<<<<< Updated upstream
-          <span className="inline-block px-4 py-1.5 bg-[#F59E0B]/20 border border-[#F59E0B]/30 text-[#FDBA74] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Our Curriculum</span>
-          <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">Academic Programs</h1>
-=======
           <span className="inline-block px-4 py-1.5 bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Our Curriculum</span>
           <h1 className="text-5xl md:text-6xl  font-bold text-[#231F20] font-sans font-black leading-tight">Academic Programs</h1>
->>>>>>> Stashed changes
         </div>
       </section>
 
@@ -90,15 +81,9 @@ export default async function AcademicsPage() {
                   ) : (
                     <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center mx-auto mb-4"><Users className="w-8 h-8 text-slate-400" /></div>
                   )}
-<<<<<<< Updated upstream
-                  <h4 className="font-bold text-[#0F172A] text-[15px]">{m.name}</h4>
-                  <p className="text-[#F59E0B] text-[12px] font-bold uppercase tracking-wide mt-1">{m.subject}</p>
-                  {m.qualification && <p className="text-slate-400 text-[12px] mt-1">{m.qualification}</p>}
-=======
                   <h4 className="font-bold text-foreground text-[15px]">{m.name}</h4>
                   <p className="text-primary text-[12px] font-bold uppercase tracking-wide mt-1">{m.subject}</p>
                   {m.qualification && <p className="text-slate-600 text-[12px] mt-1">{m.qualification}</p>}
->>>>>>> Stashed changes
                 </div>
               ))}
             </div>
@@ -107,11 +92,7 @@ export default async function AcademicsPage() {
       )}
 
       {/* Quick links */}
-<<<<<<< Updated upstream
-      <section className="py-14 bg-[#0F172A]">
-=======
       <section className="py-14 bg-white">
->>>>>>> Stashed changes
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
@@ -120,13 +101,8 @@ export default async function AcademicsPage() {
               { href: "/academics/faculty", label: "Faculty", icon: Users },
               { href: "/academics/calendar", label: "Academic Calendar", icon: Calendar },
             ].map((l) => (
-<<<<<<< Updated upstream
-              <Link key={l.href} href={l.href} className="flex items-center gap-3 p-5 bg-white/5 border border-white/10 rounded-sm hover:bg-[#F59E0B]/10 hover:border-[#F59E0B]/30 transition-all group">
-                <l.icon className="w-5 h-5 text-[#F59E0B]" />
-=======
               <Link key={l.href} href={l.href} className="flex items-center gap-3 p-5 bg-white/5 border border-white/10 rounded-sm hover:bg-primary/10 hover:border-[var(--primary)]/20 transition-all group">
                 <l.icon className="w-5 h-5 text-primary" />
->>>>>>> Stashed changes
                 <span className="text-white font-bold text-[14px]">{l.label}</span>
                 <ChevronRight className="w-4 h-4 text-white/40 ml-auto group-hover:text-[#F59E0B]" />
               </Link>

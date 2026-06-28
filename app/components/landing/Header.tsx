@@ -2,21 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Phone, Mail } from "lucide-react";
+import { usePublicSchoolInfo } from "@/app/hooks/usePublicSchoolInfo";
 
-<<<<<<< Updated upstream
-export function Header() {
-  const [isOpen, setIsOpen] = React.useState(false);
-
-  return (
-    <>
-      {/* Top Bar for Affiliation & Quick Links */}
-      <div className="hidden lg:flex bg-[#0F172A] text-white/80 py-2 px-6 text-[12px] font-medium justify-between items-center border-b border-white/10">
-        <div className="flex items-center gap-4">
-          <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Admissions Open {new Date().getFullYear()}-{String(new Date().getFullYear() + 1).slice(2)}</span>
-          <span className="text-white/30">|</span>
-          <span>Affiliated to CBSE, New Delhi</span>
-=======
 // Inline SVG social icons (lucide-react version may not include these)
 const FacebookIcon = () => <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>;
 const TwitterIcon = () => <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" /></svg>;
@@ -53,6 +41,7 @@ interface EnabledPage {
   enabled: boolean;
   order: number;
   slug?: string;
+  isCustom?: boolean;
 }
 
 interface HeaderProps {
@@ -172,49 +161,47 @@ export function Header({
             )}
           </div>
 
-          {/* Social Icons in top bar */}
-          {(socialIcons?.facebook || socialIcons?.twitter || socialIcons?.instagram || socialIcons?.youtube) && (
-            <div className="flex items-center gap-3">
-              {socialIcons.facebook && (
-                <a href={socialIcons.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                  <FacebookIcon />
-                </a>
-              )}
-              {socialIcons.twitter && (
-                <a href={socialIcons.twitter} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                  <TwitterIcon />
-                </a>
-              )}
-              {socialIcons.instagram && (
-                <a href={socialIcons.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                  <InstagramIcon />
-                </a>
-              )}
-              {socialIcons.youtube && (
-                <a href={socialIcons.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
-                  <YoutubeIcon />
-                </a>
-              )}
+          {/* Right side: Quick links & Social Icons */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
+              <a href="#" className="hover:text-white transition-colors">Pay Fees Online</a>
+              <span className="text-[#5C5D5D]">|</span>
+              <a href="#" className="hover:text-white transition-colors">Mandatory Disclosures</a>
+              <span className="text-[#5C5D5D]">|</span>
+              <a href="#" className="hover:text-white transition-colors">Alumni Network</a>
             </div>
-          )}
->>>>>>> Stashed changes
-        </div>
-        <div className="flex items-center gap-4">
-          <a href="#" className="hover:text-[#F59E0B] transition-colors">Pay Fees Online</a>
-          <a href="#" className="hover:text-[#F59E0B] transition-colors">Mandatory Disclosures</a>
-          <a href="#" className="hover:text-[#F59E0B] transition-colors">Alumni Network</a>
-        </div>
-      </div>
 
-<<<<<<< Updated upstream
-      <nav className="sticky top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-200 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+            {(socialIcons?.facebook || socialIcons?.twitter || socialIcons?.instagram || socialIcons?.youtube) && (
+              <>
+                <span className="text-[#5C5D5D]">|</span>
+                <div className="flex items-center gap-3">
+                  {socialIcons.facebook && (
+                    <a href={socialIcons.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                      <FacebookIcon />
+                    </a>
+                  )}
+                  {socialIcons.twitter && (
+                    <a href={socialIcons.twitter} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                      <TwitterIcon />
+                    </a>
+                  )}
+                  {socialIcons.instagram && (
+                    <a href={socialIcons.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                      <InstagramIcon />
+                    </a>
+                  )}
+                  {socialIcons.youtube && (
+                    <a href={socialIcons.youtube} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                      <YoutubeIcon />
+                    </a>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[#0F172A] flex items-center justify-center">
-              <img src="/logo.png" alt="MySchoolLife Logo" className="w-full h-full object-contain p-1" />
-=======
       {/* ── Main Nav ──────────────────────────────────────────── */}
       <nav className={`${navPosition} left-0 right-0 z-50 bg-[#FFFFFF] shadow-md border-b-4 border-[var(--primary)] transition-all duration-300`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
@@ -223,7 +210,6 @@ export function Header({
           <Link href="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[var(--primary)] flex items-center justify-center">
               <img src="/logo.png" alt="School Logo" className="w-full h-full object-contain p-1" />
->>>>>>> Stashed changes
             </div>
             <div className="flex flex-col">
               <span className="text-[22px] font-black tracking-tight text-[#0F172A] leading-none">
@@ -234,30 +220,6 @@ export function Header({
           </Link>
 
           {/* Desktop Menu */}
-<<<<<<< Updated upstream
-          <div className="hidden lg:flex items-center gap-6 font-bold text-[13px] uppercase tracking-wide">
-            <Link href="/" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Home</Link>
-            <Link href="/about" className="text-slate-800 hover:text-[#F59E0B] transition-colors">About Us</Link>
-            <Link href="/academics" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Academics</Link>
-            <Link href="/admissions" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Admissions</Link>
-            <Link href="/student-life" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Student Life</Link>
-            <Link href="/news" className="text-slate-800 hover:text-[#F59E0B] transition-colors">News</Link>
-            <Link href="/gallery" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Gallery</Link>
-            <Link href="/contact" className="text-slate-800 hover:text-[#F59E0B] transition-colors">Contact</Link>
-          </div>
-
-          {/* Buttons */}
-          <div className="hidden lg:flex items-center gap-4">
-            {/* <button className="px-6 py-2.5 rounded-sm border-2 border-[#0F172A] text-[#0F172A] font-bold text-[14px] hover:bg-[#0F172A] hover:text-white transition-all duration-300">
-              Apply Now
-            </button> */}
-            <Link
-              href="/login"
-              className="px-6 py-2.5 rounded-sm bg-[#F59E0B] text-white font-bold text-[14px] shadow-lg shadow-[#F59E0B]/30 hover:bg-[#D97706] hover:-translate-y-0.5 transition-all duration-300"
-            >
-              Login
-            </Link>
-=======
           <div className="hidden lg:flex items-center gap-0 font-bold text-[13px] uppercase tracking-wide">
             {navLinks.map((item) => (
               <Link
@@ -289,7 +251,6 @@ export function Header({
                 {loginBtn.text || "Portal Login"}
               </Link>
             )}
->>>>>>> Stashed changes
           </div>
 
           {/* Mobile Toggle */}
@@ -303,30 +264,6 @@ export function Header({
 
         {/* Mobile Dropdown */}
         {isOpen && (
-<<<<<<< Updated upstream
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-2xl p-4 flex flex-col gap-4 max-h-[80vh] overflow-y-auto">
-            <Link href="/" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Home</Link>
-            <Link href="/about" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">About Us</Link>
-            <Link href="/academics" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Academics</Link>
-            <Link href="/admissions" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Admissions</Link>
-            <Link href="/student-life" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Student Life</Link>
-            <Link href="/news" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">News</Link>
-            <Link href="/gallery" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Gallery</Link>
-            <Link href="/contact" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] uppercase text-sm border-b border-slate-100 pb-2">Contact</Link>
-
-            {/* Quick Links for Mobile */}
-            <div className="pt-2 flex flex-col gap-3">
-              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quick Links</span>
-              <a href="#" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] text-sm">Pay Fees Online</a>
-              <a href="#" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] text-sm">Mandatory Disclosures</a>
-              <a href="#" onClick={() => setIsOpen(false)} className="font-bold text-[#0F172A] text-sm">Alumni Network</a>
-            </div>
-
-            <div className="flex flex-col gap-3 mt-4">
-              {/* <button className="w-full py-3 rounded-sm border-2 border-[#0F172A] text-[#0F172A] font-bold">Apply Now</button> */}
-              <Link href="/login" onClick={() => setIsOpen(false)} className="w-full py-3 rounded-sm bg-[#F59E0B] text-white font-bold text-center"> Login</Link>
-            </div>
-=======
           <div className="lg:hidden absolute top-full left-0 right-0 bg-[#FFFFFF] border-t-2 border-[var(--primary)] shadow-2xl p-4 flex flex-col gap-0 max-h-[80vh] overflow-y-auto">
             {navLinks.map((item) => (
               <Link
@@ -364,7 +301,6 @@ export function Header({
                 {loginBtn.text || "Portal Login"}
               </Link>
             )}
->>>>>>> Stashed changes
           </div>
         )}
       </nav>

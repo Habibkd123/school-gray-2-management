@@ -17,13 +17,8 @@ export default async function InfrastructurePage() {
 
   return (
     <main className="py-20 px-4 md:px-8 max-w-5xl mx-auto min-h-[60vh]">
-<<<<<<< Updated upstream
-      <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Infrastructure</h1>
-      <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-10">Our Campus Facilities</p>
-=======
       <h1 className="text-4xl  font-bold text-foreground mb-3">Infrastructure</h1>
       <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-10">Our Campus Facilities</p>
->>>>>>> Stashed changes
 
       <div className="grid lg:grid-cols-2 gap-12 items-start">
         <div>

@@ -2,9 +2,6 @@ import React from "react";
 import { Header } from "../components/landing/Header";
 import { Footer } from "../components/landing/Footer";
 
-<<<<<<< Updated upstream
-export default function WebsiteLayout({
-=======
 async function getLandingAndLayout() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const isDev = process.env.NODE_ENV === "development";
@@ -30,20 +27,10 @@ async function getLandingAndLayout() {
 }
 
 export default async function WebsiteLayout({
->>>>>>> Stashed changes
   children,
 }: {
   children: React.ReactNode;
 }) {
-<<<<<<< Updated upstream
-  return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <Header />
-      <div className="flex-grow">
-        {children}
-      </div>
-      <Footer />
-=======
   const { landing, layout } = await getLandingAndLayout();
 
   // Extract navigation settings from layout config
@@ -78,7 +65,6 @@ export default async function WebsiteLayout({
         footerConfig={layout?.footer ?? null}
         socialIcons={socialIcons}
       />
->>>>>>> Stashed changes
     </div>
   );
 }

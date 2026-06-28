@@ -42,24 +42,6 @@ async function getLayoutConfig() {
   }
 }
 
-<<<<<<< Updated upstream
-  return (
-    <main className="w-full">
-      <Hero data={landingData} />
-      <Highlights data={landingData} />
-      <AboutSchool data={landingData?.about} />
-      <WhyChooseUs data={landingData} />
-      <AcademicPrograms data={landingData?.academics} />
-      <Facilities data={landingData} />
-      <Achievements data={landingData?.student_life} />
-      <Gallery data={landingData?.gallery} />
-      <VirtualCampusTour data={landingData?.gallery} />
-      <Testimonials data={landingData} />
-      <AdmissionProcess data={landingData?.admissions} />
-      <LatestNews data={landingData?.news_notices} />
-      <FAQ data={landingData} />
-      <Contact data={landingData?.contact} />
-=======
 // ─── Section Config → Component mapping ─────────────────────────────────────
 // Maps each homepage section configuration to the React component
 
@@ -211,7 +193,6 @@ export default async function Home() {
   return (
     <main className="w-full">
       {sections.map((section) => renderSection(section, landingData))}
->>>>>>> Stashed changes
     </main>
   );
 }

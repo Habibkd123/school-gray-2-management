@@ -16,13 +16,8 @@ export default async function DocumentsPage() {
   const docs = admissions?.documents_required ?? [];
   return (
     <main className="py-20 px-4 md:px-8 max-w-5xl mx-auto min-h-[60vh]">
-<<<<<<< Updated upstream
-      <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Documents Required</h1>
-      <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-10">Bring the following documents at the time of admission</p>
-=======
       <h1 className="text-4xl  font-bold text-foreground mb-3">Documents Required</h1>
       <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-10">Bring the following documents at the time of admission</p>
->>>>>>> Stashed changes
       {docs.length > 0 ? (
         <ul className="grid sm:grid-cols-2 gap-4">
           {docs.map((doc: string, i: number) => (

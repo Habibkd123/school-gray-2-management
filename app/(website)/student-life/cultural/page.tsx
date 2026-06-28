@@ -21,23 +21,14 @@ export default async function StudentLifeCulturalPage() {
   return (
     <main className="w-full">
       {/* Hero Section */}
-<<<<<<< Updated upstream
-      <section className="relative py-28 bg-[#0F172A]">
-=======
       <section className="relative py-28 bg-white">
->>>>>>> Stashed changes
         <div className="absolute inset-0">
           <img src={heroImage || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1920&auto=format&fit=crop"} alt="Cultural Activities" className="w-full h-full object-cover" style={{ filter: "blur(3px)", transform: "scale(1.05)" }} />
           <div className="absolute inset-0 z-0 pointer-events-none" style={{ backgroundColor: "color-mix(in oklab, #ffffff6b 90%, transparent)" }} />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-<<<<<<< Updated upstream
-          <span className="inline-block px-4 py-1.5 bg-[#F59E0B]/20 border border-[#F59E0B]/30 text-[#FDBA74] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Creative Expression</span>
-          <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">Cultural Activities</h1>
-=======
           <span className="inline-block px-4 py-1.5 bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Creative Expression</span>
           <h1 className="text-5xl md:text-6xl  font-bold text-[#231F20] font-sans font-black leading-tight">Cultural Activities</h1>
->>>>>>> Stashed changes
         </div>
       </section>
 
@@ -89,11 +80,7 @@ export default async function StudentLifeCulturalPage() {
 
             {/* Right Column */}
             <div className="space-y-6">
-<<<<<<< Updated upstream
-              <div className="bg-[#0F172A] text-white p-8 rounded-sm shadow-xl relative overflow-hidden">
-=======
               <div className="bg-white text-white p-8 rounded-sm shadow-xl relative overflow-hidden">
->>>>>>> Stashed changes
                 <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500 rounded-full blur-[70px] opacity-20" />
                 <h4 className="text-lg font-serif font-bold mb-4 relative z-10 text-white flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-[#F59E0B]" />

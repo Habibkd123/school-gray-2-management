@@ -39,25 +39,15 @@ export default async function GalleryPage() {
   return (
     <main className="w-full">
       {/* Hero */}
-<<<<<<< Updated upstream
-      <section className="relative py-28 bg-[#0F172A]">
-=======
       <section className="relative py-28 bg-white">
->>>>>>> Stashed changes
         <div className="absolute inset-0">
           <img src={data?.gallery?.hero_image_url || displayPhotos[0]?.src} alt="Gallery" className="w-full h-full object-cover opacity-25" />
           <div className="absolute inset-0 z-0 pointer-events-none" style={{ backgroundColor: "color-mix(in oklab, #ffffff6b 90%, transparent)" }} />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-<<<<<<< Updated upstream
-          <span className="inline-block px-4 py-1.5 bg-[#F59E0B]/20 border border-[#F59E0B]/30 text-[#FDBA74] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Campus Life</span>
-          <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">Photo Gallery</h1>
-          <p className="text-slate-400 mt-4">{displayPhotos.length} photos</p>
-=======
           <span className="inline-block px-4 py-1.5 bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Campus Life</span>
           <h1 className="text-5xl md:text-6xl  font-bold text-[#231F20] font-sans font-black leading-tight">Photo Gallery</h1>
           <p className="text-slate-600 mt-4">{displayPhotos.length} photos</p>
->>>>>>> Stashed changes
         </div>
       </section>
 

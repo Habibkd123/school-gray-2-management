@@ -1,7 +1,4 @@
 import React from "react";
-<<<<<<< Updated upstream
-import { MapPin, Phone, Mail } from "lucide-react";
-=======
 import Link from "next/link";
 import { MapPin, Phone, Mail, ExternalLink } from "lucide-react";
 import { usePublicSchoolInfo } from "@/app/hooks/usePublicSchoolInfo";
@@ -98,9 +95,7 @@ export function Footer({ contact, about, admissions, footerConfig, socialIcons: 
   const hasAffiliation = affiliationName || affiliationNumber || schoolCode;
   const hasContact = address || phone || email || mapUrl;
   const showAdmissionCTA = admissionOpen;
->>>>>>> Stashed changes
 
-export function Footer() {
   return (
     <footer className="bg-[#020617] pt-20 pb-10 border-t border-slate-800 text-slate-400">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -118,16 +113,6 @@ export function Footer() {
                 <span className="text-[10px] font-bold tracking-widest text-[#F59E0B] uppercase">Public School</span>
               </div>
             </div>
-<<<<<<< Updated upstream
-            <p className="leading-relaxed mb-6 text-[14px]">
-              Affiliated to CBSE, New Delhi.<br/>Affiliation No: 1234567<br/>School Code: 98765
-            </p>
-            <div className="flex items-center gap-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#F59E0B] hover:text-white transition-colors"><FacebookIcon className="w-4 h-4" /></a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#F59E0B] hover:text-white transition-colors"><TwitterIcon className="w-4 h-4" /></a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#F59E0B] hover:text-white transition-colors"><InstagramIcon className="w-4 h-4" /></a>
-              <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-[#F59E0B] hover:text-white transition-colors"><LinkedinIcon className="w-4 h-4" /></a>
-=======
 
             {/* Affiliation info — only if filled */}
             {hasAffiliation && (
@@ -239,59 +224,10 @@ export function Footer() {
                   </li>
                 )}
               </ul>
->>>>>>> Stashed changes
             </div>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-white mb-6 text-[16px] uppercase tracking-wider">Quick Links</h4>
-            <ul className="space-y-3 font-medium text-[14px]">
-              <li><a href="#about" className="hover:text-[#F59E0B] transition-colors">About Management</a></li>
-              <li><a href="#admissions" className="hover:text-[#F59E0B] transition-colors">Admission Enquiry</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Fee Structure 2024-25</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">CBSE Mandatory Public Disclosures</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Transfer Certificate (TC) List</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-white mb-6 text-[16px] uppercase tracking-wider">Academics</h4>
-            <ul className="space-y-3 font-medium text-[14px]">
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Pre-Primary Wing</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Primary Wing</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Middle Wing</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Secondary Wing</a></li>
-              <li><a href="#" className="hover:text-[#F59E0B] transition-colors">Senior Secondary Wing</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-bold text-white mb-6 text-[16px] uppercase tracking-wider">Contact Us</h4>
-            <ul className="space-y-4 font-medium text-[14px]">
-              <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-[#F59E0B] shrink-0 mt-0.5" />
-                <span>Sector 62, Knowledge Park,<br />New Delhi, 110001, India</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-[#F59E0B] shrink-0" />
-                <span>+91 98765 43210</span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail className="w-5 h-5 text-[#F59E0B] shrink-0" />
-                <span>info@MySchoolLife.edu.in</span>
-              </li>
-            </ul>
-          </div>
+          )}
         </div>
 
-<<<<<<< Updated upstream
-        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-[13px] font-medium">
-          <p>Copyright © 2024 MySchoolLife Public School. All rights reserved.</p>
-          <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-[#F59E0B] transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-[#F59E0B] transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-[#F59E0B] transition-colors">Sitemap</a>
-=======
         {/* ── Bottom Bar ─────────────────────────────────── */}
         <div className="pt-6 border-t border-[#5C5D5D]/50 flex flex-col md:flex-row items-center justify-between gap-4 text-[12px]">
           <p className="text-[#828283]">
@@ -306,7 +242,6 @@ export function Footer() {
                 {i < arr.length - 1 && <span className="text-[#5C5D5D]">·</span>}
               </React.Fragment>
             ))}
->>>>>>> Stashed changes
           </div>
         </div>
       </div>

@@ -17,13 +17,8 @@ export default async function ManagementPage() {
 
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
-<<<<<<< Updated upstream
-      <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Management Team</h1>
-      <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-12">Our Leadership</p>
-=======
       <h1 className="text-4xl  font-bold text-foreground mb-3">Management Team</h1>
       <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-12">Our Leadership</p>
->>>>>>> Stashed changes
 
       {team.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
