@@ -88,14 +88,14 @@ export default function AssignFeesPage() {
   const loading = groupsLoading || classesLoading || studentsLoading || allocLoading;
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Assign Fees</h1>
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/fees-collection" className="hover:text-[#1E3A5F]">Fees Collection</Link>
+            <Link href="/fees-collection" className="hover:text-primary">Fees Collection</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Assign Fees</span>
           </div>
@@ -109,7 +109,7 @@ export default function AssignFeesPage() {
             <select 
               value={selectedGroup} 
               onChange={e => { setSelectedGroup(e.target.value); }}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-border rounded-lg text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#1E3A5F] transition-colors"
+              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-border rounded-lg text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary transition-colors"
             >
               <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select...</option>
               {groups.map(g => (
@@ -124,7 +124,7 @@ export default function AssignFeesPage() {
             <select 
               value={selectedClass} 
               onChange={e => handleClassChange(e.target.value)}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-border rounded-lg text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#1E3A5F] transition-colors"
+              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-border rounded-lg text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary transition-colors"
             >
               <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select...</option>
               {classes.map(c => (
@@ -147,7 +147,7 @@ export default function AssignFeesPage() {
             <button 
               disabled={saving}
               onClick={handleSave}
-              className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors disabled:opacity-50"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
               Save Assignments
@@ -156,11 +156,11 @@ export default function AssignFeesPage() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-[13px]">
-              <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+              <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
                 <tr>
                   <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12 cursor-pointer" onClick={toggleAll}>
                     {students.length > 0 && selectedStudents.length === students.length ? (
-                      <CheckSquare className="w-5 h-5 text-[#1E3A5F]" />
+                      <CheckSquare className="w-5 h-5 text-primary" />
                     ) : (
                       <Square className="w-5 h-5 text-slate-400" />
                     )}
@@ -207,7 +207,7 @@ export default function AssignFeesPage() {
                     <tr key={s._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="cursor-pointer" onClick={() => toggleStudent(s._id)}>
-                          {selected ? <CheckSquare className="w-5 h-5 text-[#1E3A5F]" /> : <Square className="w-5 h-5 text-slate-400" />}
+                          {selected ? <CheckSquare className="w-5 h-5 text-primary" /> : <Square className="w-5 h-5 text-slate-400" />}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{s.admission_no}</td>

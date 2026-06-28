@@ -210,7 +210,7 @@ export default function SchoolsPage() {
   if (authLoading || !user || user.role !== "super_admin") {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 text-[#1E3A5F] animate-spin" />
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }

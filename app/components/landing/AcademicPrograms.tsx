@@ -43,15 +43,15 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div className="max-w-2xl">
-            <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Our Curriculum</h2>
-            <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] leading-tight">
+            <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Our Curriculum</h2>
+            <h3 className="text-4xl md:text-5xl font-serif font-bold text-foreground leading-tight">
               Academic Programs
             </h3>
             {overview && (
               <p className="text-[14px] text-slate-600 mt-4 leading-relaxed max-w-xl">{overview}</p>
             )}
           </div>
-          <a href="/academics" className="hidden md:flex items-center gap-2 font-bold text-[#0F172A] hover:text-[#1E3A5F] transition-colors uppercase tracking-wider text-[13px]">
+          <a href="/academics" className="hidden md:flex items-center gap-2 font-bold text-foreground hover:text-primary transition-colors uppercase tracking-wider text-[13px]">
             View Syllabus <ChevronRight className="w-5 h-5" />
           </a>
         </div>
@@ -69,12 +69,12 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
                       <BookOpen className="w-12 h-12 text-slate-300" />
                     </div>
                   )}
-                  <div className="absolute top-4 left-4 bg-[#0F172A] text-white px-3 py-1 text-[11px] font-bold tracking-widest uppercase shadow-md">
+                  <div className="absolute top-4 left-4 bg-[var(--sidebar-bg)] text-white px-3 py-1 text-[11px] font-bold tracking-widest uppercase shadow-md">
                     {member.subject}
                   </div>
                 </div>
                 <div className="p-6 flex-1 flex flex-col">
-                  <h4 className="text-xl font-bold text-[#0F172A] mb-1">{member.name}</h4>
+                  <h4 className="text-xl font-bold text-foreground mb-1">{member.name}</h4>
                   <p className="text-slate-500 text-[12px] mb-3">{member.qualification}</p>
                 </div>
               </div>
@@ -91,12 +91,12 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
                 <div key={idx} className="min-w-full sm:w-[280px] sm:min-w-0 bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 snap-center flex flex-col">
                   <div className="h-48 overflow-hidden relative">
                     <img src={prog.img} alt={prog.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                    <div className="absolute top-4 left-4 bg-[#0F172A] text-white px-3 py-1 text-[11px] font-bold tracking-widest uppercase shadow-md">
+                    <div className="absolute top-4 left-4 bg-[var(--sidebar-bg)] text-white px-3 py-1 text-[11px] font-bold tracking-widest uppercase shadow-md">
                       {prog.age}
                     </div>
                   </div>
                   <div className="p-6 flex-1 flex flex-col">
-                    <h4 className="text-xl font-bold text-[#0F172A] mb-2">{prog.title}</h4>
+                    <h4 className="text-xl font-bold text-foreground mb-2">{prog.title}</h4>
                     <p className="text-slate-600 text-[13px] leading-relaxed mb-4 flex-1">{prog.desc}</p>
                     <a href="/academics" className="inline-flex items-center gap-1 text-[13px] font-bold text-[#0088CC] hover:text-[#005F8F] uppercase tracking-wider">
                       Learn More <ChevronRight className="w-4 h-4" />

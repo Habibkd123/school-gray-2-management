@@ -146,7 +146,7 @@ export default function SubjectMasterPage() {
             <>
               <div className="fixed inset-0 z-40" onClick={() => setActionMenuId(null)} />
               <div className="absolute right-8 top-0 w-32 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-1.5">
-                <button onClick={() => openEdit(s)} className="w-full px-4 py-2 text-[13px] font-semibold text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 text-left">
+                <button onClick={() => openEdit(s)} className="w-full px-4 py-2 text-[13px] font-semibold text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 text-left">
                   <Edit className="w-3.5 h-3.5" /> Edit
                 </button>
                 <button onClick={() => openDelete(s)} className="w-full px-4 py-2 text-[13px] font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 text-left">
@@ -164,10 +164,10 @@ export default function SubjectMasterPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
-          <h1 className="text-[20px] leading-[24px] font-bold text-[#0F172A] dark:text-slate-100">Subject Master</h1>
+          <h1 className="text-[20px] leading-[24px] font-bold text-foreground dark:text-slate-100">Subject Master</h1>
           <div className="flex items-center gap-2 text-[14px] text-[#68718a] mt-1 font-medium">
             <span>Academic Management</span><span>/</span>
-            <span className="text-[#0F172A] dark:text-slate-100">Subjects</span>
+            <span className="text-foreground dark:text-slate-100">Subjects</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -176,7 +176,7 @@ export default function SubjectMasterPage() {
           </button>
           {isAdmin && (
             <button onClick={() => { resetForm(); setIsAddOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
               <Plus className="w-4 h-4" /><span>Add Subject</span>
             </button>
           )}
@@ -191,7 +191,7 @@ export default function SubjectMasterPage() {
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input type="text" placeholder="Search subjects..." value={searchQuery} onChange={(e) => handleSearch(e.target.value)}
-              className="pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none w-full sm:w-64 focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-[#F8FAFC] dark:bg-[#0F172A]" />
+              className="pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none w-full sm:w-64 focus:border-primary/50 transition-colors shadow-sm bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)]" />
           </div>
         </div>
 
@@ -208,13 +208,13 @@ export default function SubjectMasterPage() {
             <BookOpen className="w-10 h-10 opacity-30" />
             <p className="text-[14px] font-medium">No subjects in catalog</p>
             <p className="text-[12px] text-slate-400">Add Physics, Chemistry, Mathematics and more</p>
-            {isAdmin && <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="px-4 py-2 text-[13px] font-bold bg-[#1E3A5F] hover:bg-[#162C47] text-white rounded-lg">Add First Subject</button>}
+            {isAdmin && <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="px-4 py-2 text-[13px] font-bold bg-primary hover:bg-[var(--primary-hover)] text-white rounded-lg">Add First Subject</button>}
           </div>
         ) : (
           <>
             <DataTable columns={columns} data={subjects}
-              selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4" />}
-              renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4" />}
+              selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
+              renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
             />
             {totalPages > 1 && (
               <div className="px-5 py-4 border-t border-border flex items-center justify-between gap-3">
@@ -240,27 +240,27 @@ export default function SubjectMasterPage() {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Subject Name <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Subject Name <span className="text-red-500">*</span></label>
               <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)}
                 placeholder="e.g. Physics, Mathematics"
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Subject Code <span className="text-slate-400 text-[11px]">(optional)</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Subject Code <span className="text-slate-400 text-[11px]">(optional)</span></label>
               <input type="text" value={formCode} onChange={(e) => setFormCode(e.target.value.toUpperCase())}
                 placeholder="e.g. PHY, MATH"
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Description <span className="text-slate-400 text-[11px]">(optional)</span></label>
+            <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Description <span className="text-slate-400 text-[11px]">(optional)</span></label>
             <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)} rows={2}
               placeholder="Brief description of this subject..."
-              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 resize-none" />
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900 resize-none" />
           </div>
           {enableStreams && (
             <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">
                 Allowed Streams <span className="text-slate-400 text-[11px]">(leave blank to allow for all streams)</span>
               </label>
               <div className="space-y-3 p-3 border border-border rounded-lg bg-[#F8FAFC] dark:bg-slate-900/50">
@@ -268,7 +268,7 @@ export default function SubjectMasterPage() {
                   {streams.filter(s => s.status === "Active").map(s => {
                     const checked = formAllowedStreams.includes(s._id);
                     return (
-                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#1E3A5F]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
+                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors shadow-sm text-[13px] font-medium text-foreground dark:text-slate-100">
                         <input type="checkbox" checked={checked}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -277,7 +277,7 @@ export default function SubjectMasterPage() {
                               setFormAllowedStreams(formAllowedStreams.filter(x => x !== s._id));
                             }
                           }}
-                          className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4 cursor-pointer" />
+                          className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer" />
                         <span>{s.name}</span>
                       </label>
                     );
@@ -290,11 +290,11 @@ export default function SubjectMasterPage() {
             </div>
           )}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Status <span className="text-red-500">*</span></label>
+            <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
             <div className="flex gap-3">
               {(["Active", "Inactive"] as const).map(s => (
                 <button key={s} type="button" onClick={() => setFormStatus(s)}
-                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${formStatus === s ? "bg-[#1E3A5F] border-[#1E3A5F] text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${formStatus === s ? "bg-primary border-primary text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
                   {s}
                 </button>
               ))}
@@ -303,9 +303,9 @@ export default function SubjectMasterPage() {
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button type="button" onClick={() => { setIsAddOpen(false); resetForm(); }}
-              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
+              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
             <button type="submit" disabled={submitting}
-              className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
+              className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Add Subject
             </button>
           </div>
@@ -320,27 +320,27 @@ export default function SubjectMasterPage() {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Subject Name <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Subject Name <span className="text-red-500">*</span></label>
               <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)}
                 placeholder="e.g. Physics, Mathematics"
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Subject Code <span className="text-slate-400 text-[11px]">(optional)</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Subject Code <span className="text-slate-400 text-[11px]">(optional)</span></label>
               <input type="text" value={formCode} onChange={(e) => setFormCode(e.target.value.toUpperCase())}
                 placeholder="e.g. PHY, MATH"
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Description <span className="text-slate-400 text-[11px]">(optional)</span></label>
+            <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Description <span className="text-slate-400 text-[11px]">(optional)</span></label>
             <textarea value={formDesc} onChange={(e) => setFormDesc(e.target.value)} rows={2}
               placeholder="Brief description of this subject..."
-              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 resize-none" />
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900 resize-none" />
           </div>
           {enableStreams && (
             <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">
                 Allowed Streams <span className="text-slate-400 text-[11px]">(leave blank to allow for all streams)</span>
               </label>
               <div className="space-y-3 p-3 border border-border rounded-lg bg-[#F8FAFC] dark:bg-slate-900/50">
@@ -348,7 +348,7 @@ export default function SubjectMasterPage() {
                   {streams.filter(s => s.status === "Active").map(s => {
                     const checked = formAllowedStreams.includes(s._id);
                     return (
-                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#1E3A5F]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
+                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors shadow-sm text-[13px] font-medium text-foreground dark:text-slate-100">
                         <input type="checkbox" checked={checked}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -357,7 +357,7 @@ export default function SubjectMasterPage() {
                               setFormAllowedStreams(formAllowedStreams.filter(x => x !== s._id));
                             }
                           }}
-                          className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4 cursor-pointer" />
+                          className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer" />
                         <span>{s.name}</span>
                       </label>
                     );
@@ -370,11 +370,11 @@ export default function SubjectMasterPage() {
             </div>
           )}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Status <span className="text-red-500">*</span></label>
+            <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
             <div className="flex gap-3">
               {(["Active", "Inactive"] as const).map(s => (
                 <button key={s} type="button" onClick={() => setFormStatus(s)}
-                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${formStatus === s ? "bg-[#1E3A5F] border-[#1E3A5F] text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${formStatus === s ? "bg-primary border-primary text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
                   {s}
                 </button>
               ))}
@@ -383,9 +383,9 @@ export default function SubjectMasterPage() {
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button type="button" onClick={() => { setIsEditOpen(false); resetForm(); }}
-              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
+              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
             <button type="submit" disabled={submitting}
-              className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
+              className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Save Changes
             </button>
           </div>
@@ -394,10 +394,10 @@ export default function SubjectMasterPage() {
       <Modal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="Delete Subject">
         <div className="space-y-5 text-left">
           <p className="text-[14px] text-slate-600 dark:text-slate-300">
-            Are you sure you want to delete <span className="font-bold text-[#0F172A] dark:text-white">{selected?.name}</span>?
+            Are you sure you want to delete <span className="font-bold text-foreground dark:text-white">{selected?.name}</span>?
           </p>
           <div className="flex justify-end gap-3">
-            <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg">Cancel</button>
+            <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg">Cancel</button>
             <button onClick={handleDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Delete
             </button>

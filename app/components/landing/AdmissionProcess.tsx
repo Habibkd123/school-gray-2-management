@@ -40,11 +40,11 @@ export function AdmissionProcess({ data }: { data?: AdmissionsData | null }) {
   const steps = apiSteps.length >= 2 ? apiSteps : DEFAULT_STEPS;
 
   return (
-    <section id="admissions" className="py-24 bg-[#0F172A] text-white">
+    <section id="admissions" className="py-24 bg-[var(--sidebar-bg)] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Join Our Legacy</h2>
+          <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Join Our Legacy</h2>
           <h3 className="text-4xl md:text-5xl font-serif font-bold text-white leading-tight">
             Admission Process
           </h3>
@@ -61,7 +61,7 @@ export function AdmissionProcess({ data }: { data?: AdmissionsData | null }) {
           <div className="grid md:grid-cols-4 gap-8">
             {steps.map((step, idx) => (
               <div key={idx} className="relative flex flex-col items-center text-center group">
-                <div className="w-16 h-16 bg-[#0F172A] border-4 border-[#1E3A5F] text-[#1E3A5F] rounded-full flex items-center justify-center text-xl font-black mb-6 relative z-10 shadow-[0_0_20px_rgba(245,158,11,0.3)] group-hover:scale-110 group-hover:bg-[#1E3A5F] group-hover:text-[#0F172A] transition-all duration-300">
+                <div className="w-16 h-16 bg-[var(--sidebar-bg)] border-4 border-primary text-primary rounded-full flex items-center justify-center text-xl font-black mb-6 relative z-10 shadow-[0_0_20px_rgba(245,158,11,0.3)] group-hover:scale-110 group-hover:bg-primary group-hover:text-foreground transition-all duration-300">
                   {idx + 1}
                 </div>
                 <h4 className="text-[16px] font-bold text-white mb-3">{step.title}</h4>
@@ -74,11 +74,11 @@ export function AdmissionProcess({ data }: { data?: AdmissionsData | null }) {
         {/* Documents Required */}
         {docs.length > 0 && (
           <div className="mt-16 bg-white/5 rounded-sm border border-white/10 p-8">
-            <h4 className="text-[#1E3A5F] font-bold text-[13px] uppercase tracking-widest mb-4">Documents Required</h4>
+            <h4 className="text-primary font-bold text-[13px] uppercase tracking-widest mb-4">Documents Required</h4>
             <ul className="grid sm:grid-cols-2 gap-2">
               {docs.map((doc, idx) => (
                 <li key={idx} className="flex items-start gap-2 text-slate-300 text-[14px]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#1E3A5F] mt-2 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
                   {doc}
                 </li>
               ))}
@@ -90,7 +90,7 @@ export function AdmissionProcess({ data }: { data?: AdmissionsData | null }) {
           <div className="mt-16 text-center">
             <a
               href={applyUrl}
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-sm bg-[#1E3A5F] text-white font-bold text-[14px] hover:bg-[#162C47] shadow-xl shadow-[#1E3A5F]/20 hover:-translate-y-1 transition-all duration-300 uppercase tracking-wide"
+              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-sm bg-primary text-white font-bold text-[14px] hover:bg-[var(--primary-hover)] shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all duration-300 uppercase tracking-wide"
             >
               Apply Now <ArrowRight className="w-5 h-5" />
             </a>

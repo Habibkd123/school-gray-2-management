@@ -163,7 +163,7 @@ export default function ExamAttendancePage() {
   }, [classStudents, localRecords]);
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -171,14 +171,14 @@ export default function ExamAttendancePage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/examination" className="hover:text-[#1E3A5F]">Examination</Link>
+            <Link href="/examination" className="hover:text-primary">Examination</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Exam Attendance</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
           <div className="relative">
@@ -189,10 +189,10 @@ export default function ExamAttendancePage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-2 text-left">
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500" /> Export as PDF
                   </button>
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500" /> Export as Excel
                   </button>
                 </div>
@@ -202,7 +202,7 @@ export default function ExamAttendancePage() {
           <button
             onClick={handleSave}
             disabled={saving || !selectedClassId}
-            className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm flex items-center gap-2 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
             Save Attendance
@@ -220,7 +220,7 @@ export default function ExamAttendancePage() {
               <select
                 value={selectedClassId}
                 onChange={(e) => { setSelectedClassId(e.target.value); setSelectedExamId(""); setLocalRecords({}); }}
-                className="w-full px-3.5 py-2.5 text-[13px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-3.5 py-2.5 text-[13px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
               >
                 <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Class</option>
                 {classes.map((c) => (
@@ -240,7 +240,7 @@ export default function ExamAttendancePage() {
               <select
                 value={selectedExamId}
                 onChange={(e) => setSelectedExamId(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-[13px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-3.5 py-2.5 text-[13px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
               >
                 <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Exam</option>
                 {classExams.map((ex) => {
@@ -263,7 +263,7 @@ export default function ExamAttendancePage() {
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-[13px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
+              className="w-full px-3.5 py-2.5 text-[13px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
             />
           </div>
 
@@ -277,7 +277,7 @@ export default function ExamAttendancePage() {
                 placeholder="Name or roll no…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2.5 text-[13px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors"
+                className="w-full pl-9 pr-3 py-2.5 text-[13px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors"
               />
             </div>
           </div>
@@ -310,10 +310,10 @@ export default function ExamAttendancePage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">
-                  <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />
+                  <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                 </th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Student Name</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Roll No</th>
@@ -343,10 +343,10 @@ export default function ExamAttendancePage() {
                 return (
                   <tr key={student._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="px-6 py-4">
-                      <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />
+                      <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                     </td>
                     <td className="px-6 py-4">
-                      <Link href={`/students/${student._id}`} className="font-semibold text-[#1E3A5F] hover:text-[#162C47] transition-colors">
+                      <Link href={`/students/${student._id}`} className="font-semibold text-primary hover:text-[var(--primary-hover)] transition-colors">
                         {student.name}
                       </Link>
                     </td>
@@ -371,7 +371,7 @@ export default function ExamAttendancePage() {
                         value={rec.note}
                         onChange={(e) => setNote(student._id, e.target.value)}
                         placeholder="Optional note…"
-                        className="px-3 py-1.5 text-[12px] bg-slate-50 dark:bg-slate-800 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors w-40 text-slate-700 dark:text-slate-200"
+                        className="px-3 py-1.5 text-[12px] bg-slate-50 dark:bg-slate-800 border border-border rounded-lg outline-none focus:border-primary transition-colors w-40 text-slate-700 dark:text-slate-200"
                       />
                     </td>
                   </tr>

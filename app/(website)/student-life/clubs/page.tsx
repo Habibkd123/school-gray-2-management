@@ -21,13 +21,13 @@ export default async function StudentLifeClubsPage() {
   return (
     <main className="w-full">
       {/* Hero Section */}
-      <section className="relative py-28 bg-[#0F172A]">
+      <section className="relative py-28 bg-[var(--sidebar-bg)]">
         <div className="absolute inset-0">
           <img src={heroImage || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1920&auto=format&fit=crop"} alt="Clubs & Societies" className="w-full h-full object-cover opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <span className="inline-block px-4 py-1.5 bg-[#1E3A5F]/20 border border-[#1E3A5F]/30 text-[#FCA5A5] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Student Groups</span>
+          <span className="inline-block px-4 py-1.5 bg-primary/20 border border-primary/30 text-[#FCA5A5] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Student Groups</span>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">Clubs & Societies</h1>
         </div>
       </section>
@@ -44,7 +44,7 @@ export default async function StudentLifeClubsPage() {
                 </div>
                 <div>
                   <h2 className="text-[12px] font-bold text-blue-500 uppercase tracking-wider">Extracurricular Interest</h2>
-                  <h3 className="text-2xl font-serif font-bold text-[#0F172A]">Clubs and Societies</h3>
+                  <h3 className="text-2xl font-serif font-bold text-foreground">Clubs and Societies</h3>
                 </div>
               </div>
 
@@ -65,7 +65,7 @@ export default async function StudentLifeClubsPage() {
                     <Code className="w-5 h-5 text-indigo-500" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#0F172A] text-[14px] mb-1">Coding & Tech Club</h4>
+                    <h4 className="font-bold text-foreground text-[14px] mb-1">Coding & Tech Club</h4>
                     <p className="text-slate-500 text-[12px] leading-relaxed">Fostering programmatic logic, web creation, and artificial intelligence exploration.</p>
                   </div>
                 </div>
@@ -75,7 +75,7 @@ export default async function StudentLifeClubsPage() {
                     <BookOpen className="w-5 h-5 text-emerald-500" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#0F172A] text-[14px] mb-1">Literary & Debate Society</h4>
+                    <h4 className="font-bold text-foreground text-[14px] mb-1">Literary & Debate Society</h4>
                     <p className="text-slate-500 text-[12px] leading-relaxed">Promoting public speaking, declamation, poetry, and creative writing.</p>
                   </div>
                 </div>
@@ -85,7 +85,7 @@ export default async function StudentLifeClubsPage() {
                     <Compass className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#0F172A] text-[14px] mb-1">Eco Club</h4>
+                    <h4 className="font-bold text-foreground text-[14px] mb-1">Eco Club</h4>
                     <p className="text-slate-500 text-[12px] leading-relaxed">Leading environmental awareness drives, tree plantation, and waste audits.</p>
                   </div>
                 </div>
@@ -95,7 +95,7 @@ export default async function StudentLifeClubsPage() {
                     <Heart className="w-5 h-5 text-rose-500" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-[#0F172A] text-[14px] mb-1">Social Service Guild</h4>
+                    <h4 className="font-bold text-foreground text-[14px] mb-1">Social Service Guild</h4>
                     <p className="text-slate-500 text-[12px] leading-relaxed">Organizing community outreach, donation drives, and teaching assistance programs.</p>
                   </div>
                 </div>
@@ -104,13 +104,13 @@ export default async function StudentLifeClubsPage() {
 
             {/* Right Column */}
             <div className="space-y-6">
-              <div className="bg-[#0F172A] text-white p-8 rounded-sm shadow-xl relative overflow-hidden">
+              <div className="bg-[var(--sidebar-bg)] text-white p-8 rounded-sm shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-[70px] opacity-20" />
                 <h4 className="text-lg font-serif font-bold mb-4 relative z-10 text-white">Join a Club</h4>
                 <p className="text-slate-400 text-[13px] leading-relaxed mb-6 relative z-10">
                   Every student is encouraged to participate in at least one club to build specialized skills, network with peers, and follow their passions outside of textbooks.
                 </p>
-                <div className="text-[12px] text-[#1E3A5F] font-bold tracking-wide border-t border-white/10 pt-4 relative z-10">
+                <div className="text-[12px] text-primary font-bold tracking-wide border-t border-white/10 pt-4 relative z-10">
                   WEEKLY SESSIONS &bull; SKILL SHARING &bull; COMPETITIONS
                 </div>
               </div>
@@ -120,7 +120,7 @@ export default async function StudentLifeClubsPage() {
           </div>
 
           <div className="mt-16 pt-8 border-t border-slate-100 text-center">
-            <Link href="/student-life" className="inline-flex items-center gap-2 text-[#1E3A5F] font-bold text-[14px] hover:text-[#162C47] transition-colors">
+            <Link href="/student-life" className="inline-flex items-center gap-2 text-primary font-bold text-[14px] hover:text-[var(--primary-hover)] transition-colors">
               &larr; Back to Student Life
             </Link>
           </div>

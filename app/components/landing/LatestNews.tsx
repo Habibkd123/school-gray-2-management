@@ -12,14 +12,14 @@ interface NewsItem {
 }
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  announcement: { label: "Announcement", color: "bg-[#1E3A5F]", icon: Bell },
+  announcement: { label: "Announcement", color: "bg-primary", icon: Bell },
   circular: { label: "Circular", color: "bg-blue-500", icon: FileText },
   result: { label: "Result", color: "bg-emerald-500", icon: Award },
 };
 
 const DEFAULT_NEWS = [
   { tag: "Circular", date: "Oct 15, 2024", title: "CBSE Class X & XII Pre-Board Examination Schedule Released", img: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=600&auto=format&fit=crop", color: "bg-blue-500" },
-  { tag: "Event", date: "Oct 20, 2024", title: "Annual Inter-School Cultural Fest Registration Open", img: "https://images.unsplash.com/photo-1511629091441-ee46146481b6?q=80&w=600&auto=format&fit=crop", color: "bg-[#1E3A5F]" },
+  { tag: "Event", date: "Oct 20, 2024", title: "Annual Inter-School Cultural Fest Registration Open", img: "https://images.unsplash.com/photo-1511629091441-ee46146481b6?q=80&w=600&auto=format&fit=crop", color: "bg-primary" },
   { tag: "Holiday", date: "Oct 31, 2024", title: "School Closed on Account of Diwali Festival", img: "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=600&auto=format&fit=crop", color: "bg-emerald-500" },
 ];
 
@@ -40,12 +40,12 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div className="max-w-2xl">
-            <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Notice Board</h2>
-            <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] leading-tight">
+            <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Notice Board</h2>
+            <h3 className="text-4xl md:text-5xl font-serif font-bold text-foreground leading-tight">
               Latest News & Circulars
             </h3>
           </div>
-          <a href="/news" className="hidden md:flex items-center gap-2 font-bold text-[#0F172A] hover:text-[#1E3A5F] transition-colors uppercase tracking-wider text-[13px]">
+          <a href="/news" className="hidden md:flex items-center gap-2 font-bold text-foreground hover:text-primary transition-colors uppercase tracking-wider text-[13px]">
             View All Updates <ChevronRight className="w-5 h-5" />
           </a>
         </div>
@@ -75,7 +75,7 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
                       <Calendar className="w-4 h-4" />
                       {dateStr}
                     </div>
-                    <h4 className="text-[17px] font-bold text-[#0F172A] mb-4 leading-snug group-hover:text-[#231F20] transition-colors line-clamp-2">
+                    <h4 className="text-[17px] font-bold text-foreground mb-4 leading-snug group-hover:text-[#231F20] transition-colors line-clamp-2">
                       {item.title}
                     </h4>
                     {item.content && (
@@ -119,7 +119,7 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
                     <Calendar className="w-4 h-4" />
                     {item.date}
                   </div>
-                  <h4 className="text-[17px] font-bold text-[#0F172A] mb-4 leading-snug group-hover:text-[#231F20] transition-colors line-clamp-2">
+                  <h4 className="text-[17px] font-bold text-foreground mb-4 leading-snug group-hover:text-[#231F20] transition-colors line-clamp-2">
                     {item.title}
                   </h4>
                   <a href="#" className="inline-flex items-center gap-1 text-[13px] font-bold text-[#0088CC] hover:text-[#005F8F] uppercase tracking-wider">

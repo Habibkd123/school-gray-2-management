@@ -19,8 +19,8 @@ export default async function ApplyPage() {
 
   return (
     <main className="py-20 px-4 md:px-8 max-w-5xl mx-auto min-h-[60vh]">
-      <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Apply for Admission</h1>
-      <p className="text-[#1E3A5F] font-bold uppercase tracking-widest text-[12px] mb-10">
+      <h1 className="text-4xl font-serif font-bold text-foreground mb-3">Apply for Admission</h1>
+      <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-10">
         {admissionOpen ? "Admissions are currently open" : "Admissions are currently closed"}
       </p>
       {howToApply && (
@@ -28,7 +28,7 @@ export default async function ApplyPage() {
       )}
       {admissionOpen && applyUrl ? (
         <a href={applyUrl} target="_blank" rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-8 py-4 bg-[#1E3A5F] text-white font-bold rounded-sm hover:bg-[#162C47] transition-all shadow-lg uppercase tracking-wide">
+          className="inline-flex items-center gap-2 px-8 py-4 bg-primary text-white font-bold rounded-sm hover:bg-[var(--primary-hover)] transition-all shadow-lg uppercase tracking-wide">
           Apply Now <ArrowRight className="w-5 h-5" />
         </a>
       ) : !admissionOpen ? (

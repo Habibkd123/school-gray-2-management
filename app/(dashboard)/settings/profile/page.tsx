@@ -265,7 +265,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       {activeTab !== "roles" && (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
@@ -361,7 +361,7 @@ export default function ProfilePage() {
                   <button
                     onClick={() => handleConfigToggle("enable_streams", !config.enable_streams)}
                     disabled={savingConfig !== null}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_streams ? "bg-[#1E3A5F]" : "bg-slate-300 dark:bg-slate-700"}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_streams ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
                   >
                     {savingConfig === "streams" && <Loader2 className="absolute left-0 right-0 mx-auto w-3 h-3 animate-spin text-white" />}
                     <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${config.enable_streams ? "translate-x-6" : "translate-x-1"}`} />
@@ -377,7 +377,7 @@ export default function ProfilePage() {
                   <button
                     onClick={() => handleConfigToggle("enable_sections", !config.enable_sections)}
                     disabled={savingConfig !== null}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_sections ? "bg-[#1E3A5F]" : "bg-slate-300 dark:bg-slate-700"}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_sections ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
                   >
                     {savingConfig === "sections" && <Loader2 className="absolute left-0 right-0 mx-auto w-3 h-3 animate-spin text-white" />}
                     <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${config.enable_sections ? "translate-x-6" : "translate-x-1"}`} />
@@ -494,7 +494,7 @@ export default function ProfilePage() {
                       onChange={e => setName(e.target.value)}
                       disabled={!editMode}
                       placeholder="Full name"
-                      className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[#0F172A] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
+                      className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
                     />
                   </div>
 
@@ -507,7 +507,7 @@ export default function ProfilePage() {
                       onChange={e => setEmail(e.target.value)}
                       disabled={!editMode}
                       placeholder="Email"
-                      className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[#0F172A] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
+                      className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
                     />
                   </div>
 
@@ -520,7 +520,7 @@ export default function ProfilePage() {
                       onChange={e => setPhone(e.target.value)}
                       disabled={!editMode}
                       placeholder="Phone"
-                      className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[#0F172A] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
+                      className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
                     />
                   </div>
 
@@ -534,7 +534,7 @@ export default function ProfilePage() {
                         onChange={e => setOccupation(e.target.value)}
                         disabled={!editMode}
                         placeholder="e.g. Engineer, Teacher..."
-                        className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[#0F172A] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
+                        className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
                       />
                     </div>
                   )}
@@ -568,7 +568,7 @@ export default function ProfilePage() {
                     disabled={!editMode}
                     rows={3}
                     placeholder="Enter your address"
-                    className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[#0F172A] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full resize-none disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
+                    className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full resize-none disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
                   />
                 </div>
               </div>
@@ -604,7 +604,7 @@ export default function ProfilePage() {
                         onChange={e => { setCurrentPassword(e.target.value); setPwError(""); }}
                         placeholder="Current password"
                         required
-                        className="px-4 py-2.5 pr-10 bg-[#F8FAFC] dark:bg-[#0F172A] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full"
+                        className="px-4 py-2.5 pr-10 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full"
                       />
                       <button type="button" onClick={() => setShowCurrent(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
                         {showCurrent ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -622,7 +622,7 @@ export default function ProfilePage() {
                         onChange={e => { setNewPassword(e.target.value); setPwError(""); }}
                         placeholder="Min 8 characters"
                         required
-                        className="px-4 py-2.5 pr-10 bg-[#F8FAFC] dark:bg-[#0F172A] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full"
+                        className="px-4 py-2.5 pr-10 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full"
                       />
                       <button type="button" onClick={() => setShowNew(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
                         {showNew ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -639,7 +639,7 @@ export default function ProfilePage() {
                       onChange={e => { setConfirmPassword(e.target.value); setPwError(""); }}
                       placeholder="Re-enter password"
                       required
-                      className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[#0F172A] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full"
+                      className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full"
                     />
                   </div>
                 </div>

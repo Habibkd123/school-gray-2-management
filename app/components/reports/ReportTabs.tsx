@@ -23,12 +23,12 @@ export function ReportTabs() {
           <Link
             key={tab.name}
             href={tab.href}
-            className={`pb-3 text-[14px] font-medium transition-colors relative ${isActive ? "text-[#1E3A5F]" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
+            className={`pb-3 text-[14px] font-medium transition-colors relative ${isActive ? "text-primary" : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
               }`}
           >
             {tab.name}
             {isActive && (
-              <span className="absolute bottom-0 left-0 w-full h-[2px] bg-[#1E3A5F] rounded-t-full" />
+              <span className="absolute bottom-0 left-0 w-full h-[2px] bg-primary rounded-t-full" />
             )}
           </Link>
         );

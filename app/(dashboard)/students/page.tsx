@@ -271,13 +271,13 @@ export default function StudentsPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const columns: ColumnDef<typeof tableData[0]>[] = [
-    { header: "Admission No", accessorKey: "displayId", render: (s) => <span className="font-semibold text-[#1E3A5F]">{s.displayId}</span> },
+    { header: "Admission No", accessorKey: "displayId", render: (s) => <span className="font-semibold text-primary">{s.displayId}</span> },
     { header: "Roll No", accessorKey: "roll_no" },
     {
       header: "Name", accessorKey: "name", render: (s) => (
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push(`/students/${s.id}`)}>
           <img src={s.avatar} className="w-8 h-8 rounded-full object-cover" alt="Avatar" />
-          <span className="font-semibold text-slate-900 dark:text-white group-hover:text-[#1E3A5F] transition-colors">{s.name}</span>
+          <span className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{s.name}</span>
         </div>
       )
     },
@@ -286,8 +286,8 @@ export default function StudentsPage() {
     { header: "Gender", accessorKey: "gender" },
     {
       header: "Status", accessorKey: "status", render: (s) => (
-        <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-bold ${s.status === "Active" ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBF0] text-[#FF4A6B]"}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${s.status === "Active" ? "bg-[#1DD04A]" : "bg-[#FF4A6B]"}`} />
+        <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-bold ${s.status === "Active" ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${s.status === "Active" ? "bg-success" : "bg-danger"}`} />
           {s.status}
         </span>
       )
@@ -309,7 +309,7 @@ export default function StudentsPage() {
                 e.stopPropagation();
                 setActiveDropdown(activeDropdown === s._id ? null : s._id);
               }}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-[#1E3A5F] text-white hover:bg-[#162C47]`}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-primary text-white hover:bg-[var(--primary-hover)]`}
             >
               <MoreVertical className="w-4 h-4" />
             </button>
@@ -372,7 +372,7 @@ export default function StudentsPage() {
             <AlertCircle className="w-6 h-6 text-rose-500" />
           </div>
           <p className="text-[14px] font-semibold text-slate-700">{error}</p>
-          <button onClick={() => fetchStudents()} className="px-4 py-2 text-[13px] font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded-lg transition-colors">
+          <button onClick={() => fetchStudents()} className="px-4 py-2 text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] rounded-lg transition-colors">
             Try Again
           </button>
         </div>
@@ -381,7 +381,7 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6" onClick={() => setActiveDropdown(null)}>
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6" onClick={() => setActiveDropdown(null)}>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
@@ -412,7 +412,7 @@ export default function StudentsPage() {
           {activeRole === "admin" && (
             <Link
               href="/students/add"
-              className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded-lg shadow-sm transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] rounded-lg shadow-sm transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add Student</span>
@@ -440,7 +440,7 @@ export default function StudentsPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsDateRangeOpen(false)} />
                   <div className="absolute left-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                     {["All Time", "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year"].map((item) => (
-                      <button onClick={() => { handleDateRangeChange(item); setIsDateRangeOpen(false); }} key={item} className={`w-full px-4 py-2 text-[13px] text-left transition-colors ${item === selectedDateRange ? "bg-[#1E3A5F] text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                      <button onClick={() => { handleDateRangeChange(item); setIsDateRangeOpen(false); }} key={item} className={`w-full px-4 py-2 text-[13px] text-left transition-colors ${item === selectedDateRange ? "bg-primary text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
                         {item}
                       </button>
                     ))}
@@ -519,7 +519,7 @@ export default function StudentsPage() {
                       >
                         Reset
                       </button>
-                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C47] transition-colors shadow-sm">
+                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] transition-colors shadow-sm">
                         Close
                       </button>
                     </div>
@@ -543,7 +543,7 @@ export default function StudentsPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                     {["Ascending", "Descending", "Recently Added"].map((item) => (
-                      <button onClick={() => { handleSortChange(item); setIsSortOpen(false); }} key={item} className={`w-full px-4 py-2.5 text-[14px] text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "bg-[#1E3A5F] text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                      <button onClick={() => { handleSortChange(item); setIsSortOpen(false); }} key={item} className={`w-full px-4 py-2.5 text-[14px] text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "bg-primary text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
                         {item}
                       </button>
                     ))}
@@ -553,8 +553,8 @@ export default function StudentsPage() {
             </div>
 
             <div className="flex items-center border border-border rounded-lg bg-white dark:bg-slate-900 p-1">
-              <button onClick={() => setViewMode("grid")} className={`p-1 rounded ${viewMode === 'grid' ? 'bg-[#1E3A5F] text-white' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><LayoutGrid className="w-4 h-4" /></button>
-              <button onClick={() => setViewMode("list")} className={`p-1 rounded ${viewMode === 'list' ? 'bg-[#1E3A5F] text-white' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><List className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode("grid")} className={`p-1 rounded ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><LayoutGrid className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode("list")} className={`p-1 rounded ${viewMode === 'list' ? 'bg-primary text-white' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><List className="w-4 h-4" /></button>
             </div>
           </div>
         </div>
@@ -576,7 +576,7 @@ export default function StudentsPage() {
               placeholder="Search Name/Roll/Admission No"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-[250px] pl-3 pr-4 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F]/50 transition-all"
+              className="w-full sm:w-[250px] pl-3 pr-4 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all"
             />
           </div>
         </div>
@@ -601,7 +601,7 @@ export default function StudentsPage() {
                       });
                     }
                   }}
-                  className="rounded border-slate-300 w-4 h-4 accent-[#1E3A5F]"
+                  className="rounded border-slate-300 w-4 h-4 accent-primary"
                 />
               }
               renderSelection={(student) => (
@@ -615,7 +615,7 @@ export default function StudentsPage() {
                         : [...prev, student.id]
                     );
                   }}
-                  className="rounded border-slate-300 w-4 h-4 accent-[#1E3A5F]"
+                  className="rounded border-slate-300 w-4 h-4 accent-primary"
                 />
               )}
               noDataMessage="No students registered or matching filters."
@@ -637,7 +637,7 @@ export default function StudentsPage() {
                 </div>
               ) : (
                 tableData.map((student) => (
-                  <div key={student._id} className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 relative group flex flex-col hover:border-[#1E3A5F]/50 transition-colors">
+                  <div key={student._id} className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 relative group flex flex-col hover:border-primary/50 transition-colors">
                     {/* Top Row */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex flex-wrap items-center gap-2">
@@ -651,13 +651,13 @@ export default function StudentsPage() {
                                 : [...prev, student._id]
                             );
                           }}
-                          className="rounded border-slate-300 w-3.5 h-3.5 accent-[#1E3A5F]"
+                          className="rounded border-slate-300 w-3.5 h-3.5 accent-primary"
                         />
-                        <span className="text-[13px] font-bold text-[#1E3A5F]">{student.displayId}</span>
+                        <span className="text-[13px] font-bold text-primary">{student.displayId}</span>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${student.is_active ? "bg-[#E8F8E8] text-[#1D7F2C] dark:bg-[#1D7F2C]/20 dark:text-[#1DD04A]" : "bg-[#FFEBF0] text-[#FF4A6B] dark:bg-[#FF4A6B]/20"}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${student.is_active ? "bg-[#1DD04A]" : "bg-[#FF4A6B]"}`} /> {student.is_active ? "Active" : "Inactive"}
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${student.is_active ? "bg-success/10 text-success dark:bg-[#1D7F2C]/20 dark:text-success" : "bg-danger/10 text-danger dark:bg-danger/20"}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${student.is_active ? "bg-success" : "bg-danger"}`} /> {student.is_active ? "Active" : "Inactive"}
                         </span>
                         <div className="relative">
                           <button
@@ -706,7 +706,7 @@ export default function StudentsPage() {
                     <div className="flex items-center gap-4 mb-5 cursor-pointer" onClick={() => router.push(`/students/${student._id}`)}>
                       <img src={student.avatar} alt="Avatar" className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" />
                       <div>
-                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-[#1E3A5F] transition-colors">{student.name}</h3>
+                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{student.name}</h3>
                         <p className="text-[12px] font-medium text-slate-500">{student.classNameStr}</p>
                       </div>
                     </div>

@@ -35,10 +35,10 @@ function PhotoUploader({
       />
       <div
         onClick={() => !uploading && ref.current?.click()}
-        className="w-32 h-32 bg-[#F1F5F9] dark:bg-slate-800 border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4 overflow-hidden relative cursor-pointer hover:border-[#F59E0B]/60 transition-colors"
+        className="w-32 h-32 bg-[#F1F5F9] dark:bg-slate-800 border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-500 mb-4 overflow-hidden relative cursor-pointer hover:border-primary/60 transition-colors"
       >
         {uploading ? (
-          <Loader2 className="w-8 h-8 animate-spin text-[#F59E0B]" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         ) : preview ? (
           <img src={preview} alt="preview" className="w-full h-full object-cover" />
         ) : (
@@ -100,7 +100,7 @@ function DocUploader({
           type="button"
           onClick={() => ref.current?.click()}
           disabled={uploading}
-          className="px-4 py-2 bg-[#F59E0B] text-white text-[11px] font-semibold rounded-lg hover:bg-[#D97706] transition-colors flex items-center gap-2 disabled:opacity-50"
+          className="px-4 py-2 bg-primary text-white text-[11px] font-semibold rounded-lg hover:bg-[var(--primary-hover)] transition-colors flex items-center gap-2 disabled:opacity-50"
         >
           {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
           {uploading ? "Uploading…" : "Upload Document"}
@@ -145,7 +145,7 @@ function TagInput({ tags, onChange, placeholder }: { tags: string[]; onChange: (
         placeholder={placeholder || "Type language and press Enter"}
         className="flex-1 min-w-full sm:w-[120px] text-[12px] outline-none bg-transparent text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
       />
-      <button type="button" onClick={add} className="text-[11px] px-2 py-0.5 bg-[#F59E0B] text-white rounded font-semibold hover:bg-[#D97706] transition-colors">Add</button>
+      <button type="button" onClick={add} className="text-[11px] px-2 py-0.5 bg-primary text-white rounded font-semibold hover:bg-[var(--primary-hover)] transition-colors">Add</button>
     </div>
   );
 }
@@ -183,7 +183,7 @@ function SubjectSpecializationInput({
         {/* Dropdown for existing catalog */}
         <div className="relative flex-1">
           <select
-            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all appearance-none cursor-pointer"
+            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
             value="Select Subject"
             onChange={handleSelectChange}
           >
@@ -532,7 +532,7 @@ export default function EditTeacherPage() {
   const isUploading = uploadingPhoto || uploadingResume || uploadingLetter;
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
@@ -540,7 +540,7 @@ export default function EditTeacherPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/teachers" className="hover:text-[#F59E0B]">Teachers</Link>
+            <Link href="/teachers" className="hover:text-primary">Teachers</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">{editId ? "Edit Teacher" : "Add Teacher"}</span>
           </div>
@@ -640,7 +640,7 @@ export default function EditTeacherPage() {
                 
                 <div className="col-span-1 md:col-span-2 xl:col-span-4">
                   <label className="block text-[12px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5">Notes</label>
-                  <textarea placeholder="Other information" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full h-24 px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all"></textarea>
+                  <textarea placeholder="Other information" value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full h-24 px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all"></textarea>
                 </div>
               </div>
             </div>
@@ -750,7 +750,7 @@ export default function EditTeacherPage() {
           <button 
             type="submit" 
             disabled={isSubmitting || isUploading}
-            className="px-6 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-2"
+            className="px-6 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-2"
           >
             {(isSubmitting || isUploading) && <Loader2 className="w-4 h-4 animate-spin" />}
             {isUploading ? "Uploading..." : isSubmitting ? "Saving..." : editId ? "Update Teacher" : "Add Teacher"}
@@ -804,7 +804,7 @@ function InputGroup({
       </label>
       {type === "select" ? (
         <select
-          className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all appearance-none cursor-pointer"
+          className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
           value={value}
           onChange={onChange}
         >
@@ -821,7 +821,7 @@ function InputGroup({
           value={value}
           onChange={onChange}
           required={required}
-          className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#F59E0B]/50 transition-all"
+          className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all"
         />
       )}
     </div>

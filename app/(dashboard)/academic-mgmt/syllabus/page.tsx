@@ -156,7 +156,7 @@ export default function SyllabusManagementPage() {
           <select 
             value={selectedAssignment} 
             onChange={(e) => setSelectedAssignment(e.target.value)}
-            className="w-full md:w-2/3 px-4 py-3 border border-border rounded-lg text-[14px] outline-none focus:border-[#1E3A5F] bg-[#F8FAFC] dark:bg-[#0F172A] font-medium"
+            className="w-full md:w-2/3 px-4 py-3 border border-border rounded-lg text-[14px] outline-none focus:border-primary bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] font-medium"
           >
             <option value="">-- Choose an Assignment --</option>
             {assignments.map(a => (
@@ -180,7 +180,7 @@ export default function SyllabusManagementPage() {
                   {activeAssignment.stream_id ? ` - ${activeAssignment.stream_id.name}` : ''}
                   {activeAssignment.section_id ? ` (${activeAssignment.section_id.name})` : ''}
                 </span>
-                <span className="bg-[#1E3A5F]/10 text-[#1E3A5F] px-2.5 py-1 rounded text-xs font-bold tracking-wide flex items-center gap-1.5">
+                <span className="bg-primary/10 text-primary px-2.5 py-1 rounded text-xs font-bold tracking-wide flex items-center gap-1.5">
                   <BookOpen className="w-3.5 h-3.5" /> {activeAssignment.subject_master_id?.name}
                 </span>
               </div>
@@ -189,7 +189,7 @@ export default function SyllabusManagementPage() {
               </p>
             </div>
             {isAdmin && (
-              <button onClick={handleAddChapter} className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 shrink-0">
+              <button onClick={handleAddChapter} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 shrink-0">
                 <Plus className="w-4 h-4" /> Add Chapter
               </button>
             )}
@@ -268,14 +268,14 @@ export default function SyllabusManagementPage() {
               <input type="number" required min="1"
                 value={formChapter.chapter_no || ''} 
                 onChange={(e) => setFormChapter({...formChapter, chapter_no: parseInt(e.target.value)})}
-                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]" />
+                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary" />
             </div>
             <div className="sm:col-span-3 flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold">Chapter Name <span className="text-red-500">*</span></label>
               <input type="text" required
                 value={formChapter.chapter_name || ''} 
                 onChange={(e) => setFormChapter({...formChapter, chapter_name: e.target.value})}
-                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]" />
+                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary" />
             </div>
           </div>
 
@@ -284,7 +284,7 @@ export default function SyllabusManagementPage() {
             <textarea rows={2}
               value={formChapter.description || ''} 
               onChange={(e) => setFormChapter({...formChapter, description: e.target.value})}
-              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] resize-none" />
+              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary resize-none" />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -293,14 +293,14 @@ export default function SyllabusManagementPage() {
               <input type="date" required
                 value={formChapter.start_date ? new Date(formChapter.start_date).toISOString().split('T')[0] : ''} 
                 onChange={(e) => setFormChapter({...formChapter, start_date: e.target.value})}
-                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]" />
+                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary" />
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold">Target Date <span className="text-red-500">*</span></label>
               <input type="date" required
                 value={formChapter.target_date ? new Date(formChapter.target_date).toISOString().split('T')[0] : ''} 
                 onChange={(e) => setFormChapter({...formChapter, target_date: e.target.value})}
-                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]" />
+                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary" />
             </div>
           </div>
 
@@ -309,7 +309,7 @@ export default function SyllabusManagementPage() {
             <select 
               value={formChapter.status} 
               onChange={(e) => setFormChapter({...formChapter, status: e.target.value as any})}
-              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] bg-white dark:bg-slate-900"
+              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary bg-white dark:bg-slate-900"
             >
               <option value="Not Started">Not Started</option>
               <option value="In Progress">In Progress</option>
@@ -321,7 +321,7 @@ export default function SyllabusManagementPage() {
             <button type="button" onClick={() => setIsChapterModalOpen(false)}
               className="px-5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-[13px] font-bold rounded-lg">Cancel</button>
             <button type="submit" disabled={submitting}
-              className="px-5 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm flex items-center gap-2">
+              className="px-5 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Save Chapter
             </button>
           </div>

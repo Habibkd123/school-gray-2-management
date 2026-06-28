@@ -19,7 +19,7 @@ export default function StudentExamsPage() {
       new Date(b.start_date || b.date).getTime() - new Date(a.start_date || a.date).getTime()
     );
 
-  const colors = ["#6366f1", "#1E3A5F", "#10b981", "#f43f5e", "#8b5cf6", "#0ea5e9"];
+  const colors = ["#6366f1", "var(--primary)", "#10b981", "#f43f5e", "#8b5cf6", "#0ea5e9"];
 
   const renderExamCard = (exam: any, idx: number) => {
     const color = colors[idx % colors.length];

@@ -79,7 +79,7 @@ export function DataTable<T>({
                 <div className="flex items-center gap-1">
                   {col.header}
                   {col.sortable !== false && col.accessorKey && (
-                     <span className={`text-[10px] ml-1 font-bold ${sortConfig?.key === col.accessorKey ? 'text-[#1E3A5F]' : 'text-slate-400 dark:text-slate-500'}`}>
+                     <span className={`text-[10px] ml-1 font-bold ${sortConfig?.key === col.accessorKey ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}`}>
                        {sortConfig?.key === col.accessorKey ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '⇅'}
                      </span>
                   )}

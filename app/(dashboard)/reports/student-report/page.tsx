@@ -43,22 +43,22 @@ export default function StudentReportPage() {
   }, [students, searchTerm, filterClass, filterGender, filterStatus]);
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Student Report</h1>
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span><span>/</span>
-            <span className="hover:text-[#1E3A5F] cursor-pointer">Reports</span><span>/</span>
+            <span className="hover:text-primary cursor-pointer">Reports</span><span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Student Report</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
           <div className="relative">
@@ -69,10 +69,10 @@ export default function StudentReportPage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-2">
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500" /> Export as PDF
                   </button>
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500" /> Export as Excel
                   </button>
                 </div>
@@ -112,7 +112,7 @@ export default function StudentReportPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-xl z-50 text-left">
                     <div className="p-4 border-b border-border">
-                      <h3 className="text-[15px] font-bold text-[#0F172A] dark:text-slate-100">Filter</h3>
+                      <h3 className="text-[15px] font-bold text-foreground dark:text-slate-100">Filter</h3>
                     </div>
                     <div className="p-4 space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -152,8 +152,8 @@ export default function StudentReportPage() {
                       </div>
                     </div>
                     <div className="p-4 flex justify-end gap-3 border-t border-border">
-                      <button onClick={() => { setFilterClass(""); setFilterGender(""); setFilterStatus(""); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[13px] font-bold rounded-lg cursor-pointer">Reset</button>
-                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-[#1E3A5F] text-white text-[13px] font-bold rounded-lg cursor-pointer">Apply</button>
+                      <button onClick={() => { setFilterClass(""); setFilterGender(""); setFilterStatus(""); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[13px] font-bold rounded-lg cursor-pointer">Reset</button>
+                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-primary text-white text-[13px] font-bold rounded-lg cursor-pointer">Apply</button>
                     </div>
                   </div>
                 </>
@@ -183,14 +183,14 @@ export default function StudentReportPage() {
           <span className="text-[13px] text-slate-500 dark:text-slate-400">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredData.length}</span> of {students.length}</span>
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input type="text" placeholder="Search name, admission no, roll no…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 w-full sm:w-[280px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors" />
+            <input type="text" placeholder="Search name, admission no, roll no…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 w-full sm:w-[280px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors" />
           </div>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Admission No</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Roll No</th>
@@ -211,7 +211,7 @@ export default function StudentReportPage() {
               ) : filteredData.map(s => (
                 <tr key={s._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4">
-                    <Link href={`/students/${s._id}`} className="font-semibold text-[#1E3A5F] hover:text-[#162C47] cursor-pointer">
+                    <Link href={`/students/${s._id}`} className="font-semibold text-primary hover:text-[var(--primary-hover)] cursor-pointer">
                       {s.admission_no || s._id.slice(-6).toUpperCase()}
                     </Link>
                   </td>
@@ -219,7 +219,7 @@ export default function StudentReportPage() {
                   <td className="px-6 py-4">
                     <div className="flex flex-wrap items-center gap-3">
                       <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary text-[11px] flex-shrink-0">{s.name.charAt(0)}</div>
-                      <span className="font-semibold text-[#0F172A] dark:text-slate-100">{s.name}</span>
+                      <span className="font-semibold text-foreground dark:text-slate-100">{s.name}</span>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{getClassName(s.class_id)}</td>
@@ -251,7 +251,7 @@ export default function StudentReportPage() {
         {/* Pagination */}
         <div className="p-5 border-t border-border flex items-center justify-end gap-2">
           <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition-colors">Prev</button>
-          <button className="w-7 h-7 rounded-lg bg-[#1E3A5F] text-white text-[13px] font-medium flex items-center justify-center">1</button>
+          <button className="w-7 h-7 rounded-lg bg-primary text-white text-[13px] font-medium flex items-center justify-center">1</button>
           <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition-colors">Next</button>
         </div>
       </div>

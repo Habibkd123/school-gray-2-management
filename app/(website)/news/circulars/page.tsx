@@ -21,12 +21,12 @@ export default async function CircularsPage() {
   const items = await getNews();
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
-      <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Circulars</h1>
-      <p className="text-[#1E3A5F] font-bold uppercase tracking-widest text-[12px] mb-12">Official School Circulars</p>
+      <h1 className="text-4xl font-serif font-bold text-foreground mb-3">Circulars</h1>
+      <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-12">Official School Circulars</p>
       {items.length > 0 ? (
         <div className="space-y-4">
           {items.map((item: any, idx: number) => (
-            <div key={item._id ?? idx} className="bg-white rounded-sm border border-slate-200 shadow-sm p-6 flex items-start gap-5 hover:shadow-md hover:border-[#1E3A5F]/40 transition-all group">
+            <div key={item._id ?? idx} className="bg-white rounded-sm border border-slate-200 shadow-sm p-6 flex items-start gap-5 hover:shadow-md hover:border-primary/40 transition-all group">
               <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center shrink-0 border border-blue-100 group-hover:bg-blue-500 group-hover:border-blue-500 transition-all">
                 <FileText className="w-5 h-5 text-blue-500 group-hover:text-white transition-colors" />
               </div>
@@ -35,7 +35,7 @@ export default async function CircularsPage() {
                   <Calendar className="w-3.5 h-3.5" />
                   {item.published_at ? new Date(item.published_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : ""}
                 </div>
-                <h3 className="font-bold text-[#0F172A] text-[15px] mb-1 leading-snug group-hover:text-blue-600 transition-colors">{item.title}</h3>
+                <h3 className="font-bold text-foreground text-[15px] mb-1 leading-snug group-hover:text-blue-600 transition-colors">{item.title}</h3>
                 {item.content && <p className="text-slate-500 text-[13px] leading-relaxed">{item.content}</p>}
               </div>
               {item.pdf_url && (

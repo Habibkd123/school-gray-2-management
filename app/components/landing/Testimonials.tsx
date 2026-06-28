@@ -26,13 +26,13 @@ export function Testimonials({ data }: TestimonialsProps) {
     : defaultTestimonials;
 
   return (
-    <section className="py-20 bg-[#F0F4F9] relative">
+    <section className="py-20 bg-[var(--section-alt)] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-block mb-3">
-            <span className="text-[12px] font-bold text-[#1E3A5F] uppercase tracking-[0.15em]">Parent & Alumni Stories</span>
-            <div className="h-0.5 bg-[#1E3A5F] mt-1 w-full" />
+            <span className="text-[12px] font-bold text-primary uppercase tracking-[0.15em]">Parent & Alumni Stories</span>
+            <div className="h-0.5 bg-primary mt-1 w-full" />
           </div>
           <h3 className="text-4xl font-black text-[#231F20] leading-tight">
             Trusted by Thousands of Families
@@ -41,8 +41,8 @@ export function Testimonials({ data }: TestimonialsProps) {
 
         <div className="grid md:grid-cols-3 gap-6">
           {testimonials.map((test, idx) => (
-            <div key={idx} className="bg-[#FFFFFF] p-8 border border-[#E0E0E0] relative group hover:shadow-lg hover:border-[#1E3A5F] transition-all duration-300">
-              <Quote className="w-10 h-10 text-[#CCCCCC] absolute top-6 right-6 group-hover:text-[#1E3A5F]/30 transition-colors" fill="currentColor" />
+            <div key={idx} className="bg-[#FFFFFF] p-8 border border-[#E0E0E0] relative group hover:shadow-lg hover:border-primary transition-all duration-300">
+              <Quote className="w-10 h-10 text-[#CCCCCC] absolute top-6 right-6 group-hover:text-primary/30 transition-colors" fill="currentColor" />
               
               <div className="flex gap-1 mb-6">
                 {[...Array(5)].map((_, i) => (
@@ -55,7 +55,7 @@ export function Testimonials({ data }: TestimonialsProps) {
               </p>
               
               <div className="flex items-center gap-4 pt-5 border-t border-[#E0E0E0]">
-                <img src={test.img} alt={test.name} className="w-11 h-11 rounded-full border-2 border-[#1E3A5F] object-cover" />
+                <img src={test.img} alt={test.name} className="w-11 h-11 rounded-full border-2 border-primary object-cover" />
                 <div>
                   <h4 className="font-bold text-[#231F20] text-[14px]">{test.name}</h4>
                   <p className="text-[#828283] text-[11px] font-semibold uppercase tracking-wider">{test.role}</p>

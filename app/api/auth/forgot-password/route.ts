@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import connectDB from "@/lib/db";
 import User from "@/lib/models/User";
+import { getSchoolThemeById } from "@/lib/themes/getSchoolTheme";
 
 export async function POST(request: NextRequest) {
   try {
@@ -45,6 +46,9 @@ export async function POST(request: NextRequest) {
     // ─── Send email here ──────────────────────────
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
     const { sendEmail } = await import("@/lib/email");
+
+    const schoolTheme = await getSchoolThemeById(school_id);
+    const btnColor = schoolTheme?.theme.colors.primary ?? "#1E3A5F";
     
     await sendEmail({
       to: user.email,
@@ -53,7 +57,7 @@ export async function POST(request: NextRequest) {
         <h3>Password Reset Request</h3>
         <p>Hello ${user.name},</p>
         <p>You requested a password reset. Click the link below to set a new password:</p>
-        <p><a href="${resetUrl}" target="_blank" style="display:inline-block;padding:10px 20px;background-color:#1E3A5F;color:white;text-decoration:none;border-radius:5px;">Reset Password</a></p>
+        <p><a href="${resetUrl}" target="_blank" style="display:inline-block;padding:10px 20px;background-color:${btnColor};color:white;text-decoration:none;border-radius:5px;">Reset Password</a></p>
         <p>If you did not request this, please ignore this email. The link will expire in 1 hour.</p>
         <br/>
         <p>Thank you,<br/>School ERP Team</p>

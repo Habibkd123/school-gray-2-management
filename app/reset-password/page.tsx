@@ -108,7 +108,7 @@ function ResetPasswordForm() {
           </p>
           <Link
             href="/login"
-            className="flex items-center justify-center gap-2 w-full py-2.5 bg-[#1E3A5F] hover:bg-[#4b58ce] text-white rounded-lg text-[13px] font-semibold transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-2.5 bg-primary hover:bg-[#4b58ce] text-white rounded-lg text-[13px] font-semibold transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Go to Login
           </Link>
@@ -129,7 +129,7 @@ function ResetPasswordForm() {
               <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
               <div>
                 <p className="text-[12.5px] text-amber-700 dark:text-amber-400 font-medium">Invalid reset link</p>
-                <Link href="/forget-password" className="text-[12px] text-[#1E3A5F] hover:underline font-medium">
+                <Link href="/forget-password" className="text-[12px] text-primary hover:underline font-medium">
                   Request a new reset link →
                 </Link>
               </div>
@@ -158,7 +158,7 @@ function ResetPasswordForm() {
                   onChange={(e) => { setNewPassword(e.target.value); setError(""); }}
                   placeholder="Min 8 chars, upper + lower + number"
                   disabled={!token}
-                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors text-slate-800 dark:text-slate-100 placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[13px] outline-none focus:border-primary transition-colors text-slate-800 dark:text-slate-100 placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button type="button" onClick={() => setShowNewPassword(!showNewPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
@@ -187,7 +187,7 @@ function ResetPasswordForm() {
                   onChange={(e) => { setConfirmPassword(e.target.value); setError(""); }}
                   placeholder="Re-enter new password"
                   disabled={!token}
-                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors text-slate-800 dark:text-slate-100 placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[13px] outline-none focus:border-primary transition-colors text-slate-800 dark:text-slate-100 placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
@@ -207,7 +207,7 @@ function ResetPasswordForm() {
               id="reset-password-submit"
               type="submit"
               disabled={isLoading || !token}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-[#1E3A5F] hover:bg-[#4b58ce] text-white rounded-lg text-[13px] font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+              className="w-full flex items-center justify-center gap-2 py-2.5 bg-primary hover:bg-[#4b58ce] text-white rounded-lg text-[13px] font-semibold transition-colors disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
             >
               {isLoading ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Resetting...</>
@@ -219,7 +219,7 @@ function ResetPasswordForm() {
 
           <p className="w-full text-center text-[13px] text-slate-600 dark:text-slate-300 font-medium mt-6">
             Remember your password?{" "}
-            <Link href="/login" className="text-[#1E3A5F] hover:text-[#4b58ce] transition-colors font-semibold">
+            <Link href="/login" className="text-primary hover:text-[#4b58ce] transition-colors font-semibold">
               Sign In
             </Link>
           </p>
@@ -238,7 +238,7 @@ export default function ResetPasswordPage() {
         className="hidden lg:flex flex-1 relative flex-col justify-center items-center p-12 bg-cover bg-center"
         style={{ backgroundImage: `url('https://preskool.dreamstechnologies.com/html/assets/img/authentication/authentication-04.jpg')` }}
       >
-        <div className="absolute inset-0 bg-[#1E3A5F]/80 dark:bg-slate-900/80 backdrop-blur-[2px]" />
+        <div className="absolute inset-0 bg-primary/80 dark:bg-slate-900/80 backdrop-blur-[2px]" />
         <div className="relative z-10 w-full max-w-full sm:w-[500px] bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-6 shadow-2xl">
           <h2 className="text-xl font-bold text-white mb-6">What&apos;s New on School ERP !!!</h2>
           <div className="space-y-3">

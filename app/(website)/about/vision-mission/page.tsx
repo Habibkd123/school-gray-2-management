@@ -18,26 +18,26 @@ export default async function VisionMissionPage() {
 
   return (
     <main className="py-20 px-4 md:px-8 max-w-5xl mx-auto min-h-[60vh]">
-      <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Vision & Mission</h1>
-      <p className="text-[#1E3A5F] font-bold uppercase tracking-widest text-[12px] mb-12">Our Purpose & Goals</p>
+      <h1 className="text-4xl font-serif font-bold text-foreground mb-3">Vision & Mission</h1>
+      <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-12">Our Purpose & Goals</p>
 
       {(vision || mission) ? (
         <div className="grid md:grid-cols-2 gap-10">
           {vision && (
-            <div className="bg-white p-10 rounded-sm border border-slate-200 shadow-md border-t-4 border-t-[#1E3A5F]">
-              <div className="w-14 h-14 bg-[#1E3A5F]/10 rounded-full flex items-center justify-center mb-6">
-                <Eye className="w-7 h-7 text-[#1E3A5F]" />
+            <div className="bg-white p-10 rounded-sm border border-slate-200 shadow-md border-t-4 border-t-primary">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                <Eye className="w-7 h-7 text-primary" />
               </div>
-              <h2 className="text-2xl font-serif font-bold text-[#0F172A] mb-4">Our Vision</h2>
+              <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Our Vision</h2>
               <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{vision}</p>
             </div>
           )}
           {mission && (
             <div className="bg-white p-10 rounded-sm border border-slate-200 shadow-md border-t-4 border-t-[#0F172A]">
-              <div className="w-14 h-14 bg-[#0F172A]/10 rounded-full flex items-center justify-center mb-6">
-                <Target className="w-7 h-7 text-[#0F172A]" />
+              <div className="w-14 h-14 bg-[var(--sidebar-bg)]/10 rounded-full flex items-center justify-center mb-6">
+                <Target className="w-7 h-7 text-foreground" />
               </div>
-              <h2 className="text-2xl font-serif font-bold text-[#0F172A] mb-4">Our Mission</h2>
+              <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Our Mission</h2>
               <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{mission}</p>
             </div>
           )}

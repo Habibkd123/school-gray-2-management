@@ -165,7 +165,7 @@ export default function LeaveTypePage() {
   const triggerCls = (open: boolean) =>
     `flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors cursor-pointer
      ${open
-      ? "border-[#1E3A5F] text-[#1E3A5F]"
+      ? "border-primary text-primary"
       : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
 
   const filteredData = useMemo(() => {
@@ -205,7 +205,7 @@ export default function LeaveTypePage() {
   }, [leaveTypes]);
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -213,17 +213,17 @@ export default function LeaveTypePage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/leave" className="hover:text-[#1E3A5F]">HRM</Link>
+            <Link href="/leave" className="hover:text-primary">HRM</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Leave Type</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchLeaveTypes()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => fetchLeaveTypes()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
           
@@ -238,10 +238,10 @@ export default function LeaveTypePage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-2 text-left">
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as PDF
                   </button>
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as Excel
                   </button>
                 </div>
@@ -251,7 +251,7 @@ export default function LeaveTypePage() {
 
           <button 
             onClick={openAddModal}
-            className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+            className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add Leave Type
           </button>
@@ -281,7 +281,7 @@ export default function LeaveTypePage() {
                     {DATE_RANGES.map((range) => (
                       <button key={range} onClick={() => applyDateRange(range)}
                         className={`w-full px-4 py-2.5 text-left text-[13px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer
-                          ${selectedRange === range ? "bg-[#FFF3CD] dark:bg-amber-900/20 text-[#92400E] dark:text-amber-500 font-semibold" : "text-slate-700 dark:text-slate-300"}`}>
+                          ${selectedRange === range ? "bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-semibold" : "text-slate-700 dark:text-slate-300"}`}>
                         {range}
                       </button>
                     ))}
@@ -293,7 +293,7 @@ export default function LeaveTypePage() {
                           <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
                             className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
                           <button onClick={applyCustomRange} disabled={!customFrom || !customTo}
-                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded transition-colors disabled:opacity-50 cursor-pointer">
+                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-primary hover:bg-[var(--primary-hover)] rounded transition-colors disabled:opacity-50 cursor-pointer">
                             Apply
                           </button>
                         </div>
@@ -324,7 +324,7 @@ export default function LeaveTypePage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
                   <div className="absolute right-0 sm:left-0 sm:right-auto top-full mt-2 w-64 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 text-left">
                     <div className="p-4 border-b border-border">
-                      <h3 className="text-[15px] font-bold text-[#0F172A] dark:text-slate-100">Filter</h3>
+                      <h3 className="text-[15px] font-bold text-foreground dark:text-slate-100">Filter</h3>
                     </div>
                     <div className="p-4 space-y-4">
                       <div className="space-y-1.5">
@@ -362,13 +362,13 @@ export default function LeaveTypePage() {
                     <div className="p-4 flex justify-end gap-3 bg-white dark:bg-slate-900 rounded-b-lg border-t border-border mt-2">
                       <button 
                         onClick={() => { setFilterLeaveType(""); setFilterStatus(""); }}
-                        className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-[#0F172A] dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer"
+                        className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-foreground dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer"
                       >
                         Reset
                       </button>
                       <button 
                         onClick={() => setIsFilterOpen(false)}
-                        className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+                        className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
                       >
                         Apply
                       </button>
@@ -394,7 +394,7 @@ export default function LeaveTypePage() {
                         key={item} 
                         onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
                         className={`w-full px-4 py-2.5 text-[13px] text-left transition-colors cursor-pointer
-                          ${selectedSort === item ? "bg-[#FFF3CD] dark:bg-amber-900/20 text-[#92400E] dark:text-amber-500 font-semibold" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
+                          ${selectedSort === item ? "bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-semibold" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
                       >
                         {item}
                       </button>
@@ -419,7 +419,7 @@ export default function LeaveTypePage() {
               placeholder="Search..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
@@ -427,10 +427,10 @@ export default function LeaveTypePage() {
         {/* Table */}
         <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
           <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">
-                  <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />
+                  <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                 </th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Leave Type</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Status</th>
@@ -453,9 +453,9 @@ export default function LeaveTypePage() {
               ) : pag.paged.map((item) => (
                 <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4">
-                    <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />
+                    <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                   </td>
-                  <td className="px-6 py-4 font-semibold text-[#0F172A] dark:text-slate-100">
+                  <td className="px-6 py-4 font-semibold text-foreground dark:text-slate-100">
                     {item.leave_type}
                   </td>
                   <td className="px-6 py-4">
@@ -474,7 +474,7 @@ export default function LeaveTypePage() {
                   <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                     <button 
                       onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-[#1E3A5F] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
@@ -482,8 +482,8 @@ export default function LeaveTypePage() {
                       <>
                         <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                         <div className="absolute right-10 top-10 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
-                          <button onClick={() => openEditModal(item)} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
-                            <Edit className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Edit
+                          <button onClick={() => openEditModal(item)} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                            <Edit className="w-4 h-4 text-foreground dark:text-slate-100" /> Edit
                           </button>
                           <button onClick={() => openDeleteModal(item)} className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-2 font-medium transition-colors cursor-pointer">
                             <Trash2 className="w-4 h-4 text-rose-600" /> Delete
@@ -518,25 +518,25 @@ export default function LeaveTypePage() {
         <form onSubmit={handleSubmit} className="space-y-6 text-left">
           
           <div className="space-y-1.5">
-            <label className="text-[14px] font-bold text-[#0F172A] dark:text-slate-100">Leave Type</label>
+            <label className="text-[14px] font-bold text-foreground dark:text-slate-100">Leave Type</label>
             <input 
               type="text" 
               value={formLeaveType}
               onChange={(e) => setFormLeaveType(e.target.value)}
-              className="w-full px-4 py-2.5 border border-border rounded-lg outline-none focus:border-[#1E3A5F] bg-white dark:bg-slate-800 text-[14px] text-slate-700 dark:text-slate-200 transition-colors"
+              className="w-full px-4 py-2.5 border border-border rounded-lg outline-none focus:border-primary bg-white dark:bg-slate-800 text-[14px] text-slate-700 dark:text-slate-200 transition-colors"
               required
             />
           </div>
 
           <div className="flex items-center justify-between pt-2">
             <div>
-              <label className="text-[14px] font-bold text-[#0F172A] dark:text-slate-100 block">Status</label>
+              <label className="text-[14px] font-bold text-foreground dark:text-slate-100 block">Status</label>
               <span className="text-[13px] text-slate-500 dark:text-slate-400">Change the Status by toggle</span>
             </div>
             <button 
               type="button"
               onClick={() => setFormStatus(formStatus === "Active" ? "Inactive" : "Active")}
-              className={`w-11 h-6 rounded-full flex items-center px-1 transition-colors ${formStatus === "Active" ? "bg-[#1E3A5F]" : "bg-slate-200"}`}
+              className={`w-11 h-6 rounded-full flex items-center px-1 transition-colors ${formStatus === "Active" ? "bg-primary" : "bg-slate-200"}`}
             >
               <div className={`w-4 h-4 rounded-full bg-white dark:bg-slate-900 transition-transform ${formStatus === "Active" ? "translate-x-5" : "translate-x-0"}`} />
             </button>
@@ -553,7 +553,7 @@ export default function LeaveTypePage() {
             <button 
               type="submit" 
               disabled={submitting}
-              className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+              className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer disabled:opacity-50"
             >
               {submitting ? "Saving..." : isEditing ? "Save Changes" : "Add Leave Type"}
             </button>
@@ -570,7 +570,7 @@ export default function LeaveTypePage() {
             <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <Trash2 className="w-8 h-8 text-rose-500" />
             </div>
-            <h2 className="text-xl font-bold text-[#0F172A] dark:text-slate-100 mb-3">Confirm Deletion</h2>
+            <h2 className="text-xl font-bold text-foreground dark:text-slate-100 mb-3">Confirm Deletion</h2>
             <p className="text-[14px] text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
               Are you sure you want to delete leave type <strong>{selectedLeaveType?.leave_type}</strong>? This action cannot be undone.
             </p>

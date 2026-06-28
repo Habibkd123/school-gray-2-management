@@ -128,7 +128,7 @@ export default function ParentFeesPage() {
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5">
                   <div 
-                    className={`h-2.5 rounded-full ${paymentPercentage === 100 ? 'bg-emerald-500' : 'bg-amber-500'}`} 
+                    className={`h-2.5 rounded-full ${paymentPercentage === 100 ? 'bg-success' : 'bg-primary'}`} 
                     style={{ width: `${paymentPercentage}%` }}
                   ></div>
                 </div>

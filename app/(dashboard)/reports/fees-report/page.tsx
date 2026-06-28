@@ -53,7 +53,7 @@ export default function FeesReportPage() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
         <div>
@@ -61,7 +61,7 @@ export default function FeesReportPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/reports" className="hover:text-[#1E3A5F]">Reports</Link>
+            <Link href="/reports" className="hover:text-primary">Reports</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Fees Report</span>
           </div>
@@ -71,8 +71,8 @@ export default function FeesReportPage() {
           <select 
             value={dateRange} 
             onChange={e => setDateRange(e.target.value)}
-            className={`px-3 py-2 bg-white dark:bg-slate-900 border text-[13px] text-slate-900 dark:text-white rounded-lg outline-none focus:border-[#1E3A5F] transition-colors ${
-              dateRange !== "all" ? "border-[#1E3A5F] bg-[#FFF9E6] dark:bg-[#1E3A5F]/10" : "border-border"
+            className={`px-3 py-2 bg-white dark:bg-slate-900 border text-[13px] text-slate-900 dark:text-white rounded-lg outline-none focus:border-primary transition-colors ${
+              dateRange !== "all" ? "border-primary bg-primary/10 dark:bg-primary/10" : "border-border"
             }`}
           >
             <option value="all" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Time</option>
@@ -82,7 +82,7 @@ export default function FeesReportPage() {
           </select>
           <button 
             onClick={handlePrint}
-            className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+            className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm"
           >
             <Printer className="w-4 h-4" /> Print Report
           </button>
@@ -91,7 +91,7 @@ export default function FeesReportPage() {
 
       {loading ? (
         <div className="flex items-center justify-center h-40">
-          <Loader2 className="w-8 h-8 text-[#1E3A5F] animate-spin" />
+          <Loader2 className="w-8 h-8 text-primary animate-spin" />
         </div>
       ) : (
         <>
@@ -143,7 +143,7 @@ export default function FeesReportPage() {
             
             <div className="overflow-x-auto">
               <table className="w-full text-[13px]">
-                <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border print:bg-slate-100 print:text-black">
+                <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border print:bg-slate-100 print:text-black">
                   <tr>
                     <th className="px-5 py-3 text-left font-bold text-slate-700 dark:text-slate-200">Date</th>
                     <th className="px-5 py-3 text-left font-bold text-slate-700 dark:text-slate-200">Receipt No</th>

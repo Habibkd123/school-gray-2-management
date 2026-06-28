@@ -8,14 +8,14 @@ export default function AlertsPage() {
   const [showLiveAlert, setShowLiveAlert] = useState(false);
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">Alerts</h1>
         <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
           <span>Dashboard</span>
           <span>/</span>
-          <span className="hover:text-[#1E3A5F] cursor-pointer">UI Elements</span>
+          <span className="hover:text-primary cursor-pointer">UI Elements</span>
           <span>/</span>
           <span className="text-slate-900 dark:text-white font-medium">Alerts</span>
         </div>

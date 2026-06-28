@@ -126,7 +126,7 @@ export default function ParentAttendancePage() {
   const totalWorking = stats.present + stats.absent + stats.late + stats.half_day;
   const attendedDays  = stats.present + stats.late + stats.half_day * 0.5;
   const pct = totalWorking > 0 ? Math.round((attendedDays / totalWorking) * 100) : 0;
-  const pctColor = pct >= 75 ? "#10b981" : pct >= 50 ? "#1E3A5F" : "#ef4444";
+  const pctColor = pct >= 75 ? "#10b981" : pct >= 50 ? "var(--primary)" : "#ef4444";
 
   // Current streak (consecutive present/late days from today backwards)
   const streak = useMemo(() => {

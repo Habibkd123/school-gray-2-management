@@ -87,13 +87,13 @@ export default function ProgramsSlider({ programs }: { programs: Program[] }) {
                     alt={p.title} 
                     className="w-full h-full object-cover" 
                   />
-                  <div className="absolute top-4 left-4 bg-[#0F172A] text-white px-3 py-1 text-[11px] font-bold tracking-widest uppercase shadow-md">
+                  <div className="absolute top-4 left-4 bg-[var(--sidebar-bg)] text-white px-3 py-1 text-[11px] font-bold tracking-widest uppercase shadow-md">
                     {p.age}
                   </div>
                 </div>
                 <div className="p-6 flex-1 flex flex-col">
-                  <span className="text-[11px] font-bold text-[#1E3A5F] uppercase tracking-widest">{p.age}</span>
-                  <h4 className="text-xl font-bold text-[#0F172A] mt-1 mb-2">{p.title}</h4>
+                  <span className="text-[11px] font-bold text-primary uppercase tracking-widest">{p.age}</span>
+                  <h4 className="text-xl font-bold text-foreground mt-1 mb-2">{p.title}</h4>
                   <p className="text-slate-500 text-[13px] leading-relaxed flex-1">{p.desc}</p>
                 </div>
               </div>
@@ -131,7 +131,7 @@ export default function ProgramsSlider({ programs }: { programs: Program[] }) {
               onClick={() => setCurrentIndex(idx)}
               className={`h-2.5 rounded-full transition-all duration-300 ${
                 currentIndex === idx 
-                  ? "w-8 bg-[#1E3A5F]" 
+                  ? "w-8 bg-primary" 
                   : "w-2.5 bg-slate-300 hover:bg-slate-400"
               }`}
               aria-label={`Go to slide ${idx + 1}`}

@@ -473,7 +473,7 @@ export default function LandingEditorPage() {
                 <div key={i} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/30 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-slate-400">
-                      <Star className="w-4 h-4 text-[#1E3A5F]" />
+                      <Star className="w-4 h-4 text-primary" />
                       <span className="text-[12px] font-semibold">Testimonial #{i + 1}</span>
                     </div>
                     <button onClick={() => removeTestimonial(i)} className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors shrink-0">

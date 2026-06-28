@@ -281,7 +281,7 @@ export default function AcademicClassesPage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setActionMenuId(null)} />
                 <div className="absolute right-8 top-0 w-32 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5">
-                  <button onClick={() => openEdit(c)} className="w-full px-4 py-2 text-[13px] font-semibold text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 transition-colors text-left">
+                  <button onClick={() => openEdit(c)} className="w-full px-4 py-2 text-[13px] font-semibold text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 transition-colors text-left">
                     <Edit className="w-3.5 h-3.5" /> Edit
                   </button>
                   <button onClick={() => openDelete(c)} className="w-full px-4 py-2 text-[13px] font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 transition-colors text-left">
@@ -303,10 +303,10 @@ export default function AcademicClassesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
-          <h1 className="text-[20px] leading-[24px] font-bold text-[#0F172A] dark:text-slate-100">Classes</h1>
+          <h1 className="text-[20px] leading-[24px] font-bold text-foreground dark:text-slate-100">Classes</h1>
           <div className="flex items-center gap-2 text-[14px] text-[#68718a] mt-1 font-medium">
             <span>Academic Management</span><span>/</span>
-            <span className="text-[#0F172A] dark:text-slate-100">Classes</span>
+            <span className="text-foreground dark:text-slate-100">Classes</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -325,10 +325,10 @@ export default function AcademicClassesPage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-2 text-left">
-                  <button onClick={() => setIsExportOpen(false)} className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors">
+                  <button onClick={() => setIsExportOpen(false)} className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors">
                     <FileText className="w-4 h-4 text-slate-500" /> Export as PDF
                   </button>
-                  <button onClick={() => setIsExportOpen(false)} className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors">
+                  <button onClick={() => setIsExportOpen(false)} className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors">
                     <FileText className="w-4 h-4 text-slate-500" /> Export as Excel
                   </button>
                 </div>
@@ -337,7 +337,7 @@ export default function AcademicClassesPage() {
           </div>
           {isAdmin && (
             <button onClick={() => { resetForm(); setIsAddOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
               <Plus className="w-4 h-4" /><span>Add Class</span>
             </button>
           )}
@@ -365,7 +365,7 @@ export default function AcademicClassesPage() {
                   <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-1.5 text-left">
                     {(["asc", "desc"] as const).map(o => (
                       <button key={o} onClick={() => { setSortOrder(o); setIsSortOpen(false); doFetch({ sort: o }); }}
-                        className={`w-full px-4 py-2.5 text-[13px] text-left transition-colors font-medium ${o === sortOrder ? "bg-[#1E3A5F] text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                        className={`w-full px-4 py-2.5 text-[13px] text-left transition-colors font-medium ${o === sortOrder ? "bg-primary text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
                         {o === "asc" ? "A → Z (Ascending)" : "Z → A (Descending)"}
                       </button>
                     ))}
@@ -386,7 +386,7 @@ export default function AcademicClassesPage() {
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input type="text" placeholder="Search classes..." value={searchQuery} onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none w-full sm:w-64 focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-[#F8FAFC] dark:bg-[#0F172A]" />
+              className="pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none w-full sm:w-64 focus:border-primary/50 transition-colors shadow-sm bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)]" />
           </div>
         </div>
 
@@ -400,19 +400,19 @@ export default function AcademicClassesPage() {
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-red-500">
             <AlertCircle className="w-6 h-6" />
             <p className="text-[14px] font-medium">{error}</p>
-            <button onClick={() => doFetch()} className="px-4 py-2 text-[13px] font-bold bg-[#1E3A5F] hover:bg-[#162C47] text-white rounded-lg transition-colors">Retry</button>
+            <button onClick={() => doFetch()} className="px-4 py-2 text-[13px] font-bold bg-primary hover:bg-[var(--primary-hover)] text-white rounded-lg transition-colors">Retry</button>
           </div>
         ) : classes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
             <BookOpen className="w-10 h-10 opacity-30" />
             <p className="text-[14px] font-medium">No classes found</p>
-            {isAdmin && <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="px-4 py-2 text-[13px] font-bold bg-[#1E3A5F] hover:bg-[#162C47] text-white rounded-lg transition-colors">Add First Class</button>}
+            {isAdmin && <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="px-4 py-2 text-[13px] font-bold bg-primary hover:bg-[var(--primary-hover)] text-white rounded-lg transition-colors">Add First Class</button>}
           </div>
         ) : (
           <>
             <DataTable columns={columns} data={classes}
-              selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4" />}
-              renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4" />}
+              selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
+              renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
             />
             {totalPages > 1 && (
               <div className="px-5 py-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
@@ -432,7 +432,7 @@ export default function AcademicClassesPage() {
                       <span key={`e${i}`} className="px-2 text-slate-400">…</span>
                     ) : (
                       <button key={p} onClick={() => handlePageChange(p as number)}
-                        className={`w-8 h-8 rounded-lg text-[13px] font-bold transition-colors ${p === currentPage ? "bg-[#1E3A5F] text-white shadow-sm" : "border border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
+                        className={`w-8 h-8 rounded-lg text-[13px] font-bold transition-colors ${p === currentPage ? "bg-primary text-white shadow-sm" : "border border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
                         {p}
                       </button>
                     ))}
@@ -457,10 +457,10 @@ export default function AcademicClassesPage() {
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Class Name <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Class Name <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={formName} onChange={(e) => setFormName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="">Select Class</option>
                   {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -468,16 +468,16 @@ export default function AcademicClassesPage() {
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Class Code <span className="text-slate-400 text-[11px]">(optional)</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Class Code <span className="text-slate-400 text-[11px]">(optional)</span></label>
               <input type="text" value={formClassCode} onChange={(e) => setFormClassCode(e.target.value)}
                 placeholder="e.g. CLS-11"
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
             </div>
           </div>
 
           {enableSections && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Sections <span className="text-slate-400 text-[11px]">(optional, select one or more)</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Sections <span className="text-slate-400 text-[11px]">(optional, select one or more)</span></label>
               <div className="space-y-3 p-3 border border-border rounded-lg bg-[#F8FAFC] dark:bg-slate-900/50">
                 {/* Quick Add Section Input */}
                 <div className="flex gap-2">
@@ -489,9 +489,9 @@ export default function AcademicClassesPage() {
                         handleQuickAddSection();
                       }
                     }}
-                    className="px-3 py-1.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 bg-white dark:bg-slate-900 flex-1 uppercase" />
+                    className="px-3 py-1.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 bg-white dark:bg-slate-900 flex-1 uppercase" />
                   <button type="button" onClick={handleQuickAddSection} disabled={addingSection || !quickSectionName.trim()}
-                    className="px-4 py-1.5 bg-[#1E3A5F] hover:bg-[#162C47] disabled:opacity-55 text-white text-[13px] font-bold rounded-lg transition-colors flex items-center gap-1.5">
+                    className="px-4 py-1.5 bg-primary hover:bg-[var(--primary-hover)] disabled:opacity-55 text-white text-[13px] font-bold rounded-lg transition-colors flex items-center gap-1.5">
                     {addingSection ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "+ Add"}
                   </button>
                 </div>
@@ -501,7 +501,7 @@ export default function AcademicClassesPage() {
                   {sections.filter(s => s.status === "Active").map(s => {
                     const checked = formSections.includes(s.name);
                     return (
-                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#1E3A5F]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
+                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors shadow-sm text-[13px] font-medium text-foreground dark:text-slate-100">
                         <input type="checkbox" checked={checked}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -510,7 +510,7 @@ export default function AcademicClassesPage() {
                               setFormSections(formSections.filter(x => x !== s.name));
                             }
                           }}
-                          className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4" />
+                          className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />
                         <span>Section {s.name}</span>
                       </label>
                     );
@@ -525,13 +525,13 @@ export default function AcademicClassesPage() {
 
           {(formName === "Class 11" || formName === "Class 12") && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Streams <span className="text-red-500">*</span> <span className="text-slate-400 text-[11px]">(select one or more)</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Streams <span className="text-red-500">*</span> <span className="text-slate-400 text-[11px]">(select one or more)</span></label>
               <div className="space-y-3 p-3 border border-border rounded-lg bg-[#F8FAFC] dark:bg-slate-900/50">
                 <div className="flex flex-wrap gap-2.5">
                   {streams.filter(s => s.status === "Active").map(s => {
                     const checked = formStreams.includes(s.name);
                     return (
-                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-[#1E3A5F]/50 transition-colors shadow-sm text-[13px] font-medium text-[#0F172A] dark:text-slate-100">
+                      <label key={s._id} className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors shadow-sm text-[13px] font-medium text-foreground dark:text-slate-100">
                         <input type="checkbox" checked={checked}
                           onChange={(e) => {
                             if (e.target.checked) {
@@ -540,7 +540,7 @@ export default function AcademicClassesPage() {
                               setFormStreams(formStreams.filter(x => x !== s.name));
                             }
                           }}
-                          className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] w-4 h-4" />
+                          className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />
                         <span>{s.name}</span>
                       </label>
                     );
@@ -555,10 +555,10 @@ export default function AcademicClassesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Academic Year <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Academic Year <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={formAcademicYear} onChange={(e) => setFormAcademicYear(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="">Select Year</option>
                   {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
@@ -566,10 +566,10 @@ export default function AcademicClassesPage() {
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Status <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={formStatus} onChange={(e) => setFormStatus(e.target.value as "Active" | "Inactive")}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                 </select>
@@ -579,18 +579,18 @@ export default function AcademicClassesPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Capacity</label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Capacity</label>
               <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)} min={1} max={200}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button type="button" onClick={() => { setIsAddOpen(false); resetForm(); }}
-              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">
+              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">
               Cancel
             </button>
             <button type="submit" disabled={submitting}
-              className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
+              className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Add Class
             </button>
           </div>
@@ -605,10 +605,10 @@ export default function AcademicClassesPage() {
           )}
           <div className={`grid grid-cols-1 ${enableSections ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Class Name <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Class Name <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={formName} onChange={(e) => setFormName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="">Select Class</option>
                   {CLASS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -616,17 +616,17 @@ export default function AcademicClassesPage() {
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Class Code <span className="text-slate-400 text-[11px]">(optional)</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Class Code <span className="text-slate-400 text-[11px]">(optional)</span></label>
               <input type="text" value={formClassCode} onChange={(e) => setFormClassCode(e.target.value)}
                 placeholder="e.g. CLS-11"
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900 uppercase" />
             </div>
             {enableSections && (
               <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Section <span className="text-slate-400 text-[11px]">(optional)</span></label>
+                <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Section <span className="text-slate-400 text-[11px]">(optional)</span></label>
                 <div className="relative">
                   <select value={formSection} onChange={(e) => setFormSection(e.target.value)}
-                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                     <option value="">No Section</option>
                     {sections.filter(s => s.status === "Active").map(s => (
                       <option key={s._id} value={s.name}>{s.name}</option>
@@ -640,10 +640,10 @@ export default function AcademicClassesPage() {
 
           {(formName === "Class 11" || formName === "Class 12") && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Stream <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Stream <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={formStream} onChange={(e) => setFormStream(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="">No Stream</option>
                   {streams.filter(s => s.status === "Active").map(s => (
                     <option key={s._id} value={s.name}>{s.name}</option>
@@ -656,10 +656,10 @@ export default function AcademicClassesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Academic Year <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Academic Year <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={formAcademicYear} onChange={(e) => setFormAcademicYear(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="">Select Year</option>
                   {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
@@ -667,10 +667,10 @@ export default function AcademicClassesPage() {
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Status <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
               <div className="relative">
                 <select value={formStatus} onChange={(e) => setFormStatus(e.target.value as "Active" | "Inactive")}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
                 </select>
@@ -680,15 +680,15 @@ export default function AcademicClassesPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Capacity</label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Capacity</label>
               <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)} min={1} max={200}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
             {/* <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Class Teacher</label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Class Teacher</label>
               <div className="relative">
                 <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
                   <option value="">Not assigned</option>
                   {teachers.filter(t => t.is_active).map(t => (
                     <option key={t._id} value={t._id}>{t.name}{t.employee_id ? ` (${t.employee_id})` : ""}</option>
@@ -700,11 +700,11 @@ export default function AcademicClassesPage() {
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button type="button" onClick={() => { setIsEditOpen(false); resetForm(); }}
-              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">
+              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">
               Cancel
             </button>
             <button type="submit" disabled={submitting}
-              className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
+              className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Save Changes
             </button>
           </div>
@@ -713,10 +713,10 @@ export default function AcademicClassesPage() {
       <Modal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="Delete Class">
         <div className="space-y-5 text-left">
           <p className="text-[14px] text-slate-600 dark:text-slate-300">
-            Are you sure you want to delete <span className="font-bold text-[#0F172A] dark:text-white">{selectedClass?.name}{selectedClass?.section ? ` - ${selectedClass.section}` : ""}</span>? This action cannot be undone.
+            Are you sure you want to delete <span className="font-bold text-foreground dark:text-white">{selectedClass?.name}{selectedClass?.section ? ` - ${selectedClass.section}` : ""}</span>? This action cannot be undone.
           </p>
           <div className="flex justify-end gap-3">
-            <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[#0F172A] dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
+            <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
             <button onClick={handleDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Delete
             </button>

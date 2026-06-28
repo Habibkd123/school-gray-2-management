@@ -114,19 +114,19 @@ export default function BusDetailsPage() {
   };
 
   const triggerCls = (open: boolean) =>
-    `flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors ${open ? "border-[#1E3A5F] text-[#1E3A5F]" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
+    `flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors ${open ? "border-primary text-primary" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
 
   // Field builder for modals
   const FieldInput = ({ label, value, onChange, type = "text", placeholder = "" }: { label: string; value: string | number; onChange: (v: string) => void; type?: string; placeholder?: string }) => (
     <div className="flex flex-col gap-1.5 text-left">
       <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">{label}</label>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#1E3A5F]/50 focus:ring-2 focus:ring-[#1E3A5F]/10 transition-all shadow-sm" />
+        className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm" />
     </div>
   );
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6" onClick={() => setActiveDropdown(null)}>
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6" onClick={() => setActiveDropdown(null)}>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -144,7 +144,7 @@ export default function BusDetailsPage() {
             <Download className="w-4 h-4" /> Export <ChevronDown className="w-3.5 h-3.5" />
           </button>
           <button onClick={() => { setForm(buildEmptyBus() as any); setIsAddOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg shadow-sm transition-colors">
+            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg shadow-sm transition-colors">
             <Plus className="w-4 h-4" /> Add Bus
           </button>
         </div>
@@ -156,7 +156,7 @@ export default function BusDetailsPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Buses", value: buses.length, icon: Bus, color: "bg-amber-50 dark:bg-amber-900/20 text-[#1E3A5F]" },
+          { label: "Total Buses", value: buses.length, icon: Bus, color: "bg-amber-50 dark:bg-amber-900/20 text-primary" },
           { label: "Active", value: buses.filter(b => b.status === "Active").length, icon: Gauge, color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" },
           { label: "Inactive", value: buses.filter(b => b.status === "Inactive").length, icon: Bus, color: "bg-rose-50 dark:bg-rose-900/20 text-rose-500" },
           { label: "Total Capacity", value: buses.reduce((s, b) => s + b.capacity, 0), icon: Users, color: "bg-blue-50 dark:bg-blue-900/20 text-blue-500" },
@@ -210,7 +210,7 @@ export default function BusDetailsPage() {
                     </div>
                     <div className="p-4 border-t border-border flex justify-end gap-3">
                       <button onClick={() => { setFilterStatus(""); setFilterRoute(""); }} className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg">Reset</button>
-                      <button onClick={() => setIsFilterOpen(false)} className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg">Apply</button>
+                      <button onClick={() => setIsFilterOpen(false)} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg">Apply</button>
                     </div>
                   </div>
                 </>
@@ -227,7 +227,7 @@ export default function BusDetailsPage() {
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-1.5">
                     {["Ascending", "Descending"].map(item => (
                       <button key={item} onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
-                        className={`w-full px-4 py-2.5 text-left text-[13px] font-medium transition-colors ${item === selectedSort ? "bg-[#1E3A5F] text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                        className={`w-full px-4 py-2.5 text-left text-[13px] font-medium transition-colors ${item === selectedSort ? "bg-primary text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
                         {item}
                       </button>
                     ))}
@@ -250,16 +250,16 @@ export default function BusDetailsPage() {
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input type="text" placeholder="Search bus or driver..." value={search} onChange={e => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-all" />
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-all" />
           </div>
         </div>
 
         {/* Table */}
         <div className={`overflow-x-auto ${activeDropdown ? "pb-28" : ""}`}>
           <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
-                <th className="px-4 py-4 text-left w-10"><input type="checkbox" className="rounded w-4 h-4 accent-[#1E3A5F]" /></th>
+                <th className="px-4 py-4 text-left w-10"><input type="checkbox" className="rounded w-4 h-4 accent-primary" /></th>
                 {["Bus Number", "Driver", "Phone", "Capacity", "Assigned Route", "Status", "Action"].map(h => (
                   <th key={h} className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">{h}</th>
                 ))}
@@ -268,7 +268,7 @@ export default function BusDetailsPage() {
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr><td colSpan={8} className="px-6 py-16 text-center text-slate-400">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-[#1E3A5F]" />
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
                   <p>Loading buses...</p>
                 </td></tr>
               ) : filtered.length === 0 ? (
@@ -278,14 +278,14 @@ export default function BusDetailsPage() {
                 </td></tr>
               ) : filtered.map((bus, idx) => (
                 <tr key={bus.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="px-4 py-4"><input type="checkbox" className="rounded w-4 h-4 accent-[#1E3A5F]" /></td>
+                  <td className="px-4 py-4"><input type="checkbox" className="rounded w-4 h-4 accent-primary" /></td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2 cursor-pointer" onClick={e => { e.stopPropagation(); setViewBus(bus); }}>
                       <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
-                        <Bus className="w-4 h-4 text-[#1E3A5F]" />
+                        <Bus className="w-4 h-4 text-primary" />
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-900 dark:text-white group-hover:text-[#1E3A5F] transition-colors">{bus.busNumber}</div>
+                        <div className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{bus.busNumber}</div>
                         <div className="text-[11px] text-slate-400">{bus.busModel}</div>
                       </div>
                     </div>
@@ -302,15 +302,15 @@ export default function BusDetailsPage() {
                   </td>
                   <td className="px-4 py-4 text-slate-600 dark:text-slate-300 max-w-full sm:w-[160px] truncate">{bus.assignedRoute}</td>
                   <td className="px-4 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-bold ${bus.status === "Active" ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBF0] text-[#FF4A6B]"}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${bus.status === "Active" ? "bg-[#1DD04A]" : "bg-[#FF4A6B]"}`} />
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-bold ${bus.status === "Active" ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${bus.status === "Active" ? "bg-success" : "bg-danger"}`} />
                       {bus.status}
                     </span>
                   </td>
                   <td className="px-4 py-4">
                     <div className="relative" onClick={e => e.stopPropagation()}>
                       <button onClick={() => setActiveDropdown(activeDropdown === bus.id ? null : bus.id)}
-                        className="w-8 h-8 rounded-full flex items-center justify-center bg-[#1E3A5F] hover:bg-[#162C47] text-white transition-colors">
+                        className="w-8 h-8 rounded-full flex items-center justify-center bg-primary hover:bg-[var(--primary-hover)] text-white transition-colors">
                         <MoreVertical className="w-4 h-4" />
                       </button>
                       {activeDropdown === bus.id && (
@@ -339,7 +339,7 @@ export default function BusDetailsPage() {
           <span>Showing 1–{Math.min(10, filtered.length)} of {filtered.length}</span>
           <div className="flex items-center gap-1">
             <button className="px-3 py-1.5 font-medium hover:text-slate-700 dark:hover:text-slate-200">Prev</button>
-            <button className="w-7 h-7 rounded bg-[#1E3A5F] text-white text-[13px] font-bold">1</button>
+            <button className="w-7 h-7 rounded bg-primary text-white text-[13px] font-bold">1</button>
             <button className="px-3 py-1.5 font-medium hover:text-slate-700 dark:hover:text-slate-200">Next</button>
           </div>
         </div>
@@ -350,16 +350,16 @@ export default function BusDetailsPage() {
         <Modal isOpen={!!viewBus} onClose={() => setViewBus(null)} title="Bus Details" size="md">
           <div className="space-y-5">
             <div className="flex items-center gap-4 p-4 bg-amber-50/50 dark:bg-amber-900/10 rounded-xl border border-amber-100 dark:border-amber-900/20">
-              <div className="w-14 h-14 rounded-xl bg-[#1E3A5F]/10 flex items-center justify-center">
-                <Bus className="w-7 h-7 text-[#1E3A5F]" />
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Bus className="w-7 h-7 text-primary" />
               </div>
               <div>
                 <p className="text-[11px] text-slate-500 font-semibold uppercase">Bus</p>
-                <h2 className="text-[18px] font-bold text-[#1E3A5F]">{viewBus.busNumber}</h2>
+                <h2 className="text-[18px] font-bold text-primary">{viewBus.busNumber}</h2>
                 <p className="text-[13px] text-slate-500">{viewBus.busModel}</p>
               </div>
-              <span className={`ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${viewBus.status === "Active" ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBF0] text-[#FF4A6B]"}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${viewBus.status === "Active" ? "bg-[#1DD04A]" : "bg-[#FF4A6B]"}`} />
+              <span className={`ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${viewBus.status === "Active" ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${viewBus.status === "Active" ? "bg-success" : "bg-danger"}`} />
                 {viewBus.status}
               </span>
             </div>
@@ -389,7 +389,7 @@ export default function BusDetailsPage() {
               <button onClick={() => { setViewBus(null); openEdit(viewBus); }} className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-[#E2E8F0] transition-colors flex items-center gap-2">
                 <Edit className="w-4 h-4" /> Edit Bus
               </button>
-              <button onClick={() => setViewBus(null)} className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg transition-colors">Close</button>
+              <button onClick={() => setViewBus(null)} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg transition-colors">Close</button>
             </div>
           </div>
         </Modal>
@@ -423,7 +423,7 @@ export default function BusDetailsPage() {
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => { setIsAddOpen(false); setEditBus(null); }} className="px-4 py-2 border border-border text-[13px] font-semibold rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors">Cancel</button>
-              <button type="submit" disabled={isSaving} className="px-5 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 disabled:opacity-70 transition-colors">
+              <button type="submit" disabled={isSaving} className="px-5 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 disabled:opacity-70 transition-colors">
                 {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editBus ? "Save Changes" : "Add Bus"}
               </button>

@@ -120,7 +120,7 @@ export default function TeacherAttendancePage() {
           <div className="flex flex-col gap-1.5 min-w-[140px]">
             <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Date</label>
             <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] bg-white dark:bg-slate-900 font-medium" />
+              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary bg-white dark:bg-slate-900 font-medium" />
           </div>
         </div>
       </div>
@@ -153,7 +153,7 @@ export default function TeacherAttendancePage() {
               <div className="relative">
                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2" />
                 <input type="text" placeholder="Search teacher..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-3 py-1.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] bg-white dark:bg-slate-900" />
+                  className="pl-9 pr-3 py-1.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary bg-white dark:bg-slate-900" />
               </div>
             </div>
 
@@ -195,7 +195,7 @@ export default function TeacherAttendancePage() {
                         <input type="text" placeholder="Add note..."
                           value={attendanceRecords[teacher._id]?.note || ""}
                           onChange={(e) => handleNoteChange(teacher._id, e.target.value)}
-                          className="w-full px-3 py-1.5 border border-transparent hover:border-border focus:border-[#1E3A5F] rounded text-[13px] outline-none bg-transparent focus:bg-white dark:focus:bg-slate-900 transition-colors" />
+                          className="w-full px-3 py-1.5 border border-transparent hover:border-border focus:border-primary rounded text-[13px] outline-none bg-transparent focus:bg-white dark:focus:bg-slate-900 transition-colors" />
                       </td>
                     </tr>
                   ))}
@@ -208,7 +208,7 @@ export default function TeacherAttendancePage() {
                 {successMsg && <span className="text-emerald-500 text-[13px] font-bold flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> {successMsg}</span>}
               </div>
               <button onClick={handleSave} disabled={submitting}
-                className="px-6 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[14px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                className="px-6 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[14px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2">
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 Save Attendance
               </button>

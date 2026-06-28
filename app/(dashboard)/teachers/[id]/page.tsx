@@ -135,7 +135,7 @@ export default function TeacherDetailsPage() {
 
   const InfoRow = ({ label, value }: { label: string; value: string }) => (
     <div className="flex justify-between py-1">
-      <span className="text-[14px] leading-[21px] font-medium text-[#0F172A] dark:text-slate-100">{label}</span>
+      <span className="text-[14px] leading-[21px] font-medium text-foreground dark:text-slate-100">{label}</span>
       <span className="text-[14px] leading-[21px] text-[#68718a] text-right font-normal">{value}</span>
     </div>
   );
@@ -172,7 +172,7 @@ export default function TeacherDetailsPage() {
     <button
       onClick={onClick}
       className={`flex items-center gap-2 px-4 py-3 text-[13px] font-bold transition-all border-b-2 whitespace-nowrap
-        ${active ? "text-[#F59E0B] border-[#F59E0B] bg-[#F59E0B]/5" : "text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}
+        ${active ? "text-primary border-primary bg-primary/5" : "text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}
       `}
     >
       {icon}
@@ -298,17 +298,17 @@ export default function TeacherDetailsPage() {
   });
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
-          <h1 className="text-[20px] leading-[24px] font-semibold text-[#0F172A] dark:text-slate-100">Teacher Details</h1>
+          <h1 className="text-[20px] leading-[24px] font-semibold text-foreground dark:text-slate-100">Teacher Details</h1>
           <div className="flex items-center gap-2 text-[14px] leading-[21px] text-[#68718a] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/teachers" className="hover:text-[#F59E0B]">Teachers</Link>
+            <Link href="/teachers" className="hover:text-primary">Teachers</Link>
             <span>/</span>
-            <span className="text-[#0F172A] dark:text-slate-100 font-normal">Teacher Details</span>
+            <span className="text-foreground dark:text-slate-100 font-normal">Teacher Details</span>
           </div>
         </div>
 
@@ -329,7 +329,7 @@ export default function TeacherDetailsPage() {
           </button>
           <button
             onClick={() => router.push(`/teachers/${teacher._id}/edit`)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors"
           >
             <Edit className="w-3.5 h-3.5" />
             <span>Edit Teacher</span>
@@ -346,8 +346,8 @@ export default function TeacherDetailsPage() {
             <div className="flex items-center gap-4">
               <img src={teacher.photo_url || "/asset 7.webp"} className="w-full sm:w-[60px] h-[60px] rounded-xl object-cover border border-slate-200 dark:border-slate-800" alt="Avatar" />
               <div>
-                <h2 className="text-[16px] leading-[19.2px] font-medium text-[#0F172A] dark:text-slate-100">{teacher.name}</h2>
-                <p className="text-[12px] text-[#F59E0B] font-bold mt-0.5">{teacher.employee_id || "No ID"}</p>
+                <h2 className="text-[16px] leading-[19.2px] font-medium text-foreground dark:text-slate-100">{teacher.name}</h2>
+                <p className="text-[12px] text-primary font-bold mt-0.5">{teacher.employee_id || "No ID"}</p>
                 <p className="text-[11px] text-[#68718a] font-medium mt-1">Joined : {formatDate(teacher.join_date)}</p>
               </div>
             </div>
@@ -356,14 +356,14 @@ export default function TeacherDetailsPage() {
           {/* Basic Information */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl overflow-hidden card-shadow text-left">
             <div className="p-4 text-[12px]">
-              <h3 className="text-[14px] leading-[19.2px] font-medium text-[#0F172A] dark:text-slate-100 mb-4">Basic Information</h3>
+              <h3 className="text-[14px] leading-[19.2px] font-medium text-foreground dark:text-slate-100 mb-4">Basic Information</h3>
               <div className="space-y-3.5">
                 <InfoRow label="Class & Section" value={getClassName(teacher.classId || teacher.class_id || "")} />
                 <InfoRow label="Subject" value={teacher.subject || teacher.subject_specialization || "Not Specified"} />
                 <InfoRow label="Gender" value={teacher.gender ? teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1) : "Not Specified"} />
                 <InfoRow label="Blood Group" value={teacher.blood_group || "Not Specified"} />
                 <div className="flex justify-between py-1 items-center">
-                  <span className="text-[14px] leading-[21px] font-medium text-[#0F172A] dark:text-slate-100">Language</span>
+                  <span className="text-[14px] leading-[21px] font-medium text-foreground dark:text-slate-100">Language</span>
                   <div className="flex gap-1.5 flex-wrap justify-end">
                     {teacher.languages && teacher.languages.length > 0 ? (
                       teacher.languages.map((l, i) => (
@@ -420,7 +420,7 @@ export default function TeacherDetailsPage() {
                     alert("ID copied to clipboard!");
                   }
                 }}
-                className="p-1.5 rounded bg-[#F59E0B] text-white hover:bg-[#D97706] transition-colors shadow-sm"
+                className="p-1.5 rounded bg-primary text-white hover:bg-[var(--primary-hover)] transition-colors shadow-sm"
               >
                 <Copy className="w-3.5 h-3.5" />
               </button>
@@ -432,13 +432,13 @@ export default function TeacherDetailsPage() {
             <div className="flex border-b border-border">
               <button
                 onClick={() => setBottomTab("Hostel")}
-                className={`flex-1 py-2.5 text-[12px] font-bold transition-colors ${bottomTab === "Hostel" ? "text-[#F59E0B] border-b-2 border-[#F59E0B]" : "text-slate-500 dark:text-slate-400"}`}
+                className={`flex-1 py-2.5 text-[12px] font-bold transition-colors ${bottomTab === "Hostel" ? "text-primary border-b-2 border-primary" : "text-slate-500 dark:text-slate-400"}`}
               >
                 Hostel
               </button>
               <button
                 onClick={() => setBottomTab("Transportation")}
-                className={`flex-1 py-2.5 text-[12px] font-bold transition-colors ${bottomTab === "Transportation" ? "text-[#F59E0B] border-b-2 border-[#F59E0B]" : "text-slate-500 dark:text-slate-400"}`}
+                className={`flex-1 py-2.5 text-[12px] font-bold transition-colors ${bottomTab === "Transportation" ? "text-primary border-b-2 border-primary" : "text-slate-500 dark:text-slate-400"}`}
               >
                 Transportation
               </button>
@@ -451,7 +451,7 @@ export default function TeacherDetailsPage() {
                   </div>
                   <div>
                     <p className="text-[12px] font-bold text-slate-900 dark:text-white">HI-Hostel, Floor</p>
-                    <p className="text-[11px] text-[#F59E0B] font-bold mt-0.5">Room No : 25</p>
+                    <p className="text-[11px] text-primary font-bold mt-0.5">Room No : 25</p>
                   </div>
                 </div>
               ) : (
@@ -461,7 +461,7 @@ export default function TeacherDetailsPage() {
                   </div>
                   <div>
                     <p className="text-[12px] font-bold text-slate-900 dark:text-white">Bus Route 42</p>
-                    <p className="text-[11px] text-[#F59E0B] font-bold mt-0.5">Pickup : 07:30 AM</p>
+                    <p className="text-[11px] text-primary font-bold mt-0.5">Pickup : 07:30 AM</p>
                   </div>
                 </div>
               )}
@@ -639,7 +639,7 @@ export default function TeacherDetailsPage() {
                   <div>
                     <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Facebook</p>
                     {teacher.facebook_url ? (
-                      <a href={teacher.facebook_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[#F59E0B] hover:underline font-medium break-all">{teacher.facebook_url}</a>
+                      <a href={teacher.facebook_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary hover:underline font-medium break-all">{teacher.facebook_url}</a>
                     ) : (
                       <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Not Specified</p>
                     )}
@@ -647,7 +647,7 @@ export default function TeacherDetailsPage() {
                   <div>
                     <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Twitter</p>
                     {teacher.twitter_url ? (
-                      <a href={teacher.twitter_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[#F59E0B] hover:underline font-medium break-all">{teacher.twitter_url}</a>
+                      <a href={teacher.twitter_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary hover:underline font-medium break-all">{teacher.twitter_url}</a>
                     ) : (
                       <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Not Specified</p>
                     )}
@@ -655,7 +655,7 @@ export default function TeacherDetailsPage() {
                   <div>
                     <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Linkedin</p>
                     {teacher.linkedin_url ? (
-                      <a href={teacher.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[#F59E0B] hover:underline font-medium break-all">{teacher.linkedin_url}</a>
+                      <a href={teacher.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary hover:underline font-medium break-all">{teacher.linkedin_url}</a>
                     ) : (
                       <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Not Specified</p>
                     )}
@@ -663,7 +663,7 @@ export default function TeacherDetailsPage() {
                   <div>
                     <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Youtube</p>
                     {teacher.youtube_url ? (
-                      <a href={teacher.youtube_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[#F59E0B] hover:underline font-medium break-all">{teacher.youtube_url}</a>
+                      <a href={teacher.youtube_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary hover:underline font-medium break-all">{teacher.youtube_url}</a>
                     ) : (
                       <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Not Specified</p>
                     )}
@@ -736,19 +736,19 @@ export default function TeacherDetailsPage() {
                     {/* Break sections below table */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                       <div className="bg-[#EEF2FF] rounded-xl p-4 flex flex-col justify-center">
-                        <span className="inline-block px-2 py-0.5 bg-[#F59E0B] text-white text-[10px] font-bold rounded mb-2 self-start">Morning Break</span>
+                        <span className="inline-block px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded mb-2 self-start">Morning Break</span>
                         <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1">
                           <Clock className="w-3.5 h-3.5" /> 10:30 to 10:45 AM
                         </div>
                       </div>
                       <div className="bg-[#FFF8E6] rounded-xl p-4 flex flex-col justify-center">
-                        <span className="inline-block px-2 py-0.5 bg-[#F59E0B] text-white text-[10px] font-bold rounded mb-2 self-start">Lunch</span>
+                        <span className="inline-block px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded mb-2 self-start">Lunch</span>
                         <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1">
                           <Clock className="w-3.5 h-3.5" /> 12:15 to 01:30 PM
                         </div>
                       </div>
                       <div className="bg-[#E6F4FE] rounded-xl p-4 flex flex-col justify-center">
-                        <span className="inline-block px-2 py-0.5 bg-[#F59E0B] text-white text-[10px] font-bold rounded mb-2 self-start">Evening Break</span>
+                        <span className="inline-block px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded mb-2 self-start">Evening Break</span>
                         <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1">
                           <Clock className="w-3.5 h-3.5" /> 03:00 PM to 03:15 PM
                         </div>
@@ -767,7 +767,7 @@ export default function TeacherDetailsPage() {
                 <button
                   onClick={() => setAttendanceSubTab("Leaves")}
                   className={`px-6 py-2.5 text-[13px] font-bold transition-all rounded-t-lg
-                    ${attendanceSubTab === "Leaves" ? "bg-[#F59E0B] text-white" : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-b-0 border-border"}
+                    ${attendanceSubTab === "Leaves" ? "bg-primary text-white" : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-b-0 border-border"}
                   `}
                 >
                   Leaves
@@ -775,7 +775,7 @@ export default function TeacherDetailsPage() {
                 <button
                   onClick={() => setAttendanceSubTab("Attendance")}
                   className={`px-6 py-2.5 text-[13px] font-bold transition-all rounded-t-lg ml-2
-                    ${attendanceSubTab === "Attendance" ? "bg-[#F59E0B] text-white" : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-b-0 border-border"}
+                    ${attendanceSubTab === "Attendance" ? "bg-primary text-white" : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-b-0 border-border"}
                   `}
                 >
                   Attendance
@@ -808,7 +808,7 @@ export default function TeacherDetailsPage() {
                       <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Leaves Request History</h3>
                       <button
                         onClick={() => setIsApplyLeaveOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] text-white text-[12px] font-bold rounded-lg hover:bg-[#D97706] transition-colors shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-[12px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm"
                       >
                         <Plus className="w-3.5 h-3.5" /> Apply Leave
                       </button>
@@ -824,7 +824,7 @@ export default function TeacherDetailsPage() {
                     ) : (
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-[12px]">
-                          <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] text-slate-700 dark:text-slate-200 border-b border-border">
+                          <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border">
                             <tr>
                               <th className="px-5 py-3 font-semibold">Leave Type</th>
                               <th className="px-5 py-3 font-semibold">Leave Date</th>
@@ -844,9 +844,9 @@ export default function TeacherDetailsPage() {
                                 <td className="px-5 py-3 truncate max-w-full sm:w-[200px]" title={l.reason}>{l.reason || "-"}</td>
                                 <td className="px-5 py-3">
                                   <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold
-                                    ${l.status === "approved" ? "bg-[#E8F8E8] text-[#1D7F2C]" : l.status === "rejected" ? "bg-[#FFEBEB] text-[#E02424]" : "bg-[#FFF8E6] text-[#F59E0B]"}
+                                    ${l.status === "approved" ? "bg-success/10 text-success" : l.status === "rejected" ? "bg-[#FFEBEB] text-[#E02424]" : "bg-[#FFF8E6] text-primary"}
                                   `}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${l.status === "approved" ? "bg-[#1DD04A]" : l.status === "rejected" ? "bg-[#E02424]" : "bg-[#F59E0B]"}`} />
+                                    <span className={`w-1.5 h-1.5 rounded-full ${l.status === "approved" ? "bg-success" : l.status === "rejected" ? "bg-[#E02424]" : "bg-primary"}`} />
                                     {l.status.charAt(0).toUpperCase() + l.status.slice(1)}
                                   </span>
                                 </td>
@@ -882,7 +882,7 @@ export default function TeacherDetailsPage() {
                   {/* Summary Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
                     <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 card-shadow flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-[#E8F8E8] text-[#1D7F2C] flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 rounded-lg bg-success/10 text-success flex items-center justify-center flex-shrink-0">
                         <User className="w-5 h-5" />
                       </div>
                       <div>
@@ -909,7 +909,7 @@ export default function TeacherDetailsPage() {
                       </div>
                     </div>
                     <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 card-shadow flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-[#FFF8E6] text-[#F59E0B] flex items-center justify-center flex-shrink-0">
+                      <div className="w-12 h-12 rounded-lg bg-[#FFF8E6] text-primary flex items-center justify-center flex-shrink-0">
                         <Clock className="w-5 h-5" />
                       </div>
                       <div>
@@ -927,13 +927,13 @@ export default function TeacherDetailsPage() {
 
                     {/* Legend */}
                     <div className="flex flex-wrap gap-3">
-                      <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#E8F8E8] text-[#1D7F2C] border border-[#1D7F2C]/20 text-[11px] font-bold">
+                      <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-success/10 text-success border border-[#1D7F2C]/20 text-[11px] font-bold">
                         <CheckCircle className="w-3.5 h-3.5" /> Present
                       </div>
                       <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#FFEBEB] text-[#E02424] border border-[#E02424]/20 text-[11px] font-bold">
                         <X className="w-3.5 h-3.5" /> Absent
                       </div>
-                      <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#FFF8E6] text-[#F59E0B] border border-[#F59E0B]/20 text-[11px] font-bold">
+                      <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#FFF8E6] text-primary border border-primary/20 text-[11px] font-bold">
                         <Clock className="w-3.5 h-3.5" /> Late
                       </div>
                       <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-300 text-[11px] font-bold">
@@ -953,7 +953,7 @@ export default function TeacherDetailsPage() {
                     ) : (
                       <div className="overflow-x-auto custom-scrollbar">
                         <table className="w-full text-left text-[12px] min-w-full sm:w-[800px]">
-                          <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] text-slate-700 dark:text-slate-200 border-y border-border">
+                          <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-y border-border">
                             <tr>
                               <th className="px-4 py-3 font-semibold whitespace-nowrap">Day | Month</th>
                               {monthsList.map(m => (
@@ -967,9 +967,9 @@ export default function TeacherDetailsPage() {
                                 <td className="px-4 py-3">{row.day}</td>
                                 {row.statuses.map((s, idx) => (
                                   <td key={idx} className="px-3 py-3 text-center">
-                                    {s === "P" && <span className="inline-block w-2.5 h-4 rounded-[4px] bg-[#1DD04A]" />}
+                                    {s === "P" && <span className="inline-block w-2.5 h-4 rounded-[4px] bg-success" />}
                                     {s === "A" && <span className="inline-block w-2.5 h-4 rounded-[4px] bg-[#E02424]" />}
-                                    {s === "L" && <span className="inline-block w-2.5 h-4 rounded-[4px] bg-[#F59E0B]" />}
+                                    {s === "L" && <span className="inline-block w-2.5 h-4 rounded-[4px] bg-primary" />}
                                     {s === "HD" && <span className="inline-block w-2.5 h-4 rounded-[4px] bg-slate-400 dark:bg-slate-600" />}
                                     {s === "H" && <span className="inline-block w-2.5 h-4 rounded-[4px] bg-[#3B82F6]" />}
                                   </td>
@@ -995,8 +995,8 @@ export default function TeacherDetailsPage() {
                     <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-1">Total Net Salary</p>
                     <p className="text-[20px] font-bold text-slate-900 dark:text-white">$5,55,410</p>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-[#FFF8E6] flex items-center justify-center border border-[#F59E0B]/20">
-                    <User className="w-5 h-5 text-[#F59E0B]" />
+                  <div className="w-10 h-10 rounded-full bg-[#FFF8E6] flex items-center justify-center border border-primary/20">
+                    <User className="w-5 h-5 text-primary" />
                   </div>
                 </div>
                 <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex items-center justify-between">
@@ -1005,7 +1005,7 @@ export default function TeacherDetailsPage() {
                     <p className="text-[20px] font-bold text-slate-900 dark:text-white">$5,58,380</p>
                   </div>
                   <div className="w-10 h-10 rounded-full bg-[#E8F8E8] flex items-center justify-center border border-[#1D7F2C]/20">
-                    <Briefcase className="w-5 h-5 text-[#1D7F2C]" />
+                    <Briefcase className="w-5 h-5 text-success" />
                   </div>
                 </div>
                 <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex items-center justify-between">
@@ -1013,8 +1013,8 @@ export default function TeacherDetailsPage() {
                     <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-1">Total Deduction</p>
                     <p className="text-[20px] font-bold text-slate-900 dark:text-white">$2,500</p>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-[#FFF8E6] flex items-center justify-center border border-[#F59E0B]/20">
-                    <Download className="w-5 h-5 text-[#F59E0B]" />
+                  <div className="w-10 h-10 rounded-full bg-[#FFF8E6] flex items-center justify-center border border-primary/20">
+                    <Download className="w-5 h-5 text-primary" />
                   </div>
                 </div>
               </div>
@@ -1030,12 +1030,12 @@ export default function TeacherDetailsPage() {
                     <select className="border border-border rounded px-2 py-1 outline-none bg-white dark:bg-slate-900 font-bold text-slate-700 dark:text-slate-200"><option>10</option></select>
                     <span>Entries</span>
                   </div>
-                  <input type="text" placeholder="Search" className="px-3 py-1.5 border border-border rounded-lg text-[12px] outline-none w-64 focus:border-[#F59E0B]/50 transition-colors" />
+                  <input type="text" placeholder="Search" className="px-3 py-1.5 border border-border rounded-lg text-[12px] outline-none w-64 focus:border-primary/50 transition-colors" />
                 </div>
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-[12px]">
-                    <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] text-slate-700 dark:text-slate-200 border-b border-border">
+                    <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border">
                       <tr>
                         <th className="px-5 py-3 font-semibold"><input type="checkbox" className="rounded" /></th>
                         <th className="px-5 py-3 font-semibold">ID <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-1">⇅</span></th>
@@ -1060,7 +1060,7 @@ export default function TeacherDetailsPage() {
                       ].map((s, i) => (
                         <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                           <td className="px-5 py-3"><input type="checkbox" className="rounded" /></td>
-                          <td className="px-5 py-3 text-[#F59E0B] font-bold">{s.id}</td>
+                          <td className="px-5 py-3 text-primary font-bold">{s.id}</td>
                           <td className="px-5 py-3">{s.month}</td>
                           <td className="px-5 py-3">{s.date}</td>
                           <td className="px-5 py-3">{s.method}</td>
@@ -1087,12 +1087,12 @@ export default function TeacherDetailsPage() {
       <Modal isOpen={isApplyLeaveOpen} onClose={() => setIsApplyLeaveOpen(false)} title="Apply Leave">
         <form onSubmit={handleApplyLeaveSubmit} className="space-y-4 text-left">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-semibold text-[#0F172A] dark:text-slate-100">Leave Type</label>
+            <label className="text-[12px] font-semibold text-foreground dark:text-slate-100">Leave Type</label>
             <div className="relative">
               <select
                 value={leaveType}
                 onChange={(e) => setLeaveType(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#F59E0B]/50 transition-colors appearance-none bg-white dark:bg-slate-900"
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors appearance-none bg-white dark:bg-slate-900"
                 required
               >
                 <option value="casual">Casual Leave</option>
@@ -1104,27 +1104,27 @@ export default function TeacherDetailsPage() {
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-semibold text-[#0F172A] dark:text-slate-100">Leave From date</label>
+            <label className="text-[12px] font-semibold text-foreground dark:text-slate-100">Leave From date</label>
             <input
               type="date"
               value={leaveFromDate}
               onChange={(e) => setLeaveFromDate(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 focus:border-[#F59E0B]/50 transition-colors"
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 focus:border-primary/50 transition-colors"
               required
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-semibold text-[#0F172A] dark:text-slate-100">Leave to Date</label>
+            <label className="text-[12px] font-semibold text-foreground dark:text-slate-100">Leave to Date</label>
             <input
               type="date"
               value={leaveToDate}
               onChange={(e) => setLeaveToDate(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 focus:border-[#F59E0B]/50 transition-colors"
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 focus:border-primary/50 transition-colors"
               required
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-semibold text-[#0F172A] dark:text-slate-100">No of Days</label>
+            <label className="text-[12px] font-semibold text-foreground dark:text-slate-100">No of Days</label>
             <input
               type="text"
               value={leaveDaysNum}
@@ -1133,11 +1133,11 @@ export default function TeacherDetailsPage() {
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-semibold text-[#0F172A] dark:text-slate-100">Reason</label>
+            <label className="text-[12px] font-semibold text-foreground dark:text-slate-100">Reason</label>
             <textarea
               value={leaveReason}
               onChange={(e) => setLeaveReason(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 focus:border-[#F59E0B]/50 transition-colors min-h-[60px]"
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 focus:border-primary/50 transition-colors min-h-[60px]"
               required
             />
           </div>
@@ -1145,14 +1145,14 @@ export default function TeacherDetailsPage() {
             <button
               type="button"
               onClick={() => setIsApplyLeaveOpen(false)}
-              className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-[#0F172A] dark:text-slate-100 text-[13px] font-semibold rounded-lg transition-colors"
+              className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-foreground dark:text-slate-100 text-[13px] font-semibold rounded-lg transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmittingLeave}
-              className="px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50"
             >
               {isSubmittingLeave && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>Apply Leave</span>

@@ -39,13 +39,13 @@ export default async function GalleryPage() {
   return (
     <main className="w-full">
       {/* Hero */}
-      <section className="relative py-28 bg-[#0F172A]">
+      <section className="relative py-28 bg-[var(--sidebar-bg)]">
         <div className="absolute inset-0">
           <img src={data?.gallery?.hero_image_url || displayPhotos[0]?.src} alt="Gallery" className="w-full h-full object-cover opacity-25" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <span className="inline-block px-4 py-1.5 bg-[#1E3A5F]/20 border border-[#1E3A5F]/30 text-[#FCA5A5] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Campus Life</span>
+          <span className="inline-block px-4 py-1.5 bg-primary/20 border border-primary/30 text-[#FCA5A5] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Campus Life</span>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">Photo Gallery</h1>
           <p className="text-slate-400 mt-4">{displayPhotos.length} photos</p>
         </div>
@@ -56,7 +56,7 @@ export default async function GalleryPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {displayPhotos.map((img: any, idx: number) => (
-              <div key={idx} className="relative aspect-square rounded-sm overflow-hidden group cursor-pointer border-2 border-transparent hover:border-[#1E3A5F] transition-colors">
+              <div key={idx} className="relative aspect-square rounded-sm overflow-hidden group cursor-pointer border-2 border-transparent hover:border-primary transition-colors">
                 <img src={img.src} alt={img.label} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0F172A]/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
                   <span className="text-white font-bold text-[13px]">{img.label}</span>
@@ -71,8 +71,8 @@ export default async function GalleryPage() {
       {videos.length > 0 && (
         <section className="py-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Videos</h2>
-            <h3 className="text-3xl font-serif font-bold text-[#0F172A] mb-10">Campus Videos</h3>
+            <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Videos</h2>
+            <h3 className="text-3xl font-serif font-bold text-foreground mb-10">Campus Videos</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {videos.map((v: any, i: number) => {
                 if (!v.url) return null;

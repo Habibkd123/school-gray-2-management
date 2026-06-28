@@ -171,7 +171,7 @@ export default function ParentDetailPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex items-center gap-3 text-slate-500">
-          <Loader2 className="w-6 h-6 animate-spin text-[#F59E0B]" />
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
           <span className="text-[14px] font-medium">Loading parent details...</span>
         </div>
       </div>
@@ -196,17 +196,17 @@ export default function ParentDetailPage() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* ── Page Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
-          <h1 className="text-[20px] leading-[24px] font-semibold text-[#0F172A] dark:text-slate-100">Parent Details</h1>
+          <h1 className="text-[20px] leading-[24px] font-semibold text-foreground dark:text-slate-100">Parent Details</h1>
           <div className="flex items-center gap-2 text-[14px] leading-[21px] text-[#68718a] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/guardians" className="hover:text-[#F59E0B]">Parents</Link>
+            <Link href="/guardians" className="hover:text-primary">Parents</Link>
             <span>/</span>
-            <span className="text-[#0F172A] dark:text-slate-100 font-normal">Parent Details</span>
+            <span className="text-foreground dark:text-slate-100 font-normal">Parent Details</span>
           </div>
         </div>
 
@@ -230,7 +230,7 @@ export default function ParentDetailPage() {
           </button>
           <button
             onClick={() => setIsEditOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
           >
             <Edit className="w-3.5 h-3.5" />
             <span>Edit Parent</span>
@@ -246,12 +246,12 @@ export default function ParentDetailPage() {
             <div className="flex flex-col items-center text-center p-2">
               <img src={getAvatar(parent.name, parent.photo_url)} className="w-full sm:w-[80px] h-[80px] rounded-xl object-cover border border-slate-200 dark:border-slate-800 shadow-sm mb-4" alt="Avatar" />
               <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[9px] font-bold mb-3
-                ${parent.is_active ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBF0] text-[#FF4A6B]"}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${parent.is_active ? "bg-[#1DD04A]" : "bg-[#FF4A6B]"}`} />
+                ${parent.is_active ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${parent.is_active ? "bg-success" : "bg-danger"}`} />
                 {parent.is_active ? "Active" : "Inactive"}
               </div>
-              <h2 className="text-[18px] font-semibold text-[#0F172A] dark:text-slate-100">{parent.name}</h2>
-              <p className="text-[12px] text-[#F59E0B] font-bold mt-1">ID: {parent._id.slice(-6).toUpperCase()}</p>
+              <h2 className="text-[18px] font-semibold text-foreground dark:text-slate-100">{parent.name}</h2>
+              <p className="text-[12px] text-primary font-bold mt-1">ID: {parent._id.slice(-6).toUpperCase()}</p>
             </div>
           </div>
 
@@ -333,15 +333,15 @@ export default function ParentDetailPage() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {parent.children.map((child) => (
-                    <div key={child._id} className="border border-border rounded-xl p-5 hover:border-[#F59E0B]/40 transition-colors flex flex-col justify-between bg-white dark:bg-slate-800 shadow-sm text-left">
+                    <div key={child._id} className="border border-border rounded-xl p-5 hover:border-primary/40 transition-colors flex flex-col justify-between bg-white dark:bg-slate-800 shadow-sm text-left">
                       {/* Top Row */}
                       <div className="flex items-center justify-between mb-4">
-                        <span className="font-bold text-[#F59E0B] text-[13px]">
+                        <span className="font-bold text-primary text-[13px]">
                           {child.admission_no || `AD${child._id.slice(-7).toUpperCase()}`}
                         </span>
                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold
-                          ${child.is_active ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBF0] text-[#FF4A6B]"}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${child.is_active ? "bg-[#1DD04A]" : "bg-[#FF4A6B]"}`} />
+                          ${child.is_active ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${child.is_active ? "bg-success" : "bg-danger"}`} />
                           {child.is_active ? "Active" : "Inactive"}
                         </span>
                       </div>
@@ -380,7 +380,7 @@ export default function ParentDetailPage() {
                         </button>
                         <button
                           onClick={() => router.push(`/students/${child._id}`)}
-                          className="flex-1 py-2 rounded bg-[#F59E0B] hover:bg-[#D97706] text-white text-[11px] font-bold transition-colors cursor-pointer"
+                          className="flex-1 py-2 rounded bg-primary hover:bg-[var(--primary-hover)] text-white text-[11px] font-bold transition-colors cursor-pointer"
                         >
                           View Profile
                         </button>
@@ -431,7 +431,7 @@ export default function ParentDetailPage() {
             <div className="flex items-center gap-4 p-4 border border-border rounded-xl bg-slate-50/50 dark:bg-slate-800/30 text-left">
               {uploadingPhoto ? (
                 <div className="w-16 h-16 rounded-lg border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-slate-900">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#F59E0B]" />
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
               ) : formPhoto ? (
                 <img src={formPhoto} className="w-16 h-16 rounded-lg object-cover border border-border shadow-sm" alt="Parent Photo" />
@@ -460,19 +460,19 @@ export default function ParentDetailPage() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Full Name</label>
                 <input required type="text" value={formName} onChange={e => setFormName(e.target.value)} placeholder="e.g. Robert Watson"
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#F59E0B]/50 transition-all shadow-sm" />
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all shadow-sm" />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Relationship</label>
                   <input type="text" value={formRelation} onChange={e => setFormRelation(e.target.value)} placeholder="e.g. Father"
-                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#F59E0B]/50 transition-all shadow-sm" />
+                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all shadow-sm" />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Occupation</label>
                   <input type="text" value={formOccupation} onChange={e => setFormOccupation(e.target.value)} placeholder="e.g. Engineer"
-                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#F59E0B]/50 transition-all shadow-sm" />
+                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all shadow-sm" />
                 </div>
               </div>
 
@@ -480,24 +480,24 @@ export default function ParentDetailPage() {
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Phone Number</label>
                   <input type="tel" value={formPhone} onChange={e => setFormPhone(e.target.value)} placeholder="e.g. +1 (555) 123-4567"
-                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#F59E0B]/50 transition-all shadow-sm" />
+                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all shadow-sm" />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Email Address</label>
                   <input type="email" value={formEmail} onChange={e => setFormEmail(e.target.value)} placeholder="e.g. parent@email.com"
-                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#F59E0B]/50 transition-all shadow-sm" />
+                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all shadow-sm" />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Address</label>
                 <textarea rows={2} value={formAddress} onChange={e => setFormAddress(e.target.value)} placeholder="e.g. 123 School Lane, NY"
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#F59E0B]/50 transition-all shadow-sm resize-none" />
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all shadow-sm resize-none" />
               </div>
 
               <div className="flex items-center gap-2 mt-2">
                 <input id="formIsActive" type="checkbox" checked={formIsActive} onChange={e => setFormIsActive(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 accent-[#F59E0B]" />
+                  className="w-4 h-4 rounded border-slate-300 accent-primary" />
                 <label htmlFor="formIsActive" className="text-[12px] font-bold text-slate-700 dark:text-slate-200">Active Profile Status</label>
               </div>
             </div>
@@ -508,7 +508,7 @@ export default function ParentDetailPage() {
                 Cancel
               </button>
               <button type="submit" disabled={isSaving || uploadingPhoto}
-                className="flex items-center gap-2 px-4 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer disabled:opacity-70">
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer disabled:opacity-70">
                 {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                 Save Changes
               </button>

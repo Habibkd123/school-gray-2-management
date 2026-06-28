@@ -137,7 +137,7 @@ export default function SuperAdminLoginPage() {
                     "linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 60%)",
                 }}
               />
-              <ShieldCheck className="w-9 h-9 text-[#1E3A5F]" />
+              <ShieldCheck className="w-9 h-9 text-primary" />
             </div>
           </div>
 
@@ -259,7 +259,7 @@ export default function SuperAdminLoginPage() {
             style={{
               background: isLoading
                 ? "rgba(245,158,11,0.40)"
-                : "linear-gradient(135deg, #1E3A5F 0%, #162C47 100%)",
+                : "linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%)",
               boxShadow: isLoading
                 ? "none"
                 : "0 8px 28px rgba(245,158,11,0.35)",

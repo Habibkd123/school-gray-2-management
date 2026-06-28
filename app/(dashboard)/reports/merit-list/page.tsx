@@ -121,7 +121,7 @@ export default function MeritListPage() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -129,7 +129,7 @@ export default function MeritListPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/reports" className="hover:text-[#1E3A5F]">Reports</Link>
+            <Link href="/reports" className="hover:text-primary">Reports</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Merit List</span>
           </div>
@@ -138,13 +138,13 @@ export default function MeritListPage() {
         <div className="flex flex-wrap items-center gap-3">
           <button 
             onClick={() => fetchResults()} 
-            className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer"
+            className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
           <button 
             onClick={() => window.print()}
-            className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer"
+            className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer"
           >
             <Printer className="w-4 h-4" />
           </button>
@@ -160,10 +160,10 @@ export default function MeritListPage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-2 text-left">
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as PDF
                   </button>
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as Excel
                   </button>
                 </div>
@@ -181,8 +181,8 @@ export default function MeritListPage() {
             <select
               value={selectedExamId}
               onChange={(e) => setSelectedExamId(e.target.value)}
-              className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#1E3A5F] transition-colors ${
-                selectedExamId ? "border-[#1E3A5F] bg-[#FFF9E6] dark:bg-[#1E3A5F]/10" : "border-border"
+              className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary transition-colors ${
+                selectedExamId ? "border-primary bg-primary/10 dark:bg-primary/10" : "border-border"
               }`}
             >
               <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Exam</option>
@@ -198,8 +198,8 @@ export default function MeritListPage() {
             <select
               value={selectedClassId}
               onChange={(e) => setSelectedClassId(e.target.value)}
-              className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#1E3A5F] transition-colors ${
-                selectedClassId ? "border-[#1E3A5F] bg-[#FFF9E6] dark:bg-[#1E3A5F]/10" : "border-border"
+              className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border rounded-lg text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary transition-colors ${
+                selectedClassId ? "border-primary bg-primary/10 dark:bg-primary/10" : "border-border"
               }`}
             >
               <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Class</option>
@@ -250,7 +250,7 @@ export default function MeritListPage() {
               placeholder="Search by name or roll no..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
@@ -258,7 +258,7 @@ export default function MeritListPage() {
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-24">Rank</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Roll No</th>
@@ -295,7 +295,7 @@ export default function MeritListPage() {
                   </td>
                   <td className="px-6 py-4 font-medium text-slate-600 dark:text-slate-300">{student.rollNo || "—"}</td>
                   <td className="px-6 py-4">
-                    <Link href={`/students/${student.studentId}`} className="font-bold text-[#1E3A5F] hover:text-[#162C47] transition-colors cursor-pointer">
+                    <Link href={`/students/${student.studentId}`} className="font-bold text-primary hover:text-[var(--primary-hover)] transition-colors cursor-pointer">
                       {student.studentName}
                     </Link>
                   </td>

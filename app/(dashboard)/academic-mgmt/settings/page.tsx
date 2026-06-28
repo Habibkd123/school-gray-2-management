@@ -60,7 +60,7 @@ export default function AcademicSettingsPage() {
               <button
                 onClick={() => handleToggle("enable_streams", !config.enable_streams)}
                 disabled={!isAdmin || saving !== null}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_streams ? "bg-[#1E3A5F]" : "bg-slate-300 dark:bg-slate-700"}`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_streams ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
               >
                 {saving === "streams" && <Loader2 className="absolute left-0 right-0 mx-auto w-3 h-3 animate-spin text-white" />}
                 <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${config.enable_streams ? "translate-x-6" : "translate-x-1"}`} />
@@ -76,7 +76,7 @@ export default function AcademicSettingsPage() {
               <button
                 onClick={() => handleToggle("enable_sections", !config.enable_sections)}
                 disabled={!isAdmin || saving !== null}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_sections ? "bg-[#1E3A5F]" : "bg-slate-300 dark:bg-slate-700"}`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${config.enable_sections ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
               >
                 {saving === "sections" && <Loader2 className="absolute left-0 right-0 mx-auto w-3 h-3 animate-spin text-white" />}
                 <span className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${config.enable_sections ? "translate-x-6" : "translate-x-1"}`} />

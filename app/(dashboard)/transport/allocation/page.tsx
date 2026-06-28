@@ -150,12 +150,12 @@ export default function AllocationPage() {
   };
 
   const triggerCls = (open: boolean) =>
-    `flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors ${open ? "border-[#1E3A5F] text-[#1E3A5F]" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
+    `flex items-center gap-2 px-3 py-1.5 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors ${open ? "border-primary text-primary" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
 
   const currentStops = dynamicRoutesMap[form.routeName]?.stops ?? [];
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6" onClick={() => setActiveDropdown(null)}>
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6" onClick={() => setActiveDropdown(null)}>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -173,7 +173,7 @@ export default function AllocationPage() {
             <Download className="w-4 h-4" /> Export <ChevronDown className="w-3.5 h-3.5" />
           </button>
           <button onClick={() => { setForm({ student_id: "", route_id: "", bus_id: "", routeName: "", pickupStop: "", status: "Active" }); setIsAddOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg shadow-sm transition-colors">
+            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg shadow-sm transition-colors">
             <Plus className="w-4 h-4" /> Allocate Student
           </button>
         </div>
@@ -185,7 +185,7 @@ export default function AllocationPage() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: "Total Allocations", value: allocations.length, color: "bg-amber-50 dark:bg-amber-900/20 text-[#1E3A5F]", icon: UserCheck },
+          { label: "Total Allocations", value: allocations.length, color: "bg-amber-50 dark:bg-amber-900/20 text-primary", icon: UserCheck },
           { label: "Active", value: allocations.filter(a => a.status === "Active").length, color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600", icon: UserCheck },
           { label: "Inactive", value: allocations.filter(a => a.status === "Inactive").length, color: "bg-rose-50 dark:bg-rose-900/20 text-rose-500", icon: UserCheck },
           { label: "Routes Used", value: new Set(allocations.map(a => a.route)).size, color: "bg-blue-50 dark:bg-blue-900/20 text-blue-500", icon: Bus },
@@ -235,7 +235,7 @@ export default function AllocationPage() {
                     </div>
                     <div className="p-4 border-t border-border flex justify-end gap-3">
                       <button onClick={() => { setFilterClass(""); setFilterRoute(""); }} className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg">Reset</button>
-                      <button onClick={() => setIsFilterOpen(false)} className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg">Apply</button>
+                      <button onClick={() => setIsFilterOpen(false)} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg">Apply</button>
                     </div>
                   </div>
                 </>
@@ -251,7 +251,7 @@ export default function AllocationPage() {
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-1.5">
                     {["Ascending", "Descending"].map(item => (
                       <button key={item} onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
-                        className={`w-full px-4 py-2.5 text-left text-[13px] font-medium transition-colors ${item === selectedSort ? "bg-[#1E3A5F] text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                        className={`w-full px-4 py-2.5 text-left text-[13px] font-medium transition-colors ${item === selectedSort ? "bg-primary text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
                         {item}
                       </button>
                     ))}
@@ -272,16 +272,16 @@ export default function AllocationPage() {
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input type="text" placeholder="Search student or ID..." value={search} onChange={e => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F]/50 transition-all" />
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-all" />
           </div>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
-                <th className="px-4 py-4 text-left w-10"><input type="checkbox" className="rounded w-4 h-4 accent-[#1E3A5F]" /></th>
+                <th className="px-4 py-4 text-left w-10"><input type="checkbox" className="rounded w-4 h-4 accent-primary" /></th>
                 {["Alloc ID", "Student", "Class", "Route", "Bus Number", "Pickup Stop", "Status", "Action"].map(h => (
                   <th key={h} className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">{h}</th>
                 ))}
@@ -290,7 +290,7 @@ export default function AllocationPage() {
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr><td colSpan={8} className="px-6 py-16 text-center text-slate-400">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-[#1E3A5F]" />
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
                   <p>Loading allocations...</p>
                 </td></tr>
               ) : filtered.length === 0 ? (
@@ -299,9 +299,9 @@ export default function AllocationPage() {
                 </td></tr>
               ) : filtered.map(alloc => (
                 <tr key={alloc.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="px-4 py-4"><input type="checkbox" className="rounded w-4 h-4 accent-[#1E3A5F]" /></td>
+                  <td className="px-4 py-4"><input type="checkbox" className="rounded w-4 h-4 accent-primary" /></td>
                   <td className="px-4 py-4">
-                    <button onClick={e => { e.stopPropagation(); setViewAlloc(alloc); }} className="font-semibold text-[#1E3A5F] hover:underline">
+                    <button onClick={e => { e.stopPropagation(); setViewAlloc(alloc); }} className="font-semibold text-primary hover:underline">
                       {alloc._id?.slice(-6).toUpperCase() || alloc.id}
                     </button>
                   </td>
@@ -310,14 +310,14 @@ export default function AllocationPage() {
                     <button onClick={e => { e.stopPropagation(); router.push(`/students/${alloc.studentId}`); }} className="flex items-center gap-3 group/sn">
                       <img src={getAvatar(alloc.studentName)} className="w-8 h-8 rounded-full object-cover border border-border" alt="" />
                       <div className="text-left">
-                        <div className="font-semibold text-slate-900 dark:text-white group-hover/sn:text-[#1E3A5F] transition-colors">{alloc.studentName}</div>
+                        <div className="font-semibold text-slate-900 dark:text-white group-hover/sn:text-primary transition-colors">{alloc.studentName}</div>
                         <div className="text-[11px] text-slate-400">{alloc.admissionNo}</div>
                       </div>
                     </button>
                   </td>
                   <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{alloc.className}</td>
                   <td className="px-4 py-4">
-                    <span className="px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-[#92400E] dark:text-amber-300 text-[11px] font-semibold rounded">{alloc.route}</span>
+                    <span className="px-2 py-1 bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-amber-300 text-[11px] font-semibold rounded">{alloc.route}</span>
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-1.5">
@@ -332,15 +332,15 @@ export default function AllocationPage() {
                     </div>
                   </td>
                   <td className="px-4 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-bold ${alloc.status === "Active" ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBF0] text-[#FF4A6B]"}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${alloc.status === "Active" ? "bg-[#1DD04A]" : "bg-[#FF4A6B]"}`} />
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-bold ${alloc.status === "Active" ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${alloc.status === "Active" ? "bg-success" : "bg-danger"}`} />
                       {alloc.status}
                     </span>
                   </td>
                   <td className="px-4 py-4">
                     <div className="relative" onClick={e => e.stopPropagation()}>
                       <button onClick={() => setActiveDropdown(activeDropdown === alloc.id ? null : alloc.id)}
-                        className="w-8 h-8 rounded-full flex items-center justify-center bg-[#1E3A5F] hover:bg-[#162C47] text-white transition-colors">
+                        className="w-8 h-8 rounded-full flex items-center justify-center bg-primary hover:bg-[var(--primary-hover)] text-white transition-colors">
                         <MoreVertical className="w-4 h-4" />
                       </button>
                       {activeDropdown === alloc.id && (
@@ -372,7 +372,7 @@ export default function AllocationPage() {
           <span>Showing 1–{Math.min(10, filtered.length)} of {filtered.length}</span>
           <div className="flex items-center gap-1">
             <button className="px-3 py-1.5 font-medium hover:text-slate-700 dark:hover:text-slate-200">Prev</button>
-            <button className="w-7 h-7 rounded bg-[#1E3A5F] text-white text-[13px] font-bold">1</button>
+            <button className="w-7 h-7 rounded bg-primary text-white text-[13px] font-bold">1</button>
             <button className="px-3 py-1.5 font-medium hover:text-slate-700 dark:hover:text-slate-200">Next</button>
           </div>
         </div>
@@ -386,14 +386,14 @@ export default function AllocationPage() {
               <img src={getAvatar(viewAlloc.studentName)} className="w-14 h-14 rounded-xl object-cover border border-border shadow-sm" alt="" />
               <div className="flex-1">
                 <button onClick={() => { setViewAlloc(null); router.push(`/students/${viewAlloc.studentId}`); }}
-                  className="text-[16px] font-bold text-slate-900 dark:text-white hover:text-[#1E3A5F] transition-colors text-left">
+                  className="text-[16px] font-bold text-slate-900 dark:text-white hover:text-primary transition-colors text-left">
                   {viewAlloc.studentName}
                 </button>
                 <p className="text-[12px] text-slate-500">{viewAlloc.admissionNo} · {viewAlloc.className}</p>
-                <p className="text-[12px] font-semibold text-[#1E3A5F] mt-0.5">{viewAlloc.id}</p>
+                <p className="text-[12px] font-semibold text-primary mt-0.5">{viewAlloc.id}</p>
               </div>
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${viewAlloc.status === "Active" ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBF0] text-[#FF4A6B]"}`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${viewAlloc.status === "Active" ? "bg-[#1DD04A]" : "bg-[#FF4A6B]"}`} />
+              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${viewAlloc.status === "Active" ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${viewAlloc.status === "Active" ? "bg-success" : "bg-danger"}`} />
                 {viewAlloc.status}
               </span>
             </div>
@@ -422,7 +422,7 @@ export default function AllocationPage() {
                 className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-[#E2E8F0] transition-colors flex items-center gap-2">
                 <User className="w-4 h-4" /> View Student
               </button>
-              <button onClick={() => setViewAlloc(null)} className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg transition-colors">Close</button>
+              <button onClick={() => setViewAlloc(null)} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg transition-colors">Close</button>
             </div>
           </div>
         </Modal>
@@ -435,7 +435,7 @@ export default function AllocationPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="col-span-2 flex flex-col gap-1.5">
                 <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Student</label>
-                <select required value={form.student_id} onChange={e => setForm(f => ({ ...f, student_id: e.target.value }))} className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-[#1E3A5F]/50 transition-all">
+                <select required value={form.student_id} onChange={e => setForm(f => ({ ...f, student_id: e.target.value }))} className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all">
                   <option value="">Select a student...</option>
                   {students.map(s => <option key={s._id} value={s._id}>{s.name} ({s.admission_no})</option>)}
                 </select>
@@ -469,7 +469,7 @@ export default function AllocationPage() {
 
             <div className="flex justify-end gap-3 pt-2">
               <button type="button" onClick={() => { setIsAddOpen(false); setEditAlloc(null); }} className="px-4 py-2 border border-border text-[13px] font-semibold rounded-lg bg-white dark:bg-slate-900 text-slate-700 hover:bg-slate-50 transition-colors">Cancel</button>
-              <button type="submit" disabled={isSaving} className="px-5 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 disabled:opacity-70 transition-colors">
+              <button type="submit" disabled={isSaving} className="px-5 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 disabled:opacity-70 transition-colors">
                 {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editAlloc ? "Save Changes" : "Allocate"}
               </button>

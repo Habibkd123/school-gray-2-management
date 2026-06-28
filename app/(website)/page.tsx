@@ -4,6 +4,7 @@ import { Highlights } from "../components/landing/Highlights";
 import { AboutSchool } from "../components/landing/AboutSchool";
 import { WhyChooseUs } from "../components/landing/WhyChooseUs";
 import { AcademicPrograms } from "../components/landing/AcademicPrograms";
+import { ApplyNowSection } from "../components/landing/ApplyNowSection";
 import { Facilities } from "../components/landing/Facilities";
 import { Achievements } from "../components/landing/Achievements";
 import { Gallery } from "../components/landing/Gallery";
@@ -41,6 +42,7 @@ export default async function Home() {
       <AboutSchool data={landingData?.about} />
       <WhyChooseUs data={landingData} />
       <AcademicPrograms data={landingData?.academics} />
+      <ApplyNowSection data={landingData} />
       <Facilities data={landingData} />
       <Achievements data={landingData?.student_life} />
       <Gallery data={landingData?.gallery} />

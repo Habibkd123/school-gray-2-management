@@ -3,9 +3,11 @@
 import React from "react";
 import Link from "next/link";
 import { Menu, X, Phone, Mail } from "lucide-react";
+import { usePublicSchoolInfo } from "@/app/hooks/usePublicSchoolInfo";
 
 export function Header() {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { schoolInfo } = usePublicSchoolInfo();
 
   return (
     <>
@@ -13,11 +15,11 @@ export function Header() {
       <div className="hidden lg:flex bg-[#231F20] text-[#CCCCCC] py-2 px-6 text-[12px] font-medium justify-between items-center border-b border-[#5C5D5D]">
         <div className="flex items-center gap-6">
           <span className="flex items-center gap-1.5">
-            <Phone className="w-3 h-3 text-[#1E3A5F]" />
+            <Phone className="w-3 h-3 text-[var(--primary)]" />
             +91 98765 43210
           </span>
           <span className="flex items-center gap-1.5">
-            <Mail className="w-3 h-3 text-[#1E3A5F]" />
+            <Mail className="w-3 h-3 text-[var(--primary)]" />
             info@myschoollife.edu.in
           </span>
           <span className="text-[#5C5D5D]">|</span>
@@ -38,20 +40,20 @@ export function Header() {
       </div>
 
       {/* ── Main Nav — White with Red accents ─────────────────── */}
-      <nav className="sticky top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-md border-b-4 border-[#1E3A5F] transition-all duration-300">
+      <nav className="sticky top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-md border-b-4 border-[var(--primary)] transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
 
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[#1E3A5F] flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[var(--primary)] flex items-center justify-center">
               <img src="/logo.png" alt="MySchoolLife Logo" className="w-full h-full object-contain p-1" />
             </div>
             <div className="flex flex-col">
               <span className="text-[20px] font-black tracking-tight text-[#231F20] leading-none">
-                {process.env.NEXT_PUBLIC_SCHOOL_NAME || "MySchoolLife"}
+                {schoolInfo.school_name}
               </span>
-              <span className="text-[10px] font-bold tracking-widest text-[#1E3A5F] uppercase">
-                Public School
+              <span className="text-[10px] font-bold tracking-widest text-[var(--primary)] uppercase">
+                {schoolInfo.school_subtitle}
               </span>
             </div>
           </div>
@@ -71,10 +73,10 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="relative px-3 py-2 text-[#231F20] hover:text-[#1E3A5F] transition-colors duration-200 group"
+                className="relative px-3 py-2 text-[#231F20] hover:text-[var(--primary)] transition-colors duration-200 group"
               >
                 {item.label}
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#1E3A5F] group-hover:w-full transition-all duration-300" />
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--primary)] group-hover:w-full transition-all duration-300" />
               </Link>
             ))}
           </div>
@@ -83,7 +85,7 @@ export function Header() {
           <div className="hidden lg:flex items-center gap-3">
             <Link
               href="/login"
-              className="px-6 py-2.5 rounded-sm bg-[#1E3A5F] text-white font-bold text-[13px] shadow-md hover:bg-[#162C47] hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wider"
+              className="px-6 py-2.5 rounded-sm bg-[var(--primary)] text-white font-bold text-[13px] shadow-md hover:bg-[var(--primary-hover)] hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wider"
             >
               Login Portal
             </Link>
@@ -91,7 +93,7 @@ export function Header() {
 
           {/* Mobile Menu Toggle */}
           <button
-            className="lg:hidden p-2 text-[#231F20] hover:text-[#1E3A5F] transition-colors"
+            className="lg:hidden p-2 text-[#231F20] hover:text-[var(--primary)] transition-colors"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -100,7 +102,7 @@ export function Header() {
 
         {/* Mobile Menu Dropdown */}
         {isOpen && (
-          <div className="lg:hidden absolute top-full left-0 right-0 bg-[#FFFFFF] border-t-2 border-[#1E3A5F] shadow-2xl p-4 flex flex-col gap-0 max-h-[80vh] overflow-y-auto">
+          <div className="lg:hidden absolute top-full left-0 right-0 bg-[#FFFFFF] border-t-2 border-[var(--primary)] shadow-2xl p-4 flex flex-col gap-0 max-h-[80vh] overflow-y-auto">
             {[
               { label: "Home", href: "/" },
               { label: "About Us", href: "/about" },
@@ -115,7 +117,7 @@ export function Header() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setIsOpen(false)}
-                className="font-bold text-[#231F20] hover:text-[#1E3A5F] uppercase text-sm border-b border-[#E0E0E0] py-3 transition-colors"
+                className="font-bold text-[#231F20] hover:text-[var(--primary)] uppercase text-sm border-b border-[#E0E0E0] py-3 transition-colors"
               >
                 {item.label}
               </Link>
@@ -132,7 +134,7 @@ export function Header() {
             <Link
               href="/login"
               onClick={() => setIsOpen(false)}
-              className="mt-4 w-full py-3 rounded-sm bg-[#1E3A5F] text-white font-bold text-center uppercase tracking-wider"
+              className="mt-4 w-full py-3 rounded-sm bg-[var(--primary)] text-white font-bold text-center uppercase tracking-wider"
             >
               Login Portal
             </Link>

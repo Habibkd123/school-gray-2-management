@@ -162,7 +162,7 @@ export default function ClassRoutinePage() {
   const isLoading = classesLoading || teachersLoading || schedulesLoading;
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-left">
@@ -170,19 +170,19 @@ export default function ClassRoutinePage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/academic" className="hover:text-[#1E3A5F]">Academic</Link>
+            <Link href="/academic" className="hover:text-primary">Academic</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Class Routine</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchSchedules()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => fetchSchedules()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
             onClick={openAddModal}
-            className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+            className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add Class Routine
           </button>
@@ -201,7 +201,7 @@ export default function ClassRoutinePage() {
               placeholder="Search routines"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
@@ -210,12 +210,12 @@ export default function ClassRoutinePage() {
         <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
           {isLoading ? (
             <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
-              <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F]" />
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <span>Fetching class routines...</span>
             </div>
           ) : (
             <table className="w-full text-[13px]">
-              <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+              <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
                 <tr>
                   <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">ID</th>
                   <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
@@ -237,7 +237,7 @@ export default function ClassRoutinePage() {
                 ) : (
                   filteredRoutines.map((routine) => (
                     <tr key={routine._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-[#1E3A5F]">{routine._id.substring(routine._id.length - 8)}</td>
+                      <td className="px-6 py-4 font-semibold text-primary">{routine._id.substring(routine._id.length - 8)}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-bold">{getClassName(routine.class_id)}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{getTeacherName(routine.teacher_id)}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-semibold">{getSubjectName(routine.subject_id)}</td>
@@ -247,7 +247,7 @@ export default function ClassRoutinePage() {
                       <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => setActionMenuId(actionMenuId === routine._id ? null : routine._id)}
-                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === routine._id ? "bg-[#1E3A5F] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === routine._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
                         >
                           <MoreVertical className="w-4 h-4" />
                         </button>
@@ -255,11 +255,11 @@ export default function ClassRoutinePage() {
                           <>
                             <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                             <div className="absolute right-10 top-10 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
-                              <button onClick={() => openEditModal(routine)} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
-                                <Edit className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Edit
+                              <button onClick={() => openEditModal(routine)} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                                <Edit className="w-4 h-4 text-foreground dark:text-slate-100" /> Edit
                               </button>
-                              <button onClick={() => handleDelete(routine._id)} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
-                                <Trash2 className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Delete
+                              <button onClick={() => handleDelete(routine._id)} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                                <Trash2 className="w-4 h-4 text-foreground dark:text-slate-100" /> Delete
                               </button>
                             </div>
                           </>
@@ -284,7 +284,7 @@ export default function ClassRoutinePage() {
               <select
                 value={formClassId}
                 onChange={(e) => setFormClassId(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                 required
               >
                 {classes.map(c => <option key={c._id} value={c._id}>{c.name} - {c.section}</option>)}
@@ -300,7 +300,7 @@ export default function ClassRoutinePage() {
                 <select
                   value={formSubject}
                   onChange={(e) => setFormSubject(e.target.value)}
-                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                   required
                 >
                   <option value="">Select Subject</option>
@@ -325,7 +325,7 @@ export default function ClassRoutinePage() {
               <select
                 value={formTeacherId}
                 onChange={(e) => setFormTeacherId(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                 required
               >
                 {teachers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
@@ -340,7 +340,7 @@ export default function ClassRoutinePage() {
               <select
                 value={formDay}
                 onChange={(e) => setFormDay(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                 required
               >
                 {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map(d => <option key={d} value={d}>{d}</option>)}
@@ -380,7 +380,7 @@ export default function ClassRoutinePage() {
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer"
+              className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer"
             >
               {isAddOpen ? "Add Routine" : "Save Changes"}
             </button>
@@ -434,7 +434,7 @@ function TimePicker({ value, onChange }: TimePickerProps) {
         <select
           value={currentHour}
           onChange={(e) => handleHourChange(e.target.value)}
-          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
         >
           {hours.map((h) => (
             <option key={h} value={h}>
@@ -451,7 +451,7 @@ function TimePicker({ value, onChange }: TimePickerProps) {
         <select
           value={currentMinute}
           onChange={(e) => handleMinuteChange(e.target.value)}
-          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
         >
           {minutes.map((m) => (
             <option key={m} value={m}>
@@ -466,7 +466,7 @@ function TimePicker({ value, onChange }: TimePickerProps) {
         <select
           value={currentPeriod}
           onChange={(e) => handlePeriodChange(e.target.value)}
-          className="w-full pl-3 pr-7 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-semibold cursor-pointer"
+          className="w-full pl-3 pr-7 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 font-semibold cursor-pointer"
         >
           {periods.map((p) => (
             <option key={p} value={p}>

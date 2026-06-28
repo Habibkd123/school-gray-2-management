@@ -191,11 +191,11 @@ export default function TeachersPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const columns: ColumnDef<typeof tableData[0]>[] = [
-    { header: "ID", accessorKey: "displayId", render: (t) => <span className="font-semibold text-[#1E3A5F] cursor-pointer hover:underline">{t.displayId}</span> },
+    { header: "ID", accessorKey: "displayId", render: (t) => <span className="font-semibold text-primary cursor-pointer hover:underline">{t.displayId}</span> },
     { header: "Name", accessorKey: "name", render: (t) => (
         <div className="flex flex-wrap items-center gap-3">
           <img src={t.photo_url || getAvatar(t.name)} className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={t.name} />
-          <span className="font-medium text-slate-900 dark:text-white group-hover:text-[#1E3A5F] transition-colors cursor-pointer">{t.name}</span>
+          <span className="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors cursor-pointer">{t.name}</span>
         </div>
     ) },
     { header: "Class", accessorKey: "classNameStr" },
@@ -204,8 +204,8 @@ export default function TeachersPage() {
     { header: "Phone", accessorKey: "phoneStr" },
     { header: "Date of Join", accessorKey: "joinDateStr" },
     { header: "Status", accessorKey: "status", render: (t) => (
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${t.status === "Active" ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBEB] text-[#E02424]"}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${t.status === "Active" ? "bg-[#1DD04A]" : "bg-[#E02424]"}`} />
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${t.status === "Active" ? "bg-success/10 text-success" : "bg-[#FFEBEB] text-[#E02424]"}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${t.status === "Active" ? "bg-success" : "bg-[#E02424]"}`} />
           {t.status}
         </span>
     ) },
@@ -214,7 +214,7 @@ export default function TeachersPage() {
           <div className="flex justify-center">
             <button
               onClick={() => setActionMenuId(actionMenuId === t.id ? null : t.id)}
-              className={`p-1.5 rounded-lg transition-colors ${actionMenuId === t.id ? "bg-[#1E3A5F] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+              className={`p-1.5 rounded-lg transition-colors ${actionMenuId === t.id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
             >
               <MoreVertical className="w-4 h-4" />
             </button>
@@ -223,14 +223,14 @@ export default function TeachersPage() {
             <>
               <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
               <div className="absolute right-12 top-10 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
-                <button onClick={() => { router.push(`/teachers/${t.id}`); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
-                  <AlignLeft className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> View Teacher
+                <button onClick={() => { router.push(`/teachers/${t.id}`); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
+                  <AlignLeft className="w-4 h-4 text-foreground dark:text-slate-100" /> View Teacher
                 </button>
-                <button onClick={() => { router.push(`/teachers/${t.id}/edit`); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
-                  <Edit className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Edit
+                <button onClick={() => { router.push(`/teachers/${t.id}/edit`); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
+                  <Edit className="w-4 h-4 text-foreground dark:text-slate-100" /> Edit
                 </button>
-                <button onClick={() => { setSelectedTeacher(t as unknown as ApiTeacher); setIsLoginDetailsOpen(true); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
-                  <Lock className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Login Details
+                <button onClick={() => { setSelectedTeacher(t as unknown as ApiTeacher); setIsLoginDetailsOpen(true); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
+                  <Lock className="w-4 h-4 text-foreground dark:text-slate-100" /> Login Details
                 </button>
                 <button onClick={() => { 
                   const teacherUser = t.user_id;
@@ -239,8 +239,8 @@ export default function TeachersPage() {
                   setResetPassTarget({ userId: tUid, name: t.name, email: tEmail }); 
                   setIsResetPassModalOpen(true); 
                   setActionMenuId(null); 
-                }} className="w-full px-4 py-2.5 text-[14px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
-                  <Lock className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Reset Password
+                }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
+                  <Lock className="w-4 h-4 text-foreground dark:text-slate-100" /> Reset Password
                 </button>
                 <button onClick={() => { handleDelete(t.id); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 font-medium transition-colors">
                   <Trash2 className="w-4 h-4 text-rose-400" /> Delete
@@ -255,7 +255,7 @@ export default function TeachersPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F]" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
         <p className="text-slate-500 dark:text-slate-400 text-sm">Loading teachers...</p>
       </div>
     );
@@ -267,7 +267,7 @@ export default function TeachersPage() {
         <AlertCircle className="w-10 h-10 text-rose-500" />
         <h3 className="font-semibold text-slate-800 dark:text-slate-100">Failed to Load Teachers</h3>
         <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md">{error}</p>
-        <button onClick={() => fetchTeachers()} className="mt-2 px-4 py-2 bg-[#1E3A5F] text-white rounded-lg text-sm font-semibold hover:bg-[#162C47] transition-colors">
+        <button onClick={() => fetchTeachers()} className="mt-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-[var(--primary-hover)] transition-colors">
           Retry
         </button>
       </div>
@@ -275,7 +275,7 @@ export default function TeachersPage() {
   }
 
   return (
-    <div className="space-y-6 -m-6 p-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen">
+    <div className="space-y-6 -m-6 p-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
@@ -285,7 +285,7 @@ export default function TeachersPage() {
             <span>/</span>
             <span>Peoples</span>
             <span>/</span>
-            <span className="text-[#0F172A] dark:text-slate-100">Teacher List</span>
+            <span className="text-foreground dark:text-slate-100">Teacher List</span>
           </div>
         </div>
 
@@ -308,7 +308,7 @@ export default function TeachersPage() {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-2 text-left">
-                    <button onClick={() => { handleExport(); setIsExportOpen(false); }} className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors">
+                    <button onClick={() => { handleExport(); setIsExportOpen(false); }} className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors">
                       <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as CSV
                     </button>
                   </div>
@@ -317,7 +317,7 @@ export default function TeachersPage() {
             </div>
             <button
               onClick={() => router.push('/teachers/add')}
-              className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded-lg shadow-sm transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] rounded-lg shadow-sm transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add Teacher</span>
@@ -330,7 +330,7 @@ export default function TeachersPage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow text-left p-5">
         {/* Top Actions in Card */}
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-5">
-          <h2 className="text-[16px] font-semibold text-[#0F172A] dark:text-slate-100">{viewMode === "list" ? "Teachers List" : "Teachers Grid"}</h2>
+          <h2 className="text-[16px] font-semibold text-foreground dark:text-slate-100">{viewMode === "list" ? "Teachers List" : "Teachers Grid"}</h2>
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative">
               <button
@@ -345,7 +345,7 @@ export default function TeachersPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsDateRangeOpen(false)} />
                   <div className="absolute left-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                     {["All Time", "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year"].map((item) => (
-                      <button key={item} onClick={() => { handleDateRangeChange(item); setIsDateRangeOpen(false); }} className={`w-full px-4 py-2 text-[13px] text-left transition-colors ${item === selectedDateRange ? "bg-[#1E3A5F] text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                      <button key={item} onClick={() => { handleDateRangeChange(item); setIsDateRangeOpen(false); }} className={`w-full px-4 py-2 text-[13px] text-left transition-colors ${item === selectedDateRange ? "bg-primary text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
                         {item}
                       </button>
                     ))}
@@ -367,11 +367,11 @@ export default function TeachersPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
                   <div className="absolute right-0 sm:left-0 sm:right-auto top-full mt-2 w-64 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 text-left">
                     <div className="p-4 border-b border-border">
-                      <h3 className="text-[15px] font-bold text-[#0F172A] dark:text-slate-100">Filter</h3>
+                      <h3 className="text-[15px] font-bold text-foreground dark:text-slate-100">Filter</h3>
                     </div>
                     <div className="p-4 space-y-4">
                       <div className="space-y-1.5">
-                        <label className="text-[13px] font-semibold text-[#0F172A] dark:text-slate-100">Status</label>
+                        <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status</label>
                         <div className="relative">
                           <select 
                             value={statusFilter}
@@ -387,11 +387,11 @@ export default function TeachersPage() {
                       </div>
                     </div>
                     <div className="p-4 flex justify-end gap-3 bg-white dark:bg-slate-900 rounded-b-lg pt-2">
-                      <button onClick={() => { setStatusFilter("all"); setPage(1); setIsFilterOpen(false); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-[#0F172A] dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer">
+                      <button onClick={() => { setStatusFilter("all"); setPage(1); setIsFilterOpen(false); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-foreground dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer">
                         Reset
                       </button>
 
-                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer">
+                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer">
                         Apply
                       </button>
                     </div>
@@ -401,8 +401,8 @@ export default function TeachersPage() {
             </div>
 
             <div className="flex items-center border border-border rounded-lg p-0.5 bg-slate-50 dark:bg-slate-800/50">
-              <button onClick={() => setViewMode("list")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "list" ? "bg-[#1E3A5F] text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><List className="w-4 h-4" /></button>
-              <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "grid" ? "bg-[#1E3A5F] text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><Grid className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode("list")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "list" ? "bg-primary text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><List className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "grid" ? "bg-primary text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><Grid className="w-4 h-4" /></button>
             </div>
 
             <div className="relative">
@@ -421,7 +421,7 @@ export default function TeachersPage() {
                       <button 
                         key={item} 
                         onClick={() => { handleSortChange(item); setIsSortOpen(false); }}
-                        className={`w-full px-4 py-2.5 text-[14px] text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "bg-[#1E3A5F] text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
+                        className={`w-full px-4 py-2.5 text-[14px] text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "bg-primary text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
                       >
                         {item}
                       </button>
@@ -450,7 +450,7 @@ export default function TeachersPage() {
               placeholder="Search Name/ID/Email/Subject"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-[#1E3A5F]/50 focus:ring-2 focus:ring-[#1E3A5F]/10 transition-all bg-white dark:bg-slate-900"
+              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900"
             />
           </div>
         </div>
@@ -477,7 +477,7 @@ export default function TeachersPage() {
                       });
                     }
                   }}
-                  className="rounded border-slate-300 w-4 h-4 accent-[#1E3A5F] cursor-pointer"
+                  className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
                 />
               }
               renderSelection={(t) => (
@@ -491,7 +491,7 @@ export default function TeachersPage() {
                         : [...prev, t.id]
                     );
                   }}
-                  className="rounded border-slate-300 w-4 h-4 accent-[#1E3A5F] cursor-pointer"
+                  className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
                 />
               )}
               noDataMessage="No faculty records matching filter."
@@ -519,7 +519,7 @@ export default function TeachersPage() {
                   const subject = teacher.subject_specialization || "—";
 
                   return (
-                    <div key={teacher._id} className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-black/50 transition-all duration-300 relative text-left flex flex-col hover:border-[#1E3A5F]/50">
+                    <div key={teacher._id} className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 hover:shadow-lg hover:shadow-slate-200/50 dark:hover:shadow-black/50 transition-all duration-300 relative text-left flex flex-col hover:border-primary/50">
                       {/* Top row: ID, Checkbox, Status, Actions */}
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex flex-wrap items-center gap-2">
@@ -533,17 +533,17 @@ export default function TeachersPage() {
                                   : [...prev, teacher._id]
                               );
                             }}
-                            className="rounded border-slate-300 w-3.5 h-3.5 accent-[#1E3A5F] cursor-pointer"
+                            className="rounded border-slate-300 w-3.5 h-3.5 accent-primary cursor-pointer"
                           />
-                          <span className="text-[#1E3A5F] font-semibold text-[13px] hover:underline cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>{displayId}</span>
+                          <span className="text-primary font-semibold text-[13px] hover:underline cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>{displayId}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${status === "Active" ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBEB] text-[#E02424]"}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${status === "Active" ? "bg-[#1DD04A]" : "bg-[#E02424]"}`} />
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${status === "Active" ? "bg-success/10 text-success" : "bg-[#FFEBEB] text-[#E02424]"}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${status === "Active" ? "bg-success" : "bg-[#E02424]"}`} />
                             {status}
                           </span>
                           <div className="relative">
-                            <button onClick={() => setActionMenuId(actionMenuId === teacher._id ? null : teacher._id)} className={`p-1.5 rounded-lg transition-colors ${actionMenuId === teacher._id ? "bg-[#1E3A5F] text-white" : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"}`}>
+                            <button onClick={() => setActionMenuId(actionMenuId === teacher._id ? null : teacher._id)} className={`p-1.5 rounded-lg transition-colors ${actionMenuId === teacher._id ? "bg-primary text-white" : "text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"}`}>
                               <MoreVertical className="w-4 h-4" />
                             </button>
 
@@ -551,14 +551,14 @@ export default function TeachersPage() {
                               <>
                                 <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                                 <div className="absolute right-0 top-10 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
-                                  <button onClick={() => { router.push(`/teachers/${teacher._id}`); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
-                                    <AlignLeft className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> View Teacher
+                                  <button onClick={() => { router.push(`/teachers/${teacher._id}`); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
+                                    <AlignLeft className="w-4 h-4 text-foreground dark:text-slate-100" /> View Teacher
                                   </button>
-                                  <button onClick={() => { router.push(`/teachers/${teacher._id}/edit`); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
-                                    <Edit className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Edit
+                                  <button onClick={() => { router.push(`/teachers/${teacher._id}/edit`); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
+                                    <Edit className="w-4 h-4 text-foreground dark:text-slate-100" /> Edit
                                   </button>
-                                  <button onClick={() => { setSelectedTeacher(teacher); setIsLoginDetailsOpen(true); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
-                                    <Lock className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Login Details
+                                  <button onClick={() => { setSelectedTeacher(teacher); setIsLoginDetailsOpen(true); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
+                                    <Lock className="w-4 h-4 text-foreground dark:text-slate-100" /> Login Details
                                   </button>
                                   <button onClick={() => { 
                                     const teacherUser = teacher.user_id;
@@ -567,11 +567,11 @@ export default function TeachersPage() {
                                     setResetPassTarget({ userId: tUid, name: teacher.name, email: tEmail }); 
                                     setIsResetPassModalOpen(true); 
                                     setActionMenuId(null); 
-                                  }} className="w-full px-4 py-2.5 text-[14px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
-                                    <Lock className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Reset Password
+                                  }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
+                                    <Lock className="w-4 h-4 text-foreground dark:text-slate-100" /> Reset Password
                                   </button>
-                                  <button onClick={() => { handleDelete(teacher._id); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
-                                    <Trash2 className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Delete
+                                  <button onClick={() => { handleDelete(teacher._id); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
+                                    <Trash2 className="w-4 h-4 text-foreground dark:text-slate-100" /> Delete
                                   </button>
                                 </div>
                               </>
@@ -584,7 +584,7 @@ export default function TeachersPage() {
                       <div className="flex items-center gap-3 mb-5 cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>
                         <img src={teacher.photo_url || getAvatar(teacher.name)} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={teacher.name} />
                         <div>
-                          <h3 className="font-bold text-[#0F172A] dark:text-slate-100 text-[14px] group-hover:text-[#1E3A5F] transition-colors">{teacher.name}</h3>
+                          <h3 className="font-bold text-foreground dark:text-slate-100 text-[14px] group-hover:text-primary transition-colors">{teacher.name}</h3>
                           <p className="text-slate-500 dark:text-slate-400 text-[12px] font-medium">{getClassName(teacher)}</p>
                         </div>
                       </div>
@@ -593,11 +593,11 @@ export default function TeachersPage() {
                       <div className="space-y-3 mb-5 text-[12px]">
                         <div>
                           <p className="text-slate-500 dark:text-slate-400 mb-0.5">Email</p>
-                          <p className="text-[#0F172A] dark:text-slate-100 font-medium">{teacher.email ? teacher.email.toLowerCase() : "No Email"}</p>
+                          <p className="text-foreground dark:text-slate-100 font-medium">{teacher.email ? teacher.email.toLowerCase() : "No Email"}</p>
                         </div>
                         <div>
                           <p className="text-slate-500 dark:text-slate-400 mb-0.5">Phone</p>
-                          <p className="text-[#0F172A] dark:text-slate-100 font-medium">{phoneStr}</p>
+                          <p className="text-foreground dark:text-slate-100 font-medium">{phoneStr}</p>
                         </div>
                       </div>
 

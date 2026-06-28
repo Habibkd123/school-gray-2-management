@@ -111,7 +111,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                     <button
                       key={year}
                       onClick={() => { setAcademicYear(year); setIsAcademicYearOpen(false); }}
-                      className={`w-full px-4 py-2 text-left text-[13px] transition-colors cursor-pointer ${year === academicYear ? "bg-[#1E3A5F] text-white font-medium" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
+                      className={`w-full px-4 py-2 text-left text-[13px] transition-colors cursor-pointer ${year === academicYear ? "bg-primary text-white font-medium" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
                     >
                       {year.replace("-", " / ")}
                     </button>
@@ -149,7 +149,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 <div className="p-4 border-b border-border flex items-center justify-between">
                   <h3 className="text-[16px] font-bold text-slate-900 dark:text-white">Notifications (2)</h3>
                   <div className="flex items-center gap-3">
-                    <span className="text-[13px] text-[#1E3A5F] hover:underline cursor-pointer">Mark all as read</span>
+                    <span className="text-[13px] text-primary hover:underline cursor-pointer">Mark all as read</span>
                     <button className="flex items-center gap-1 px-2 py-1 bg-[#F1F5F9] dark:bg-slate-800 rounded text-[12px] text-slate-700 dark:text-slate-300">
                       <Calendar className="w-3 h-3" />
                       <span>Today</span>
@@ -181,7 +181,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                       <span className="text-[13px] text-slate-500 mt-1 block">10 mins ago</span>
                       <div className="flex gap-2 mt-2.5">
                         <button className="px-3 py-1.5 bg-[#F1F5F9] dark:bg-slate-800 text-[13px] font-medium text-slate-700 dark:text-slate-300 rounded hover:bg-[#E2E8F0] dark:hover:bg-slate-700 transition-colors">Deny</button>
-                        <button className="px-3 py-1.5 bg-[#1E3A5F] text-[13px] font-medium text-white rounded hover:bg-[#162C47] transition-colors">Approve</button>
+                        <button className="px-3 py-1.5 bg-primary text-[13px] font-medium text-white rounded hover:bg-[var(--primary-hover)] transition-colors">Approve</button>
                       </div>
                     </div>
                   </div>
@@ -201,7 +201,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 {/* Footer */}
                 <div className="p-3 border-t border-border flex gap-3">
                   <button onClick={() => setIsNotifOpen(false)} className="flex-1 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-[14px] font-medium text-slate-700 dark:text-slate-300 rounded hover:bg-[#E2E8F0] dark:hover:bg-slate-700 transition-colors">Cancel</button>
-                  <button onClick={() => setIsNotifOpen(false)} className="flex-1 py-2.5 bg-[#1E3A5F] text-[14px] font-medium text-white rounded hover:bg-[#162C47] transition-colors">View All</button>
+                  <button onClick={() => setIsNotifOpen(false)} className="flex-1 py-2.5 bg-primary text-[14px] font-medium text-white rounded hover:bg-[var(--primary-hover)] transition-colors">View All</button>
                 </div>
               </div>
             </>
@@ -246,7 +246,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 <div className="px-4 py-3 border-b border-border dark:border-slate-800">
                   <p className="text-[13px] font-bold text-slate-800 dark:text-slate-100 truncate">{user?.name}</p>
                   <p className="text-[12px] text-slate-400 truncate">{user?.email}</p>
-                  <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-[#1E3A5F]/10 text-[11px] font-semibold text-[#1E3A5F] capitalize">
+                  <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-[11px] font-semibold text-primary capitalize">
                     <Shield className="w-2.5 h-2.5" />
                     {user?.role?.replace("_", " ")}
                   </span>

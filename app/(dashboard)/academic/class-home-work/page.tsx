@@ -236,7 +236,7 @@ export default function ClassHomeWorkPage() {
   }, [homework, searchTerm, filterClass]);
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -244,17 +244,17 @@ export default function ClassHomeWorkPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/academic" className="hover:text-[#1E3A5F]">Academic</Link>
+            <Link href="/academic" className="hover:text-primary">Academic</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Class Home Work</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchHomework()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => fetchHomework()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
 
@@ -269,10 +269,10 @@ export default function ClassHomeWorkPage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-2 text-left">
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as PDF
                   </button>
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as Excel
                   </button>
                 </div>
@@ -282,7 +282,7 @@ export default function ClassHomeWorkPage() {
 
           <button
             onClick={openAddModal}
-            className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+            className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add Homework
           </button>
@@ -316,7 +316,7 @@ export default function ClassHomeWorkPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsDateRangeOpen(false)} />
                   <div className="absolute right-0 sm:left-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                     {["Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year", "Next Year", "Custom Range"].map((item) => (
-                      <button key={item} onClick={() => { setSelectedDateRange(item); setIsDateRangeOpen(false); }} className={`w-full px-4 py-2 text-[13px] text-left transition-colors cursor-pointer ${item === selectedDateRange ? "bg-[#1E3A5F] text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                      <button key={item} onClick={() => { setSelectedDateRange(item); setIsDateRangeOpen(false); }} className={`w-full px-4 py-2 text-[13px] text-left transition-colors cursor-pointer ${item === selectedDateRange ? "bg-primary text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
                         {item}
                       </button>
                     ))}
@@ -340,7 +340,7 @@ export default function ClassHomeWorkPage() {
               placeholder="Search homework..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
@@ -348,7 +348,7 @@ export default function ClassHomeWorkPage() {
         {/* Table */}
         <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
           <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Title</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
@@ -374,7 +374,7 @@ export default function ClassHomeWorkPage() {
                 </tr>
               ) : filteredData.map((item) => (
                 <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-[#1E3A5F]">{item.title}</td>
+                  <td className="px-6 py-4 font-bold text-primary">{item.title}</td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">
                     {getClassName(item.class_id)}
                   </td>
@@ -388,7 +388,7 @@ export default function ClassHomeWorkPage() {
                   </td>
                   <td className="px-6 py-4">
                     {item.attachment_url ? (
-                      <a href={cleanAttachmentUrl(item.attachment_url)} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[#1E3A5F] hover:underline text-[13px] font-medium" onClick={e => e.stopPropagation()}>
+                      <a href={cleanAttachmentUrl(item.attachment_url)} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-primary hover:underline text-[13px] font-medium" onClick={e => e.stopPropagation()}>
                         <Link2 className="w-4 h-4" /> Link
                       </a>
                     ) : (
@@ -398,7 +398,7 @@ export default function ClassHomeWorkPage() {
                   <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-[#1E3A5F] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
@@ -437,7 +437,7 @@ export default function ClassHomeWorkPage() {
               <select
                 value={formClassId}
                 onChange={(e) => setFormClassId(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                 required
               >
                 <option value="">Select Class</option>
@@ -454,7 +454,7 @@ export default function ClassHomeWorkPage() {
               <select
                 value={formSubject}
                 onChange={(e) => setFormSubject(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer disabled:opacity-50"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer disabled:opacity-50"
                 required
                 disabled={!formClassId || availableSubjects.length === 0}
               >
@@ -479,7 +479,7 @@ export default function ClassHomeWorkPage() {
                 <select
                   value={formChapterId}
                   onChange={(e) => setFormChapterId(e.target.value)}
-                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                 >
                   <option value="">Select Chapter (optional)</option>
                   {syllabusChapters.map(ch => (
@@ -513,7 +513,7 @@ export default function ClassHomeWorkPage() {
               type="text"
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
               required
               placeholder="e.g. Chapter 1 Exercise"
             />
@@ -526,7 +526,7 @@ export default function ClassHomeWorkPage() {
               type="date"
               value={formDueDate}
               onChange={(e) => setFormDueDate(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200 cursor-pointer"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200 cursor-pointer"
               required
             />
           </div>
@@ -540,10 +540,10 @@ export default function ClassHomeWorkPage() {
                 placeholder="Upload file or enter URL..."
                 value={formAttachmentUrl}
                 onChange={(e) => setFormAttachmentUrl(e.target.value)}
-                className="flex-1 px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
+                className="flex-1 px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
               />
               <label className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg flex items-center gap-2 cursor-pointer transition-colors shadow-sm border border-border flex-shrink-0">
-                <Upload className="w-4 h-4 text-[#1E3A5F]" />
+                <Upload className="w-4 h-4 text-primary" />
                 <span>{uploading ? "Uploading..." : "Upload File"}</span>
                 <input
                   type="file"
@@ -571,7 +571,7 @@ export default function ClassHomeWorkPage() {
               placeholder="Optional description"
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200 resize-none"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200 resize-none"
             />
           </div>
 
@@ -586,7 +586,7 @@ export default function ClassHomeWorkPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+              className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer disabled:opacity-50"
             >
               {submitting ? "Saving..." : "Add Homework"}
             </button>
@@ -602,7 +602,7 @@ export default function ClassHomeWorkPage() {
             <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <Trash2 className="w-8 h-8 text-rose-500" />
             </div>
-            <h2 className="text-xl font-bold text-[#0F172A] dark:text-slate-100 mb-3">Confirm Deletion</h2>
+            <h2 className="text-xl font-bold text-foreground dark:text-slate-100 mb-3">Confirm Deletion</h2>
             <p className="text-[14px] text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
               Are you sure you want to delete homework <strong>{selectedHw?.title}</strong>? This action cannot be undone.
             </p>
@@ -635,14 +635,14 @@ export default function ClassHomeWorkPage() {
               placeholder="Provide your text answer or paste a link to your assignment file..."
               value={submitContent}
               onChange={(e) => setSubmitContent(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200 resize-none"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200 resize-none"
               required
             />
           </div>
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Attach Document (PDF, Image, etc.)</label>
             <label className="w-full px-4 py-3 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/50 dark:hover:bg-slate-800 border border-dashed border-border rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-sm text-[13px] font-medium text-slate-600 dark:text-slate-300">
-              <Upload className="w-4 h-4 text-[#1E3A5F]" />
+              <Upload className="w-4 h-4 text-primary" />
               <span>{uploading ? "Uploading..." : "Upload File"}</span>
               <input
                 type="file"
@@ -672,7 +672,7 @@ export default function ClassHomeWorkPage() {
             <button
               type="submit"
               disabled={submitting || !submitContent}
-              className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+              className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer disabled:opacity-50"
             >
               {submitting ? "Submitting..." : "Submit"}
             </button>
@@ -684,7 +684,7 @@ export default function ClassHomeWorkPage() {
       <Modal isOpen={!!viewSubmissionsHw} onClose={() => setViewSubmissionsHw(null)} title="Student Progress & Grading">
         <div className="p-0 text-left max-h-[80vh] overflow-y-auto custom-scrollbar">
           <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-b border-border sticky top-0 z-10">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-b border-border sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-3 text-left font-bold text-slate-700 dark:text-slate-200">Student Name</th>
                 <th className="px-6 py-3 text-left font-bold text-slate-700 dark:text-slate-200">Status</th>
@@ -722,7 +722,7 @@ export default function ClassHomeWorkPage() {
                     <td className="px-6 py-4">
                       {submission ? (
                         submission.content.startsWith("http") ? (
-                          <a href={submission.content} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[#1E3A5F] hover:underline">
+                          <a href={submission.content} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-primary hover:underline">
                             <Link2 className="w-3 h-3" /> Open Link
                           </a>
                         ) : (
@@ -746,14 +746,14 @@ export default function ClassHomeWorkPage() {
                             <input
                               type="text"
                               placeholder="Grade (e.g. A+)"
-                              className="w-24 px-2 py-1.5 text-[12px] bg-white dark:bg-slate-900 border border-border rounded outline-none focus:border-[#1E3A5F]"
+                              className="w-24 px-2 py-1.5 text-[12px] bg-white dark:bg-slate-900 border border-border rounded outline-none focus:border-primary"
                               value={gradingState[student._id]?.grade || ""}
                               onChange={(e) => setGradingState(prev => ({ ...prev, [student._id]: { ...prev[student._id], grade: e.target.value } }))}
                             />
                             <button
                               onClick={() => handleGradeSubmit(student._id)}
                               disabled={submitting}
-                              className="px-3 py-1.5 bg-[#1E3A5F] text-white rounded text-[12px] font-bold hover:bg-[#162C47] transition-colors cursor-pointer disabled:opacity-50"
+                              className="px-3 py-1.5 bg-primary text-white rounded text-[12px] font-bold hover:bg-[var(--primary-hover)] transition-colors cursor-pointer disabled:opacity-50"
                             >
                               Grade
                             </button>

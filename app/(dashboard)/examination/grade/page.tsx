@@ -224,7 +224,7 @@ export default function GradeListPage() {
   }, [grades, searchTerm, filterStatus, activeFrom, activeTo, selectedSort]);
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -232,17 +232,17 @@ export default function GradeListPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/examination" className="hover:text-[#1E3A5F]">Examination</Link>
+            <Link href="/examination" className="hover:text-primary">Examination</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Grade</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchGrades()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => fetchGrades()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
           
@@ -257,10 +257,10 @@ export default function GradeListPage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-2 text-left">
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as PDF
                   </button>
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as Excel
                   </button>
                 </div>
@@ -271,7 +271,7 @@ export default function GradeListPage() {
           {canAddGrade && (
             <button 
               onClick={openAddModal}
-              className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+              className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Add Grade
             </button>
@@ -292,7 +292,7 @@ export default function GradeListPage() {
                 onClick={() => setIsDateRangeOpen(!isDateRangeOpen)} 
                 className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors cursor-pointer
                   ${(activeFrom && activeTo) || isDateRangeOpen
-                    ? "border-[#1E3A5F] bg-[#FFF9E6] dark:bg-amber-900/20 text-[#162C47] dark:text-amber-500 font-bold"
+                    ? "border-primary bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-bold"
                     : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   }`}
               >
@@ -307,7 +307,7 @@ export default function GradeListPage() {
                     {DATE_RANGES.map((range) => (
                       <button key={range} onClick={() => applyDateRange(range)}
                         className={`w-full px-4 py-2.5 text-left text-[13px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer
-                          ${selectedRange === range ? "bg-[#FFF3CD] dark:bg-amber-900/20 text-[#92400E] dark:text-amber-500 font-semibold" : "text-slate-700 dark:text-slate-300"}`}>
+                          ${selectedRange === range ? "bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-semibold" : "text-slate-700 dark:text-slate-300"}`}>
                         {range}
                       </button>
                     ))}
@@ -319,7 +319,7 @@ export default function GradeListPage() {
                           <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
                             className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
                           <button onClick={applyCustomRange} disabled={!customFrom || !customTo}
-                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded transition-colors disabled:opacity-50 cursor-pointer">
+                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-primary hover:bg-[var(--primary-hover)] rounded transition-colors disabled:opacity-50 cursor-pointer">
                             Apply
                           </button>
                         </div>
@@ -351,7 +351,7 @@ export default function GradeListPage() {
                 }}
                 className={`px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors flex items-center gap-2 cursor-pointer
                   ${filterStatus !== "All" || isFilterOpen
-                    ? "border-[#1E3A5F] bg-[#FFF9E6] dark:bg-amber-900/20 text-[#162C47] dark:text-amber-500 font-bold"
+                    ? "border-primary bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-bold"
                     : "border-border bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   }`}
               >
@@ -362,7 +362,7 @@ export default function GradeListPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
                   <div className="absolute right-0 left-auto top-full mt-2 w-64 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 text-left">
                     <div className="p-4 border-b border-border">
-                      <h3 className="text-[15px] font-bold text-[#0F172A] dark:text-slate-100">Filter</h3>
+                      <h3 className="text-[15px] font-bold text-foreground dark:text-slate-100">Filter</h3>
                     </div>
                     <div className="p-4 space-y-4">
                       <div className="space-y-1.5">
@@ -388,7 +388,7 @@ export default function GradeListPage() {
                           setFilterStatus("All"); 
                           setIsFilterOpen(false); 
                         }} 
-                        className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-[#0F172A] dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer"
+                        className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-foreground dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer"
                       >
                         Reset
                       </button>
@@ -397,7 +397,7 @@ export default function GradeListPage() {
                           setFilterStatus(pendingStatus);
                           setIsFilterOpen(false);
                         }} 
-                        className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+                        className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
                       >
                         Apply
                       </button>
@@ -413,7 +413,7 @@ export default function GradeListPage() {
                 onClick={() => setIsSortOpen(!isSortOpen)} 
                 className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors cursor-pointer
                   ${selectedSort !== "Points: High to Low" || isSortOpen
-                    ? "border-[#1E3A5F] bg-[#FFF9E6] dark:bg-amber-900/20 text-[#162C47] dark:text-amber-500 font-bold"
+                    ? "border-primary bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-bold"
                     : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   }`}
               >
@@ -429,7 +429,7 @@ export default function GradeListPage() {
                       <button 
                         key={item} 
                         onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
-                        className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-[#1E3A5F] font-bold" : "text-slate-700 dark:text-slate-200"}`}
+                        className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-primary font-bold" : "text-slate-700 dark:text-slate-200"}`}
                       >
                         {item}
                       </button>
@@ -454,7 +454,7 @@ export default function GradeListPage() {
               placeholder="Search grade or points..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
@@ -462,7 +462,7 @@ export default function GradeListPage() {
         {/* Table */}
         <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
           <table className="w-full text-[13px]">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Grade</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Marks Range</th>
@@ -486,7 +486,7 @@ export default function GradeListPage() {
                 </tr>
               ) : filteredData.map((item) => (
                 <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 font-bold text-[#1E3A5F]">{item.grade_name}</td>
+                  <td className="px-6 py-4 font-bold text-primary">{item.grade_name}</td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                     {item.marks_from === 0 ? `Below ${item.marks_upto}%` : `${item.marks_from}% - ${item.marks_upto}%`}
                   </td>
@@ -506,7 +506,7 @@ export default function GradeListPage() {
                     <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
                       <button 
                         onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
-                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-[#1E3A5F] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
                       >
                         <MoreVertical className="w-4 h-4" />
                       </button>
@@ -514,8 +514,8 @@ export default function GradeListPage() {
                         <>
                           <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                           <div className="absolute right-10 top-2 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
-                            <button onClick={() => openEditModal(item)} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
-                              <Edit className="w-4 h-4 text-[#0F172A] dark:text-slate-100" /> Edit
+                            <button onClick={() => openEditModal(item)} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                              <Edit className="w-4 h-4 text-foreground dark:text-slate-100" /> Edit
                             </button>
                             <button onClick={() => openDeleteModal(item)} className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-2 font-medium transition-colors cursor-pointer">
                               <Trash2 className="w-4 h-4 text-rose-600" /> Delete
@@ -542,7 +542,7 @@ export default function GradeListPage() {
               type="text"
               value={formGrade}
               onChange={(e) => setFormGrade(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
               required
               placeholder="e.g. A+"
             />
@@ -555,7 +555,7 @@ export default function GradeListPage() {
                 type="number"
                 value={formMarksFrom}
                 onChange={(e) => setFormMarksFrom(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
                 required
                 min={0}
                 max={100}
@@ -568,7 +568,7 @@ export default function GradeListPage() {
                 type="number"
                 value={formMarksUpto}
                 onChange={(e) => setFormMarksUpto(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
                 required
                 min={0}
                 max={100}
@@ -583,7 +583,7 @@ export default function GradeListPage() {
               type="number"
               value={formGradePoints}
               onChange={(e) => setFormGradePoints(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
               required
               min={0}
               step={0.1}
@@ -597,7 +597,7 @@ export default function GradeListPage() {
               <select 
                 value={formStatus}
                 onChange={(e) => setFormStatus(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                 required
               >
                 <option value="Active" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Active</option>
@@ -614,7 +614,7 @@ export default function GradeListPage() {
               placeholder="Add Comment"
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200 resize-none"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200 resize-none"
             />
           </div>
 
@@ -629,7 +629,7 @@ export default function GradeListPage() {
             <button 
               type="submit" 
               disabled={submitting}
-              className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+              className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer disabled:opacity-50"
             >
               {submitting ? "Saving..." : (isAddOpen ? "Add Grade" : "Save Changes")}
             </button>
@@ -645,7 +645,7 @@ export default function GradeListPage() {
             <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <Trash2 className="w-8 h-8 text-rose-500" />
             </div>
-            <h2 className="text-xl font-bold text-[#0F172A] dark:text-slate-100 mb-3">Confirm Deletion</h2>
+            <h2 className="text-xl font-bold text-foreground dark:text-slate-100 mb-3">Confirm Deletion</h2>
             <p className="text-[14px] text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
               Are you sure you want to delete grade <strong>{selectedGrade?.grade_name}</strong>? This action cannot be undone.
             </p>

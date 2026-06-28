@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useThemeColors } from "../SchoolThemeProvider";
 
 interface ChartData {
   label: string;
@@ -14,7 +15,9 @@ interface ChartProps {
   height?: number;
 }
 
-export function LineChart({ data, color = "#2563EB", height = 200 }: ChartProps) {
+export function LineChart({ data, color, height = 200 }: ChartProps) {
+  const theme = useThemeColors();
+  const chartColor = color ?? theme.primary;
   const values = data.map((d) => d.value);
   const max = Math.max(...values, 100);
   const min = Math.min(...values, 0);
@@ -70,13 +73,13 @@ export function LineChart({ data, color = "#2563EB", height = 200 }: ChartProps)
         })}
 
         {/* Area under curve */}
-        <path d={fillD} fill={`${color}20`} className="transition-all duration-500 ease-in-out" />
+        <path d={fillD} fill={`${chartColor}20`} className="transition-all duration-500 ease-in-out" />
 
         {/* Line stroke */}
         <path
           d={pathD}
           fill="none"
-          stroke={color}
+          stroke={chartColor}
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -90,7 +93,7 @@ export function LineChart({ data, color = "#2563EB", height = 200 }: ChartProps)
               cx={p.x}
               cy={p.y}
               r="4"
-              fill={color}
+              fill={chartColor}
               className="stroke-white stroke-2 transition-all duration-200 group-hover/dot:r-6"
             />
             {/* Tooltip on hover */}
@@ -132,7 +135,9 @@ export function LineChart({ data, color = "#2563EB", height = 200 }: ChartProps)
   );
 }
 
-export function BarChart({ data, color = "#2563EB", height = 200 }: ChartProps) {
+export function BarChart({ data, color, height = 200 }: ChartProps) {
+  const theme = useThemeColors();
+  const chartColor = color ?? theme.primary;
   const values = data.map((d) => d.value);
   const max = Math.max(...values, 10);
   const padding = 45;
@@ -186,7 +191,7 @@ export function BarChart({ data, color = "#2563EB", height = 200 }: ChartProps) 
                 width={barWidth}
                 height={Math.max(barHeight, 4)} // Ensure at least a line is visible
                 rx="3"
-                fill={color}
+                fill={chartColor}
                 className="transition-all duration-300 opacity-90 hover:opacity-100"
               />
               {/* Tooltip */}
@@ -231,7 +236,9 @@ interface DoughnutChartProps {
   colors?: string[]; // e.g. ["#2563EB", "#10B981", "#EF4444"]
 }
 
-export function DoughnutChart({ data, colors = ["#2563EB", "#10B981", "#1E3A5F", "#EF4444"] }: DoughnutChartProps) {
+export function DoughnutChart({ data, colors }: DoughnutChartProps) {
+  const theme = useThemeColors();
+  const chartColors = colors ?? [theme.info, theme.success, theme.primary, theme.danger];
   const total = data.reduce((acc, curr) => acc + curr.value, 0);
   const size = 180;
   const radius = 55;
@@ -268,7 +275,7 @@ export function DoughnutChart({ data, colors = ["#2563EB", "#10B981", "#1E3A5F",
                 cy={center}
                 r={radius}
                 fill="none"
-                stroke={colors[i % colors.length]}
+                stroke={chartColors[i % chartColors.length]}
                 strokeWidth={strokeWidth}
                 strokeDasharray={strokeDasharray}
                 strokeDashoffset={strokeDashoffset}
@@ -300,7 +307,7 @@ export function DoughnutChart({ data, colors = ["#2563EB", "#10B981", "#1E3A5F",
             <div key={i} className="flex items-center gap-3 text-[13px] text-slate-600 dark:text-slate-300">
               <span
                 className="w-3 h-3 rounded-full flex-shrink-0"
-                style={{ backgroundColor: colors[i % colors.length] }}
+                style={{ backgroundColor: chartColors[i % chartColors.length] }}
               />
               <span className="font-semibold text-slate-700 dark:text-slate-200 min-w-full sm:w-[70px]">{d.label}</span>
               <span className="font-bold text-slate-900 dark:text-white">{d.value}</span>

@@ -30,20 +30,20 @@ export function WhyChooseUs({ data }: WhyChooseUsProps) {
   const renderIcon = (iconName: string) => {
     const IconComponent = (LucideIcons as any)[iconName];
     if (IconComponent) {
-      return <IconComponent className="w-8 h-8 text-[#1E3A5F]" />;
+      return <IconComponent className="w-8 h-8 text-primary" />;
     }
-    return <LucideIcons.Sparkles className="w-8 h-8 text-[#1E3A5F]" />;
+    return <LucideIcons.Sparkles className="w-8 h-8 text-primary" />;
   };
 
   return (
-    <section className="py-20 bg-[#F0F4F9] relative">
+    <section className="py-20 bg-[var(--section-alt)] relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-block mb-3">
-            <span className="text-[12px] font-bold text-[#1E3A5F] uppercase tracking-[0.15em]">Core Features</span>
-            <div className="h-0.5 bg-[#1E3A5F] mt-1 w-full" />
+            <span className="text-[12px] font-bold text-primary uppercase tracking-[0.15em]">Core Features</span>
+            <div className="h-0.5 bg-primary mt-1 w-full" />
           </div>
           <h3 className="text-4xl font-black text-[#231F20] mb-4 leading-tight">
             Why Parents Choose Us
@@ -56,8 +56,8 @@ export function WhyChooseUs({ data }: WhyChooseUsProps) {
         {/* Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {reasons.map((item, idx) => (
-            <div key={idx} className="bg-[#FFFFFF] p-7 border border-[#E0E0E0] border-l-4 border-l-transparent hover:border-l-[#1E3A5F] hover:shadow-lg transition-all duration-300 group">
-              <div className="w-14 h-14 rounded-sm bg-[#EFEFEF] flex items-center justify-center mb-5 group-hover:bg-[#1E3A5F] transition-colors duration-300">
+            <div key={idx} className="bg-[#FFFFFF] p-7 border border-[#E0E0E0] border-l-4 border-l-transparent hover:border-l-primary hover:shadow-lg transition-all duration-300 group">
+              <div className="w-14 h-14 rounded-sm bg-[#EFEFEF] flex items-center justify-center mb-5 group-hover:bg-primary transition-colors duration-300">
                 <span className="group-hover:text-white transition-colors">{renderIcon(item.icon)}</span>
               </div>
               <h4 className="text-[16px] font-black text-[#231F20] mb-2">{item.title}</h4>

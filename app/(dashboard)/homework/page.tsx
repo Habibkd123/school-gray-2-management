@@ -159,7 +159,7 @@ export default function HomeworkPage() {
         {activeRole !== "student" && (
           <button
             onClick={() => setIsAddOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded-lg shadow-sm transition-colors cursor-pointer self-start sm:self-auto"
+            className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] rounded-lg shadow-sm transition-colors cursor-pointer self-start sm:self-auto"
           >
             <Plus className="w-4 h-4" />
             <span>Create Assignment</span>
@@ -169,7 +169,7 @@ export default function HomeworkPage() {
 
       {isLoading ? (
         <div className="py-20 flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 gap-3">
-          <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F]" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <span>Loading homework registers...</span>
         </div>
       ) : (
@@ -249,7 +249,7 @@ export default function HomeworkPage() {
                               setSelectedHwId(hw._id);
                               setIsSubmitOpen(true);
                             }}
-                            className="px-3.5 py-2 text-[12px] font-bold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded-lg shadow-sm transition-colors cursor-pointer"
+                            className="px-3.5 py-2 text-[12px] font-bold text-white bg-primary hover:bg-[var(--primary-hover)] rounded-lg shadow-sm transition-colors cursor-pointer"
                           >
                             Submit Work
                           </button>
@@ -361,7 +361,7 @@ export default function HomeworkPage() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
+              className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
             >
               Assign Homework
             </button>
@@ -401,7 +401,7 @@ export default function HomeworkPage() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
+              className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
             >
               Submit Assignment
             </button>
@@ -566,7 +566,7 @@ export default function HomeworkPage() {
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
+              className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
             >
               Submit Review
             </button>

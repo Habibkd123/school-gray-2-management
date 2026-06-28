@@ -70,23 +70,23 @@ export default function ClassRoomPage() {
     ), [rooms, searchTerm]);
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Class Room</h1>
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span><span>/</span>
-            <Link href="/academic" className="hover:text-[#1E3A5F]">Academic</Link>
+            <Link href="/academic" className="hover:text-primary">Academic</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Class Room</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-[#1E3A5F] transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
           <div className="relative">
@@ -97,13 +97,13 @@ export default function ClassRoomPage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-2">
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 flex items-center gap-3 cursor-pointer"><FileText className="w-4 h-4 text-slate-500" /> Export as PDF</button>
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 flex items-center gap-3 cursor-pointer"><FileText className="w-4 h-4 text-slate-500" /> Export as Excel</button>
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 flex items-center gap-3 cursor-pointer"><FileText className="w-4 h-4 text-slate-500" /> Export as PDF</button>
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 flex items-center gap-3 cursor-pointer"><FileText className="w-4 h-4 text-slate-500" /> Export as Excel</button>
                 </div>
               </>
             )}
           </div>
-          <button onClick={openAddModal} className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer">
+          <button onClick={openAddModal} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer">
             <Plus className="w-4 h-4" /> Add Class Room
           </button>
         </div>
@@ -122,14 +122,14 @@ export default function ClassRoomPage() {
               placeholder="Search room…"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
 
         <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
           <table className="w-full text-[13px]">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Room No</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Capacity</th>
@@ -144,18 +144,18 @@ export default function ClassRoomPage() {
                 <tr><td colSpan={4} className="px-6 py-10 text-center text-slate-400">No rooms found. Add your first room!</td></tr>
               ) : filteredRooms.map(room => (
                 <tr key={room._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4 font-semibold text-[#1E3A5F]">{room.room_no}</td>
+                  <td className="px-6 py-4 font-semibold text-primary">{room.room_no}</td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{room.capacity}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${room.is_active ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFEBEB] text-[#E02424]"}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${room.is_active ? "bg-[#1DD04A]" : "bg-[#E02424]"}`} />
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${room.is_active ? "bg-success/10 text-success" : "bg-[#FFEBEB] text-[#E02424]"}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${room.is_active ? "bg-success" : "bg-[#E02424]"}`} />
                       {room.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center relative" onClick={e => e.stopPropagation()}>
                     <button
                       onClick={() => setActionMenuId(actionMenuId === room._id ? null : room._id)}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === room._id ? "bg-[#1E3A5F] text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === room._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
@@ -163,10 +163,10 @@ export default function ClassRoomPage() {
                       <>
                         <div className="fixed inset-0 z-40" onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                         <div className="absolute right-10 top-10 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-lg z-50 overflow-hidden py-2 text-left">
-                          <button onClick={() => openEditModal(room)} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium cursor-pointer">
+                          <button onClick={() => openEditModal(room)} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium cursor-pointer">
                             <Edit className="w-4 h-4" /> Edit
                           </button>
-                          <button onClick={() => openDeleteModal(room)} className="w-full px-4 py-2 text-[13px] text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium cursor-pointer">
+                          <button onClick={() => openDeleteModal(room)} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium cursor-pointer">
                             <Trash2 className="w-4 h-4" /> Delete
                           </button>
                         </div>
@@ -186,23 +186,23 @@ export default function ClassRoomPage() {
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Room No</label>
             <input type="text" value={formRoomNo} onChange={e => setFormRoomNo(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
               placeholder="e.g. 101" required />
           </div>
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Capacity</label>
             <input type="number" value={formCapacity} onChange={e => setFormCapacity(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors text-slate-700 dark:text-slate-200"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
               placeholder="e.g. 40" required />
           </div>
           <div className="flex items-center justify-between py-2">
             <div>
-              <label className="text-[14px] font-bold text-[#0F172A] dark:text-slate-100 block">Status</label>
+              <label className="text-[14px] font-bold text-foreground dark:text-slate-100 block">Status</label>
               <span className="text-[13px] text-slate-500 block mt-1">Toggle to activate/deactivate</span>
             </div>
             <button type="button" onClick={() => setFormStatus(!formStatus)} className="cursor-pointer focus:outline-none">
               {formStatus
-                ? <ToggleRight className="w-10 h-10 text-[#1E3A5F]" />
+                ? <ToggleRight className="w-10 h-10 text-primary" />
                 : <div className="w-10 h-10 flex items-center justify-center"><div className="w-8 h-4 bg-slate-300 rounded-full relative"><div className="w-3 h-3 bg-white rounded-full absolute left-0.5 top-0.5 shadow-sm" /></div></div>
               }
             </button>
@@ -212,7 +212,7 @@ export default function ClassRoomPage() {
               className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 transition-colors cursor-pointer">
               Cancel
             </button>
-            <button type="submit" className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer">
+            <button type="submit" className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer">
               {isAddOpen ? "Add Room" : "Save Changes"}
             </button>
           </div>
@@ -227,7 +227,7 @@ export default function ClassRoomPage() {
             <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <Trash2 className="w-8 h-8 text-rose-500" />
             </div>
-            <h2 className="text-xl font-bold text-[#0F172A] dark:text-slate-100 mb-3">Confirm Deletion</h2>
+            <h2 className="text-xl font-bold text-foreground dark:text-slate-100 mb-3">Confirm Deletion</h2>
             <p className="text-[14px] text-slate-500 leading-relaxed mb-8">This action cannot be undone.</p>
             <div className="flex justify-center gap-3">
               <button onClick={() => setIsDeleteOpen(false)} className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 text-[14px] font-bold rounded-lg hover:bg-slate-200 transition-colors cursor-pointer">Cancel</button>

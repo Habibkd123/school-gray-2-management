@@ -34,8 +34,8 @@ export function FAQ({ data }: FAQProps) {
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         
         <div className="text-center mb-16">
-          <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">Got Questions?</h2>
-          <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] leading-tight">
+          <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Got Questions?</h2>
+          <h3 className="text-4xl md:text-5xl font-serif font-bold text-foreground leading-tight">
             Frequently Asked Questions
           </h3>
         </div>
@@ -53,7 +53,7 @@ export function FAQ({ data }: FAQProps) {
                 <span className={`font-bold text-[15px] pr-8 ${openIdx === idx ? 'text-[#231F20]' : 'text-[#5C5D5D]'}`}>
                   {faq.question}
                 </span>
-                <ChevronDown className={`w-5 h-5 shrink-0 transition-transform duration-300 ${openIdx === idx ? 'rotate-180 text-[#1E3A5F]' : 'text-[#CCCCCC]'}`} />
+                <ChevronDown className={`w-5 h-5 shrink-0 transition-transform duration-300 ${openIdx === idx ? 'rotate-180 text-primary' : 'text-[#CCCCCC]'}`} />
               </button>
               
               <div 

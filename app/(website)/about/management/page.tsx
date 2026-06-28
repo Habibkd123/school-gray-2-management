@@ -17,8 +17,8 @@ export default async function ManagementPage() {
 
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
-      <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Management Team</h1>
-      <p className="text-[#1E3A5F] font-bold uppercase tracking-widest text-[12px] mb-12">Our Leadership</p>
+      <h1 className="text-4xl font-serif font-bold text-foreground mb-3">Management Team</h1>
+      <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-12">Our Leadership</p>
 
       {team.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -32,11 +32,11 @@ export default async function ManagementPage() {
                     <Users className="w-16 h-16 text-slate-300" />
                   </div>
                 )}
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#1E3A5F]" />
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary" />
               </div>
               <div className="p-6">
-                <h2 className="text-lg font-bold text-[#0F172A]">{member.name}</h2>
-                <p className="text-[#1E3A5F] text-[12px] font-bold uppercase tracking-widest mb-3">{member.position}</p>
+                <h2 className="text-lg font-bold text-foreground">{member.name}</h2>
+                <p className="text-primary text-[12px] font-bold uppercase tracking-widest mb-3">{member.position}</p>
                 {member.bio && <p className="text-slate-500 text-[13px] leading-relaxed">{member.bio}</p>}
               </div>
             </div>

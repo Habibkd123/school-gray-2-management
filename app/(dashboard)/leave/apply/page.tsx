@@ -92,7 +92,7 @@ export default function ApplyLeavePage() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -127,7 +127,7 @@ export default function ApplyLeavePage() {
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Leave Type</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Leave Date</th>
@@ -141,7 +141,7 @@ export default function ApplyLeavePage() {
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-16 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F] mx-auto" />
+                    <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
                     <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading your leaves...</p>
                   </td>
                 </tr>
@@ -253,7 +253,7 @@ export default function ApplyLeavePage() {
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[13px] font-bold rounded-lg hover:bg-[#4b58ce] transition-colors shadow-sm disabled:opacity-60 flex items-center gap-2"
+              className="px-6 py-2.5 bg-primary text-white text-[13px] font-bold rounded-lg hover:bg-[#4b58ce] transition-colors shadow-sm disabled:opacity-60 flex items-center gap-2"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               Submit Request

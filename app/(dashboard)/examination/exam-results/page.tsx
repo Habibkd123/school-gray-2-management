@@ -210,7 +210,7 @@ export default function ExamResultsPage() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -218,17 +218,17 @@ export default function ExamResultsPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/examination" className="hover:text-[#1E3A5F]">Examination</Link>
+            <Link href="/examination" className="hover:text-primary">Examination</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Exam Result</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchResults()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => fetchResults()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer">
+          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
 
@@ -243,10 +243,10 @@ export default function ExamResultsPage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-2 text-left">
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as PDF
                   </button>
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-[#0F172A] dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
+                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
                     <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as Excel
                   </button>
                 </div>
@@ -268,7 +268,7 @@ export default function ExamResultsPage() {
               <select
                 value={selectedExamId}
                 onChange={(e) => setSelectedExamId(e.target.value)}
-                className="pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none shadow-sm cursor-pointer"
+                className="pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg outline-none focus:border-primary transition-colors appearance-none shadow-sm cursor-pointer"
               >
                 <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Exams</option>
                 {exams.map((ex) => (
@@ -284,7 +284,7 @@ export default function ExamResultsPage() {
                 onClick={() => setIsDateRangeOpen(!isDateRangeOpen)} 
                 className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors cursor-pointer
                   ${(activeFrom && activeTo) || isDateRangeOpen
-                    ? "border-[#1E3A5F] bg-[#FFF9E6] dark:bg-amber-900/20 text-[#162C47] dark:text-amber-500 font-bold"
+                    ? "border-primary bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-bold"
                     : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
                   }`}
               >
@@ -299,7 +299,7 @@ export default function ExamResultsPage() {
                     {DATE_RANGES.map((range) => (
                       <button key={range} onClick={() => applyDateRange(range)}
                         className={`w-full px-4 py-2.5 text-left text-[13px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer
-                          ${selectedRange === range ? "bg-[#FFF3CD] dark:bg-amber-900/20 text-[#92400E] dark:text-amber-500 font-semibold" : "text-slate-700 dark:text-slate-300"}`}>
+                          ${selectedRange === range ? "bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-semibold" : "text-slate-700 dark:text-slate-300"}`}>
                         {range}
                       </button>
                     ))}
@@ -311,7 +311,7 @@ export default function ExamResultsPage() {
                           <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
                             className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
                           <button onClick={applyCustomRange} disabled={!customFrom || !customTo}
-                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-[#1E3A5F] hover:bg-[#162C47] rounded transition-colors disabled:opacity-50 cursor-pointer">
+                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-primary hover:bg-[var(--primary-hover)] rounded transition-colors disabled:opacity-50 cursor-pointer">
                             Apply
                           </button>
                         </div>
@@ -335,7 +335,7 @@ export default function ExamResultsPage() {
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
                 className={`px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer ${
-                  selectedSort !== "A-Z by Name" ? "border-[#1E3A5F] bg-[#FFF9E6] dark:bg-[#1E3A5F]/10" : ""
+                  selectedSort !== "A-Z by Name" ? "border-primary bg-primary/10 dark:bg-primary/10" : ""
                 }`}
               >
                 <List className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Sort: {selectedSort} <ChevronDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
@@ -346,7 +346,7 @@ export default function ExamResultsPage() {
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                     {["A-Z by Name", "Z-A by Name", "Roll No", "Percentage: High to Low", "Percentage: Low to High"].map((item) => (
                       <button key={item} onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
-                        className={`w-full px-4 py-2 text-[13px] text-left transition-colors cursor-pointer ${item === selectedSort ? "bg-[#1E3A5F] text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                        className={`w-full px-4 py-2 text-[13px] text-left transition-colors cursor-pointer ${item === selectedSort ? "bg-primary text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
                         {item}
                       </button>
                     ))}
@@ -372,7 +372,7 @@ export default function ExamResultsPage() {
               placeholder="Search by name or roll no…"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
@@ -380,10 +380,10 @@ export default function ExamResultsPage() {
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">
-                  <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />
+                  <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                 </th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Student Name</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Roll No</th>
@@ -420,10 +420,10 @@ export default function ExamResultsPage() {
                 return (
                   <tr key={row.studentId} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="px-6 py-4">
-                      <input type="checkbox" className="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F] cursor-pointer" />
+                      <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                     </td>
                     <td className="px-6 py-4">
-                      <Link href={`/students/${row.studentId}`} className="font-semibold text-[#1E3A5F] hover:text-[#162C47] transition-colors cursor-pointer">
+                      <Link href={`/students/${row.studentId}`} className="font-semibold text-primary hover:text-[var(--primary-hover)] transition-colors cursor-pointer">
                         {row.studentName}
                       </Link>
                     </td>
@@ -469,7 +469,7 @@ export default function ExamResultsPage() {
         {/* Pagination */}
         <div className="p-5 border-t border-border flex items-center justify-end gap-2">
           <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition-colors">Prev</button>
-          <button className="w-7 h-7 rounded-lg bg-[#1E3A5F] text-white text-[13px] font-medium flex items-center justify-center">1</button>
+          <button className="w-7 h-7 rounded-lg bg-primary text-white text-[13px] font-medium flex items-center justify-center">1</button>
           <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition-colors">Next</button>
         </div>
       </div>
@@ -485,7 +485,7 @@ export default function ExamResultsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <button 
                   onClick={() => window.print()}
-                  className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors"
+                  className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors"
                 >
                   <Printer className="w-4 h-4" /> Print
                 </button>
@@ -576,7 +576,7 @@ export default function ExamResultsPage() {
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex items-center justify-between mb-12">
                 <div className="text-center">
                   <div className="text-[12px] uppercase font-bold text-slate-500 mb-1">Percentage</div>
-                  <div className="text-2xl font-black text-[#1E3A5F]">{reportCardData.percent}%</div>
+                  <div className="text-2xl font-black text-primary">{reportCardData.percent}%</div>
                 </div>
                 <div className="w-px h-12 bg-slate-200"></div>
                 <div className="text-center">

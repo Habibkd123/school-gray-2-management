@@ -4,6 +4,8 @@ import "./globals.css";
 import { AppProvider } from "./context/store";
 import { AuthProvider } from "./context/auth";
 import { ThemeProvider } from "./providers";
+import { RootThemeProvider } from "./components/RootThemeProvider";
+import { ServerThemeStyles } from "./components/ServerThemeStyles";
 
 // ── Font ─────────────────────────────────────────────────────────────
 // display:'swap' ensures text stays visible in the fallback font while
@@ -40,10 +42,13 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="//ui-avatars.com" />
       </head>
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
+        <ServerThemeStyles />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthProvider>
-            <AppProvider>{children}</AppProvider>
-          </AuthProvider>
+          <RootThemeProvider>
+            <AuthProvider>
+              <AppProvider>{children}</AppProvider>
+            </AuthProvider>
+          </RootThemeProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -401,7 +401,7 @@ function StudentPromotionContent() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6 text-left">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -409,7 +409,7 @@ function StudentPromotionContent() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/students" className="hover:text-[#1E3A5F] transition-colors">Students</Link>
+            <Link href="/students" className="hover:text-primary transition-colors">Students</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Student Promotion</span>
           </div>
@@ -429,7 +429,7 @@ function StudentPromotionContent() {
       {/* Loading states / Errors */}
       {loadingStudentParam && (
         <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-8 flex items-center justify-center gap-3 text-slate-500 shadow-sm">
-          <Loader2 className="w-5 h-5 animate-spin text-[#1E3A5F]" />
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
           <span>Fetching student details...</span>
         </div>
       )}
@@ -473,7 +473,7 @@ function StudentPromotionContent() {
                         setFromSession(e.target.value);
                         setPromoteToSession(getNextAcademicYear(e.target.value));
                       }}
-                      className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-[#1E3A5F]/50 transition-all appearance-none cursor-pointer w-full max-w-xs"
+                      className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer w-full max-w-xs"
                     >
                       {sessions.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
@@ -491,7 +491,7 @@ function StudentPromotionContent() {
                         <select
                           value={selectedFromClassName}
                           onChange={(e) => setSelectedFromClassName(e.target.value)}
-                          className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-[#1E3A5F]/50 transition-all appearance-none cursor-pointer"
+                          className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
                         >
                           {uniqueClassNamesFrom.map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
@@ -505,7 +505,7 @@ function StudentPromotionContent() {
                         <select
                           value={selectedFromSectionName}
                           onChange={(e) => setSelectedFromSectionName(e.target.value)}
-                          className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-[#1E3A5F]/50 transition-all appearance-none cursor-pointer"
+                          className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
                         >
                           {sectionsInFromClass.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
@@ -516,7 +516,7 @@ function StudentPromotionContent() {
               </div>
 
               {/* Swap/Transfer Visual Icon */}
-              <div className="hidden lg:flex shrink-0 w-12 h-12 rounded-xl bg-[#1E3A5F] text-white items-center justify-center shadow-lg transform -mx-4 z-10">
+              <div className="hidden lg:flex shrink-0 w-12 h-12 rounded-xl bg-primary text-white items-center justify-center shadow-lg transform -mx-4 z-10">
                 <ArrowRightLeft className="w-5 h-5" />
               </div>
 
@@ -529,7 +529,7 @@ function StudentPromotionContent() {
                   <select
                     value={promoteToSession}
                     onChange={(e) => setPromoteToSession(e.target.value)}
-                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-[#1E3A5F]/50 transition-all appearance-none cursor-pointer w-full max-w-xs"
+                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer w-full max-w-xs"
                   >
                     <option value={getNextAcademicYear(fromSession)}>{getNextAcademicYear(fromSession)} (Suggested)</option>
                     {sessions.map(s => <option key={s} value={s}>{s}</option>)}
@@ -544,7 +544,7 @@ function StudentPromotionContent() {
                       <select
                         value={selectedToClassName}
                         onChange={(e) => setSelectedToClassName(e.target.value)}
-                        className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-[#1E3A5F]/50 transition-all appearance-none cursor-pointer"
+                        className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
                       >
                         {uniqueClassNamesTo.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
@@ -554,7 +554,7 @@ function StudentPromotionContent() {
                       <select
                         value={selectedToSectionName}
                         onChange={(e) => setSelectedToSectionName(e.target.value)}
-                        className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-[#1E3A5F]/50 transition-all appearance-none cursor-pointer"
+                        className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
                       >
                         {sectionsInToClass.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
@@ -569,7 +569,7 @@ function StudentPromotionContent() {
               <div className="mt-4">
                 {!classes.some(c => c.name === selectedToClassName && c.section === selectedToSectionName && c.academic_year === promoteToSession) && (
                   <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-lg text-amber-700 dark:text-amber-300 text-[12.5px]">
-                    <AlertTriangle className="w-4 h-4 text-[#1E3A5F] shrink-0" />
+                    <AlertTriangle className="w-4 h-4 text-primary shrink-0" />
                     <span>
                       Target Class <strong>{selectedToClassName} - {selectedToSectionName}</strong> does not exist in database for session <strong>{promoteToSession}</strong> yet. You will need to create it before finalizing promotion.
                     </span>
@@ -589,7 +589,7 @@ function StudentPromotionContent() {
                 <button
                   onClick={handleManagePromotion}
                   disabled={loadingStudentsList || classesLoading}
-                  className="px-6 py-2.5 rounded-lg text-[13px] font-bold text-white bg-[#1E3A5F] hover:bg-amber-600 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-lg text-[13px] font-bold text-white bg-primary hover:bg-amber-600 transition-colors shadow-sm flex items-center gap-2 disabled:opacity-50"
                 >
                   {loadingStudentsList && <Loader2 className="w-4 h-4 animate-spin" />}
                   <span>Manage Promotion</span>
@@ -619,7 +619,7 @@ function StudentPromotionContent() {
                 </div>
 
                 {/* Swap Icon */}
-                <div className="hidden lg:flex shrink-0 w-10 h-10 rounded-full bg-[#1E3A5F] text-white items-center justify-center shadow-md transform -mx-4 z-10">
+                <div className="hidden lg:flex shrink-0 w-10 h-10 rounded-full bg-primary text-white items-center justify-center shadow-md transform -mx-4 z-10">
                   <ArrowRightLeft className="w-4 h-4" />
                 </div>
 
@@ -627,7 +627,7 @@ function StudentPromotionContent() {
                 <div className="flex-1 w-full border border-slate-100 dark:border-slate-800 rounded-xl p-5 bg-slate-50/50 dark:bg-slate-800/20">
                   <div>
                     <h4 className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Promote To Class & Session</h4>
-                    <p className="text-[15px] text-[#1E3A5F] mt-1 font-semibold">{selectedToClassName} - {selectedToSectionName} ({promoteToSession})</p>
+                    <p className="text-[15px] text-primary mt-1 font-semibold">{selectedToClassName} - {selectedToSectionName} ({promoteToSession})</p>
                   </div>
                 </div>
               </div>
@@ -652,7 +652,7 @@ function StudentPromotionContent() {
                         type="checkbox"
                         checked={selectedStudentIds.length === studentsList.length && studentsList.length > 0}
                         onChange={(e) => handleCheckboxAll(e.target.checked)}
-                        className="rounded border-slate-300 w-4 h-4 accent-[#1E3A5F] cursor-pointer"
+                        className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
                       />
                     </th>
                     <th className="px-5 py-4">Admission No</th>
@@ -671,10 +671,10 @@ function StudentPromotionContent() {
                           type="checkbox"
                           checked={selectedStudentIds.includes(s._id)}
                           onChange={(e) => handleCheckboxSingle(s._id, e.target.checked)}
-                          className="rounded border-slate-300 w-4 h-4 accent-[#1E3A5F] cursor-pointer"
+                          className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
                         />
                       </td>
-                      <td className="px-5 py-3 font-semibold text-[#1E3A5F]">
+                      <td className="px-5 py-3 font-semibold text-primary">
                         {s.admission_no || `AD${s._id.slice(-6).toUpperCase()}`}
                       </td>
                       <td className="px-5 py-3 text-slate-700 dark:text-slate-200">{s.roll_no || "-"}</td>
@@ -701,7 +701,7 @@ function StudentPromotionContent() {
                           <select
                             value={promotionResults[s._id] || "promote"}
                             onChange={(e) => setPromotionResults(prev => ({ ...prev, [s._id]: e.target.value as "promote" | "no_promote" }))}
-                            className="border border-border rounded px-2.5 py-1 text-[12px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 outline-none w-full sm:w-[170px] cursor-pointer focus:border-[#1E3A5F]/50"
+                            className="border border-border rounded px-2.5 py-1 text-[12px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 outline-none w-full sm:w-[170px] cursor-pointer focus:border-primary/50"
                           >
                             <option value="promote">Promote to {selectedToClassName}</option>
                             <option value="no_promote">No Promotion (Repeat)</option>
@@ -721,7 +721,7 @@ function StudentPromotionContent() {
               <button
                 onClick={handlePromoteStudents}
                 disabled={submittingPromotions}
-                className="px-8 py-2.5 rounded-lg text-[14px] font-bold text-white bg-[#1E3A5F] hover:bg-amber-600 transition-colors shadow-md disabled:opacity-50 flex items-center gap-2"
+                className="px-8 py-2.5 rounded-lg text-[14px] font-bold text-white bg-primary hover:bg-amber-600 transition-colors shadow-md disabled:opacity-50 flex items-center gap-2"
               >
                 {submittingPromotions && <Loader2 className="w-4 h-4 animate-spin" />}
                 <span>Promote Students</span>
@@ -738,7 +738,7 @@ export default function StudentPromotionPage() {
   return (
     <Suspense fallback={
       <div className="p-6 text-slate-500 flex items-center gap-2 justify-center min-h-[400px]">
-        <Loader2 className="w-5 h-5 animate-spin text-[#1E3A5F]" />
+        <Loader2 className="w-5 h-5 animate-spin text-primary" />
         <span>Loading promotion workspace...</span>
       </div>
     }>

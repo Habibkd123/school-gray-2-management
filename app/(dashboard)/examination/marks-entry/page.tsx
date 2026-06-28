@@ -149,7 +149,7 @@ export default function MarksEntryPage() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -157,7 +157,7 @@ export default function MarksEntryPage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/examination" className="hover:text-[#1E3A5F]">Examination</Link>
+            <Link href="/examination" className="hover:text-primary">Examination</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Marks Entry</span>
           </div>
@@ -166,14 +166,14 @@ export default function MarksEntryPage() {
         <div className="flex flex-wrap items-center gap-3">
           <button 
             onClick={() => window.location.reload()} 
-            className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] hover:bg-indigo-50 transition-colors shadow-sm cursor-pointer"
+            className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
           <button 
             onClick={handleSave}
             disabled={saving || !selectedExamId || !selectedClassId || !selectedSubjectId || filteredStudents.length === 0}
-            className="px-5 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+            className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
           >
             {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} 
             Save Marks
@@ -189,7 +189,7 @@ export default function MarksEntryPage() {
             <select
               value={selectedExamId}
               onChange={(e) => setSelectedExamId(e.target.value)}
-              className="w-full px-3 py-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+              className="w-full px-3 py-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
             >
               <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Exam</option>
               {classExams.map(e => {
@@ -210,7 +210,7 @@ export default function MarksEntryPage() {
                 setSelectedClassId(e.target.value);
                 setSelectedSubjectId(""); // Reset subject when class changes
               }}
-              className="w-full px-3 py-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+              className="w-full px-3 py-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
             >
               <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Class</option>
               {classes.map(c => (
@@ -226,7 +226,7 @@ export default function MarksEntryPage() {
               value={selectedSubjectId}
               onChange={(e) => setSelectedSubjectId(e.target.value)}
               disabled={!selectedClassId || loadingSubjects}
-              className="w-full px-3 py-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors disabled:opacity-50"
+              className="w-full px-3 py-2 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors disabled:opacity-50"
             >
               <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{loadingSubjects ? "Loading..." : "Select Subject"}</option>
               {subjects.map(s => (
@@ -256,7 +256,7 @@ export default function MarksEntryPage() {
               placeholder="Search by name or roll no..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
             />
           </div>
         </div>
@@ -264,7 +264,7 @@ export default function MarksEntryPage() {
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
-            <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] border-y border-border">
+            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-16">Roll No</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Student Name</th>
@@ -298,7 +298,7 @@ export default function MarksEntryPage() {
                         min="0"
                         value={data.marks_obtained}
                         onChange={(e) => handleMarksChange(student._id, "marks_obtained", e.target.value)}
-                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
                         placeholder="e.g. 85"
                       />
                     </td>
@@ -308,7 +308,7 @@ export default function MarksEntryPage() {
                         min="0"
                         value={data.total_marks}
                         onChange={(e) => handleMarksChange(student._id, "total_marks", e.target.value)}
-                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
                       />
                     </td>
                     <td className="px-6 py-4">
@@ -316,7 +316,7 @@ export default function MarksEntryPage() {
                         type="text"
                         value={data.remarks}
                         onChange={(e) => handleMarksChange(student._id, "remarks", e.target.value)}
-                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-[#1E3A5F] transition-colors"
+                        className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
                         placeholder="Optional remarks"
                       />
                     </td>

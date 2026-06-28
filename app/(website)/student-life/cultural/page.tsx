@@ -21,13 +21,13 @@ export default async function StudentLifeCulturalPage() {
   return (
     <main className="w-full">
       {/* Hero Section */}
-      <section className="relative py-28 bg-[#0F172A]">
+      <section className="relative py-28 bg-[var(--sidebar-bg)]">
         <div className="absolute inset-0">
           <img src={heroImage || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1920&auto=format&fit=crop"} alt="Cultural Activities" className="w-full h-full object-cover opacity-20" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <span className="inline-block px-4 py-1.5 bg-[#1E3A5F]/20 border border-[#1E3A5F]/30 text-[#FCA5A5] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Creative Expression</span>
+          <span className="inline-block px-4 py-1.5 bg-primary/20 border border-primary/30 text-[#FCA5A5] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Creative Expression</span>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">Cultural Activities</h1>
         </div>
       </section>
@@ -44,7 +44,7 @@ export default async function StudentLifeCulturalPage() {
                 </div>
                 <div>
                   <h2 className="text-[12px] font-bold text-purple-500 uppercase tracking-wider">Arts & Performance</h2>
-                  <h3 className="text-2xl font-serif font-bold text-[#0F172A]">Nurturing Creative Talents</h3>
+                  <h3 className="text-2xl font-serif font-bold text-foreground">Nurturing Creative Talents</h3>
                 </div>
               </div>
 
@@ -62,17 +62,17 @@ export default async function StudentLifeCulturalPage() {
               <div className="grid sm:grid-cols-3 gap-6 pt-6">
                 <div className="p-5 bg-purple-50/50 border border-purple-100 rounded-sm text-center">
                   <Palette className="w-8 h-8 text-purple-500 mx-auto mb-3" />
-                  <h4 className="font-bold text-[#0F172A] mb-1 text-[14px]">Fine Arts</h4>
+                  <h4 className="font-bold text-foreground mb-1 text-[14px]">Fine Arts</h4>
                   <p className="text-slate-500 text-[12px] leading-relaxed">Painting, sketching, pottery, and craft studios.</p>
                 </div>
                 <div className="p-5 bg-pink-50/50 border border-pink-100 rounded-sm text-center">
                   <Theater className="w-8 h-8 text-pink-500 mx-auto mb-3" />
-                  <h4 className="font-bold text-[#0F172A] mb-1 text-[14px]">Performing Arts</h4>
+                  <h4 className="font-bold text-foreground mb-1 text-[14px]">Performing Arts</h4>
                   <p className="text-slate-500 text-[12px] leading-relaxed">Contemporary & classical dance, theatre workshops.</p>
                 </div>
                 <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-sm text-center">
                   <Mic className="w-8 h-8 text-blue-500 mx-auto mb-3" />
-                  <h4 className="font-bold text-[#0F172A] mb-1 text-[14px]">Music & Vocals</h4>
+                  <h4 className="font-bold text-foreground mb-1 text-[14px]">Music & Vocals</h4>
                   <p className="text-slate-500 text-[12px] leading-relaxed">Instrumental classes, choir, and recording facility.</p>
                 </div>
               </div>
@@ -80,16 +80,16 @@ export default async function StudentLifeCulturalPage() {
 
             {/* Right Column */}
             <div className="space-y-6">
-              <div className="bg-[#0F172A] text-white p-8 rounded-sm shadow-xl relative overflow-hidden">
+              <div className="bg-[var(--sidebar-bg)] text-white p-8 rounded-sm shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500 rounded-full blur-[70px] opacity-20" />
                 <h4 className="text-lg font-serif font-bold mb-4 relative z-10 text-white flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-[#1E3A5F]" />
+                  <Sparkles className="w-5 h-5 text-primary" />
                   Annual Fest & Events
                 </h4>
                 <p className="text-slate-400 text-[13px] leading-relaxed mb-4 relative z-10">
                   Every year, our students organize and host inter-school cultural festivals, art exhibitions, and musical performances that attract participation from all across the region.
                 </p>
-                <div className="text-[12px] text-[#1E3A5F] font-bold tracking-wide border-t border-white/10 pt-4 relative z-10">
+                <div className="text-[12px] text-primary font-bold tracking-wide border-t border-white/10 pt-4 relative z-10">
                   CHORUS &bull; ART MEETS &bull; DEBATE CHAMPIONSHIPS
                 </div>
               </div>
@@ -99,7 +99,7 @@ export default async function StudentLifeCulturalPage() {
           </div>
 
           <div className="mt-16 pt-8 border-t border-slate-100 text-center">
-            <Link href="/student-life" className="inline-flex items-center gap-2 text-[#1E3A5F] font-bold text-[14px] hover:text-[#162C47] transition-colors">
+            <Link href="/student-life" className="inline-flex items-center gap-2 text-primary font-bold text-[14px] hover:text-[var(--primary-hover)] transition-colors">
               &larr; Back to Student Life
             </Link>
           </div>

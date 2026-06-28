@@ -104,11 +104,11 @@ function SectionCard({ section, completeness }: { section: Section; completeness
         {/* Status dot */}
         <div className="absolute top-4 right-4">
           {isComplete ? (
-            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-success bg-success/10 border border-success/20 px-2.5 py-1 rounded-full">
               <CheckCircle2 className="w-3 h-3" /> Complete
             </span>
           ) : isPartial ? (
-            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full">
+            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full">
               <AlertCircle className="w-3 h-3" /> Partial
             </span>
           ) : (
@@ -144,11 +144,11 @@ function SectionCard({ section, completeness }: { section: Section; completeness
         <div className="mb-4">
           <div className="flex justify-between text-[11px] text-slate-500 mb-1.5">
             <span>Completeness</span>
-            <span className={isComplete ? "text-emerald-400" : isPartial ? "text-amber-400" : ""}>{completeness}%</span>
+            <span className={isComplete ? "text-success" : isPartial ? "text-primary" : ""}>{completeness}%</span>
           </div>
           <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
             <div
-              className={`h-full rounded-full transition-all duration-700 ${isComplete ? "bg-emerald-400" : isPartial ? "bg-amber-400" : "bg-slate-600"}`}
+              className={`h-full rounded-full transition-all duration-700 progress-fill ${isComplete ? "!bg-success" : isPartial ? "" : "!bg-slate-600"}`}
               style={{ width: `${completeness}%` }}
             />
           </div>

@@ -48,13 +48,13 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
 
   return (
     <section id="about" className="py-24 bg-slate-50 overflow-hidden relative">
-      <div className="absolute top-0 right-0 w-full sm:w-[500px] h-[500px] bg-[#1E3A5F]/5 rounded-full blur-[100px] -z-10" />
+      <div className="absolute top-0 right-0 w-full sm:w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -z-10" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
 
           {/* Left: Image Grid */}
           <div className="relative">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full sm:w-[120%] h-[120%] bg-[#0F172A]/5 rounded-full -z-10 border border-[#0F172A]/10" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full sm:w-[120%] h-[120%] bg-[var(--sidebar-bg)]/5 rounded-full -z-10 border border-[var(--sidebar-bg)]/10" />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <img
@@ -69,8 +69,8 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
                   className="w-full h-[200px] object-cover rounded-sm shadow-xl"
                 />
                 {/* Year Badge */}
-                <div className="bg-[#0F172A] text-white p-6 rounded-sm shadow-xl flex flex-col items-center justify-center h-[104px] border-b-4 border-[#1E3A5F]">
-                  <span className="text-3xl font-serif font-black text-[#1E3A5F]">{yearsLegacy}</span>
+                <div className="bg-[var(--sidebar-bg)] text-white p-6 rounded-sm shadow-xl flex flex-col items-center justify-center h-[104px] border-b-4 border-primary">
+                  <span className="text-3xl font-serif font-black text-primary">{yearsLegacy}</span>
                   <span className="text-[11px] font-bold opacity-90 uppercase tracking-widest mt-1">Years Legacy</span>
                 </div>
               </div>
@@ -79,10 +79,10 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
 
           {/* Right: Content */}
           <div className="max-w-xl">
-            <h2 className="text-[#1E3A5F] font-bold tracking-widest uppercase text-[12px] mb-3">
+            <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">
               {process.env.NEXT_PUBLIC_SCHOOL_NAME || "About Our School"}
             </h2>
-            <h3 className="text-4xl md:text-5xl font-serif font-bold text-[#0F172A] mb-6 leading-tight">
+            <h3 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
               {tagline}
             </h3>
             <p className="text-[15px] text-slate-600 leading-relaxed mb-8">
@@ -93,7 +93,7 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
             <ul className="space-y-4 mb-10">
               {displayPoints.map((point, idx) => (
                 <li key={idx} className="flex items-start gap-3 text-slate-700 font-medium text-[14px]">
-                  <CheckCircle2 className="w-5 h-5 text-[#1E3A5F] shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                   <span>{point}</span>
                 </li>
               ))}
@@ -101,9 +101,9 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
 
             <a
               href="#contact"
-              className="px-8 py-3.5 rounded-sm bg-[#0F172A] text-white font-bold text-[14px] hover:bg-slate-800 shadow-xl transition-all duration-300 flex items-center gap-2 uppercase tracking-wide w-fit"
+              className="px-8 py-3.5 rounded-sm bg-primary text-white font-bold text-[14px] hover:bg-[var(--primary-hover)] shadow-xl transition-all duration-300 flex items-center gap-2 uppercase tracking-wide w-fit"
             >
-              Learn More <ArrowRight className="w-4 h-4 text-[#1E3A5F]" />
+              Learn More <ArrowRight className="w-4 h-4 text-primary" />
             </a>
           </div>
 

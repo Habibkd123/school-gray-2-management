@@ -128,7 +128,7 @@ export default function TimeTablePage() {
   const isLoading = classesLoading || teachersLoading || schedulesLoading;
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-left">
@@ -136,7 +136,7 @@ export default function TimeTablePage() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/academic" className="hover:text-[#1E3A5F]">Academic</Link>
+            <Link href="/academic" className="hover:text-primary">Academic</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Time Table</span>
           </div>
@@ -160,7 +160,7 @@ export default function TimeTablePage() {
 
           <button
             onClick={() => setIsAddOpen(true)}
-            className="px-4 py-2 bg-[#1E3A5F] hover:bg-[#162C47] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+            className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add Time Table
           </button>
@@ -171,7 +171,7 @@ export default function TimeTablePage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left p-6">
         {isLoading ? (
           <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
-            <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F]" />
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <span>Fetching time table data...</span>
           </div>
         ) : (
@@ -180,7 +180,7 @@ export default function TimeTablePage() {
               {/* Headers */}
               <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4 border-b border-border pb-3">
                 {days.map(day => (
-                  <div key={day} className="font-bold text-[14px] text-[#0F172A] dark:text-slate-100 pl-2">{day}</div>
+                  <div key={day} className="font-bold text-[14px] text-foreground dark:text-slate-100 pl-2">{day}</div>
                 ))}
               </div>
 
@@ -196,8 +196,8 @@ export default function TimeTablePage() {
                         }}
                         className="p-4 text-center text-[12px] text-slate-400 dark:text-slate-600 bg-slate-50/50 dark:bg-slate-800/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors group"
                       >
-                        <Plus className="w-4 h-4 mx-auto mb-1 opacity-50 group-hover:opacity-100 group-hover:text-[#1E3A5F] transition-colors" />
-                        <span className="group-hover:text-[#1E3A5F] transition-colors">Add period</span>
+                        <Plus className="w-4 h-4 mx-auto mb-1 opacity-50 group-hover:opacity-100 group-hover:text-primary transition-colors" />
+                        <span className="group-hover:text-primary transition-colors">Add period</span>
                       </div>
                     ) : (
                       timeTableData.filter(d => d.day === day).map((item, index) => (
@@ -206,13 +206,13 @@ export default function TimeTablePage() {
                             <Clock className="w-3.5 h-3.5" />
                             {item.time}
                           </div>
-                          <div className="text-[13px] font-bold text-[#0F172A] dark:text-slate-100 mb-4">
+                          <div className="text-[13px] font-bold text-foreground dark:text-slate-100 mb-4">
                             Subject: {item.subject}
                           </div>
                           <div className="bg-white/60 dark:bg-slate-900/60 rounded-lg p-2 flex items-center gap-3 hover:bg-white dark:hover:bg-slate-800 transition-colors">
                             <Link href={`/teachers?search=${encodeURIComponent(item.teacher)}`} className="flex items-center gap-3 w-full">
                               <img src={item.img} alt={item.teacher} className="w-8 h-8 rounded-full object-cover border border-white dark:border-slate-700 shadow-sm" />
-                              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 hover:text-[#1E3A5F] transition-colors">{item.teacher}</span>
+                              <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200 hover:text-primary transition-colors">{item.teacher}</span>
                             </Link>
                           </div>
                         </div>
@@ -232,7 +232,7 @@ export default function TimeTablePage() {
           <div className="fixed inset-0 bg-slate-900/50 z-[60] backdrop-blur-sm" onClick={() => setIsAddOpen(false)} />
           <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-full sm:w-[500px] bg-white dark:bg-slate-900 rounded-2xl shadow-xl z-[70] overflow-hidden text-left flex flex-col max-h-[95vh]">
             <div className="flex items-center justify-between p-6 border-b border-border bg-white dark:bg-slate-900">
-              <h2 className="text-xl font-bold text-[#0F172A] dark:text-slate-100">Add Time Table Entry</h2>
+              <h2 className="text-xl font-bold text-foreground dark:text-slate-100">Add Time Table Entry</h2>
               <button onClick={() => setIsAddOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-500 dark:text-slate-400 transition-colors cursor-pointer">
                 ✕
               </button>
@@ -245,7 +245,7 @@ export default function TimeTablePage() {
                   <select
                     value={formClassId}
                     onChange={(e) => setFormClassId(e.target.value)}
-                    className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                    className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                     required
                   >
                     {classes.map(c => (
@@ -264,7 +264,7 @@ export default function TimeTablePage() {
                   <select
                     value={formSubject}
                     onChange={(e) => setFormSubject(e.target.value)}
-                    className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                    className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                     required
                   >
                     <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Select Subject</option>
@@ -284,7 +284,7 @@ export default function TimeTablePage() {
                   <select
                     value={formTeacherId}
                     onChange={(e) => setFormTeacherId(e.target.value)}
-                    className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                    className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                     required
                   >
                     {teachers.map(t => (
@@ -303,7 +303,7 @@ export default function TimeTablePage() {
                   <select
                     value={formDay}
                     onChange={(e) => setFormDay(e.target.value)}
-                    className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                    className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
                     required
                   >
                     {days.map(d => (
@@ -339,7 +339,7 @@ export default function TimeTablePage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 bg-[#1E3A5F] text-white text-[14px] font-bold rounded-lg hover:bg-[#162C47] transition-colors shadow-sm cursor-pointer"
+                  className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer"
                 >
                   Add Entry
                 </button>
@@ -393,7 +393,7 @@ function TimePicker({ value, onChange }: TimePickerProps) {
         <select
           value={currentHour}
           onChange={(e) => handleHourChange(e.target.value)}
-          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
         >
           {hours.map((h) => (
             <option key={h} value={h}>
@@ -410,7 +410,7 @@ function TimePicker({ value, onChange }: TimePickerProps) {
         <select
           value={currentMinute}
           onChange={(e) => handleMinuteChange(e.target.value)}
-          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
         >
           {minutes.map((m) => (
             <option key={m} value={m}>
@@ -425,7 +425,7 @@ function TimePicker({ value, onChange }: TimePickerProps) {
         <select
           value={currentPeriod}
           onChange={(e) => handlePeriodChange(e.target.value)}
-          className="w-full pl-3 pr-7 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F] transition-colors appearance-none text-slate-700 dark:text-slate-200 font-semibold cursor-pointer"
+          className="w-full pl-3 pr-7 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 font-semibold cursor-pointer"
         >
           {periods.map((p) => (
             <option key={p} value={p}>

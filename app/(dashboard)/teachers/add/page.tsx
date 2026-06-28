@@ -40,10 +40,10 @@ function ImageUploader({
       <div
         onClick={() => !uploading && ref.current?.click()}
         className={`w-full ${isLandscape ? "h-36" : "h-32 w-32"
-          } bg-[#F1F5F9] dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 overflow-hidden relative cursor-pointer hover:border-[#1E3A5F]/70 hover:bg-[#1E3A5F]/5 transition-all group`}
+          } bg-[#F1F5F9] dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 overflow-hidden relative cursor-pointer hover:border-primary/70 hover:bg-primary/5 transition-all group`}
       >
         {uploading ? (
-          <Loader2 className="w-7 h-7 animate-spin text-[#1E3A5F]" />
+          <Loader2 className="w-7 h-7 animate-spin text-primary" />
         ) : preview ? (
           <img src={preview} alt={label} className="w-full h-full object-cover" />
         ) : (
@@ -98,10 +98,10 @@ function PhotoUploader({
       />
       <div
         onClick={() => !uploading && ref.current?.click()}
-        className="w-32 h-32 bg-[#F1F5F9] dark:bg-slate-800 border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3 overflow-hidden relative cursor-pointer hover:border-[#1E3A5F]/60 transition-colors"
+        className="w-32 h-32 bg-[#F1F5F9] dark:bg-slate-800 border-2 border-dashed border-slate-300 rounded-2xl flex items-center justify-center text-slate-400 dark:text-slate-500 mb-3 overflow-hidden relative cursor-pointer hover:border-primary/60 transition-colors"
       >
         {uploading ? (
-          <Loader2 className="w-8 h-8 animate-spin text-[#1E3A5F]" />
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         ) : preview ? (
           <img src={preview} alt="preview" className="w-full h-full object-cover" />
         ) : (
@@ -160,7 +160,7 @@ function TagInput({ tags, onChange, placeholder }: { tags: string[]; onChange: (
         placeholder={placeholder || "Type and press Enter"}
         className="flex-1 min-w-full sm:w-[120px] text-[12px] outline-none bg-transparent text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
       />
-      <button type="button" onClick={add} className="text-[11px] px-2 py-0.5 bg-[#1E3A5F] text-white rounded font-semibold hover:bg-[#162C47] transition-colors">Add</button>
+      <button type="button" onClick={add} className="text-[11px] px-2 py-0.5 bg-primary text-white rounded font-semibold hover:bg-[var(--primary-hover)] transition-colors">Add</button>
     </div>
   );
 }
@@ -198,7 +198,7 @@ function SubjectSpecializationInput({
         {/* Dropdown for existing catalog */}
         <div className="relative flex-1">
           <select
-            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F]/50 transition-all appearance-none cursor-pointer"
+            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
             value="Select Subject"
             onChange={handleSelectChange}
           >
@@ -266,7 +266,7 @@ function InputGroup({
       {type === "select" ? (
         <div className="relative">
           <select
-            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F]/50 transition-all appearance-none cursor-pointer disabled:opacity-60"
+            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer disabled:opacity-60"
             value={value}
             onChange={onChange}
             disabled={disabled}
@@ -290,7 +290,7 @@ function InputGroup({
             onChange={onChange}
             required={required}
             disabled={disabled}
-            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F]/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           />
           {datalistOptions && (
             <datalist id={`${label.replace(/\s+/g, '-')}-list`}>
@@ -488,7 +488,7 @@ function AddTeacherContent() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
@@ -496,7 +496,7 @@ function AddTeacherContent() {
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/teachers" className="hover:text-[#1E3A5F]">Teachers</Link>
+            <Link href="/teachers" className="hover:text-primary">Teachers</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">{editId ? "Edit Teacher" : "Add Teacher"}</span>
           </div>
@@ -630,7 +630,7 @@ function AddTeacherContent() {
                 placeholder="Enter full address"
                 value={address}
                 onChange={e => setAddress(e.target.value)}
-                className="w-full h-20 px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-[#1E3A5F]/50 transition-all resize-none"
+                className="w-full h-20 px-3.5 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all resize-none"
               />
             </div>
           </div>
@@ -668,7 +668,7 @@ function AddTeacherContent() {
           <button
             type="submit"
             disabled={isSubmitting || uploadingPhoto || uploadingAadhaarFront || uploadingAadhaarBack}
-            className="px-6 py-2.5 bg-[#1E3A5F] hover:bg-[#162C47] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
+            className="px-6 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
@@ -685,8 +685,8 @@ function AddTeacherContent() {
           <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-border animate-in fade-in zoom-in-95 duration-300">
             {/* Header */}
             <div className="flex items-center gap-3 p-5 border-b border-border">
-              <div className="w-10 h-10 rounded-xl bg-[#1E3A5F]/10 flex items-center justify-center">
-                <Lock className="w-5 h-5 text-[#1E3A5F]" />
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Lock className="w-5 h-5 text-primary" />
               </div>
               <div>
                 <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">Teacher Created Successfully! 🎉</h2>
@@ -703,7 +703,7 @@ function AddTeacherContent() {
                   <span className="text-[13px] font-bold text-slate-900 dark:text-white font-mono break-all">{createdCredentials.loginId}</span>
                   <button
                     onClick={() => handleCopyCredential(createdCredentials.loginId, "loginId")}
-                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-[#1E3A5F]/10 hover:bg-[#1E3A5F]/20 text-[#1E3A5F] transition-colors"
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
                     title="Copy Login ID"
                   >
                     {copiedField === "loginId" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
@@ -720,7 +720,7 @@ function AddTeacherContent() {
                   <span className="text-[13px] font-bold text-slate-900 dark:text-white font-mono">{createdCredentials.password}</span>
                   <button
                     onClick={() => handleCopyCredential(createdCredentials.password, "password")}
-                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-[#1E3A5F]/10 hover:bg-[#1E3A5F]/20 text-[#1E3A5F] transition-colors"
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
                     title="Copy Password"
                   >
                     {copiedField === "password" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}

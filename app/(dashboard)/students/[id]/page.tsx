@@ -306,17 +306,17 @@ function StudentViewContent() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[#0F172A] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
-          <h1 className="text-[20px] leading-[24px] font-semibold text-[#0F172A] dark:text-slate-100">Student Details</h1>
+          <h1 className="text-[20px] leading-[24px] font-semibold text-foreground dark:text-slate-100">Student Details</h1>
           <div className="flex items-center gap-2 text-[14px] leading-[21px] text-[#68718a] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/students" className="hover:text-[#F59E0B]">Student</Link>
+            <Link href="/students" className="hover:text-primary">Student</Link>
             <span>/</span>
-            <span className="text-[#0F172A] dark:text-slate-100 font-normal">Student Details</span>
+            <span className="text-foreground dark:text-slate-100 font-normal">Student Details</span>
           </div>
         </div>
 
@@ -343,7 +343,7 @@ function StudentViewContent() {
           </button>
           <button
             onClick={() => router.push(`/students/add?edit=${student._id}`)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+            className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
           >
             <Edit className="w-3.5 h-3.5" />
             <span>Edit Student</span>
@@ -360,13 +360,13 @@ function StudentViewContent() {
             <div className="flex items-center gap-4">
               <img src={student.photo_url || getAvatar(student.name)} className="w-full sm:w-[60px] h-[60px] rounded-xl object-cover border border-slate-200 dark:border-slate-800" alt="Avatar" />
               <div>
-                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-bold bg-[#E8F8E8] text-[#1D7F2C] mb-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#1DD04A]" />
+                <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-bold bg-success/10 text-success mb-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success" />
                   Active
                 </div>
-                <h2 className="text-[16px] leading-[19.2px] font-medium text-[#0F172A] dark:text-slate-100">{student.name}</h2>
+                <h2 className="text-[16px] leading-[19.2px] font-medium text-foreground dark:text-slate-100">{student.name}</h2>
                 <p className="text-[12px] text-slate-500 font-medium mt-0.5">{getClassName(student.class_id)}</p>
-                <p className="text-[12px] text-[#F59E0B] font-bold mt-0.5">{student.admission_no || "No Admission No"}</p>
+                <p className="text-[12px] text-primary font-bold mt-0.5">{student.admission_no || "No Admission No"}</p>
               </div>
             </div>
           </div>
@@ -374,7 +374,7 @@ function StudentViewContent() {
           {/* Basic Information */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl overflow-hidden card-shadow text-left">
             <div className="px-4 py-3 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
-              <h3 className="text-[16px] leading-[19.2px] font-medium text-[#0F172A] dark:text-slate-100">Basic Information</h3>
+              <h3 className="text-[16px] leading-[19.2px] font-medium text-foreground dark:text-slate-100">Basic Information</h3>
             </div>
             <div className="p-4 text-[12px]">
               <div className="space-y-3.5">
@@ -388,7 +388,7 @@ function StudentViewContent() {
                 <InfoRow label="Category" value={student.category || "—"} />
                 <InfoRow label="Mother tongue" value={student.mother_tongue || "—"} />
                 <div className="flex justify-between py-1">
-                  <span className="text-[14px] leading-[21px] font-medium text-[#0F172A] dark:text-slate-100">Language</span>
+                  <span className="text-[14px] leading-[21px] font-medium text-foreground dark:text-slate-100">Language</span>
                   <div className="flex gap-1.5 flex-wrap justify-end">
                     {student.languages && student.languages.length > 0 ? (
                       student.languages.map((lang, idx) => (
@@ -400,7 +400,7 @@ function StudentViewContent() {
                   </div>
                 </div>
               </div>
-              <button onClick={() => setIsFeesModalOpen(true)} className="w-full mt-5 py-2 bg-[#F59E0B] hover:bg-[#D97706] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors">
+              <button onClick={() => setIsFeesModalOpen(true)} className="w-full mt-5 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors">
                 Add Fees
               </button>
             </div>
@@ -463,13 +463,13 @@ function StudentViewContent() {
             <div className="flex border-b border-border">
               <button
                 onClick={() => setBottomTab("Hostel")}
-                className={`flex-1 py-2.5 text-[12px] font-bold transition-colors ${bottomTab === "Hostel" ? "text-[#F59E0B] border-b-2 border-[#F59E0B]" : "text-slate-500 dark:text-slate-400"}`}
+                className={`flex-1 py-2.5 text-[12px] font-bold transition-colors ${bottomTab === "Hostel" ? "text-primary border-b-2 border-primary" : "text-slate-500 dark:text-slate-400"}`}
               >
                 Hostel
               </button>
               <button
                 onClick={() => setBottomTab("Transportation")}
-                className={`flex-1 py-2.5 text-[12px] font-bold transition-colors ${bottomTab === "Transportation" ? "text-[#F59E0B] border-b-2 border-[#F59E0B]" : "text-slate-500 dark:text-slate-400"}`}
+                className={`flex-1 py-2.5 text-[12px] font-bold transition-colors ${bottomTab === "Transportation" ? "text-primary border-b-2 border-primary" : "text-slate-500 dark:text-slate-400"}`}
               >
                 Transportation
               </button>
@@ -477,8 +477,8 @@ function StudentViewContent() {
             <div className="p-4">
               {bottomTab === "Hostel" ? (
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#F59E0B]/10 flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-3.5 h-3.5 text-[#F59E0B]" />
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-3.5 h-3.5 text-primary" />
                   </div>
                   <div>
                     <p className="text-[12px] font-bold text-slate-900 dark:text-white">Not Assigned</p>
@@ -487,8 +487,8 @@ function StudentViewContent() {
                 </div>
               ) : (
                 <div className="flex flex-wrap items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#F59E0B]/10 flex items-center justify-center flex-shrink-0">
-                    <Bus className="w-3.5 h-3.5 text-[#F59E0B]" />
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Bus className="w-3.5 h-3.5 text-primary" />
                   </div>
                   <div>
                     <p className="text-[12px] font-bold text-slate-900 dark:text-white">Not Assigned</p>
@@ -774,12 +774,12 @@ function StudentViewContent() {
                     <select className="border border-border rounded px-2 py-1 outline-none bg-white dark:bg-slate-900 font-bold text-slate-700 dark:text-slate-200"><option>10</option></select>
                     <span>Entries</span>
                   </div>
-                  <input type="text" placeholder="Search" className="px-3 py-1.5 border border-border rounded-lg text-[12px] outline-none w-full sm:w-64 focus:border-[#F59E0B]/50 transition-colors" />
+                  <input type="text" placeholder="Search" className="px-3 py-1.5 border border-border rounded-lg text-[12px] outline-none w-full sm:w-64 focus:border-primary/50 transition-colors" />
                 </div>
 
                 <div className="overflow-x-auto custom-scrollbar">
                   <table className="w-full text-left text-[12px] min-w-full sm:w-[900px]">
-                    <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] text-slate-700 dark:text-slate-200 border-b border-border font-bold">
+                    <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border font-bold">
                       <tr>
                         <th className="px-5 py-3 whitespace-nowrap">Fees Group</th>
                         <th className="px-5 py-3 whitespace-nowrap">Fees Code</th>
@@ -794,7 +794,7 @@ function StudentViewContent() {
                     </thead>
                     <tbody className="divide-y divide-border text-slate-600 dark:text-slate-300 font-medium">
                       {/* Total Row */}
-                      <tr className="bg-[#0F172A] text-white">
+                      <tr className="bg-[var(--sidebar-bg)] text-white">
                         <td className="px-5 py-3">Total Outstanding</td>
                         <td className="px-5 py-3"></td>
                         <td className="px-5 py-3"></td>
@@ -922,13 +922,13 @@ function StudentViewContent() {
                   {/* Breaks Section */}
                   <div className="flex items-center gap-5 mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/50">
                     <div className="flex-1 p-3 rounded-xl border border-slate-100 dark:border-slate-800/50 flex flex-col gap-1.5">
-                      <span className="px-2.5 py-0.5 bg-[#F59E0B] text-white text-[10px] font-bold rounded self-start">Morning Break</span>
+                      <span className="px-2.5 py-0.5 bg-primary text-white text-[10px] font-bold rounded self-start">Morning Break</span>
                       <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1">
                         <Clock className="w-3.5 h-3.5" /> 10:30 to 10:45 AM
                       </div>
                     </div>
                     <div className="flex-1 p-3 rounded-xl border border-slate-100 dark:border-slate-800/50 flex flex-col gap-1.5">
-                      <span className="px-2.5 py-0.5 bg-[#F59E0B] text-white text-[10px] font-bold rounded self-start">Lunch</span>
+                      <span className="px-2.5 py-0.5 bg-primary text-white text-[10px] font-bold rounded self-start">Lunch</span>
                       <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1">
                         <Clock className="w-3.5 h-3.5" /> 12:15 to 01:30 PM
                       </div>
@@ -953,13 +953,13 @@ function StudentViewContent() {
               <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-1 flex items-center gap-1 w-fit card-shadow">
                 <button
                   onClick={() => setAttendanceSubTab("Leaves")}
-                  className={`px-5 py-1.5 text-[12px] font-bold rounded-lg transition-colors ${attendanceSubTab === "Leaves" ? "bg-[#F59E0B] text-white" : "text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:border-slate-800"}`}
+                  className={`px-5 py-1.5 text-[12px] font-bold rounded-lg transition-colors ${attendanceSubTab === "Leaves" ? "bg-primary text-white" : "text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:border-slate-800"}`}
                 >
                   Leaves
                 </button>
                 <button
                   onClick={() => setAttendanceSubTab("Attendance")}
-                  className={`px-5 py-1.5 text-[12px] font-bold rounded-lg transition-colors ${attendanceSubTab === "Attendance" ? "bg-[#F59E0B] text-white" : "text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:border-slate-800"}`}
+                  className={`px-5 py-1.5 text-[12px] font-bold rounded-lg transition-colors ${attendanceSubTab === "Attendance" ? "bg-primary text-white" : "text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-slate-200 dark:border-slate-800"}`}
                 >
                   Attendance
                 </button>
@@ -980,7 +980,7 @@ function StudentViewContent() {
                   <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
                     <div className="p-4 border-b border-border flex items-center justify-between">
                       <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Leaves</h3>
-                      <button onClick={() => setIsLeaveModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 bg-[#F59E0B] text-white rounded-lg text-[12px] font-bold shadow-sm hover:bg-[#D97706] transition-colors">
+                      <button onClick={() => setIsLeaveModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg text-[12px] font-bold shadow-sm hover:bg-[var(--primary-hover)] transition-colors">
                         <Calendar className="w-3.5 h-3.5" /> Apply Leave
                       </button>
                     </div>
@@ -996,13 +996,13 @@ function StudentViewContent() {
                         placeholder="Search Leaves..."
                         value={leaveSearch}
                         onChange={(e) => setLeaveSearch(e.target.value)}
-                        className="px-3 py-1.5 border border-border rounded-lg text-[12px] outline-none w-full sm:w-64 focus:border-[#F59E0B]/50 transition-colors"
+                        className="px-3 py-1.5 border border-border rounded-lg text-[12px] outline-none w-full sm:w-64 focus:border-primary/50 transition-colors"
                       />
                     </div>
 
                     <div className="overflow-x-auto">
                       <table className="w-full text-left text-[12px]">
-                        <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] text-slate-700 dark:text-slate-200 border-b border-border font-bold">
+                        <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border font-bold">
                           <tr>
                             <th className="px-5 py-3">Leave Type</th>
                             <th className="px-5 py-3">Leave Date</th>
@@ -1038,7 +1038,7 @@ function StudentViewContent() {
 
                     <div className="p-3 flex items-center justify-end gap-2 text-[12px] font-bold border-t border-border">
                       <button className="px-2 py-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors">Prev</button>
-                      <button className="w-6 h-6 rounded bg-[#F59E0B] text-white flex items-center justify-center shadow-sm">1</button>
+                      <button className="w-6 h-6 rounded bg-primary text-white flex items-center justify-center shadow-sm">1</button>
                       <button className="px-2 py-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:text-white transition-colors">Next</button>
                     </div>
                   </div>
@@ -1066,9 +1066,9 @@ function StudentViewContent() {
                     </div>
                     <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                       <AttSumCard title="Present" value={String(attendanceSummary.present)} icon={<User className="w-4 h-4 text-[#10B981]" />} iconBg="bg-[#10B981]/10" />
-                      <AttSumCard title="Absent" value={String(attendanceSummary.absent)} icon={<User className="w-4 h-4 text-[#FF4A6B]" />} iconBg="bg-[#FF4A6B]/10" />
+                      <AttSumCard title="Absent" value={String(attendanceSummary.absent)} icon={<User className="w-4 h-4 text-danger" />} iconBg="bg-danger/10" />
                       <AttSumCard title="Half Day" value={String(attendanceSummary.half_day)} icon={<User className="w-4 h-4 text-[#3B82F6]" />} iconBg="bg-[#3B82F6]/10" />
-                      <AttSumCard title="Late" value={String(attendanceSummary.late)} icon={<User className="w-4 h-4 text-[#F59E0B]" />} iconBg="bg-[#F59E0B]/10" />
+                      <AttSumCard title="Late" value={String(attendanceSummary.late)} icon={<User className="w-4 h-4 text-primary" />} iconBg="bg-primary/10" />
                     </div>
                   </div>
 
@@ -1088,7 +1088,7 @@ function StudentViewContent() {
 
                     <div className="overflow-x-auto custom-scrollbar">
                       <table className="w-full text-left text-[12px] min-w-full sm:w-[800px]">
-                        <thead className="bg-[#F8FAFC] dark:bg-[#0F172A] text-slate-700 dark:text-slate-200 border-b border-border font-bold">
+                        <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border font-bold">
                           <tr>
                             <th className="px-4 py-3 whitespace-nowrap">Date | Month</th>
                             {["Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr"].map(m => (
@@ -1166,14 +1166,14 @@ function StudentViewContent() {
             <div className="flex items-center justify-between p-5 border-b border-border">
               <div className="flex flex-wrap items-center gap-3">
                 <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">Collect Fees</h2>
-                <span className="px-2 py-0.5 bg-[#F59E0B] text-white text-[10px] font-bold rounded">{student.admission_no || "No Admission No"}</span>
+                <span className="px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded">{student.admission_no || "No Admission No"}</span>
               </div>
               <button onClick={() => setIsFeesModalOpen(false)} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 transition-colors">
                 <X className="w-4 h-4" />
               </button>
             </div>
             <div className="p-6">
-              <div className="flex items-center justify-between bg-[#F8FAFC] dark:bg-[#0F172A] rounded-xl p-4 mb-6 border border-slate-100 dark:border-slate-800/50">
+              <div className="flex items-center justify-between bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] rounded-xl p-4 mb-6 border border-slate-100 dark:border-slate-800/50">
                 <div className="flex flex-wrap items-center gap-3">
                   <img src={student.photo_url || getAvatar(student.name)} className="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-slate-850" alt="Avatar" />
                   <div>
@@ -1192,8 +1192,8 @@ function StudentViewContent() {
                   <p className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400">${totalPaidAmount}</p>
                 </div>
                 <div>
-                  <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold ${totalPendingDues === 0 ? "bg-[#E8F8E8] text-[#1D7F2C]" : "bg-[#FFF0F2] text-[#FF4A6B]"}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${totalPendingDues === 0 ? "bg-[#1DD04A]" : "bg-[#FF4A6B]"}`} /> {totalPendingDues === 0 ? "Paid" : "Pending"}
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[10px] font-bold ${totalPendingDues === 0 ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${totalPendingDues === 0 ? "bg-success" : "bg-danger"}`} /> {totalPendingDues === 0 ? "Paid" : "Pending"}
                   </span>
                 </div>
               </div>
@@ -1225,7 +1225,7 @@ function StudentViewContent() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[12px] font-bold text-slate-900 dark:text-white">Amount ($)</label>
-                  <input type="number" placeholder="Enter Amount" className="px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none focus:border-[#F59E0B]/50 transition-colors bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100" />
+                  <input type="number" placeholder="Enter Amount" className="px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none focus:border-primary/50 transition-colors bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100" />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[12px] font-bold text-slate-900 dark:text-white">Collection Date</label>
@@ -1247,20 +1247,20 @@ function StudentViewContent() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[12px] font-bold text-slate-900 dark:text-white">Payment Reference No</label>
-                  <input type="text" placeholder="Enter Payment Reference No" className="px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none focus:border-[#F59E0B]/50 transition-colors bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100" />
+                  <input type="text" placeholder="Enter Payment Reference No" className="px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none focus:border-primary/50 transition-colors bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100" />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5 mb-6 text-left">
                 <label className="text-[12px] font-bold text-slate-900 dark:text-white">Notes</label>
-                <textarea rows={3} placeholder="Add Notes" className="px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none focus:border-[#F59E0B]/50 transition-colors resize-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"></textarea>
+                <textarea rows={3} placeholder="Add Notes" className="px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none focus:border-primary/50 transition-colors resize-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"></textarea>
               </div>
 
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button onClick={() => setIsFeesModalOpen(false)} className="px-5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-bold rounded-lg hover:bg-slate-200 transition-colors">
                   Cancel
                 </button>
-                <button onClick={() => { alert("Fee payment processing is managed via fee collection dashboards."); setIsFeesModalOpen(false); }} className="px-5 py-2 bg-[#F59E0B] text-white text-[13px] font-bold rounded-lg hover:bg-[#D97706] shadow-sm transition-colors">
+                <button onClick={() => { alert("Fee payment processing is managed via fee collection dashboards."); setIsFeesModalOpen(false); }} className="px-5 py-2 bg-primary text-white text-[13px] font-bold rounded-lg hover:bg-[var(--primary-hover)] shadow-sm transition-colors">
                   Pay Fees
                 </button>
               </div>
@@ -1327,7 +1327,7 @@ function StudentViewContent() {
                 <div className="flex items-center gap-4">
                   {["Full Day", "First Half", "Second Half"].map((choice) => (
                     <label key={choice} className="flex items-center gap-2 cursor-pointer" onClick={() => setLeaveDaysChoice(choice)}>
-                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${leaveDaysChoice === choice ? "border-[#F59E0B] border-4" : "border-slate-300"} bg-white dark:bg-slate-900 shadow-sm`} />
+                      <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${leaveDaysChoice === choice ? "border-primary border-4" : "border-slate-300"} bg-white dark:bg-slate-900 shadow-sm`} />
                       <span className="text-[13px] font-medium text-slate-700 dark:text-slate-200">{choice}</span>
                     </label>
                   ))}
@@ -1350,7 +1350,7 @@ function StudentViewContent() {
                   rows={2}
                   value={leaveReason}
                   onChange={(e) => setLeaveReason(e.target.value)}
-                  className="px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none focus:border-[#F59E0B]/50 transition-colors resize-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  className="px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none focus:border-primary/50 transition-colors resize-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
                   required
                 ></textarea>
               </div>
@@ -1359,7 +1359,7 @@ function StudentViewContent() {
                 <button type="button" onClick={() => setIsLeaveModalOpen(false)} className="px-5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-bold rounded-lg hover:bg-slate-200 transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={isSubmittingLeave} className="px-5 py-2 bg-[#F59E0B] text-white text-[13px] font-bold rounded-lg hover:bg-[#D97706] shadow-sm transition-colors flex items-center gap-2">
+                <button type="submit" disabled={isSubmittingLeave} className="px-5 py-2 bg-primary text-white text-[13px] font-bold rounded-lg hover:bg-[var(--primary-hover)] shadow-sm transition-colors flex items-center gap-2">
                   {isSubmittingLeave && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Apply Leave</span>
                 </button>
@@ -1377,7 +1377,7 @@ function StudentViewContent() {
 function InfoRow({ label, value }: { label: string, value: string }) {
   return (
     <div className="flex justify-between py-1 border-b border-slate-50 last:border-0">
-      <span className="text-[14px] leading-[21px] font-medium text-[#0F172A] dark:text-slate-100">{label}</span>
+      <span className="text-[14px] leading-[21px] font-medium text-foreground dark:text-slate-100">{label}</span>
       <span className="text-[14px] leading-[21px] font-normal text-[#6a7287]">{value}</span>
     </div>
   );
@@ -1385,7 +1385,7 @@ function InfoRow({ label, value }: { label: string, value: string }) {
 
 function TabItem({ icon, label, active, onClick }: { icon: React.ReactNode, label: string, active: boolean, onClick: () => void }) {
   return (
-    <div onClick={onClick} className={`flex flex-col items-center gap-2 px-5 py-2.5 cursor-pointer whitespace-nowrap transition-colors border-b-2 ${active ? "border-[#F59E0B] text-[#F59E0B]" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+    <div onClick={onClick} className={`flex flex-col items-center gap-2 px-5 py-2.5 cursor-pointer whitespace-nowrap transition-colors border-b-2 ${active ? "border-primary text-primary" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
       <div className="flex items-center gap-1.5">
         {icon}
         <span className="text-[12px] font-bold">{label}</span>
@@ -1402,7 +1402,7 @@ function ParentRow({ name, role, phone, email, hideBorder = false, onViewLogin, 
         <img src={getAvatar(name)} className="w-10 h-10 rounded-lg object-cover" />
         <div>
           <p className="text-[12px] font-bold text-slate-900 dark:text-white mb-0.5">{name}</p>
-          <p className="text-[11px] text-[#F59E0B] font-bold">{role}</p>
+          <p className="text-[11px] text-primary font-bold">{role}</p>
         </div>
       </div>
       <div className="w-32 text-left">
@@ -1464,13 +1464,13 @@ function DocRow({ title, url }: { title: string, url?: string }) {
 function FeeRow({ group, code, due, amount, status, refId, mode, paid, discount }: any) {
   return (
     <tr className="hover:bg-slate-50/50 dark:bg-slate-800/50 transition-colors">
-      <td className="px-5 py-3 text-[#F59E0B] hover:underline cursor-pointer">{group}</td>
+      <td className="px-5 py-3 text-primary hover:underline cursor-pointer">{group}</td>
       <td className="px-5 py-3">{code}</td>
       <td className="px-5 py-3">{due}</td>
       <td className="px-5 py-3">{amount}</td>
       <td className="px-5 py-3">
-        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-[#E8F8E8] text-[#1D7F2C]">
-          <span className="w-1 h-1 rounded-full bg-[#1DD04A]" /> {status}
+        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-success/10 text-success">
+          <span className="w-1 h-1 rounded-full bg-success" /> {status}
         </span>
       </td>
       <td className="px-5 py-3">{refId}</td>
@@ -1531,7 +1531,7 @@ function ExamCard({ title, initiallyExpanded, results = [] }: { title: string, i
               </tbody>
             </table>
           </div>
-          <div className="mt-4 bg-[#0F172A] text-white rounded-lg p-4 flex flex-wrap items-center justify-between gap-4 text-[12px] font-bold shadow-md">
+          <div className="mt-4 bg-[var(--sidebar-bg)] text-white rounded-lg p-4 flex flex-wrap items-center justify-between gap-4 text-[12px] font-bold shadow-md">
             <div className="flex gap-8">
               <span>Total : {totalMaxMarks}</span>
               <span>Marks Obtained : {totalObtainedMarks}</span>
@@ -1556,12 +1556,12 @@ function ExamRow({ subject, max, min, obtained, isPass }: { subject: string, max
       <td className="py-3 px-4">{obtained}</td>
       <td className="py-3 px-4 text-right">
         {isPass ? (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#E8F8E8] text-[#1D7F2C]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#1DD04A] mr-1.5" /> Pass
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-success/10 text-success">
+            <span className="w-1.5 h-1.5 rounded-full bg-success mr-1.5" /> Pass
           </span>
         ) : (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF0F2] text-[#FF4A6B]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FF4A6B] mr-1.5" /> Fail
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-danger/10 text-danger">
+            <span className="w-1.5 h-1.5 rounded-full bg-danger mr-1.5" /> Fail
           </span>
         )}
       </td>
@@ -1590,12 +1590,12 @@ function LeaveRow({ type, date, days, applied, status }: { type: string, date: s
       <td className="px-5 py-3">{applied}</td>
       <td className="px-5 py-3">
         {status === "Approved" ? (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-[#E8F8E8] text-[#1D7F2C]">
-            <span className="w-1 h-1 rounded-full bg-[#1DD04A]" /> Approved
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-success/10 text-success">
+            <span className="w-1 h-1 rounded-full bg-success" /> Approved
           </span>
         ) : status === "Rejected" ? (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-[#FFF0F2] text-[#FF4A6B]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#FF4A6B]" /> Rejected
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-danger/10 text-danger">
+            <span className="w-1.5 h-1.5 rounded-full bg-danger" /> Rejected
           </span>
         ) : (
           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-[#E0F2FE] text-[#0284C7]">

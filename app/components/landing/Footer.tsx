@@ -1,15 +1,19 @@
+"use client";
+
 import React from "react";
 import { MapPin, Phone, Mail, ExternalLink } from "lucide-react";
+import { usePublicSchoolInfo } from "@/app/hooks/usePublicSchoolInfo";
 
 export function Footer() {
+  const { schoolInfo } = usePublicSchoolInfo();
   return (
     <footer className="bg-[#231F20] text-[#CCCCCC]">
       
       {/* ── Red Top Bar ─────────────────────────────────── */}
-      <div className="w-full h-1 bg-[#1E3A5F]" />
+      <div className="w-full h-1 bg-[var(--primary)]" />
 
       {/* ── Pre-Footer CTA Strip ─────────────────────────── */}
-      <div className="bg-[#1E3A5F] py-6">
+      <div className="bg-[var(--primary)] py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <div className="text-[11px] font-bold text-white/70 uppercase tracking-widest mb-1">
@@ -35,14 +39,16 @@ export function Footer() {
           {/* Brand Column */}
           <div className="col-span-1">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-white shrink-0 flex items-center justify-center p-1 border-2 border-[#1E3A5F]">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-white shrink-0 flex items-center justify-center p-1 border-2 border-[var(--primary)]">
                 <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">
                 <span className="text-[20px] font-black tracking-tight text-white leading-none">
-                  MySchoolLife
+                  {schoolInfo.school_name}
                 </span>
-                <span className="text-[10px] font-bold tracking-widest text-[#1E3A5F] uppercase">Public School</span>
+                <span className="text-[10px] font-bold tracking-widest text-[var(--primary)] uppercase">
+                  {schoolInfo.school_subtitle}
+                </span>
               </div>
             </div>
             <p className="leading-relaxed mb-5 text-[13px] text-[#999999]">
@@ -53,7 +59,7 @@ export function Footer() {
             {/* Social Icons */}
             <div className="flex items-center gap-3">
               {[FacebookIcon, TwitterIcon, InstagramIcon, LinkedinIcon].map((Icon, i) => (
-                <a key={i} href="#" className="w-9 h-9 rounded-sm bg-[#07070A] border border-[#5C5D5D] flex items-center justify-center hover:bg-[#1E3A5F] hover:border-[#1E3A5F] transition-all duration-300">
+                <a key={i} href="#" className="w-9 h-9 rounded-sm bg-[#07070A] border border-[#5C5D5D] flex items-center justify-center hover:bg-[var(--primary)] hover:border-[var(--primary)] transition-all duration-300">
                   <Icon className="w-4 h-4" />
                 </a>
               ))}
@@ -63,7 +69,7 @@ export function Footer() {
           {/* Quick Links */}
           <div>
             <h4 className="font-black text-white mb-5 text-[14px] uppercase tracking-wider flex items-center gap-2">
-              <span className="w-4 h-0.5 bg-[#1E3A5F] inline-block" />
+              <span className="w-4 h-0.5 bg-[var(--primary)] inline-block" />
               Quick Links
             </h4>
             <ul className="space-y-2.5 text-[13px]">
@@ -73,8 +79,8 @@ export function Footer() {
                 "Transfer Certificate List", "Student Login",
               ].map((link) => (
                 <li key={link}>
-                  <a href="#" className="flex items-center gap-2 text-[#999999] hover:text-[#1E3A5F] transition-colors group">
-                    <span className="w-1 h-1 rounded-full bg-[#1E3A5F] group-hover:w-2 transition-all" />
+                  <a href="#" className="flex items-center gap-2 text-[#999999] hover:text-[var(--primary)] transition-colors group">
+                    <span className="w-1 h-1 rounded-full bg-[var(--primary)] group-hover:w-2 transition-all" />
                     {link}
                   </a>
                 </li>
@@ -85,7 +91,7 @@ export function Footer() {
           {/* Academics */}
           <div>
             <h4 className="font-black text-white mb-5 text-[14px] uppercase tracking-wider flex items-center gap-2">
-              <span className="w-4 h-0.5 bg-[#1E3A5F] inline-block" />
+              <span className="w-4 h-0.5 bg-[var(--primary)] inline-block" />
               Academics
             </h4>
             <ul className="space-y-2.5 text-[13px]">
@@ -95,8 +101,8 @@ export function Footer() {
                 "Senior Secondary Wing", "Sports & Co-curricular",
               ].map((link) => (
                 <li key={link}>
-                  <a href="#" className="flex items-center gap-2 text-[#999999] hover:text-[#1E3A5F] transition-colors group">
-                    <span className="w-1 h-1 rounded-full bg-[#1E3A5F] group-hover:w-2 transition-all" />
+                  <a href="#" className="flex items-center gap-2 text-[#999999] hover:text-[var(--primary)] transition-colors group">
+                    <span className="w-1 h-1 rounded-full bg-[var(--primary)] group-hover:w-2 transition-all" />
                     {link}
                   </a>
                 </li>
@@ -107,20 +113,20 @@ export function Footer() {
           {/* Contact */}
           <div>
             <h4 className="font-black text-white mb-5 text-[14px] uppercase tracking-wider flex items-center gap-2">
-              <span className="w-4 h-0.5 bg-[#1E3A5F] inline-block" />
+              <span className="w-4 h-0.5 bg-[var(--primary)] inline-block" />
               Contact Us
             </h4>
             <ul className="space-y-4 text-[13px]">
               <li className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 text-[#1E3A5F] shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-[var(--primary)] shrink-0 mt-0.5" />
                 <span className="text-[#999999]">Sector 62, Knowledge Park,<br />New Delhi, 110001, India</span>
               </li>
               <li className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-[#1E3A5F] shrink-0" />
+                <Phone className="w-4 h-4 text-[var(--primary)] shrink-0" />
                 <a href="tel:+919876543210" className="text-[#999999] hover:text-[#0088CC] transition-colors">+91 98765 43210</a>
               </li>
               <li className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-[#1E3A5F] shrink-0" />
+                <Mail className="w-4 h-4 text-[var(--primary)] shrink-0" />
                 <a href="mailto:info@myschoollife.edu.in" className="text-[#999999] hover:text-[#0088CC] transition-colors">info@myschoollife.edu.in</a>
               </li>
               <li>
@@ -136,11 +142,11 @@ export function Footer() {
 
         {/* ── Bottom Bar ─────────────────────────────────── */}
         <div className="pt-6 border-t border-[#5C5D5D]/50 flex flex-col md:flex-row items-center justify-between gap-4 text-[12px]">
-          <p className="text-[#828283]">Copyright © {new Date().getFullYear()} MySchoolLife Public School. All rights reserved.</p>
+          <p className="text-[#828283]">Copyright © {new Date().getFullYear()} {schoolInfo.school_name} {schoolInfo.school_subtitle}. All rights reserved.</p>
           <div className="flex items-center gap-4 text-[#828283]">
             {["Privacy Policy", "Terms of Service", "Sitemap"].map((item, i, arr) => (
               <React.Fragment key={item}>
-                <a href="#" className="hover:text-[#1E3A5F] transition-colors">{item}</a>
+                <a href="#" className="hover:text-[var(--primary)] transition-colors">{item}</a>
                 {i < arr.length - 1 && <span className="text-[#5C5D5D]">·</span>}
               </React.Fragment>
             ))}
