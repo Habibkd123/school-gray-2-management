@@ -21,14 +21,23 @@ export default async function StudentLifeClubsPage() {
   return (
     <main className="w-full">
       {/* Hero Section */}
+<<<<<<< Updated upstream
       <section className="relative py-28 bg-[#0F172A]">
+=======
+      <section className="relative py-28 bg-white">
+>>>>>>> Stashed changes
         <div className="absolute inset-0">
-          <img src={heroImage || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1920&auto=format&fit=crop"} alt="Clubs & Societies" className="w-full h-full object-cover opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
+          <img src={heroImage || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1920&auto=format&fit=crop"} alt="Clubs & Societies" className="w-full h-full object-cover" style={{ filter: "blur(3px)", transform: "scale(1.05)" }} />
+          <div className="absolute inset-0 z-0 pointer-events-none" style={{ backgroundColor: "color-mix(in oklab, #ffffff6b 90%, transparent)" }} />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
+<<<<<<< Updated upstream
           <span className="inline-block px-4 py-1.5 bg-[#F59E0B]/20 border border-[#F59E0B]/30 text-[#FDBA74] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Student Groups</span>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">Clubs & Societies</h1>
+=======
+          <span className="inline-block px-4 py-1.5 bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Student Groups</span>
+          <h1 className="text-5xl md:text-6xl  font-bold text-[#231F20] font-sans font-black leading-tight">Clubs & Societies</h1>
+>>>>>>> Stashed changes
         </div>
       </section>
 
@@ -104,10 +113,14 @@ export default async function StudentLifeClubsPage() {
 
             {/* Right Column */}
             <div className="space-y-6">
+<<<<<<< Updated upstream
               <div className="bg-[#0F172A] text-white p-8 rounded-sm shadow-xl relative overflow-hidden">
+=======
+              <div className="bg-white text-white p-8 rounded-sm shadow-xl relative overflow-hidden">
+>>>>>>> Stashed changes
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-[70px] opacity-20" />
                 <h4 className="text-lg font-serif font-bold mb-4 relative z-10 text-white">Join a Club</h4>
-                <p className="text-slate-400 text-[13px] leading-relaxed mb-6 relative z-10">
+                <p className="text-slate-600 text-[13px] leading-relaxed mb-6 relative z-10">
                   Every student is encouraged to participate in at least one club to build specialized skills, network with peers, and follow their passions outside of textbooks.
                 </p>
                 <div className="text-[12px] text-[#F59E0B] font-bold tracking-wide border-t border-white/10 pt-4 relative z-10">

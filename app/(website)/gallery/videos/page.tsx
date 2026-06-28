@@ -15,8 +15,13 @@ export default async function VideosPage() {
   const videos = await getVideos();
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
+<<<<<<< Updated upstream
       <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Campus Videos</h1>
       <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-12">Video Gallery</p>
+=======
+      <h1 className="text-4xl  font-bold text-foreground mb-3">Campus Videos</h1>
+      <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-12">Video Gallery</p>
+>>>>>>> Stashed changes
       {videos.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {videos.map((v: any, i: number) => {
@@ -38,7 +43,7 @@ export default async function VideosPage() {
       ) : (
         <div className="text-center py-20">
           <Video className="w-16 h-16 text-slate-200 mx-auto mb-4" />
-          <p className="text-slate-400">No videos yet. Add YouTube video links from <strong>Admin → Website → Gallery</strong>.</p>
+          <p className="text-slate-600">No videos yet. Add YouTube video links from <strong>Admin → Website → Gallery</strong>.</p>
         </div>
       )}
     </main>

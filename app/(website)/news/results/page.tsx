@@ -15,8 +15,13 @@ export default async function ResultsPage() {
   const items = await getNews();
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
+<<<<<<< Updated upstream
       <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Results</h1>
       <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-12">Examination Results & Merit Lists</p>
+=======
+      <h1 className="text-4xl  font-bold text-foreground mb-3">Results</h1>
+      <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-12">Examination Results & Merit Lists</p>
+>>>>>>> Stashed changes
       {items.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((item: any, idx: number) => (
@@ -35,7 +40,7 @@ export default async function ResultsPage() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20"><Award className="w-16 h-16 text-slate-200 mx-auto mb-4" /><p className="text-slate-400">No results published yet. Add them from <strong>Admin → Website → News</strong>.</p></div>
+        <div className="text-center py-20"><Award className="w-16 h-16 text-slate-200 mx-auto mb-4" /><p className="text-slate-600">No results published yet. Add them from <strong>Admin → Website → News</strong>.</p></div>
       )}
     </main>
   );

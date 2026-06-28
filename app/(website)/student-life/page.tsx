@@ -27,14 +27,23 @@ export default async function StudentLifePage() {
   return (
     <main className="w-full">
       {/* Hero */}
+<<<<<<< Updated upstream
       <section className="relative py-28 bg-[#0F172A]">
+=======
+      <section className="relative py-28 bg-white">
+>>>>>>> Stashed changes
         <div className="absolute inset-0">
-          <img src={heroImage || "https://images.unsplash.com/photo-1529390079861-591de354faf5?q=80&w=1920&auto=format&fit=crop"} alt="Student Life" className="w-full h-full object-cover opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
+          <img src={heroImage || "https://images.unsplash.com/photo-1529390079861-591de354faf5?q=80&w=1920&auto=format&fit=crop"} alt="Student Life" className="w-full h-full object-cover" style={{ filter: "blur(3px)", transform: "scale(1.05)" }} />
+          <div className="absolute inset-0 z-0 pointer-events-none" style={{ backgroundColor: "color-mix(in oklab, #ffffff6b 90%, transparent)" }} />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
+<<<<<<< Updated upstream
           <span className="inline-block px-4 py-1.5 bg-[#F59E0B]/20 border border-[#F59E0B]/30 text-[#FDBA74] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Campus Life</span>
           <h1 className="text-5xl md:text-6xl font-serif font-bold text-white leading-tight">Student Life</h1>
+=======
+          <span className="inline-block px-4 py-1.5 bg-[var(--primary)]/10 border border-[var(--primary)]/20 text-[var(--primary)] text-[12px] font-bold uppercase tracking-widest rounded-sm mb-6">Campus Life</span>
+          <h1 className="text-5xl md:text-6xl  font-bold text-[#231F20] font-sans font-black leading-tight">Student Life</h1>
+>>>>>>> Stashed changes
         </div>
       </section>
 
@@ -83,7 +92,11 @@ export default async function StudentLifePage() {
 
       {/* Achievements */}
       {achievements.length > 0 && (
+<<<<<<< Updated upstream
         <section className="py-16 bg-[#0F172A]">
+=======
+        <section className="py-16 bg-white">
+>>>>>>> Stashed changes
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12">
               <h2 className="text-[#F59E0B] font-bold tracking-widest uppercase text-[12px] mb-3">Our Pride</h2>
@@ -91,11 +104,17 @@ export default async function StudentLifePage() {
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {achievements.map((a: any, i: number) => (
+<<<<<<< Updated upstream
                 <div key={a._id ?? i} className="bg-white/5 border border-white/10 rounded-sm p-6 hover:bg-[#F59E0B]/10 hover:border-[#F59E0B]/30 transition-all">
                   <Star className="w-6 h-6 text-[#F59E0B] mb-3" />
                   <span className="text-[#F59E0B] text-[12px] font-bold uppercase tracking-widest">{a.year}</span>
+=======
+                <div key={a._id ?? i} className="bg-white/5 border border-white/10 rounded-sm p-6 hover:bg-primary/10 hover:border-[var(--primary)]/20 transition-all">
+                  <Star className="w-6 h-6 text-primary mb-3" />
+                  <span className="text-primary text-[12px] font-bold uppercase tracking-widest">{a.year}</span>
+>>>>>>> Stashed changes
                   <h4 className="text-white font-bold text-[15px] mt-1 mb-2">{a.title}</h4>
-                  {a.description && <p className="text-slate-400 text-[13px] leading-relaxed">{a.description}</p>}
+                  {a.description && <p className="text-slate-600 text-[13px] leading-relaxed">{a.description}</p>}
                 </div>
               ))}
             </div>
@@ -107,7 +126,7 @@ export default async function StudentLifePage() {
       {!sports && !cultural && !clubs && achievements.length === 0 && (
         <section className="py-20 bg-white">
           <div className="max-w-5xl mx-auto px-4 text-center">
-            <p className="text-slate-400">Student life content will appear here. Add it from <strong>Admin → Website → Student Life</strong>.</p>
+            <p className="text-slate-600">Student life content will appear here. Add it from <strong>Admin → Website → Student Life</strong>.</p>
           </div>
         </section>
       )}

@@ -17,8 +17,13 @@ export default async function ManagementPage() {
 
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
+<<<<<<< Updated upstream
       <h1 className="text-4xl font-serif font-bold text-[#0F172A] mb-3">Management Team</h1>
       <p className="text-[#F59E0B] font-bold uppercase tracking-widest text-[12px] mb-12">Our Leadership</p>
+=======
+      <h1 className="text-4xl  font-bold text-foreground mb-3">Management Team</h1>
+      <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-12">Our Leadership</p>
+>>>>>>> Stashed changes
 
       {team.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -26,7 +31,7 @@ export default async function ManagementPage() {
             <div key={member._id ?? idx} className="bg-white rounded-sm border border-slate-200 shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
               <div className="h-64 overflow-hidden bg-slate-100 relative">
                 {member.photo_url ? (
-                  <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover" />
+                  <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover" style={{ filter: "blur(3px)", transform: "scale(1.05)" }} />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Users className="w-16 h-16 text-slate-300" />
