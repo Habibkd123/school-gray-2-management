@@ -3,11 +3,6 @@
 import { useEffect, useState } from "react";
 import { getAccessToken, getStoredUser } from "@/lib/utils/session";
 
-// School-specific prefix to isolate localStorage from other school projects
-const _schoolId = process.env.NEXT_PUBLIC_SCHOOL_ID || "default";
-const VIEW_SCHOOL_KEY = `${_schoolId}_sm_view_school_id`;
-const STORAGE_TOKEN_KEY = `${_schoolId}_sm_access_token`;
-
 type ThemeSource = "auth" | "public" | "auto";
 
 interface SchoolThemeProviderProps {
@@ -48,7 +43,7 @@ export function SchoolThemeProvider({
           // If super_admin, allow viewing a specific school via localStorage key
           // 'sm_view_school_id' which triggers /api/theme?school_id=xxxx
           if (token && user?.role === "super_admin") {
-            const viewId = typeof window !== "undefined" ? localStorage.getItem(VIEW_SCHOOL_KEY) : null;
+            const viewId = typeof window !== "undefined" ? localStorage.getItem("sm_view_school_id") : null;
             if (viewId) {
               cssVars = await fetchThemeEndpoint(`/api/theme?school_id=${viewId}`, {
                 Authorization: `Bearer ${token}`,
@@ -100,7 +95,7 @@ export function SchoolThemeProvider({
     loadTheme();
 
     const onStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_TOKEN_KEY) loadTheme();
+      if (e.key === "sm_access_token") loadTheme();
     };
     window.addEventListener("storage", onStorage);
 
