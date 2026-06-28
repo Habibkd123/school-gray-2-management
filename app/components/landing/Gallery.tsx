@@ -51,6 +51,7 @@ export function Gallery({ data }: { data?: GalleryData | null }) {
               <img 
                 src={img.src} 
                 alt={img.label} 
+                loading="lazy"
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[var(--sidebar-bg)]/90 via-[var(--sidebar-bg)]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">

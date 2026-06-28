@@ -31,6 +31,11 @@ export function Hero({ data }: { data?: HeroData | null }) {
     { icon: <Star className="w-5 h-5" />, value: "25+", label: "Years" },
   ];
 
+  const taglineWords = tagline.split(" ");
+  const splitIndex = Math.max(1, taglineWords.length - 3);
+  const firstLine = taglineWords.slice(0, splitIndex).join(" ");
+  const secondLine = taglineWords.slice(splitIndex).join(" ");
+
   return (
     <section id="home" className="relative bg-[#FFFFFF] overflow-hidden">
       
@@ -53,11 +58,9 @@ export function Hero({ data }: { data?: HeroData | null }) {
 
           {/* Heading */}
           <h1 className="text-4xl lg:text-6xl font-black text-[#231F20] leading-[1.1] mb-6">
-            {tagline.split(" ").slice(0, Math.ceil(tagline.split(" ").length / 2)).join(" ")}
+            {firstLine}
             <br />
-            <span className="text-[var(--primary)]">
-              {tagline.split(" ").slice(Math.ceil(tagline.split(" ").length / 2)).join(" ")}
-            </span>
+            <span className="text-[var(--primary)]">{secondLine}</span>
           </h1>
 
           {/* Red left-border description */}
@@ -118,6 +121,7 @@ export function Hero({ data }: { data?: HeroData | null }) {
             <img
               src={data?.about?.hero_side_image_url || "https://images.unsplash.com/photo-1577896851231-70ef18881754?q=80&w=1200&auto=format&fit=crop"}
               alt="Students studying"
+              loading="lazy"
               className="w-full h-[480px] object-cover"
             />
             {/* Bottom caption badge */}

@@ -52,6 +52,10 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    if (!auth.schoolId) {
+      return NextResponse.json({ success: false, message: "School ID is required" }, { status: 400 });
+    }
+
     const resolved = await getSchoolThemeById(auth.schoolId);
     if (!resolved) {
       return NextResponse.json({ success: false, message: "School not found" }, { status: 404 });

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { SectionHeading } from "./SectionHeading";
 
 interface FAQItem {
   question: string;
@@ -32,13 +33,12 @@ export function FAQ({ data }: FAQProps) {
   return (
     <section className="py-24 bg-white border-t border-slate-200">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        
-        <div className="text-center mb-16">
-          <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Got Questions?</h2>
-          <h3 className="text-4xl md:text-5xl font-serif font-bold text-foreground leading-tight">
-            Frequently Asked Questions
-          </h3>
-        </div>
+        <SectionHeading
+          eyebrow="Got Questions?"
+          title="Frequently Asked Questions"
+          description="Find quick answers to the most common admission and school life questions."
+          align="center"
+        />
 
         <div className="flex flex-col gap-4">
           {faqs.map((faq, idx) => (
@@ -47,6 +47,8 @@ export function FAQ({ data }: FAQProps) {
               className={`border transition-all duration-300 ${openIdx === idx ? 'border-[#231F20] shadow-md' : 'border-[#E0E0E0] hover:border-[#CCCCCC]'}`}
             >
               <button 
+                type="button"
+                aria-expanded={openIdx === idx}
                 className="w-full flex items-center justify-between p-6 text-left bg-white"
                 onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
               >
@@ -58,6 +60,7 @@ export function FAQ({ data }: FAQProps) {
               
               <div 
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${openIdx === idx ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
+                aria-hidden={openIdx !== idx}
               >
                 <div className="p-6 pt-0 text-slate-600 leading-relaxed text-[15px] border-t border-slate-100 mt-2">
                   {faq.answer}

@@ -34,8 +34,12 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
   const classStructure = data?.class_structure;
   const faculty = data?.faculty ?? [];
 
-  // Show faculty if available, otherwise show default programs
   const hasFaculty = faculty.length > 0;
+  const hasClassStructure = Boolean(classStructure);
+
+  if (!hasFaculty && !hasClassStructure) {
+    return null;
+  }
 
   return (
     <section id="academics" className="py-24 bg-slate-50 relative">
@@ -56,7 +60,6 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
           </a>
         </div>
 
-        {/* Faculty Section if available */}
         {hasFaculty ? (
           <div className="flex overflow-x-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6 snap-x snap-mandatory">
             {faculty.slice(0, 8).map((member, idx) => (
@@ -81,31 +84,9 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
             ))}
           </div>
         ) : (
-          /* Default Programs */
-          <>
-            {classStructure && (
-              <p className="text-[14px] text-slate-600 mb-10 leading-relaxed max-w-2xl">{classStructure}</p>
-            )}
-            <div className="flex overflow-x-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-5 gap-6 snap-x snap-mandatory hide-scrollbar">
-              {DEFAULT_PROGRAMS.map((prog, idx) => (
-                <div key={idx} className="min-w-full sm:w-[280px] sm:min-w-0 bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 snap-center flex flex-col">
-                  <div className="h-48 overflow-hidden relative">
-                    <img src={prog.img} alt={prog.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                    <div className="absolute top-4 left-4 bg-[var(--sidebar-bg)] text-white px-3 py-1 text-[11px] font-bold tracking-widest uppercase shadow-md">
-                      {prog.age}
-                    </div>
-                  </div>
-                  <div className="p-6 flex-1 flex flex-col">
-                    <h4 className="text-xl font-bold text-foreground mb-2">{prog.title}</h4>
-                    <p className="text-slate-600 text-[13px] leading-relaxed mb-4 flex-1">{prog.desc}</p>
-                    <a href="/academics" className="inline-flex items-center gap-1 text-[13px] font-bold text-[#0088CC] hover:text-[#005F8F] uppercase tracking-wider">
-                      Learn More <ChevronRight className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
+          hasClassStructure ? (
+            <p className="text-[14px] text-slate-600 mb-10 leading-relaxed max-w-2xl">{classStructure}</p>
+          ) : null
         )}
 
       </div>

@@ -4,28 +4,38 @@ interface SectionHeadingProps {
   eyebrow?: string;
   title: string;
   description?: string;
-  align?: "center" | "left";
+  align?: "left" | "center" | "right";
 }
 
-export function SectionHeading({ eyebrow, title, description, align = "center" }: SectionHeadingProps) {
-  const alignment = align === "left" ? "text-left" : "text-center";
-  const container = align === "left" ? "items-start" : "items-center";
+export function SectionHeading({
+  eyebrow,
+  title,
+  description,
+  align = "left",
+}: SectionHeadingProps) {
+  const alignmentClasses = {
+    left: "text-left",
+    center: "text-center mx-auto",
+    right: "text-right ml-auto",
+  }[align];
+
+  const containerClasses = align === "center" ? "max-w-3xl mx-auto" : "max-w-4xl";
 
   return (
-    <div className={`flex flex-col ${container} mb-14 ${alignment}`}>
-      {eyebrow && (
-        <span className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">
+    <div className={`${containerClasses} mb-12 ${alignmentClasses}`}>
+      {eyebrow ? (
+        <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary mb-3">
           {eyebrow}
-        </span>
-      )}
-      <h2 className="text-4xl md:text-5xl font-serif font-bold text-foreground leading-tight max-w-4xl">
+        </p>
+      ) : null}
+      <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground leading-tight mb-4">
         {title}
       </h2>
-      {description && (
-        <p className="mt-4 text-[15px] text-slate-600 leading-relaxed max-w-3xl">
+      {description ? (
+        <p className="text-base text-slate-600 leading-relaxed max-w-2xl">
           {description}
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

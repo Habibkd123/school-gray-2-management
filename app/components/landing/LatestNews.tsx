@@ -1,5 +1,6 @@
 import React from "react";
 import { Calendar, ChevronRight, FileText, Bell, Award } from "lucide-react";
+import { SectionHeading } from "./SectionHeading";
 
 interface NewsItem {
   _id?: string;
@@ -37,15 +38,14 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
   return (
     <section className="py-24 bg-slate-50 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
-          <div className="max-w-2xl">
-            <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Notice Board</h2>
-            <h3 className="text-4xl md:text-5xl font-serif font-bold text-foreground leading-tight">
-              Latest News & Circulars
-            </h3>
-          </div>
-          <a href="/news" className="hidden md:flex items-center gap-2 font-bold text-foreground hover:text-primary transition-colors uppercase tracking-wider text-[13px]">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
+          <SectionHeading
+            eyebrow="Notice Board"
+            title="Latest News & Circulars"
+            description="Stay informed with the latest school updates, announcements, and important dates for parents and students."
+            align="left"
+          />
+          <a href="/news" className="hidden lg:inline-flex items-center gap-2 font-bold text-foreground hover:text-primary transition-colors uppercase tracking-wider text-[13px]">
             View All Updates <ChevronRight className="w-5 h-5" />
           </a>
         </div>

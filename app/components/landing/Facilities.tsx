@@ -24,9 +24,7 @@ export function Facilities({ data }: FacilitiesProps) {
     { icon: "Presentation", title: "Smart Classrooms" }
   ];
 
-  const facilities = data?.facilities && data.facilities.length > 0
-    ? data.facilities
-    : defaultFacilities;
+  const facilities = data?.facilities && data.facilities.length > 0 ? data.facilities : [];
 
   const renderIcon = (iconName: string) => {
     const IconComponent = (LucideIcons as any)[iconName];
@@ -36,9 +34,12 @@ export function Facilities({ data }: FacilitiesProps) {
     return <LucideIcons.Star className="w-8 h-8" />;
   };
 
+  if (facilities.length === 0) {
+    return null;
+  }
+
   return (
     <section id="facilities" className="py-24 bg-[var(--sidebar-bg)] text-white relative overflow-hidden">
-      {/* Background Decor */}
       <div className="absolute inset-0 opacity-5 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10">

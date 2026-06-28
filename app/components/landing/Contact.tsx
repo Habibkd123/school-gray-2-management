@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { MapPin, Phone, Mail, Globe, Loader2, CheckCircle2, AlertCircle, ExternalLink, Share2, Video, Link2 } from "lucide-react";
+import { SectionHeading } from "./SectionHeading";
 
 interface ContactData {
   address?: string;
@@ -22,11 +23,11 @@ export function Contact({ data }: { data?: ContactData | null }) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [message, setMessage] = useState("");
 
-  const address = data?.address || "Sector 62, Knowledge Park,\nNew Delhi, 110001, India";
-  const phone = data?.phone || "+91 98765 43210";
-  const email = data?.email || "admissions@school.edu.in";
-  const website = data?.website || "";
-  const mapUrl = data?.map_embed_url || "";
+  const address = data?.address;
+  const phone = data?.phone;
+  const email = data?.email;
+  const website = data?.website;
+  const mapUrl = data?.map_embed_url;
   const social = data?.social || {};
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,32 +60,31 @@ export function Contact({ data }: { data?: ContactData | null }) {
     }
   };
 
+  if (!address && !phone && !email && !website && !mapUrl && !social.facebook && !social.twitter && !social.instagram && !social.youtube) {
+    return null;
+  }
+
   return (
     <section id="contact" className="py-24 bg-white relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Get in Touch</h2>
-          <h3 className="text-4xl md:text-5xl font-serif font-bold text-foreground leading-tight">
-            Contact Admissions Office
-          </h3>
-        </div>
+        <SectionHeading
+          eyebrow="Get in Touch"
+          title="Contact the Admissions Office"
+          description="Our team is ready to answer your questions and guide you through the admissions process."
+          align="center"
+        />
 
         <div className="grid lg:grid-cols-2 gap-16">
-          
-          {/* Left: Contact Info */}
           <div className="space-y-8">
-            <p className="text-[15px] text-slate-600 leading-relaxed">
-              We welcome prospective parents to visit our campus. Please contact our admissions desk to schedule a tour or for any queries regarding the admission process.
-            </p>
-            
-            <div className="grid sm:grid-cols-2 gap-6">
+            {address && (
               <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-primary">
                 <MapPin className="w-8 h-8 text-primary mb-4" />
                 <h4 className="font-bold text-foreground mb-2 text-[15px]">Campus Address</h4>
                 <p className="text-slate-600 text-[14px] whitespace-pre-line">{address}</p>
               </div>
-              
+            )}
+
+            {phone && (
               <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-primary">
                 <Phone className="w-8 h-8 text-primary mb-4" />
                 <h4 className="font-bold text-foreground mb-2 text-[15px]">Contact Numbers</h4>
@@ -94,7 +94,9 @@ export function Contact({ data }: { data?: ContactData | null }) {
                   </a>
                 </p>
               </div>
-              
+            )}
+
+            {email && (
               <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-primary sm:col-span-2">
                 <Mail className="w-8 h-8 text-primary mb-4" />
                 <h4 className="font-bold text-foreground mb-2 text-[15px]">Email Address</h4>
@@ -109,9 +111,8 @@ export function Contact({ data }: { data?: ContactData | null }) {
                   </p>
                 )}
               </div>
-            </div>
+            )}
 
-            {/* Social Links */}
             {(social.facebook || social.twitter || social.instagram || social.youtube) && (
               <div className="flex items-center gap-4 pt-2">
                 <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Follow us:</span>
@@ -186,12 +187,12 @@ export function Contact({ data }: { data?: ContactData | null }) {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[13px] font-bold text-slate-300 uppercase tracking-wide">Email Address</label>
-                  <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors" placeholder="john@example.com" />
+                  <label htmlFor="contact-email" className="text-[13px] font-bold text-slate-300 uppercase tracking-wide">Email Address</label>
+                  <input id="contact-email" type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors" placeholder="john@example.com" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[13px] font-bold text-slate-300 uppercase tracking-wide">Grade Applying For</label>
-                  <select value={formData.grade} onChange={(e) => setFormData({...formData, grade: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors appearance-none">
+                  <label htmlFor="contact-grade" className="text-[13px] font-bold text-slate-300 uppercase tracking-wide">Grade Applying For</label>
+                  <select id="contact-grade" value={formData.grade} onChange={(e) => setFormData({...formData, grade: e.target.value})} className="w-full bg-white/5 border border-white/20 rounded-sm px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary transition-colors appearance-none">
                     <option className="bg-[var(--sidebar-bg)]">Pre-Primary</option>
                     <option className="bg-[var(--sidebar-bg)]">Primary (I-V)</option>
                     <option className="bg-[var(--sidebar-bg)]">Middle (VI-VIII)</option>
@@ -202,6 +203,9 @@ export function Contact({ data }: { data?: ContactData | null }) {
                 <button type="submit" disabled={status === "loading"} className="w-full flex items-center justify-center gap-2 py-4 rounded-sm bg-primary text-white font-bold text-[15px] hover:bg-[var(--primary-hover)] transition-all duration-300 shadow-lg shadow-primary/20 uppercase tracking-wide disabled:opacity-70 disabled:cursor-not-allowed">
                   {status === "loading" ? <Loader2 className="w-5 h-5 animate-spin" /> : "Submit Enquiry"}
                 </button>
+                <div role="status" aria-live="polite" className="sr-only">
+                  {status === "success" ? message : status === "error" ? message : ""}
+                </div>
               </form>
             </div>
           </div>

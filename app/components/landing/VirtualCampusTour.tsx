@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Play, ChevronLeft, ChevronRight } from "lucide-react";
+import { SectionHeading } from "./SectionHeading";
 
 interface VideoItem {
   url: string;
@@ -51,12 +52,12 @@ export function VirtualCampusTour({ data }: { data?: GalleryData | null }) {
       <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 relative z-10 text-center">
-        <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">
-          Explore {schoolName}
-        </h2>
-        <h3 className="text-4xl md:text-5xl font-serif font-bold mb-6 leading-tight">
-          Virtual Campus Tour
-        </h3>
+        <SectionHeading
+          eyebrow={`Explore ${schoolName}`}
+          title="Virtual Campus Tour"
+          description="Experience our campus through guided videos that highlight classrooms, labs, and student life."
+          align="center"
+        />
         <p className="text-[15px] text-slate-300 leading-relaxed max-w-2xl mx-auto mb-16">
           {currentVideo?.title ||
             "Take a virtual walkthrough of our campus, featuring smart classrooms, international-standard sports facilities, and advanced laboratories."}

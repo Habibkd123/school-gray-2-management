@@ -1,5 +1,6 @@
 import React from "react";
 import { Star, Trophy, Medal, Award } from "lucide-react";
+import { SectionHeading } from "./SectionHeading";
 
 interface StudentLifeData {
   sports?: string;
@@ -29,17 +30,15 @@ export function Achievements({ data }: { data?: StudentLifeData | null }) {
   return (
     <section className="py-24 bg-white border-t border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Our Pride</h2>
-          <h3 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
-            Milestones & Achievements
-          </h3>
-          <p className="text-[15px] text-slate-600 leading-relaxed">
-            {data?.sports || data?.cultural_activities ||
-              "Consistently producing academic toppers and sports champions at the state and national levels."}
-          </p>
-        </div>
+        <SectionHeading
+          eyebrow="Our Pride"
+          title="Milestones & Achievements"
+          description={
+            data?.sports || data?.cultural_activities ||
+            "Consistently producing academic toppers and sports champions at the state and national levels."
+          }
+          align="center"
+        />
 
         {hasReal ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
