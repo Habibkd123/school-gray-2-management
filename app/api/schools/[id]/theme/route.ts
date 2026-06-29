@@ -13,7 +13,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-const VALID_PRESETS: ThemePreset[] = ["cbse_saffron", "navy_blue", "custom"];
+const VALID_PRESETS: ThemePreset[] = ["cbse_saffron", "navy_blue", "emerald_green", "crimson_maroon", "modern_teal", "custom"];
 
 // GET /api/schools/[id]/theme
 export async function GET(request: NextRequest, context: RouteContext) {

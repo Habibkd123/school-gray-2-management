@@ -44,7 +44,7 @@ const themeConfigSchema = new Schema<IThemeConfig>(
   {
     preset: {
       type: String,
-      enum: ["cbse_saffron", "navy_blue", "custom"],
+      enum: ["cbse_saffron", "navy_blue", "emerald_green", "crimson_maroon", "modern_teal", "custom"],
       default: "navy_blue",
     },
     colors: {
