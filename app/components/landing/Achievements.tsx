@@ -28,7 +28,7 @@ export function Achievements({ data }: { data?: StudentLifeData | null }) {
   const hasReal = apiAchievements.length > 0;
 
   return (
-    <section className="py-24 bg-white border-t border-slate-200">
+    <section className="py-24 bg-white border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <SectionHeading
           eyebrow="Our Pride"
@@ -46,8 +46,8 @@ export function Achievements({ data }: { data?: StudentLifeData | null }) {
               const IconComp = ICONS[idx % ICONS.length];
               const altColors = idx % 2 === 0 ? "text-primary" : "text-foreground";
               return (
-                <div key={item._id ?? idx} className="flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-sm border border-slate-200 hover:border-primary hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                  <div className="w-24 h-24 rounded-full bg-white shadow-md flex items-center justify-center mb-6 border-4 border-slate-100">
+                <div key={item._id ?? idx} className="flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-sm border border-slate-200 hover:border-primary hover:shadow-xl hover:-translate-y-1 transition-all duration-300 dark:bg-slate-800/50 dark:border-slate-800">
+                  <div className="w-24 h-24 rounded-full bg-white shadow-md flex items-center justify-center mb-6 border-4 border-slate-100 dark:bg-slate-900 dark:border-slate-800/50">
                     <IconComp className={`w-8 h-8 ${altColors}`} />
                   </div>
                   <h4 className={`text-2xl font-black ${altColors} mb-2`}>{item.year}</h4>
@@ -62,12 +62,12 @@ export function Achievements({ data }: { data?: StudentLifeData | null }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {DEFAULT_ACHIEVEMENTS.map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-sm border border-slate-200 hover:border-primary hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                <div className="w-24 h-24 rounded-full bg-white shadow-md flex items-center justify-center mb-6 border-4 border-slate-100">
+              <div key={idx} className="flex flex-col items-center justify-center text-center p-8 bg-slate-50 rounded-sm border border-slate-200 hover:border-primary hover:shadow-xl hover:-translate-y-1 transition-all duration-300 dark:bg-slate-800/50 dark:border-slate-800">
+                <div className="w-24 h-24 rounded-full bg-white shadow-md flex items-center justify-center mb-6 border-4 border-slate-100 dark:bg-slate-900 dark:border-slate-800/50">
                   <Star className={`w-8 h-8 ${item.color}`} fill="currentColor" />
                 </div>
                 <h4 className={`text-3xl font-black ${item.color} mb-2`}>{item.number}</h4>
-                <p className="text-slate-700 font-bold text-[13px] uppercase tracking-wide">{item.label}</p>
+                <p className="text-slate-700 font-bold text-[13px] uppercase tracking-wide dark:text-slate-200">{item.label}</p>
               </div>
             ))}
           </div>

@@ -23,9 +23,9 @@ export default async function InfrastructurePage() {
       <div className="grid lg:grid-cols-2 gap-12 items-start">
         <div>
           {infrastructure ? (
-            <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{infrastructure}</p>
+            <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{infrastructure}</p>
           ) : (
-            <div className="p-8 bg-gray-50 border border-gray-200 rounded-2xl">
+            <div className="p-8 bg-gray-50 border border-gray-200 rounded-2xl dark:bg-slate-800/50 dark:border-slate-800">
               <p className="text-gray-500">Infrastructure details will be added here. Update it from the admin panel under <strong>Website → About</strong>.</p>
             </div>
           )}

@@ -153,10 +153,10 @@ export default function SuperAdminLoginPage() {
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 font-semibold tracking-wider uppercase">
               Super Admin
             </span>
-            <ChevronRight className="w-3 h-3 text-slate-600" />
-            <span className="text-[10px] text-slate-600">Admin</span>
-            <ChevronRight className="w-3 h-3 text-slate-600" />
-            <span className="text-[10px] text-slate-600">Teacher / Student</span>
+            <ChevronRight className="w-3 h-3 text-slate-600 dark:text-slate-300" />
+            <span className="text-[10px] text-slate-600 dark:text-slate-300">Admin</span>
+            <ChevronRight className="w-3 h-3 text-slate-600 dark:text-slate-300" />
+            <span className="text-[10px] text-slate-600 dark:text-slate-300">Teacher / Student</span>
           </div>
         </div>
 
@@ -279,7 +279,7 @@ export default function SuperAdminLoginPage() {
           </button>
 
           {/* Security Note */}
-          <p className="text-center text-[11px] text-slate-600 pt-1">
+          <p className="text-center text-[11px] text-slate-600 pt-1 dark:text-slate-300">
             🔒 This portal is exclusively for Super Administrators.
             <br />
             Unauthorized access attempts are logged.
@@ -298,7 +298,7 @@ export default function SuperAdminLoginPage() {
       </div>
 
       {/* Branding watermark */}
-      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[11px] text-slate-700 font-medium tracking-wider uppercase select-none">
+      <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[11px] text-slate-700 font-medium tracking-wider uppercase select-none dark:text-slate-200">
         MySchoolLife ERP © 2026
       </div>
     </div>

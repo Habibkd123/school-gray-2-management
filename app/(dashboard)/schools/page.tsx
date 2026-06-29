@@ -393,7 +393,7 @@ export default function SchoolsPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleOpenEdit(school)}
-                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 hover:text-amber-500 hover:border-amber-500 transition-all cursor-pointer bg-white dark:bg-slate-900 shadow-sm"
+                          className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 hover:text-amber-500 hover:border-amber-500 transition-all cursor-pointer bg-white dark:bg-slate-900 shadow-sm dark:text-slate-300"
                           title="Edit School"
                         >
                           <Edit className="w-4 h-4" />

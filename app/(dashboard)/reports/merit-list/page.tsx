@@ -115,7 +115,7 @@ export default function MeritListPage() {
   const getRankBadge = (rank: number, hasFailed: boolean) => {
     if (hasFailed) return <span className="text-slate-400 font-medium">—</span>;
     if (rank === 1) return <div className="flex items-center gap-1.5 font-black text-amber-500 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200"><Trophy className="w-4 h-4" /> 1st</div>;
-    if (rank === 2) return <div className="flex items-center gap-1.5 font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-300"><Trophy className="w-4 h-4" /> 2nd</div>;
+    if (rank === 2) return <div className="flex items-center gap-1.5 font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md border border-slate-300 dark:bg-slate-800"><Trophy className="w-4 h-4" /> 2nd</div>;
     if (rank === 3) return <div className="flex items-center gap-1.5 font-bold text-orange-700 bg-orange-50 px-2.5 py-1 rounded-md border border-orange-200"><Trophy className="w-4 h-4" /> 3rd</div>;
     return <span className="font-bold text-slate-600 dark:text-slate-300 px-2">{rank}th</span>;
   };
@@ -215,11 +215,11 @@ export default function MeritListPage() {
 
       {/* Print Header (Only visible when printing) */}
       <div className="hidden print:block text-center mb-8 border-b-2 border-slate-800 pb-6">
-        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-wider mb-2">MySchoolLife Academy</h1>
+        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-wider mb-2 dark:text-white">MySchoolLife Academy</h1>
         <div className="mt-4 inline-block bg-slate-800 text-white px-6 py-2 rounded-full font-bold text-[15px] uppercase tracking-widest shadow-sm">
           Merit List
         </div>
-        <div className="mt-4 text-slate-700 font-bold text-lg">
+        <div className="mt-4 text-slate-700 font-bold text-lg dark:text-slate-200">
           {exams.find(e => e._id === selectedExamId)?.name} - {classes.find(c => c._id === selectedClassId)?.name}
         </div>
       </div>

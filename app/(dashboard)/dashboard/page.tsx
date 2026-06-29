@@ -837,7 +837,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Upcoming Events Card — Dynamic */}
-              {/* <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow flex flex-col  text-left">
+              {/* <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow flex flex-col text-left">
                 <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white mb-5">Upcoming Events</h3>
                 <div className="space-y-4">
                   {upcomingEvents.length === 0 ? (
@@ -1165,7 +1165,7 @@ export default function DashboardPage() {
 
               <img src={(user as any)?.photo_url || "/asset 12.webp"} alt="Profile" className="w-full sm:w-[72px] h-[72px] rounded-lg object-cover border-2 border-slate-700 z-10 bg-slate-800" />
               <div className="z-10 text-left">
-                <span className="bg-white text-primary text-[9px] font-bold px-2 py-0.5 rounded uppercase">#{(user as any)?.employee_id || "T094001"}</span>
+                <span className="bg-white text-primary text-[9px] font-bold px-2 py-0.5 rounded uppercase dark:bg-slate-900">#{(user as any)?.employee_id || "T094001"}</span>
                 <h3 className="text-[15px] font-bold text-white mt-1.5">{user?.name || "Teacher Name"}</h3>
                 <p className="text-[11px] text-slate-300 mt-0.5 line-clamp-1" title={`Classes : ${uniqueClasses.join(', ')} • ${uniqueSubjects.join(', ')}`}>
                   Classes : {uniqueClasses.length > 0 ? uniqueClasses.slice(0, 2).join(', ') : "None"}  <span className="mx-1">•</span> {uniqueSubjects.length > 0 ? uniqueSubjects[0] : "No Subject"}
@@ -1756,7 +1756,7 @@ export default function DashboardPage() {
                   <div className="text-sm">Loading children...</div>
                 ) : (
                   <select
-                    className="w-full bg-white text-slate-900 rounded-lg px-3 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full bg-white text-slate-900 rounded-lg px-3 py-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-purple-500 dark:bg-slate-900 dark:text-white"
                     value={selectedChildId || ""}
                     onChange={(e) => setSelectedChildId(e.target.value)}
                   >
@@ -1791,14 +1791,14 @@ export default function DashboardPage() {
                     <div className="absolute top-3 right-3 w-0 h-0 border-l-[10px] border-l-transparent border-t-[10px] border-t-yellow-400 border-r-[10px] border-r-transparent transform rotate-45"></div>
 
                     <div className="relative z-10 flex gap-4 items-center">
-                      <div className="w-14 h-14 bg-white rounded flex items-center justify-center p-0.5 shadow-sm overflow-hidden">
+                      <div className="w-14 h-14 bg-white rounded flex items-center justify-center p-0.5 shadow-sm overflow-hidden dark:bg-slate-900">
                         {(displayStudent as any)?.photo_url
                           ? <img src={(displayStudent as any).photo_url} alt="Profile" className="w-full h-full rounded object-cover" />
                           : <span className="text-primary font-black text-xl">{((displayStudent as any)?.name || 'S').charAt(0).toUpperCase()}</span>
                         }
                       </div>
                       <div>
-                        <span className="bg-white text-primary text-[9px] font-bold px-2 py-0.5 rounded uppercase">#{(displayStudent as any)?.roll_no || "ST123456"}</span>
+                        <span className="bg-white text-primary text-[9px] font-bold px-2 py-0.5 rounded uppercase dark:bg-slate-900">#{(displayStudent as any)?.roll_no || "ST123456"}</span>
                         <h3 className="text-[16px] font-bold mt-1.5">{(displayStudent as any)?.name}</h3>
                         <p className="text-[11px] text-white/70 mt-0.5">
                           Class : {(displayStudent as any)?.class_id ? `${(displayStudent as any).class_id?.name} ${(displayStudent as any).class_id?.section}` : "N/A"}

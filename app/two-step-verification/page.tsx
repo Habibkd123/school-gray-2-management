@@ -114,7 +114,7 @@ export default function TwoStepVerificationPage() {
         {/* Header Logo */}
         <div className="w-full flex justify-center pt-10 pb-6 lg:pt-20 lg:pb-12 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white shadow-sm shrink-0">
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white shadow-sm shrink-0 dark:bg-slate-900">
               <img src="/logo.png" alt="Logo" className="w-full h-full object-contain p-1" />
             </div>
             <span className="text-[24px] font-bold text-slate-800 dark:text-slate-100 tracking-tight">MySchool<span className="text-primary">Life</span></span>

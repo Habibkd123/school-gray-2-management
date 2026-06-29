@@ -43,7 +43,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <ServerThemeStyles />
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <RootThemeProvider>
             <AuthProvider>
               <AppProvider>{children}</AppProvider>

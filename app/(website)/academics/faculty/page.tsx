@@ -21,8 +21,8 @@ export default async function FacultyPage() {
       {faculty.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {faculty.map((m: any, i: number) => (
-            <div key={m._id ?? i} className="bg-white rounded-sm border border-slate-200 shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <div className="h-56 bg-slate-100 overflow-hidden">
+            <div key={m._id ?? i} className="bg-white rounded-sm border border-slate-200 shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 dark:bg-slate-900 dark:border-slate-800">
+              <div className="h-56 bg-slate-100 overflow-hidden dark:bg-slate-800">
                 {m.photo_url ? (
                   <img src={m.photo_url} alt={m.name} className="w-full h-full object-cover" />
                 ) : (
@@ -38,7 +38,7 @@ export default async function FacultyPage() {
           ))}
         </div>
       ) : (
-        <div className="p-8 bg-gray-50 border border-gray-200 rounded-2xl">
+        <div className="p-8 bg-gray-50 border border-gray-200 rounded-2xl dark:bg-slate-800/50 dark:border-slate-800">
           <p className="text-gray-500">Faculty members will appear here. Add them from <strong>Admin → Website → Academics</strong>.</p>
         </div>
       )}

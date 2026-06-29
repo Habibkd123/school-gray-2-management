@@ -25,7 +25,7 @@ export default async function AboutHistoryPage() {
       )}
       {history ? (
         <div className="grid lg:grid-cols-2 gap-12 items-start mt-8">
-          <div className="prose prose-slate max-w-none text-[15px] leading-relaxed text-slate-600 whitespace-pre-line">
+          <div className="prose prose-slate max-w-none text-[15px] leading-relaxed text-slate-600 whitespace-pre-line dark:text-slate-300">
             {history}
           </div>
           <div>
@@ -37,7 +37,7 @@ export default async function AboutHistoryPage() {
           </div>
         </div>
       ) : (
-        <div className="p-8 bg-gray-50 border border-gray-200 rounded-2xl">
+        <div className="p-8 bg-gray-50 border border-gray-200 rounded-2xl dark:bg-slate-800/50 dark:border-slate-800">
           <p className="text-gray-500">History content will be added here soon. Add it from the admin panel under <strong>Website → About</strong>.</p>
         </div>
       )}

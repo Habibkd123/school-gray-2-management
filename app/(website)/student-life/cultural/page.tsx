@@ -33,7 +33,7 @@ export default async function StudentLifeCulturalPage() {
       </section>
 
       {/* Main Content */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-3 gap-12 items-start">
             {/* Left/Middle Column: Details */}
@@ -49,11 +49,11 @@ export default async function StudentLifeCulturalPage() {
               </div>
 
               {culturalText ? (
-                <div className="text-slate-600 text-[15px] leading-relaxed whitespace-pre-line border-l-2 border-slate-200 pl-6 py-2">
+                <div className="text-slate-600 text-[15px] leading-relaxed whitespace-pre-line border-l-2 border-slate-200 pl-6 py-2 dark:text-slate-300 dark:border-slate-800">
                   {culturalText}
                 </div>
               ) : (
-                <div className="p-8 bg-slate-50 border border-slate-200 rounded-sm">
+                <div className="p-8 bg-slate-50 border border-slate-200 rounded-sm dark:bg-slate-800/50 dark:border-slate-800">
                   <p className="text-slate-500 text-[14px]">Cultural program details will appear here. Add details in the admin panel under <strong>Website → Student Life</strong>.</p>
                 </div>
               )}
@@ -98,7 +98,7 @@ export default async function StudentLifeCulturalPage() {
             </div>
           </div>
 
-          <div className="mt-16 pt-8 border-t border-slate-100 text-center">
+          <div className="mt-16 pt-8 border-t border-slate-100 text-center dark:border-slate-800/50">
             <Link href="/student-life" className="inline-flex items-center gap-2 text-primary font-bold text-[14px] hover:text-[var(--primary-hover)] transition-colors">
               &larr; Back to Student Life
             </Link>

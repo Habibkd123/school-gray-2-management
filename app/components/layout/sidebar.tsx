@@ -260,7 +260,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         <div className={`h-16 flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-4'} border-b border-slate-800/50 mt-2`}>
           {(!isCollapsed || isMobileOpen) && (
             <div className="flex items-center gap-3 pl-2 md:pl-0">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden bg-white shrink-0">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden bg-white shrink-0 dark:bg-slate-900">
                 <img src="/logo.png" alt="Logo" className="w-full h-full object-contain p-1" />
               </div>
               <div className="flex flex-col">

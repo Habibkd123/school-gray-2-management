@@ -52,7 +52,7 @@ export default async function GalleryPage() {
       </section>
 
       {/* Photos Grid */}
-      <section className="py-16 bg-slate-50">
+      <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {displayPhotos.map((img: any, idx: number) => (
@@ -69,7 +69,7 @@ export default async function GalleryPage() {
 
       {/* Videos */}
       {videos.length > 0 && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-white dark:bg-slate-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Videos</h2>
             <h3 className="text-3xl font-serif font-bold text-foreground mb-10">Campus Videos</h3>
@@ -79,13 +79,13 @@ export default async function GalleryPage() {
                 const ytMatch = v.url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
                 const embedId = ytMatch?.[1];
                 return (
-                  <div key={i} className="rounded-sm overflow-hidden border border-slate-200 shadow-md">
+                  <div key={i} className="rounded-sm overflow-hidden border border-slate-200 shadow-md dark:border-slate-800">
                     {embedId ? (
                       <iframe src={`https://www.youtube.com/embed/${embedId}`} title={v.title || "Video"} className="w-full h-52" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                     ) : (
                       <video src={v.url} controls className="w-full h-52 bg-black object-cover" />
                     )}
-                    {v.title && <p className="text-[13px] font-bold text-slate-600 px-4 py-3 bg-slate-50 border-t border-slate-100">{v.title}</p>}
+                    {v.title && <p className="text-[13px] font-bold text-slate-600 px-4 py-3 bg-slate-50 border-t border-slate-100 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-800/50">{v.title}</p>}
                   </div>
                 );
               })}

@@ -32,7 +32,7 @@ export function SectionHeading({
         {title}
       </h2>
       {description ? (
-        <p className="text-base text-slate-600 leading-relaxed max-w-2xl">
+        <p className="text-base text-slate-600 leading-relaxed max-w-2xl dark:text-slate-300">
           {description}
         </p>
       ) : null}

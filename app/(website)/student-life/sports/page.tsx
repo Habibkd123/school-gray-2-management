@@ -33,7 +33,7 @@ export default async function StudentLifeSportsPage() {
       </section>
 
       {/* Main Content */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-3 gap-12 items-start">
             {/* Left/Middle Column: Details */}
@@ -49,26 +49,26 @@ export default async function StudentLifeSportsPage() {
               </div>
 
               {sportsText ? (
-                <div className="text-slate-600 text-[15px] leading-relaxed whitespace-pre-line border-l-2 border-slate-200 pl-6 py-2">
+                <div className="text-slate-600 text-[15px] leading-relaxed whitespace-pre-line border-l-2 border-slate-200 pl-6 py-2 dark:text-slate-300 dark:border-slate-800">
                   {sportsText}
                 </div>
               ) : (
-                <div className="p-8 bg-slate-50 border border-slate-200 rounded-sm">
+                <div className="p-8 bg-slate-50 border border-slate-200 rounded-sm dark:bg-slate-800/50 dark:border-slate-800">
                   <p className="text-slate-500 text-[14px]">Sports and athletics program details will appear here. Add details in the admin panel under <strong>Website → Student Life</strong>.</p>
                 </div>
               )}
 
               {/* Extra visual highlights */}
               <div className="grid sm:grid-cols-2 gap-6 pt-6">
-                <div className="p-6 bg-slate-50 border border-slate-100 rounded-sm">
+                <div className="p-6 bg-slate-50 border border-slate-100 rounded-sm dark:bg-slate-800/50 dark:border-slate-800/50">
                   <Activity className="w-8 h-8 text-foreground mb-4" />
                   <h4 className="font-bold text-foreground mb-2 text-[15px]">State-of-the-Art Infrastructure</h4>
-                  <p className="text-slate-600 text-[13px] leading-relaxed">Access to multi-sport courts, football turf, running tracks, and professional coaching staffs.</p>
+                  <p className="text-slate-600 text-[13px] leading-relaxed dark:text-slate-300">Access to multi-sport courts, football turf, running tracks, and professional coaching staffs.</p>
                 </div>
-                <div className="p-6 bg-slate-50 border border-slate-100 rounded-sm">
+                <div className="p-6 bg-slate-50 border border-slate-100 rounded-sm dark:bg-slate-800/50 dark:border-slate-800/50">
                   <Medal className="w-8 h-8 text-foreground mb-4" />
                   <h4 className="font-bold text-foreground mb-2 text-[15px]">Competitive Leagues</h4>
-                  <p className="text-slate-600 text-[13px] leading-relaxed">Our teams regularly participate and win laurels in regional, state, and national level school meets.</p>
+                  <p className="text-slate-600 text-[13px] leading-relaxed dark:text-slate-300">Our teams regularly participate and win laurels in regional, state, and national level school meets.</p>
                 </div>
               </div>
             </div>
@@ -97,7 +97,7 @@ export default async function StudentLifeSportsPage() {
             </div>
           </div>
 
-          <div className="mt-16 pt-8 border-t border-slate-100 text-center">
+          <div className="mt-16 pt-8 border-t border-slate-100 text-center dark:border-slate-800/50">
             <Link href="/student-life" className="inline-flex items-center gap-2 text-primary font-bold text-[14px] hover:text-[var(--primary-hover)] transition-colors">
               &larr; Back to Student Life
             </Link>

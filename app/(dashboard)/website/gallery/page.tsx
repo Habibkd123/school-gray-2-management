@@ -145,7 +145,7 @@ export default function GalleryPage() {
           </div>
           {data.photos.length === 0 ? (
             <div className="text-center py-10 text-slate-500 text-[13px]">
-              <Camera className="w-12 h-12 text-slate-700 mx-auto mb-2" />
+              <Camera className="w-12 h-12 text-slate-700 mx-auto mb-2 dark:text-slate-200" />
               No photos yet. Add photo URLs to build your gallery.
             </div>
           ) : (
@@ -158,7 +158,7 @@ export default function GalleryPage() {
                       <img src={photo.url} alt={photo.caption} className="w-16 h-16 rounded-lg object-cover shrink-0 border border-slate-700/50" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                     ) : (
                       <div className="w-16 h-16 rounded-lg bg-slate-700/50 border border-slate-700/30 flex items-center justify-center shrink-0">
-                        <Camera className="w-6 h-6 text-slate-600" />
+                        <Camera className="w-6 h-6 text-slate-600 dark:text-slate-300" />
                       </div>
                     )}
                     <div className="flex-1 space-y-3">
@@ -204,7 +204,7 @@ export default function GalleryPage() {
           </div>
           {data.videos.length === 0 ? (
             <div className="text-center py-10 text-slate-500 text-[13px]">
-              <YoutubeIcon className="w-12 h-12 text-slate-700 mx-auto mb-2" />
+              <YoutubeIcon className="w-12 h-12 text-slate-700 mx-auto mb-2 dark:text-slate-200" />
               No videos yet. Add YouTube or video embed URLs.
             </div>
           ) : (
@@ -228,7 +228,7 @@ export default function GalleryPage() {
                       })()
                     ) : (
                       <div className="w-16 h-16 rounded-lg bg-slate-700/50 border border-slate-700/30 flex items-center justify-center shrink-0">
-                        <YoutubeIcon className="w-6 h-6 text-slate-600" />
+                        <YoutubeIcon className="w-6 h-6 text-slate-600 dark:text-slate-300" />
                       </div>
                     )}
                     <div className="flex-1 space-y-3">

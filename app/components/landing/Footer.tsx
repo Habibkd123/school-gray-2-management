@@ -113,7 +113,7 @@ export function Footer({ contact, about, admissions }: FooterProps) {
           {/* Brand Column */}
           <div className="col-span-1">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-white shrink-0 flex items-center justify-center p-1 border-2 border-[var(--primary)]">
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-white shrink-0 flex items-center justify-center p-1 border-2 border-[var(--primary)] dark:bg-slate-900">
                 <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col">

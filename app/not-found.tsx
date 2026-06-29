@@ -13,14 +13,14 @@ export default function NotFound() {
         <div className="mb-8 w-64 h-64 bg-indigo-50/50 rounded-full flex items-center justify-center relative">
           <SearchX className="w-24 h-24 text-primary opacity-80" />
           <div className="absolute top-10 right-0 bg-white dark:bg-slate-900 shadow-lg border border-gray-100 rounded-xl px-4 py-2 rotate-12">
-            <span className="text-xl font-bold text-gray-900">Oops!</span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white">Oops!</span>
           </div>
           <div className="absolute bottom-4 -left-4 font-black text-6xl text-primary drop-shadow-md">
             404
           </div>
         </div>
 
-        <h1 className="text-[20px] font-bold text-gray-900 mb-2">
+        <h1 className="text-[20px] font-bold text-gray-900 mb-2 dark:text-white">
           Oops, something went wrong
         </h1>
         

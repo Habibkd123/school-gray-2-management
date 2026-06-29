@@ -97,7 +97,7 @@ export default function LeaveReportPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1  sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         {[
           { label: "Total Requests", value: stats.total, color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
           { label: "Approved", value: stats.approved, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },
@@ -128,7 +128,7 @@ export default function LeaveReportPage() {
                     <div className="p-4 space-y-4">
                       <div className="space-y-1.5">
                         <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Leave Type</label>
-                        <select value={filterType} onChange={e => setFilterType(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 cursor-pointer">
+                        <select value={filterType} onChange={e => setFilterType(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 cursor-pointer dark:text-slate-300">
                           <option value="">All Types</option>
                           <option value="sick">Sick Leave</option>
                           <option value="casual">Casual Leave</option>
@@ -138,7 +138,7 @@ export default function LeaveReportPage() {
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Status</label>
-                        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 cursor-pointer">
+                        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 cursor-pointer dark:text-slate-300">
                           <option value="">All Statuses</option>
                           <option value="pending">Pending</option>
                           <option value="approved">Approved</option>
@@ -156,7 +156,7 @@ export default function LeaveReportPage() {
             </div>
             {/* Sort */}
             <div className="relative">
-              <button onClick={() => setIsSortOpen(!isSortOpen)} className="px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 text-[13px] font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer">
+              <button onClick={() => setIsSortOpen(!isSortOpen)} className="px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 text-[13px] font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer dark:text-slate-200">
                 <List className="w-4 h-4 text-slate-400" /> Sort <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
               {isSortOpen && (
@@ -164,7 +164,7 @@ export default function LeaveReportPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-1.5">
                     {["Newest First", "Oldest First"].map(opt => (
-                      <button key={opt} onClick={() => setIsSortOpen(false)} className="w-full px-4 py-2.5 text-[14px] text-slate-700 hover:bg-slate-50 text-left font-medium cursor-pointer">{opt}</button>
+                      <button key={opt} onClick={() => setIsSortOpen(false)} className="w-full px-4 py-2.5 text-[14px] text-slate-700 hover:bg-slate-50 text-left font-medium cursor-pointer dark:text-slate-200">{opt}</button>
                     ))}
                   </div>
                 </>

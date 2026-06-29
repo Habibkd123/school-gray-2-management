@@ -31,7 +31,7 @@ export function FAQ({ data }: FAQProps) {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
 
   return (
-    <section className="py-24 bg-white border-t border-slate-200">
+    <section className="py-24 bg-white border-t border-slate-200 dark:bg-slate-900 dark:border-slate-800">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <SectionHeading
           eyebrow="Got Questions?"
@@ -49,7 +49,7 @@ export function FAQ({ data }: FAQProps) {
               <button 
                 type="button"
                 aria-expanded={openIdx === idx}
-                className="w-full flex items-center justify-between p-6 text-left bg-white"
+                className="w-full flex items-center justify-between p-6 text-left bg-white dark:bg-slate-900"
                 onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
               >
                 <span className={`font-bold text-[15px] pr-8 ${openIdx === idx ? 'text-[#231F20]' : 'text-[#5C5D5D]'}`}>
@@ -62,7 +62,7 @@ export function FAQ({ data }: FAQProps) {
                 className={`overflow-hidden transition-all duration-300 ease-in-out ${openIdx === idx ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}
                 aria-hidden={openIdx !== idx}
               >
-                <div className="p-6 pt-0 text-slate-600 leading-relaxed text-[15px] border-t border-slate-100 mt-2">
+                <div className="p-6 pt-0 text-slate-600 leading-relaxed text-[15px] border-t border-slate-100 mt-2 dark:text-slate-300 dark:border-slate-800/50">
                   {faq.answer}
                 </div>
               </div>

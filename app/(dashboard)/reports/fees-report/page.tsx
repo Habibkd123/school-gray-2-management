@@ -97,7 +97,7 @@ export default function FeesReportPage() {
         <>
           {/* Print Header */}
           <div className="hidden print:block text-center mb-8">
-            <h1 className="text-2xl font-black text-slate-900 uppercase tracking-wider">EduManage School</h1>
+            <h1 className="text-2xl font-black text-slate-900 uppercase tracking-wider dark:text-white">EduManage School</h1>
             <p className="text-slate-500 mt-1">Fees Collection Report</p>
             <p className="text-slate-400 text-sm mt-1">Generated on: {new Date().toLocaleDateString()}</p>
           </div>

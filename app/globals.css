@@ -186,3 +186,58 @@ body {
   background: var(--primary);
   margin-top: 8px;
 }
+
+/* ── Global Dark Mode Fallbacks ──
+   Ensures any light backgrounds, texts, or borders that missed a dark: variant
+   automatically adapt to the theme in dark mode. */
+.dark {
+  /* Backgrounds */
+  .bg-white:not([class*="dark:bg-"]) {
+    background-color: var(--card-bg) !important;
+  }
+  .bg-slate-50:not([class*="dark:bg-"]),
+  .bg-gray-50:not([class*="dark:bg-"]),
+  .bg-slate-100:not([class*="dark:bg-"]),
+  .bg-slate-200:not([class*="dark:bg-"]),
+  .bg-gray-100:not([class*="dark:bg-"]),
+  .bg-gray-200:not([class*="dark:bg-"]),
+  .bg-\[\#F8FAFC\]:not([class*="dark:bg-"]),
+  .bg-\[\#F9FAFB\]:not([class*="dark:bg-"]),
+  .bg-\[\#f8fafc\]:not([class*="dark:bg-"]),
+  .bg-\[\#F1F5F9\]:not([class*="dark:bg-"]),
+  .bg-\[\#f1f5f9\]:not([class*="dark:bg-"]),
+  .bg-\[\#E2E8F0\]:not([class*="dark:bg-"]),
+  .bg-\[\#e2e8f0\]:not([class*="dark:bg-"]) {
+    background-color: var(--background) !important;
+  }
+  .bg-slate-300:not([class*="dark:bg-"]),
+  .bg-gray-300:not([class*="dark:bg-"]) {
+    background-color: #334155 !important;
+  }
+  .bg-slate-400:not([class*="dark:bg-"]),
+  .bg-gray-400:not([class*="dark:bg-"]) {
+    background-color: #475569 !important;
+  }
+  
+  /* Text Colors */
+  .text-slate-900:not([class*="dark:text-"]),
+  .text-slate-800:not([class*="dark:text-"]),
+  .text-slate-700:not([class*="dark:text-"]),
+  .text-gray-900:not([class*="dark:text-"]) {
+    color: var(--foreground) !important;
+  }
+  .text-slate-600:not([class*="dark:text-"]),
+  .text-slate-500:not([class*="dark:text-"]),
+  .text-gray-600:not([class*="dark:text-"]),
+  .text-gray-500:not([class*="dark:text-"]) {
+    color: var(--muted-text) !important;
+  }
+
+  /* Borders */
+  .border-slate-200:not([class*="dark:border-"]),
+  .border-gray-200:not([class*="dark:border-"]),
+  .border-slate-100:not([class*="dark:border-"]),
+  .border-border:not([class*="dark:border-"]) {
+    border-color: var(--border-color) !important;
+  }
+}

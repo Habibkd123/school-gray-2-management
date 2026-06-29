@@ -27,7 +27,7 @@ export default async function WebsiteLayout({
   const data = await getLayoutData();
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col dark:bg-slate-900">
       <Header
         contact={data?.contact ?? null}
         admissions={data?.admissions ?? null}

@@ -331,7 +331,7 @@ export function ForceChangePasswordModal({ isOpen, onSuccess }: ForceChangePassw
           </button>
 
           {/* Footer note */}
-          <p className="text-center text-[11px] text-slate-600 pt-1">
+          <p className="text-center text-[11px] text-slate-600 pt-1 dark:text-slate-300">
             🔒 This is a one-time mandatory security step. You cannot skip this.
           </p>
         </form>

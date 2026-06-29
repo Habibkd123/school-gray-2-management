@@ -33,7 +33,7 @@ export default async function StudentLifeClubsPage() {
       </section>
 
       {/* Main Content */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid lg:grid-cols-3 gap-12 items-start">
             {/* Left/Middle Column: Details */}
@@ -49,19 +49,19 @@ export default async function StudentLifeClubsPage() {
               </div>
 
               {clubsText ? (
-                <div className="text-slate-600 text-[15px] leading-relaxed whitespace-pre-line border-l-2 border-slate-200 pl-6 py-2">
+                <div className="text-slate-600 text-[15px] leading-relaxed whitespace-pre-line border-l-2 border-slate-200 pl-6 py-2 dark:text-slate-300 dark:border-slate-800">
                   {clubsText}
                 </div>
               ) : (
-                <div className="p-8 bg-slate-50 border border-slate-200 rounded-sm">
+                <div className="p-8 bg-slate-50 border border-slate-200 rounded-sm dark:bg-slate-800/50 dark:border-slate-800">
                   <p className="text-slate-500 text-[14px]">Clubs and societies details will appear here. Add details in the admin panel under <strong>Website → Student Life</strong>.</p>
                 </div>
               )}
 
               {/* Club categories list */}
               <div className="grid sm:grid-cols-2 gap-6 pt-6">
-                <div className="flex gap-4 p-5 bg-slate-50 border border-slate-100 rounded-sm">
-                  <div className="shrink-0 w-10 h-10 bg-white rounded-full border border-slate-200 flex items-center justify-center">
+                <div className="flex gap-4 p-5 bg-slate-50 border border-slate-100 rounded-sm dark:bg-slate-800/50 dark:border-slate-800/50">
+                  <div className="shrink-0 w-10 h-10 bg-white rounded-full border border-slate-200 flex items-center justify-center dark:bg-slate-900 dark:border-slate-800">
                     <Code className="w-5 h-5 text-indigo-500" />
                   </div>
                   <div>
@@ -70,8 +70,8 @@ export default async function StudentLifeClubsPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-4 p-5 bg-slate-50 border border-slate-100 rounded-sm">
-                  <div className="shrink-0 w-10 h-10 bg-white rounded-full border border-slate-200 flex items-center justify-center">
+                <div className="flex gap-4 p-5 bg-slate-50 border border-slate-100 rounded-sm dark:bg-slate-800/50 dark:border-slate-800/50">
+                  <div className="shrink-0 w-10 h-10 bg-white rounded-full border border-slate-200 flex items-center justify-center dark:bg-slate-900 dark:border-slate-800">
                     <BookOpen className="w-5 h-5 text-emerald-500" />
                   </div>
                   <div>
@@ -80,8 +80,8 @@ export default async function StudentLifeClubsPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-4 p-5 bg-slate-50 border border-slate-100 rounded-sm">
-                  <div className="shrink-0 w-10 h-10 bg-white rounded-full border border-slate-200 flex items-center justify-center">
+                <div className="flex gap-4 p-5 bg-slate-50 border border-slate-100 rounded-sm dark:bg-slate-800/50 dark:border-slate-800/50">
+                  <div className="shrink-0 w-10 h-10 bg-white rounded-full border border-slate-200 flex items-center justify-center dark:bg-slate-900 dark:border-slate-800">
                     <Compass className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
@@ -90,8 +90,8 @@ export default async function StudentLifeClubsPage() {
                   </div>
                 </div>
 
-                <div className="flex gap-4 p-5 bg-slate-50 border border-slate-100 rounded-sm">
-                  <div className="shrink-0 w-10 h-10 bg-white rounded-full border border-slate-200 flex items-center justify-center">
+                <div className="flex gap-4 p-5 bg-slate-50 border border-slate-100 rounded-sm dark:bg-slate-800/50 dark:border-slate-800/50">
+                  <div className="shrink-0 w-10 h-10 bg-white rounded-full border border-slate-200 flex items-center justify-center dark:bg-slate-900 dark:border-slate-800">
                     <Heart className="w-5 h-5 text-rose-500" />
                   </div>
                   <div>
@@ -119,7 +119,7 @@ export default async function StudentLifeClubsPage() {
             </div>
           </div>
 
-          <div className="mt-16 pt-8 border-t border-slate-100 text-center">
+          <div className="mt-16 pt-8 border-t border-slate-100 text-center dark:border-slate-800/50">
             <Link href="/student-life" className="inline-flex items-center gap-2 text-primary font-bold text-[14px] hover:text-[var(--primary-hover)] transition-colors">
               &larr; Back to Student Life
             </Link>

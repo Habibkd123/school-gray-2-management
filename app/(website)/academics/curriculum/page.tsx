@@ -18,9 +18,9 @@ export default async function CurriculumPage() {
       <h1 className="text-4xl font-serif font-bold text-foreground mb-3">Curriculum Overview</h1>
       <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-10">Our Teaching Approach</p>
       {overview ? (
-        <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{overview}</p>
+        <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{overview}</p>
       ) : (
-        <div className="p-8 bg-gray-50 border border-gray-200 rounded-2xl">
+        <div className="p-8 bg-gray-50 border border-gray-200 rounded-2xl dark:bg-slate-800/50 dark:border-slate-800">
           <p className="text-gray-500">Curriculum details will appear here. Add them from <strong>Admin → Website → Academics</strong>.</p>
         </div>
       )}

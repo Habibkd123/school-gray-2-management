@@ -145,7 +145,7 @@ export default function NewsPage() {
       {/* News Items */}
       {items.length === 0 ? (
         <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-12 text-center">
-          <Newspaper className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+          <Newspaper className="w-12 h-12 text-slate-600 mx-auto mb-3 dark:text-slate-300" />
           <p className="text-slate-400 font-semibold">No news or notices yet</p>
           <p className="text-slate-500 text-[12px] mt-1">Click "Add News" to create your first announcement.</p>
         </div>

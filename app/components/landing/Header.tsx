@@ -77,7 +77,7 @@ export function Header({ contact, admissions }: HeaderProps) {
 
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[var(--primary)] flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[var(--primary)] flex items-center justify-center dark:bg-slate-900">
               <img src="/logo.png" alt="School Logo" className="w-full h-full object-contain p-1" />
             </div>
             <div className="flex flex-col">

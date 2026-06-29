@@ -46,7 +46,7 @@ export default async function NewsPage() {
       </section>
 
       {/* Filter tabs */}
-      <section className="py-6 bg-white border-b border-slate-200 sticky top-20 z-40">
+      <section className="py-6 bg-white border-b border-slate-200 sticky top-20 z-40 dark:bg-slate-900 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex gap-4 overflow-x-auto">
           {[
             { href: "/news", label: "All" },
@@ -54,7 +54,7 @@ export default async function NewsPage() {
             { href: "/news/circulars", label: "Circulars" },
             { href: "/news/results", label: "Results" },
           ].map(t => (
-            <Link key={t.href} href={t.href} className="px-5 py-2 text-[13px] font-bold uppercase tracking-wide rounded-sm whitespace-nowrap border border-slate-200 hover:bg-primary hover:text-white hover:border-primary transition-all">
+            <Link key={t.href} href={t.href} className="px-5 py-2 text-[13px] font-bold uppercase tracking-wide rounded-sm whitespace-nowrap border border-slate-200 hover:bg-primary hover:text-white hover:border-primary transition-all dark:border-slate-800">
               {t.label}
             </Link>
           ))}
@@ -62,7 +62,7 @@ export default async function NewsPage() {
       </section>
 
       {/* All News */}
-      <section className="py-16 bg-slate-50">
+      <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           {all.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -70,7 +70,7 @@ export default async function NewsPage() {
                 const cfg = TYPE_CONFIG[item.type] ?? TYPE_CONFIG.announcement;
                 const dateStr = item.published_at ? new Date(item.published_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "";
                 return (
-                  <div key={item._id ?? idx} className="bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+                  <div key={item._id ?? idx} className="bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 dark:bg-slate-900 dark:border-slate-800">
                     <div className="h-52 overflow-hidden relative">
                       <img src={PLACEHOLDER_IMGS[idx % PLACEHOLDER_IMGS.length]} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                       <div className={`absolute top-4 left-4 ${cfg.bg} text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded-sm`}>{cfg.label}</div>

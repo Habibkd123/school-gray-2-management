@@ -371,7 +371,7 @@ export default function StudentsPage() {
           <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center">
             <AlertCircle className="w-6 h-6 text-rose-500" />
           </div>
-          <p className="text-[14px] font-semibold text-slate-700">{error}</p>
+          <p className="text-[14px] font-semibold text-slate-700 dark:text-slate-200">{error}</p>
           <button onClick={() => fetchStudents()} className="px-4 py-2 text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] rounded-lg transition-colors">
             Try Again
           </button>

@@ -28,12 +28,9 @@ export async function GET(req: NextRequest) {
     if (user.role === "teacher") {
       const teacher = await Teacher.findOne({ user_id: user.user_id, school_id: schoolId }).lean();
       if (teacher) {
-        const classIdsFromTimetable = await Timetable.find({ teacher_id: teacher._id, school_id: schoolId }).distinct("class_id");
+        // Only show classes where this teacher is the Class Teacher
         andFilters.push({
-          $or: [
-            { class_teacher_id: teacher._id },
-            { _id: { $in: classIdsFromTimetable } }
-          ]
+          class_teacher_id: teacher._id
         });
       } else {
         andFilters.push({ _id: null });

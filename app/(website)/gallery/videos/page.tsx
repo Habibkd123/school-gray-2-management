@@ -24,13 +24,13 @@ export default async function VideosPage() {
             const ytMatch = v.url.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
             const embedId = ytMatch?.[1];
             return (
-              <div key={i} className="rounded-sm overflow-hidden border border-slate-200 shadow-md">
+              <div key={i} className="rounded-sm overflow-hidden border border-slate-200 shadow-md dark:border-slate-800">
                 {embedId ? (
                   <iframe src={`https://www.youtube.com/embed/${embedId}`} title={v.title || "Video"} className="w-full h-56" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen />
                 ) : (
                   <video src={v.url} controls className="w-full h-56 bg-black object-cover" />
                 )}
-                {v.title && <p className="text-[13px] font-bold text-slate-600 px-4 py-3 bg-slate-50 border-t border-slate-100">{v.title}</p>}
+                {v.title && <p className="text-[13px] font-bold text-slate-600 px-4 py-3 bg-slate-50 border-t border-slate-100 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-800/50">{v.title}</p>}
               </div>
             );
           })}

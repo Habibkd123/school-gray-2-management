@@ -95,7 +95,7 @@ export default function DailyAttendanceReportPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1  sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
         {[
           { label: "Total Students", value: totalStats.total, color: "text-indigo-600 bg-indigo-50 border-indigo-100" },
           { label: "Present", value: totalStats.present, color: "text-emerald-600 bg-emerald-50 border-emerald-100" },

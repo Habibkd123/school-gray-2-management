@@ -30,7 +30,7 @@ export function Gallery({ data }: { data?: GalleryData | null }) {
   const schoolName = process.env.NEXT_PUBLIC_SCHOOL_NAME || "Our School";
 
   return (
-    <section id="gallery" className="py-24 bg-slate-50">
+    <section id="gallery" className="py-24 bg-slate-50 dark:bg-slate-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">

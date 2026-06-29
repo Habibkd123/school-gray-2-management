@@ -71,6 +71,7 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
     startTime: string;
     endTime: string;
     room?: string;
+    academicYear?: string;
   }): Promise<{ success: boolean; message: string; data?: ApiSchedule }> => {
     try {
       const res = await fetch("/api/schedules", {
@@ -98,6 +99,7 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
       startTime: string;
       endTime: string;
       room: string;
+      academicYear: string;
     }>
   ): Promise<{ success: boolean; message: string; data?: ApiSchedule }> => {
     try {

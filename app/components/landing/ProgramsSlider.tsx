@@ -80,7 +80,7 @@ export default function ProgramsSlider({ programs }: { programs: Program[] }) {
               key={i} 
               className="flex-shrink-0 px-4 w-full sm:w-1/2 lg:w-1/3 transition-all duration-300"
             >
-              <div className="bg-white h-full rounded-sm border border-slate-200 shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col">
+              <div className="bg-white h-full rounded-sm border border-slate-200 shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col dark:bg-slate-900 dark:border-slate-800">
                 <div className="h-48 overflow-hidden relative">
                   <img 
                     src={p.img || "https://images.unsplash.com/photo-1587691592099-24045742c181?q=80&w=600&auto=format&fit=crop"} 
@@ -107,14 +107,14 @@ export default function ProgramsSlider({ programs }: { programs: Program[] }) {
         <>
           <button
             onClick={handlePrev}
-            className="absolute -left-4 top-1/2 -translate-y-1/2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all focus:outline-none z-10 hover:scale-105 active:scale-95"
+            className="absolute -left-4 top-1/2 -translate-y-1/2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all focus:outline-none z-10 hover:scale-105 active:scale-95 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-800"
             aria-label="Previous slide"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={handleNext}
-            className="absolute -right-4 top-1/2 -translate-y-1/2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all focus:outline-none z-10 hover:scale-105 active:scale-95"
+            className="absolute -right-4 top-1/2 -translate-y-1/2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 hover:text-slate-900 w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all focus:outline-none z-10 hover:scale-105 active:scale-95 dark:bg-slate-900 dark:text-slate-200 dark:border-slate-800"
             aria-label="Next slide"
           >
             <ChevronRight className="w-5 h-5" />

@@ -32,12 +32,12 @@ export default async function StudentLifeAchievementsPage() {
       </section>
 
       {/* Main Content */}
-      <section className="py-20 bg-white">
+      <section className="py-20 bg-white dark:bg-slate-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <Trophy className="w-12 h-12 text-primary mx-auto mb-4" />
             <h2 className="text-3xl font-serif font-bold text-foreground mb-3">Celebrating Excellence</h2>
-            <p className="text-slate-600 text-[14px]">
+            <p className="text-slate-600 text-[14px] dark:text-slate-300">
               We take immense pride in the achievements of our students across academic, sporting, and creative domains. Here are some of our milestone accomplishments.
             </p>
           </div>
@@ -45,7 +45,7 @@ export default async function StudentLifeAchievementsPage() {
           {achievements.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
               {achievements.map((item: any, idx: number) => (
-                <div key={item._id ?? idx} className="bg-slate-50 border border-slate-200 rounded-sm p-8 hover:bg-[var(--sidebar-bg)]/5 hover:border-primary/50 hover:shadow-xl transition-all duration-300 relative group">
+                <div key={item._id ?? idx} className="bg-slate-50 border border-slate-200 rounded-sm p-8 hover:bg-[var(--sidebar-bg)]/5 hover:border-primary/50 hover:shadow-xl transition-all duration-300 relative group dark:bg-slate-800/50 dark:border-slate-800">
                   <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                     <Award className="w-16 h-16 text-primary" />
                   </div>
@@ -58,7 +58,7 @@ export default async function StudentLifeAchievementsPage() {
 
                   <h3 className="text-lg font-bold text-foreground mb-3 line-clamp-2">{item.title}</h3>
                   {item.description && (
-                    <p className="text-slate-600 text-[13px] leading-relaxed whitespace-pre-line">
+                    <p className="text-slate-600 text-[13px] leading-relaxed whitespace-pre-line dark:text-slate-300">
                       {item.description}
                     </p>
                   )}
@@ -66,13 +66,13 @@ export default async function StudentLifeAchievementsPage() {
               ))}
             </div>
           ) : (
-            <div className="p-12 text-center max-w-md mx-auto bg-slate-50 border border-slate-200 rounded-sm">
+            <div className="p-12 text-center max-w-md mx-auto bg-slate-50 border border-slate-200 rounded-sm dark:bg-slate-800/50 dark:border-slate-800">
               <Star className="w-10 h-10 text-slate-300 mx-auto mb-4" />
               <p className="text-slate-500 text-[14px]">Achievements and accolades details will appear here. Add accomplishments in the admin panel under <strong>Website → Student Life → Achievements</strong>.</p>
             </div>
           )}
 
-          <div className="mt-16 pt-8 border-t border-slate-100 text-center">
+          <div className="mt-16 pt-8 border-t border-slate-100 text-center dark:border-slate-800/50">
             <Link href="/student-life" className="inline-flex items-center gap-2 text-primary font-bold text-[14px] hover:text-[var(--primary-hover)] transition-colors">
               &larr; Back to Student Life
             </Link>

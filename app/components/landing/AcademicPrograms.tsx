@@ -42,7 +42,7 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
   }
 
   return (
-    <section id="academics" className="py-24 bg-slate-50 relative">
+    <section id="academics" className="py-24 bg-slate-50 relative dark:bg-slate-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
@@ -52,7 +52,7 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
               Academic Programs
             </h3>
             {overview && (
-              <p className="text-[14px] text-slate-600 mt-4 leading-relaxed max-w-xl">{overview}</p>
+              <p className="text-[14px] text-slate-600 mt-4 leading-relaxed max-w-xl dark:text-slate-300">{overview}</p>
             )}
           </div>
           <a href="/academics" className="hidden md:flex items-center gap-2 font-bold text-foreground hover:text-primary transition-colors uppercase tracking-wider text-[13px]">
@@ -63,12 +63,12 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
         {hasFaculty ? (
           <div className="flex overflow-x-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-6 snap-x snap-mandatory">
             {faculty.slice(0, 8).map((member, idx) => (
-              <div key={member._id ?? idx} className="min-w-[260px] sm:min-w-0 bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 snap-center flex flex-col">
+              <div key={member._id ?? idx} className="min-w-[260px] sm:min-w-0 bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 snap-center flex flex-col dark:bg-slate-900 dark:border-slate-800">
                 <div className="h-48 overflow-hidden relative">
                   {member.photo_url ? (
                     <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                   ) : (
-                    <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                    <div className="w-full h-full bg-slate-100 flex items-center justify-center dark:bg-slate-800">
                       <BookOpen className="w-12 h-12 text-slate-300" />
                     </div>
                   )}
@@ -85,7 +85,7 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
           </div>
         ) : (
           hasClassStructure ? (
-            <p className="text-[14px] text-slate-600 mb-10 leading-relaxed max-w-2xl">{classStructure}</p>
+            <p className="text-[14px] text-slate-600 mb-10 leading-relaxed max-w-2xl dark:text-slate-300">{classStructure}</p>
           ) : null
         )}
 

@@ -40,13 +40,13 @@ export default async function StudentLifePage() {
 
       {/* Content Sections */}
       {sports && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-white dark:bg-slate-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6"><Trophy className="w-7 h-7 text-primary" /></div>
               <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Athletics</h2>
               <h3 className="text-3xl font-serif font-bold text-foreground mb-6">Sports & Athletics</h3>
-              <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{sports}</p>
+              <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{sports}</p>
             </div>
             <img src={sportsImage || "https://images.unsplash.com/photo-1529390079861-591de354faf5?q=80&w=800&auto=format&fit=crop"} alt="Sports" className="w-full h-72 object-cover rounded-sm shadow-xl" />
           </div>
@@ -54,27 +54,27 @@ export default async function StudentLifePage() {
       )}
 
       {cultural && (
-        <section className="py-16 bg-slate-50">
+        <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center">
             <img src={culturalImage || "https://images.unsplash.com/photo-1511629091441-ee46146481b6?q=80&w=800&auto=format&fit=crop"} alt="Cultural" className="w-full h-72 object-cover rounded-sm shadow-xl order-2 lg:order-1" />
             <div className="order-1 lg:order-2">
               <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-6"><Music className="w-7 h-7 text-purple-500" /></div>
               <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Arts</h2>
               <h3 className="text-3xl font-serif font-bold text-foreground mb-6">Cultural Activities</h3>
-              <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{cultural}</p>
+              <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{cultural}</p>
             </div>
           </div>
         </section>
       )}
 
       {clubs && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-white dark:bg-slate-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-6"><Users className="w-7 h-7 text-blue-500" /></div>
               <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Extracurriculars</h2>
               <h3 className="text-3xl font-serif font-bold text-foreground mb-6">Clubs & Societies</h3>
-              <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{clubs}</p>
+              <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{clubs}</p>
             </div>
             <img src={clubsImage || "https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=800&auto=format&fit=crop"} alt="Clubs" className="w-full h-72 object-cover rounded-sm shadow-xl" />
           </div>
@@ -105,14 +105,14 @@ export default async function StudentLifePage() {
 
       {/* Fallback + Quick Links */}
       {!sports && !cultural && !clubs && achievements.length === 0 && (
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white dark:bg-slate-900">
           <div className="max-w-5xl mx-auto px-4 text-center">
             <p className="text-slate-400">Student life content will appear here. Add it from <strong>Admin → Website → Student Life</strong>.</p>
           </div>
         </section>
       )}
 
-      <section className="py-14 bg-slate-50 border-t border-slate-200">
+      <section className="py-14 bg-slate-50 border-t border-slate-200 dark:bg-slate-800/50 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[
@@ -121,7 +121,7 @@ export default async function StudentLifePage() {
               { href: "/student-life/clubs", label: "Clubs & Societies" },
               { href: "/student-life/achievements", label: "Achievements" },
             ].map(l => (
-              <Link key={l.href} href={l.href} className="flex items-center justify-between p-5 bg-white border border-slate-200 rounded-sm hover:border-primary hover:shadow-md transition-all group">
+              <Link key={l.href} href={l.href} className="flex items-center justify-between p-5 bg-white border border-slate-200 rounded-sm hover:border-primary hover:shadow-md transition-all group dark:bg-slate-900 dark:border-slate-800">
                 <span className="text-foreground font-bold text-[14px]">{l.label}</span>
                 <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-primary" />
               </Link>

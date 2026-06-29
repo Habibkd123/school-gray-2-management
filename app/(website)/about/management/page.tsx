@@ -23,8 +23,8 @@ export default async function ManagementPage() {
       {team.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {team.map((member: any, idx: number) => (
-            <div key={member._id ?? idx} className="bg-white rounded-sm border border-slate-200 shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-              <div className="h-64 overflow-hidden bg-slate-100 relative">
+            <div key={member._id ?? idx} className="bg-white rounded-sm border border-slate-200 shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 dark:bg-slate-900 dark:border-slate-800">
+              <div className="h-64 overflow-hidden bg-slate-100 relative dark:bg-slate-800">
                 {member.photo_url ? (
                   <img src={member.photo_url} alt={member.name} className="w-full h-full object-cover" />
                 ) : (
@@ -43,7 +43,7 @@ export default async function ManagementPage() {
           ))}
         </div>
       ) : (
-        <div className="p-8 bg-gray-50 border border-gray-200 rounded-2xl">
+        <div className="p-8 bg-gray-50 border border-gray-200 rounded-2xl dark:bg-slate-800/50 dark:border-slate-800">
           <p className="text-gray-500">Management team members will be listed here. Add them from the admin panel under <strong>Website → About</strong>.</p>
         </div>
       )}

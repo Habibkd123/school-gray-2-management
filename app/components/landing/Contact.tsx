@@ -65,7 +65,7 @@ export function Contact({ data }: { data?: ContactData | null }) {
   }
 
   return (
-    <section id="contact" className="py-24 bg-white relative">
+    <section id="contact" className="py-24 bg-white relative dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <SectionHeading
           eyebrow="Get in Touch"
@@ -77,18 +77,18 @@ export function Contact({ data }: { data?: ContactData | null }) {
         <div className="grid lg:grid-cols-2 gap-16">
           <div className="space-y-8">
             {address && (
-              <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-primary">
+              <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-primary dark:bg-slate-800/50">
                 <MapPin className="w-8 h-8 text-primary mb-4" />
                 <h4 className="font-bold text-foreground mb-2 text-[15px]">Campus Address</h4>
-                <p className="text-slate-600 text-[14px] whitespace-pre-line">{address}</p>
+                <p className="text-slate-600 text-[14px] whitespace-pre-line dark:text-slate-300">{address}</p>
               </div>
             )}
 
             {phone && (
-              <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-primary">
+              <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-primary dark:bg-slate-800/50">
                 <Phone className="w-8 h-8 text-primary mb-4" />
                 <h4 className="font-bold text-foreground mb-2 text-[15px]">Contact Numbers</h4>
-                <p className="text-slate-600 text-[14px]">
+                <p className="text-slate-600 text-[14px] dark:text-slate-300">
                   <a href={`tel:${phone.replace(/\s/g, "")}`} className="hover:text-primary transition-colors">
                     {phone}
                   </a>
@@ -97,14 +97,14 @@ export function Contact({ data }: { data?: ContactData | null }) {
             )}
 
             {email && (
-              <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-primary sm:col-span-2">
+              <div className="bg-slate-50 p-6 rounded-sm border-l-4 border-primary sm:col-span-2 dark:bg-slate-800/50">
                 <Mail className="w-8 h-8 text-primary mb-4" />
                 <h4 className="font-bold text-foreground mb-2 text-[15px]">Email Address</h4>
-                <p className="text-slate-600 text-[14px]">
+                <p className="text-slate-600 text-[14px] dark:text-slate-300">
                   <a href={`mailto:${email}`} className="hover:text-primary transition-colors">{email}</a>
                 </p>
                 {website && (
-                  <p className="text-slate-600 text-[14px] mt-1">
+                  <p className="text-slate-600 text-[14px] mt-1 dark:text-slate-300">
                     <a href={website} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors flex items-center gap-1">
                       <Globe className="w-4 h-4" /> {website}
                     </a>
@@ -117,22 +117,22 @@ export function Contact({ data }: { data?: ContactData | null }) {
               <div className="flex items-center gap-4 pt-2">
                 <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">Follow us:</span>
                 {social.facebook && (
-                  <a href={social.facebook} target="_blank" rel="noopener noreferrer" title="Facebook" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-primary hover:text-white transition-all">
+                  <a href={social.facebook} target="_blank" rel="noopener noreferrer" title="Facebook" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-primary hover:text-white transition-all dark:bg-slate-800 dark:text-slate-300">
                     <Share2 className="w-5 h-5" />
                   </a>
                 )}
                 {social.twitter && (
-                  <a href={social.twitter} target="_blank" rel="noopener noreferrer" title="Twitter / X" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-primary hover:text-white transition-all">
+                  <a href={social.twitter} target="_blank" rel="noopener noreferrer" title="Twitter / X" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-primary hover:text-white transition-all dark:bg-slate-800 dark:text-slate-300">
                     <Link2 className="w-5 h-5" />
                   </a>
                 )}
                 {social.instagram && (
-                  <a href={social.instagram} target="_blank" rel="noopener noreferrer" title="Instagram" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-primary hover:text-white transition-all">
+                  <a href={social.instagram} target="_blank" rel="noopener noreferrer" title="Instagram" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-primary hover:text-white transition-all dark:bg-slate-800 dark:text-slate-300">
                     <ExternalLink className="w-5 h-5" />
                   </a>
                 )}
                 {social.youtube && (
-                  <a href={social.youtube} target="_blank" rel="noopener noreferrer" title="YouTube" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-primary hover:text-white transition-all">
+                  <a href={social.youtube} target="_blank" rel="noopener noreferrer" title="YouTube" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-primary hover:text-white transition-all dark:bg-slate-800 dark:text-slate-300">
                     <Video className="w-5 h-5" />
                   </a>
                 )}
@@ -141,7 +141,7 @@ export function Contact({ data }: { data?: ContactData | null }) {
 
             {/* Map Embed */}
             {mapUrl && (
-              <div className="rounded-sm overflow-hidden border border-slate-200 shadow-md h-48 mt-4">
+              <div className="rounded-sm overflow-hidden border border-slate-200 shadow-md h-48 mt-4 dark:border-slate-800">
                 <iframe
                   src={mapUrl}
                   width="100%"

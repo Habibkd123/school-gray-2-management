@@ -95,7 +95,7 @@ export default function TeacherReportPage() {
                     <div className="p-4 space-y-4">
                       <div className="space-y-1.5">
                         <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Department</label>
-                        <select value={filterDepartment} onChange={e => setFilterDepartment(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 cursor-pointer">
+                        <select value={filterDepartment} onChange={e => setFilterDepartment(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 cursor-pointer dark:text-slate-300">
                           <option value="">All Departments</option>
                           {departments.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>

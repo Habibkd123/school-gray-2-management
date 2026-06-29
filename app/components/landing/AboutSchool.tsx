@@ -43,7 +43,7 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
   }
 
   return (
-    <section id="about" className="py-24 bg-slate-50 overflow-hidden relative">
+    <section id="about" className="py-24 bg-slate-50 overflow-hidden relative dark:bg-slate-800/50">
       <div className="absolute top-0 right-0 w-full sm:w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -z-10" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -87,7 +87,7 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
             )}
 
             {history && (
-              <p className="text-[15px] text-slate-600 leading-relaxed mb-8">
+              <p className="text-[15px] text-slate-600 leading-relaxed mb-8 dark:text-slate-300">
                 {history}
               </p>
             )}
@@ -95,7 +95,7 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
             {points.length > 0 && (
               <ul className="space-y-4 mb-10">
                 {points.map((point, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-slate-700 font-medium text-[14px]">
+                  <li key={idx} className="flex items-start gap-3 text-slate-700 font-medium text-[14px] dark:text-slate-200">
                     <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                     <span>{point}</span>
                   </li>
@@ -106,14 +106,14 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
             {data?.vision && (
               <div className="mb-10">
                 <h4 className="text-lg font-bold text-foreground mb-3">Our Vision</h4>
-                <p className="text-[15px] text-slate-600 leading-relaxed">{data.vision}</p>
+                <p className="text-[15px] text-slate-600 leading-relaxed dark:text-slate-300">{data.vision}</p>
               </div>
             )}
 
             {data?.mission && (
               <div className="mb-10">
                 <h4 className="text-lg font-bold text-foreground mb-3">Our Mission</h4>
-                <p className="text-[15px] text-slate-600 leading-relaxed">{data.mission}</p>
+                <p className="text-[15px] text-slate-600 leading-relaxed dark:text-slate-300">{data.mission}</p>
               </div>
             )}
 
@@ -122,10 +122,10 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
                 <h4 className="text-lg font-bold text-foreground mb-6">Leadership Team</h4>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {managementTeam.map((member) => (
-                    <div key={member._id?.toString() ?? member.name} className="bg-white rounded-sm p-4 border border-slate-200">
+                    <div key={member._id?.toString() ?? member.name} className="bg-white rounded-sm p-4 border border-slate-200 dark:bg-slate-900 dark:border-slate-800">
                       <p className="font-bold text-foreground">{member.name}</p>
                       <p className="text-slate-500 text-[13px] mb-3">{member.position}</p>
-                      <p className="text-slate-600 text-[14px] leading-relaxed">{member.bio}</p>
+                      <p className="text-slate-600 text-[14px] leading-relaxed dark:text-slate-300">{member.bio}</p>
                     </div>
                   ))}
                 </div>

@@ -65,14 +65,14 @@ export function Header({ onMenuClick }: HeaderProps) {
       }
     }
     fetchYears();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <header
       className={`sticky top-0 z-40 h-[72px] w-full px-4 md:px-6 flex items-center justify-between transition-all duration-200 ${scrolled
-          ? "bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-border shadow-sm"
-          : "bg-white dark:bg-slate-900 border-b border-border"
+        ? "bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-border shadow-sm"
+        : "bg-white dark:bg-slate-900 border-b border-border"
         }`}
     >
       <div className="flex items-center">
@@ -124,12 +124,12 @@ export function Header({ onMenuClick }: HeaderProps) {
 
 
         {/* Theme Toggle */}
-        <button
+        {/* <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="flex items-center justify-center w-9 h-9 rounded-lg bg-[#F1F5F9] dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 transition-colors"
         >
           {theme === "dark" ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
-        </button>
+        </button> */}
 
         {/* Notifications */}
         <div className="relative">

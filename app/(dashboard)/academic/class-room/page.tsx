@@ -203,7 +203,7 @@ export default function ClassRoomPage() {
             <button type="button" onClick={() => setFormStatus(!formStatus)} className="cursor-pointer focus:outline-none">
               {formStatus
                 ? <ToggleRight className="w-10 h-10 text-primary" />
-                : <div className="w-10 h-10 flex items-center justify-center"><div className="w-8 h-4 bg-slate-300 rounded-full relative"><div className="w-3 h-3 bg-white rounded-full absolute left-0.5 top-0.5 shadow-sm" /></div></div>
+                : <div className="w-10 h-10 flex items-center justify-center"><div className="w-8 h-4 bg-slate-300 rounded-full relative"><div className="w-3 h-3 bg-white rounded-full absolute left-0.5 top-0.5 shadow-sm dark:bg-slate-900" /></div></div>
               }
             </button>
           </div>
@@ -230,7 +230,7 @@ export default function ClassRoomPage() {
             <h2 className="text-xl font-bold text-foreground dark:text-slate-100 mb-3">Confirm Deletion</h2>
             <p className="text-[14px] text-slate-500 leading-relaxed mb-8">This action cannot be undone.</p>
             <div className="flex justify-center gap-3">
-              <button onClick={() => setIsDeleteOpen(false)} className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 text-[14px] font-bold rounded-lg hover:bg-slate-200 transition-colors cursor-pointer">Cancel</button>
+              <button onClick={() => setIsDeleteOpen(false)} className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 text-[14px] font-bold rounded-lg hover:bg-slate-200 transition-colors cursor-pointer dark:text-slate-200">Cancel</button>
               <button onClick={handleDeleteConfirm} className="px-6 py-2.5 bg-rose-500 text-white text-[14px] font-bold rounded-lg hover:bg-rose-600 transition-colors cursor-pointer">Yes, Delete</button>
             </div>
           </div>

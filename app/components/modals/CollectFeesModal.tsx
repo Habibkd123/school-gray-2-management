@@ -120,7 +120,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                onClick={() => setIsPaid(!isPaid)}
                className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors focus:outline-none ${isPaid ? 'bg-[#10B981]' : 'bg-slate-200 dark:bg-slate-700'}`}
              >
-               <div className={`w-4 h-4 bg-white rounded-full absolute top-0.5 shadow-sm transition-transform ${isPaid ? 'left-[22px]' : 'left-0.5'}`}></div>
+               <div className={`w-4 h-4 bg-white dark:bg-slate-900 rounded-full absolute top-0.5 shadow-sm transition-transform ${isPaid ? 'left-[22px]' : 'left-0.5'}`}></div>
              </button>
            </div>
 

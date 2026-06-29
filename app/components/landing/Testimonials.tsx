@@ -50,7 +50,7 @@ export function Testimonials({ data }: TestimonialsProps) {
                 ))}
               </div>
               
-              <p className="text-slate-600 leading-relaxed mb-8 text-[15px] italic">
+              <p className="text-slate-600 leading-relaxed mb-8 text-[15px] italic dark:text-slate-300">
                 "{test.content}"
               </p>
               

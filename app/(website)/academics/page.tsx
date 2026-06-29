@@ -49,17 +49,17 @@ export default async function AcademicsPage() {
 
       {/* Overview */}
       {overview && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-white dark:bg-slate-900">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Overview</h2>
             <h3 className="text-3xl font-serif font-bold text-foreground mb-6">Curriculum Overview</h3>
-            <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{overview}</p>
+            <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{overview}</p>
           </div>
         </section>
       )}
 
       {/* Programs */}
-      <section className="py-16 bg-slate-50">
+      <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Programs</h2>
           <h3 className="text-3xl font-serif font-bold text-foreground mb-10">Classes & Programs</h3>
@@ -69,13 +69,13 @@ export default async function AcademicsPage() {
 
       {/* Faculty */}
       {faculty.length > 0 && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-white dark:bg-slate-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Our Teachers</h2>
             <h3 className="text-3xl font-serif font-bold text-foreground mb-10">Faculty</h3>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {faculty.map((m: any, i: number) => (
-                <div key={m._id ?? i} className="bg-slate-50 rounded-sm border border-slate-200 p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                <div key={m._id ?? i} className="bg-slate-50 rounded-sm border border-slate-200 p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 dark:bg-slate-800/50 dark:border-slate-800">
                   {m.photo_url ? (
                     <img src={m.photo_url} alt={m.name} className="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-4 border-white shadow-md" />
                   ) : (

@@ -36,7 +36,7 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
   const hasRealData = news.length > 0;
 
   return (
-    <section className="py-24 bg-slate-50 relative">
+    <section className="py-24 bg-slate-50 relative dark:bg-slate-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16">
           <SectionHeading
@@ -59,7 +59,7 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
                 : "";
               const img = PLACEHOLDER_IMGS[idx % PLACEHOLDER_IMGS.length];
               return (
-                <div key={item._id ?? idx} className="bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+                <div key={item._id ?? idx} className="bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 dark:bg-slate-900 dark:border-slate-800">
                   <div className="h-56 overflow-hidden relative">
                     <img 
                       src={img} 
@@ -103,7 +103,7 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
         ) : (
           <div className="grid md:grid-cols-3 gap-8">
             {DEFAULT_NEWS.map((item, idx) => (
-              <div key={idx} className="bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
+              <div key={idx} className="bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 dark:bg-slate-900 dark:border-slate-800">
                 <div className="h-56 overflow-hidden relative">
                   <img 
                     src={item.img} 

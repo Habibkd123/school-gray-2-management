@@ -20,7 +20,7 @@ export default async function ResultsPage() {
       {items.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map((item: any, idx: number) => (
-            <div key={item._id ?? idx} className="bg-white rounded-sm border border-slate-200 shadow-md p-6 hover:shadow-xl hover:-translate-y-1 transition-all group border-t-4 border-t-emerald-500">
+            <div key={item._id ?? idx} className="bg-white rounded-sm border border-slate-200 shadow-md p-6 hover:shadow-xl hover:-translate-y-1 transition-all group border-t-4 border-t-emerald-500 dark:bg-slate-900 dark:border-slate-800">
               <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mb-4 border border-emerald-100">
                 <Award className="w-5 h-5 text-emerald-500" />
               </div>

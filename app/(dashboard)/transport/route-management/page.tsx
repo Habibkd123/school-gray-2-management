@@ -492,7 +492,7 @@ export default function RouteManagementPage() {
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <button type="button" onClick={() => { setIsAddOpen(false); setEditRoute(null); }} className="px-4 py-2 border border-border text-[13px] font-semibold rounded-lg bg-white dark:bg-slate-900 text-slate-700 hover:bg-slate-50 transition-colors">Cancel</button>
+              <button type="button" onClick={() => { setIsAddOpen(false); setEditRoute(null); }} className="px-4 py-2 border border-border text-[13px] font-semibold rounded-lg bg-white dark:bg-slate-900 text-slate-700 hover:bg-slate-50 transition-colors dark:text-slate-200">Cancel</button>
               <button type="submit" disabled={isSaving} className="px-5 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 disabled:opacity-70 transition-colors">
                 {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                 {editRoute ? "Save Changes" : "Add Route"}
@@ -512,7 +512,7 @@ export default function RouteManagementPage() {
               <p className="text-[13px] text-slate-500 dark:text-slate-400">This will permanently remove <strong>{deleteTarget.routeName}</strong>.</p>
             </div>
             <div className="flex justify-center gap-3">
-              <button onClick={() => setDeleteTarget(null)} className="px-5 py-2.5 border border-border text-[13px] font-semibold rounded-lg bg-white dark:bg-slate-900 text-slate-700 hover:bg-slate-50 transition-colors">Cancel</button>
+              <button onClick={() => setDeleteTarget(null)} className="px-5 py-2.5 border border-border text-[13px] font-semibold rounded-lg bg-white dark:bg-slate-900 text-slate-700 hover:bg-slate-50 transition-colors dark:text-slate-200">Cancel</button>
               <button onClick={handleDelete} className="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-white text-[13px] font-semibold rounded-lg transition-colors">Delete</button>
             </div>
           </div>

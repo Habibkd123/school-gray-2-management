@@ -46,11 +46,11 @@ export default async function AdmissionsPage() {
 
       {/* How to Apply */}
       {howToApply && (
-        <section className="py-16 bg-white">
+        <section className="py-16 bg-white dark:bg-slate-900">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Process</h2>
             <h3 className="text-3xl font-serif font-bold text-foreground mb-6">How to Apply</h3>
-            <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{howToApply}</p>
+            <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{howToApply}</p>
             {admissionOpen && (
               <a href={applyUrl} target={applyUrl.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
                 className="mt-8 inline-flex items-center gap-2 px-8 py-3.5 bg-primary text-white font-bold rounded-sm hover:bg-[var(--primary-hover)] transition-all shadow-lg shadow-primary/20 uppercase tracking-wide">
@@ -63,15 +63,15 @@ export default async function AdmissionsPage() {
 
       {/* Documents */}
       {docs.length > 0 && (
-        <section className="py-16 bg-slate-50">
+        <section className="py-16 bg-slate-50 dark:bg-slate-800/50">
           <div className="max-w-5xl mx-auto px-4 sm:px-6">
             <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Documents</h2>
             <h3 className="text-3xl font-serif font-bold text-foreground mb-8">Documents Required</h3>
             <ul className="grid sm:grid-cols-2 gap-4">
               {docs.map((doc: string, i: number) => (
-                <li key={i} className="flex items-start gap-3 bg-white p-4 rounded-sm border border-slate-200 shadow-sm">
+                <li key={i} className="flex items-start gap-3 bg-white p-4 rounded-sm border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800">
                   <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-slate-700 text-[14px] font-medium">{doc}</span>
+                  <span className="text-slate-700 text-[14px] font-medium dark:text-slate-200">{doc}</span>
                 </li>
               ))}
             </ul>

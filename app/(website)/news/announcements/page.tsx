@@ -26,7 +26,7 @@ export default async function AnnouncementsPage() {
       {items.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {items.map((item: any, idx: number) => (
-            <div key={item._id ?? idx} className="bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+            <div key={item._id ?? idx} className="bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 dark:bg-slate-900 dark:border-slate-800">
               <div className="h-48 overflow-hidden relative">
                 <img src={IMGS[idx % IMGS.length]} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                 <div className="absolute top-4 left-4 bg-primary text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded-sm">Announcement</div>

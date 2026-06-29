@@ -58,13 +58,13 @@ export default async function AboutPage() {
 
       {/* ── Our Story ── */}
       {history && (
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white dark:bg-slate-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div>
                 <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Our Story</h2>
                 <h3 className="text-4xl font-serif font-bold text-foreground mb-6">Our History</h3>
-                <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{history}</p>
+                <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{history}</p>
               </div>
               <div className="relative">
                 <img
@@ -86,7 +86,7 @@ export default async function AboutPage() {
 
       {/* ── Vision & Mission ── */}
       {(vision || mission) && (
-        <section className="py-20 bg-slate-50">
+        <section className="py-20 bg-slate-50 dark:bg-slate-800/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-14">
               <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Our Purpose</h2>
@@ -94,21 +94,21 @@ export default async function AboutPage() {
             </div>
             <div className="grid md:grid-cols-2 gap-10">
               {vision && (
-                <div className="bg-white p-10 rounded-sm border border-slate-200 shadow-md border-t-4 border-t-primary">
+                <div className="bg-white p-10 rounded-sm border border-slate-200 shadow-md border-t-4 border-t-primary dark:bg-slate-900 dark:border-slate-800">
                   <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                     <Eye className="w-7 h-7 text-primary" />
                   </div>
                   <h4 className="text-2xl font-serif font-bold text-foreground mb-4">Our Vision</h4>
-                  <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{vision}</p>
+                  <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{vision}</p>
                 </div>
               )}
               {mission && (
-                <div className="bg-white p-10 rounded-sm border border-slate-200 shadow-md border-t-4 border-t-[#0F172A]">
+                <div className="bg-white p-10 rounded-sm border border-slate-200 shadow-md border-t-4 border-t-[#0F172A] dark:bg-slate-900 dark:border-slate-800">
                   <div className="w-14 h-14 bg-[var(--sidebar-bg)]/10 rounded-full flex items-center justify-center mb-6">
                     <Target className="w-7 h-7 text-foreground" />
                   </div>
                   <h4 className="text-2xl font-serif font-bold text-foreground mb-4">Our Mission</h4>
-                  <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{mission}</p>
+                  <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{mission}</p>
                 </div>
               )}
             </div>
@@ -118,7 +118,7 @@ export default async function AboutPage() {
 
       {/* ── Infrastructure ── */}
       {infrastructure && (
-        <section className="py-20 bg-white">
+        <section className="py-20 bg-white dark:bg-slate-900">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="relative order-2 lg:order-1">
@@ -131,7 +131,7 @@ export default async function AboutPage() {
               <div className="order-1 lg:order-2">
                 <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Our Campus</h2>
                 <h3 className="text-4xl font-serif font-bold text-foreground mb-6">Infrastructure</h3>
-                <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line">{infrastructure}</p>
+                <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{infrastructure}</p>
               </div>
             </div>
           </div>
@@ -140,7 +140,7 @@ export default async function AboutPage() {
 
       {/* ── Management Team ── */}
       {team.length > 0 && (
-        <section className="py-20 bg-slate-50">
+        <section className="py-20 bg-slate-50 dark:bg-slate-800/50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-14">
               <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Leadership</h2>
@@ -148,8 +148,8 @@ export default async function AboutPage() {
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {team.map((member: any, idx: number) => (
-                <div key={member._id ?? idx} className="bg-white rounded-sm border border-slate-200 shadow-md overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-                  <div className="h-64 overflow-hidden bg-slate-100 relative">
+                <div key={member._id ?? idx} className="bg-white rounded-sm border border-slate-200 shadow-md overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300 dark:bg-slate-900 dark:border-slate-800">
+                  <div className="h-64 overflow-hidden bg-slate-100 relative dark:bg-slate-800">
                     {member.photo_url ? (
                       <img
                         src={member.photo_url}
@@ -179,9 +179,9 @@ export default async function AboutPage() {
 
       {/* ── Fallback when no data ── */}
       {!history && !vision && !mission && !infrastructure && team.length === 0 && (
-        <section className="py-24 bg-white">
+        <section className="py-24 bg-white dark:bg-slate-900">
           <div className="max-w-4xl mx-auto px-4 text-center">
-            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6 dark:bg-slate-800">
               <CheckCircle2 className="w-10 h-10 text-slate-300" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-3">Content Coming Soon</h2>
