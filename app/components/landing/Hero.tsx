@@ -68,10 +68,22 @@ export function Hero({ data }: { data?: HeroData | null }) {
     <section id="home" className="relative bg-[#FFFFFF] overflow-hidden">
 
       {/* ── Red Top Accent Bar ─────────────────────────── */}
-      <div className="w-full h-1 bg-[var(--primary)]" />
+      <div className="w-full h-1 bg-[var(--primary)] relative z-10" />
+
+      {/* ── Background Image with Blur & Light Overlay ── */}
+      {about?.hero_image_url && (
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          <img
+            src={about.hero_image_url}
+            alt="School Campus"
+            className="w-full h-full object-cover opacity-45 blur-[3px] scale-105"
+          />
+          <div className="absolute inset-0 bg-white/50 dark:bg-slate-950/50" />
+        </div>
+      )}
 
       {/* ── Main Hero Grid ─────────────────────────────── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
 
         {/* Left — Text Content */}
         <div className="max-w-2xl">
@@ -204,7 +216,7 @@ export function Hero({ data }: { data?: HeroData | null }) {
 
       {/* ── Bottom Recognition Bar — only if tags exist ────────────────── */}
       {showBottomBar && (
-        <div className="w-full bg-[var(--section-alt)] py-4 border-t border-[#E0E0E0]">
+        <div className="relative z-10 w-full bg-[var(--section-alt)] py-4 border-t border-[#E0E0E0]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-between gap-4">
             <span className="text-[12px] font-bold text-[#828283] uppercase tracking-widest">
               Recognized by:

@@ -36,7 +36,7 @@ export default async function CircularsPage() {
                   {item.published_at ? new Date(item.published_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : ""}
                 </div>
                 <h3 className="font-bold text-foreground text-[15px] mb-1 leading-snug group-hover:text-blue-600 transition-colors">{item.title}</h3>
-                {item.content && <p className="text-slate-500 text-[13px] leading-relaxed">{item.content}</p>}
+                {item.content && <p className="text-slate-500 text-[13px] leading-relaxed dark:text-slate-400">{item.content}</p>}
               </div>
               {item.pdf_url && (
                 <a href={item.pdf_url} target="_blank" rel="noopener noreferrer" className="shrink-0 flex items-center gap-1 text-[12px] font-bold text-blue-500 hover:text-blue-700 uppercase tracking-wider">

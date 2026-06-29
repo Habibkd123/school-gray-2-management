@@ -98,7 +98,7 @@ function StudentFeesView({ studentId, studentName }: { studentId?: string; stude
                       <FileText className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-[12px] text-slate-500 uppercase font-semibold">Total Fees</p>
+                      <p className="text-[12px] text-slate-500 uppercase font-semibold dark:text-slate-400">Total Fees</p>
                       <p className="text-lg font-bold text-slate-900 dark:text-white">${totalFees.toLocaleString()}</p>
                     </div>
                   </div>
@@ -132,7 +132,7 @@ function StudentFeesView({ studentId, studentName }: { studentId?: string; stude
               {/* Progress Bar */}
               <div className="mt-6 pt-6 border-t border-border">
                 <div className="flex justify-between text-sm mb-2">
-                  <span className="text-slate-500 font-medium">Payment Progress</span>
+                  <span className="text-slate-500 font-medium dark:text-slate-400">Payment Progress</span>
                   <span className="font-bold text-slate-900 dark:text-white">{paymentPercentage}%</span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2.5">
@@ -163,7 +163,7 @@ function StudentFeesView({ studentId, studentName }: { studentId?: string; stude
                   <tbody>
                     {childFeeMasters.length === 0 ? (
                       <tr>
-                        <td colSpan={3} className="px-4 py-8 text-center text-slate-500">
+                        <td colSpan={3} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
                           No fees assigned yet.
                         </td>
                       </tr>
@@ -176,7 +176,7 @@ function StudentFeesView({ studentId, studentName }: { studentId?: string; stude
                           <tr key={master._id} className="border-b border-border last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                             <td className="px-4 py-3 font-medium text-slate-900 dark:text-white">
                               {type?.name || 'Unknown Type'}
-                              <span className="block text-[11px] text-slate-500 font-normal mt-0.5">{group?.name || 'Unknown Group'}</span>
+                              <span className="block text-[11px] text-slate-500 font-normal mt-0.5 dark:text-slate-400">{group?.name || 'Unknown Group'}</span>
                             </td>
                             <td className="px-4 py-3">
                               {master.due_date ? new Date(master.due_date).toLocaleDateString() : 'N/A'}
@@ -209,7 +209,7 @@ function StudentFeesView({ studentId, studentName }: { studentId?: string; stude
                   <tbody>
                     {payPag.paged.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-4 py-8 text-center text-slate-500">
+                        <td colSpan={4} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
                           No payments made yet.
                         </td>
                       </tr>

@@ -285,7 +285,7 @@ export default function TeacherAssignmentPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={doFetch} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
+          <button onClick={doFetch} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm dark:text-slate-400">
             <RefreshCcw className="w-4 h-4" />
           </button>
           {isAdmin && (
@@ -301,7 +301,7 @@ export default function TeacherAssignmentPage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 card-shadow">
         <div className="flex flex-wrap items-end gap-4">
           <div className="flex flex-col gap-1.5 min-w-[140px]">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Year</label>
+            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Year</label>
             <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium">
               <option value="">All Years</option>
@@ -309,7 +309,7 @@ export default function TeacherAssignmentPage() {
             </select>
           </div>
           <div className="flex flex-col gap-1.5 min-w-[140px]">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Teacher</label>
+            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Teacher</label>
             <select value={filterTeacherId} onChange={(e) => setFilterTeacherId(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium">
               <option value="">All Teachers</option>
@@ -317,7 +317,7 @@ export default function TeacherAssignmentPage() {
             </select>
           </div>
           <div className="flex flex-col gap-1.5 min-w-[140px]">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Class</label>
+            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Class</label>
             <select value={filterClassId} onChange={(e) => setFilterClassId(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium">
               <option value="">All Classes</option>
@@ -326,7 +326,7 @@ export default function TeacherAssignmentPage() {
           </div>
           {enableStreams && (
             <div className="flex flex-col gap-1.5 min-w-[140px]">
-              <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Stream</label>
+              <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Stream</label>
               <select value={filterStreamId} onChange={(e) => setFilterStreamId(e.target.value)}
                 className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium">
                 <option value="">All Streams</option>
@@ -336,7 +336,7 @@ export default function TeacherAssignmentPage() {
           )}
           {enableSections && (
             <div className="flex flex-col gap-1.5 min-w-[140px]">
-              <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Section</label>
+              <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Section</label>
               <select value={filterSectionId} onChange={(e) => setFilterSectionId(e.target.value)}
                 className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium">
                 <option value="">All Sections</option>
@@ -345,7 +345,7 @@ export default function TeacherAssignmentPage() {
             </div>
           )}
           <div className="flex flex-col gap-1.5 flex-1 min-w-[160px]">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Search</label>
+            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Search</label>
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}

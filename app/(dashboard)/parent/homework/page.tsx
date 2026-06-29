@@ -77,7 +77,7 @@ export default function ParentHomeworkPage() {
             <BookOpen className="w-6 h-6 text-purple-500" />
             Homework
           </h1>
-          <p className="text-sm text-slate-500 mt-1">Track assignments and submission status</p>
+          <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Track assignments and submission status</p>
         </div>
         <div className="w-full sm:w-[250px]">
           <ChildSelector
@@ -90,7 +90,7 @@ export default function ParentHomeworkPage() {
       </div>
 
       {!selectedChild ? (
-        <div className="bg-white dark:bg-slate-900 p-8 rounded-xl border border-border text-center text-slate-500">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-xl border border-border text-center text-slate-500 dark:text-slate-400">
           Please select a child to view their homework.
         </div>
       ) : isLoading && enrichedHomework.length === 0 ? (
@@ -108,7 +108,7 @@ export default function ParentHomeworkPage() {
                   <Clock className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-slate-500 font-semibold uppercase">Pending</p>
+                  <p className="text-[11px] text-slate-500 font-semibold uppercase dark:text-slate-400">Pending</p>
                   <p className="text-lg font-bold text-slate-900 dark:text-white leading-none">{pendingCount}</p>
                 </div>
               </div>
@@ -117,7 +117,7 @@ export default function ParentHomeworkPage() {
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <p className="text-[11px] text-slate-500 font-semibold uppercase">Submitted</p>
+                  <p className="text-[11px] text-slate-500 font-semibold uppercase dark:text-slate-400">Submitted</p>
                   <p className="text-lg font-bold text-slate-900 dark:text-white leading-none">{submittedCount}</p>
                 </div>
               </div>
@@ -145,7 +145,7 @@ export default function ParentHomeworkPage() {
             <div className="bg-white dark:bg-slate-900 p-8 rounded-xl border border-border text-center flex flex-col items-center">
               <CheckCircle2 className="w-12 h-12 text-emerald-300 mb-3" />
               <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">All Caught Up!</h3>
-              <p className="text-slate-500">No homework found for the selected filter.</p>
+              <p className="text-slate-500 dark:text-slate-400">No homework found for the selected filter.</p>
             </div>
           ) : (
             <>
@@ -187,7 +187,7 @@ export default function ParentHomeworkPage() {
                     </h3>
 
                     {/* Teacher */}
-                    <div className="flex items-center gap-1.5 text-[12px] text-slate-500 mb-3">
+                    <div className="flex items-center gap-1.5 text-[12px] text-slate-500 mb-3 dark:text-slate-400">
                       <User className="w-3 h-3" />
                       <span>{teacherName}</span>
                     </div>
@@ -201,13 +201,13 @@ export default function ParentHomeworkPage() {
 
                     {/* Footer dates */}
                     <div className="mt-auto pt-3 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
-                      <div className="flex items-center justify-between text-xs text-slate-500">
+                      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                         <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Assigned:</span>
                         <span className="font-medium text-slate-700 dark:text-slate-300">
                           {new Date(hw.assigned_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between text-xs text-slate-500">
+                      <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                         <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-amber-500" /> Due:</span>
                         <span className={`font-medium ${hw.isOverdue ? 'text-red-500' : 'text-slate-700 dark:text-slate-300'}`}>
                           {new Date(hw.due_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}

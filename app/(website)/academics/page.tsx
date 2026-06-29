@@ -36,9 +36,9 @@ export default async function AcademicsPage() {
   return (
     <main className="w-full">
       {/* Hero */}
-      <section className="relative py-28 bg-[var(--sidebar-bg)]">
+      <section className="relative py-28 bg-[var(--sidebar-bg)] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={academics?.hero_image_url || "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1920&auto=format&fit=crop"} alt="Academics" className="w-full h-full object-cover opacity-20" />
+          <img src={academics?.hero_image_url || "https://images.unsplash.com/photo-1532012197267-da84d127e765?q=80&w=1920&auto=format&fit=crop"} alt="Academics" className="w-full h-full object-cover opacity-45 blur-[3px] scale-105" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
@@ -77,7 +77,7 @@ export default async function AcademicsPage() {
               {faculty.map((m: any, i: number) => (
                 <div key={m._id ?? i} className="bg-slate-50 rounded-sm border border-slate-200 p-6 text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300 dark:bg-slate-800/50 dark:border-slate-800">
                   {m.photo_url ? (
-                    <img src={m.photo_url} alt={m.name} className="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-4 border-white shadow-md" />
+                    <img src={m.photo_url} alt={m.name} className="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-4 border-white shadow-md dark:border-slate-800" />
                   ) : (
                     <div className="w-20 h-20 rounded-full bg-slate-200 flex items-center justify-center mx-auto mb-4"><Users className="w-8 h-8 text-slate-400" /></div>
                   )}

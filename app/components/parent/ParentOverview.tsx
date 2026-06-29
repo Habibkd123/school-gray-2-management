@@ -79,7 +79,7 @@ export function ParentOverview() {
           <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-xl border border-border">
             <UsersPlaceholder />
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white mt-4">No Children Found</h3>
-            <p className="text-slate-500 max-w-md mx-auto mt-2">
+            <p className="text-slate-500 max-w-md mx-auto mt-2 dark:text-slate-400">
               We couldn't find any students linked to your email address. Please contact the school administrator to link your account to your children.
             </p>
           </div>

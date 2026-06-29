@@ -714,7 +714,7 @@ export default function ClassHomeWorkPage() {
                           <CheckCircle2 className="w-3 h-3" /> Submitted
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-[11px]">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 font-bold text-[11px] dark:text-slate-400">
                           Pending
                         </span>
                       )}
@@ -739,7 +739,7 @@ export default function ClassHomeWorkPage() {
                         submission.grade ? (
                           <div className="text-slate-700 dark:text-slate-200 font-bold">
                             {submission.grade}
-                            {submission.feedback && <span className="block text-slate-500 font-normal text-[11px] truncate max-w-full sm:w-[150px]">{submission.feedback}</span>}
+                            {submission.feedback && <span className="block text-slate-500 font-normal text-[11px] truncate max-w-full sm:w-[150px] dark:text-slate-400">{submission.feedback}</span>}
                           </div>
                         ) : (
                           <div className="flex flex-wrap items-center gap-2">

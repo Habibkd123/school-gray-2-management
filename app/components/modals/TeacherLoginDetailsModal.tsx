@@ -69,7 +69,7 @@ export function TeacherLoginDetailsModal({ isOpen, onClose, teacher }: TeacherLo
             <Lock className="w-5 h-5 text-primary" />
             <span>Teacher Login Details & Password</span>
           </h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors dark:text-slate-400">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -81,7 +81,7 @@ export function TeacherLoginDetailsModal({ isOpen, onClose, teacher }: TeacherLo
             <img src={teacher.photo_url || getAvatar(teacher.name)} className="w-16 h-16 rounded-xl object-cover shadow-sm border border-border" alt="Teacher" />
             <div>
               <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">{teacher.name}</h3>
-              <p className="text-[12px] text-slate-500 font-medium">Employee ID: {teacher.employee_id || "—"}</p>
+              <p className="text-[12px] text-slate-500 font-medium dark:text-slate-400">Employee ID: {teacher.employee_id || "—"}</p>
             </div>
           </div>
 

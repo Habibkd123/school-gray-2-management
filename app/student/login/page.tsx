@@ -160,7 +160,7 @@ export default function StudentLoginPage() {
 
       {/* Right Panel — Login Form */}
       <div className="flex-1 flex flex-col relative bg-white dark:bg-slate-950">
-        {/* Theme toggle */}
+        {/* Theme toggle
         {mounted && (
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -172,7 +172,7 @@ export default function StudentLoginPage() {
               <Moon className="w-5 h-5" />
             )}
           </button>
-        )}
+        )} */}
 
         <div className="flex-1 flex flex-col justify-center items-center px-6 sm:px-12 lg:px-16 xl:px-24 pb-20">
           <div className="w-full max-w-[420px]">

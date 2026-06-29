@@ -94,7 +94,7 @@ export default function ProgramsSlider({ programs }: { programs: Program[] }) {
                 <div className="p-6 flex-1 flex flex-col">
                   <span className="text-[11px] font-bold text-primary uppercase tracking-widest">{p.age}</span>
                   <h4 className="text-xl font-bold text-foreground mt-1 mb-2">{p.title}</h4>
-                  <p className="text-slate-500 text-[13px] leading-relaxed flex-1">{p.desc}</p>
+                  <p className="text-slate-500 text-[13px] leading-relaxed flex-1 dark:text-slate-400">{p.desc}</p>
                 </div>
               </div>
             </div>

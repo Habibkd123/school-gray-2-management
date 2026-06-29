@@ -36,7 +36,7 @@ export default async function AboutPage() {
           <img
             src={about?.hero_image_url || "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1920&auto=format&fit=crop"}
             alt="School Building"
-            className="w-full h-full object-cover opacity-20"
+            className="w-full h-full object-cover opacity-45 blur-[3px] scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
@@ -167,7 +167,7 @@ export default async function AboutPage() {
                     <h4 className="text-lg font-bold text-foreground">{member.name}</h4>
                     <p className="text-primary text-[12px] font-bold uppercase tracking-widest mb-3">{member.position}</p>
                     {member.bio && (
-                      <p className="text-slate-500 text-[13px] leading-relaxed">{member.bio}</p>
+                      <p className="text-slate-500 text-[13px] leading-relaxed dark:text-slate-400">{member.bio}</p>
                     )}
                   </div>
                 </div>
@@ -185,7 +185,7 @@ export default async function AboutPage() {
               <CheckCircle2 className="w-10 h-10 text-slate-300" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-3">Content Coming Soon</h2>
-            <p className="text-slate-500">
+            <p className="text-slate-500 dark:text-slate-400">
               About content is being updated. Please visit the admin panel under{" "}
               <strong>Website → About</strong> to add your school details.
             </p>

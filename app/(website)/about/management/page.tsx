@@ -37,7 +37,7 @@ export default async function ManagementPage() {
               <div className="p-6">
                 <h2 className="text-lg font-bold text-foreground">{member.name}</h2>
                 <p className="text-primary text-[12px] font-bold uppercase tracking-widest mb-3">{member.position}</p>
-                {member.bio && <p className="text-slate-500 text-[13px] leading-relaxed">{member.bio}</p>}
+                {member.bio && <p className="text-slate-500 text-[13px] leading-relaxed dark:text-slate-400">{member.bio}</p>}
               </div>
             </div>
           ))}

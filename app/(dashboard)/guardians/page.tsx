@@ -249,7 +249,7 @@ export default function GuardiansPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center gap-3 text-slate-500">
+        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
           <span className="text-[14px] font-medium">Loading parents...</span>
         </div>
@@ -649,11 +649,11 @@ export default function GuardiansPage() {
                     {/* Stats */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-5 border-t border-b border-slate-100 dark:border-slate-700/50 py-4">
                       <div>
-                        <p className="text-[11px] text-slate-500 mb-1">Children</p>
+                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Children</p>
                         <p className="text-[12px] font-bold text-slate-900 dark:text-white">{parent.children?.length || 0}</p>
                       </div>
                       <div>
-                        <p className="text-[11px] text-slate-500 mb-1">Added on</p>
+                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Added on</p>
                         <p className="text-[12px] font-bold text-slate-900 dark:text-white">{formatDate(parent.createdAt)}</p>
                       </div>
                     </div>

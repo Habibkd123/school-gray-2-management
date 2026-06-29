@@ -149,7 +149,7 @@ export default function ParentAttendancePage() {
             <Clock className="w-6 h-6 text-emerald-500" />
             Attendance Tracker
           </h1>
-          <p className="text-sm text-slate-500 mt-1">Monitor your child's daily presence</p>
+          <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Monitor your child's daily presence</p>
         </div>
         <div className="w-full sm:w-[250px]">
           <ChildSelector
@@ -162,7 +162,7 @@ export default function ParentAttendancePage() {
       </div>
 
       {!selectedChild ? (
-        <div className="bg-white dark:bg-slate-900 p-10 rounded-xl border border-border text-center text-slate-500">
+        <div className="bg-white dark:bg-slate-900 p-10 rounded-xl border border-border text-center text-slate-500 dark:text-slate-400">
           <Clock className="w-12 h-12 mx-auto text-slate-300 mb-3" />
           <p className="font-medium">Select a child to view their attendance</p>
         </div>
@@ -317,7 +317,7 @@ export default function ParentAttendancePage() {
             )}
 
             {/* Legend */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px] text-slate-500">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[12px] text-slate-500 dark:text-slate-400">
               {[
                 { color: "bg-emerald-500", label: "Present" },
                 { color: "bg-red-500",     label: "Absent" },

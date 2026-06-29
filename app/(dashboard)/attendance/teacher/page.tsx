@@ -118,7 +118,7 @@ export default function TeacherAttendancePage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 card-shadow">
         <div className="flex flex-wrap items-end gap-4">
           <div className="flex flex-col gap-1.5 min-w-[140px]">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Date</label>
+            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Date</label>
             <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary bg-white dark:bg-slate-900 font-medium" />
           </div>
@@ -159,7 +159,7 @@ export default function TeacherAttendancePage() {
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-[14px]">
-                <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 border-b border-border">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 border-b border-border dark:text-slate-400">
                   <tr>
                     <th className="px-4 py-3 font-semibold w-24">Emp ID</th>
                     <th className="px-4 py-3 font-semibold">Teacher Name</th>
@@ -170,7 +170,7 @@ export default function TeacherAttendancePage() {
                 <tbody className="divide-y divide-border">
                   {filteredTeachers.map(teacher => (
                     <tr key={teacher._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
-                      <td className="px-4 py-3 font-mono text-slate-500">{teacher.employee_id || "-"}</td>
+                      <td className="px-4 py-3 font-mono text-slate-500 dark:text-slate-400">{teacher.employee_id || "-"}</td>
                       <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{teacher.name}</td>
                       <td className="px-4 py-3">
                         <select

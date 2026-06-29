@@ -78,7 +78,7 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
                 </div>
                 <div className="p-6 flex-1 flex flex-col">
                   <h4 className="text-xl font-bold text-foreground mb-1">{member.name}</h4>
-                  <p className="text-slate-500 text-[12px] mb-3">{member.qualification}</p>
+                  <p className="text-slate-500 text-[12px] mb-3 dark:text-slate-400">{member.qualification}</p>
                 </div>
               </div>
             ))}

@@ -170,7 +170,7 @@ export default function ParentDetailPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center gap-3 text-slate-500">
+        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
           <span className="text-[14px] font-medium">Loading parent details...</span>
         </div>
@@ -180,7 +180,7 @@ export default function ParentDetailPage() {
 
   if (!parent) {
     return (
-      <div className="p-10 text-slate-500 text-center bg-white dark:bg-slate-900 border border-border rounded-xl">
+      <div className="p-10 text-slate-500 text-center bg-white dark:bg-slate-900 border border-border rounded-xl dark:text-slate-400">
         Parent not found.
       </div>
     );

@@ -575,17 +575,17 @@ export default function ExamResultsPage() {
               {/* Summary Section */}
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex items-center justify-between mb-12 dark:bg-slate-800/50 dark:border-slate-800">
                 <div className="text-center">
-                  <div className="text-[12px] uppercase font-bold text-slate-500 mb-1">Percentage</div>
+                  <div className="text-[12px] uppercase font-bold text-slate-500 mb-1 dark:text-slate-400">Percentage</div>
                   <div className="text-2xl font-black text-primary">{reportCardData.percent}%</div>
                 </div>
                 <div className="w-px h-12 bg-slate-200"></div>
                 <div className="text-center">
-                  <div className="text-[12px] uppercase font-bold text-slate-500 mb-1">Grade</div>
+                  <div className="text-[12px] uppercase font-bold text-slate-500 mb-1 dark:text-slate-400">Grade</div>
                   <div className="text-2xl font-black text-indigo-600">{reportCardData.grade}</div>
                 </div>
                 <div className="w-px h-12 bg-slate-200"></div>
                 <div className="text-center">
-                  <div className="text-[12px] uppercase font-bold text-slate-500 mb-1">Final Result</div>
+                  <div className="text-[12px] uppercase font-bold text-slate-500 mb-1 dark:text-slate-400">Final Result</div>
                   <div className={`text-2xl font-black uppercase ${reportCardData.failed ? 'text-rose-600' : 'text-emerald-600'}`}>
                     {reportCardData.failed ? 'Fail' : 'Pass'}
                   </div>

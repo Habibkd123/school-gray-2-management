@@ -356,7 +356,7 @@ export default function StudentsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center gap-3 text-slate-500">
+        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
           <Loader2 className="w-6 h-6 animate-spin" />
           <span className="text-[14px] font-medium">Loading students...</span>
         </div>
@@ -632,7 +632,7 @@ export default function StudentsPage() {
           <div className="p-6 bg-slate-50/50 dark:bg-slate-900/20 min-h-[400px]">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {students.length === 0 ? (
-                <div className="col-span-full py-12 text-center text-slate-500">
+                <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400">
                   No students registered or matching filters.
                 </div>
               ) : (
@@ -707,22 +707,22 @@ export default function StudentsPage() {
                       <img src={student.avatar} alt="Avatar" className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" />
                       <div>
                         <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{student.name}</h3>
-                        <p className="text-[12px] font-medium text-slate-500">{student.classNameStr}</p>
+                        <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400">{student.classNameStr}</p>
                       </div>
                     </div>
 
                     {/* Details grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-5 border-t border-b border-slate-100 dark:border-slate-700/50 py-4">
                       <div>
-                        <p className="text-[11px] text-slate-500 mb-1">Roll No</p>
+                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Roll No</p>
                         <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.roll_no || "—"}</p>
                       </div>
                       <div>
-                        <p className="text-[11px] text-slate-500 mb-1">Gender</p>
+                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Gender</p>
                         <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.gender}</p>
                       </div>
                       <div>
-                        <p className="text-[11px] text-slate-500 mb-1">Joined On</p>
+                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Joined On</p>
                         <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.joinDateStr}</p>
                       </div>
                     </div>
@@ -730,9 +730,9 @@ export default function StudentsPage() {
                     {/* Footer buttons */}
                     <div className="flex items-center justify-between mt-auto">
                       <div className="flex flex-wrap items-center gap-2">
-                        <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"><MessageSquare className="w-3.5 h-3.5" /></button>
-                        <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"><Phone className="w-3.5 h-3.5" /></button>
-                        <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"><Mail className="w-3.5 h-3.5" /></button>
+                        <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors dark:text-slate-400"><MessageSquare className="w-3.5 h-3.5" /></button>
+                        <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors dark:text-slate-400"><Phone className="w-3.5 h-3.5" /></button>
+                        <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors dark:text-slate-400"><Mail className="w-3.5 h-3.5" /></button>
                       </div>
                       <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsCollectFeesOpen(true); }} className="px-3 py-1.5 rounded bg-[#F1F5F9] dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
                         Add Fees

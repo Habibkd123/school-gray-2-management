@@ -71,7 +71,7 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
                     </div>
                   </div>
                   <div className="p-8">
-                    <div className="flex items-center gap-2 text-slate-500 text-[12px] font-bold mb-3 uppercase tracking-wider">
+                    <div className="flex items-center gap-2 text-slate-500 text-[12px] font-bold mb-3 uppercase tracking-wider dark:text-slate-400">
                       <Calendar className="w-4 h-4" />
                       {dateStr}
                     </div>
@@ -79,7 +79,7 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
                       {item.title}
                     </h4>
                     {item.content && (
-                      <p className="text-slate-500 text-[13px] mb-4 line-clamp-2">{item.content}</p>
+                      <p className="text-slate-500 text-[13px] mb-4 line-clamp-2 dark:text-slate-400">{item.content}</p>
                     )}
                     {item.pdf_url ? (
                       <a
@@ -115,7 +115,7 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
                   </div>
                 </div>
                 <div className="p-8">
-                  <div className="flex items-center gap-2 text-slate-500 text-[12px] font-bold mb-3 uppercase tracking-wider">
+                  <div className="flex items-center gap-2 text-slate-500 text-[12px] font-bold mb-3 uppercase tracking-wider dark:text-slate-400">
                     <Calendar className="w-4 h-4" />
                     {item.date}
                   </div>

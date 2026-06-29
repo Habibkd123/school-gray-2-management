@@ -406,7 +406,7 @@ function StudentPromotionContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Student Promotion</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 mt-1 dark:text-slate-400">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/students" className="hover:text-primary transition-colors">Students</Link>
@@ -428,7 +428,7 @@ function StudentPromotionContent() {
 
       {/* Loading states / Errors */}
       {loadingStudentParam && (
-        <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-8 flex items-center justify-center gap-3 text-slate-500 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-8 flex items-center justify-center gap-3 text-slate-500 shadow-sm dark:text-slate-400">
           <Loader2 className="w-5 h-5 animate-spin text-primary" />
           <span>Fetching student details...</span>
         </div>
@@ -452,7 +452,7 @@ function StudentPromotionContent() {
         <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden">
           <div className="p-5 border-b border-border">
             <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">Promotion Configuration</h2>
-            <p className="text-[13px] text-slate-500 mt-0.5">Define academic sessions and classes for promotion mapping</p>
+            <p className="text-[13px] text-slate-500 mt-0.5 dark:text-slate-400">Define academic sessions and classes for promotion mapping</p>
           </div>
 
           <div className="p-5">
@@ -606,7 +606,7 @@ function StudentPromotionContent() {
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden">
             <div className="p-5 border-b border-border">
               <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">Map Class Sections Summary</h2>
-              <p className="text-[13px] text-slate-500 mt-0.5">Verify old class vs new target class mapping</p>
+              <p className="text-[13px] text-slate-500 mt-0.5 dark:text-slate-400">Verify old class vs new target class mapping</p>
             </div>
             <div className="p-5">
               <div className="flex flex-col lg:flex-row items-center gap-8 relative">
@@ -639,7 +639,7 @@ function StudentPromotionContent() {
             <div className="p-4 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Active Students List</h3>
-                <p className="text-[12.5px] text-slate-500 mt-0.5">Showing {studentsList.length} students</p>
+                <p className="text-[12.5px] text-slate-500 mt-0.5 dark:text-slate-400">Showing {studentsList.length} students</p>
               </div>
             </div>
 
@@ -737,7 +737,7 @@ function StudentPromotionContent() {
 export default function StudentPromotionPage() {
   return (
     <Suspense fallback={
-      <div className="p-6 text-slate-500 flex items-center gap-2 justify-center min-h-[400px]">
+      <div className="p-6 text-slate-500 flex items-center gap-2 justify-center min-h-[400px] dark:text-slate-400">
         <Loader2 className="w-5 h-5 animate-spin text-primary" />
         <span>Loading promotion workspace...</span>
       </div>

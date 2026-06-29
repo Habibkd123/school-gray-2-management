@@ -286,13 +286,13 @@ export default function SubjectAssignmentPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-[20px] leading-[24px] font-bold text-slate-900 dark:text-slate-100">Subject Assignment</h1>
-          <div className="flex items-center gap-2 text-[14px] text-slate-500 mt-1 font-medium">
+          <div className="flex items-center gap-2 text-[14px] text-slate-500 mt-1 font-medium dark:text-slate-400">
             <span>Academic Management</span><span>/</span>
             <span className="text-slate-900 dark:text-slate-200">Subject Assignment</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={doFetch} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm cursor-pointer">
+          <button onClick={doFetch} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm cursor-pointer dark:text-slate-400">
             <RefreshCcw className="w-4 h-4" />
           </button>
           {isAdmin && (
@@ -308,7 +308,7 @@ export default function SubjectAssignmentPage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 card-shadow">
         <div className="flex flex-wrap items-end gap-4">
           <div className="flex flex-col gap-1.5 min-w-[160px] text-left">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Academic Year</label>
+            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Academic Year</label>
             <div className="relative">
               <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)}
                 className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary appearance-none bg-white dark:bg-slate-900 font-medium">
@@ -319,7 +319,7 @@ export default function SubjectAssignmentPage() {
             </div>
           </div>
           <div className="flex flex-col gap-1.5 min-w-[160px] text-left">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Class</label>
+            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Class</label>
             <div className="relative">
               <select value={filterClassId} onChange={(e) => setFilterClassId(e.target.value)}
                 className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary appearance-none bg-white dark:bg-slate-900 font-medium">
@@ -331,7 +331,7 @@ export default function SubjectAssignmentPage() {
           </div>
           {enableStreams && (
             <div className="flex flex-col gap-1.5 min-w-[160px] text-left">
-              <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Stream</label>
+              <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Stream</label>
               <div className="relative">
                 <select value={filterStreamId} onChange={(e) => setFilterStreamId(e.target.value)}
                   className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary appearance-none bg-white dark:bg-slate-900 font-medium">
@@ -343,7 +343,7 @@ export default function SubjectAssignmentPage() {
             </div>
           )}
           <div className="flex flex-col gap-1.5 flex-1 min-w-[160px] text-left">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide">Search</label>
+            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Search</label>
             <div className="relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <input type="text" placeholder="Search assigned subjects or classes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}

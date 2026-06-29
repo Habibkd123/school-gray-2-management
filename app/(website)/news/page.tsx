@@ -34,9 +34,9 @@ export default async function NewsPage() {
   return (
     <main className="w-full">
       {/* Hero */}
-      <section className="relative py-28 bg-[var(--sidebar-bg)]">
+      <section className="relative py-28 bg-[var(--sidebar-bg)] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={data?.news?.hero_image_url || "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=1920&auto=format&fit=crop"} alt="News" className="w-full h-full object-cover opacity-20" />
+          <img src={data?.news?.hero_image_url || "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?q=80&w=1920&auto=format&fit=crop"} alt="News" className="w-full h-full object-cover opacity-45 blur-[3px] scale-105" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
@@ -80,7 +80,7 @@ export default async function NewsPage() {
                         <Calendar className="w-3.5 h-3.5" />{dateStr}
                       </div>
                       <h3 className="font-bold text-foreground text-[16px] mb-3 leading-snug group-hover:text-primary transition-colors line-clamp-2">{item.title}</h3>
-                      {item.content && <p className="text-slate-500 text-[13px] leading-relaxed mb-4 line-clamp-2">{item.content}</p>}
+                      {item.content && <p className="text-slate-500 text-[13px] leading-relaxed mb-4 line-clamp-2 dark:text-slate-400">{item.content}</p>}
                       {item.pdf_url && (
                         <a href={item.pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[13px] font-bold text-primary hover:text-[var(--primary-hover)] uppercase tracking-wider">
                           Download PDF <ChevronRight className="w-4 h-4" />

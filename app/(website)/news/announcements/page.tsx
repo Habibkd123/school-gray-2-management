@@ -37,7 +37,7 @@ export default async function AnnouncementsPage() {
                   {item.published_at ? new Date(item.published_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : ""}
                 </div>
                 <h3 className="font-bold text-foreground text-[16px] mb-3 leading-snug group-hover:text-primary transition-colors line-clamp-2">{item.title}</h3>
-                {item.content && <p className="text-slate-500 text-[13px] leading-relaxed mb-4 line-clamp-3">{item.content}</p>}
+                {item.content && <p className="text-slate-500 text-[13px] leading-relaxed mb-4 line-clamp-3 dark:text-slate-400">{item.content}</p>}
                 {item.pdf_url && <a href={item.pdf_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[13px] font-bold text-primary uppercase tracking-wider">Download PDF <ChevronRight className="w-4 h-4" /></a>}
               </div>
             </div>

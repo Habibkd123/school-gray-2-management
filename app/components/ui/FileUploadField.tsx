@@ -110,7 +110,7 @@ export function FileUploadField({
             <button
               type="button"
               onClick={clear}
-              className="p-2.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"
+              className="p-2.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors dark:text-slate-400"
             >
               <X className="w-4 h-4" />
             </button>
@@ -147,7 +147,7 @@ export function FileUploadField({
                 {isPdf ? <FileText className="w-5 h-5 text-slate-400" /> : <Upload className="w-5 h-5 text-slate-400" />}
                 <div className="text-center">
                   <p className="text-[13px] text-slate-300 font-medium">Click to upload</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5 dark:text-slate-400">
                     {hint || (isPdf ? "PDF up to 5MB" : "Images up to 5MB")}
                   </p>
                 </div>
@@ -190,7 +190,7 @@ export function FileUploadField({
           <button
             type="button"
             onClick={clear}
-            className="p-1 text-slate-500 hover:text-rose-400 transition-colors"
+            className="p-1 text-slate-500 hover:text-rose-400 transition-colors dark:text-slate-400"
             title="Remove"
           >
             <X className="w-3.5 h-3.5" />

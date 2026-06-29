@@ -34,7 +34,7 @@ export function ConfirmModal({
              <AlertCircle className="w-5 h-5 text-amber-500" />
              {title}
           </h2>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors dark:text-slate-400">
             <X className="w-4 h-4" />
           </button>
         </div>

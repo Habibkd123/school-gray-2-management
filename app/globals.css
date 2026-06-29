@@ -140,10 +140,18 @@ h6 {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: #FFFFFF;
+  color: #231F20;
   font-family: var(--font-family-base);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Ensure all text containers default to readable dark color in light mode */
+.bg-white,
+.bg-slate-50,
+.bg-gray-50,
+.bg-card {
+  color: #231F20;
 }
 
 /* ── Utility Classes ─────────────────────────────────── */

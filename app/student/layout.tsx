@@ -10,7 +10,7 @@ export default function StudentLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" disableTransitionOnChange>
       <StudentAuthProvider>{children}</StudentAuthProvider>
     </ThemeProvider>
   );

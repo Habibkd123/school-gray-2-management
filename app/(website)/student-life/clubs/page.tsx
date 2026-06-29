@@ -21,9 +21,9 @@ export default async function StudentLifeClubsPage() {
   return (
     <main className="w-full">
       {/* Hero Section */}
-      <section className="relative py-28 bg-[var(--sidebar-bg)]">
+      <section className="relative py-28 bg-[var(--sidebar-bg)] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroImage || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1920&auto=format&fit=crop"} alt="Clubs & Societies" className="w-full h-full object-cover opacity-20" />
+          <img src={heroImage || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1920&auto=format&fit=crop"} alt="Clubs & Societies" className="w-full h-full object-cover opacity-45 blur-[3px] scale-105" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
@@ -54,7 +54,7 @@ export default async function StudentLifeClubsPage() {
                 </div>
               ) : (
                 <div className="p-8 bg-slate-50 border border-slate-200 rounded-sm dark:bg-slate-800/50 dark:border-slate-800">
-                  <p className="text-slate-500 text-[14px]">Clubs and societies details will appear here. Add details in the admin panel under <strong>Website → Student Life</strong>.</p>
+                  <p className="text-slate-500 text-[14px] dark:text-slate-400">Clubs and societies details will appear here. Add details in the admin panel under <strong>Website → Student Life</strong>.</p>
                 </div>
               )}
 
@@ -66,7 +66,7 @@ export default async function StudentLifeClubsPage() {
                   </div>
                   <div>
                     <h4 className="font-bold text-foreground text-[14px] mb-1">Coding & Tech Club</h4>
-                    <p className="text-slate-500 text-[12px] leading-relaxed">Fostering programmatic logic, web creation, and artificial intelligence exploration.</p>
+                    <p className="text-slate-500 text-[12px] leading-relaxed dark:text-slate-400">Fostering programmatic logic, web creation, and artificial intelligence exploration.</p>
                   </div>
                 </div>
 
@@ -76,7 +76,7 @@ export default async function StudentLifeClubsPage() {
                   </div>
                   <div>
                     <h4 className="font-bold text-foreground text-[14px] mb-1">Literary & Debate Society</h4>
-                    <p className="text-slate-500 text-[12px] leading-relaxed">Promoting public speaking, declamation, poetry, and creative writing.</p>
+                    <p className="text-slate-500 text-[12px] leading-relaxed dark:text-slate-400">Promoting public speaking, declamation, poetry, and creative writing.</p>
                   </div>
                 </div>
 
@@ -86,7 +86,7 @@ export default async function StudentLifeClubsPage() {
                   </div>
                   <div>
                     <h4 className="font-bold text-foreground text-[14px] mb-1">Eco Club</h4>
-                    <p className="text-slate-500 text-[12px] leading-relaxed">Leading environmental awareness drives, tree plantation, and waste audits.</p>
+                    <p className="text-slate-500 text-[12px] leading-relaxed dark:text-slate-400">Leading environmental awareness drives, tree plantation, and waste audits.</p>
                   </div>
                 </div>
 
@@ -96,7 +96,7 @@ export default async function StudentLifeClubsPage() {
                   </div>
                   <div>
                     <h4 className="font-bold text-foreground text-[14px] mb-1">Social Service Guild</h4>
-                    <p className="text-slate-500 text-[12px] leading-relaxed">Organizing community outreach, donation drives, and teaching assistance programs.</p>
+                    <p className="text-slate-500 text-[12px] leading-relaxed dark:text-slate-400">Organizing community outreach, donation drives, and teaching assistance programs.</p>
                   </div>
                 </div>
               </div>

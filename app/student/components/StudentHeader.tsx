@@ -73,7 +73,7 @@ export function StudentHeader({ onMenuClick }: StudentHeaderProps) {
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2">
-        {/* Dark mode toggle */}
+        {/* Dark mode toggle
         {mounted && (
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -82,7 +82,7 @@ export function StudentHeader({ onMenuClick }: StudentHeaderProps) {
           >
             {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
-        )}
+        )} */}
 
         {/* Notification bell */}
         <button className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">

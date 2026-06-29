@@ -130,7 +130,7 @@ export default function CollectFeesPage() {
                   >
                     <div>
                       <div className="text-[13px] font-bold text-slate-800 dark:text-slate-100">{s.name}</div>
-                      <div className="text-[11px] text-slate-500">Adm: {s.admission_no} • Roll: {s.roll_no || "-"}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">Adm: {s.admission_no} • Roll: {s.roll_no || "-"}</div>
                     </div>
                   </div>
                 ))}
@@ -179,7 +179,7 @@ export default function CollectFeesPage() {
                   <tbody className="divide-y divide-border">
                     {studentMasters.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-5 py-10 text-center text-slate-500">No fees assigned to this student.</td>
+                        <td colSpan={7} className="px-5 py-10 text-center text-slate-500 dark:text-slate-400">No fees assigned to this student.</td>
                       </tr>
                     ) : studentMasters.map(m => {
                       const mPayments = getMasterPayments(m._id);
@@ -273,28 +273,28 @@ export default function CollectFeesPage() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-sm">
                 <div>
-                  <div className="text-slate-500 mb-1">Receipt No</div>
+                  <div className="text-slate-500 mb-1 dark:text-slate-400">Receipt No</div>
                   <div className="font-bold text-slate-900 dark:text-white">{lastReceipt.receipt_number}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-slate-500 mb-1">Date</div>
+                  <div className="text-slate-500 mb-1 dark:text-slate-400">Date</div>
                   <div className="font-bold text-slate-900 dark:text-white">{new Date(lastReceipt.transaction_date).toLocaleDateString()}</div>
                 </div>
               </div>
 
               <div className="border-t border-b border-border py-4 mb-6 text-sm">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
-                  <span className="text-slate-500 col-span-1">Received From:</span>
+                  <span className="text-slate-500 col-span-1 dark:text-slate-400">Received From:</span>
                   <span className="font-bold text-slate-900 dark:text-white col-span-2">{selectedStudent.name} (Adm: {selectedStudent.admission_no})</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
-                  <span className="text-slate-500 col-span-1">Fee Category:</span>
+                  <span className="text-slate-500 col-span-1 dark:text-slate-400">Fee Category:</span>
                   <span className="font-bold text-slate-900 dark:text-white col-span-2">
                     {lastReceipt.fee_master_id.fee_group_id.name} - {lastReceipt.fee_master_id.fee_type_id.name}
                   </span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <span className="text-slate-500 col-span-1">Payment Method:</span>
+                  <span className="text-slate-500 col-span-1 dark:text-slate-400">Payment Method:</span>
                   <span className="font-bold text-slate-900 dark:text-white col-span-2">{lastReceipt.payment_method}</span>
                 </div>
               </div>
@@ -304,7 +304,7 @@ export default function CollectFeesPage() {
                 <span className="text-2xl font-black text-primary">${lastReceipt.amount_paid.toFixed(2)}</span>
               </div>
 
-              <div className="mt-8 pt-8 border-t border-border flex justify-between items-end text-sm text-slate-500">
+              <div className="mt-8 pt-8 border-t border-border flex justify-between items-end text-sm text-slate-500 dark:text-slate-400">
                 <div className="text-center">
                   <div className="w-32 border-b border-slate-300 mb-1"></div>
                   Accountant Signature

@@ -92,15 +92,15 @@ export default function NewsPage() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-800/50 text-slate-400 hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
+          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
           <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center"><Newspaper className="w-5 h-5 text-rose-400" /></div>
           <div>
-            <h1 className="text-xl font-bold text-white">News & Notices</h1>
-            <p className="text-slate-400 text-[12px]">Announcements, circulars (PDF) and result news</p>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">News & Notices</h1>
+            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px]">Announcements, circulars (PDF) and result news</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={addItem} className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-700/50 border border-slate-600/30 text-white text-[13px] font-semibold hover:bg-slate-700 transition-colors">
+          <button onClick={addItem} className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-200 dark:bg-slate-700 border border-slate-200 dark:border-slate-750 text-white text-[13px] font-semibold hover:bg-slate-700 transition-colors">
             <Plus className="w-4 h-4" /> Add News
           </button>
           <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-60 transition-all">
@@ -131,8 +131,8 @@ export default function NewsPage() {
       </div>
 
       {/* News Hero settings */}
-      <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6">
-        <h2 className="text-white font-bold text-[14px] border-b border-slate-700/50 pb-3 mb-4">News Page Settings</h2>
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6">
+        <h2 className="text-slate-900 dark:text-white font-bold text-[14px] border-b border-slate-200 dark:border-slate-700 pb-3 mb-4">News Page Settings</h2>
         <FileUploadField
           label="Hero Banner Image"
           value={heroImageUrl}
@@ -144,48 +144,48 @@ export default function NewsPage() {
 
       {/* News Items */}
       {items.length === 0 ? (
-        <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-12 text-center">
-          <Newspaper className="w-12 h-12 text-slate-600 mx-auto mb-3 dark:text-slate-300" />
-          <p className="text-slate-400 font-semibold">No news or notices yet</p>
-          <p className="text-slate-500 text-[12px] mt-1">Click "Add News" to create your first announcement.</p>
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-12 text-center">
+          <Newspaper className="w-12 h-12 text-slate-600 mx-auto mb-3 dark:text-slate-700 dark:text-slate-300" />
+          <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 font-semibold">No news or notices yet</p>
+          <p className="text-slate-600 dark:text-slate-500 text-[12px] mt-1 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">Click "Add News" to create your first announcement.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {items.map((item, idx) => {
             const cfg = typeConfig[item.type];
             return (
-              <div key={idx} className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-5 space-y-4">
+              <div key={idx} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 space-y-4">
                 {/* Row 1: Type + Date + Toggle + Delete */}
                 <div className="flex items-center gap-3 flex-wrap">
                   <select value={item.type} onChange={(e) => updateItem(idx, "type", e.target.value)}
-                    className="bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 text-[12px] text-white focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all">
+                    className="bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[12px] text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all">
                     <option value="announcement">📢 Announcement</option>
                     <option value="circular">📄 Circular</option>
                     <option value="result">🏆 Result News</option>
                   </select>
                   <input type="date" value={item.published_at} onChange={(e) => updateItem(idx, "published_at", e.target.value)}
-                    className="bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 text-[12px] text-white focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
+                    className="bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[12px] text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
                   <button onClick={() => updateItem(idx, "is_published", !item.is_published)}
-                    className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-colors ${item.is_published ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-slate-700/50 text-slate-500 border-slate-600/30"}`}>
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-colors ${item.is_published ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-500 border-slate-200 dark:border-slate-750"} dark:text-slate-600 dark:text-slate-500 dark:text-slate-400`}>
                     {item.is_published ? "● Published" : "○ Draft"}
                   </button>
-                  <button onClick={() => removeItem(idx)} className="ml-auto p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors">
+                  <button onClick={() => removeItem(idx)} className="ml-auto p-1.5 text-slate-600 dark:text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Title */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Title</label>
+                  <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Title</label>
                   <input type="text" value={item.title} onChange={(e) => updateItem(idx, "title", e.target.value)} placeholder="e.g. Annual Sports Day 2024 – Date Announced"
-                    className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+                    className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
                 </div>
 
                 {/* Content */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Content / Body</label>
+                  <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Content / Body</label>
                   <textarea value={item.content} onChange={(e) => updateItem(idx, "content", e.target.value)} rows={3} placeholder="Details of the news or notice..."
-                    className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
+                    className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
                 </div>
 
                 {/* PDF URL */}

@@ -87,7 +87,7 @@ export function VirtualCampusTour({ data }: { data?: GalleryData | null }) {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-slate-500">
+              <div className="w-full h-full flex flex-col items-center justify-center text-slate-500 dark:text-slate-400">
                 <Play className="w-12 h-12 mb-2" />
                 <p>No video available</p>
               </div>

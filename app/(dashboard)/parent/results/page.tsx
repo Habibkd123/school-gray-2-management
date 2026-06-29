@@ -89,7 +89,7 @@ export default function ParentResultsPage() {
             <ClipboardList className="w-6 h-6 text-blue-500" />
             Exam Results
           </h1>
-          <p className="text-sm text-slate-500 mt-1">Academic performance and grade report</p>
+          <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Academic performance and grade report</p>
         </div>
         <div className="w-full sm:w-[250px]">
           <ChildSelector
@@ -121,20 +121,20 @@ export default function ParentResultsPage() {
             <h2 className="text-[16px] font-black text-slate-900 dark:text-white leading-tight">{selectedChild.name}</h2>
             <div className="flex flex-wrap items-center gap-3 mt-1">
               {selectedChild.class_id && (
-                <span className="text-[12px] text-slate-500 flex items-center gap-1">
+                <span className="text-[12px] text-slate-500 flex items-center gap-1 dark:text-slate-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
                   Class {selectedChild.class_id?.name}
                   {selectedChild.class_id?.section ? ` — ${selectedChild.class_id?.section}` : ""}
                 </span>
               )}
               {selectedChild.roll_no && (
-                <span className="text-[12px] text-slate-500 flex items-center gap-1">
+                <span className="text-[12px] text-slate-500 flex items-center gap-1 dark:text-slate-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
                   Roll No: <strong className="text-slate-700 dark:text-slate-300">{selectedChild.roll_no}</strong>
                 </span>
               )}
               {selectedChild.gender && (
-                <span className="text-[12px] text-slate-500 flex items-center gap-1">
+                <span className="text-[12px] text-slate-500 flex items-center gap-1 dark:text-slate-400">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
                   {selectedChild.gender}
                 </span>
@@ -151,7 +151,7 @@ export default function ParentResultsPage() {
 
       {/* ── States ── */}
       {!selectedChild ? (
-        <div className="bg-white dark:bg-slate-900 p-10 rounded-xl border border-border text-center text-slate-500">
+        <div className="bg-white dark:bg-slate-900 p-10 rounded-xl border border-border text-center text-slate-500 dark:text-slate-400">
           <Trophy className="w-12 h-12 mx-auto text-slate-300 mb-3" />
           <p className="font-medium">Select a child to view their results</p>
         </div>
@@ -163,7 +163,7 @@ export default function ParentResultsPage() {
         <div className="bg-white dark:bg-slate-900 p-10 rounded-xl border border-border text-center flex flex-col items-center">
           <Trophy className="w-12 h-12 text-slate-300 mb-3" />
           <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">No Results Yet</h3>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-slate-500 text-sm mt-1 dark:text-slate-400">
             No exam results found for <strong>{selectedChild?.name}</strong>. Exams might not have been graded yet.
           </p>
         </div>
@@ -186,7 +186,7 @@ export default function ParentResultsPage() {
                   </div>
                   <div className="mt-3 w-64 bg-white/20 rounded-full h-2.5">
                     <div
-                      className="h-2.5 rounded-full bg-white/90 transition-all"
+                      className="h-2.5 rounded-full bg-white/90 transition-all dark:bg-slate-900/90"
                       style={{ width: `${Math.min(overallStats.pct, 100)}%` }}
                     />
                   </div>
@@ -236,7 +236,7 @@ export default function ParentResultsPage() {
                     </div>
                     <div>
                       <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">{examName}</h3>
-                      <p className="text-[12px] text-slate-500">
+                      <p className="text-[12px] text-slate-500 dark:text-slate-400">
                         Class {selectedChild.class_id?.name || ""} {selectedChild.class_id?.section || ""}
                         {examType && <span className="ml-2 px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[10px] font-bold uppercase">{examType}</span>}
                       </p>
@@ -246,7 +246,7 @@ export default function ParentResultsPage() {
                   <div className="flex flex-wrap items-center gap-3">
                     {/* Overall percentage */}
                     <div className="text-right">
-                      <p className="text-[11px] text-slate-500 font-bold uppercase">Score</p>
+                      <p className="text-[11px] text-slate-500 font-bold uppercase dark:text-slate-400">Score</p>
                       <p className="text-lg font-black text-slate-900 dark:text-white">
                         {totalObt} <span className="text-sm text-slate-400 font-medium">/ {totalMax}</span>
                       </p>
@@ -339,8 +339,8 @@ export default function ParentResultsPage() {
                               {subjectName}
                             </td>
                             <td className="px-5 py-3 text-center font-bold text-slate-900 dark:text-white">{result.marks_obtained}</td>
-                            <td className="px-5 py-3 text-center text-slate-500">{result.total_marks}</td>
-                            <td className="px-5 py-3 text-center text-slate-500">{result.passing_marks ?? "—"}</td>
+                            <td className="px-5 py-3 text-center text-slate-500 dark:text-slate-400">{result.total_marks}</td>
+                            <td className="px-5 py-3 text-center text-slate-500 dark:text-slate-400">{result.passing_marks ?? "—"}</td>
                             <td className="px-5 py-3 text-center font-semibold text-slate-700 dark:text-slate-300">{subPct}%</td>
                             <td className="px-5 py-3 text-center">
                               {result.grade ? (

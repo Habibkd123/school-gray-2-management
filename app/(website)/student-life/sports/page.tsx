@@ -21,9 +21,9 @@ export default async function StudentLifeSportsPage() {
   return (
     <main className="w-full">
       {/* Hero Section */}
-      <section className="relative py-28 bg-[var(--sidebar-bg)]">
+      <section className="relative py-28 bg-[var(--sidebar-bg)] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroImage || "https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1920&auto=format&fit=crop"} alt="Sports & Athletics" className="w-full h-full object-cover opacity-20" />
+          <img src={heroImage || "https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1920&auto=format&fit=crop"} alt="Sports & Athletics" className="w-full h-full object-cover opacity-45 blur-[3px] scale-105" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
@@ -54,7 +54,7 @@ export default async function StudentLifeSportsPage() {
                 </div>
               ) : (
                 <div className="p-8 bg-slate-50 border border-slate-200 rounded-sm dark:bg-slate-800/50 dark:border-slate-800">
-                  <p className="text-slate-500 text-[14px]">Sports and athletics program details will appear here. Add details in the admin panel under <strong>Website → Student Life</strong>.</p>
+                  <p className="text-slate-500 text-[14px] dark:text-slate-400">Sports and athletics program details will appear here. Add details in the admin panel under <strong>Website → Student Life</strong>.</p>
                 </div>
               )}
 

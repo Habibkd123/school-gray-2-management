@@ -117,7 +117,7 @@ export default function RegisterPage() {
       {/* Right Side - Form */}
       <div className="flex-1 flex flex-col relative bg-white dark:bg-slate-900 h-screen overflow-y-auto">
         
-        {/* Theme Toggle */}
+        {/* Theme Toggle
         {mounted && (
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
@@ -125,7 +125,7 @@ export default function RegisterPage() {
           >
             {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
-        )}
+        )} */}
 
         <div className="flex flex-col justify-center items-center px-6 sm:px-12 lg:px-16 xl:px-24 py-12 mt-8 sm:mt-0">
           <div className="w-full max-w-full sm:w-[420px] bg-white dark:bg-slate-900 border border-border/60 dark:border-slate-800 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">

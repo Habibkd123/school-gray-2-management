@@ -57,11 +57,11 @@ const defaultData: ContactData = {
 function InputField({ label, value, onChange, placeholder = "", type = "text", icon }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; icon?: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+      <label className="text-[12px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
         {icon} {label}
       </label>
       <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all" />
+        className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all" />
     </div>
   );
 }
@@ -105,11 +105,11 @@ export default function ContactPage() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-800/50 text-slate-400 hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
+          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
           <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center"><Phone className="w-5 h-5 text-indigo-400" /></div>
           <div>
-            <h1 className="text-xl font-bold text-white">Contact Us</h1>
-            <p className="text-slate-400 text-[12px]">School address, phone, email, map & social links</p>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Contact Us</h1>
+            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px]">School address, phone, email, map & social links</p>
           </div>
         </div>
         <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-60 transition-all">
@@ -122,8 +122,8 @@ export default function ContactPage() {
       {status === "error" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[13px] font-medium"><AlertCircle className="w-4 h-4" /> Failed.</div>}
 
       {/* Contact Details */}
-      <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 space-y-5">
-        <h2 className="text-white font-bold text-[14px] border-b border-slate-700/50 pb-3">Contact Details</h2>
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-5">
+        <h2 className="text-slate-900 dark:text-white font-bold text-[14px] border-b border-slate-200 dark:border-slate-700 pb-3">Contact Details</h2>
         <FileUploadField
           label="Hero Banner Image"
           value={data.hero_image_url || ""}
@@ -132,12 +132,12 @@ export default function ContactPage() {
           placeholder="Upload or paste image URL for Contact page hero banner..."
         />
         <div className="flex flex-col gap-1.5">
-          <label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <label className="text-[12px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5" /> Address
           </label>
           <textarea value={data.address} onChange={(e) => setData((p) => ({ ...p, address: e.target.value }))} rows={3}
             placeholder="e.g. 123 Education Lane, Knowledge Nagar, New Delhi - 110001"
-            className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
+            className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all resize-none" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <InputField label="Phone Number" value={data.phone} onChange={upd("phone")} placeholder="+91 98765 43210" type="tel" icon={<Phone className="w-3.5 h-3.5" />} />
@@ -147,52 +147,52 @@ export default function ContactPage() {
       </div>
 
       {/* Google Maps Embed */}
-      <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 space-y-5">
-        <h2 className="text-white font-bold text-[14px] border-b border-slate-700/50 pb-3">Google Maps Embed</h2>
-        <div className="p-3 rounded-lg bg-slate-700/30 border border-slate-600/30 text-[11px] text-slate-400 leading-relaxed">
-          <strong className="text-slate-300">How to get embed URL:</strong><br />
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-5">
+        <h2 className="text-slate-900 dark:text-white font-bold text-[14px] border-b border-slate-200 dark:border-slate-700 pb-3">Google Maps Embed</h2>
+        <div className="p-3 rounded-lg bg-slate-100 dark:bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-750 text-[11px] text-slate-600 dark:text-slate-500 dark:text-slate-400 leading-relaxed">
+          <strong className="text-slate-700 dark:text-slate-300">How to get embed URL:</strong><br />
           1. Open Google Maps → Search your school<br />
           2. Click Share → Embed a map → Copy the src URL from the iframe code
         </div>
         <InputField label="Google Maps Embed URL" value={data.map_embed_url} onChange={upd("map_embed_url")} placeholder="https://www.google.com/maps/embed?pb=..." type="url" icon={<MapPin className="w-3.5 h-3.5" />} />
         {data.map_embed_url && (
-          <div className="rounded-xl overflow-hidden border border-slate-700/50 h-48">
+          <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 h-48">
             <iframe src={data.map_embed_url} width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
           </div>
         )}
       </div>
 
       {/* Social Links */}
-      <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 space-y-5">
-        <h2 className="text-white font-bold text-[14px] border-b border-slate-700/50 pb-3">Social Media Links</h2>
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-5">
+        <h2 className="text-slate-900 dark:text-white font-bold text-[14px] border-b border-slate-200 dark:border-slate-700 pb-3">Social Media Links</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-[12px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
               <FacebookIcon /> Facebook
             </label>
             <input type="url" value={data.social.facebook} onChange={(e) => updSocial("facebook")(e.target.value)} placeholder="https://facebook.com/yourschool"
-              className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+              className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-[12px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
               <TwitterIcon /> Twitter / X
             </label>
             <input type="url" value={data.social.twitter} onChange={(e) => updSocial("twitter")(e.target.value)} placeholder="https://twitter.com/yourschool"
-              className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+              className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-[12px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
               <InstagramIcon /> Instagram
             </label>
             <input type="url" value={data.social.instagram} onChange={(e) => updSocial("instagram")(e.target.value)} placeholder="https://instagram.com/yourschool"
-              className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+              className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <label className="text-[12px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
               <YoutubeIcon /> YouTube
             </label>
             <input type="url" value={data.social.youtube} onChange={(e) => updSocial("youtube")(e.target.value)} placeholder="https://youtube.com/@yourschool"
-              className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+              className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
           </div>
         </div>
       </div>

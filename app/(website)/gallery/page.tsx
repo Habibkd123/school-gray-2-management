@@ -39,9 +39,9 @@ export default async function GalleryPage() {
   return (
     <main className="w-full">
       {/* Hero */}
-      <section className="relative py-28 bg-[var(--sidebar-bg)]">
+      <section className="relative py-28 bg-[var(--sidebar-bg)] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={data?.gallery?.hero_image_url || displayPhotos[0]?.src} alt="Gallery" className="w-full h-full object-cover opacity-25" />
+          <img src={data?.gallery?.hero_image_url || displayPhotos[0]?.src} alt="Gallery" className="w-full h-full object-cover opacity-45 blur-[3px] scale-105" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">

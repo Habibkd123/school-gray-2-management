@@ -126,7 +126,7 @@ export default function StreamsPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => doFetch()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors">
+          <button onClick={() => doFetch()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors dark:text-slate-400">
             <RefreshCcw className="w-4 h-4" />
           </button>
           {isAdmin && (

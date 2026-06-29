@@ -310,10 +310,10 @@ export default function AcademicClassesPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => doFetch()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors">
+          <button onClick={() => doFetch()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors dark:text-slate-400">
             <RefreshCcw className="w-4 h-4" />
           </button>
-          <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors">
+          <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors dark:text-slate-400">
             <Printer className="w-4 h-4" />
           </button>
           <div className="relative">
@@ -326,10 +326,10 @@ export default function AcademicClassesPage() {
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-2 text-left">
                   <button onClick={() => setIsExportOpen(false)} className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors">
-                    <FileText className="w-4 h-4 text-slate-500" /> Export as PDF
+                    <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as PDF
                   </button>
                   <button onClick={() => setIsExportOpen(false)} className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors">
-                    <FileText className="w-4 h-4 text-slate-500" /> Export as Excel
+                    <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as Excel
                   </button>
                 </div>
               </>
@@ -416,7 +416,7 @@ export default function AcademicClassesPage() {
             />
             {totalPages > 1 && (
               <div className="px-5 py-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p className="text-[13px] text-slate-500">Page <span className="font-bold text-slate-700 dark:text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-700 dark:text-slate-200">{totalPages}</span></p>
+                <p className="text-[13px] text-slate-500 dark:text-slate-400">Page <span className="font-bold text-slate-700 dark:text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-700 dark:text-slate-200">{totalPages}</span></p>
                 <div className="flex items-center gap-1">
                   <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1}
                     className="px-3 py-1.5 rounded-lg border border-border text-[13px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">

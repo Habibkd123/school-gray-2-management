@@ -16,9 +16,9 @@ export default async function ContactPage() {
   return (
     <main className="w-full">
       {/* Hero */}
-      <section className="relative py-28 bg-[var(--sidebar-bg)]">
+      <section className="relative py-28 bg-[var(--sidebar-bg)] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={data?.contact?.hero_image_url || "https://images.unsplash.com/photo-1523966211575-eb4a01e7dd51?q=80&w=1920&auto=format&fit=crop"} alt="Contact Us" className="w-full h-full object-cover opacity-20" />
+          <img src={data?.contact?.hero_image_url || "https://images.unsplash.com/photo-1523966211575-eb4a01e7dd51?q=80&w=1920&auto=format&fit=crop"} alt="Contact Us" className="w-full h-full object-cover opacity-45 blur-[3px] scale-105" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">

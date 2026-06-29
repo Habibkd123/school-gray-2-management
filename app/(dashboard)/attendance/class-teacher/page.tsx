@@ -51,7 +51,7 @@ export default function ClassTeacherAssignmentPage() {
 
   if (!isAdmin) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500 gap-3">
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-500 gap-3 dark:text-slate-400">
         <ShieldAlert className="w-12 h-12 text-rose-500" />
         <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Access Denied</h2>
         <p className="text-sm">You do not have permission to view this page.</p>
@@ -116,7 +116,7 @@ export default function ClassTeacherAssignmentPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[13.5px]">
-              <thead className="bg-[#F8FAFC] dark:bg-slate-800/50 text-slate-500 border-b border-border">
+              <thead className="bg-[#F8FAFC] dark:bg-slate-800/50 text-slate-500 border-b border-border dark:text-slate-400">
                 <tr>
                   <th className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">Class Name</th>
                   <th className="px-6 py-4 font-bold text-slate-700 dark:text-slate-200">Section</th>
@@ -134,7 +134,7 @@ export default function ClassTeacherAssignmentPage() {
                     <tr key={cls._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                       <td className="px-6 py-4 font-bold text-slate-900 dark:text-slate-100">{cls.name}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-semibold">{cls.section || "—"}</td>
-                      <td className="px-6 py-4 font-mono text-slate-500">{cls.class_code || "—"}</td>
+                      <td className="px-6 py-4 font-mono text-slate-500 dark:text-slate-400">{cls.class_code || "—"}</td>
                       <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{cls.capacity}</td>
                       <td className="px-6 py-4">
                         <div className="relative flex items-center gap-2">

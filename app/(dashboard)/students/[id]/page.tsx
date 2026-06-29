@@ -267,7 +267,7 @@ function StudentViewContent() {
   };
 
   if (loading) return <div className="p-10 flex items-center gap-3"><Loader2 className="w-5 h-5 animate-spin text-primary" /><span>Loading student...</span></div>;
-  if (!student) return <div className="p-10 text-slate-500">Student not found.</div>;
+  if (!student) return <div className="p-10 text-slate-500 dark:text-slate-400">Student not found.</div>;
 
   // Apply Leave Handler
   const handleApplyLeaveSubmit = async (e: React.FormEvent) => {
@@ -365,7 +365,7 @@ function StudentViewContent() {
                   Active
                 </div>
                 <h2 className="text-[16px] leading-[19.2px] font-medium text-foreground dark:text-slate-100">{student.name}</h2>
-                <p className="text-[12px] text-slate-500 font-medium mt-0.5">{getClassName(student.class_id)}</p>
+                <p className="text-[12px] text-slate-500 font-medium mt-0.5 dark:text-slate-400">{getClassName(student.class_id)}</p>
                 <p className="text-[12px] text-primary font-bold mt-0.5">{student.admission_no || "No Admission No"}</p>
               </div>
             </div>
@@ -1699,7 +1699,7 @@ const timeTableData = [
 
 export default function StudentViewPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-slate-500">Loading...</div>}>
+    <Suspense fallback={<div className="p-6 text-slate-500 dark:text-slate-400">Loading...</div>}>
       <StudentViewContent />
     </Suspense>
   );

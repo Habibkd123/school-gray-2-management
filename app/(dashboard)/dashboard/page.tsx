@@ -657,7 +657,7 @@ export default function DashboardPage() {
                           <td className="px-5 py-3 text-right">
                             <Link
                               href="/schools"
-                              className="text-[12px] font-semibold text-slate-500 hover:text-amber-500 underline"
+                              className="text-[12px] font-semibold text-slate-500 hover:text-amber-500 underline dark:text-slate-400"
                             >
                               Manage
                             </Link>
@@ -1271,7 +1271,7 @@ export default function DashboardPage() {
                         </div>
                         <h4 className="text-[13px] font-bold text-slate-900 dark:text-white line-clamp-1">{ch.chapter_name}</h4>
                         {ch.target_date && (
-                          <p className="text-[11px] text-slate-500 mt-1">Target: {new Date(ch.target_date).toLocaleDateString()}</p>
+                          <p className="text-[11px] text-slate-500 mt-1 dark:text-slate-400">Target: {new Date(ch.target_date).toLocaleDateString()}</p>
                         )}
                       </div>
                     ))}
@@ -1773,7 +1773,7 @@ export default function DashboardPage() {
           {!displayStudent && activeRole === "parent" && !parentLoading ? (
             <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-xl border border-border">
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mt-4">No Children Found</h3>
-              <p className="text-slate-500 max-w-md mx-auto mt-2">
+              <p className="text-slate-500 max-w-md mx-auto mt-2 dark:text-slate-400">
                 We couldn't find any students linked to your account.
               </p>
             </div>
@@ -1822,7 +1822,7 @@ export default function DashboardPage() {
                   <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex-1">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Today's Class</h3>
-                      <span className="text-[11px] font-medium text-slate-500">
+                      <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
                         {today.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' })}
                       </span>
                     </div>
@@ -1863,7 +1863,7 @@ export default function DashboardPage() {
                               </div>
                               <div>
                                 <h4 className="text-[12px] font-bold text-slate-900 dark:text-white line-clamp-1">{subject}</h4>
-                                <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1"><Clock className="w-3 h-3 shrink-0" /> {startTime} - {endTime}</p>
+                                <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1 dark:text-slate-400"><Clock className="w-3 h-3 shrink-0" /> {startTime} - {endTime}</p>
                               </div>
                             </div>
                             <span className={`${statusColor} text-[9px] font-bold px-2 py-0.5 rounded flex items-center gap-1 shrink-0`}>
@@ -1872,7 +1872,7 @@ export default function DashboardPage() {
                           </div>
                         );
                       }) : (
-                        <div className="text-center py-6 text-slate-500 text-xs">No classes scheduled for today.</div>
+                        <div className="text-center py-6 text-slate-500 text-xs dark:text-slate-400">No classes scheduled for today.</div>
                       )}
                     </div>
                   </div>
@@ -1900,17 +1900,17 @@ export default function DashboardPage() {
 
                     <div className="flex items-center justify-between px-6 mb-6">
                       <div className="text-center">
-                        <p className="text-[11px] text-slate-500 font-medium">Present</p>
+                        <p className="text-[11px] text-slate-500 font-medium dark:text-slate-400">Present</p>
                         <p className="text-[16px] font-bold mt-1">25</p>
                       </div>
                       <div className="w-px h-8 bg-border"></div>
                       <div className="text-center">
-                        <p className="text-[11px] text-slate-500 font-medium">Absent</p>
+                        <p className="text-[11px] text-slate-500 font-medium dark:text-slate-400">Absent</p>
                         <p className="text-[16px] font-bold mt-1">2</p>
                       </div>
                       <div className="w-px h-8 bg-border"></div>
                       <div className="text-center">
-                        <p className="text-[11px] text-slate-500 font-medium">Halfday</p>
+                        <p className="text-[11px] text-slate-500 font-medium dark:text-slate-400">Halfday</p>
                         <p className="text-[16px] font-bold mt-1">0</p>
                       </div>
                     </div>
@@ -1945,10 +1945,10 @@ export default function DashboardPage() {
 
                       {/* Legend */}
                       <div className="flex items-center gap-4 mt-6">
-                        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#10B981]"></div><span className="text-[11px] text-slate-500 font-medium">Present</span></div>
-                        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#3B82F6]"></div><span className="text-[11px] text-slate-500 font-medium">Late</span></div>
-                        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-slate-300"></div><span className="text-[11px] text-slate-500 font-medium">Half Day</span></div>
-                        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#EF4444]"></div><span className="text-[11px] text-slate-500 font-medium">Absent</span></div>
+                        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#10B981]"></div><span className="text-[11px] text-slate-500 font-medium dark:text-slate-400">Present</span></div>
+                        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#3B82F6]"></div><span className="text-[11px] text-slate-500 font-medium dark:text-slate-400">Late</span></div>
+                        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-slate-300"></div><span className="text-[11px] text-slate-500 font-medium dark:text-slate-400">Half Day</span></div>
+                        <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-[#EF4444]"></div><span className="text-[11px] text-slate-500 font-medium dark:text-slate-400">Absent</span></div>
                       </div>
                     </div>
 
@@ -2008,14 +2008,14 @@ export default function DashboardPage() {
                   <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Schedules</h3>
-                      <span className="text-[12px] font-bold text-slate-500">
+                      <span className="text-[12px] font-bold text-slate-500 dark:text-slate-400">
                         {today.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-7 gap-1 text-center mb-2">
                       {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-                        <div key={day} className="text-[11px] font-semibold text-slate-500 py-1">{day}</div>
+                        <div key={day} className="text-[11px] font-semibold text-slate-500 py-1 dark:text-slate-400">{day}</div>
                       ))}
                     </div>
                     <div className="grid grid-cols-7 gap-1 text-center">
@@ -2060,11 +2060,11 @@ export default function DashboardPage() {
                               <h4 className="text-[12px] font-bold text-slate-900 dark:text-white">{subject}</h4>
                               <span className={`text-[9px] font-bold px-2 py-0.5 rounded ${badge.cls}`}>{badge.label}</span>
                             </div>
-                            <p className="text-[10px] text-slate-500 flex items-center gap-1"><Clock className="w-3 h-3" /> {startTime} - {endTime}</p>
+                            <p className="text-[10px] text-slate-500 flex items-center gap-1 dark:text-slate-400"><Clock className="w-3 h-3" /> {startTime} - {endTime}</p>
                           </div>
                         );
                       }) : (
-                        <div className="text-center py-4 text-slate-500 text-xs">No classes scheduled for today.</div>
+                        <div className="text-center py-4 text-slate-500 text-xs dark:text-slate-400">No classes scheduled for today.</div>
                       )}
                     </div>
                   </div>
@@ -2151,11 +2151,11 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-center gap-6 mt-4">
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-primary"></div>
-                      <span className="text-[11px] text-slate-500 font-medium">Avg. Exam Score</span>
+                      <span className="text-[11px] text-slate-500 font-medium dark:text-slate-400">Avg. Exam Score</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-info"></div>
-                      <span className="text-[11px] text-slate-500 font-medium">Avg. Attendance</span>
+                      <span className="text-[11px] text-slate-500 font-medium dark:text-slate-400">Avg. Attendance</span>
                     </div>
                   </div>
                 </div>
@@ -2184,7 +2184,7 @@ export default function DashboardPage() {
 
                       return (
                         <div key={hw._id || idx} className="flex items-center justify-between gap-3">
-                          <div className="w-10 h-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 shrink-0">
+                          <div className="w-10 h-10 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 shrink-0 dark:text-slate-400">
                             <BookOpen className="w-5 h-5" />
                           </div>
                           <div className="flex-1">
@@ -2195,7 +2195,7 @@ export default function DashboardPage() {
                                 <div className="w-3 h-3 rounded-full bg-slate-200 overflow-hidden shrink-0">
                                   {(teacher as any)?.photo_url && <img src={(teacher as any).photo_url} className="w-full h-full object-cover" />}
                                 </div>
-                                <span className="text-[10px] text-slate-500">{(teacher as any)?.name?.split(' ')[0] || "Teacher"}</span>
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400">{(teacher as any)?.name?.split(' ')[0] || "Teacher"}</span>
                               </div>
                               <span className="text-[10px] text-slate-400 shrink-0">Due: {dueStr}</span>
                             </div>
@@ -2210,7 +2210,7 @@ export default function DashboardPage() {
                         </div>
                       );
                     }) : (
-                      <div className="text-center py-6 text-slate-500 text-xs">No pending homeworks.</div>
+                      <div className="text-center py-6 text-slate-500 text-xs dark:text-slate-400">No pending homeworks.</div>
                     )}
                   </div>
                 </div>
@@ -2222,10 +2222,10 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white">Class Faculties</h3>
                   <div className="flex flex-wrap items-center gap-2">
-                    <button className="w-6 h-6 border border-slate-200 dark:border-slate-700 rounded flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <button className="w-6 h-6 border border-slate-200 dark:border-slate-700 rounded flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400">
                       <ChevronLeft className="w-3 h-3" />
                     </button>
-                    <button className="w-6 h-6 border border-slate-200 dark:border-slate-700 rounded flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800">
+                    <button className="w-6 h-6 border border-slate-200 dark:border-slate-700 rounded flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 dark:text-slate-400">
                       <ChevronRight className="w-3 h-3" />
                     </button>
                   </div>
@@ -2248,7 +2248,7 @@ export default function DashboardPage() {
                     }, []);
 
                     if (uniqueTeachers.length === 0) return (
-                      <div className="text-sm text-slate-500 py-4 px-2">No class faculty data available.</div>
+                      <div className="text-sm text-slate-500 py-4 px-2 dark:text-slate-400">No class faculty data available.</div>
                     );
 
                     return uniqueTeachers.map(({ teacher, subject }, idx) => (
@@ -2262,7 +2262,7 @@ export default function DashboardPage() {
                           </div>
                           <div>
                             <h4 className="text-[13px] font-bold text-slate-900 dark:text-white">{(teacher as any)?.name || 'Teacher'}</h4>
-                            <p className="text-[11px] text-slate-500 mt-0.5">{(subject as any)?.name || 'Subject'}</p>
+                            <p className="text-[11px] text-slate-500 mt-0.5 dark:text-slate-400">{(subject as any)?.name || 'Subject'}</p>
                           </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -2313,14 +2313,14 @@ export default function DashboardPage() {
                             </div>
                             <div>
                               <h4 className="text-[13px] font-bold text-slate-900 dark:text-white capitalize">{leaveTypeLabel}</h4>
-                              <p className="text-[10px] text-slate-500 mt-0.5">Date : {new Date(leave.from_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                              <p className="text-[10px] text-slate-500 mt-0.5 dark:text-slate-400">Date : {new Date(leave.from_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                             </div>
                           </div>
                           <span className={`${statusColor} text-[9px] font-bold px-2 py-0.5 rounded capitalize`}>{leave.status}</span>
                         </div>
                       );
                     }) : (
-                      <div className="text-center py-6 text-slate-500 text-xs">No recent leave requests.</div>
+                      <div className="text-center py-6 text-slate-500 text-xs dark:text-slate-400">No recent leave requests.</div>
                     )}
                   </div>
                 </div>
@@ -2344,7 +2344,7 @@ export default function DashboardPage() {
                           {subName?.substring(0, 3)} : {pct}
                         </span>
                       );
-                    }) : <span className="text-slate-500">No results</span>}
+                    }) : <span className="text-slate-500 dark:text-slate-400">No results</span>}
                   </div>
 
                   {/* Bar Chart */}
@@ -2368,11 +2368,11 @@ export default function DashboardPage() {
                         <div key={i} className="flex flex-col items-center gap-1 z-10">
                           <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">{pct}%</span>
                           <div className={`w-6 ${barColor} rounded-t transition-all`} style={{ height: `${Math.max(pct, 5)}px` }}></div>
-                          <span className="text-[10px] text-slate-500 mt-1">{subName?.substring(0, 3)}</span>
+                          <span className="text-[10px] text-slate-500 mt-1 dark:text-slate-400">{subName?.substring(0, 3)}</span>
                         </div>
                       );
                     }) : (
-                      <div className="z-10 w-full text-center text-slate-500 text-xs mb-8">No exam results available.</div>
+                      <div className="z-10 w-full text-center text-slate-500 text-xs mb-8 dark:text-slate-400">No exam results available.</div>
                     )}
                   </div>
                 </div>
@@ -2399,13 +2399,13 @@ export default function DashboardPage() {
                           </div>
                           <div>
                             <h4 className="text-[12px] font-bold text-slate-900 dark:text-white">{(p as any).fee_type || 'Fee Payment'}</h4>
-                            <p className="text-[10px] text-slate-500 mt-0.5">{new Date((p as any).transaction_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5 dark:text-slate-400">{new Date((p as any).transaction_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                           </div>
                         </div>
                         <span className="text-[12px] font-black text-emerald-600">${(p as any).amount_paid?.toLocaleString()}</span>
                       </div>
                     )) : (
-                      <div className="text-center py-6 text-slate-500 text-xs">No payment history found.</div>
+                      <div className="text-center py-6 text-slate-500 text-xs dark:text-slate-400">No payment history found.</div>
                     )}
                   </div>
                 </div>
@@ -2434,7 +2434,7 @@ export default function DashboardPage() {
                       })}
                     </div>
                   ) : (
-                    <div className="text-center py-6 text-slate-500 text-xs">No exam results yet.</div>
+                    <div className="text-center py-6 text-slate-500 text-xs dark:text-slate-400">No exam results yet.</div>
                   )}
                 </div>
 
@@ -2461,7 +2461,7 @@ export default function DashboardPage() {
                             </div>
                             <div className="flex-1">
                               <h4 className="text-[13px] font-bold text-slate-900 dark:text-white line-clamp-1">{notice.title}</h4>
-                              <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1">
+                              <p className="text-[10px] text-slate-500 mt-0.5 flex items-center gap-1 dark:text-slate-400">
                                 <CalendarIcon className="w-3 h-3" />
                                 {new Date(notice.publish_date).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                               </p>
@@ -2492,7 +2492,7 @@ export default function DashboardPage() {
                         </div>
                         <div>
                           <h4 className="text-[13px] font-bold text-slate-900 dark:text-white line-clamp-1">Send Reminder to Students</h4>
-                          <p className="text-[10px] text-slate-500 mt-0.5">01:00 PM</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5 dark:text-slate-400">01:00 PM</p>
                         </div>
                       </div>
                       <span className="bg-[#E8F8E8] text-success text-[9px] font-bold px-2 py-0.5 rounded ml-2 shrink-0">Completed</span>
@@ -2503,7 +2503,7 @@ export default function DashboardPage() {
                         <div className="w-4 h-4 rounded border border-slate-300 dark:border-slate-600 shrink-0 mt-0.5"></div>
                         <div>
                           <h4 className="text-[13px] font-bold text-slate-900 dark:text-white line-clamp-1">Create Routine to new staff</h4>
-                          <p className="text-[10px] text-slate-500 mt-0.5">04:50 PM</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5 dark:text-slate-400">04:50 PM</p>
                         </div>
                       </div>
                       <span className="bg-info/10 text-info text-[9px] font-bold px-2 py-0.5 rounded ml-2 shrink-0">Inprogress</span>
@@ -2514,7 +2514,7 @@ export default function DashboardPage() {
                         <div className="w-4 h-4 rounded border border-slate-300 dark:border-slate-600 shrink-0 mt-0.5"></div>
                         <div>
                           <h4 className="text-[13px] font-bold text-slate-900 dark:text-white line-clamp-1">Extra Class Info to Students</h4>
-                          <p className="text-[10px] text-slate-500 mt-0.5">04:55 PM</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5 dark:text-slate-400">04:55 PM</p>
                         </div>
                       </div>
                       <span className="bg-[#FFF5E6] text-primary text-[9px] font-bold px-2 py-0.5 rounded ml-2 shrink-0">Yet to Start</span>
@@ -2525,7 +2525,7 @@ export default function DashboardPage() {
                         <div className="w-4 h-4 rounded border border-slate-300 dark:border-slate-600 shrink-0 mt-0.5"></div>
                         <div>
                           <h4 className="text-[13px] font-bold text-slate-900 dark:text-white line-clamp-1">Fees for Upcoming Academics</h4>
-                          <p className="text-[10px] text-slate-500 mt-0.5">04:55 PM</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5 dark:text-slate-400">04:55 PM</p>
                         </div>
                       </div>
                       <span className="bg-[#FFF5E6] text-primary text-[9px] font-bold px-2 py-0.5 rounded ml-2 shrink-0">Yet to Start</span>
@@ -2536,7 +2536,7 @@ export default function DashboardPage() {
                         <div className="w-4 h-4 rounded border border-slate-300 dark:border-slate-600 shrink-0 mt-0.5"></div>
                         <div>
                           <h4 className="text-[13px] font-bold text-slate-900 dark:text-white line-clamp-1">English - Essay on Visit</h4>
-                          <p className="text-[10px] text-slate-500 mt-0.5">05:55 PM</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5 dark:text-slate-400">05:55 PM</p>
                         </div>
                       </div>
                       <span className="bg-[#FFF5E6] text-primary text-[9px] font-bold px-2 py-0.5 rounded ml-2 shrink-0">Yet to Start</span>

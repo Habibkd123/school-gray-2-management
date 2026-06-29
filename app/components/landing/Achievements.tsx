@@ -53,7 +53,7 @@ export function Achievements({ data }: { data?: StudentLifeData | null }) {
                   <h4 className={`text-2xl font-black ${altColors} mb-2`}>{item.year}</h4>
                   <h5 className="font-bold text-foreground text-[15px] mb-2">{item.title}</h5>
                   {item.description && (
-                    <p className="text-slate-500 text-[13px] leading-relaxed">{item.description}</p>
+                    <p className="text-slate-500 text-[13px] leading-relaxed dark:text-slate-400">{item.description}</p>
                   )}
                 </div>
               );

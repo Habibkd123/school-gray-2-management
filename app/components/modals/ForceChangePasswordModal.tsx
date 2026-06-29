@@ -179,7 +179,7 @@ export function ForceChangePasswordModal({ isOpen, onSuccess }: ForceChangePassw
           {/* Old Password */}
           <div className="space-y-1.5">
             <label className="text-[12px] font-bold text-slate-400 flex items-center gap-1.5">
-              <KeyRound className="w-3.5 h-3.5 text-slate-500" />
+              <KeyRound className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               Old Password
             </label>
             <div className="relative">
@@ -194,7 +194,7 @@ export function ForceChangePasswordModal({ isOpen, onSuccess }: ForceChangePassw
               <button
                 type="button"
                 onClick={() => setShowOld(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors dark:text-slate-400"
               >
                 {showOld ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
@@ -209,7 +209,7 @@ export function ForceChangePasswordModal({ isOpen, onSuccess }: ForceChangePassw
           {/* New Password */}
           <div className="space-y-1.5">
             <label className="text-[12px] font-bold text-slate-400 flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-slate-500" />
+              <Lock className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               New Password
             </label>
             <div className="relative">
@@ -224,7 +224,7 @@ export function ForceChangePasswordModal({ isOpen, onSuccess }: ForceChangePassw
               <button
                 type="button"
                 onClick={() => setShowNew(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors dark:text-slate-400"
               >
                 {showNew ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
@@ -260,7 +260,7 @@ export function ForceChangePasswordModal({ isOpen, onSuccess }: ForceChangePassw
           {/* Confirm New Password */}
           <div className="space-y-1.5">
             <label className="text-[12px] font-bold text-slate-400 flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-slate-500" />
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               Confirm New Password
             </label>
             <div className="relative">
@@ -281,7 +281,7 @@ export function ForceChangePasswordModal({ isOpen, onSuccess }: ForceChangePassw
               <button
                 type="button"
                 onClick={() => setShowConfirm(v => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors dark:text-slate-400"
               >
                 {showConfirm ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>

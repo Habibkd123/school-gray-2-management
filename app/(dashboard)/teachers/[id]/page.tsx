@@ -119,7 +119,7 @@ export default function TeacherDetailsPage() {
   }, [teacher, selectedYear, fetchSummary, fetchDetail]);
 
   if (loading) return <div className="p-10 flex items-center gap-3"><Loader2 className="w-5 h-5 animate-spin text-primary" /><span>Loading teacher...</span></div>;
-  if (!teacher) return <div className="p-10 text-slate-500">Teacher not found.</div>;
+  if (!teacher) return <div className="p-10 text-slate-500 dark:text-slate-400">Teacher not found.</div>;
 
   const getClassName = (cid: any) => {
     if (!cid) return "Not Assigned";
@@ -370,7 +370,7 @@ export default function TeacherDetailsPage() {
                         <span key={i} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200">{l}</span>
                       ))
                     ) : (
-                      <span className="text-slate-500 font-medium">None</span>
+                      <span className="text-slate-500 font-medium dark:text-slate-400">None</span>
                     )}
                   </div>
                 </div>
@@ -1129,7 +1129,7 @@ export default function TeacherDetailsPage() {
               type="text"
               value={leaveDaysNum}
               readOnly
-              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-slate-50 dark:bg-slate-800 text-slate-500 cursor-not-allowed"
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-slate-50 dark:bg-slate-800 text-slate-500 cursor-not-allowed dark:text-slate-400"
             />
           </div>
           <div className="flex flex-col gap-1.5">

@@ -32,7 +32,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
             <h2 className="text-[18px] font-bold text-slate-900 dark:text-white">Collect Fees</h2>
             <span className="bg-[#3B82F6] text-white text-[11px] font-bold px-2 py-0.5 rounded">AD9892{student.rollNo}</span>
           </div>
-          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors dark:text-slate-400">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -45,17 +45,17 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                  <img src={getAvatar(student.name)} className="w-10 h-10 rounded object-cover" alt="Student" />
                  <div>
                    <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">{student.name}</h3>
-                   <p className="text-[12px] text-slate-500">III, {getSection((student as any)._id || student.id)}</p>
+                   <p className="text-[12px] text-slate-500 dark:text-slate-400">III, {getSection((student as any)._id || student.id)}</p>
                  </div>
               </div>
 
               <div>
-                <p className="text-[12px] font-medium text-slate-500">Total Outstanding</p>
+                <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400">Total Outstanding</p>
                 <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">2000</p>
               </div>
 
               <div>
-                <p className="text-[12px] font-medium text-slate-500">Last Date</p>
+                <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400">Last Date</p>
                 <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">25 May 2024</p>
               </div>
 
@@ -112,7 +112,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
            <div className="flex items-center justify-between mb-5 bg-[#F8FAFC] dark:bg-slate-800/50 p-4 rounded-lg border border-slate-100 dark:border-slate-800">
              <div>
                <h4 className="text-[13px] font-bold text-slate-900 dark:text-white">Status</h4>
-               <p className="text-[12px] text-slate-500">Change the Status by toggle</p>
+               <p className="text-[12px] text-slate-500 dark:text-slate-400">Change the Status by toggle</p>
              </div>
              {/* Toggle switch */}
              <button 

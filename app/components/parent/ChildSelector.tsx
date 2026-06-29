@@ -16,7 +16,7 @@ export function ChildSelector({ childrenList, selectedChildId, onSelectChild, is
     return (
       <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-sm text-sm">
         <div className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-        <span className="text-slate-500">Loading children...</span>
+        <span className="text-slate-500 dark:text-slate-400">Loading children...</span>
       </div>
     );
   }
@@ -42,7 +42,7 @@ export function ChildSelector({ childrenList, selectedChildId, onSelectChild, is
             {child.name}
           </span>
           {child.class_id && (
-            <span className="text-[11px] text-slate-500 mt-0.5">
+            <span className="text-[11px] text-slate-500 mt-0.5 dark:text-slate-400">
               Class {child.class_id?.name} {child.class_id?.section} {child.roll_no ? `| Roll: ${child.roll_no}` : ''}
             </span>
           )}
@@ -65,7 +65,7 @@ export function ChildSelector({ childrenList, selectedChildId, onSelectChild, is
           </option>
         ))}
       </select>
-      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500 dark:text-slate-400">
         <ChevronDown className="w-4 h-4" />
       </div>
     </div>

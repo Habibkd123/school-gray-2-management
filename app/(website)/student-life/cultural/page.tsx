@@ -21,9 +21,9 @@ export default async function StudentLifeCulturalPage() {
   return (
     <main className="w-full">
       {/* Hero Section */}
-      <section className="relative py-28 bg-[var(--sidebar-bg)]">
+      <section className="relative py-28 bg-[var(--sidebar-bg)] overflow-hidden">
         <div className="absolute inset-0">
-          <img src={heroImage || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1920&auto=format&fit=crop"} alt="Cultural Activities" className="w-full h-full object-cover opacity-20" />
+          <img src={heroImage || "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?q=80&w=1920&auto=format&fit=crop"} alt="Cultural Activities" className="w-full h-full object-cover opacity-45 blur-[3px] scale-105" />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0F172A]/80 to-[#0F172A]" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 text-center">
@@ -54,7 +54,7 @@ export default async function StudentLifeCulturalPage() {
                 </div>
               ) : (
                 <div className="p-8 bg-slate-50 border border-slate-200 rounded-sm dark:bg-slate-800/50 dark:border-slate-800">
-                  <p className="text-slate-500 text-[14px]">Cultural program details will appear here. Add details in the admin panel under <strong>Website → Student Life</strong>.</p>
+                  <p className="text-slate-500 text-[14px] dark:text-slate-400">Cultural program details will appear here. Add details in the admin panel under <strong>Website → Student Life</strong>.</p>
                 </div>
               )}
 
@@ -63,17 +63,17 @@ export default async function StudentLifeCulturalPage() {
                 <div className="p-5 bg-purple-50/50 border border-purple-100 rounded-sm text-center">
                   <Palette className="w-8 h-8 text-purple-500 mx-auto mb-3" />
                   <h4 className="font-bold text-foreground mb-1 text-[14px]">Fine Arts</h4>
-                  <p className="text-slate-500 text-[12px] leading-relaxed">Painting, sketching, pottery, and craft studios.</p>
+                  <p className="text-slate-500 text-[12px] leading-relaxed dark:text-slate-400">Painting, sketching, pottery, and craft studios.</p>
                 </div>
                 <div className="p-5 bg-pink-50/50 border border-pink-100 rounded-sm text-center">
                   <Theater className="w-8 h-8 text-pink-500 mx-auto mb-3" />
                   <h4 className="font-bold text-foreground mb-1 text-[14px]">Performing Arts</h4>
-                  <p className="text-slate-500 text-[12px] leading-relaxed">Contemporary & classical dance, theatre workshops.</p>
+                  <p className="text-slate-500 text-[12px] leading-relaxed dark:text-slate-400">Contemporary & classical dance, theatre workshops.</p>
                 </div>
                 <div className="p-5 bg-blue-50/50 border border-blue-100 rounded-sm text-center">
                   <Mic className="w-8 h-8 text-blue-500 mx-auto mb-3" />
                   <h4 className="font-bold text-foreground mb-1 text-[14px]">Music & Vocals</h4>
-                  <p className="text-slate-500 text-[12px] leading-relaxed">Instrumental classes, choir, and recording facility.</p>
+                  <p className="text-slate-500 text-[12px] leading-relaxed dark:text-slate-400">Instrumental classes, choir, and recording facility.</p>
                 </div>
               </div>
             </div>

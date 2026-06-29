@@ -10,10 +10,13 @@ interface SchoolThemeProviderProps {
   children: React.ReactNode;
 }
 
+// These are hardcoded in globals.css for forced light mode — skip them from theme injection
+const SKIP_IN_LIGHT_MODE = new Set(["--background", "--foreground"]);
+
 function applyCssVars(vars: Record<string, string>) {
   const root = document.documentElement;
   for (const [key, value] of Object.entries(vars)) {
-    if (value) root.style.setProperty(key, value);
+    if (value && !SKIP_IN_LIGHT_MODE.has(key)) root.style.setProperty(key, value);
   }
 }
 

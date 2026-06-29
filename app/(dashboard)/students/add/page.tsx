@@ -596,7 +596,7 @@ function AddStudentContent() {
 
 export default function AddStudentPage() {
   return (
-    <Suspense fallback={<div className="p-6 text-slate-500 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>}>
+    <Suspense fallback={<div className="p-6 text-slate-500 flex items-center gap-2 dark:text-slate-400"><Loader2 className="w-4 h-4 animate-spin" /> Loading...</div>}>
       <AddStudentContent />
     </Suspense>
   );

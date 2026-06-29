@@ -171,7 +171,7 @@ export default function SubjectMasterPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => doFetch()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
+          <button onClick={() => doFetch()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm dark:text-slate-400">
             <RefreshCcw className="w-4 h-4" />
           </button>
           {isAdmin && (
@@ -218,7 +218,7 @@ export default function SubjectMasterPage() {
             />
             {totalPages > 1 && (
               <div className="px-5 py-4 border-t border-border flex items-center justify-between gap-3">
-                <p className="text-[13px] text-slate-500">Page <span className="font-bold text-slate-700 dark:text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-700 dark:text-slate-200">{totalPages}</span></p>
+                <p className="text-[13px] text-slate-500 dark:text-slate-400">Page <span className="font-bold text-slate-700 dark:text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-700 dark:text-slate-200">{totalPages}</span></p>
                 <div className="flex items-center gap-1">
                   <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1}
                     className="px-3 py-1.5 rounded-lg border border-border text-[13px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed">← Prev</button>

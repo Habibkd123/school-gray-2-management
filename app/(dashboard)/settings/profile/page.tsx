@@ -285,7 +285,7 @@ export default function ProfilePage() {
           </div>
           <button
             onClick={handleRefreshClick}
-            className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/5 transition-colors shadow-sm"
+            className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/5 transition-colors shadow-sm dark:text-slate-400"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -297,31 +297,19 @@ export default function ProfilePage() {
         <div className="flex border-b border-border gap-6">
           <button
             onClick={() => setActiveTab("profile")}
-            className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer ${
-              activeTab === "profile"
-                ? "border-primary text-primary"
-                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
-            }`}
+            className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer ${ activeTab === "profile" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
           >
             Profile
           </button>
           <button
             onClick={() => setActiveTab("roles")}
-            className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer ${
-              activeTab === "roles"
-                ? "border-primary text-primary"
-                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
-            }`}
+            className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer ${ activeTab === "roles" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
           >
             Roles & Permissions
           </button>
           <button
             onClick={() => setActiveTab("academic")}
-            className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer ${
-              activeTab === "academic"
-                ? "border-primary text-primary"
-                : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
-            }`}
+            className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer ${ activeTab === "academic" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
           >
             Academic Settings
           </button>
@@ -412,7 +400,7 @@ export default function ProfilePage() {
 
                 <div className="text-center">
                   <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">{displayName}</h3>
-                  <p className="text-[12px] text-slate-500 capitalize mt-0.5">{user?.role?.replace("_", " ")}</p>
+                  <p className="text-[12px] text-slate-500 capitalize mt-0.5 dark:text-slate-400">{user?.role?.replace("_", " ")}</p>
                   {profile?.relation && (
                     <span className="mt-1 inline-block px-2 py-0.5 bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-300 text-[11px] font-bold rounded-full">
                       {profile.relation}

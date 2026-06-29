@@ -288,7 +288,7 @@ export default function ClassRoutinePage() {
           
           {viewMode === "grid" && (
             <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-border rounded-lg px-3 py-1.5 text-[13px] shadow-sm">
-              <span className="font-bold text-slate-500 uppercase text-[10px] tracking-wider">Class:</span>
+              <span className="font-bold text-slate-500 uppercase text-[10px] tracking-wider dark:text-slate-400">Class:</span>
               <select
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
@@ -332,7 +332,7 @@ export default function ClassRoutinePage() {
 
           <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
             {isLoading ? (
-              <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
+              <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2 dark:text-slate-400">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
                 <span>Fetching class routines...</span>
               </div>
@@ -353,7 +353,7 @@ export default function ClassRoutinePage() {
                 <tbody className="divide-y divide-border">
                   {filteredRoutines.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-6 py-12 text-center text-slate-500">
+                      <td colSpan={8} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                         No routine items found.
                       </td>
                     </tr>
@@ -400,7 +400,7 @@ export default function ClassRoutinePage() {
         /* Weekly Grid View Mode */
         <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm text-left p-5">
           {isLoading ? (
-            <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
+            <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2 dark:text-slate-400">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <span>Fetching weekly grid...</span>
             </div>
@@ -439,8 +439,8 @@ export default function ClassRoutinePage() {
                               <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Teacher: {getTeacherName(routine.teacher_id)}</p>
                               
                               <div className="absolute right-2 top-2 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center gap-1 bg-white/80 dark:bg-slate-950/80 p-1 rounded-lg">
-                                <button onClick={() => openEditModal(routine)} className="p-1 hover:text-primary transition-colors text-slate-500 cursor-pointer"><Edit className="w-3.5 h-3.5" /></button>
-                                <button onClick={() => handleDelete(routine._id)} className="p-1 hover:text-red-500 transition-colors text-slate-500 cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
+                                <button onClick={() => openEditModal(routine)} className="p-1 hover:text-primary transition-colors text-slate-500 cursor-pointer dark:text-slate-400"><Edit className="w-3.5 h-3.5" /></button>
+                                <button onClick={() => handleDelete(routine._id)} className="p-1 hover:text-red-500 transition-colors text-slate-500 cursor-pointer dark:text-slate-400"><Trash2 className="w-3.5 h-3.5" /></button>
                               </div>
                             </div>
                           ))

@@ -21,7 +21,7 @@ export default function AttendanceReportsPage() {
           <BarChart3 className="w-8 h-8" />
         </div>
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Reports Dashboard</h2>
-        <p className="text-slate-500 max-w-md text-[14px]">
+        <p className="text-slate-500 max-w-md text-[14px] dark:text-slate-400">
           The comprehensive reporting module is scheduled for the next phase. It will include daily, monthly, and low-attendance reports with export capabilities.
         </p>
       </div>

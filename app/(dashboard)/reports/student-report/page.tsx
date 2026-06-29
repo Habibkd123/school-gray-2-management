@@ -70,10 +70,10 @@ export default function StudentReportPage() {
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-2">
                   <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 cursor-pointer">
-                    <FileText className="w-4 h-4 text-slate-500" /> Export as PDF
+                    <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as PDF
                   </button>
                   <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 cursor-pointer">
-                    <FileText className="w-4 h-4 text-slate-500" /> Export as Excel
+                    <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as Excel
                   </button>
                 </div>
               </>

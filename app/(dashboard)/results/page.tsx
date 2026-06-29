@@ -144,7 +144,7 @@ export default function ResultsPage() {
           <h2 className="text-[15px] font-semibold text-slate-900 dark:text-white">Institutional Gradebook Logs</h2>
         </div>
         {resultsLoading ? (
-          <div className="p-12 flex items-center justify-center gap-3 text-slate-500">
+          <div className="p-12 flex items-center justify-center gap-3 text-slate-500 dark:text-slate-400">
             <Loader2 className="w-5 h-5 animate-spin text-primary" />
             <span>Loading results...</span>
           </div>

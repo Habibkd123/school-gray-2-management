@@ -27,9 +27,9 @@ const defaultData: AdmissionsData = {
 function TextareaField({ label, value, onChange, placeholder = "", rows = 4 }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; rows?: number }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider">{label}</label>
+      <label className="text-[12px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</label>
       <textarea value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} rows={rows}
-        className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all resize-none" />
+        className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all resize-none" />
     </div>
   );
 }
@@ -37,9 +37,9 @@ function TextareaField({ label, value, onChange, placeholder = "", rows = 4 }: {
 function InputField({ label, value, onChange, placeholder = "", type = "text" }: { label: string; value: string | number; onChange: (v: string) => void; placeholder?: string; type?: string }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider">{label}</label>
+      <label className="text-[12px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</label>
       <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all" />
+        className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all" />
     </div>
   );
 }
@@ -91,15 +91,15 @@ export default function AdmissionsPage() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-800/50 text-slate-400 hover:text-white transition-colors">
+          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-white transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
             <BookOpen className="w-5 h-5 text-amber-400" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Admissions</h1>
-            <p className="text-slate-400 text-[12px]">How to apply, fee structure & required documents</p>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Admissions</h1>
+            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px]">How to apply, fee structure & required documents</p>
           </div>
         </div>
         <button onClick={save} disabled={saving}
@@ -113,17 +113,17 @@ export default function AdmissionsPage() {
       {status === "error" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[13px] font-medium"><AlertCircle className="w-4 h-4" /> Failed to save.</div>}
 
       {/* Admission Status Toggle */}
-      <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 space-y-5">
-        <h2 className="text-white font-bold text-[14px] border-b border-slate-700/50 pb-3">Admission Status</h2>
-        <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 border border-slate-700/30">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-5">
+        <h2 className="text-slate-900 dark:text-white font-bold text-[14px] border-b border-slate-200 dark:border-slate-700 pb-3">Admission Status</h2>
+        <div className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800">
           <div>
             <p className="text-white font-semibold text-[14px]">Admissions Open</p>
-            <p className="text-slate-400 text-[12px] mt-0.5">
+            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px] mt-0.5">
               {data.admission_open ? "Admissions are currently open on your website." : "Admissions are currently closed on your website."}
             </p>
           </div>
           <button onClick={() => setData((p) => ({ ...p, admission_open: !p.admission_open }))}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all ${data.admission_open ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-700/50 text-slate-400 border border-slate-600/30"}`}>
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] font-semibold transition-all ${data.admission_open ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-750"}`}>
             {data.admission_open ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
             {data.admission_open ? "Open" : "Closed"}
           </button>
@@ -145,32 +145,32 @@ export default function AdmissionsPage() {
       </div>
 
       {/* How to Apply */}
-      <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 space-y-5">
-        <h2 className="text-white font-bold text-[14px] border-b border-slate-700/50 pb-3">How to Apply</h2>
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-5">
+        <h2 className="text-slate-900 dark:text-white font-bold text-[14px] border-b border-slate-200 dark:border-slate-700 pb-3">How to Apply</h2>
         <TextareaField label="Application Process" value={data.how_to_apply} onChange={(v) => setData((p) => ({ ...p, how_to_apply: v }))}
           placeholder="Step 1: Download the application form from our website or collect it from the school office..." rows={6} />
       </div>
 
       {/* Documents Required */}
-      <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 space-y-5">
-        <h2 className="text-white font-bold text-[14px] border-b border-slate-700/50 pb-3">Documents Required</h2>
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-5">
+        <h2 className="text-slate-900 dark:text-white font-bold text-[14px] border-b border-slate-200 dark:border-slate-700 pb-3">Documents Required</h2>
         <div className="flex gap-2">
           <input type="text" value={newDoc} onChange={(e) => setNewDoc(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addDoc()}
-            placeholder="e.g. Birth Certificate" className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
+            placeholder="e.g. Birth Certificate" className="flex-1 bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" />
           <button onClick={addDoc} className="px-4 py-2.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[13px] font-semibold hover:bg-primary/20 transition-colors flex items-center gap-1.5">
             <Plus className="w-4 h-4" /> Add
           </button>
         </div>
         {data.documents_required.length === 0 ? (
-          <p className="text-slate-500 text-[13px] text-center py-4">No documents added yet.</p>
+          <p className="text-slate-600 dark:text-slate-500 text-[13px] text-center py-4 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">No documents added yet.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {data.documents_required.map((doc, i) => (
-              <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-700/50 border border-slate-600/30 text-slate-300 text-[12px] font-medium">
+              <div key={i} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-200 dark:bg-slate-700 border border-slate-200 dark:border-slate-750 text-slate-700 dark:text-slate-300 text-[12px] font-medium">
                 <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                 {doc}
-                <button onClick={() => removeDoc(i)} className="ml-1 text-slate-500 hover:text-rose-400 transition-colors">
+                <button onClick={() => removeDoc(i)} className="ml-1 text-slate-600 dark:text-slate-500 hover:text-rose-400 transition-colors dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">
                   <X className="w-3 h-3" />
                 </button>
               </div>

@@ -138,8 +138,8 @@ export default function BusDetailsPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchBuses()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm"><RefreshCw className="w-4 h-4" /></button>
-          <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm"><Printer className="w-4 h-4" /></button>
+          <button onClick={() => fetchBuses()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm dark:text-slate-400"><RefreshCw className="w-4 h-4" /></button>
+          <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm dark:text-slate-400"><Printer className="w-4 h-4" /></button>
           <button className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 shadow-sm">
             <Download className="w-4 h-4" /> Export <ChevronDown className="w-3.5 h-3.5" />
           </button>
@@ -239,7 +239,7 @@ export default function BusDetailsPage() {
         </div>
 
         {/* Search Row */}
-        <div className="p-4 border-b border-border flex items-center justify-between gap-4 text-[13px] text-slate-500">
+        <div className="p-4 border-b border-border flex items-center justify-between gap-4 text-[13px] text-slate-500 dark:text-slate-400">
           <div className="flex flex-wrap items-center gap-2">
             <span>Row Per Page</span>
             <div className="flex items-center gap-1 px-3 py-1.5 border border-border rounded bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 cursor-pointer">
@@ -335,7 +335,7 @@ export default function BusDetailsPage() {
         </div>
 
         {/* Pagination */}
-        <div className="p-4 border-t border-border flex items-center justify-between text-[13px] text-slate-500">
+        <div className="p-4 border-t border-border flex items-center justify-between text-[13px] text-slate-500 dark:text-slate-400">
           <span>Showing 1–{Math.min(10, filtered.length)} of {filtered.length}</span>
           <div className="flex items-center gap-1">
             <button className="px-3 py-1.5 font-medium hover:text-slate-700 dark:hover:text-slate-200">Prev</button>
@@ -354,9 +354,9 @@ export default function BusDetailsPage() {
                 <Bus className="w-7 h-7 text-primary" />
               </div>
               <div>
-                <p className="text-[11px] text-slate-500 font-semibold uppercase">Bus</p>
+                <p className="text-[11px] text-slate-500 font-semibold uppercase dark:text-slate-400">Bus</p>
                 <h2 className="text-[18px] font-bold text-primary">{viewBus.busNumber}</h2>
-                <p className="text-[13px] text-slate-500">{viewBus.busModel}</p>
+                <p className="text-[13px] text-slate-500 dark:text-slate-400">{viewBus.busModel}</p>
               </div>
               <span className={`ml-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${viewBus.status === "Active" ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${viewBus.status === "Active" ? "bg-success" : "bg-danger"}`} />
@@ -375,7 +375,7 @@ export default function BusDetailsPage() {
               ].map(({ label, value, icon: Icon }) => (
                 <div key={label} className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0 mt-0.5">
-                    <Icon className="w-4 h-4 text-slate-500" />
+                    <Icon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                   </div>
                   <div>
                     <p className="text-[11px] text-slate-400 font-semibold uppercase mb-0.5">{label}</p>

@@ -311,7 +311,7 @@ export default function StudentProgressPage() {
       </div>
 
       {isLoading ? (
-        <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
+        <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2 dark:text-slate-400">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <span>Analyzing progress ledger reports...</span>
         </div>
@@ -325,7 +325,7 @@ export default function StudentProgressPage() {
                   <Award className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">Class Average GPA</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider dark:text-slate-400">Class Average GPA</span>
                   <span className="text-2xl font-bold block text-slate-900 dark:text-white mt-0.5">{classSummary.avgGpa} / 4.0</span>
                 </div>
               </div>
@@ -340,7 +340,7 @@ export default function StudentProgressPage() {
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">Passing Rate</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider dark:text-slate-400">Passing Rate</span>
                   <span className="text-2xl font-bold block text-slate-900 dark:text-white mt-0.5">{classSummary.passRate}%</span>
                 </div>
               </div>
@@ -355,7 +355,7 @@ export default function StudentProgressPage() {
                   <User className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider">Class Valedictorian</span>
+                  <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider dark:text-slate-400">Class Valedictorian</span>
                   <span className="text-xl font-bold block text-slate-900 dark:text-white mt-0.5 truncate max-w-full sm:w-[150px]">{classSummary.topPerformer}</span>
                 </div>
               </div>
@@ -370,7 +370,7 @@ export default function StudentProgressPage() {
             <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm p-6 text-left lg:col-span-1 flex flex-col justify-between">
               <div>
                 <h3 className="text-[15px] font-bold text-slate-900 dark:text-white mb-1">Grade Distribution</h3>
-                <p className="text-[12px] text-slate-500 mb-6">Distribution count of grades in selected class.</p>
+                <p className="text-[12px] text-slate-500 mb-6 dark:text-slate-400">Distribution count of grades in selected class.</p>
               </div>
 
               <div className="space-y-4">
@@ -380,7 +380,7 @@ export default function StudentProgressPage() {
                     <div key={grade} className="space-y-1">
                       <div className="flex items-center justify-between text-[12px] font-semibold">
                         <span className="text-slate-700 dark:text-slate-300">{grade} Grade</span>
-                        <span className="text-slate-500">{count} {count === 1 ? "student" : "students"}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{count} {count === 1 ? "student" : "students"}</span>
                       </div>
                       <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
                         <div 
@@ -577,7 +577,7 @@ export default function StudentProgressPage() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-center font-semibold text-slate-500">{subjectsCount}</td>
+                          <td className="px-6 py-4 text-center font-semibold text-slate-500 dark:text-slate-400">{subjectsCount}</td>
                           <td className="px-6 py-4 text-right font-bold font-mono text-slate-800 dark:text-slate-100">{averagePercentage}%</td>
                           <td className="px-6 py-4 text-center">
                             <span className={`px-2 py-0.5 rounded font-bold ${
@@ -638,7 +638,7 @@ export default function StudentProgressPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-950 dark:text-white">{selectedStudentMetric.student.name}</h3>
-                  <p className="text-[13px] text-slate-500 mt-0.5">Roll Number: {selectedStudentMetric.student.roll_no || "—"}</p>
+                  <p className="text-[13px] text-slate-500 mt-0.5 dark:text-slate-400">Roll Number: {selectedStudentMetric.student.roll_no || "—"}</p>
                 </div>
               </div>
 
@@ -651,11 +651,11 @@ export default function StudentProgressPage() {
             {/* Performance Statistics Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-border">
-                <span className="text-[11px] uppercase font-bold text-slate-500">Cumulative Score</span>
+                <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400">Cumulative Score</span>
                 <span className="text-2xl font-black block mt-1 font-mono text-slate-900 dark:text-white">{selectedStudentMetric.averagePercentage}%</span>
               </div>
               <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-border">
-                <span className="text-[11px] uppercase font-bold text-slate-500">Letter Grade</span>
+                <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400">Letter Grade</span>
                 <span className="text-2xl font-black block mt-1 text-slate-900 dark:text-white">{selectedStudentMetric.grade}</span>
               </div>
             </div>
@@ -676,7 +676,7 @@ export default function StudentProgressPage() {
                   <tbody className="divide-y divide-border">
                     {selectedStudentMetric.results.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="px-5 py-6 text-center text-slate-500">No grades registered for this student.</td>
+                        <td colSpan={4} className="px-5 py-6 text-center text-slate-500 dark:text-slate-400">No grades registered for this student.</td>
                       </tr>
                     ) : (
                       selectedStudentMetric.results.map((r) => {
@@ -684,7 +684,7 @@ export default function StudentProgressPage() {
                         return (
                           <tr key={r._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                             <td className="px-5 py-3 text-slate-800 dark:text-slate-100 font-semibold">{sName}</td>
-                            <td className="px-5 py-3 text-right text-slate-500 font-mono">{r.total_marks}</td>
+                            <td className="px-5 py-3 text-right text-slate-500 font-mono dark:text-slate-400">{r.total_marks}</td>
                             <td className="px-5 py-3 text-right text-slate-900 dark:text-white font-bold font-mono">{r.marks_obtained}</td>
                             <td className="px-5 py-3 text-center">
                               <span className={`px-2 py-0.5 rounded font-semibold text-[11px] ${

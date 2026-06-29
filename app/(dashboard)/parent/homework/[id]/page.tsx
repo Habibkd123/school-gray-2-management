@@ -177,7 +177,7 @@ export default function ParentHomeworkDetailPage() {
             rel="noopener noreferrer"
             className="mt-4 flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors w-fit"
           >
-            <Paperclip className="w-4 h-4 text-slate-500" />
+            <Paperclip className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">View Attachment</span>
           </a>
         )}

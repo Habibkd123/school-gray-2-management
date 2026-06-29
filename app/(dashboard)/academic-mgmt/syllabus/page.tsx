@@ -228,7 +228,7 @@ export default function SyllabusManagementPage() {
                           <span className="text-slate-400 font-mono text-xs">CH {ch.chapter_no}</span>
                           {ch.chapter_name}
                         </h4>
-                        {ch.description && <p className="text-[13px] text-slate-500 mt-1 max-w-2xl">{ch.description}</p>}
+                        {ch.description && <p className="text-[13px] text-slate-500 mt-1 max-w-2xl dark:text-slate-400">{ch.description}</p>}
                         <div className="flex items-center gap-4 mt-2 text-[12px] font-medium text-slate-400">
                           <span>Start: <span className="text-slate-600 dark:text-slate-300">{ch.start_date ? new Date(ch.start_date).toLocaleDateString() : "Not set"}</span></span>
                           <span>Target: <span className="text-slate-600 dark:text-slate-300">{ch.target_date ? new Date(ch.target_date).toLocaleDateString() : "Not set"}</span></span>

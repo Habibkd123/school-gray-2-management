@@ -179,7 +179,7 @@ export default function SuperAdminLoginPage() {
           {/* Email */}
           <div className="space-y-1.5">
             <label className="text-[11.5px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5 text-slate-500" />
+              <Mail className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               Email Address
             </label>
             <div className="relative">
@@ -212,7 +212,7 @@ export default function SuperAdminLoginPage() {
           {/* Password */}
           <div className="space-y-1.5">
             <label className="text-[11.5px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-slate-500" />
+              <Lock className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
               Password
             </label>
             <div className="relative">
@@ -242,7 +242,7 @@ export default function SuperAdminLoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors dark:text-slate-400"
                 aria-label="Toggle password visibility"
               >
                 {showPw ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -290,7 +290,7 @@ export default function SuperAdminLoginPage() {
         <div className="px-8 pb-7 pt-0 text-center">
           <a
             href="/login"
-            className="text-[12px] text-slate-500 hover:text-amber-400 transition-colors"
+            className="text-[12px] text-slate-500 hover:text-amber-400 transition-colors dark:text-slate-400"
           >
             ← Back to Admin Login
           </a>

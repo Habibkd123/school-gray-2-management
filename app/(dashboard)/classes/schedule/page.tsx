@@ -215,7 +215,7 @@ export default function SchedulePage() {
         {/* Table */}
         <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
           {isLoading ? (
-            <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
+            <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2 dark:text-slate-400">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <span>Fetching class schedules...</span>
             </div>
@@ -237,7 +237,7 @@ export default function SchedulePage() {
               <tbody className="divide-y divide-border">
                 {filteredSchedules.length === 0 ? (
                   <tr>
-                    <td colSpan={isAdmin ? 9 : 8} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={isAdmin ? 9 : 8} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                       No schedule items mapped yet.
                     </td>
                   </tr>

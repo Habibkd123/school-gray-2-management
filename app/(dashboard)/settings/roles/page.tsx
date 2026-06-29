@@ -311,7 +311,7 @@ function ComparisonTable({
                       <div className="flex flex-col items-center gap-0.5">
                         <Check className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto" />
                         {hasMore && (
-                          <span className="text-[9px] text-slate-500 font-semibold">
+                          <span className="text-[9px] text-slate-500 font-semibold dark:text-slate-400">
                             +{modulePerms.length - 1}
                           </span>
                         )}

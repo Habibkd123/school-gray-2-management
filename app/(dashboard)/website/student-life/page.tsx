@@ -37,9 +37,9 @@ const defaultData: StudentLifeData = {
 function TextareaField({ label, value, onChange, placeholder = "", rows = 4 }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string; rows?: number }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[12px] font-semibold text-slate-400 uppercase tracking-wider">{label}</label>
+      <label className="text-[12px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">{label}</label>
       <textarea value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} rows={rows}
-        className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3.5 py-2.5 text-[13px] text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all resize-none" />
+        className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all resize-none" />
     </div>
   );
 }
@@ -85,11 +85,11 @@ export default function StudentLifePage() {
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-800/50 text-slate-400 hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
+          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
           <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center"><Trophy className="w-5 h-5 text-purple-400" /></div>
           <div>
-            <h1 className="text-xl font-bold text-white">Student Life</h1>
-            <p className="text-slate-400 text-[12px]">Sports, cultural activities, clubs & achievements</p>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Student Life</h1>
+            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px]">Sports, cultural activities, clubs & achievements</p>
           </div>
         </div>
         <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-60 transition-all">
@@ -101,8 +101,8 @@ export default function StudentLifePage() {
       {status === "success" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[13px] font-medium"><CheckCircle2 className="w-4 h-4" /> Saved!</div>}
       {status === "error" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[13px] font-medium"><AlertCircle className="w-4 h-4" /> Failed.</div>}
 
-      <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 space-y-5">
-        <h2 className="text-white font-bold text-[14px] border-b border-slate-700/50 pb-3">Activities & Layout</h2>
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-5">
+        <h2 className="text-slate-900 dark:text-white font-bold text-[14px] border-b border-slate-200 dark:border-slate-700 pb-3">Activities & Layout</h2>
         <FileUploadField
           label="Hero Banner Image"
           value={data.hero_image_url || ""}
@@ -145,39 +145,39 @@ export default function StudentLifePage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-slate-700/50 bg-slate-800/30 p-6 space-y-5">
-        <div className="flex items-center justify-between border-b border-slate-700/50 pb-3">
-          <h2 className="text-white font-bold text-[14px]">Achievements</h2>
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-5">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
+          <h2 className="text-slate-900 dark:text-white font-bold text-[14px]">Achievements</h2>
           <button onClick={addAchievement} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[12px] font-semibold hover:bg-primary/20 transition-colors">
             <Plus className="w-3.5 h-3.5" /> Add Achievement
           </button>
         </div>
         {data.achievements.length === 0 ? (
-          <p className="text-slate-500 text-[13px] text-center py-4">No achievements yet. Click "Add Achievement" to highlight school accomplishments.</p>
+          <p className="text-slate-600 dark:text-slate-500 text-[13px] text-center py-4 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">No achievements yet. Click "Add Achievement" to highlight school accomplishments.</p>
         ) : (
           <div className="space-y-4">
             {data.achievements.map((a, idx) => (
-              <div key={idx} className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/30 space-y-3">
+              <div key={idx} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400 text-[12px] font-semibold">Achievement #{idx + 1}</span>
-                  <button onClick={() => removeAchievement(idx)} className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+                  <span className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px] font-semibold">Achievement #{idx + 1}</span>
+                  <button onClick={() => removeAchievement(idx)} className="p-1.5 text-slate-600 dark:text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors dark:text-slate-600 dark:text-slate-500 dark:text-slate-400"><Trash2 className="w-4 h-4" /></button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="md:col-span-2 flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Title</label>
+                    <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Title</label>
                     <input type="text" value={a.title} onChange={(e) => updateAchievement(idx, "title", e.target.value)} placeholder="e.g. State Level Science Olympiad Winner"
-                      className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 text-[12px] text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
+                      className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[12px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Year</label>
+                    <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Year</label>
                     <input type="number" value={a.year} onChange={(e) => updateAchievement(idx, "year", e.target.value)} placeholder="2024"
-                      className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 text-[12px] text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
+                      className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[12px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all" />
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Description</label>
+                  <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-500 dark:text-slate-400 uppercase tracking-wider">Description</label>
                   <textarea value={a.description} onChange={(e) => updateAchievement(idx, "description", e.target.value)} placeholder="Brief description of the achievement..." rows={2}
-                    className="w-full bg-slate-800/60 border border-slate-700/50 rounded-lg px-3 py-2 text-[12px] text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all resize-none" />
+                    className="w-full bg-[#F8FAFC] dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-[12px] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary/40 transition-all resize-none" />
                 </div>
               </div>
             ))}

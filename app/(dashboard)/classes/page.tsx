@@ -371,10 +371,10 @@ export default function ClassesPage() {
                 <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-2 text-left">
                   <button onClick={() => setIsExportOpen(false)} className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors">
-                    <FileText className="w-4 h-4 text-slate-500" /> Export as PDF
+                    <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as PDF
                   </button>
                   <button onClick={() => setIsExportOpen(false)} className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors">
-                    <FileText className="w-4 h-4 text-slate-500" /> Export as Excel
+                    <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as Excel
                   </button>
                 </div>
               </>
@@ -526,7 +526,7 @@ export default function ClassesPage() {
             {/* ── Pagination Bar ── */}
             {totalPages > 1 && (
               <div className="px-5 py-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p className="text-[13px] text-slate-500">
+                <p className="text-[13px] text-slate-500 dark:text-slate-400">
                   Page <span className="font-bold text-slate-700 dark:text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-700 dark:text-slate-200">{totalPages}</span>
                 </p>
                 <div className="flex items-center gap-1">

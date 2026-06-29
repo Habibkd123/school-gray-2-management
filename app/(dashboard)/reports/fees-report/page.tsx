@@ -98,7 +98,7 @@ export default function FeesReportPage() {
           {/* Print Header */}
           <div className="hidden print:block text-center mb-8">
             <h1 className="text-2xl font-black text-slate-900 uppercase tracking-wider dark:text-white">EduManage School</h1>
-            <p className="text-slate-500 mt-1">Fees Collection Report</p>
+            <p className="text-slate-500 mt-1 dark:text-slate-400">Fees Collection Report</p>
             <p className="text-slate-400 text-sm mt-1">Generated on: {new Date().toLocaleDateString()}</p>
           </div>
 
@@ -156,7 +156,7 @@ export default function FeesReportPage() {
                 <tbody className="divide-y divide-border print:divide-slate-300">
                   {filteredPayments.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-5 py-10 text-center text-slate-500">No transactions found for the selected period.</td>
+                      <td colSpan={6} className="px-5 py-10 text-center text-slate-500 dark:text-slate-400">No transactions found for the selected period.</td>
                     </tr>
                   ) : filteredPayments.map(p => (
                     <tr key={p._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors print:text-black">
@@ -164,7 +164,7 @@ export default function FeesReportPage() {
                       <td className="px-5 py-3 font-medium text-slate-700 dark:text-slate-300 print:text-black">{p.receipt_number}</td>
                       <td className="px-5 py-3 font-semibold text-slate-800 dark:text-slate-100 print:text-black">
                         {typeof p.student_id === 'object' ? p.student_id.name : "—"}
-                        <div className="text-[11px] text-slate-500 font-normal">Adm: {typeof p.student_id === 'object' ? p.student_id.admission_no : "—"}</div>
+                        <div className="text-[11px] text-slate-500 font-normal dark:text-slate-400">Adm: {typeof p.student_id === 'object' ? p.student_id.admission_no : "—"}</div>
                       </td>
                       <td className="px-5 py-3 text-slate-600 dark:text-slate-400 print:text-black">
                         {typeof p.fee_master_id === 'object' && typeof p.fee_master_id.fee_type_id === 'object' ? p.fee_master_id.fee_type_id.name : "—"}
