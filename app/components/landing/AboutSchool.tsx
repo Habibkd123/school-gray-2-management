@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
+import { Flag, Eye, Building2, Users, GraduationCap } from "lucide-react";
 
 interface AboutData {
   hero_tagline?: string;
@@ -21,7 +24,7 @@ interface AboutData {
 
 export function AboutSchool({ data }: { data?: AboutData | null }) {
   const history = data?.history;
-  const tagline = data?.hero_tagline;
+  const tagline = data?.hero_tagline || "Learning Journey";
   const foundedYear = data?.founded_year;
   const infrastructure = data?.infrastructure;
   const vision = data?.vision;
@@ -30,121 +33,149 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
   const historyImageUrl = data?.history_image_url;
   const infrastructureImageUrl = data?.infrastructure_image_url;
 
-  const points = [
-    ...(history ? [history.slice(0, 120) + (history.length > 120 ? "..." : "")] : []),
-    ...(vision ? [`Vision: ${vision.slice(0, 80)}${vision.length > 80 ? "..." : ""}`] : []),
-    ...(infrastructure ? [infrastructure.slice(0, 120) + (infrastructure.length > 120 ? "..." : "")] : []),
-  ].filter(Boolean).slice(0, 4);
+  const timelineItems = [
+    {
+      id: "foundation",
+      title: "Our Foundation",
+      description: history,
+      icon: <Flag className="w-6 h-6 text-primary dark:text-white" />,
+      image: historyImageUrl,
+      badge: foundedYear ? `Est. ${foundedYear}` : undefined,
+    },
+    {
+      id: "vision",
+      title: "Vision & Mission",
+      description: [vision, mission].filter(Boolean).join("\n\n"),
+      icon: <Eye className="w-6 h-6 text-primary dark:text-white" />,
+      image: null,
+    },
+    {
+      id: "infrastructure",
+      title: "Campus Infrastructure",
+      description: infrastructure,
+      icon: <Building2 className="w-6 h-6 text-primary dark:text-white" />,
+      image: infrastructureImageUrl,
+    },
+    {
+      id: "leadership",
+      title: "Leadership",
+      description: managementTeam.length > 0 ? "Guided by an experienced team of educators committed to excellence." : undefined,
+      icon: <Users className="w-6 h-6 text-primary dark:text-white" />,
+      image: null,
+      customContent: managementTeam.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+          {managementTeam.slice(0, 4).map((member) => (
+            <div key={member.name} className="flex items-center gap-3 bg-slate-100/50 dark:bg-white/5 p-3 rounded-lg border border-slate-200/50 dark:border-white/10">
+              {member.photo_url ? (
+                <img src={member.photo_url} alt={member.name} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-white/20" />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-white/5 flex items-center justify-center border border-primary/20 dark:border-white/10">
+                  <GraduationCap className="w-5 h-5 text-primary" />
+                </div>
+              )}
+              <div>
+                <p className="font-bold text-foreground text-sm">{member.name}</p>
+                <p className="text-primary text-[10px] uppercase tracking-wider">{member.position}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+    }
+  ].filter(item => item.description || item.customContent);
 
-  const yearsLegacy = foundedYear ? `${new Date().getFullYear() - foundedYear}+` : undefined;
-
-  if (!tagline && !history && !vision && !infrastructure && !managementTeam.length) {
-    return null;
-  }
+  if (timelineItems.length === 0) return null;
 
   return (
-    <section id="about" className="py-24 bg-slate-50 overflow-hidden relative dark:bg-slate-800/50">
-      <div className="absolute top-0 right-0 w-full sm:w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -z-10" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        
-        {/* Top Grid: School Images + Tagline & Story */}
-        <div className="grid lg:grid-cols-2 gap-16 items-center mb-16">
-          <div className="relative">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full sm:w-[120%] h-[120%] bg-[var(--sidebar-bg)]/5 rounded-full -z-10 border border-[var(--sidebar-bg)]/10" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {historyImageUrl && (
-                <img
-                  src={historyImageUrl}
-                  alt="School Building"
-                  className="w-full h-[320px] object-cover rounded-sm shadow-xl"
-                />
-              )}
-              <div className="flex flex-col gap-4 pt-12">
-                {infrastructureImageUrl && (
-                  <img
-                    src={infrastructureImageUrl}
-                    alt="School infrastructure"
-                    className="w-full h-[200px] object-cover rounded-sm shadow-xl"
-                  />
-                )}
-                {yearsLegacy && (
-                  <div className="bg-[var(--sidebar-bg)] text-white p-6 rounded-sm shadow-xl flex flex-col items-center justify-center h-[104px] border-b-4 border-primary">
-                    <span className="text-3xl font-serif font-black text-primary">{yearsLegacy}</span>
-                    <span className="text-[11px] font-bold opacity-90 uppercase tracking-widest mt-1">Years Legacy</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+    <section id="about" className="py-24 bg-background relative overflow-hidden">
+      
+      {/* Background styling */}
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5 z-0 dark:opacity-10" />
+      <div className="absolute top-1/3 right-0 w-[600px] h-[600px] bg-primary/5 dark:bg-primary/10 rounded-full blur-[120px] -z-10" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/5 dark:bg-primary/10 rounded-full blur-[100px] -z-10" />
 
-          <div className="max-w-xl">
-            {tagline && (
-              <h3 className="text-4xl md:text-5xl font-serif font-bold text-foreground mb-6 leading-tight">
-                {tagline}
-              </h3>
-            )}
-            {history && (
-              <p className="text-[15px] text-slate-600 leading-relaxed mb-8 dark:text-slate-300">
-                {history}
-              </p>
-            )}
-            {points.length > 0 && (
-              <ul className="space-y-4">
-                {points.map((point, idx) => (
-                  <li key={idx} className="flex items-start gap-3 text-slate-700 font-medium text-[14px] dark:text-slate-200">
-                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                    <span>{point}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
+        
+        <div className="text-center mb-16">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-4xl md:text-5xl font-bold text-foreground mb-4"
+          >
+            {tagline}
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-muted-text max-w-2xl mx-auto"
+          >
+            Trace our journey of excellence and discover what makes our institution unique.
+          </motion.p>
         </div>
 
-        {/* Bottom Section: Vision & Mission side-by-side */}
-        {(vision || mission) && (
-          <div className="grid md:grid-cols-2 gap-8 border-t border-slate-200 dark:border-slate-800 pt-12 mb-16">
-            {vision && (
-              <div className="bg-white p-8 rounded-sm border border-slate-200 shadow-md border-t-4 border-t-primary dark:bg-slate-900 dark:border-slate-800">
-                <h4 className="text-xl font-serif font-bold text-foreground mb-3">Our Vision</h4>
-                <p className="text-[15px] text-slate-600 leading-relaxed dark:text-slate-300">{vision}</p>
-              </div>
-            )}
-            {mission && (
-              <div className="bg-white p-8 rounded-sm border border-slate-200 shadow-md border-t-4 border-t-[var(--sidebar-bg)] dark:bg-slate-900 dark:border-slate-800">
-                <h4 className="text-xl font-serif font-bold text-foreground mb-3">Our Mission</h4>
-                <p className="text-[15px] text-slate-600 leading-relaxed dark:text-slate-300">{mission}</p>
-              </div>
-            )}
-          </div>
-        )}
+        <div className="relative">
+          {/* Vertical Line */}
+          <div className="absolute left-4 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-primary/30 via-[var(--primary-hover)]/30 to-transparent -translate-x-1/2 rounded-full hidden md:block" />
+          <div className="absolute left-8 top-0 bottom-0 w-1 bg-gradient-to-b from-primary/30 via-[var(--primary-hover)]/30 to-transparent rounded-full md:hidden" />
 
-        {/* Leadership Team: full width with up to 3 columns */}
-        {(managementTeam?.length ?? 0) > 0 && (
-          <div className="border-t border-slate-200 dark:border-slate-800 pt-12">
-            <h4 className="text-2xl font-serif font-bold text-foreground text-center mb-10">Leadership Team</h4>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {managementTeam.map((member) => (
-                <div key={member._id?.toString() ?? member.name} className="bg-white rounded-sm p-6 border border-slate-200 shadow-md hover:shadow-lg transition-shadow dark:bg-slate-900 dark:border-slate-800">
-                  <div className="flex items-center gap-4 mb-4">
-                    {member.photo_url && (
-                      <img
-                        src={member.photo_url}
-                        alt={member.name}
-                        className="w-14 h-14 rounded-full object-cover border-2 border-primary shrink-0"
-                      />
-                    )}
-                    <div>
-                      <p className="font-bold text-foreground leading-snug">{member.name}</p>
-                      <p className="text-primary text-[12px] font-bold uppercase tracking-wider mt-0.5">{member.position}</p>
+          <div className="space-y-12 md:space-y-24">
+            {timelineItems.map((item, idx) => {
+              const isEven = idx % 2 === 0;
+              return (
+                <motion.div 
+                  key={item.id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 0.6 }}
+                  className={`relative flex flex-col md:flex-row gap-8 md:gap-0 ${isEven ? 'md:flex-row-reverse' : ''}`}
+                >
+                  
+                  {/* Timeline Dot */}
+                  <div className="absolute left-8 md:left-1/2 top-6 -translate-x-1/2 md:translate-x-0 md:-ml-[22px] z-10 w-11 h-11 rounded-full bg-background dark:bg-slate-900 border-4 border-primary flex items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.2)]">
+                    {item.icon}
+                  </div>
+
+                  {/* Spacer for alternating sides */}
+                  <div className="hidden md:block md:w-1/2" />
+
+                  {/* Content Card */}
+                  <div className="md:w-1/2 pl-20 md:pl-0">
+                    <div className={`bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-6 md:p-8 rounded-xl shadow-lg hover:bg-white/80 dark:hover:bg-white/10 transition-colors duration-300 ${isEven ? 'md:mr-12' : 'md:ml-12'}`}>
+                      
+                      {item.badge && (
+                        <span className="inline-block px-3 py-1 bg-primary/10 dark:bg-white/5 border border-primary/20 dark:border-white/10 text-primary dark:text-[color-mix(in_srgb,var(--primary)_40%,white)] text-xs font-bold uppercase tracking-wider rounded-lg mb-4">
+                          {item.badge}
+                        </span>
+                      )}
+                      
+                      <h3 className="text-2xl font-bold text-foreground mb-3">{item.title}</h3>
+                      
+                      {item.description && (
+                        <p className="text-muted-text leading-relaxed whitespace-pre-line text-sm md:text-base">
+                          {item.description}
+                        </p>
+                      )}
+
+                      {item.image && (
+                        <div className="mt-6 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 h-48 w-full relative">
+                          <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                        </div>
+                      )}
+
+                      {item.customContent}
+
                     </div>
                   </div>
-                  <p className="text-slate-600 text-[13.5px] leading-relaxed dark:text-slate-300">{member.bio}</p>
-                </div>
-              ))}
-            </div>
+
+                </motion.div>
+              );
+            })}
           </div>
-        )}
+        </div>
 
       </div>
     </section>

@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, FileText, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface AdmissionsData {
   how_to_apply?: string;
@@ -14,89 +17,102 @@ interface AdmissionsData {
   }>;
 }
 
-const DEFAULT_STEPS = [
-  { title: "Online Enquiry", desc: "Submit the admission enquiry form for the upcoming academic session." },
-  { title: "Campus Interaction", desc: "Interactive session with the Principal and campus tour." },
-  { title: "Document Submission", desc: "Submit birth certificate, previous school records, and Aadhar." },
-  { title: "Fee Payment", desc: "Confirm admission by paying the first quarter fees online." },
-];
-
 export function AdmissionProcess({ data }: { data?: AdmissionsData | null }) {
   const applyUrl = data?.apply_url || "#contact";
   const admissionOpen = data?.admission_open ?? true;
-  const howToApply = data?.how_to_apply;
   const docs = data?.documents_required ?? [];
 
-  // Parse how_to_apply into steps if provided
-  const apiSteps = howToApply
-    ? howToApply
-        .split(/\n|\.\s+/)
-        .map((s) => s.trim())
-        .filter((s) => s.length > 10)
-        .slice(0, 4)
-        .map((s, i) => ({ title: `Step ${i + 1}`, desc: s }))
-    : [];
-
-  const steps = apiSteps.length >= 2 ? apiSteps : DEFAULT_STEPS;
-
   return (
-    <section id="admissions" className="py-24 bg-[var(--sidebar-bg)] text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <section id="admissions" className="py-24 relative overflow-hidden bg-[var(--section-alt)]">
+      
+      {/* Background gradients matching FAQ.tsx */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/20 dark:bg-primary/10 rounded-full blur-[100px] -translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[var(--primary-hover)]/20 dark:bg-[var(--primary-hover)]/10 rounded-full blur-[100px] translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Join Our Legacy</h2>
-          <h3 className="text-4xl md:text-5xl font-serif font-bold text-white leading-tight">
-            Admission Process
-          </h3>
-          {!admissionOpen && (
-            <p className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-rose-500/20 border border-rose-500/30 text-rose-400 rounded-sm text-[13px] font-bold uppercase tracking-wide">
-              Admissions Currently Closed
-            </p>
-          )}
-        </div>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 relative z-10">
+        
+        <div className="bg-white/60 dark:bg-white/5 backdrop-blur-xl border border-slate-200 dark:border-white/10 p-8 md:p-16 rounded-xl shadow-lg text-center">
+          
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="mb-8"
+          >
+            {admissionOpen ? (
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-success/20 border border-success/50 text-success font-bold uppercase tracking-wider text-sm shadow-[0_0_15px_var(--success)]">
+                <span className="w-2.5 h-2.5 rounded-full bg-success animate-pulse" />
+                Admissions Open for 2026-27
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-danger/20 border border-danger/50 text-danger font-bold uppercase tracking-wider text-sm">
+                Admissions Closed
+              </span>
+            )}
+          </motion.div>
 
-        <div className="relative">
-          <div className="hidden md:block absolute top-8 left-0 right-0 h-1 bg-white/10" />
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight"
+          >
+            Begin Your Educational Journey With Us
+          </motion.h2>
 
-          <div className="grid md:grid-cols-4 gap-8">
-            {steps.map((step, idx) => (
-              <div key={idx} className="relative flex flex-col items-center text-center group">
-                <div className="w-16 h-16 bg-[var(--sidebar-bg)] border-4 border-primary text-primary rounded-full flex items-center justify-center text-xl font-black mb-6 relative z-10 shadow-[0_0_20px_rgba(245,158,11,0.3)] group-hover:scale-110 group-hover:bg-primary group-hover:text-foreground transition-all duration-300">
-                  {idx + 1}
-                </div>
-                <h4 className="text-[16px] font-bold text-white mb-3">{step.title}</h4>
-                <p className="text-slate-400 text-[14px] leading-relaxed max-w-full sm:w-[200px]">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className="text-lg md:text-xl text-muted-text max-w-2xl mx-auto mb-10 leading-relaxed font-light"
+          >
+            Join a community of lifelong learners and future leaders. Secure your spot today and unlock a world of opportunities.
+          </motion.p>
 
-        {/* Documents Required */}
-        {docs.length > 0 && (
-          <div className="mt-16 bg-white/5 rounded-sm border border-white/10 p-8">
-            <h4 className="text-primary font-bold text-[13px] uppercase tracking-widest mb-4">Documents Required</h4>
-            <ul className="grid sm:grid-cols-2 gap-2">
-              {docs.map((doc, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-slate-300 text-[14px]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary mt-2 shrink-0" />
-                  {doc}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {admissionOpen && (
-          <div className="mt-16 text-center">
-            <a
-              href={applyUrl}
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-sm bg-primary text-white font-bold text-[14px] hover:bg-[var(--primary-hover)] shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all duration-300 uppercase tracking-wide"
+          {admissionOpen && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 150 }}
+              className="flex justify-center mb-12"
             >
-              Apply Now <ArrowRight className="w-5 h-5" />
-            </a>
-          </div>
-        )}
+              <a
+                href={applyUrl}
+                className="group relative inline-flex items-center gap-3 px-10 py-5 rounded-lg bg-primary hover:bg-primary-hover text-white font-bold text-lg overflow-hidden transition-all duration-300 hover:shadow-[0_0_20px_var(--primary)] hover:scale-105"
+              >
+                <span className="relative">Apply Now</span>
+                <ArrowRight className="relative w-6 h-6 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </motion.div>
+          )}
 
+          {docs.length > 0 && (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="mt-8 pt-8 border-t border-slate-200 dark:border-white/10 text-left"
+            >
+              <div className="flex items-center gap-3 mb-6 justify-center md:justify-start">
+                <FileText className="w-5 h-5 text-primary" />
+                <h4 className="font-bold text-foreground uppercase tracking-wider text-sm">Required Documents</h4>
+              </div>
+              <ul className="grid sm:grid-cols-2 gap-4">
+                {docs.map((doc, idx) => (
+                  <li key={idx} className="flex items-start gap-3 text-muted-text text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
+                    <span>{doc}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          )}
+
+        </div>
       </div>
     </section>
   );
