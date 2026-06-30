@@ -114,7 +114,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         lastUpdated,
         updatedBy
       };
-    }).filter(Boolean);
+    }).filter(Boolean) as any[];
 
     // Calculate Stats
     let totalPresent = 0;
@@ -144,8 +144,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           name: student.name,
           admission_no: student.admission_no,
           roll_no: student.roll_no,
-          className: student.class_id?.name || "",
-          section: student.class_id?.section || "",
+          className: (student.class_id as any)?.name || "",
+          section: (student.class_id as any)?.section || "",
         },
         stats: {
           totalWorkingDays,
@@ -246,6 +246,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // Update the record
     existingRecord.records[oldRecordIndex].status = status.toLowerCase();
     existingRecord.records[oldRecordIndex].note = note || "";
+    if (!existingRecord.edit_history) {
+      existingRecord.edit_history = [];
+    }
     existingRecord.edit_history.push(auditLogEntry);
 
     await existingRecord.save();
