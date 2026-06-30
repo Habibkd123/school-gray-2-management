@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Search, Loader2, AlertCircle, Save, Calendar, CheckCircle2, Users } from "lucide-react";
+import Link from "next/link";
+import { Search, Loader2, AlertCircle, Save, Calendar, CheckCircle2, Users, Eye } from "lucide-react";
 import { useTeacherAttendance } from "@/app/hooks/useTeacherAttendance";
 import { useTeachers } from "@/app/hooks/useTeachers";
 import { useAppState } from "@/app/context/store";
@@ -165,6 +166,7 @@ export default function TeacherAttendancePage() {
                     <th className="px-4 py-3 font-semibold">Teacher Name</th>
                     <th className="px-4 py-3 font-semibold w-48">Status</th>
                     <th className="px-4 py-3 font-semibold">Note</th>
+                    <th className="px-4 py-3 font-semibold w-24 text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -196,6 +198,11 @@ export default function TeacherAttendancePage() {
                           value={attendanceRecords[teacher._id]?.note || ""}
                           onChange={(e) => handleNoteChange(teacher._id, e.target.value)}
                           className="w-full px-3 py-1.5 border border-transparent hover:border-border focus:border-primary rounded text-[13px] outline-none bg-transparent focus:bg-white dark:focus:bg-slate-900 transition-colors" />
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <Link href={`/attendance/teacher/${teacher._id}`} className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors">
+                          <Eye className="w-4 h-4" />
+                        </Link>
                       </td>
                     </tr>
                   ))}
