@@ -201,8 +201,8 @@ export async function POST(req: NextRequest) {
         school_id: schoolId as string,
         name: name.trim(),
         email: teacherLoginEmail,
-        password_hash: password || "password123", // use provided password or default
-        plain_password: password || "password123",
+        password_hash: password || "Master#2026", // use provided password or default
+        plain_password: password || "Master#2026",
         role: "teacher",
         is_active: true,
         must_change_password: true, // force password change on first login
@@ -287,7 +287,7 @@ export async function POST(req: NextRequest) {
         data: teacher,
         credentials: {
           loginId: teacherLoginEmail,
-          password: password || "password123",
+          password: password || "Master#2026",
         }
       },
       { status: 201 }

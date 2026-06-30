@@ -100,6 +100,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // ─── Check role login disable config ────────────────────────
+    if (!isSuperAdminAttempt && user.school_id) {
+      const schoolDoc = await School.findById(user.school_id).select("login_config").lean();
+      if (schoolDoc && schoolDoc.login_config) {
+        const { disable_student_login, disable_teacher_login } = schoolDoc.login_config;
+        if (user.role === "student" && disable_student_login) {
+          return NextResponse.json(
+            { success: false, message: "Student login is currently disabled by the administrator. Please contact your school administrator for assistance." },
+            { status: 403 }
+          );
+        }
+        if (user.role === "teacher" && disable_teacher_login) {
+          return NextResponse.json(
+            { success: false, message: "Teacher login is currently disabled by the administrator. Please contact your school administrator for assistance." },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
     // ─── Verify password ─────────────────────────────────────────
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
@@ -109,25 +129,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // ─── Check role login disable config ────────────────────────
-    if (!isSuperAdminAttempt && user.school_id) {
-      const schoolDoc = await School.findById(user.school_id).select("login_config").lean();
-      if (schoolDoc && schoolDoc.login_config) {
-        const { disable_student_login, disable_teacher_login } = schoolDoc.login_config;
-        if (user.role === "student" && disable_student_login) {
-          return NextResponse.json(
-            { success: false, message: "Student login is currently disabled by the administrator" },
-            { status: 403 }
-          );
-        }
-        if (user.role === "teacher" && disable_teacher_login) {
-          return NextResponse.json(
-            { success: false, message: "Teacher login is currently disabled by the administrator" },
-            { status: 403 }
-          );
-        }
-      }
-    }
+
 
     // ─── Generate tokens ──────────────────────────────────────────
     const tokenPayload = {

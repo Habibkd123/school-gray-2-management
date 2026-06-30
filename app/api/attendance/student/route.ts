@@ -140,43 +140,24 @@ export async function POST(req: NextRequest) {
 
     const existingRecord = await Attendance.findOne(filter);
 
-    // Date check: only allow today if not editing
+    // Date check
     const requestDateStr = date;
     const d = new Date();
     const localToday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const utcToday = d.toISOString().split("T")[0];
     const isToday = (requestDateStr === localToday || requestDateStr === utcToday);
 
-    const yesterdayDate = new Date();
-    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-    const localYesterday = `${yesterdayDate.getFullYear()}-${String(yesterdayDate.getMonth() + 1).padStart(2, "0")}-${String(yesterdayDate.getDate()).padStart(2, "0")}`;
-    const utcYesterday = yesterdayDate.toISOString().split("T")[0];
-    const isYesterday = (requestDateStr === localYesterday || requestDateStr === utcYesterday);
+    if (existingRecord && (!body.reason || body.reason.trim() === "")) {
+      return NextResponse.json(
+        { success: false, message: "A reason is mandatory when editing attendance." },
+        { status: 400 }
+      );
+    }
 
     if (role === "teacher") {
-      if (isToday) {
-        if (existingRecord) {
-          return NextResponse.json(
-            { success: false, message: "Teachers can submit attendance only once. Today's attendance has already been submitted." },
-            { status: 400 }
-          );
-        }
-      } else if (isYesterday) {
-        if (existingRecord) {
-          // Verify if it is within 24 hours of first submission
-          const editWindowLimitMs = 24 * 60 * 60 * 1000;
-          const submittedAt = existingRecord.createdAt || existingRecord.updatedAt;
-          const elapsed = Date.now() - new Date(submittedAt).getTime();
-          if (elapsed > editWindowLimitMs) {
-            return NextResponse.json(
-              { success: false, message: "The edit window for yesterday's attendance has expired (max 24 hours from initial submission)." },
-              { status: 400 }
-            );
-          }
-        }
-      } else {
+      if (!isToday) {
         return NextResponse.json(
-          { success: false, message: "Teachers can only mark today's attendance or edit yesterday's attendance within the edit window." },
+          { success: false, message: "Teachers can only mark or edit today's attendance." },
           { status: 400 }
         );
       }
@@ -188,9 +169,9 @@ export async function POST(req: NextRequest) {
       note: r.note || null,
     }));
 
-    // Maintain Edit History / Audit Log for Admins & Principals
+    // Maintain Edit History / Audit Log for All Roles
     let auditLogEntry = null;
-    if (existingRecord && (role === "school_admin" || role === "super_admin")) {
+    if (existingRecord) {
       const changes: any[] = [];
       const oldRecordsMap = new Map();
       existingRecord.records.forEach((r: any) => {
@@ -243,7 +224,7 @@ export async function POST(req: NextRequest) {
         });
 
         const editor = await User.findById(userId).select("name").lean();
-        const editorName = editor?.name || "Admin/Principal";
+        const editorName = editor?.name || (role === "teacher" ? "Teacher" : "Admin/Principal");
 
         auditLogEntry = {
           edited_by: new mongoose.Types.ObjectId(userId as string),

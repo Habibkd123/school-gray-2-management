@@ -69,24 +69,6 @@ export default function ClassRoutinePage() {
     const uniqueClassIds = new Set<string>();
     const result: any[] = [];
     
-    const resolveClassesFromGroup = (group: any) => {
-      if (!group) return;
-      if (group.classes && Array.isArray(group.classes)) {
-        group.classes.forEach((c: any) => {
-          const classObj = c.class_id;
-          if (classObj && typeof classObj === "object" && !uniqueClassIds.has(classObj._id)) {
-            uniqueClassIds.add(classObj._id);
-            result.push(classObj);
-          }
-        });
-      }
-      if (group.sub_groups && Array.isArray(group.sub_groups)) {
-        group.sub_groups.forEach((sub: any) => {
-          resolveClassesFromGroup(sub);
-        });
-      }
-    };
-
     assigned.forEach(a => {
       if (a.class_id) {
         const classObj = a.class_id;
@@ -94,8 +76,6 @@ export default function ClassRoutinePage() {
           uniqueClassIds.add(classObj._id);
           result.push(classObj);
         }
-      } else if (a.class_group_id) {
-        resolveClassesFromGroup(a.class_group_id);
       }
     });
     return result;
@@ -111,28 +91,11 @@ export default function ClassRoutinePage() {
     const uniqueSubjectIds = new Set<string>();
     const result: any[] = [];
 
-    const groupHasClass = (group: any, classId: string): boolean => {
-      if (!group) return false;
-      if (group.classes && Array.isArray(group.classes)) {
-        const hasDirect = group.classes.some((c: any) => {
-          const cId = typeof c.class_id === "object" ? c.class_id?._id : c.class_id;
-          return cId === classId;
-        });
-        if (hasDirect) return true;
-      }
-      if (group.sub_groups && Array.isArray(group.sub_groups)) {
-        return group.sub_groups.some((sub: any) => groupHasClass(sub, classId));
-      }
-      return false;
-    };
-
     assigned.forEach(a => {
       let match = false;
       if (a.class_id) {
         const cId = typeof a.class_id === "object" ? a.class_id?._id : a.class_id;
         match = cId === formClassId;
-      } else if (a.class_group_id) {
-        match = groupHasClass(a.class_group_id, formClassId);
       }
 
       if (match) {

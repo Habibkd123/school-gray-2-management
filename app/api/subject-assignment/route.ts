@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { SubjectAssignment, SubjectMaster, ClassGroup } from "@/lib/models/index";
+import { SubjectAssignment, SubjectMaster } from "@/lib/models/index";
 import Stream from "@/lib/models/Stream";
 import Class from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
@@ -8,7 +8,7 @@ import mongoose from "mongoose";
 
 // Ensure models are registered for populate
 const registerModels = () => {
-  return [Class.modelName, Stream.modelName, ClassGroup.modelName];
+  return [Class.modelName, Stream.modelName];
 };
 
 // GET — list subject assignments
@@ -21,31 +21,19 @@ export async function GET(req: NextRequest) {
     registerModels();
     const url = new URL(req.url);
     const class_id = url.searchParams.get("class_id");
-    const class_group_id = url.searchParams.get("class_group_id");
     const stream_id = url.searchParams.get("stream_id");
     const academic_year = url.searchParams.get("academic_year");
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
     const limit = Math.min(200, parseInt(url.searchParams.get("limit") || "50"));
 
     const query: any = { school_id: schoolId };
+    
+    // Only return class-based subject assignments
+    query.class_id = { $ne: null };
 
-    if (class_group_id && mongoose.Types.ObjectId.isValid(class_group_id)) {
-      query.class_group_id = class_group_id;
-    } else if (class_id && mongoose.Types.ObjectId.isValid(class_id)) {
-      // Find Class Groups containing classId
-      const matchingGroups = await ClassGroup.find({
-        school_id: schoolId,
-        "classes.class_id": class_id
-      }).select("_id").lean();
-      const groupIds = matchingGroups.map(g => g._id);
-
-      query.$or = [
-        {
-          class_id: class_id,
-          ...(stream_id && mongoose.Types.ObjectId.isValid(stream_id) ? { stream_id } : {})
-        },
-        { class_group_id: { $in: groupIds } }
-      ];
+    if (class_id && mongoose.Types.ObjectId.isValid(class_id)) {
+      query.class_id = class_id;
+      if (stream_id && mongoose.Types.ObjectId.isValid(stream_id)) query.stream_id = stream_id;
     } else {
       if (stream_id && mongoose.Types.ObjectId.isValid(stream_id)) query.stream_id = stream_id;
     }
@@ -53,9 +41,9 @@ export async function GET(req: NextRequest) {
     if (academic_year) query.academic_year = academic_year;
 
     const total = await SubjectAssignment.countDocuments(query);
+
     const assignments = await SubjectAssignment.find(query)
       .populate("class_id", "name class_code section")
-      .populate("class_group_id", "name classes")
       .populate("stream_id", "name")
       .populate("subject_master_id", "name subject_code")
       .sort({ "class_id.name": 1 })
@@ -81,43 +69,33 @@ export async function POST(req: NextRequest) {
     await connectToDatabase();
     registerModels();
     const body = await req.json();
-    const { academic_year, class_id, class_group_id, stream_id, subject_master_id, subject_master_ids } = body;
+    const { academic_year, class_id, stream_id, subject_master_id, subject_master_ids } = body;
 
-    if (!academic_year?.trim() || (!class_id && !class_group_id)) {
+    if (!academic_year?.trim() || !class_id) {
       return NextResponse.json(
-        { success: false, message: "academic_year and class_id (or class_group_id) are required" },
+        { success: false, message: "academic_year and class_id are required" },
         { status: 400 }
       );
     }
 
     let finalClassId = null;
-    let finalClassGroupId = null;
     let finalStreamId = null;
 
-    if (class_group_id) {
-      if (!mongoose.Types.ObjectId.isValid(class_group_id)) {
-        return NextResponse.json({ success: false, message: "Invalid Class Group ID" }, { status: 400 });
-      }
-      const group = await ClassGroup.findOne({ _id: class_group_id, school_id: schoolId }).lean();
-      if (!group) return NextResponse.json({ success: false, message: "Class Group not found" }, { status: 404 });
-      finalClassGroupId = class_group_id;
-    } else {
-      if (!mongoose.Types.ObjectId.isValid(class_id)) {
-        return NextResponse.json({ success: false, message: "Invalid Class ID" }, { status: 400 });
-      }
-      const cls = await Class.findOne({ _id: class_id, school_id: schoolId }).lean();
-      if (!cls) return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
-
-      const isHigherClass = cls.name.startsWith("Class 11") || cls.name.startsWith("Class 12");
-      if (isHigherClass && stream_id) {
-        if (mongoose.Types.ObjectId.isValid(stream_id)) {
-          const stream = await Stream.findOne({ _id: stream_id, school_id: schoolId }).lean();
-          if (!stream) return NextResponse.json({ success: false, message: "Stream not found" }, { status: 404 });
-          finalStreamId = stream_id;
-        }
-      }
-      finalClassId = class_id;
+    if (!mongoose.Types.ObjectId.isValid(class_id)) {
+      return NextResponse.json({ success: false, message: "Invalid Class ID" }, { status: 400 });
     }
+    const cls = await Class.findOne({ _id: class_id, school_id: schoolId }).lean();
+    if (!cls) return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
+
+    const isHigherClass = cls.name.startsWith("Class 11") || cls.name.startsWith("Class 12");
+    if (isHigherClass && stream_id) {
+      if (mongoose.Types.ObjectId.isValid(stream_id)) {
+        const stream = await Stream.findOne({ _id: stream_id, school_id: schoolId }).lean();
+        if (!stream) return NextResponse.json({ success: false, message: "Stream not found" }, { status: 404 });
+        finalStreamId = stream_id;
+      }
+    }
+    finalClassId = class_id;
 
     const targetSubjectIds: string[] = [];
     if (Array.isArray(subject_master_ids)) {
@@ -144,7 +122,6 @@ export async function POST(req: NextRequest) {
           school_id: String(schoolId),
           academic_year: academic_year.trim(),
           class_id: finalClassId,
-          class_group_id: finalClassGroupId,
           stream_id: finalStreamId || null,
           subject_master_id: subId,
         });

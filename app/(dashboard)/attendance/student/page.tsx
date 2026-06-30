@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Loader2, AlertCircle, Save, Calendar, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Search, Loader2, AlertCircle, Save, Calendar, CheckCircle2, XCircle, Clock, ChevronDown, RefreshCcw } from "lucide-react";
 import { useStudentAttendance, StudentAttendanceRecord } from "@/app/hooks/useStudentAttendance";
 import { useClasses } from "@/app/hooks/useClasses";
 import { useStreams } from "@/app/hooks/useStreams";
 import { useStudents } from "@/app/hooks/useStudents";
 import { useTeachers } from "@/app/hooks/useTeachers";
+import { useTeacherAssignment } from "@/app/hooks/useTeacherAssignment";
 import { useAuth } from "@/app/context/auth";
 import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { useAppState } from "@/app/context/store";
@@ -25,6 +26,7 @@ export default function StudentAttendancePage() {
   const { user } = useAuth();
   const isTeacher = user?.role === "teacher";
   const { teachers } = useTeachers({ skip: !isTeacher });
+  const { assignments, fetchAssignments } = useTeacherAssignment();
 
   const teacherProfile = useMemo(() => {
     if (!isTeacher || teachers.length === 0) return null;
@@ -34,16 +36,30 @@ export default function StudentAttendancePage() {
     });
   }, [isTeacher, teachers, user]);
 
+  useEffect(() => {
+    if (isTeacher && teacherProfile?._id && academicYear) {
+      fetchAssignments({ teacher_id: teacherProfile._id, academic_year: academicYear, limit: 5000 });
+    }
+  }, [isTeacher, teacherProfile?._id, academicYear, fetchAssignments]);
+
   const filteredClasses = useMemo(() => {
     if (isTeacher) {
       if (!teacherProfile) return [];
+      
+      const assignedClassIds = new Set(
+        assignments
+          .filter(a => a.academic_year === academicYear)
+          .map(a => typeof a.class_id === "object" ? a.class_id?._id : a.class_id)
+          .filter(Boolean)
+      );
+
       return classes.filter(cls => {
         const ctId = typeof cls.class_teacher_id === "object" ? cls.class_teacher_id?._id : cls.class_teacher_id;
-        return ctId === teacherProfile._id;
+        return ctId === teacherProfile._id || assignedClassIds.has(cls._id);
       });
     }
     return classes;
-  }, [classes, isTeacher, teacherProfile]);
+  }, [classes, isTeacher, teacherProfile, assignments, academicYear]);
 
   // Filters
   const [filterYear, setFilterYear] = useState(academicYear);
@@ -51,6 +67,10 @@ export default function StudentAttendancePage() {
   const [filterClassId, setFilterClassId] = useState("");
   const [filterStreamId, setFilterStreamId] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // New Mode State
+  const [mode, setMode] = useState<"take" | "view" | "edit">("take");
+  const [actionsOpen, setActionsOpen] = useState(false);
 
   // Attendance State
   const [attendanceRecords, setAttendanceRecords] = useState<Record<string, { status: string; note: string }>>({});
@@ -60,6 +80,7 @@ export default function StudentAttendancePage() {
   // Reason & History Modal State
   const [editReason, setEditReason] = useState("");
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [localError, setLocalError] = useState("");
 
   // Date permission helper info
   const dateInfo = useMemo(() => {
@@ -94,34 +115,19 @@ export default function StudentAttendancePage() {
 
     // If not submitted yet:
     if (!attendance) {
-      if (dateInfo.isToday || dateInfo.isYesterday) {
+      if (dateInfo.isToday) {
         return { canEdit: true, message: "" };
       }
-      return { canEdit: false, message: "Teachers can only submit attendance for today or yesterday." };
+      return { canEdit: false, message: "Teachers can only submit attendance for today." };
     }
 
     // If already submitted:
     if (dateInfo.isToday) {
-      return { canEdit: false, message: "Attendance has already been submitted for today." };
+      return { canEdit: true, message: "Editing today's attendance requires a reason." };
     }
 
-    if (dateInfo.isYesterday) {
-      const editWindowLimitMs = 24 * 60 * 60 * 1000;
-      if (dateInfo.elapsedMs > editWindowLimitMs) {
-        return { canEdit: false, message: "The 24-hour edit window for yesterday's attendance has expired." };
-      }
-      return { canEdit: true, message: "" };
-    }
-
-    return { canEdit: false, message: "Teachers can only edit attendance for the previous 1 day (within 24 hours of submission)." };
+    return { canEdit: false, message: "Teachers cannot edit attendance of previous dates." };
   }, [isTeacher, attendance, dateInfo]);
-
-  // Redirect teacher if today's attendance has already been submitted
-  useEffect(() => {
-    if (isTeacher && attendance && filterClassId && filterDate && dateInfo.isToday) {
-      router.push(`/attendance/student/confirmation?classId=${filterClassId}&date=${filterDate}${filterStreamId ? `&streamId=${filterStreamId}` : ""}`);
-    }
-  }, [attendance, isTeacher, filterClassId, filterDate, dateInfo.isToday, filterStreamId, router]);
 
   // Auto-fetch students when filters change
   useEffect(() => {
@@ -149,6 +155,7 @@ export default function StudentAttendancePage() {
   // Reset reason field when date/class changes
   useEffect(() => {
     setEditReason("");
+    setLocalError("");
   }, [filterClassId, filterDate]);
 
   // Sync state when attendance changes
@@ -160,11 +167,13 @@ export default function StudentAttendancePage() {
           newRecords[r.student_id._id] = { status: r.status, note: r.note || "" };
         }
       });
+      setMode("view");
     } else {
       // Default all to Present
       students.forEach(s => {
         newRecords[s._id] = { status: "present", note: "" };
       });
+      setMode("take");
     }
     setAttendanceRecords(newRecords);
   }, [attendance, students]);
@@ -189,8 +198,14 @@ export default function StudentAttendancePage() {
     if (!filterClassId || !filterDate || !filterYear) return;
     if (!teacherPermission.canEdit) return;
 
+    if (attendance && (!editReason || editReason.trim() === "")) {
+      setLocalError("A reason is mandatory when editing attendance.");
+      return;
+    }
+
     setSubmitting(true);
     setSuccessMsg("");
+    setLocalError("");
 
     const recordsToSave = Object.keys(attendanceRecords).map(student_id => ({
       student_id,
@@ -204,7 +219,7 @@ export default function StudentAttendancePage() {
       classId: filterClassId,
       streamId: filterStreamId || undefined,
       records: recordsToSave,
-      reason: !isTeacher ? editReason : undefined,
+      reason: attendance ? editReason : undefined,
     });
 
     setSubmitting(false);
@@ -237,6 +252,86 @@ export default function StudentAttendancePage() {
             <span>Attendance</span><span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Student</span>
           </div>
+        </div>
+        
+        <div className="relative">
+          <button 
+            onClick={() => setActionsOpen(!actionsOpen)} 
+            className="px-4 py-2 bg-white dark:bg-slate-800 border border-border rounded-lg text-[13px] font-bold shadow-sm flex items-center gap-2 hover:bg-slate-50 transition-colors"
+          >
+            Actions 
+            <ChevronDown className={`w-4 h-4 transition-transform ${actionsOpen ? 'rotate-180' : ''}`} />
+          </button>
+          
+          {actionsOpen && (
+            <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 border border-border rounded-xl shadow-lg z-50 overflow-hidden text-[13px] font-medium text-slate-700 dark:text-slate-300 py-1">
+              {!attendance && (
+                <button 
+                  onClick={() => { setMode("take"); setActionsOpen(false); }}
+                  disabled={isTeacher && !dateInfo.isToday}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Take Attendance
+                </button>
+              )}
+
+              {attendance && (
+                <button 
+                  onClick={() => { setMode("edit"); setActionsOpen(false); }}
+                  disabled={!teacherPermission.canEdit}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Edit Attendance
+                </button>
+              )}
+
+              {attendance && (
+                <button 
+                  onClick={() => { setMode("view"); setActionsOpen(false); }}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                >
+                  View Attendance
+                </button>
+              )}
+              
+              <div className="h-px bg-border my-1"></div>
+              
+              <button 
+                onClick={() => { router.push("/reports/attendance-report"); setActionsOpen(false); }}
+                className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+              >
+                Attendance Report
+              </button>
+
+              {attendance && (attendance as any).edit_history && (attendance as any).edit_history.length > 0 && (
+                <button 
+                  onClick={() => { setIsHistoryOpen(true); setActionsOpen(false); }}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                >
+                  Attendance History
+                </button>
+              )}
+              
+              <div className="h-px bg-border my-1"></div>
+              
+              <button onClick={() => { window.print(); setActionsOpen(false); }} className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50">Export Report (PDF)</button>
+              <button onClick={() => { window.print(); setActionsOpen(false); }} className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50">Print Attendance</button>
+              
+              <div className="h-px bg-border my-1"></div>
+              
+              <button 
+                onClick={() => { 
+                  fetchAttendance({
+                    academic_year: filterYear, date: filterDate, classId: filterClassId, streamId: filterStreamId || undefined
+                  }); 
+                  setActionsOpen(false); 
+                }} 
+                className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center justify-between"
+              >
+                Refresh Data <RefreshCcw className="w-3.5 h-3.5 opacity-50" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -305,21 +400,15 @@ export default function StudentAttendancePage() {
           <div>
             <div className="p-4 border-b border-border bg-slate-50 dark:bg-slate-800/50 flex flex-col sm:flex-row justify-between items-center gap-4 text-left">
               <div className="flex flex-wrap items-center gap-2">
-                {teacherPermission.canEdit && (
+                {(mode === "edit" || mode === "take") && teacherPermission.canEdit && (
                   <>
                     <button onClick={() => markAll("present")} className="px-3 py-1.5 text-xs font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded cursor-pointer">Mark All Present</button>
                     <button onClick={() => markAll("absent")} className="px-3 py-1.5 text-xs font-bold bg-red-100 text-red-700 hover:bg-red-200 rounded cursor-pointer">Mark All Absent</button>
                     <button onClick={() => markAll("leave")} className="px-3 py-1.5 text-xs font-bold bg-amber-100 text-amber-700 hover:bg-amber-200 rounded cursor-pointer">Mark All Leave</button>
                   </>
                 )}
-                {attendance && (attendance as any).edit_history && (attendance as any).edit_history.length > 0 && (
-                  <button
-                    onClick={() => setIsHistoryOpen(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/20 dark:hover:bg-indigo-900/30 dark:text-indigo-400 text-xs font-bold rounded cursor-pointer transition-colors"
-                  >
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>View Edit History ({(attendance as any).edit_history.length})</span>
-                  </button>
+                {mode === "view" && (
+                  <span className="px-3 py-1.5 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded">View Only Mode</span>
                 )}
               </div>
               <div className="relative">
@@ -337,6 +426,7 @@ export default function StudentAttendancePage() {
                     <th className="px-4 py-3 font-semibold">Student Name</th>
                     <th className="px-4 py-3 font-semibold w-48">Status</th>
                     <th className="px-4 py-3 font-semibold">Note</th>
+                    <th className="px-4 py-3 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -348,7 +438,7 @@ export default function StudentAttendancePage() {
                         <select
                           value={attendanceRecords[student._id]?.status || "present"}
                           onChange={(e) => handleStatusChange(student._id, e.target.value)}
-                          disabled={!teacherPermission.canEdit || submitting}
+                          disabled={!teacherPermission.canEdit || submitting || mode === "view"}
                           className={`w-full px-3 py-1.5 rounded-lg text-xs font-bold outline-none border-0 appearance-none bg-no-repeat bg-[right_10px_center] ${
                             attendanceRecords[student._id]?.status === 'present' ? 'bg-emerald-100 text-emerald-700' :
                             attendanceRecords[student._id]?.status === 'absent' ? 'bg-red-100 text-red-700' :
@@ -368,8 +458,16 @@ export default function StudentAttendancePage() {
                         <input type="text" placeholder={teacherPermission.canEdit ? "Add note..." : ""}
                           value={attendanceRecords[student._id]?.note || ""}
                           onChange={(e) => handleNoteChange(student._id, e.target.value)}
-                          disabled={!teacherPermission.canEdit || submitting}
+                          disabled={!teacherPermission.canEdit || submitting || mode === "view"}
                           className="w-full px-3 py-1.5 border border-transparent hover:border-border focus:border-primary rounded text-[13px] outline-none bg-transparent focus:bg-white dark:focus:bg-slate-900 transition-colors disabled:opacity-50" />
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button 
+                          onClick={() => router.push(`/attendance/student/${student._id}`)} 
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs font-bold transition-colors whitespace-nowrap"
+                        >
+                          View Details
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -380,28 +478,35 @@ export default function StudentAttendancePage() {
             <div className="p-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
               <div>
                 {successMsg && <span className="text-emerald-500 text-[13px] font-bold flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> {successMsg}</span>}
+                {localError && <span className="text-rose-500 text-[13px] font-bold flex items-center gap-1"><AlertCircle className="w-4 h-4" /> {localError}</span>}
               </div>
-              <div className="flex flex-wrap items-end gap-4 w-full sm:w-auto justify-end">
-                {!isTeacher && attendance && (
-                  <div className="flex flex-col gap-1 text-left w-full sm:w-[240px]">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reason for Edit</span>
-                    <input
-                      type="text"
-                      placeholder="e.g. Corrected entry error"
-                      value={editReason}
-                      onChange={(e) => setEditReason(e.target.value)}
-                      className="w-full px-3 py-1.5 border border-border rounded-lg text-xs font-semibold outline-none focus:border-primary bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200"
-                    />
-                  </div>
-                )}
-                {teacherPermission.canEdit && (
-                  <button onClick={handleSave} disabled={submitting}
-                    className="px-6 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[14px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50">
-                    {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                    Save Attendance
-                  </button>
-                )}
-              </div>
+              
+              {(mode === "edit" || mode === "take") && (
+                <div className="flex flex-wrap items-end gap-4 w-full sm:w-auto justify-end">
+                  {attendance && mode === "edit" && (
+                    <div className="flex flex-col gap-1 text-left w-full sm:w-[240px]">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reason for Edit <span className="text-rose-500">*</span></span>
+                      <input
+                        type="text"
+                        placeholder="e.g. Corrected entry error"
+                        value={editReason}
+                        onChange={(e) => {
+                          setEditReason(e.target.value);
+                          setLocalError("");
+                        }}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg text-xs font-semibold outline-none focus:border-primary bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200"
+                      />
+                    </div>
+                  )}
+                  {teacherPermission.canEdit && (
+                    <button onClick={handleSave} disabled={submitting}
+                      className="px-6 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[14px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50">
+                      {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      Save Attendance
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}

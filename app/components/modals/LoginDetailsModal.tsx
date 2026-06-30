@@ -211,13 +211,13 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
       email = liveUser.email || "";
       isActive = liveUser.is_active;
       mustChangePassword = !!liveUser.must_change_password;
-      defaultPassword = liveUser.plain_password || "password123";
+      defaultPassword = liveUser.plain_password || "Master#2026";
     } else {
       email = (teacher.user_id && typeof teacher.user_id === "object" && teacher.user_id.email)
         ? teacher.user_id.email
         : (teacher.email || "");
       const userPlainPassword = (teacher.user_id && typeof teacher.user_id === "object" && (teacher.user_id as any).plain_password);
-      defaultPassword = userPlainPassword || "password123";
+      defaultPassword = userPlainPassword || "Master#2026";
       mustChangePassword = !!(teacher.user_id && typeof teacher.user_id === "object"
         && (teacher.user_id as any).must_change_password);
     }
@@ -352,7 +352,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
                       )}
                       {target === "teacher" && (
                         <>
-                          Default password = <strong>password123</strong>.
+                          Default password = <strong>Master#2026</strong>.
                           Teacher must change password on first login.
                         </>
                       )}

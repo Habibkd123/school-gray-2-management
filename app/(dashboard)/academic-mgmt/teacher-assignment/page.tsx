@@ -6,9 +6,7 @@ import {
   BookOpen, Layers, GraduationCap, User
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
-import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
 import { useTeacherAssignment, PopulatedTeacherAssignment } from "@/app/hooks/useTeacherAssignment";
-import { useClassGroups } from "@/app/hooks/useClassGroups";
 import { useSubjectAssignment } from "@/app/hooks/useSubjectAssignment";
 import { useSubjectMaster } from "@/app/hooks/useSubjectMaster";
 import { useStreams } from "@/app/hooks/useStreams";
@@ -27,7 +25,6 @@ export default function TeacherAssignmentPage() {
   const { enableStreams, enableSections } = useAcademicConfig();
 
   const { assignments, isLoading, error, fetchAssignments, createAssignment, deleteAssignment } = useTeacherAssignment();
-  const { groups: classGroups } = useClassGroups({ skip: false, academicYear });
   const { assignments: subjectAssignments, fetchAssignments: fetchSubjectAssignments } = useSubjectAssignment();
   const { subjects: subjectList } = useSubjectMaster();
   const { streams } = useStreams({ skip: !enableStreams });
@@ -40,7 +37,6 @@ export default function TeacherAssignmentPage() {
 
   // Filter state
   const [filterClassId, setFilterClassId] = useState("");
-  const [filterClassGroupId, setFilterClassGroupId] = useState("");
   const [filterStreamId, setFilterStreamId] = useState("");
   const [filterTeacherId, setFilterTeacherId] = useState("");
   const [filterYear, setFilterYear] = useState(academicYear);
@@ -56,28 +52,25 @@ export default function TeacherAssignmentPage() {
   // Form State
   const [formYear, setFormYear] = useState(academicYear);
   const [formTeacherId, setFormTeacherId] = useState("");
-  const [assignmentType, setAssignmentType] = useState<"class" | "group">("class");
   const [formClassId, setFormClassId] = useState("");
-  const [formClassGroupId, setFormClassGroupId] = useState("");
   const [formStreamId, setFormStreamId] = useState("");
   const [formSubjectId, setFormSubjectId] = useState("");
 
   const doFetch = useCallback(() => {
     fetchAssignments({
       class_id: filterClassId || undefined,
-      class_group_id: filterClassGroupId || undefined,
       stream_id: filterStreamId || undefined,
       teacher_id: filterTeacherId || undefined,
       academic_year: filterYear || undefined,
       limit: 200,
     });
-  }, [fetchAssignments, filterClassId, filterClassGroupId, filterStreamId, filterTeacherId, filterYear]);
+  }, [fetchAssignments, filterClassId, filterStreamId, filterTeacherId, filterYear]);
 
   useEffect(() => { doFetch(); }, [doFetch]);
 
   // Trigger auto stream select on class select
   useEffect(() => {
-    if (assignmentType !== "class" || !formClassId) {
+    if (!formClassId) {
       setFormStreamId("");
       return;
     }
@@ -108,10 +101,10 @@ export default function TeacherAssignmentPage() {
     } else {
       setFormStreamId("");
     }
-  }, [formClassId, classes, streams, enableStreams, assignmentType]);
+  }, [formClassId, classes, streams, enableStreams]);
 
   const filteredStreams = useMemo(() => {
-    if (assignmentType !== "class" || !enableStreams || !formClassId) return [];
+    if (!enableStreams || !formClassId) return [];
 
     const selectedClass = classes.find(c => c._id === formClassId);
     if (!selectedClass) return [];
@@ -131,30 +124,9 @@ export default function TeacherAssignmentPage() {
     }
 
     return activeStreams;
-  }, [formClassId, classes, streams, enableStreams, assignmentType]);
+  }, [formClassId, classes, streams, enableStreams]);
 
   const filteredSubjectList = useMemo(() => {
-    if (assignmentType === "group") {
-      if (!formClassGroupId) return [];
-      const selectedGroup = classGroups.find(g => g._id === formClassGroupId);
-      if (!selectedGroup) return [];
-      
-      const classIdsInGroup = selectedGroup.classes.map((c: any) => 
-        typeof c.class_id === "object" ? c.class_id._id : c.class_id
-      );
-
-      const groupSubjectAssignments = subjectAssignments.filter(sa => {
-        const saClassId = typeof sa.class_id === "object" ? sa.class_id?._id : sa.class_id;
-        return classIdsInGroup.includes(saClassId);
-      });
-
-      const assignedSubjectMasterIds = new Set(groupSubjectAssignments.map(sa =>
-        typeof sa.subject_master_id === "object" ? sa.subject_master_id?._id : sa.subject_master_id
-      ));
-
-      return subjectList.filter(s => assignedSubjectMasterIds.has(s._id) && s.status === "Active");
-    }
-
     if (!formClassId) return [];
 
     const assignedForClass = subjectAssignments.filter(sa => {
@@ -168,14 +140,12 @@ export default function TeacherAssignmentPage() {
     ));
 
     return subjectList.filter(s => assignedSubjectMasterIds.has(s._id) && s.status === "Active");
-  }, [subjectList, subjectAssignments, formClassId, formStreamId, assignmentType, formClassGroupId, classGroups]);
+  }, [subjectList, subjectAssignments, formClassId, formStreamId]);
 
   const resetForm = () => {
     setFormYear(academicYear);
     setFormTeacherId("");
-    setAssignmentType("class");
     setFormClassId("");
-    setFormClassGroupId("");
     setFormStreamId("");
     setFormSubjectId("");
     setFormError("");
@@ -183,23 +153,19 @@ export default function TeacherAssignmentPage() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formYear || !formTeacherId || !formSubjectId || (assignmentType === "class" && !formClassId) || (assignmentType === "group" && !formClassGroupId)) {
-      setFormError("Academic year, teacher, class/group, and subject are all required."); return;
+    if (!formYear || !formTeacherId || !formSubjectId || !formClassId) {
+      setFormError("Academic year, teacher, class, and subject are all required."); return;
     }
 
-    let isHigherClass = false;
-    if (assignmentType === "class") {
-      const selectedClass = classes.find(c => c._id === formClassId);
-      isHigherClass = selectedClass ? (selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12")) : false;
-    }
+    const selectedClass = classes.find(c => c._id === formClassId);
+    const isHigherClass = selectedClass ? (selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12")) : false;
 
     setSubmitting(true);
     const res = await createAssignment({
       academic_year: formYear,
       teacher_id: formTeacherId,
-      class_id: assignmentType === "class" ? formClassId : undefined,
-      class_group_id: assignmentType === "group" ? formClassGroupId : undefined,
-      stream_id: assignmentType === "class" && enableStreams && isHigherClass && formStreamId ? formStreamId : undefined,
+      class_id: formClassId,
+      stream_id: enableStreams && isHigherClass && formStreamId ? formStreamId : undefined,
       subject_master_id: formSubjectId,
     });
     setSubmitting(false);
@@ -226,77 +192,68 @@ export default function TeacherAssignmentPage() {
       a.teacher_id?.name?.toLowerCase().includes(q) ||
       a.subject_master_id?.name?.toLowerCase().includes(q) ||
       a.class_id?.name?.toLowerCase().includes(q) ||
-      a.class_group_id?.name?.toLowerCase().includes(q) ||
       (a.stream_id?.name?.toLowerCase().includes(q) ?? false) ||
       (a.class_id?.section?.toLowerCase().includes(q) ?? false)
     );
   });
 
-  const columns: ColumnDef<PopulatedTeacherAssignment>[] = [
-    {
-      header: "Academic Year", accessorKey: "academic_year", render: (a) => (
-        <span className="font-mono text-[12px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">{a.academic_year}</span>
-      )
-    },
-    {
-      header: "Teacher", accessorKey: "teacher_id", render: (a) => (
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-emerald-500/10 rounded flex items-center justify-center"><User className="w-3.5 h-3.5 text-emerald-500" /></div>
-          <span className="font-semibold text-slate-800 dark:text-slate-200">{a.teacher_id?.name || "—"}</span>
-        </div>
-      )
-    },
-    {
-      header: "Class / Group", accessorKey: "class_id", render: (a) => {
-        if (a.class_group_id) {
-          return (
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-indigo-500/10 rounded flex items-center justify-center"><Layers className="w-3.5 h-3.5 text-indigo-500" /></div>
-              <span className="font-semibold text-indigo-600 dark:text-indigo-400">{a.class_group_id.name}</span>
-              <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 px-1.5 py-0.5 rounded font-bold uppercase">Group</span>
-            </div>
-          );
-        }
-        return (
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-blue-500/10 rounded flex items-center justify-center"><GraduationCap className="w-3.5 h-3.5 text-blue-500" /></div>
-            <span className="font-semibold text-slate-800 dark:text-slate-200">{a.class_id?.name || "—"}</span>
-          </div>
-        );
+  // Group assignments by Teacher
+  const groupedAssignments = useMemo(() => {
+    const teacherGroups: Record<string, {
+      teacherName: string;
+      academic_year: string;
+      classes: Record<string, {
+        className: string;
+        section?: string;
+        streamName?: string;
+        subjects: {
+          assignmentId: string;
+          subjectId: string;
+          name: string;
+          originalRecord: PopulatedTeacherAssignment;
+        }[];
+      }>;
+    }> = {};
+
+    filteredAssignments.forEach(a => {
+      const teacherId = typeof a.teacher_id === "object" ? a.teacher_id?._id : a.teacher_id;
+      const teacherName = (typeof a.teacher_id === "object" ? a.teacher_id?.name : "Teacher") || "Teacher";
+      const classId = typeof a.class_id === "object" ? a.class_id?._id : a.class_id;
+      const className = (typeof a.class_id === "object" ? a.class_id?.name : "Class") || "Class";
+      const section = typeof a.class_id === "object" ? a.class_id?.section : "";
+      const streamId = a.stream_id ? (typeof a.stream_id === "object" ? a.stream_id._id : a.stream_id) : "";
+      const streamName = a.stream_id ? (typeof a.stream_id === "object" ? a.stream_id.name : "") : "";
+      
+      const teacherKey = `${teacherId}-${a.academic_year}`;
+      const classKey = `${classId}-${streamId}`;
+
+      if (!teacherGroups[teacherKey]) {
+        teacherGroups[teacherKey] = {
+          teacherName,
+          academic_year: a.academic_year,
+          classes: {}
+        };
       }
-    },
-    ...(enableStreams ? [{
-      header: "Stream", accessorKey: "stream_id",
-      render: (a: PopulatedTeacherAssignment) => a.stream_id ? (
-        <span className="font-medium text-slate-700 dark:text-slate-300">{a.stream_id.name}</span>
-      ) : <span className="text-slate-400 text-[13px] italic">—</span>,
-    } as ColumnDef<PopulatedTeacherAssignment>] : []),
-    ...(enableSections ? [{
-      header: "Section", accessorKey: "class_id" as any,
-      render: (a: PopulatedTeacherAssignment) => a.class_id?.section ? (
-        <span className="font-medium text-slate-700 dark:text-slate-300">{a.class_id.section}</span>
-      ) : <span className="text-slate-400 text-[13px] italic">—</span>,
-    } as unknown as ColumnDef<PopulatedTeacherAssignment>] : []),
-    {
-      header: "Subject", accessorKey: "subject_master_id", render: (a) => (
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-slate-100 dark:bg-slate-700 rounded flex items-center justify-center"><BookOpen className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" /></div>
-          <div>
-            <span className="font-semibold text-slate-800 dark:text-slate-200">{a.subject_master_id?.name || "—"}</span>
-          </div>
-        </div>
-      )
-    },
-    ...(isAdmin ? [{
-      header: "Action", sortable: false,
-      render: (a: PopulatedTeacherAssignment) => (
-        <button onClick={() => { setSelected(a); setIsDeleteOpen(true); }}
-          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors">
-          <Trash2 className="w-4 h-4" />
-        </button>
-      ),
-    } as ColumnDef<PopulatedTeacherAssignment>] : []),
-  ];
+
+      if (!teacherGroups[teacherKey].classes[classKey]) {
+        teacherGroups[teacherKey].classes[classKey] = {
+          className,
+          section,
+          streamName: streamName || undefined,
+          subjects: []
+        };
+      }
+
+      teacherGroups[teacherKey].classes[classKey].subjects.push({
+        assignmentId: a._id,
+        subjectId: typeof a.subject_master_id === "object" ? a.subject_master_id._id : a.subject_master_id,
+        name: typeof a.subject_master_id === "object" ? a.subject_master_id.name : "Subject",
+        originalRecord: a,
+      });
+    });
+
+    return Object.values(teacherGroups);
+  }, [filteredAssignments]);
 
   return (
     <div className="space-y-6">
@@ -342,16 +299,8 @@ export default function TeacherAssignmentPage() {
             </select>
           </div>
           <div className="flex flex-col gap-1.5 min-w-[140px]">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Class Group</label>
-            <select value={filterClassGroupId} onChange={(e) => { setFilterClassGroupId(e.target.value); setFilterClassId(""); }}
-              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium">
-              <option value="">All Groups</option>
-              {classGroups.map(cg => <option key={cg._id} value={cg._id}>{cg.name}</option>)}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1.5 min-w-[140px]">
             <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Class</label>
-            <select value={filterClassId} onChange={(e) => { setFilterClassId(e.target.value); setFilterClassGroupId(""); }}
+            <select value={filterClassId} onChange={(e) => setFilterClassId(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium">
               <option value="">All Classes</option>
               {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
@@ -378,36 +327,86 @@ export default function TeacherAssignmentPage() {
         </div>
       </div>
 
-      {/* Table Card */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow">
-        <div className="p-5 border-b border-border text-left">
-          <h3 className="text-[16px] font-bold text-slate-900 dark:text-white">
-            Assigned Teachers {!isLoading && <span className="ml-2 text-[13px] font-normal text-slate-400">({filteredAssignments.length})</span>}
-          </h3>
+      {/* Grouped Grid View */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-20 gap-3 text-slate-400">
+          <Loader2 className="w-5 h-5 animate-spin" /><span className="text-[14px] font-medium">Loading assignments...</span>
         </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-3 text-red-500 bg-white dark:bg-slate-900 border border-border rounded-xl">
+          <AlertCircle className="w-6 h-6" /><p className="text-[14px] font-medium">{error}</p>
+        </div>
+      ) : groupedAssignments.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400 bg-white dark:bg-slate-900 border border-border rounded-xl">
+          <User className="w-10 h-10 opacity-30" />
+          <p className="text-[14px] font-medium">No teacher assignments found</p>
+          {isAdmin && (
+            <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="mt-2 px-4 py-2 text-[13px] font-bold bg-primary hover:bg-[#d68600] text-white rounded-lg">
+              Assign First Teacher
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {groupedAssignments.map((group, idx) => (
+            <div key={idx} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden flex flex-col justify-between text-left hover:shadow-md transition-shadow">
+              <div>
+                {/* Header of group (Teacher) */}
+                <div className="p-4 border-b border-border bg-[#F8FAFC] dark:bg-slate-800/40 flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-emerald-500/10 rounded-full flex items-center justify-center shrink-0">
+                      <User className="w-4 h-4 text-emerald-500" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[15px] text-slate-900 dark:text-white leading-tight">
+                        {group.teacherName}
+                      </h4>
+                    </div>
+                  </div>
+                  <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap mt-1">
+                    {group.academic_year}
+                  </span>
+                </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20 gap-3 text-slate-400">
-            <Loader2 className="w-5 h-5 animate-spin" /><span className="text-[14px] font-medium">Loading assignments...</span>
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-red-500">
-            <AlertCircle className="w-6 h-6" /><p className="text-[14px] font-medium">{error}</p>
-          </div>
-        ) : filteredAssignments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
-            <User className="w-10 h-10 opacity-30" />
-            <p className="text-[14px] font-medium">No teacher assignments found</p>
-            {isAdmin && (
-              <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="mt-2 px-4 py-2 text-[13px] font-bold bg-primary hover:bg-[#d68600] text-white rounded-lg">
-                Assign First Teacher
-              </button>
-            )}
-          </div>
-        ) : (
-          <DataTable columns={columns} data={filteredAssignments} />
-        )}
-      </div>
+                {/* Assigned classes and subjects */}
+                <div className="p-4 space-y-4">
+                  {Object.entries(group.classes).map(([classKey, classInfo]) => (
+                    <div key={classKey} className="space-y-2 border border-slate-100 dark:border-slate-800 rounded-lg p-3 bg-white dark:bg-slate-900/50">
+                      <p className="text-[12px] font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <GraduationCap className="w-3.5 h-3.5 text-blue-500" />
+                        {classInfo.className}{classInfo.section ? ` - ${classInfo.section}` : ""}
+                        {classInfo.streamName && <span className="text-purple-500">• {classInfo.streamName}</span>}
+                      </p>
+                      <div className="flex flex-col gap-1.5 pt-1">
+                        {classInfo.subjects.map((sub, sIdx) => (
+                          <div key={sIdx} className="group flex items-center justify-between p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <BookOpen className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <p className="text-[12px] font-semibold text-slate-600 dark:text-slate-400 truncate">{sub.name}</p>
+                            </div>
+
+                            {isAdmin && (
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => { setSelected(sub.originalRecord); setIsDeleteOpen(true); }}
+                                  className="p-1 text-slate-400 hover:text-red-500 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Add Assignment Modal */}
       <Modal isOpen={isAddOpen} onClose={() => { setIsAddOpen(false); resetForm(); }} title="Assign Teacher" size="lg">
@@ -436,39 +435,14 @@ export default function TeacherAssignmentPage() {
               </select>
             </div>
 
-            <div className="flex flex-col gap-1.5 md:col-span-2">
-              <label className="text-[13px] font-semibold text-slate-900 dark:text-white font-medium">Assignment Method <span className="text-red-500">*</span></label>
-              <div className="flex gap-4">
-                <button type="button" onClick={() => { setAssignmentType("class"); setFormClassGroupId(""); setFormSubjectId(""); }}
-                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-bold border transition-all duration-200 ${assignmentType === "class" ? "bg-primary border-primary text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
-                  Assign by Class
-                </button>
-                <button type="button" onClick={() => { setAssignmentType("group"); setFormClassId(""); setFormSubjectId(""); }}
-                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-bold border transition-all duration-200 ${assignmentType === "group" ? "bg-primary border-primary text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
-                  Assign by Class Group
-                </button>
-              </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-slate-900 dark:text-white font-medium">Class <span className="text-red-500">*</span></label>
+              <select value={formClassId} onChange={(e) => setFormClassId(e.target.value)} required
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium shadow-sm">
+                <option value="">Select Class</option>
+                {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
+              </select>
             </div>
-
-            {assignmentType === "class" ? (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-semibold text-slate-900 dark:text-white font-medium">Class <span className="text-red-500">*</span></label>
-                <select value={formClassId} onChange={(e) => setFormClassId(e.target.value)} required
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium shadow-sm">
-                  <option value="">Select Class</option>
-                  {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
-                </select>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-semibold text-slate-900 dark:text-white font-medium">Class Group <span className="text-red-500">*</span></label>
-                <select value={formClassGroupId} onChange={(e) => setFormClassGroupId(e.target.value)} required
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 bg-white dark:bg-slate-900 font-medium shadow-sm">
-                  <option value="">Select Class Group</option>
-                  {classGroups.map(cg => <option key={cg._id} value={cg._id}>{cg.name}</option>)}
-                </select>
-              </div>
-            )}
 
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-slate-900 dark:text-white font-medium">Subject <span className="text-red-500">*</span></label>
@@ -481,7 +455,7 @@ export default function TeacherAssignmentPage() {
               </select>
             </div>
 
-            {assignmentType === "class" && enableStreams && filteredStreams.length > 0 && (
+            {enableStreams && filteredStreams.length > 0 && (
               <div className="flex flex-col gap-1.5" style={{ display: "none" }}>
                 <label className="text-[13px] font-semibold text-slate-900 dark:text-white font-medium">Stream</label>
                 <select value={formStreamId} onChange={(e) => setFormStreamId(e.target.value)}
@@ -510,7 +484,7 @@ export default function TeacherAssignmentPage() {
           <p className="text-[14px] text-slate-600 dark:text-slate-300">
             Remove teacher <span className="font-bold text-red-500">{selected?.teacher_id?.name}</span> from {" "}
             <span className="font-bold text-foreground dark:text-white">
-              {selected?.class_group_id ? selected.class_group_id.name : selected?.class_id?.name} - {selected?.subject_master_id?.name}
+              {selected?.class_id?.name} - {selected?.subject_master_id?.name}
             </span>?
             <br /><br />
             <span className="text-red-500 font-bold bg-red-50 p-2 rounded block">Warning: This will also delete any Syllabus created for this assignment!</span>

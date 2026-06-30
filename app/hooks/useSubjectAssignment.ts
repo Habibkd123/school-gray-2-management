@@ -8,7 +8,6 @@ export interface PopulatedAssignment {
   school_id: string;
   academic_year: string;
   class_id?: { _id: string; name: string; class_code?: string; section?: string } | null;
-  class_group_id?: { _id: string; name: string; classes?: any[] } | null;
   stream_id?: { _id: string; name: string } | null;
   subject_master_id: { _id: string; name: string; subject_code?: string };
   createdAt?: string;
@@ -24,7 +23,6 @@ export function useSubjectAssignment() {
 
   const fetchAssignments = useCallback(async (params: {
     class_id?: string;
-    class_group_id?: string;
     stream_id?: string;
     academic_year?: string;
     page?: number;
@@ -34,7 +32,6 @@ export function useSubjectAssignment() {
     try {
       const qs = new URLSearchParams();
       if (params.class_id) qs.set("class_id", params.class_id);
-      if (params.class_group_id) qs.set("class_group_id", params.class_group_id);
       if (params.stream_id) qs.set("stream_id", params.stream_id);
       if (params.academic_year) qs.set("academic_year", params.academic_year);
       if (params.page) qs.set("page", String(params.page));
@@ -58,7 +55,6 @@ export function useSubjectAssignment() {
   const createAssignment = async (input: {
     academic_year: string;
     class_id?: string;
-    class_group_id?: string;
     stream_id?: string;
     subject_master_id?: string;
     subject_master_ids?: string[];
@@ -78,7 +74,6 @@ export function useSubjectAssignment() {
   const updateAssignment = async (id: string, input: {
     academic_year?: string;
     class_id?: string;
-    class_group_id?: string;
     stream_id?: string;
     subject_master_id?: string;
   }) => {

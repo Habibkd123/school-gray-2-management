@@ -9,7 +9,6 @@ export interface PopulatedTeacherAssignment {
   academic_year: string;
   teacher_id: { _id: string; name: string; employee_id?: string };
   class_id?: { _id: string; name: string; section?: string; class_code?: string } | null;
-  class_group_id?: { _id: string; name: string; classes?: any[] } | null;
   stream_id?: { _id: string; name: string } | null;
   section_id?: { _id: string; name: string } | null;
   subject_master_id: { _id: string; name: string; subject_code?: string };
@@ -26,7 +25,6 @@ export function useTeacherAssignment() {
 
   const fetchAssignments = useCallback(async (params: {
     class_id?: string;
-    class_group_id?: string;
     stream_id?: string;
     section_id?: string;
     teacher_id?: string;
@@ -38,7 +36,6 @@ export function useTeacherAssignment() {
     try {
       const qs = new URLSearchParams();
       if (params.class_id) qs.set("class_id", params.class_id);
-      if (params.class_group_id) qs.set("class_group_id", params.class_group_id);
       if (params.stream_id) qs.set("stream_id", params.stream_id);
       if (params.section_id) qs.set("section_id", params.section_id);
       if (params.teacher_id) qs.set("teacher_id", params.teacher_id);
@@ -65,7 +62,6 @@ export function useTeacherAssignment() {
     academic_year: string;
     teacher_id: string;
     class_id?: string;
-    class_group_id?: string;
     stream_id?: string;
     section_id?: string;
     subject_master_id: string;

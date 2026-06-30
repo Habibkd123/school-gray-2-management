@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { SubjectAssignment, Class, SubjectMaster, ClassGroup } from "@/lib/models/index";
+import { SubjectAssignment, Class, SubjectMaster } from "@/lib/models/index";
 import Stream from "@/lib/models/Stream";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
@@ -11,7 +11,7 @@ interface RouteParams {
 
 // Ensure models are registered for populate
 const registerModels = () => {
-  return [Class.modelName, Stream.modelName, ClassGroup.modelName];
+  return [Class.modelName, Stream.modelName];
 };
 
 // PUT — update a subject assignment
@@ -24,7 +24,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
   try {
     await connectToDatabase();
     registerModels();
-    const { academic_year, class_id, class_group_id, stream_id, subject_master_id } = await req.json();
+    const { academic_year, class_id, stream_id, subject_master_id } = await req.json();
 
     const assignment = await SubjectAssignment.findOne({ _id: id, school_id: schoolId });
     if (!assignment) {
@@ -34,21 +34,10 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const updateData: any = {};
     if (academic_year !== undefined) updateData.academic_year = academic_year.trim();
     
-    if (class_group_id !== undefined) {
-      if (class_group_id) {
-        const group = await ClassGroup.findOne({ _id: class_group_id, school_id: schoolId }).lean();
-        if (!group) return NextResponse.json({ success: false, message: "Class Group not found" }, { status: 404 });
-        updateData.class_group_id = class_group_id;
-        updateData.class_id = null;
-        updateData.stream_id = null;
-      } else {
-        updateData.class_group_id = null;
-      }
-    } else if (class_id !== undefined) {
+    if (class_id !== undefined) {
       const cls = await Class.findOne({ _id: class_id, school_id: schoolId }).lean();
       if (!cls) return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
       updateData.class_id = class_id;
-      updateData.class_group_id = null;
 
       const isHigherClass = cls.name.startsWith("Class 11") || cls.name.startsWith("Class 12");
       if (isHigherClass && stream_id) {
@@ -78,7 +67,6 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       { new: true }
     )
       .populate("class_id", "name class_code section")
-      .populate("class_group_id", "name classes")
       .populate("stream_id", "name")
       .populate("subject_master_id", "name subject_code")
       .lean();

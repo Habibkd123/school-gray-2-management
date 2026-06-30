@@ -429,35 +429,35 @@ export default function ProfilePage() {
               </div>
             ) : (
               <>
-                {/* Disable Student Login */}
+                {/* Enable Student Login */}
                 <div className="flex items-center justify-between px-5 py-4">
                   <div>
-                    <p className="text-[13px] font-semibold text-slate-800 dark:text-white">Disable Student Login</p>
-                    <p className="text-[12px] text-slate-400 mt-0.5">Restrict student users from logging in</p>
+                    <p className="text-[13px] font-semibold text-slate-800 dark:text-white">Enable Student Login</p>
+                    <p className="text-[12px] text-slate-400 mt-0.5">Allow student users to log in to the system.</p>
                   </div>
                   <button
                     onClick={() => handleLoginConfigToggle("disable_student_login", !loginConfig.disable_student_login)}
                     disabled={savingLoginConfig !== null}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${loginConfig.disable_student_login ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${!loginConfig.disable_student_login ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
                   >
                     {savingLoginConfig === "student" && <Loader2 className="absolute left-0 right-0 mx-auto w-3 h-3 animate-spin text-white" />}
-                    <span className={`inline-block h-4 w-4 rounded-full bg-white dark:bg-slate-900 shadow-sm transition-transform ${loginConfig.disable_student_login ? "translate-x-6" : "translate-x-1"}`} />
+                    <span className={`inline-block h-4 w-4 rounded-full bg-white dark:bg-slate-900 shadow-sm transition-transform ${!loginConfig.disable_student_login ? "translate-x-6" : "translate-x-1"}`} />
                   </button>
                 </div>
 
-                {/* Disable Teacher Login */}
+                {/* Enable Teacher Login */}
                 <div className="flex items-center justify-between px-5 py-4">
                   <div>
-                    <p className="text-[13px] font-semibold text-slate-800 dark:text-white">Disable Teacher Login</p>
-                    <p className="text-[12px] text-slate-400 mt-0.5">Restrict teacher users from logging in</p>
+                    <p className="text-[13px] font-semibold text-slate-800 dark:text-white">Enable Teacher Login</p>
+                    <p className="text-[12px] text-slate-400 mt-0.5">Allow teacher users to log in to the system.</p>
                   </div>
                   <button
                     onClick={() => handleLoginConfigToggle("disable_teacher_login", !loginConfig.disable_teacher_login)}
                     disabled={savingLoginConfig !== null}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${loginConfig.disable_teacher_login ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${!loginConfig.disable_teacher_login ? "bg-primary" : "bg-slate-300 dark:bg-slate-700"}`}
                   >
                     {savingLoginConfig === "teacher" && <Loader2 className="absolute left-0 right-0 mx-auto w-3 h-3 animate-spin text-white" />}
-                    <span className={`inline-block h-4 w-4 rounded-full bg-white dark:bg-slate-900 shadow-sm transition-transform ${loginConfig.disable_teacher_login ? "translate-x-6" : "translate-x-1"}`} />
+                    <span className={`inline-block h-4 w-4 rounded-full bg-white dark:bg-slate-900 shadow-sm transition-transform ${!loginConfig.disable_teacher_login ? "translate-x-6" : "translate-x-1"}`} />
                   </button>
                 </div>
               </>
