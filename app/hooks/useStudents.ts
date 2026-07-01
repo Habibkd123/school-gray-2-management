@@ -169,7 +169,7 @@ export function useStudents(options?: { skip?: boolean }) {
       dateRange = p.dateRange ?? "";
       sort = p.sort ?? "";
       page = p.page ?? 1;
-      limit = p.limit ?? 10;
+      limit = p.limit ?? 1000;
       academic_year = p.academic_year ?? "";
     } else {
       search = (arg1 as string) ?? "";
@@ -240,7 +240,7 @@ export function useStudents(options?: { skip?: boolean }) {
   useEffect(() => {
     if (options?.skip) return;
     if (!authReady) return; // Wait until the JWT token is in localStorage
-    fetchStudents({ academic_year: academicYear });
+    fetchStudents({ academic_year: academicYear, limit: 1000 });
   }, [fetchStudents, options?.skip, academicYear, authReady, mutationVersion]);
 
   // ─── Create student ─────────────────────────────────────────────
