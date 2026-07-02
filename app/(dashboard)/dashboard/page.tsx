@@ -806,7 +806,7 @@ export default function DashboardPage() {
           )}
           {activeRole === "teacher" && (
             <Link
-              href="/attendance"
+              href="/attendance/student"
               className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-primary hover:bg-primary/90 rounded-lg shadow-sm transition-colors cursor-pointer"
             >
               <Plus className="w-4 h-4" />

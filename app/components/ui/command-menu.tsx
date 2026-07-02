@@ -58,7 +58,7 @@ export function CommandMenu() {
     { id: "nav-stu", title: "Go to Students Directory", category: "Navigation", icon: <GraduationCap className="w-4 h-4" />, action: () => { router.push("/students"); setIsOpen(false); } },
     { id: "nav-tea", title: "Go to Teachers Directory", category: "Navigation", icon: <Users className="w-4 h-4" />, action: () => { router.push("/teachers"); setIsOpen(false); } },
     { id: "nav-cla", title: "Go to Classes & Schedule", category: "Navigation", icon: <Calendar className="w-4 h-4" />, action: () => { router.push("/classes"); setIsOpen(false); } },
-    { id: "nav-att", title: "Go to Attendance Register", category: "Navigation", icon: <Clock className="w-4 h-4" />, action: () => { router.push("/attendance"); setIsOpen(false); } },
+    { id: "nav-att", title: "Go to Attendance Register", category: "Navigation", icon: <Clock className="w-4 h-4" />, action: () => { router.push("/attendance/student"); setIsOpen(false); } },
     { id: "nav-hw", title: "Go to Homework & Assignments", category: "Navigation", icon: <BookOpen className="w-4 h-4" />, action: () => { router.push("/homework"); setIsOpen(false); } },
     { id: "nav-res", title: "Go to Exams & Results", category: "Navigation", icon: <ClipboardList className="w-4 h-4" />, action: () => { router.push("/results"); setIsOpen(false); } },
     { id: "nav-fee", title: "Go to Billing & Fees Portal", category: "Navigation", icon: <DollarSign className="w-4 h-4" />, action: () => { router.push("/fees"); setIsOpen(false); } },
