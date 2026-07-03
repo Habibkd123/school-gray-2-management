@@ -153,7 +153,7 @@ export function useStudents(options?: { skip?: boolean }) {
     let dateRange = "";
     let sort = "";
     let page = 1;
-    let limit = 10;
+    let limit = 12;
     let academic_year = "";
 
     const isObject = arg1 && typeof arg1 === "object";

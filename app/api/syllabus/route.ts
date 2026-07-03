@@ -24,8 +24,16 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    if (!teacher_assignment_id || !mongoose.Types.ObjectId.isValid(teacher_assignment_id)) {
-      return NextResponse.json({ success: false, message: "Valid teacher_assignment_id is required" }, { status: 400 });
+    if (!teacher_assignment_id) {
+      const syllabi = await Syllabus.find({ school_id: schoolId }).lean();
+      return NextResponse.json({
+        success: true,
+        data: syllabi,
+      });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(teacher_assignment_id)) {
+      return NextResponse.json({ success: false, message: "Invalid teacher_assignment_id format" }, { status: 400 });
     }
 
     const syllabus = await Syllabus.findOne({ teacher_assignment_id, school_id: schoolId }).lean();

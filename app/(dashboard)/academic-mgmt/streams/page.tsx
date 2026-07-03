@@ -86,7 +86,7 @@ export default function StreamsPage() {
   );
 
   const columns: ColumnDef<ApiStream>[] = [
-    { header: "#", accessorKey: "_id", render: (s: ApiStream) => <span className="text-slate-400 text-[13px]">—</span> },
+    { header: "#", accessorKey: "_id", render: (_s: ApiStream, i: number) => <span className="text-slate-500 font-medium text-[13px]">{i + 1}</span> },
     { header: "Stream Name", accessorKey: "name", render: (s) => <span className="font-semibold text-slate-800 dark:text-slate-200">{s.name}</span> },
     { header: "Status", accessorKey: "status", render: (s) => <StatusBadge status={s.status} /> },
     ...(isAdmin ? [{
@@ -193,13 +193,21 @@ export default function StreamsPage() {
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
-            <div className="flex gap-3">
-              {(["Active", "Inactive"] as const).map(s => (
-                <button key={s} type="button" onClick={() => setFormStatus(s)}
-                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${formStatus === s ? "bg-primary border-primary text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
-                  {s}
-                </button>
-              ))}
+            <div className="flex items-center gap-3 pt-0.5">
+              <button
+                type="button"
+                onClick={() => setFormStatus(formStatus === "Active" ? "Inactive" : "Active")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                  formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                  formStatus === "Active" ? "translate-x-6" : "translate-x-1"
+                }`} />
+              </button>
+              <span className={`text-[13px] font-semibold ${
+                formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
+              }`}>{formStatus}</span>
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
@@ -230,13 +238,21 @@ export default function StreamsPage() {
           </div>
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
-            <div className="flex gap-3">
-              {(["Active", "Inactive"] as const).map(s => (
-                <button key={s} type="button" onClick={() => setFormStatus(s)}
-                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold border transition-colors ${formStatus === s ? "bg-primary border-primary text-white" : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
-                  {s}
-                </button>
-              ))}
+            <div className="flex items-center gap-3 pt-0.5">
+              <button
+                type="button"
+                onClick={() => setFormStatus(formStatus === "Active" ? "Inactive" : "Active")}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
+                  formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
+                  formStatus === "Active" ? "translate-x-6" : "translate-x-1"
+                }`} />
+              </button>
+              <span className={`text-[13px] font-semibold ${
+                formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
+              }`}>{formStatus}</span>
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">

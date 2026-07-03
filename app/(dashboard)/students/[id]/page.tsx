@@ -400,7 +400,7 @@ function StudentViewContent() {
                   </div>
                 </div>
               </div>
-              <button onClick={() => setIsFeesModalOpen(true)} className="w-full mt-5 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors">
+              <button onClick={() => setIsFeesModalOpen(true)} className="hidden w-full mt-5 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors">
                 Add Fees
               </button>
             </div>
@@ -509,9 +509,7 @@ function StudentViewContent() {
             <TabItem icon={<User className="w-3.5 h-3.5" />} label="Student Details" active={activeMainTab === "Student Details"} onClick={() => setActiveMainTab("Student Details")} />
             <TabItem icon={<Calendar className="w-3.5 h-3.5" />} label="Time Table" active={activeMainTab === "Time Table"} onClick={() => setActiveMainTab("Time Table")} />
             <TabItem icon={<Clock className="w-3.5 h-3.5" />} label="Leave & Attendance" active={activeMainTab === "Leave & Attendance"} onClick={() => setActiveMainTab("Leave & Attendance")} />
-            <TabItem icon={<FileText className="w-3.5 h-3.5" />} label="Fees" active={activeMainTab === "Fees"} onClick={() => setActiveMainTab("Fees")} />
             <TabItem icon={<CheckCircle className="w-3.5 h-3.5" />} label="Exam & Results" active={activeMainTab === "Exam & Results"} onClick={() => setActiveMainTab("Exam & Results")} />
-            <TabItem icon={<BookOpen className="w-3.5 h-3.5" />} label="Library" active={activeMainTab === "Library"} onClick={() => setActiveMainTab("Library")} />
           </div>
 
           {/* 1. Student Details Tab Content */}
@@ -681,8 +679,8 @@ function StudentViewContent() {
                 </div>
               </div>
 
-              {/* Bank Details & Medical Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+              {/* Bank Details Only Row */}
+              <div className="grid grid-cols-1 gap-5">
                 <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden h-full">
                   <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
                     <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Bank Details</h3>
@@ -702,56 +700,8 @@ function StudentViewContent() {
                     </div>
                   </div>
                 </div>
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden h-full">
-                  <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
-                    <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Medical History</h3>
-                  </div>
-                  <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-2">Known Allergies</p>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {student.allergies && student.allergies.length > 0 ? (
-                          student.allergies.map((allg, idx) => (
-                            <span key={idx} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] font-bold rounded border border-slate-200 dark:border-slate-800">{allg}</span>
-                          ))
-                        ) : (
-                          <span className="text-slate-400">—</span>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Medications</p>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {student.medications && student.medications.length > 0 ? (
-                          student.medications.map((med, idx) => (
-                            <span key={idx} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] font-bold rounded border border-slate-200 dark:border-slate-800">{med}</span>
-                          ))
-                        ) : (
-                          <span className="text-slate-400">—</span>
-                        )}
-                      </div>
-                    </div>
-                    {student.medical_notes && (
-                      <div className="col-span-2 mt-2">
-                        <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Medical Notes</p>
-                        <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{student.medical_notes}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
               </div>
 
-              {/* Other Info */}
-              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
-                <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
-                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Other Info</h3>
-                </div>
-                <div className="p-5">
-                  <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                    {student.other_info || "Depending on the specific needs of your organization or system, additional information may be collected or tracked. It's important to ensure that any data collected complies with privacy regulations and policies to protect students' sensitive information."}
-                  </p>
-                </div>
-              </div>
             </div>
           )}
 

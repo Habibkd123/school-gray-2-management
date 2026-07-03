@@ -8,20 +8,43 @@ import { useTeachers } from "../../../hooks/useTeachers";
 import { useTeacherAssignment } from "../../../hooks/useTeacherAssignment";
 import {
   Plus, Search, List, Grid, MoreVertical, Edit, Trash2,
-  Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, Clock, Loader2
+  Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, Clock, Loader2, User
 } from "lucide-react";
 import { Modal } from "../../../components/ui/modal";
 import { useAppState } from "../../../context/store";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const PASTEL_COLORS = [
-  "bg-rose-50 dark:bg-slate-800/60 border-rose-200 dark:border-slate-700/50",
-  "bg-blue-50 dark:bg-slate-800/60 border-blue-200 dark:border-slate-700/50",
-  "bg-green-50 dark:bg-slate-800/60 border-green-200 dark:border-slate-700/50",
-  "bg-yellow-50 dark:bg-slate-800/60 border-yellow-200 dark:border-slate-700/50",
-  "bg-purple-50 dark:bg-slate-800/60 border-purple-200 dark:border-slate-700/50",
-  "bg-orange-50 dark:bg-slate-800/60 border-orange-200 dark:border-slate-700/50"
-];
+
+const getPeriodStatus = (day: string, startTime: string, endTime: string): 'current' | 'completed' | 'upcoming' => {
+  const now = new Date();
+  const daysOrder = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+  const currentDayIdx = now.getDay() === 0 ? 6 : now.getDay() - 1;
+  const targetDayIdx = daysOrder.indexOf(day.toLowerCase());
+  
+  if (targetDayIdx < currentDayIdx) return 'completed';
+  if (targetDayIdx > currentDayIdx) return 'upcoming';
+
+  const parseTime = (timeStr: string) => {
+    try {
+      const [time, modifier] = timeStr.split(" ");
+      let [hours, minutes] = time.split(":");
+      let h = parseInt(hours, 10);
+      if (modifier && modifier.toUpperCase() === "PM" && h !== 12) h += 12;
+      if (modifier && modifier.toUpperCase() === "AM" && h === 12) h = 0;
+      return h * 60 + parseInt(minutes, 10);
+    } catch {
+      return 0;
+    }
+  };
+
+  const currentMins = now.getHours() * 60 + now.getMinutes();
+  const startMins = parseTime(startTime);
+  const endMins = parseTime(endTime);
+
+  if (currentMins >= startMins && currentMins <= endMins) return 'current';
+  if (currentMins > endMins) return 'completed';
+  return 'upcoming';
+};
 
 export default function ClassRoutinePage() {
   const { academicYear } = useAppState();
@@ -396,13 +419,13 @@ export default function ClassRoutinePage() {
                 No routine items found.
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
                 {groupedRoutines.map((group) => {
                   const classLabel = getClassName(group.classInfo);
                   const classIdVal = typeof group.classInfo === "object" && group.classInfo !== null ? group.classInfo._id : group.classInfo;
 
                   return (
-                    <div key={classIdVal} className="bg-slate-50/50 dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden flex flex-col">
+                    <div key={classIdVal} className="bg-slate-50/50 dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden flex flex-col h-fit">
                       {/* Header box */}
                       <div className="bg-white dark:bg-slate-900/50 px-5 py-4 border-b border-border flex items-center justify-between">
                         <h3 className="text-[14px] font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -486,50 +509,74 @@ export default function ClassRoutinePage() {
               <span>Fetching weekly grid...</span>
             </div>
           ) : (
-            <div className="overflow-x-auto pb-4">
-              <div className="min-w-full sm:w-[1200px]">
-                {/* Headers */}
-                <div className="grid grid-cols-7 gap-4 mb-4 border-b border-border pb-3">
-                  {DAYS.map(day => (
-                    <div key={day} className="font-bold text-[13px] uppercase tracking-wider text-slate-500 dark:text-slate-400 pl-2">{day}</div>
-                  ))}
-                </div>
-
-                {/* Grid Rows */}
-                <div className="grid grid-cols-7 gap-4">
-                  {DAYS.map(day => {
-                    const routinesForDay = gridSchedules.filter(s => s.day.toLowerCase() === day.toLowerCase());
-                    return (
-                      <div key={day} className="space-y-4">
+            <div className="overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory">
+              <div className="flex gap-4 min-w-max lg:min-w-0 lg:w-full">
+                {DAYS.map(day => {
+                  const routinesForDay = gridSchedules.filter(s => s.day.toLowerCase() === day.toLowerCase());
+                  return (
+                    <div key={day} className="flex-1 w-[280px] lg:w-auto snap-center">
+                      {/* Day Header - Sticky */}
+                      <div className="sticky top-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm pb-3 pt-1 border-b border-border mb-4 z-10">
+                        <div className="font-bold text-[14px] text-slate-800 dark:text-slate-200 pl-2 flex items-center justify-between">
+                          {day}
+                          <span className="text-[11px] font-medium text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full">{routinesForDay.length}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Day Columns */}
+                      <div className="space-y-4 pr-1">
                         {routinesForDay.length === 0 ? (
-                          <div
-                            onClick={() => openAddModal(day)}
-                            className="p-4 text-center text-[12px] text-slate-400 dark:text-slate-600 bg-slate-50/50 dark:bg-slate-800/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/40 transition-colors group"
-                          >
-                            <Plus className="w-4 h-4 mx-auto mb-1 opacity-50 group-hover:opacity-100 group-hover:text-primary transition-colors" />
-                            <span className="group-hover:text-primary transition-colors font-medium">Add period</span>
+                          <div className="flex flex-col items-center justify-center p-6 text-center text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 h-32">
+                            <Calendar className="w-6 h-6 mb-2 opacity-40" />
+                            <p className="text-[12px] font-medium mb-3">No periods scheduled</p>
+                            <button onClick={() => openAddModal(day)} className="flex items-center gap-1.5 text-[12px] font-bold text-primary bg-primary/10 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+                              <Plus className="w-3.5 h-3.5" /> Add Period
+                            </button>
                           </div>
                         ) : (
-                          routinesForDay.map((routine, idx) => (
-                            <div key={routine._id} className={`p-3 rounded-xl border shadow-sm transition-all hover:shadow-md relative group/card ${PASTEL_COLORS[idx % PASTEL_COLORS.length]}`}>
-                              <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 text-[11px] font-mono mb-2">
-                                <Clock className="w-3.5 h-3.5" />
-                                {routine.start_time} - {routine.end_time}
-                              </div>
-                              <p className="text-[13px] font-bold text-slate-900 dark:text-white leading-snug">{getSubjectName(routine.subject_id)}</p>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Teacher: {getTeacherName(routine.teacher_id)}</p>
+                          <>
+                            {routinesForDay.map((routine, idx) => {
+                              const status = getPeriodStatus(routine.day, routine.start_time, routine.end_time);
+                              let cardColors = "bg-white dark:bg-slate-900 border-border";
+                              if (status === 'current') cardColors = "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800";
+                              else if (status === 'completed') cardColors = "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800";
+                              
+                              return (
+                                <div key={routine._id} className={`p-4 rounded-xl border shadow-sm transition-all hover:shadow-md relative group/card flex flex-col gap-3 ${cardColors}`}>
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className={`flex items-center gap-1.5 text-[11px] font-mono font-medium px-2 py-0.5 rounded-md ${status === 'current' ? 'bg-blue-100 text-blue-700 dark:bg-blue-800/40 dark:text-blue-300' : status === 'completed' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-800/40 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'}`}>
+                                      <Clock className="w-3.5 h-3.5" />
+                                      {routine.start_time} - {routine.end_time}
+                                    </div>
+                                    {status === 'current' && <span className="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>}
+                                  </div>
+                                  <div>
+                                    <p className="text-[14px] font-bold text-slate-900 dark:text-white leading-tight">{getSubjectName(routine.subject_id)}</p>
+                                    <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
+                                      <User className="w-3 h-3" /> {getTeacherName(routine.teacher_id)}
+                                    </p>
+                                  </div>
 
-                              <div className="absolute right-2 top-2 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center gap-1 bg-white/80 dark:bg-slate-950/80 p-1 rounded-lg">
-                                <button onClick={() => openEditModal(routine)} className="p-1 hover:text-primary transition-colors text-slate-500 cursor-pointer dark:text-slate-400"><Edit className="w-3.5 h-3.5" /></button>
-                                <button onClick={() => handleDelete(routine._id)} className="p-1 hover:text-red-500 transition-colors text-slate-500 cursor-pointer dark:text-slate-400"><Trash2 className="w-3.5 h-3.5" /></button>
-                              </div>
-                            </div>
-                          ))
+                                  <div className="absolute right-3 top-3 opacity-0 group-hover/card:opacity-100 transition-opacity flex items-center gap-1 bg-white/90 dark:bg-slate-950/90 shadow-sm p-1 rounded-lg border border-slate-100 dark:border-slate-800">
+                                    <button onClick={() => openEditModal(routine)} className="p-1 hover:text-primary transition-colors text-slate-500 cursor-pointer dark:text-slate-400"><Edit className="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => handleDelete(routine._id)} className="p-1 hover:text-red-500 transition-colors text-slate-500 cursor-pointer dark:text-slate-400"><Trash2 className="w-3.5 h-3.5" /></button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            
+                            <button
+                              onClick={() => openAddModal(day)}
+                              className="w-full flex items-center justify-center gap-2 p-3 text-center text-[12px] font-bold text-slate-400 dark:text-slate-500 bg-transparent rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-primary hover:border-primary/30 transition-all group mt-2"
+                            >
+                              <Plus className="w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity" /> Add Period
+                            </button>
+                          </>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

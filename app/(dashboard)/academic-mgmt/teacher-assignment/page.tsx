@@ -347,9 +347,9 @@ export default function TeacherAssignmentPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
           {groupedAssignments.map((group, idx) => (
-            <div key={idx} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden flex flex-col justify-between text-left hover:shadow-md transition-shadow">
+            <div key={idx} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden flex flex-col justify-between text-left hover:shadow-md transition-shadow h-fit">
               <div>
                 {/* Header of group (Teacher) */}
                 <div className="p-4 border-b border-border bg-[#F8FAFC] dark:bg-slate-800/40 flex items-start justify-between">

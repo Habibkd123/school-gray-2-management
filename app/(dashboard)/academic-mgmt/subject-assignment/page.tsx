@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Plus, Search, RefreshCcw, Trash2, Loader2, AlertCircle,
-  Link2, ChevronDown, Filter, BookOpen, Layers, GraduationCap, Edit2
+  Link2, ChevronDown, Filter, BookOpen, Layers, GraduationCap, Edit2,
+  Grid, List, ChevronRight
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { useSubjectAssignment, PopulatedAssignment } from "@/app/hooks/useSubjectAssignment";
@@ -32,6 +33,8 @@ export default function SubjectAssignmentPage() {
   const [filterStreamId, setFilterStreamId] = useState("");
   const [filterYear, setFilterYear] = useState(academicYear);
   const [searchQuery, setSearchQuery] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [expandedClassKey, setExpandedClassKey] = useState<string | null>(null);
 
   // Modals state
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -297,6 +300,34 @@ export default function SubjectAssignmentPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          {/* View Toggle */}
+          <div className="flex items-center border border-border rounded-lg p-0.5 bg-slate-100/50 dark:bg-slate-800/50 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={`p-1.5 rounded-md transition-all ${
+                viewMode === "grid"
+                  ? "bg-white dark:bg-slate-900 text-primary shadow-sm"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
+              title="Grid View"
+            >
+              <Grid className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              className={`p-1.5 rounded-md transition-all ${
+                viewMode === "list"
+                  ? "bg-white dark:bg-slate-900 text-primary shadow-sm"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+              }`}
+              title="Accordion List View"
+            >
+              <List className="w-4 h-4" />
+            </button>
+          </div>
+
           <button onClick={doFetch} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm cursor-pointer dark:text-slate-400">
             <RefreshCcw className="w-4 h-4" />
           </button>
@@ -377,10 +408,10 @@ export default function SubjectAssignmentPage() {
             </button>
           )}
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      ) : viewMode === "grid" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
           {groupedAssignments.map((group, idx) => (
-            <div key={idx} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden flex flex-col justify-between text-left hover:shadow-md transition-shadow">
+            <div key={idx} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden text-left hover:shadow-md transition-shadow h-fit">
               <div>
                 {/* Header of group */}
                 <div className="p-4 border-b border-border bg-[#F8FAFC] dark:bg-slate-800/40 flex items-center justify-between">
@@ -446,6 +477,91 @@ export default function SubjectAssignmentPage() {
             </div>
           ))}
         </div>
+      ) : (
+        <div className="space-y-3">
+          {groupedAssignments.map((group, idx) => {
+            const groupKey = `${group.class_id || ""}-${group.stream_id || ""}-${group.academic_year}`;
+            const isExpanded = expandedClassKey === groupKey;
+            return (
+              <div key={idx} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden text-left hover:shadow-md transition-shadow duration-300">
+                <button
+                  type="button"
+                  onClick={() => setExpandedClassKey(isExpanded ? null : groupKey)}
+                  className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors focus:outline-none"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center shrink-0">
+                      <GraduationCap className="w-4.5 h-4.5 text-blue-500" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-[14px] text-slate-900 dark:text-white leading-tight flex items-center gap-2">
+                        {group.className}{group.section ? ` - ${group.section}` : ""}
+                        {group.streamName && (
+                          <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/25 px-2 py-0.5 rounded flex items-center gap-1">
+                            <Layers className="w-3 h-3" /> {group.streamName}
+                          </span>
+                        )}
+                      </h4>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-850 px-2.5 py-0.5 rounded">
+                      {group.subjects.length} Subjects
+                    </span>
+                    <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-bold text-slate-600 dark:text-slate-300">
+                      {group.academic_year}
+                    </span>
+                    <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`} />
+                  </div>
+                </button>
+                <div
+                  className={`transition-all duration-300 ease-in-out ${
+                    isExpanded ? "max-h-[1000px] border-t border-border opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+                  }`}
+                >
+                  <div className="p-5 bg-slate-50/50 dark:bg-slate-950/20">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {group.subjects.map((sub, sIdx) => (
+                        <div key={sIdx} className="group flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-sm transition-all duration-200">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 bg-slate-100 dark:bg-slate-850 rounded-lg flex items-center justify-center shrink-0">
+                              <BookOpen className="w-4 h-4 text-slate-400" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate">{sub.name}</p>
+                              {sub.code && <p className="text-[10px] font-mono text-slate-400">Code: {sub.code}</p>}
+                            </div>
+                          </div>
+
+                          {isAdmin && (
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setSelected(sub.originalRecord); setIsEditOpen(true); }}
+                                className="p-1 text-slate-400 hover:text-primary rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                title="Edit"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setSelected(sub.originalRecord); setIsDeleteOpen(true); }}
+                                className="p-1 text-slate-400 hover:text-red-500 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
       {/* Add Bulk Assignment Modal */}
@@ -500,41 +616,100 @@ export default function SubjectAssignmentPage() {
           )}
 
           {/* Bulk checklist selection of subjects */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Select Subjects to Assign <span className="text-red-500">*</span></label>
-            
-            <div className="relative mb-2">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Select Subjects to Assign <span className="text-red-500">*</span></label>
+              {selectedSubjectIds.length > 0 && (
+                <span className="text-[11px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                  {selectedSubjectIds.length} selected
+                </span>
+              )}
+            </div>
+
+            <div className="relative">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
-                placeholder="Search active subjects..."
+                placeholder="Search subjects..."
                 value={subjectSearch}
                 onChange={(e) => setSubjectSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-1.5 border border-border rounded-lg text-xs outline-none bg-slate-50 dark:bg-slate-800"
+                className="w-full pl-8 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-[#F8FAFC] dark:bg-slate-800 focus:border-primary/50 transition-colors"
               />
             </div>
 
-            <div className="max-h-[180px] overflow-y-auto border border-border rounded-lg p-2.5 space-y-2 bg-[#FAFBFD] dark:bg-slate-900/40">
-              {filteredSubjectList
-                .filter(s => !subjectSearch || s.name.toLowerCase().includes(subjectSearch.toLowerCase()))
-                .map(sub => {
-                  const isChecked = selectedSubjectIds.includes(sub._id);
-                  return (
-                    <label key={sub._id} className="flex items-center gap-2.5 p-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer text-[13px] font-medium text-slate-700 dark:text-slate-200 select-none">
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => toggleSubjectSelection(sub._id)}
-                        className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer"
-                      />
-                      <span>{sub.name} {sub.subject_code ? `(${sub.subject_code})` : ""}</span>
-                    </label>
-                  );
-                })}
-              {filteredSubjectList.length === 0 && (
-                <p className="text-xs text-slate-400 text-center py-4">No active subjects available for selection</p>
-              )}
-            </div>
+            {(() => {
+              // Already assigned subject IDs for the selected class (from existing data)
+              const alreadyAssignedIds = new Set(
+                assignments
+                  .filter(a => {
+                    const aClassId = typeof a.class_id === "object" ? a.class_id?._id : a.class_id;
+                    return aClassId === formClassId;
+                  })
+                  .map(a => typeof a.subject_master_id === "object" ? a.subject_master_id._id : a.subject_master_id)
+              );
+
+              const displayList = filteredSubjectList.filter(s =>
+                !subjectSearch || s.name.toLowerCase().includes(subjectSearch.toLowerCase())
+              );
+
+              const availableSubjects = displayList.filter(s => !alreadyAssignedIds.has(s._id));
+              const alreadyAssignedSubjects = displayList.filter(s => alreadyAssignedIds.has(s._id));
+
+              return (
+                <div className="border border-border rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+                  {availableSubjects.length === 0 && alreadyAssignedSubjects.length === 0 && (
+                    <p className="text-[13px] text-slate-400 text-center py-6 font-medium">No active subjects available</p>
+                  )}
+                  {availableSubjects.length === 0 && alreadyAssignedSubjects.length > 0 && (
+                    <p className="text-[13px] text-slate-400 text-center py-4 font-medium">All subjects are already assigned to this class</p>
+                  )}
+                  {availableSubjects.length > 0 && (
+                    <div className="max-h-[200px] overflow-y-auto">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2 bg-[#F8FAFC] dark:bg-slate-800/50 border-b border-border">Available to assign</p>
+                      {availableSubjects.map(sub => {
+                        const isChecked = selectedSubjectIds.includes(sub._id);
+                        return (
+                          <label key={sub._id} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors border-b border-border/50 last:border-0 ${
+                            isChecked ? "bg-primary/5 dark:bg-primary/10" : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleSubjectSelection(sub._id)}
+                              className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer shrink-0"
+                            />
+                            <div className="flex items-center justify-between flex-1 min-w-0">
+                              <span className={`text-[13px] font-medium truncate ${
+                                isChecked ? "text-primary font-semibold" : "text-slate-700 dark:text-slate-200"
+                              }`}>{sub.name}</span>
+                              {sub.subject_code && (
+                                <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-2 shrink-0">{sub.subject_code}</span>
+                              )}
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {alreadyAssignedSubjects.length > 0 && (
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2 bg-[#F8FAFC] dark:bg-slate-800/50 border-t border-b border-border">Already assigned</p>
+                      {alreadyAssignedSubjects.map(sub => (
+                        <div key={sub._id} className="flex items-center gap-3 px-4 py-2.5 opacity-50 cursor-not-allowed border-b border-border/50 last:border-0">
+                          <input type="checkbox" checked disabled className="rounded border-slate-300 w-4 h-4 cursor-not-allowed shrink-0" />
+                          <div className="flex items-center justify-between flex-1 min-w-0">
+                            <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 truncate">{sub.name}</span>
+                            {sub.subject_code && (
+                              <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-2 shrink-0">{sub.subject_code}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
@@ -593,16 +768,73 @@ export default function SubjectAssignmentPage() {
             </div>
           )}
 
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-2">
             <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Subject <span className="text-red-500">*</span></label>
-            <div className="relative">
-              <select value={editSubjectId} onChange={(e) => setEditSubjectId(e.target.value)} required
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
-                {subjectList.filter(s => s.status === "Active").map(s => (
-                  <option key={s._id} value={s._id}>{s.name}{s.subject_code ? ` (${s.subject_code})` : ""}</option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
+            <div className="border border-border rounded-xl overflow-hidden bg-white dark:bg-slate-900">
+              {(() => {
+                // All subjects assigned to this class EXCEPT the current one being edited
+                const currentSubjectId = typeof selected?.subject_master_id === "object" ? selected.subject_master_id._id : selected?.subject_master_id;
+                const alreadyAssignedIds = new Set(
+                  assignments
+                    .filter(a => {
+                      const aClassId = typeof a.class_id === "object" ? a.class_id?._id : a.class_id;
+                      return aClassId === editClassId && (typeof a.subject_master_id === "object" ? a.subject_master_id._id : a.subject_master_id) !== currentSubjectId;
+                    })
+                    .map(a => typeof a.subject_master_id === "object" ? a.subject_master_id._id : a.subject_master_id)
+                );
+                const activeSubjects = subjectList.filter(s => s.status === "Active");
+                const available = activeSubjects.filter(s => !alreadyAssignedIds.has(s._id));
+                const blocked = activeSubjects.filter(s => alreadyAssignedIds.has(s._id));
+                return (
+                  <div className="max-h-[220px] overflow-y-auto">
+                    {available.length > 0 && (
+                      <>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2 bg-[#F8FAFC] dark:bg-slate-800/50 border-b border-border sticky top-0">Available</p>
+                        {available.map(s => (
+                          <label key={s._id} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer border-b border-border/50 last:border-0 transition-colors ${
+                            editSubjectId === s._id ? "bg-primary/5 dark:bg-primary/10" : "hover:bg-slate-50 dark:hover:bg-slate-800"
+                          }`}>
+                            <input
+                              type="radio"
+                              name="editSubject"
+                              checked={editSubjectId === s._id}
+                              onChange={() => setEditSubjectId(s._id)}
+                              className="text-primary focus:ring-primary w-4 h-4 cursor-pointer shrink-0"
+                            />
+                            <div className="flex items-center justify-between flex-1 min-w-0">
+                              <span className={`text-[13px] font-medium truncate ${
+                                editSubjectId === s._id ? "text-primary font-semibold" : "text-slate-700 dark:text-slate-200"
+                              }`}>{s.name}</span>
+                              {s.subject_code && (
+                                <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-2 shrink-0">{s.subject_code}</span>
+                              )}
+                            </div>
+                          </label>
+                        ))}
+                      </>
+                    )}
+                    {blocked.length > 0 && (
+                      <>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2 bg-[#F8FAFC] dark:bg-slate-800/50 border-t border-b border-border sticky top-0">Already assigned (unavailable)</p>
+                        {blocked.map(s => (
+                          <div key={s._id} className="flex items-center gap-3 px-4 py-2.5 opacity-40 cursor-not-allowed border-b border-border/50 last:border-0">
+                            <input type="radio" disabled className="w-4 h-4 shrink-0 cursor-not-allowed" />
+                            <div className="flex items-center justify-between flex-1 min-w-0">
+                              <span className="text-[13px] font-medium text-slate-500 truncate">{s.name}</span>
+                              {s.subject_code && (
+                                <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-2 shrink-0">{s.subject_code}</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                    {activeSubjects.length === 0 && (
+                      <p className="text-[13px] text-slate-400 text-center py-6 font-medium">No active subjects found</p>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
 

@@ -732,12 +732,27 @@ export default function ClassesPage() {
                 </p>
               )}
             </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Capacity</label>
               <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)}
                 min={1} max={200}
                 className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
+              <div className="relative">
+                <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                  <option value="">Not assigned</option>
+                  {teachers.filter(t => t.is_active).map(t => (
+                    <option key={t._id} value={t._id}>{t.name}{t.employee_id ? ` (${t.employee_id})` : ""}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+              </div>
+            </div>
+          </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button type="button" onClick={() => { setIsAddClassOpen(false); resetForm(); }}
@@ -856,7 +871,7 @@ export default function ClassesPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Class Teacher</label>
+            <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
             <div className="relative">
               <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)}
                 className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">

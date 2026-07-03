@@ -52,7 +52,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Subjects", href: "/academic-mgmt/subjects" },
         { name: "Subject Assignment", href: "/academic-mgmt/subject-assignment" },
         { name: "Teacher Assignment", href: "/academic-mgmt/teacher-assignment" },
-        { name: "Schedule", href: "/classes/schedule" },
+        // { name: "Schedule", href: "/classes/schedule" },
         { name: "Syllabus", href: "/academic-mgmt/syllabus" },
         // { name: "Class Room", href: "/academic/class-room" },
         { name: "Class Routine", href: "/academic/class-routine" },
@@ -61,12 +61,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
       ]
     },
 
-    {
-      name: "Assessments", icon: <FileText className="w-4 h-4" />, subItems: [
-        { name: "Test List", href: "/assessments" },
-        { name: "Create Test", href: "/assessments/create" }
-      ]
-    },
+
     {
       name: "Attendance", icon: <Clock className="w-4 h-4" />, subItems: [
         { name: "Student Attendance", href: "/attendance/student" },
@@ -75,15 +70,16 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         // { name: "Reports", href: "/attendance/reports" }
       ]
     },
-
-    // ── Fees Collection hidden (Issue 9) ──────────────────────────────
     {
-      name: "Transport", href: "/transport/bus-details", icon: <Bus className="w-4 h-4" />,
-      // subItems: [
-      //   { name: "Bus Details", href: "/transport/bus-details" },
-      //   { name: "Route Management", href: "/transport/route-management" },
-      //   { name: "Student Allocation", href: "/transport/allocation" }
-      // ]
+      name: "Assessments", icon: <FileText className="w-4 h-4" />, href: "/assessments"
+    },
+    {
+      name: "HR Management", icon: <Calendar className="w-4 h-4" />, subItems: [
+        { name: "Approve Leave Request", href: "/leave/approve-leave-request" },
+        { name: "Leave Type", href: "/leave/leave-type" },
+        { name: "Holidays", href: "/holidays" }
+
+      ]
     },
     {
       name: "Reports", icon: <BarChart className="w-4 h-4" />, subItems: [
@@ -98,14 +94,17 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Leave Report", href: "/reports/leave-report" }
       ]
     },
+    // ── Fees Collection hidden (Issue 9) ──────────────────────────────
     {
-      name: "HR Management", icon: <Calendar className="w-4 h-4" />, subItems: [
-        { name: "Approve Leave Request", href: "/leave/approve-leave-request" },
-        { name: "Leave Type", href: "/leave/leave-type" },
-        { name: "Holidays", href: "/holidays" }
-
-      ]
+      name: "Transport", href: "/transport/bus-details", icon: <Bus className="w-4 h-4" />,
+      // subItems: [
+      //   { name: "Bus Details", href: "/transport/bus-details" },
+      //   { name: "Route Management", href: "/transport/route-management" },
+      //   { name: "Student Allocation", href: "/transport/allocation" }
+      // ]
     },
+
+
     { name: "Notice Board", href: "/notices", icon: <Megaphone className="w-4 h-4" /> },
     {
       name: "Website", icon: <Globe className="w-4 h-4" />, subItems: [

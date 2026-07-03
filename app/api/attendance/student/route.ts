@@ -21,15 +21,47 @@ export async function GET(req: NextRequest) {
     const streamId = url.searchParams.get("streamId");
     const sectionId = url.searchParams.get("sectionId");
 
-    if (!academic_year || !dateParam || !classId) {
+    if (!academic_year || !dateParam) {
       return NextResponse.json(
-        { success: false, message: "academic_year, date, and classId are required" },
+        { success: false, message: "academic_year and date are required" },
         { status: 400 }
       );
     }
 
-    if (!mongoose.Types.ObjectId.isValid(classId)) {
+    if (classId && !mongoose.Types.ObjectId.isValid(classId)) {
       return NextResponse.json({ success: false, message: "Invalid classId format" }, { status: 400 });
+    }
+
+    const startOfDay = new Date(dateParam);
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(dateParam);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+
+    if (!classId) {
+      const query: any = {
+        school_id: schoolId as string,
+        academic_year,
+        date: { $gte: startOfDay, $lte: endOfDay },
+        type: "student",
+      };
+
+      if (role === "teacher") {
+        const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
+        if (!teacher) {
+          return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
+        }
+        const teacherClassIds = await Class.find({
+          school_id: schoolId,
+          class_teacher_id: teacher._id
+        }).distinct("_id");
+        query.class_id = { $in: teacherClassIds };
+      }
+
+      const attendanceRecords = await Attendance.find(query).lean();
+      return NextResponse.json({
+        success: true,
+        data: attendanceRecords,
+      });
     }
 
     // Verify teacher assignment for student attendance
@@ -48,11 +80,6 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ success: false, message: "You are not assigned to this class" }, { status: 403 });
       }
     }
-
-    const startOfDay = new Date(dateParam);
-    startOfDay.setUTCHours(0, 0, 0, 0);
-    const endOfDay = new Date(dateParam);
-    endOfDay.setUTCHours(23, 59, 59, 999);
 
     const query: any = {
       school_id: schoolId as string,

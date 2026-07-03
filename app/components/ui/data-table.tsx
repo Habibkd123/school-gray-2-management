@@ -6,7 +6,7 @@ export type ColumnDef<T> = {
   header: string;
   accessorKey?: keyof T;
   sortable?: boolean;
-  render?: (item: T) => React.ReactNode;
+  render?: (item: T, index: number) => React.ReactNode;
   className?: string;
 };
 
@@ -109,7 +109,7 @@ export function DataTable<T>({
                 )}
                 {columns.map((col, idx) => (
                   <td key={idx} className={`px-4 py-4 ${col.className || ''}`}>
-                    {col.render ? col.render(item) : (col.accessorKey ? (item[col.accessorKey] as React.ReactNode) : null)}
+                    {col.render ? col.render(item, i) : (col.accessorKey ? (item[col.accessorKey] as React.ReactNode) : null)}
                   </td>
                 ))}
               </tr>

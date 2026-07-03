@@ -24,8 +24,8 @@ interface ResultRow {
   remarks: string;
 }
 
-export default function TestResultsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params);
+export default function ResultsPage({ params }: { params: Promise<{ classId: string; assessmentId: string }> }) {
+  const { classId, assessmentId } = React.use(params);
   const router = useRouter();
   const { user } = useAuth();
   const isAdmin = user?.role === "school_admin";
@@ -48,7 +48,7 @@ export default function TestResultsPage({ params }: { params: Promise<{ id: stri
       if (search) params_.set("search", search);
       if (filter !== "all") params_.set("filter", filter);
 
-      const res = await fetch(`/api/assessments/${id}/results?${params_}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/assessments/${assessmentId}/results?${params_}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setTest(data.data.test);
@@ -59,7 +59,7 @@ export default function TestResultsPage({ params }: { params: Promise<{ id: stri
     } finally {
       setIsLoading(false);
     }
-  }, [id, page, search, filter]);
+  }, [assessmentId, page, search, filter]);
 
   useEffect(() => { fetchResults(); }, [fetchResults]);
   useEffect(() => { setPage(1); }, [search, filter]);
@@ -67,7 +67,7 @@ export default function TestResultsPage({ params }: { params: Promise<{ id: stri
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const res = await fetch(`/api/assessments/${id}/export`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/assessments/${assessmentId}/export`, { headers: getAuthHeaders() });
       if (res.ok) {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);

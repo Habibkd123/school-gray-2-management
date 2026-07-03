@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { Plus, Loader2, AlertCircle, Trash2, Edit2, CheckCircle2, Circle, PlayCircle, BookOpen, User, Calendar, BarChart3, ChevronLeft, ArrowLeft } from "lucide-react";
+import * as XLSX from "xlsx";
+import { Plus, Loader2, AlertCircle, Trash2, Edit2, CheckCircle2, Circle, PlayCircle, BookOpen, User, Calendar, BarChart3, ChevronLeft, ArrowLeft, Upload } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { useTeacherAssignment, PopulatedTeacherAssignment } from "@/app/hooks/useTeacherAssignment";
 import { useSyllabus, SyllabusChapter } from "@/app/hooks/useSyllabus";
@@ -33,6 +34,15 @@ export default function SyllabusDetailsPage() {
     status: "Not Started"
   });
   const [submitting, setSubmitting] = useState(false);
+
+  // Bulk Import modal state
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [validationResults, setValidationResults] = useState<{
+    validRows: SyllabusChapter[];
+    invalidRows: { rowIndex: number; error: string; data: any }[];
+    totalRows: number;
+  } | null>(null);
 
   // Toast message states
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -132,6 +142,135 @@ export default function SyllabusDetailsPage() {
       showError(res.message || "Failed to save chapter");
     }
     setSubmitting(false);
+  };
+
+  const handleBulkImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = XLSX.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const rows = XLSX.utils.sheet_to_json<any[]>(ws, { header: 1 });
+        if (rows.length <= 1) {
+          showError("The uploaded file is empty or only contains headers.");
+          return;
+        }
+
+        const headers = (rows[0] as string[]).map(h => String(h).trim().toLowerCase());
+        
+        const chapterNoIdx = headers.findIndex(h => h.includes("no") || h.includes("num"));
+        const chapterNameIdx = headers.findIndex(h => h.includes("name") || h.includes("title"));
+        const descriptionIdx = headers.findIndex(h => h.includes("desc"));
+        const startDateIdx = headers.findIndex(h => h.includes("start"));
+        const targetDateIdx = headers.findIndex(h => h.includes("target"));
+        const statusIdx = headers.findIndex(h => h.includes("status"));
+
+        if (chapterNameIdx === -1) {
+          showError("Could not find a 'chapter name' column in the header row.");
+          return;
+        }
+
+        const validRows: SyllabusChapter[] = [];
+        const invalidRows: { rowIndex: number; error: string; data: any }[] = [];
+
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if (!row || row.length === 0) continue;
+
+          // Skip completely empty rows
+          if (row.every(cell => cell === null || cell === undefined || String(cell).trim() === "")) {
+            continue;
+          }
+
+          let chapterNo = chapterNoIdx !== -1 ? Number(row[chapterNoIdx]) : NaN;
+          if (isNaN(chapterNo) || chapterNo <= 0) {
+            chapterNo = validRows.length + (syllabus?.chapters?.length || 0) + 1;
+          }
+
+          const chapterName = chapterNameIdx !== -1 ? String(row[chapterNameIdx] || "").trim() : "";
+          if (!chapterName) {
+            invalidRows.push({
+              rowIndex: i + 1,
+              error: "Chapter Name cannot be empty.",
+              data: row
+            });
+            continue;
+          }
+
+          const description = descriptionIdx !== -1 ? String(row[descriptionIdx] || "").trim() : "";
+          
+          let start_date: string | undefined = undefined;
+          if (startDateIdx !== -1 && row[startDateIdx]) {
+            const parsedDate = new Date(row[startDateIdx]);
+            if (!isNaN(parsedDate.getTime())) {
+              start_date = parsedDate.toISOString();
+            }
+          }
+
+          let target_date: string | undefined = undefined;
+          if (targetDateIdx !== -1 && row[targetDateIdx]) {
+            const parsedDate = new Date(row[targetDateIdx]);
+            if (!isNaN(parsedDate.getTime())) {
+              target_date = parsedDate.toISOString();
+            }
+          }
+
+          let status: "Not Started" | "In Progress" | "Completed" = "Not Started";
+          if (statusIdx !== -1 && row[statusIdx]) {
+            const rawStatus = String(row[statusIdx]).trim().toLowerCase();
+            if (rawStatus.includes("progress")) {
+              status = "In Progress";
+            } else if (rawStatus.includes("complete") || rawStatus.includes("done")) {
+              status = "Completed";
+            }
+          }
+
+          validRows.push({
+            chapter_no: chapterNo,
+            chapter_name: chapterName,
+            description: description || undefined,
+            start_date: start_date || "",
+            target_date: target_date || "",
+            status
+          });
+        }
+
+        setValidationResults({
+          validRows,
+          invalidRows,
+          totalRows: rows.length - 1
+        });
+      } catch (err) {
+        showError("Failed to parse file: " + (err as Error).message);
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleConfirmImport = async () => {
+    if (!validationResults || validationResults.validRows.length === 0) return;
+    setImporting(true);
+
+    const existingChapters = [...(syllabus?.chapters || [])];
+    const newChapters = [...validationResults.validRows];
+
+    const updatedChapters = [...existingChapters, ...newChapters];
+    updatedChapters.sort((a, b) => Number(a.chapter_no) - Number(b.chapter_no));
+
+    const res = await saveSyllabus(assignmentId, updatedChapters);
+    setImporting(false);
+    if (res.success) {
+      setIsImportModalOpen(false);
+      setValidationResults(null);
+      showSuccess(`Successfully imported ${newChapters.length} chapters.`);
+    } else {
+      showError(res.message || "Failed to save imported syllabus chapters.");
+    }
   };
 
   const stats = useMemo(() => {
@@ -243,7 +382,7 @@ export default function SyllabusDetailsPage() {
                   {activeAssignment.section_id ? ` (${activeAssignment.section_id.name})` : ''}
                 </span>
                 <span className="bg-primary/10 text-primary px-2.5 py-1 rounded text-xs font-bold tracking-wide flex items-center gap-1.5">
-                  <BookOpen className="w-3.5 h-3.5" /> {activeAssignment.subject_master_id?.name}
+                  <BookOpen className="w-3.5 h-3.5" /> {activeAssignment.subject_master_id?.name} {activeAssignment.subject_master_id?.subject_code ? `(${activeAssignment.subject_master_id.subject_code})` : ''}
                 </span>
                 <span className="bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-300 px-2.5 py-1 rounded text-xs font-bold tracking-wide font-mono">
                   {activeAssignment.academic_year}
@@ -254,9 +393,21 @@ export default function SyllabusDetailsPage() {
               </p>
             </div>
             {isAuthorized && (
-              <button onClick={handleAddChapter} className="px-4 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 shrink-0 cursor-pointer">
-                <Plus className="w-4 h-4" /> Add Chapter
-              </button>
+              <div className="flex items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setValidationResults(null);
+                    setIsImportModalOpen(true);
+                  }}
+                  className="px-4 py-2.5 border border-border bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-[13px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
+                >
+                  <Upload className="w-4 h-4 text-slate-500" /> Bulk Import
+                </button>
+                <button onClick={handleAddChapter} className="px-4 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors flex items-center gap-2 shrink-0 cursor-pointer">
+                  <Plus className="w-4 h-4" /> Add Chapter
+                </button>
+              </div>
             )}
           </div>
 
@@ -399,6 +550,107 @@ export default function SyllabusDetailsPage() {
             </button>
           </div>
         </form>
+      </Modal>
+      {/* Bulk Import Modal */}
+      <Modal isOpen={isImportModalOpen} onClose={() => { setIsImportModalOpen(false); setValidationResults(null); }} title="Bulk Import Syllabus" size="lg">
+        <div className="space-y-5 text-left font-medium">
+          <div className="p-4 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-border text-[13px] text-slate-600 dark:text-slate-350 space-y-2 leading-relaxed">
+            <p className="font-bold text-slate-800 dark:text-white">Import Guidelines:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Supports Excel (.xlsx) and CSV files.</li>
+              <li>Required columns: <b className="text-slate-800 dark:text-white">Chapter Name</b>.</li>
+              <li>Optional columns: <b className="text-slate-800 dark:text-white">Chapter No</b>, <b className="text-slate-800 dark:text-white">Description</b>, <b className="text-slate-800 dark:text-white">Start Date</b>, <b className="text-slate-800 dark:text-white">Target Date</b>, <b className="text-slate-800 dark:text-white">Status</b>.</li>
+              <li>Only valid rows will be imported. Rows with validation failures are displayed and skipped.</li>
+            </ul>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[13px] font-semibold text-slate-800 dark:text-white">Select File</label>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-[13px] font-bold text-slate-700 dark:text-slate-300">
+                <Upload className="w-4 h-4 text-slate-500" /> Choose File
+                <input
+                  type="file"
+                  accept=".csv, .xlsx"
+                  onChange={handleBulkImportFile}
+                  className="hidden"
+                />
+              </label>
+              <span className="text-xs text-slate-400">CSV or XLSX formats supported</span>
+            </div>
+          </div>
+
+          {validationResults && (
+            <div className="space-y-4">
+              {/* Validation Summary */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 bg-slate-50 dark:bg-slate-800/40 border border-border rounded-xl text-center">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Rows</p>
+                  <p className="text-xl font-bold text-slate-800 dark:text-white mt-0.5">{validationResults.totalRows}</p>
+                </div>
+                <div className="p-3 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 rounded-xl text-center">
+                  <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">Valid Rows</p>
+                  <p className="text-xl font-bold text-emerald-700 dark:text-emerald-400 mt-0.5">{validationResults.validRows.length}</p>
+                </div>
+                <div className="p-3 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 rounded-xl text-center">
+                  <p className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Errors</p>
+                  <p className="text-xl font-bold text-rose-700 dark:text-rose-400 mt-0.5">{validationResults.invalidRows.length}</p>
+                </div>
+              </div>
+
+              {/* Validation Errors list */}
+              {validationResults.invalidRows.length > 0 && (
+                <div className="p-4 bg-rose-50 dark:bg-rose-950/10 border border-rose-200 dark:border-rose-900/20 rounded-xl max-h-[160px] overflow-y-auto space-y-2">
+                  <p className="text-xs font-bold text-rose-650 dark:text-rose-400">Validation Failures:</p>
+                  <ul className="text-xs space-y-1 text-rose-600 dark:text-rose-455 font-medium list-inside list-disc">
+                    {validationResults.invalidRows.map((err, idx) => (
+                      <li key={idx}>
+                        Row {err.rowIndex}: {err.error}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Validation Success preview */}
+              {validationResults.validRows.length > 0 && (
+                <div className="border border-border rounded-xl overflow-hidden bg-[#FAFBFD] dark:bg-slate-900/40">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2 bg-slate-100/50 dark:bg-slate-800 border-b border-border sticky top-0">Chapters to Import ({validationResults.validRows.length})</p>
+                  <div className="max-h-[200px] overflow-y-auto divide-y divide-border">
+                    {validationResults.validRows.map((ch, idx) => (
+                      <div key={idx} className="px-4 py-2.5 flex items-center justify-between text-xs">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-slate-700 dark:text-slate-305 truncate">
+                            <span className="font-mono text-slate-400 pr-1.5">[CH {ch.chapter_no}]</span> {ch.chapter_name}
+                          </p>
+                          {ch.description && <p className="text-slate-400 truncate mt-0.5">{ch.description}</p>}
+                        </div>
+                        <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] whitespace-nowrap ml-3 shrink-0 ${
+                          ch.status === "Completed" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400" :
+                          ch.status === "In Progress" ? "bg-amber-100 text-amber-700 dark:bg-amber-955/20 dark:text-amber-400" :
+                          "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                        }`}>{ch.status}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
+            <button type="button" onClick={() => { setIsImportModalOpen(false); setValidationResults(null); }}
+              className="px-5 py-2 bg-slate-100 dark:bg-slate-855 text-slate-800 dark:text-slate-200 text-[13px] font-bold rounded-lg cursor-pointer">Cancel</button>
+            <button
+              type="button"
+              onClick={handleConfirmImport}
+              disabled={importing || !validationResults || validationResults.validRows.length === 0}
+              className="px-5 py-2 bg-primary hover:bg-[var(--primary-hover)] disabled:opacity-60 text-white text-[13px] font-bold rounded-lg shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              {importing && <Loader2 className="w-4 h-4 animate-spin" />} Confirm Import
+            </button>
+          </div>
+        </div>
       </Modal>
 
       {/* Toasts */}

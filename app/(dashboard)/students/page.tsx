@@ -602,38 +602,6 @@ export default function StudentsPage() {
             <DataTable
               columns={columns}
               data={tableData}
-              selectionHeader={
-                <input
-                  type="checkbox"
-                  checked={tableData.length > 0 && tableData.every(s => selectedIds.includes(s.id))}
-                  onChange={() => {
-                    const allChecked = tableData.length > 0 && tableData.every(s => selectedIds.includes(s.id));
-                    if (allChecked) {
-                      setSelectedIds(prev => prev.filter(id => !tableData.some(s => s.id === id)));
-                    } else {
-                      setSelectedIds(prev => {
-                        const toAdd = tableData.filter(s => !prev.includes(s.id)).map(s => s.id);
-                        return [...prev, ...toAdd];
-                      });
-                    }
-                  }}
-                  className="rounded border-slate-300 w-4 h-4 accent-primary"
-                />
-              }
-              renderSelection={(student) => (
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(student.id)}
-                  onChange={() => {
-                    setSelectedIds(prev =>
-                      prev.includes(student.id)
-                        ? prev.filter(id => id !== student.id)
-                        : [...prev, student.id]
-                    );
-                  }}
-                  className="rounded border-slate-300 w-4 h-4 accent-primary"
-                />
-              )}
               noDataMessage="No students registered or matching filters."
             />
             <PaginationBar
@@ -657,18 +625,6 @@ export default function StudentsPage() {
                     {/* Top Row */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex flex-wrap items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(student._id)}
-                          onChange={() => {
-                            setSelectedIds(prev =>
-                              prev.includes(student._id)
-                                ? prev.filter(id => id !== student._id)
-                                : [...prev, student._id]
-                            );
-                          }}
-                          className="rounded border-slate-300 w-3.5 h-3.5 accent-primary"
-                        />
                         <span className="text-[13px] font-bold text-primary">{student.displayId}</span>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -744,12 +700,7 @@ export default function StudentsPage() {
                     </div>
 
                     {/* Footer buttons */}
-                    <div className="flex items-center justify-between mt-auto">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors dark:text-slate-400"><MessageSquare className="w-3.5 h-3.5" /></button>
-                        <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors dark:text-slate-400"><Phone className="w-3.5 h-3.5" /></button>
-                        <button className="w-8 h-8 rounded-full border border-border flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors dark:text-slate-400"><Mail className="w-3.5 h-3.5" /></button>
-                      </div>
+                    <div className="flex items-center justify-end mt-auto">
                       {!HIDE_FEES_FEATURE && (
                         <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsCollectFeesOpen(true); }} className="px-3 py-1.5 rounded bg-[#F1F5F9] dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
                           Add Fees

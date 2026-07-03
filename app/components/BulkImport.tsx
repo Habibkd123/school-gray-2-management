@@ -56,6 +56,18 @@ export default function BulkImport({
     failures: Array<{ row: string; error: string }>;
   } | null>(null);
 
+  // Credentials for successfully imported students (students module only)
+  const [importedCredentials, setImportedCredentials] = useState<Array<{
+    studentName: string;
+    admissionNo: string;
+    className: string;
+    section: string;
+    studentUsername: string;
+    studentPassword: string;
+    parentUsername: string;
+    parentPassword: string;
+  }>>([]);
+
   const getDynamicSampleData = () => {
     const data = sampleData.map(r => [...r]);
 
@@ -308,6 +320,62 @@ export default function BulkImport({
       failures
     });
     setIsImporting(false);
+
+    // Generate credentials for successfully imported students
+    if (module === "students") {
+      // Track which row indices failed
+      const failedRowNames = new Set(failures.map(f => f.row));
+
+      // We go batch by batch — instead re-derive from validatedRows which were selected
+      // Build credentials from all selected rows (failures will be a subset)
+      const successfulRows: typeof importedCredentials = [];
+
+      for (const vRow of validatedRows.filter(r => selectedIndices.has(r.index))) {
+        const data = vRow.data;
+        // Skip rows that failed (matched by name or admission_no)
+        const rowIdentifier = data.name || data.admission_no || "Unknown row";
+        if (failedRowNames.has(rowIdentifier)) continue;
+
+        // Replicate the server-side username generation logic
+        const schoolSlug = (process.env.NEXT_PUBLIC_SCHOOL_SLUG || "school").replace(/[\s-]+/g, "");
+        const firstName = (data.name || "").trim().split(/\s+/)[0].toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10);
+        let dobDay = "";
+        if (data.dob) {
+          const d = new Date(data.dob);
+          if (!isNaN(d.getTime())) dobDay = String(d.getDate());
+        }
+        const studentUsername = `${firstName}${dobDay}.${schoolSlug}.myschoollife`;
+
+        // Compute student password
+        let studentPassword = "student123";
+        if (data.dob) {
+          const dateObj = new Date(data.dob);
+          if (!isNaN(dateObj.getTime())) {
+            const day = String(dateObj.getDate()).padStart(2, "0");
+            const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+            const yy = dateObj.getFullYear().toString().slice(-2);
+            studentPassword = `${day}${month}${yy}`;
+          }
+        }
+
+        // Parent credentials
+        const parentUsername = data.guardian_email || "";
+        const parentPassword = parentUsername ? "parent123" : "";
+
+        successfulRows.push({
+          studentName: data.name || "",
+          admissionNo: data.admission_no || "",
+          className: data.classNameStr ? data.classNameStr.split(" \u2014 ")[0].trim() : "",
+          section: data.classNameStr && data.classNameStr.includes(" \u2014 ") ? data.classNameStr.split(" \u2014 ")[1].trim() : "",
+          studentUsername,
+          studentPassword,
+          parentUsername,
+          parentPassword,
+        });
+      }
+
+      setImportedCredentials(successfulRows);
+    }
   };
 
   const toggleSelectRow = (index: number) => {
@@ -342,7 +410,88 @@ export default function BulkImport({
     setSelectedIndices(new Set());
     setValidationError("");
     setImportResult(null);
+    setImportedCredentials([]);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  // --- Credentials Download Functions ---
+  const downloadCredentialsCSV = () => {
+    if (importedCredentials.length === 0) return;
+    const headers = ["Student Name", "Admission Number", "Class", "Section", "Username", "Password", "Parent Username", "Parent Password"];
+    const rows = importedCredentials.map(c => [
+      c.studentName, c.admissionNo, c.className, c.section,
+      c.studentUsername, c.studentPassword, c.parentUsername, c.parentPassword
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + [headers.join(","), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `student_credentials_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadCredentialsPDF = () => {
+    if (importedCredentials.length === 0) return;
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+
+    const tableRows = importedCredentials.map((c, i) => `
+      <tr style="background:${i % 2 === 0 ? '#ffffff' : '#f8fafc'}">
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0">${i + 1}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-weight:600">${c.studentName}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;color:#6366f1;font-weight:700">${c.admissionNo}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0">${c.className}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0">${c.section}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-size:12px">${c.studentUsername}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:700;color:#dc2626">${c.studentPassword}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-size:12px">${c.parentUsername || '—'}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;font-family:monospace;font-weight:700;color:#2563eb">${c.parentPassword || '—'}</td>
+      </tr>
+    `).join("");
+
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Student Credentials</title>
+        <style>
+          body { font-family: Arial, sans-serif; font-size: 13px; color: #1e293b; padding: 20px; }
+          h1 { font-size: 20px; color: #0f172a; margin-bottom: 4px; }
+          p { color: #64748b; font-size: 12px; margin-bottom: 20px; }
+          table { width: 100%; border-collapse: collapse; }
+          th { background: #1e293b; color: white; padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+          @media print { body { padding: 0; } button { display: none; } }
+        </style>
+      </head>
+      <body>
+        <h1>Student Login Credentials</h1>
+        <p>Generated on ${new Date().toLocaleString()} &mdash; ${importedCredentials.length} record(s)</p>
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Student Name</th>
+              <th>Admission No</th>
+              <th>Class</th>
+              <th>Section</th>
+              <th>Student Username</th>
+              <th>Student Password</th>
+              <th>Parent Username</th>
+              <th>Parent Password</th>
+            </tr>
+          </thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+        <br/>
+        <button onclick="window.print()" style="padding:8px 20px;background:#1e293b;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px">Print / Save as PDF</button>
+      </body>
+      </html>
+    `);
+    win.document.close();
   };
 
   const validRowsCount = validatedRows.filter(r => r.isValid).length;
@@ -689,6 +838,35 @@ export default function BulkImport({
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* Credentials Download — students module only */}
+          {module === "students" && importedCredentials.length > 0 && (
+            <div className="bg-emerald-50 dark:bg-emerald-950/10 border border-emerald-200 dark:border-emerald-900/30 rounded-xl p-5 space-y-3">
+              <div className="flex items-center gap-2">
+                <FileText className="w-4 h-4 text-emerald-600" />
+                <h3 className="text-[14px] font-bold text-emerald-800 dark:text-emerald-400">Download Student Credentials</h3>
+              </div>
+              <p className="text-[12px] text-emerald-700 dark:text-emerald-400 font-medium">
+                Credentials file for <strong>{importedCredentials.length}</strong> successfully imported student(s). Contains usernames and passwords for students and parents.
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={downloadCredentialsCSV}
+                  className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[13px] font-semibold rounded-lg transition-colors cursor-pointer shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Download CSV
+                </button>
+                <button
+                  onClick={downloadCredentialsPDF}
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-[13px] font-semibold rounded-lg transition-colors cursor-pointer shadow-sm"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Download / Print PDF
+                </button>
               </div>
             </div>
           )}

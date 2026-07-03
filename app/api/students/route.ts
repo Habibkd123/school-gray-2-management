@@ -38,12 +38,12 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const academic_year = searchParams.get("academic_year");
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+    const limit = parseInt(searchParams.get("limit") || "12");
     const skip = (page - 1) * limit;
 
     // Build filter
     const filter: Record<string, any> = { school_id: schoolId };
-    
+
     if (role === "student") {
       filter.user_id = userId;
     } else if (role === "parent") {
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       const classIds = classes.map(c => c._id);
       filter.class_id = { $in: classIds };
     }
-    
+
     const gender = searchParams.get("gender");
     if (gender && gender !== "all" && gender !== "Select") {
       filter.gender = gender.toLowerCase();

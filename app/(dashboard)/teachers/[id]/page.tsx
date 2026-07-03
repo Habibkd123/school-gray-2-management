@@ -30,7 +30,7 @@ export default function TeacherDetailsPage() {
 
   // Tab states
   const [activeMainTab, setActiveMainTab] = useState<string>("Teacher Details");
-  const [attendanceSubTab, setAttendanceSubTab] = useState<"Leaves" | "Attendance">("Leaves");
+  const [attendanceSubTab, setAttendanceSubTab] = useState<"Leaves" | "Attendance">("Attendance");
 
   // Modal states
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
@@ -189,7 +189,7 @@ export default function TeacherDetailsPage() {
         const className = typeof s.class_id === "object" ? `${s.class_id?.name}, ${s.class_id?.section}` : "Unknown Class";
         const subjectName = typeof s.subject_id === "object" ? s.subject_id.name : "Unknown Subject";
         return {
-          room: s.room || "N/A",
+          room: s.room || "",
           class: className,
           subject: subjectName,
           time: `${s.start_time} - ${s.end_time}`
@@ -478,8 +478,8 @@ export default function TeacherDetailsPage() {
             <TabItem icon={<User className="w-3.5 h-3.5" />} label="Teacher Details" active={activeMainTab === "Teacher Details"} onClick={() => setActiveMainTab("Teacher Details")} />
             <TabItem icon={<Calendar className="w-3.5 h-3.5" />} label="Routine" active={activeMainTab === "Routine"} onClick={() => setActiveMainTab("Routine")} />
             <TabItem icon={<Clock className="w-3.5 h-3.5" />} label="Leave & Attendance" active={activeMainTab === "Leave & Attendance"} onClick={() => setActiveMainTab("Leave & Attendance")} />
-            <TabItem icon={<FileText className="w-3.5 h-3.5" />} label="Salary" active={activeMainTab === "Salary"} onClick={() => setActiveMainTab("Salary")} />
-            {/* <TabItem icon={<BookOpen className="w-3.5 h-3.5" />} label="Library" active={activeMainTab === "Library"} onClick={() => setActiveMainTab("Library")} /> */}
+            {/* Salary tab hidden as per requirements */}
+            {/* <TabItem icon={<FileText className="w-3.5 h-3.5" />} label="Salary" active={activeMainTab === "Salary"} onClick={() => setActiveMainTab("Salary")} /> */}
           </div>
 
           {/* 1. Teacher Details Tab Content */}
@@ -567,68 +567,7 @@ export default function TeacherDetailsPage() {
                 </div>
               </div>
 
-              {/* Previous School Details */}
-              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
-                <div className="p-4 border-b border-border">
-                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Previous School Details</h3>
-                </div>
-                <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Previous School Name</p>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.previous_school_name || "Not Specified"}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">School Address</p>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.previous_school_address || "Not Specified"}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Phone Number</p>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.previous_school_phone || "Not Specified"}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bank Details & Work Details */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden h-full">
-                  <div className="p-4 border-b border-border">
-                    <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Bank Details</h3>
-                  </div>
-                  <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Bank Name</p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.bank_name || "Not Specified"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Branch</p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.branch_name || "Not Specified"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">IFSC</p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.ifsc_code || "Not Specified"}</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden h-full">
-                  <div className="p-4 border-b border-border">
-                    <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Work Details</h3>
-                  </div>
-                  <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Contract Type</p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.contract_type || "Not Specified"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Shift</p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.work_shift || "Not Specified"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Work Location</p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.work_location || "Not Specified"}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* Previous School Details, Bank Details, Work Details hidden as per requirements */}
 
               {/* Social Media */}
               <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
@@ -718,7 +657,9 @@ export default function TeacherDetailsPage() {
                         <div key={idx} className="flex flex-col gap-4">
                           {col.map((slot, sIdx) => (
                             <div key={sIdx} className="bg-white dark:bg-slate-900 border border-[#FFE2E6] rounded-xl p-3 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer">
-                              <span className="inline-block px-1.5 py-0.5 bg-[#FFF0F2] text-[#E02424] text-[10px] font-bold rounded mb-2">Room: {slot.room}</span>
+                              {slot.room && (
+                                <span className="inline-block px-1.5 py-0.5 bg-[#FFF0F2] text-[#E02424] text-[10px] font-bold rounded mb-2">Room: {slot.room}</span>
+                              )}
                               <div className="space-y-1.5">
                                 <p className="text-[12px] font-bold text-slate-900 dark:text-white">Class : <span className="font-medium text-slate-500 dark:text-slate-400">{slot.class}</span></p>
                                 <p className="text-[12px] font-bold text-slate-900 dark:text-white">Subject : <span className="font-medium text-slate-500 dark:text-slate-400">{slot.subject}</span></p>

@@ -8,7 +8,9 @@ import { useLoginConfig } from "@/app/hooks/useLoginConfig";
 import RolesPermissionsPage from "../roles/page";
 import {
   RefreshCw, Upload, Edit, EyeOff, Eye, Save, X,
-  Loader2, CheckCircle2, AlertCircle, User, Lock, MapPin
+  Loader2, CheckCircle2, AlertCircle, User, Lock, MapPin,
+  TrendingUp, ClipboardList, CreditCard, Users, Mail, MessageSquare, 
+  PieChart, Wallet, Book, Sparkles
 } from "lucide-react";
 
 interface ParentProfile {
@@ -26,6 +28,79 @@ function getAvatar(name: string) {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=D2232A&color=fff&bold=true&size=200`;
 }
 
+const UPCOMING_FEATURES = [
+  {
+    name: "Student Promotion",
+    description: "Easily promote students to the next academic year or class.",
+    icon: TrendingUp,
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10"
+  },
+  {
+    name: "Exam Module",
+    description: "Create exams, manage grading, generate report cards, and publish results.",
+    icon: ClipboardList,
+    color: "text-purple-500",
+    bg: "bg-purple-500/10"
+  },
+  {
+    name: "Fees Management",
+    description: "Track fee payments, generate receipts, and manage pending dues.",
+    icon: CreditCard,
+    color: "text-amber-500",
+    bg: "bg-amber-500/10"
+  },
+  {
+    name: "Group Classes",
+    description: "Organize students into custom groups for specialized sessions.",
+    icon: Users,
+    color: "text-indigo-500",
+    bg: "bg-indigo-500/10"
+  },
+  {
+    name: "Email Integration",
+    description: "Send automated email notifications and newsletters to parents and staff.",
+    icon: Mail,
+    color: "text-sky-500",
+    bg: "bg-sky-500/10"
+  },
+  {
+    name: "SMS Messaging",
+    description: "Send instant SMS alerts for attendance, fees, and announcements.",
+    icon: MessageSquare,
+    color: "text-rose-500",
+    bg: "bg-rose-500/10"
+  },
+  {
+    name: "Parent Portal / Login",
+    description: "Dedicated login for parents to track child's progress and attendance.",
+    icon: User,
+    color: "text-teal-500",
+    bg: "bg-teal-500/10"
+  },
+  {
+    name: "Reports & Analytics",
+    description: "Comprehensive reporting and analytics for school administration.",
+    icon: PieChart,
+    color: "text-orange-500",
+    bg: "bg-orange-500/10"
+  },
+  {
+    name: "Salary / Payroll",
+    description: "Manage employee salaries, payroll generation, and payslips.",
+    icon: Wallet,
+    color: "text-cyan-500",
+    bg: "bg-cyan-500/10"
+  },
+  {
+    name: "Library Management",
+    description: "Manage books, issue/return records, fines, and library members.",
+    icon: Book,
+    color: "text-blue-500",
+    bg: "bg-blue-500/10"
+  }
+];
+
 export default function ProfilePage() {
   const { user } = useAuth();
   const isParent = user?.role === "parent";
@@ -33,7 +108,7 @@ export default function ProfilePage() {
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   // Tab control
-  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login" | "upcoming">("profile");
 
   // Profile state
   const [profile, setProfile] = useState<any | null>(null);
@@ -305,7 +380,7 @@ export default function ProfilePage() {
               <span>Settings</span>
               <span>/</span>
               <span className="text-slate-900 dark:text-white font-medium">
-                {activeTab === "profile" ? "Profile" : (activeTab === "academic" ? "Academic Settings" : "Login Settings")}
+                {activeTab === "profile" ? "Profile" : (activeTab === "academic" ? "Academic Settings" : (activeTab === "upcoming" ? "Upcoming Features" : "Login Settings"))}
               </span>
             </div>
           </div>
@@ -318,37 +393,70 @@ export default function ProfilePage() {
         </div>
       )}
 
-      {/* Tabs Switcher for Admin roles */}
-      {isAdmin && (
-        <div className="flex border-b border-border gap-6">
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer ${ activeTab === "profile" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
-          >
-            Profile
-          </button>
-          <button
-            onClick={() => setActiveTab("roles")}
-            className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer ${ activeTab === "roles" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
-          >
-            Roles & Permissions
-          </button>
-          <button
-            onClick={() => setActiveTab("academic")}
-            className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer ${ activeTab === "academic" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
-          >
-            Academic Settings
-          </button>
-          <button
-            onClick={() => setActiveTab("login")}
-            className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer ${ activeTab === "login" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
-          >
-            Login Settings
-          </button>
-        </div>
-      )}
+      {/* Tabs Switcher */}
+      <div className="flex border-b border-border gap-6 overflow-x-auto no-scrollbar">
+        <button
+          onClick={() => setActiveTab("profile")}
+          className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${ activeTab === "profile" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
+        >
+          Profile
+        </button>
+        {isAdmin && (
+          <>
+            <button
+              onClick={() => setActiveTab("roles")}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${ activeTab === "roles" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
+            >
+              Roles & Permissions
+            </button>
+            <button
+              onClick={() => setActiveTab("academic")}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${ activeTab === "academic" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
+            >
+              Academic Settings
+            </button>
+            <button
+              onClick={() => setActiveTab("login")}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${ activeTab === "login" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
+            >
+              Login Settings
+            </button>
+          </>
+        )}
+        <button
+          onClick={() => setActiveTab("upcoming")}
+          className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${ activeTab === "upcoming" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
+        >
+          <Sparkles className="w-4 h-4" /> Upcoming Features
+        </button>
+      </div>
 
-      {activeTab === "roles" && isAdmin ? (
+      {activeTab === "upcoming" ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-start">
+          {UPCOMING_FEATURES.map((feature, idx) => (
+            <div key={idx} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden text-left hover:-translate-y-1 hover:shadow-lg transition-all duration-300 h-fit">
+              <div className="p-5 flex flex-col h-full">
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${feature.bg}`}>
+                    <feature.icon className={`w-6 h-6 ${feature.color}`} />
+                  </div>
+                  <span className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1 shrink-0">
+                    Coming Soon
+                  </span>
+                </div>
+                
+                <h3 className="text-[16px] font-bold text-slate-800 dark:text-slate-100 mb-2">
+                  {feature.name}
+                </h3>
+                
+                <p className="text-[13px] text-slate-500 dark:text-slate-400 flex-1 leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : activeTab === "roles" && isAdmin ? (
         <RolesPermissionsPage />
       ) : activeTab === "academic" && isAdmin ? (
         /* Academic Settings Tab */

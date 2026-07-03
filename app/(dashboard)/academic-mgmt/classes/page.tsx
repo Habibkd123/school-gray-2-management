@@ -246,9 +246,8 @@ export default function AcademicClassesPage() {
 
   const columns: ColumnDef<ApiClass>[] = React.useMemo(() => {
     const cols: ColumnDef<ApiClass>[] = [
-      { header: "#", accessorKey: "_id", render: (c: ApiClass) => <span className="text-slate-400 text-[13px]">—</span> },
+      { header: "#", accessorKey: "_id", render: (_c: ApiClass, i: number) => <span className="text-slate-500 font-medium text-[13px]">{i + 1}</span> },
       { header: "Class Name", accessorKey: "name", render: (c) => <span className="font-semibold text-slate-800 dark:text-slate-200">{c.name}</span> },
-      { header: "Class Code", accessorKey: "class_code", render: (c) => <span className="font-mono text-[12px]">{(c as any).class_code || "—"}</span> },
     ];
 
     if (enableSections) {
@@ -570,12 +569,14 @@ export default function AcademicClassesPage() {
               </div>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
               <div className="relative">
-                <select value={formStatus} onChange={(e) => setFormStatus(e.target.value as "Active" | "Inactive")}
+                <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)}
                   className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
+                  <option value="">Not assigned</option>
+                  {teachers.filter(t => t.is_active).map(t => (
+                    <option key={t._id} value={t._id}>{t.name}{t.employee_id ? ` (${t.employee_id})` : ""}</option>
+                  ))}
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
               </div>
@@ -586,6 +587,23 @@ export default function AcademicClassesPage() {
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Capacity</label>
               <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)} min={1} max={200}
                 className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setFormStatus(formStatus === "Active" ? "Inactive" : "Active")}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                    }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${formStatus === "Active" ? "translate-x-6" : "translate-x-1"
+                    }`} />
+                </button>
+                <span className={`text-[13px] font-semibold ${formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
+                  }`}>{formStatus}</span>
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
@@ -672,13 +690,18 @@ export default function AcademicClassesPage() {
             </div>
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
-              <div className="relative">
-                <select value={formStatus} onChange={(e) => setFormStatus(e.target.value as "Active" | "Inactive")}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setFormStatus(formStatus === "Active" ? "Inactive" : "Active")}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                    }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${formStatus === "Active" ? "translate-x-6" : "translate-x-1"
+                    }`} />
+                </button>
+                <span className={`text-[13px] font-semibold ${formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
+                  }`}>{formStatus}</span>
               </div>
             </div>
           </div>
@@ -688,8 +711,8 @@ export default function AcademicClassesPage() {
               <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)} min={1} max={200}
                 className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
-            {/* <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Class Teacher</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
               <div className="relative">
                 <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)}
                   className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
@@ -700,7 +723,7 @@ export default function AcademicClassesPage() {
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
               </div>
-            </div> */}
+            </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button type="button" onClick={() => { setIsEditOpen(false); resetForm(); }}

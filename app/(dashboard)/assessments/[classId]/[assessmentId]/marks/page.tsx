@@ -19,8 +19,8 @@ interface MarkRow {
   has_entry: boolean;
 }
 
-export default function MarksEntryPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params);
+export default function MarksEntryPage({ params }: { params: Promise<{ classId: string; assessmentId: string }> }) {
+  const { classId, assessmentId } = React.use(params);
   const router = useRouter();
   const [test, setTest] = useState<any>(null);
   const [rows, setRows] = useState<MarkRow[]>([]);
@@ -37,7 +37,7 @@ export default function MarksEntryPage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     const fetch_ = async () => {
       try {
-        const res = await fetch(`/api/assessments/${id}/marks`, { headers: getAuthHeaders() });
+        const res = await fetch(`/api/assessments/${assessmentId}/marks`, { headers: getAuthHeaders() });
         const data = await res.json();
         if (data.success) {
           setTest(data.data.test);
@@ -52,7 +52,7 @@ export default function MarksEntryPage({ params }: { params: Promise<{ id: strin
       }
     };
     fetch_();
-  }, [id]);
+  }, [assessmentId]);
 
   const updateMarks = (idx: number, value: string) => {
     const newRows = [...rows];
@@ -100,7 +100,7 @@ export default function MarksEntryPage({ params }: { params: Promise<{ id: strin
 
     setIsSaving(true);
     try {
-      const res = await fetch(`/api/assessments/${id}/marks`, {
+      const res = await fetch(`/api/assessments/${assessmentId}/marks`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({ entries }),
@@ -109,7 +109,7 @@ export default function MarksEntryPage({ params }: { params: Promise<{ id: strin
       if (data.success) {
         showToast("success", data.message || "Marks saved successfully!");
         // Refresh to get has_entry updated
-        const refresh = await fetch(`/api/assessments/${id}/marks`, { headers: getAuthHeaders() });
+        const refresh = await fetch(`/api/assessments/${assessmentId}/marks`, { headers: getAuthHeaders() });
         const refreshData = await refresh.json();
         if (refreshData.success) {
           setRows(refreshData.data.rows.map((r: any) => ({
@@ -139,7 +139,7 @@ export default function MarksEntryPage({ params }: { params: Promise<{ id: strin
       <div className="flex flex-col items-center justify-center py-32 text-center">
         <AlertTriangle className="w-12 h-12 text-slate-300 mb-4" />
         <p className="text-[14px] font-semibold text-slate-700 dark:text-slate-300">Test not found</p>
-        <Link href="/assessments" className="mt-4 text-[13px] text-primary hover:underline">← Back to Tests</Link>
+        <Link href={`/assessments/${classId}`} className="mt-4 text-[13px] text-primary hover:underline">← Back to Tests</Link>
       </div>
     );
   }

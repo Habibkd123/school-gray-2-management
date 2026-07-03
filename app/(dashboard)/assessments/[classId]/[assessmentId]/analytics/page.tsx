@@ -25,8 +25,8 @@ interface AnalyticsData {
   passing_marks: number;
 }
 
-export default function AnalyticsPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params);
+export default function AnalyticsPage({ params }: { params: Promise<{ classId: string; assessmentId: string }> }) {
+  const { classId, assessmentId } = React.use(params);
   const router = useRouter();
   const [testTitle, setTestTitle] = useState("");
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -36,8 +36,8 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
     const fetchData = async () => {
       try {
         const [analyticsRes, testRes] = await Promise.all([
-          fetch(`/api/assessments/${id}/analytics`, { headers: getAuthHeaders() }),
-          fetch(`/api/assessments/${id}`, { headers: getAuthHeaders() }),
+          fetch(`/api/assessments/${assessmentId}/analytics`, { headers: getAuthHeaders() }),
+          fetch(`/api/assessments/${assessmentId}`, { headers: getAuthHeaders() }),
         ]);
         const analyticsData = await analyticsRes.json();
         const testData = await testRes.json();
@@ -49,7 +49,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
       }
     };
     fetchData();
-  }, [id]);
+  }, [assessmentId]);
 
   if (isLoading) {
     return <div className="flex items-center justify-center py-32"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
@@ -72,7 +72,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
           <p className="text-[12px] text-slate-500 dark:text-slate-400">{testTitle}</p>
         </div>
         <div className="ml-auto flex gap-2">
-          <Link href={`/assessments/${id}/results`}
+          <Link href={`/assessments/${classId}/${assessmentId}/results`}
             className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-xl text-[12px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
             View Results
           </Link>
@@ -97,7 +97,7 @@ export default function AnalyticsPage({ params }: { params: Promise<{ id: string
           </div>
           <p className="text-[14px] font-semibold text-slate-700 dark:text-slate-300">No marks entered yet</p>
           <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-1">Analytics will appear once marks are entered for this test.</p>
-          <Link href={`/assessments/${id}/marks`}
+          <Link href={`/assessments/${classId}/${assessmentId}/marks`}
             className="mt-4 flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-xl text-[13px] font-semibold">
             <BookOpen className="w-4 h-4" /> Enter Marks
           </Link>
