@@ -38,7 +38,8 @@ import {
   MoreHorizontal,
   ChevronDown,
   ArrowUpDown,
-  Upload
+  Upload,
+  CheckSquare
 } from "lucide-react";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
 import { PaginationBar } from "@/app/components/ui/pagination-bar";
@@ -82,6 +83,7 @@ export default function StudentsPage() {
 
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
 
   // Debounce search input to limit API calls
   React.useEffect(() => {
@@ -102,7 +104,7 @@ export default function StudentsPage() {
       dateRange: selectedDateRange,
       sort: selectedSort,
       page,
-      limit: 10,
+      limit: 12,
       academic_year: academicYear,
     });
   }, [fetchStudents, debouncedSearch, classFilter, genderFilter, statusFilter, selectedDateRange, selectedSort, page, academicYear]);
@@ -162,6 +164,58 @@ export default function StudentsPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleBulkDelete = async () => {
+    if (confirm(`Are you sure you want to delete ${selectedIds.length} selected students?`)) {
+      let successCount = 0;
+      let failCount = 0;
+      for (const id of selectedIds) {
+        const res = await deleteStudentApi(id);
+        if (res.success) successCount++;
+        else failCount++;
+      }
+      alert(`Successfully deleted ${successCount} students.${failCount > 0 ? ` Failed to delete ${failCount} students.` : ""}`);
+      setSelectedIds([]);
+      setBulkSelectMode(false);
+      fetchStudents({
+        search: debouncedSearch,
+        classId: classFilter,
+        gender: genderFilter,
+        status: statusFilter,
+        dateRange: selectedDateRange,
+        sort: selectedSort,
+        page,
+        limit: 12,
+        academic_year: academicYear,
+      });
+    }
+  };
+
+  const handleBulkStatusChange = async (newStatus: boolean) => {
+    if (confirm(`Change status of ${selectedIds.length} selected students to ${newStatus ? "Active" : "Inactive"}?`)) {
+      let successCount = 0;
+      let failCount = 0;
+      for (const id of selectedIds) {
+        const res = await updateStudentApi(id, { is_active: newStatus });
+        if (res.success) successCount++;
+        else failCount++;
+      }
+      alert(`Successfully updated status for ${successCount} students.${failCount > 0 ? ` Failed for ${failCount} students.` : ""}`);
+      setSelectedIds([]);
+      setBulkSelectMode(false);
+      fetchStudents({
+        search: debouncedSearch,
+        classId: classFilter,
+        gender: genderFilter,
+        status: statusFilter,
+        dateRange: selectedDateRange,
+        sort: selectedSort,
+        page,
+        limit: 12,
+        academic_year: academicYear,
+      });
+    }
   };
 
   // Form states
@@ -272,7 +326,7 @@ export default function StudentsPage() {
     }));
   }, [students, classes]);
 
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = 12;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const columns: ColumnDef<typeof tableData[0]>[] = [
@@ -568,6 +622,21 @@ export default function StudentsPage() {
               )}
             </div>
 
+            <button
+              onClick={() => {
+                setBulkSelectMode(!bulkSelectMode);
+                setSelectedIds([]);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm ${
+                bulkSelectMode
+                  ? "bg-primary border-primary text-white"
+                  : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+              }`}
+            >
+              <CheckSquare className="w-4 h-4" />
+              <span>{bulkSelectMode ? "Cancel Select" : "Select"}</span>
+            </button>
+
             <div className="flex items-center border border-border rounded-lg bg-white dark:bg-slate-900 p-1">
               <button onClick={() => setViewMode("grid")} className={`p-1 rounded ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><LayoutGrid className="w-4 h-4" /></button>
               <button onClick={() => setViewMode("list")} className={`p-1 rounded ${viewMode === 'list' ? 'bg-primary text-white' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><List className="w-4 h-4" /></button>
@@ -614,7 +683,7 @@ export default function StudentsPage() {
           </>
         ) : (
           <div className="p-6 bg-slate-50/50 dark:bg-slate-900/20 min-h-[400px]">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
               {students.length === 0 ? (
                 <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400">
                   No students registered or matching filters.
@@ -625,6 +694,20 @@ export default function StudentsPage() {
                     {/* Top Row */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex flex-wrap items-center gap-2">
+                        {bulkSelectMode && (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(student._id)}
+                            onChange={() => {
+                              setSelectedIds(prev =>
+                                prev.includes(student._id)
+                                  ? prev.filter(id => id !== student._id)
+                                  : [...prev, student._id]
+                              );
+                            }}
+                            className="rounded border-slate-300 w-3.5 h-3.5 accent-primary cursor-pointer"
+                          />
+                        )}
                         <span className="text-[13px] font-bold text-primary">{student.displayId}</span>
                       </div>
                       <div className="flex flex-wrap items-center gap-2">
@@ -1135,7 +1218,7 @@ export default function StudentsPage() {
         userId={resetPassTarget?.userId}
         userName={resetPassTarget?.name || ""}
         userEmail={resetPassTarget?.email || ""}
-        onSuccess={() => fetchStudents({ search: debouncedSearch, classId: classFilter, gender: genderFilter, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 10, academic_year: academicYear })}
+        onSuccess={() => fetchStudents({ search: debouncedSearch, classId: classFilter, gender: genderFilter, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 12, academic_year: academicYear })}
       />
 
       <ConfirmModal
@@ -1165,6 +1248,56 @@ export default function StudentsPage() {
           }
         }}
       />
+
+      {/* Floating Bulk Actions Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-[60] backdrop-blur-md border border-slate-700/60 transition-all duration-300 animate-in slide-in-from-bottom-5">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-[14px] font-bold tracking-wide">{selectedIds.length} Selected</span>
+          </div>
+          
+          <div className="h-4 w-px bg-slate-700" />
+          
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
+            <button
+              onClick={() => handleBulkStatusChange(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+            >
+              <span>Activate</span>
+            </button>
+            <button
+              onClick={() => handleBulkStatusChange(false)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+            >
+              <span>Deactivate</span>
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete</span>
+            </button>
+          </div>
+          
+          <div className="h-4 w-px bg-slate-700" />
+          
+          <button
+            onClick={() => setSelectedIds([])}
+            className="text-[13px] text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
+          >
+            Clear
+          </button>
+        </div>
+      )}
     </div>
   );
 }

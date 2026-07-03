@@ -11,7 +11,7 @@ import {
   Search, Filter, ChevronDown, RefreshCw, Printer, Download,
   FileText, Plus, MoreVertical, Edit, Trash2, Loader2,
   LayoutGrid, List, ArrowUpDown, Calendar, Mail, Phone, Users,
-  ImageIcon, X
+  ImageIcon, X, CheckSquare
 } from "lucide-react";
 import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar";
 
@@ -74,6 +74,8 @@ export default function GuardiansPage() {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [selectedSort, setSelectedSort] = useState("Ascending");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
 
   // Date range
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
@@ -204,6 +206,74 @@ export default function GuardiansPage() {
     }
   };
 
+  const handleExport = () => {
+    const dataToExport = selectedIds.length > 0
+      ? filtered.filter(p => selectedIds.includes(p._id))
+      : filtered;
+
+    if (dataToExport.length === 0) {
+      alert("No parent records available to export.");
+      return;
+    }
+
+    const headers = ["Parent ID", "Name", "Email", "Phone", "Children", "Date Created"];
+    const rows = dataToExport.map(p => [
+      p._id.slice(-6).toUpperCase(),
+      p.name,
+      p.email || "",
+      p.phone || "",
+      (p.children || []).map(c => c.name).join(", "),
+      p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-GB") : ""
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + [headers.join(","), ...rows.map(e => e.map(val => `"${val.replace(/"/g, '""')}"`).join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `parents_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleBulkDelete = async () => {
+    if (confirm(`Are you sure you want to delete ${selectedIds.length} selected parents?`)) {
+      let successCount = 0;
+      let failCount = 0;
+      for (const id of selectedIds) {
+        try {
+          await deleteParent(id);
+          successCount++;
+        } catch {
+          failCount++;
+        }
+      }
+      alert(`Successfully deleted ${successCount} parents.${failCount > 0 ? ` Failed to delete ${failCount} parents.` : ""}`);
+      setSelectedIds([]);
+      setBulkSelectMode(false);
+    }
+  };
+
+  const handleBulkStatusChange = async (newStatus: boolean) => {
+    if (confirm(`Change status of ${selectedIds.length} selected parents to ${newStatus ? "Active" : "Inactive"}?`)) {
+      let successCount = 0;
+      let failCount = 0;
+      for (const id of selectedIds) {
+        try {
+          await updateParent(id, { is_active: newStatus });
+          successCount++;
+        } catch {
+          failCount++;
+        }
+      }
+      alert(`Successfully updated status for ${successCount} parents.${failCount > 0 ? ` Failed for ${failCount} parents.` : ""}`);
+      setSelectedIds([]);
+      setBulkSelectMode(false);
+    }
+  };
+
   // ── Filtered list ─────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     let list = parents.filter((p) => {
@@ -296,10 +366,9 @@ export default function GuardiansPage() {
           <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
             <Printer className="w-4 h-4" />
           </button>
-          <button className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
+          <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm cursor-pointer">
             <Download className="w-4 h-4" />
             <span>Export</span>
-            <ChevronDown className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
@@ -409,6 +478,21 @@ export default function GuardiansPage() {
               )}
             </div>
 
+            <button
+              onClick={() => {
+                setBulkSelectMode(!bulkSelectMode);
+                setSelectedIds([]);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm ${
+                bulkSelectMode
+                  ? "bg-primary border-primary text-white"
+                  : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+              }`}
+            >
+              <CheckSquare className="w-4 h-4" />
+              <span>{bulkSelectMode ? "Cancel Select" : "Select"}</span>
+            </button>
+
             {/* ── View Toggle ── */}
             <div className="flex items-center border border-border rounded-lg bg-white dark:bg-slate-900 p-1">
               <button onClick={() => setViewMode("list")} title="List view"
@@ -474,7 +558,22 @@ export default function GuardiansPage() {
               <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
                 <tr>
                   <th className="px-4 py-4 text-left w-10">
-                    <input type="checkbox" className="rounded border-slate-300 w-4 h-4 accent-primary" />
+                    <input
+                      type="checkbox"
+                      checked={listPag.paged.length > 0 && listPag.paged.every(p => selectedIds.includes(p._id))}
+                      onChange={() => {
+                        const allChecked = listPag.paged.length > 0 && listPag.paged.every(p => selectedIds.includes(p._id));
+                        if (allChecked) {
+                          setSelectedIds(prev => prev.filter(id => !listPag.paged.some(p => p._id === id)));
+                        } else {
+                          setSelectedIds(prev => {
+                            const toAdd = listPag.paged.filter(p => !prev.includes(p._id)).map(p => p._id);
+                            return [...prev, ...toAdd];
+                          });
+                        }
+                      }}
+                      className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
+                    />
                   </th>
                   <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">
                     <div className="flex items-center gap-1">ID <ArrowUpDown className="w-3 h-3 text-slate-400" /></div>
@@ -499,7 +598,18 @@ export default function GuardiansPage() {
                   return (
                     <tr key={parent._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                       <td className="px-4 py-4">
-                        <input type="checkbox" className="rounded border-slate-300 w-4 h-4 accent-primary" />
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(parent._id)}
+                          onChange={() => {
+                            setSelectedIds(prev =>
+                              prev.includes(parent._id)
+                                ? prev.filter(id => id !== parent._id)
+                                : [...prev, parent._id]
+                            );
+                          }}
+                          className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
+                        />
                       </td>
 
                       {/* Parent ID — amber, clickable → View Details */}
@@ -606,12 +716,28 @@ export default function GuardiansPage() {
 
                     {/* Card top row */}
                     <div className="flex items-center justify-between mb-4">
-                      <button
-                        onClick={() => router.push(`/guardians/${parent._id}`)}
-                        className="font-bold text-[13px] text-primary hover:underline"
-                      >
-                        {parent._id.slice(-6).toUpperCase()}
-                      </button>
+                      <div className="flex items-center gap-2">
+                        {bulkSelectMode && (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(parent._id)}
+                            onChange={() => {
+                              setSelectedIds(prev =>
+                                prev.includes(parent._id)
+                                  ? prev.filter(id => id !== parent._id)
+                                  : [...prev, parent._id]
+                              );
+                            }}
+                            className="rounded border-slate-300 w-3.5 h-3.5 accent-primary cursor-pointer"
+                          />
+                        )}
+                        <button
+                          onClick={() => router.push(`/guardians/${parent._id}`)}
+                          className="font-bold text-[13px] text-primary hover:underline font-mono"
+                        >
+                          {parent._id.slice(-6).toUpperCase()}
+                        </button>
+                      </div>
                       <div className="relative" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => setActiveDropdown(activeDropdown === parent._id ? null : parent._id)}
@@ -792,6 +918,55 @@ export default function GuardiansPage() {
             </div>
           </form>
         </Modal>
+      )}
+      {/* Floating Bulk Actions Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-[60] backdrop-blur-md border border-slate-700/60 transition-all duration-300 animate-in slide-in-from-bottom-5">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-[14px] font-bold tracking-wide">{selectedIds.length} Selected</span>
+          </div>
+          
+          <div className="h-4 w-px bg-slate-700" />
+          
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
+            <button
+              onClick={() => handleBulkStatusChange(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+            >
+              <span>Activate</span>
+            </button>
+            <button
+              onClick={() => handleBulkStatusChange(false)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+            >
+              <span>Deactivate</span>
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete</span>
+            </button>
+          </div>
+          
+          <div className="h-4 w-px bg-slate-700" />
+          
+          <button
+            onClick={() => setSelectedIds([])}
+            className="text-[13px] text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
+          >
+            Clear
+          </button>
+        </div>
       )}
     </div>
   );

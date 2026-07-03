@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
+import { getPersistedPageSize } from "@/app/components/ui/pagination-bar";
 
 // ─── Types ────────────────────────────────────────────────────────
 export interface ApiResult {
@@ -36,16 +37,37 @@ export function useResults(options?: { skip?: boolean }) {
   const [isLoading, setIsLoading] = useState(options?.skip ? false : true);
   const [error, setError] = useState<string | null>(null);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => getPersistedPageSize(25));
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  
+  const [activeFilters, setActiveFilters] = useState<{ exam_id?: string; student_id?: string; class_id?: string }>({});
+  const filtersRef = useRef<{ exam_id?: string; student_id?: string; class_id?: string }>({});
+
   // ─── Fetch results ──────────────────────────────────────────────
-  const fetchResults = useCallback(async (params?: { exam_id?: string; student_id?: string; class_id?: string }) => {
+  const fetchResults = useCallback(async (
+    params?: { exam_id?: string; student_id?: string; class_id?: string },
+    pNum = page,
+    pSize = pageSize
+  ) => {
     setIsLoading(true);
-    setResults([]);
     setError(null);
+
+    const finalParams = params !== undefined ? params : filtersRef.current;
+    if (params !== undefined) {
+      filtersRef.current = params;
+      setActiveFilters(params);
+    }
+
     try {
       const query = new URLSearchParams();
-      if (params?.exam_id) query.set("exam_id", params.exam_id);
-      if (params?.student_id) query.set("student_id", params.student_id);
-      if (params?.class_id) query.set("class_id", params.class_id);
+      if (finalParams?.exam_id) query.set("exam_id", finalParams.exam_id);
+      if (finalParams?.student_id) query.set("student_id", finalParams.student_id);
+      if (finalParams?.class_id) query.set("class_id", finalParams.class_id);
+      
+      query.set("page", pNum.toString());
+      query.set("limit", pSize.toString());
 
       const res = await fetch(`/api/results?${query.toString()}`, {
         headers: getAuthHeaders(),
@@ -53,19 +75,21 @@ export function useResults(options?: { skip?: boolean }) {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch results");
       setResults(data.data.results);
+      setTotal(data.data.total);
+      setTotalPages(data.data.totalPages);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load results");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [page, pageSize]);
 
   const authReady = useAuthReady();
   useEffect(() => {
     if (options?.skip) return;
     if (!authReady) return;
-    fetchResults();
-  }, [fetchResults, options?.skip, authReady]);
+    fetchResults(undefined, page, pageSize);
+  }, [fetchResults, page, pageSize, options?.skip, authReady]);
 
   // ─── Create result(s) ───────────────────────────────────────────
   const createResult = async (input: CreateResultInput | CreateResultInput[]): Promise<{ success: boolean; message: string }> => {
@@ -77,12 +101,26 @@ export function useResults(options?: { skip?: boolean }) {
       });
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to create" };
-      await fetchResults();
+      await fetchResults(undefined, page, pageSize);
       return { success: true, message: "Result saved successfully" };
     } catch {
       return { success: false, message: "Network error" };
     }
   };
 
-  return { results, isLoading, error, fetchResults, createResult };
+  return {
+    results,
+    isLoading,
+    error,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    total,
+    totalPages,
+    activeFilters,
+    setActiveFilters,
+    fetchResults,
+    createResult
+  };
 }

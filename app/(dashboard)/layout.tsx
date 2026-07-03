@@ -29,6 +29,7 @@ const ROUTE_MODULE_MAP: { prefix: string; module: PermissionModule }[] = [
   { prefix: "/leave", module: "leaves" },
   { prefix: "/homework", module: "homework" },
   { prefix: "/results", module: "results" },
+  { prefix: "/salary", module: "salary" },
   { prefix: "/assessments", module: "assessments" },
 ];
 

@@ -20,11 +20,37 @@ function applyCssVars(vars: Record<string, string>) {
   }
 }
 
+const _themeCache = new Map<string, Record<string, string>>();
+const _themePromises = new Map<string, Promise<Record<string, string> | null>>();
+
 async function fetchThemeEndpoint(endpoint: string, headers: HeadersInit = {}) {
-  const res = await fetch(endpoint, { headers, cache: "no-store" });
-  const json = await res.json();
-  if (!res.ok || !json.success) return null;
-  return json.data?.css_vars ?? null;
+  if (_themeCache.has(endpoint)) {
+    return _themeCache.get(endpoint)!;
+  }
+
+  if (_themePromises.has(endpoint)) {
+    return _themePromises.get(endpoint)!;
+  }
+
+  const promise = (async () => {
+    try {
+      const res = await fetch(endpoint, { headers, cache: "no-store" });
+      const json = await res.json();
+      if (!res.ok || !json.success) return null;
+      const cssVars = json.data?.css_vars ?? null;
+      if (cssVars) {
+        _themeCache.set(endpoint, cssVars);
+      }
+      return cssVars;
+    } catch {
+      return null;
+    } finally {
+      _themePromises.delete(endpoint);
+    }
+  })();
+
+  _themePromises.set(endpoint, promise);
+  return promise;
 }
 
 export function SchoolThemeProvider({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -202,6 +202,7 @@ export function useTeachers(options?: { skip?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [mutationVersion, setMutationVersion] = useState(_version);
   const authReady = useAuthReady();
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Subscribe to cache broadcasts so all instances stay in sync
   useEffect(() => {
@@ -234,7 +235,7 @@ export function useTeachers(options?: { skip?: boolean }) {
     let dateRange = "";
     let sort = "";
     let page = 1;
-    let limit = 10;
+    let limit = 12;
     let academic_year = "";
 
     const isObject = arg1 && typeof arg1 === "object";
@@ -246,7 +247,7 @@ export function useTeachers(options?: { skip?: boolean }) {
       dateRange = p.dateRange ?? "";
       sort = p.sort ?? "";
       page = p.page ?? 1;
-      limit = p.limit ?? 10;
+      limit = p.limit ?? 12;
       academic_year = p.academic_year ?? "";
     } else {
       search = (arg1 as string) ?? "";
@@ -264,6 +265,12 @@ export function useTeachers(options?: { skip?: boolean }) {
       return { teachers: _teachersCache!, total: _teachersCache!.length };
     }
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsLoading(true);
     setError(null);
     try {
@@ -278,6 +285,7 @@ export function useTeachers(options?: { skip?: boolean }) {
 
       const res = await fetch(`/api/teachers?${params.toString()}`, {
         headers: getAuthHeaders(),
+        signal: controller.signal,
       });
 
       const data = await res.json();
@@ -299,10 +307,15 @@ export function useTeachers(options?: { skip?: boolean }) {
         limit: data.data.limit ?? limit,
       };
     } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        return null;
+      }
       setError(err instanceof Error ? err.message : "Failed to load teachers");
       return null;
     } finally {
-      setIsLoading(false);
+      if (abortControllerRef.current === controller) {
+        setIsLoading(false);
+      }
     }
   }, []);
 

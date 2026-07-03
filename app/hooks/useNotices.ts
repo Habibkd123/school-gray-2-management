@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
+import { getPersistedPageSize } from "@/app/components/ui/pagination-bar";
 
 export interface ApiNotice {
   _id: string;
@@ -14,25 +15,37 @@ export interface ApiNotice {
   createdAt: string;
 }
 
-export function useNotices() {
+export function useNotices(options?: { initialPage?: number; initialPageSize?: number }) {
   const [notices, setNotices] = useState<ApiNotice[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchNotices = useCallback(async () => {
+  const [page, setPage] = useState(options?.initialPage ?? 1);
+  const [pageSize, setPageSize] = useState(() => getPersistedPageSize(options?.initialPageSize ?? 25));
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchNotices = useCallback(async (pNum = page, pSize = pageSize) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/notices", { headers: getAuthHeaders() });
+      const res = await fetch(`/api/notices?page=${pNum}&limit=${pSize}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      if (data.success) setNotices(data.data.notices);
+      if (data.success) {
+        setNotices(data.data.notices);
+        setTotal(data.data.total);
+        setTotalPages(data.data.totalPages);
+      }
     } catch (e) {
       console.error("useNotices fetch error", e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, pageSize]);
 
   const authReady = useAuthReady();
-  useEffect(() => { if (!authReady) return; fetchNotices(); }, [fetchNotices, authReady]);
+  useEffect(() => {
+    if (!authReady) return;
+    fetchNotices(page, pageSize);
+  }, [fetchNotices, page, pageSize, authReady]);
 
   const createNotice = useCallback(async (payload: Partial<ApiNotice>) => {
     const res = await fetch("/api/notices", {
@@ -41,9 +54,9 @@ export function useNotices() {
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (data.success) await fetchNotices();
+    if (data.success) await fetchNotices(page, pageSize);
     return data;
-  }, [fetchNotices]);
+  }, [fetchNotices, page, pageSize]);
 
   const updateNotice = useCallback(async (id: string, payload: Partial<ApiNotice>) => {
     const res = await fetch(`/api/notices/${id}`, {
@@ -52,9 +65,9 @@ export function useNotices() {
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (data.success) await fetchNotices();
+    if (data.success) await fetchNotices(page, pageSize);
     return data;
-  }, [fetchNotices]);
+  }, [fetchNotices, page, pageSize]);
 
   const deleteNotice = useCallback(async (id: string) => {
     const res = await fetch(`/api/notices/${id}`, {
@@ -62,9 +75,31 @@ export function useNotices() {
       headers: getAuthHeaders(),
     });
     const data = await res.json();
-    if (data.success) await fetchNotices();
+    if (data.success) {
+      setNotices((prev) => {
+        const nextList = prev.filter((n) => n._id !== id);
+        if (nextList.length === 0 && page > 1) {
+          setPage((p) => p - 1);
+        }
+        return nextList;
+      });
+      setTotal((t) => Math.max(0, t - 1));
+    }
     return data;
-  }, [fetchNotices]);
+  }, [page]);
 
-  return { notices, loading, fetchNotices, createNotice, updateNotice, deleteNotice };
+  return {
+    notices,
+    loading,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    total,
+    totalPages,
+    fetchNotices,
+    createNotice,
+    updateNotice,
+    deleteNotice
+  };
 }

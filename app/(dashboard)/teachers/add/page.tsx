@@ -382,6 +382,11 @@ function AddTeacherContent() {
   const [joinDate, setJoinDate] = useState("");
   const [status, setStatus] = useState<"Active" | "Inactive">("Active");
 
+  // ── Payroll Information ───────────────────────────────────────
+  const [basicSalary, setBasicSalary] = useState("");
+  const [contractType, setContractType] = useState("Regular");
+  const [epfNo, setEpfNo] = useState("");
+
   // ── Login Credentials Popup ───────────────────────────────────
   const [showCredentials, setShowCredentials] = useState(false);
   const [createdCredentials, setCreatedCredentials] = useState<{ loginId: string; password: string } | null>(null);
@@ -422,6 +427,9 @@ function AddTeacherContent() {
           setStatus(teacher.is_active ? "Active" : "Inactive");
           setAadhaarFrontUrl((teacher as any).aadhaar_front_url || "");
           setAadhaarBackUrl((teacher as any).aadhaar_back_url || "");
+          setBasicSalary(teacher.basic_salary != null ? teacher.basic_salary.toString() : "");
+          setContractType(teacher.contract_type || "Regular");
+          setEpfNo(teacher.epf_no || "");
         }
       }
     }
@@ -498,6 +506,9 @@ function AddTeacherContent() {
       is_active: status === "Active",
       aadhaar_front_url: aadhaarFrontUrl || undefined,
       aadhaar_back_url: aadhaarBackUrl || undefined,
+      basic_salary: basicSalary ? parseFloat(basicSalary) : undefined,
+      contract_type: contractType || undefined,
+      epf_no: epfNo || undefined,
     };
 
     if (editId) {
@@ -699,6 +710,26 @@ function AddTeacherContent() {
               value={status}
               onChange={e => setStatus(e.target.value as "Active" | "Inactive")}
               options={["Active", "Inactive"]}
+            />
+            <InputGroup
+              label="Contract Type"
+              type="select"
+              value={contractType}
+              onChange={e => setContractType(e.target.value)}
+              options={["Regular", "Contract", "Part Time"]}
+            />
+            <InputGroup
+              label="Basic Salary (₹)"
+              type="number"
+              placeholder="e.g. 25000"
+              value={basicSalary}
+              onChange={e => setBasicSalary(e.target.value)}
+            />
+            <InputGroup
+              label="EPF Number"
+              placeholder="e.g. EPF/12345/678"
+              value={epfNo}
+              onChange={e => setEpfNo(e.target.value)}
             />
           </div>
         </SectionCard>

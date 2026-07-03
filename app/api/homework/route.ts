@@ -7,6 +7,7 @@ import Student from "@/lib/models/Student";
 import Parent from "@/lib/models/Parent";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { paginateQuery } from "@/lib/utils/pagination";
 
 // GET: Fetch homeworks for the logged-in user's school
 export async function GET(req: NextRequest) {
@@ -100,16 +101,27 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const homeworks = await Homework.find(query)
-      .sort({ createdAt: -1 })
-      .populate("class_id", "name section")
-      .populate("subject_id", "name")
-      .populate("teacher_id", "name")
-      .lean();
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+    const limit = Math.max(1, parseInt(url.searchParams.get("limit") || "25"));
+
+    const { items: homeworks, total, totalPages } = await paginateQuery(
+      Homework,
+      query,
+      {
+        page,
+        limit,
+        sort: { createdAt: -1 },
+        populate: [
+          { path: "class_id", select: "name section" },
+          { path: "subject_id", select: "name" },
+          { path: "teacher_id", select: "name" }
+        ]
+      }
+    );
 
     return NextResponse.json({
       success: true,
-      data: homeworks,
+      data: { homeworks, total, page, totalPages, limit },
     });
   } catch (err: any) {
     return NextResponse.json(

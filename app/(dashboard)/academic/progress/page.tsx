@@ -105,7 +105,8 @@ export default function StudentProgressPage() {
       fetchStudents({ classId: selectedClassId });
       fetchResults({ class_id: selectedClassId });
     }
-  }, [selectedClassId, fetchStudents, fetchResults]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClassId]);
 
   const isLoading = classesLoading || studentsLoading || resultsLoading || examsLoading;
 

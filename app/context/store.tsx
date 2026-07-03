@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { getAuthHeaders } from "@/lib/utils/session";
 
 export type Role = "admin" | "teacher" | "student";
@@ -196,43 +196,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [isLoaded, activeRole, academicYear]);
 
   // Actions
-  const setRole = (role: Role) => setActiveRole(role);
+  const setRole = useCallback((role: Role) => setActiveRole(role), []);
+  const setAcademicYear = useCallback((year: string) => setAcademicYearState(year), []);
 
-  const addStudent = (student: Omit<Student, "id" | "joinedDate">) => {
+  const addStudent = useCallback((student: Omit<Student, "id" | "joinedDate">) => {
     const newStudent: Student = {
       ...student,
       id: `s${Date.now()}`,
       joinedDate: new Date().toISOString().split("T")[0]
     };
     setStudents((prev) => [...prev, newStudent]);
-  };
+  }, []);
 
-  const updateStudent = (updatedStudent: Student) => {
+  const updateStudent = useCallback((updatedStudent: Student) => {
     setStudents((prev) => prev.map((s) => (s.id === updatedStudent.id ? updatedStudent : s)));
-  };
+  }, []);
 
-  const deleteStudent = (id: string) => {
+  const deleteStudent = useCallback((id: string) => {
     setStudents((prev) => prev.filter((s) => s.id !== id));
-  };
+  }, []);
 
-  const addTeacher = (teacher: Omit<Teacher, "id" | "joinedDate">) => {
+  const addTeacher = useCallback((teacher: Omit<Teacher, "id" | "joinedDate">) => {
     const newTeacher: Teacher = {
       ...teacher,
       id: `t${Date.now()}`,
       joinedDate: new Date().toISOString().split("T")[0]
     };
     setTeachers((prev) => [...prev, newTeacher]);
-  };
+  }, []);
 
-  const updateTeacher = (updatedTeacher: Teacher) => {
+  const updateTeacher = useCallback((updatedTeacher: Teacher) => {
     setTeachers((prev) => prev.map((t) => (t.id === updatedTeacher.id ? updatedTeacher : t)));
-  };
+  }, []);
 
-  const deleteTeacher = (id: string) => {
+  const deleteTeacher = useCallback((id: string) => {
     setTeachers((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, []);
 
-  const markAttendance = (date: string, records: { studentId: string; status: "Present" | "Absent" | "Late" }[]) => {
+  const markAttendance = useCallback((date: string, records: { studentId: string; status: "Present" | "Absent" | "Late" }[]) => {
     setAttendance((prev) => {
       const updated = { ...prev };
       records.forEach((r) => {
@@ -243,9 +244,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       });
       return updated;
     });
-  };
+  }, []);
 
-  const addHomework = (hw: Omit<Homework, "id" | "assignedDate" | "submissions">) => {
+  const addHomework = useCallback((hw: Omit<Homework, "id" | "assignedDate" | "submissions">) => {
     const newHw: Homework = {
       ...hw,
       id: `h${Date.now()}`,
@@ -253,9 +254,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       submissions: []
     };
     setHomework((prev) => [newHw, ...prev]);
-  };
+  }, []);
 
-  const submitHomework = (homeworkId: string, studentId: string, content: string) => {
+  const submitHomework = useCallback((homeworkId: string, studentId: string, content: string) => {
     setHomework((prev) =>
       prev.map((hw) => {
         if (hw.id !== homeworkId) return hw;
@@ -274,9 +275,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return { ...hw, submissions };
       })
     );
-  };
+  }, []);
 
-  const gradeHomework = (homeworkId: string, studentId: string, grade: string, feedback: string) => {
+  const gradeHomework = useCallback((homeworkId: string, studentId: string, grade: string, feedback: string) => {
     setHomework((prev) =>
       prev.map((hw) => {
         if (hw.id !== homeworkId) return hw;
@@ -289,18 +290,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return { ...hw, submissions };
       })
     );
-  };
+  }, []);
 
-  const addGrade = (grade: Omit<Grade, "id" | "date">) => {
+  const addGrade = useCallback((grade: Omit<Grade, "id" | "date">) => {
     const newGrade: Grade = {
       ...grade,
       id: `g${Date.now()}`,
       date: new Date().toISOString().split("T")[0]
     };
     setGrades((prev) => [...prev, newGrade]);
-  };
+  }, []);
 
-  const payFee = (feeId: string) => {
+  const payFee = useCallback((feeId: string) => {
     setFees((prev) =>
       prev.map((f) =>
         f.id === feeId
@@ -308,18 +309,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           : f
       )
     );
-  };
+  }, []);
 
-  const addFeeInvoice = (invoice: Omit<FeeInvoice, "id" | "status">) => {
+  const addFeeInvoice = useCallback((invoice: Omit<FeeInvoice, "id" | "status">) => {
     const newInvoice: FeeInvoice = {
       ...invoice,
       id: `f${Date.now()}`,
       status: "Unpaid"
     };
     setFees((prev) => [newInvoice, ...prev]);
-  };
+  }, []);
 
-  const addNotice = (notice: Omit<Notice, "id" | "date" | "author">) => {
+  const addNotice = useCallback((notice: Omit<Notice, "id" | "date" | "author">) => {
     const newNotice: Notice = {
       ...notice,
       id: `n${Date.now()}`,
@@ -327,44 +328,72 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       author: activeRole === "admin" ? "Administration" : "Principal Office"
     };
     setNotices((prev) => [newNotice, ...prev]);
-  };
+  }, [activeRole]);
 
-  const deleteNotice = (id: string) => {
+  const deleteNotice = useCallback((id: string) => {
     setNotices((prev) => prev.filter((n) => n.id !== id));
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    activeRole,
+    academicYear,
+    students,
+    teachers,
+    classes,
+    attendance,
+    homework,
+    grades,
+    fees,
+    notices,
+    setRole,
+    setAcademicYear,
+    addStudent,
+    updateStudent,
+    deleteStudent,
+    addTeacher,
+    updateTeacher,
+    deleteTeacher,
+    markAttendance,
+    addHomework,
+    submitHomework,
+    gradeHomework,
+    addGrade,
+    payFee,
+    addFeeInvoice,
+    addNotice,
+    deleteNotice
+  }), [
+    activeRole,
+    academicYear,
+    students,
+    teachers,
+    classes,
+    attendance,
+    homework,
+    grades,
+    fees,
+    notices,
+    setRole,
+    setAcademicYear,
+    addStudent,
+    updateStudent,
+    deleteStudent,
+    addTeacher,
+    updateTeacher,
+    deleteTeacher,
+    markAttendance,
+    addHomework,
+    submitHomework,
+    gradeHomework,
+    addGrade,
+    payFee,
+    addFeeInvoice,
+    addNotice,
+    deleteNotice
+  ]);
 
   return (
-    <AppContext.Provider
-      value={{
-        activeRole,
-        academicYear,
-        students,
-        teachers,
-        classes,
-        attendance,
-        homework,
-        grades,
-        fees,
-        notices,
-        setRole,
-        setAcademicYear: setAcademicYearState,
-        addStudent,
-        updateStudent,
-        deleteStudent,
-        addTeacher,
-        updateTeacher,
-        deleteTeacher,
-        markAttendance,
-        addHomework,
-        submitHomework,
-        gradeHomework,
-        addGrade,
-        payFee,
-        addFeeInvoice,
-        addNotice,
-        deleteNotice
-      }}
-    >
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   );

@@ -34,7 +34,8 @@ import {
   Lock,
   ToggleRight,
   FileText,
-  Upload
+  Upload,
+  CheckSquare
 } from "lucide-react";
 
 function getAvatar(name: string) {
@@ -50,6 +51,7 @@ export default function TeachersPage() {
     isLoading,
     error,
     deleteTeacher: deleteTeacherApi,
+    updateTeacher,
     fetchTeachers
   } = useTeachers({ skip: true });
 
@@ -72,6 +74,7 @@ export default function TeachersPage() {
   const [selectedSort, setSelectedSort] = useState("Ascending");
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const activeRole = "admin" as "admin" | "teacher" | "student";
 
   // Debounce search input to limit API calls
@@ -91,7 +94,7 @@ export default function TeachersPage() {
       dateRange: selectedDateRange,
       sort: selectedSort,
       page,
-      limit: 10,
+      limit: 12,
       academic_year: academicYear,
     });
   }, [fetchTeachers, debouncedSearch, statusFilter, selectedDateRange, selectedSort, page, academicYear]);
@@ -117,6 +120,54 @@ export default function TeachersPage() {
       if (!res.success) {
         alert(res.message || "Failed to delete teacher");
       }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (confirm(`Are you sure you want to delete ${selectedIds.length} selected teachers?`)) {
+      let successCount = 0;
+      let failCount = 0;
+      for (const id of selectedIds) {
+        const res = await deleteTeacherApi(id);
+        if (res.success) successCount++;
+        else failCount++;
+      }
+      alert(`Successfully deleted ${successCount} teachers.${failCount > 0 ? ` Failed to delete ${failCount} teachers.` : ""}`);
+      setSelectedIds([]);
+      setBulkSelectMode(false);
+      fetchTeachers({
+        search: debouncedSearch,
+        status: statusFilter,
+        dateRange: selectedDateRange,
+        sort: selectedSort,
+        page,
+        limit: 12,
+        academic_year: academicYear,
+      });
+    }
+  };
+
+  const handleBulkStatusChange = async (newStatus: boolean) => {
+    if (confirm(`Change status of ${selectedIds.length} selected teachers to ${newStatus ? "Active" : "Inactive"}?`)) {
+      let successCount = 0;
+      let failCount = 0;
+      for (const id of selectedIds) {
+        const res = await updateTeacher(id, { is_active: newStatus });
+        if (res.success) successCount++;
+        else failCount++;
+      }
+      alert(`Successfully updated status for ${successCount} teachers.${failCount > 0 ? ` Failed for ${failCount} teachers.` : ""}`);
+      setSelectedIds([]);
+      setBulkSelectMode(false);
+      fetchTeachers({
+        search: debouncedSearch,
+        status: statusFilter,
+        dateRange: selectedDateRange,
+        sort: selectedSort,
+        page,
+        limit: 12,
+        academic_year: academicYear,
+      });
     }
   };
 
@@ -188,7 +239,7 @@ export default function TeachersPage() {
     document.body.removeChild(link);
   };
 
-  const PAGE_SIZE = 10;
+  const PAGE_SIZE = 12;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const columns: ColumnDef<typeof tableData[0]>[] = [
@@ -408,6 +459,21 @@ export default function TeachersPage() {
               )}
             </div>
 
+            <button
+              onClick={() => {
+                setBulkSelectMode(!bulkSelectMode);
+                setSelectedIds([]);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm ${
+                bulkSelectMode
+                  ? "bg-primary border-primary text-white"
+                  : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+              }`}
+            >
+              <CheckSquare className="w-4 h-4" />
+              <span>{bulkSelectMode ? "Cancel Select" : "Select"}</span>
+            </button>
+
             <div className="flex items-center border border-border rounded-lg p-0.5 bg-slate-50 dark:bg-slate-800/50">
               <button onClick={() => setViewMode("list")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "list" ? "bg-primary text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><List className="w-4 h-4" /></button>
               <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "grid" ? "bg-primary text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><Grid className="w-4 h-4" /></button>
@@ -514,7 +580,7 @@ export default function TeachersPage() {
           </>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
               {teachers.length === 0 ? (
                 <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400">
                   No faculty records matching filter.
@@ -531,18 +597,20 @@ export default function TeachersPage() {
                       {/* Top row: ID, Checkbox, Status, Actions */}
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex flex-wrap items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.includes(teacher._id)}
-                            onChange={() => {
-                              setSelectedIds(prev =>
-                                prev.includes(teacher._id)
-                                  ? prev.filter(id => id !== teacher._id)
-                                  : [...prev, teacher._id]
-                              );
-                            }}
-                            className="rounded border-slate-300 w-3.5 h-3.5 accent-primary cursor-pointer"
-                          />
+                          {bulkSelectMode && (
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(teacher._id)}
+                              onChange={() => {
+                                setSelectedIds(prev =>
+                                  prev.includes(teacher._id)
+                                    ? prev.filter(id => id !== teacher._id)
+                                    : [...prev, teacher._id]
+                                );
+                              }}
+                              className="rounded border-slate-300 w-3.5 h-3.5 accent-primary cursor-pointer"
+                            />
+                          )}
                           <span className="text-primary font-semibold text-[13px] hover:underline cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>{displayId}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -652,8 +720,58 @@ export default function TeachersPage() {
         userId={resetPassTarget?.userId}
         userName={resetPassTarget?.name || ""}
         userEmail={resetPassTarget?.email || ""}
-        onSuccess={() => fetchTeachers({ search: debouncedSearch, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 10, academic_year: academicYear })}
+        onSuccess={() => fetchTeachers({ search: debouncedSearch, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 12, academic_year: academicYear })}
       />
+
+      {/* Floating Bulk Actions Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-[60] backdrop-blur-md border border-slate-700/60 transition-all duration-300 animate-in slide-in-from-bottom-5">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <span className="text-[14px] font-bold tracking-wide">{selectedIds.length} Selected</span>
+          </div>
+          
+          <div className="h-4 w-px bg-slate-700" />
+          
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleExport}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
+            <button
+              onClick={() => handleBulkStatusChange(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+            >
+              <span>Activate</span>
+            </button>
+            <button
+              onClick={() => handleBulkStatusChange(false)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+            >
+              <span>Deactivate</span>
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete</span>
+            </button>
+          </div>
+          
+          <div className="h-4 w-px bg-slate-700" />
+          
+          <button
+            onClick={() => setSelectedIds([])}
+            className="text-[13px] text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
+          >
+            Clear
+          </button>
+        </div>
+      )}
     </div>
   );
 }

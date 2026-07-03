@@ -56,5 +56,18 @@ export function useSyllabus() {
     } catch { return { success: false, message: "Network error" }; }
   };
 
-  return { syllabus, isLoading, error, fetchSyllabus, saveSyllabus };
+  const deleteSyllabus = async (id: string) => {
+    try {
+      const res = await fetch(`/api/syllabus/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) return { success: false, message: data.message || "Failed" };
+      setSyllabus(null);
+      return { success: true, message: "Syllabus deleted successfully" };
+    } catch { return { success: false, message: "Network error" }; }
+  };
+
+  return { syllabus, isLoading, error, fetchSyllabus, saveSyllabus, deleteSyllabus };
 }

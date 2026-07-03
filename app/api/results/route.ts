@@ -4,6 +4,7 @@ import { Result, Exam } from "@/lib/models/index";
 import Student from "@/lib/models/Student";
 import Parent from "@/lib/models/Parent";
 import { requireAuth } from "@/lib/utils/auth";
+import { paginateQuery } from "@/lib/utils/pagination";
 
 export async function GET(req: NextRequest) {
   const { schoolId, role, userId, error } = requireAuth(req, ["school_admin", "teacher", "student", "parent", "super_admin"]);
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
 
     if (studentId) {
       if (targetStudentIds && !targetStudentIds.includes(studentId)) {
-        return NextResponse.json({ success: true, data: { results: [] } });
+        return NextResponse.json({ success: true, data: { results: [], total: 0, page: 1, totalPages: 1, limit: 25 } });
       }
       query.student_id = studentId;
     } else if (targetStudentIds) {
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
     if (role === "student") {
       const studentProfile = await Student.findOne({ school_id: schoolId, user_id: userId }).select("_id").lean();
       if (!studentProfile) {
-        return NextResponse.json({ success: true, data: { results: [] } });
+        return NextResponse.json({ success: true, data: { results: [], total: 0, page: 1, totalPages: 1, limit: 25 } });
       }
       if (studentId && studentId !== studentProfile._id.toString()) {
         return NextResponse.json({ success: false, message: "Access denied to student record" }, { status: 403 });
@@ -47,7 +48,7 @@ export async function GET(req: NextRequest) {
     } else if (role === "parent") {
       const parent = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
       if (!parent) {
-        return NextResponse.json({ success: true, data: { results: [] } });
+        return NextResponse.json({ success: true, data: { results: [], total: 0, page: 1, totalPages: 1, limit: 25 } });
       }
       const children = await Student.find({ school_id: schoolId, parent_id: parent._id }).select("_id").lean();
       const childIds = children.map((c: any) => c._id.toString());
@@ -68,13 +69,25 @@ export async function GET(req: NextRequest) {
       query.exam_id = { $in: examIds };
     }
 
-    const results = await Result.find(query)
-      .populate("student_id", "name roll_no")
-      .populate("subject_id", "name code")
-      .populate("exam_id", "name type")
-      .lean();
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+    const limit = Math.max(1, parseInt(url.searchParams.get("limit") || "25"));
 
-    return NextResponse.json({ success: true, data: { results } });
+    const { items: results, total, totalPages } = await paginateQuery(
+      Result,
+      query,
+      {
+        page,
+        limit,
+        sort: { createdAt: -1 },
+        populate: [
+          { path: "student_id", select: "name roll_no" },
+          { path: "subject_id", select: "name code" },
+          { path: "exam_id", select: "name type" }
+        ]
+      }
+    );
+
+    return NextResponse.json({ success: true, data: { results, total, page, totalPages, limit } });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

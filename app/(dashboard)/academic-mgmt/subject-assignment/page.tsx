@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Plus, Search, RefreshCcw, Trash2, Loader2, AlertCircle,
   Link2, ChevronDown, Filter, BookOpen, Layers, GraduationCap, Edit2,
-  Grid, List, ChevronRight
+  Grid, List, ChevronRight, MoreVertical
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { useSubjectAssignment, PopulatedAssignment } from "@/app/hooks/useSubjectAssignment";
@@ -18,12 +19,35 @@ import { useAppState } from "@/app/context/store";
 const ACADEMIC_YEARS = ["2026-2027"];
 
 export default function SubjectAssignmentPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
   const { academicYear } = useAppState();
   const { enableStreams } = useAcademicConfig();
 
   const { assignments, isLoading, error, fetchAssignments, createAssignment, updateAssignment, deleteAssignment } = useSubjectAssignment();
+  const [activeDropdownCardKey, setActiveDropdownCardKey] = useState<string | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<any>(null);
+  const [isEditingGroup, setIsEditingGroup] = useState(false);
+  const [initialSelectedSubjectIds, setInitialSelectedSubjectIds] = useState<string[]>([]);
+  const [editingGroup, setEditingGroup] = useState<any>(null);
+
+  const handleBulkDelete = async () => {
+    if (!groupToDelete) return;
+    setSubmitting(true);
+    try {
+      await Promise.all(
+        groupToDelete.subjects.map((sub: any) => deleteAssignment(sub.assignmentId))
+      );
+    } catch (e) {
+      console.error(e);
+    }
+    setSubmitting(false);
+    setIsBulkDeleteOpen(false);
+    setGroupToDelete(null);
+    doFetch();
+  };
   const { subjects: subjectList } = useSubjectMaster();
   const { streams } = useStreams({ skip: !enableStreams });
   const { classes } = useClasses({ filterByYear: true });
@@ -147,6 +171,9 @@ export default function SubjectAssignmentPage() {
     setSelectedSubjectIds([]);
     setSubjectSearch("");
     setFormError("");
+    setIsEditingGroup(false);
+    setInitialSelectedSubjectIds([]);
+    setEditingGroup(null);
   };
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -163,22 +190,59 @@ export default function SubjectAssignmentPage() {
     const selectedClass = classes.find(c => c._id === formClassId);
     const isHigherClass = selectedClass ? (selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12")) : false;
 
-    setSubmitting(true);
-    setFormError("");
-    const res = await createAssignment({
-      academic_year: formYear,
-      class_id: formClassId,
-      stream_id: enableStreams && isHigherClass && formStreamId ? formStreamId : undefined,
-      subject_master_ids: selectedSubjectIds,
-    });
-    setSubmitting(false);
+    if (isEditingGroup) {
+      const subjectsToDelete = initialSelectedSubjectIds.filter(id => !selectedSubjectIds.includes(id));
+      const subjectsToAdd = selectedSubjectIds.filter(id => !initialSelectedSubjectIds.includes(id));
+      const assignmentsToDelete = subjectsToDelete.map(subjId => {
+        const sub = editingGroup?.subjects?.find((s: any) => s.subjectId === subjId);
+        return sub?.assignmentId;
+      }).filter(Boolean);
 
-    if (res.success) {
-      setIsAddOpen(false);
-      resetForm();
-      doFetch();
+      setSubmitting(true);
+      setFormError("");
+      try {
+        if (assignmentsToDelete.length > 0) {
+          await Promise.all(assignmentsToDelete.map(id => deleteAssignment(id)));
+        }
+        if (subjectsToAdd.length > 0) {
+          const res = await createAssignment({
+            academic_year: formYear,
+            class_id: formClassId,
+            stream_id: enableStreams && isHigherClass && formStreamId ? formStreamId : undefined,
+            subject_master_ids: subjectsToAdd,
+          });
+          if (!res.success) {
+            setFormError(res.message);
+            setSubmitting(false);
+            return;
+          }
+        }
+        setIsAddOpen(false);
+        resetForm();
+        doFetch();
+      } catch (err: any) {
+        setFormError(err.message || "Failed to update assignments");
+      } finally {
+        setSubmitting(false);
+      }
     } else {
-      setFormError(res.message);
+      setSubmitting(true);
+      setFormError("");
+      const res = await createAssignment({
+        academic_year: formYear,
+        class_id: formClassId,
+        stream_id: enableStreams && isHigherClass && formStreamId ? formStreamId : undefined,
+        subject_master_ids: selectedSubjectIds,
+      });
+      setSubmitting(false);
+
+      if (res.success) {
+        setIsAddOpen(false);
+        resetForm();
+        doFetch();
+      } else {
+        setFormError(res.message);
+      }
     }
   };
 
@@ -432,9 +496,73 @@ export default function SubjectAssignmentPage() {
                       )}
                     </div>
                   </div>
-                  <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-bold text-slate-600 dark:text-slate-300">
-                    {group.academic_year}
-                  </span>
+                  <div className="flex items-center gap-2 relative">
+                    <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-bold text-slate-600 dark:text-slate-300">
+                      {group.academic_year}
+                    </span>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const cardKey = `${group.class_id}-${group.stream_id || ""}-${group.academic_year}`;
+                          setActiveDropdownCardKey(activeDropdownCardKey === cardKey ? null : cardKey);
+                        }}
+                        className="p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+
+                      {activeDropdownCardKey === `${group.class_id}-${group.stream_id || ""}-${group.academic_year}` && (
+                        <>
+                          <div className="fixed inset-0 z-45" onClick={(e) => { e.stopPropagation(); setActiveDropdownCardKey(null); }} />
+                          <div className="absolute right-0 top-7 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left font-medium">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                router.push(`/academic-mgmt/subject-assignment/details?classId=${group.class_id}&streamId=${group.stream_id || ""}&year=${group.academic_year}`);
+                                setActiveDropdownCardKey(null);
+                              }}
+                              className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
+                            >
+                              👁 View Details
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormClassId(group.class_id || "");
+                                setFormYear(group.academic_year);
+                                setFormStreamId(group.stream_id || "");
+                                const currentSubIds = group.subjects.map((s: any) => s.subjectId);
+                                setSelectedSubjectIds(currentSubIds);
+                                setInitialSelectedSubjectIds(currentSubIds);
+                                setEditingGroup(group);
+                                setIsEditingGroup(true);
+                                setIsAddOpen(true);
+                                setActiveDropdownCardKey(null);
+                              }}
+                              className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
+                            >
+                              ✏ Edit
+                            </button>
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setGroupToDelete(group);
+                                  setIsBulkDeleteOpen(true);
+                                  setActiveDropdownCardKey(null);
+                                }}
+                                className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 transition-colors cursor-pointer"
+                              >
+                                🗑 Delete
+                              </button>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Assigned subjects checklist */}
@@ -508,9 +636,76 @@ export default function SubjectAssignmentPage() {
                     <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-850 px-2.5 py-0.5 rounded">
                       {group.subjects.length} Subjects
                     </span>
-                    <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-bold text-slate-600 dark:text-slate-300">
-                      {group.academic_year}
-                    </span>
+                    <div className="flex items-center gap-2 relative">
+                      <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-bold text-slate-600 dark:text-slate-300">
+                        {group.academic_year}
+                      </span>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const cardKey = `list-${group.class_id}-${group.stream_id || ""}-${group.academic_year}`;
+                            setActiveDropdownCardKey(activeDropdownCardKey === cardKey ? null : cardKey);
+                          }}
+                          className="p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+
+                        {activeDropdownCardKey === `list-${group.class_id}-${group.stream_id || ""}-${group.academic_year}` && (
+                          <>
+                            <div className="fixed inset-0 z-45" onClick={(e) => { e.stopPropagation(); setActiveDropdownCardKey(null); }} />
+                            <div className="absolute right-0 top-7 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left font-medium">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(`/academic-mgmt/subject-assignment/details?classId=${group.class_id}&streamId=${group.stream_id || ""}&year=${group.academic_year}`);
+                                  setActiveDropdownCardKey(null);
+                                }}
+                                className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
+                              >
+                                👁 View Details
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFormClassId(group.class_id || "");
+                                  setFormYear(group.academic_year);
+                                  setFormStreamId(group.stream_id || "");
+                                  const currentSubIds = group.subjects.map((s: any) => s.subjectId);
+                                  setSelectedSubjectIds(currentSubIds);
+                                  setInitialSelectedSubjectIds(currentSubIds);
+                                  setEditingGroup(group);
+                                  setIsEditingGroup(true);
+                                  setIsAddOpen(true);
+                                  setActiveDropdownCardKey(null);
+                                }}
+                                className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
+                              >
+                                ✏ Edit
+                              </button>
+                              {isAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setGroupToDelete(group);
+                                    setIsBulkDeleteOpen(true);
+                                    setActiveDropdownCardKey(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 transition-colors cursor-pointer"
+                                >
+                                  🗑 Delete
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
                     <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`} />
                   </div>
                 </button>
@@ -565,7 +760,7 @@ export default function SubjectAssignmentPage() {
       )}
 
       {/* Add Bulk Assignment Modal */}
-      <Modal isOpen={isAddOpen} onClose={() => { setIsAddOpen(false); resetForm(); }} title="Assign Subjects (Bulk)">
+      <Modal isOpen={isAddOpen} onClose={() => { setIsAddOpen(false); resetForm(); }} title={isEditingGroup ? "Edit Assigned Subjects" : "Assign Subjects (Bulk)"}>
         <form onSubmit={handleAdd} className="space-y-5 text-left">
           {formError && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[13px] font-medium">
@@ -577,8 +772,8 @@ export default function SubjectAssignmentPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Academic Year <span className="text-red-500">*</span></label>
               <div className="relative">
-                <select value={formYear} onChange={(e) => setFormYear(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
+                <select value={formYear} onChange={(e) => setFormYear(e.target.value)} disabled={isEditingGroup}
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500">
                   <option value="">Select Year</option>
                   {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
@@ -589,8 +784,8 @@ export default function SubjectAssignmentPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Class <span className="text-red-500">*</span></label>
               <div className="relative">
-                <select value={formClassId} onChange={(e) => setFormClassId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
+                <select value={formClassId} onChange={(e) => setFormClassId(e.target.value)} disabled={isEditingGroup}
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500">
                   <option value="">Select Class</option>
                   {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
                 </select>
@@ -605,8 +800,8 @@ export default function SubjectAssignmentPage() {
                 Stream <span className="text-slate-400 text-[11px]">(optional — leave blank for all streams)</span>
               </label>
               <div className="relative">
-                <select value={formStreamId} onChange={(e) => setFormStreamId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
+                <select value={formStreamId} onChange={(e) => setFormStreamId(e.target.value)} disabled={isEditingGroup}
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500">
                   <option value="">No specific stream</option>
                   {filteredStreams.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
                 </select>
@@ -639,7 +834,7 @@ export default function SubjectAssignmentPage() {
 
             {(() => {
               // Already assigned subject IDs for the selected class (from existing data)
-              const alreadyAssignedIds = new Set(
+              const alreadyAssignedIds = isEditingGroup ? new Set() : new Set(
                 assignments
                   .filter(a => {
                     const aClassId = typeof a.class_id === "object" ? a.class_id?._id : a.class_id;
@@ -665,7 +860,7 @@ export default function SubjectAssignmentPage() {
                   )}
                   {availableSubjects.length > 0 && (
                     <div className="max-h-[200px] overflow-y-auto">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2 bg-[#F8FAFC] dark:bg-slate-800/50 border-b border-border">Available to assign</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2 bg-[#F8FAFC] dark:bg-slate-800/50 border-b border-border">{isEditingGroup ? "Assigned & Available Subjects" : "Available to assign"}</p>
                       {availableSubjects.map(sub => {
                         const isChecked = selectedSubjectIds.includes(sub._id);
                         return (
@@ -700,7 +895,7 @@ export default function SubjectAssignmentPage() {
                           <div className="flex items-center justify-between flex-1 min-w-0">
                             <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 truncate">{sub.name}</span>
                             {sub.subject_code && (
-                              <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-2 shrink-0">{sub.subject_code}</span>
+                                <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-2 shrink-0">{sub.subject_code}</span>
                             )}
                           </div>
                         </div>
@@ -717,7 +912,7 @@ export default function SubjectAssignmentPage() {
               className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg cursor-pointer">Cancel</button>
             <button type="submit" disabled={submitting}
               className="px-5 py-2.5 bg-primary hover:bg-[#d68600] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2 cursor-pointer">
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Bulk Assign
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />} {isEditingGroup ? "Save Changes" : "Bulk Assign"}
             </button>
           </div>
         </form>
@@ -859,6 +1054,26 @@ export default function SubjectAssignmentPage() {
             <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg cursor-pointer">Cancel</button>
             <button onClick={handleDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm disabled:opacity-60 flex items-center gap-2 cursor-pointer">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Remove
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Bulk Delete Modal */}
+      <Modal isOpen={isBulkDeleteOpen} onClose={() => { setIsBulkDeleteOpen(false); setGroupToDelete(null); }} title="Remove Class Subject Assignments">
+        <div className="space-y-5 text-left">
+          <p className="text-[14px] text-slate-600 dark:text-slate-300">
+            Are you sure you want to remove all assigned subjects from{" "}
+            <span className="font-bold text-foreground dark:text-white">
+              {groupToDelete?.className}{groupToDelete?.section ? ` - ${groupToDelete.section}` : ""}
+            </span> for the academic year <span className="font-bold text-primary">{groupToDelete?.academic_year}</span>?
+            <br /><br />
+            This will delete all {groupToDelete?.subjects?.length} subject assignment records.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button onClick={() => { setIsBulkDeleteOpen(false); setGroupToDelete(null); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-[14px] font-bold rounded-lg cursor-pointer">Cancel</button>
+            <button onClick={handleBulkDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm disabled:opacity-60 flex items-center gap-2 cursor-pointer">
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Remove All
             </button>
           </div>
         </div>

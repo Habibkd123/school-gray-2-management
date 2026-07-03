@@ -478,8 +478,7 @@ export default function TeacherDetailsPage() {
             <TabItem icon={<User className="w-3.5 h-3.5" />} label="Teacher Details" active={activeMainTab === "Teacher Details"} onClick={() => setActiveMainTab("Teacher Details")} />
             <TabItem icon={<Calendar className="w-3.5 h-3.5" />} label="Routine" active={activeMainTab === "Routine"} onClick={() => setActiveMainTab("Routine")} />
             <TabItem icon={<Clock className="w-3.5 h-3.5" />} label="Leave & Attendance" active={activeMainTab === "Leave & Attendance"} onClick={() => setActiveMainTab("Leave & Attendance")} />
-            {/* Salary tab hidden as per requirements */}
-            {/* <TabItem icon={<FileText className="w-3.5 h-3.5" />} label="Salary" active={activeMainTab === "Salary"} onClick={() => setActiveMainTab("Salary")} /> */}
+            <TabItem icon={<FileText className="w-3.5 h-3.5" />} label="Salary" active={activeMainTab === "Salary"} onClick={() => setActiveMainTab("Salary")} />
           </div>
 
           {/* 1. Teacher Details Tab Content */}
@@ -930,91 +929,128 @@ export default function TeacherDetailsPage() {
           {/* 4. Salary Content */}
           {activeMainTab === "Salary" && (
             <div className="space-y-5 text-left animate-in fade-in zoom-in-95 duration-200">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex items-center justify-between">
-                  <div>
-                    <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-1">Total Net Salary</p>
-                    <p className="text-[20px] font-bold text-slate-900 dark:text-white">$5,55,410</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-[#FFF8E6] flex items-center justify-center border border-primary/20">
-                    <User className="w-5 h-5 text-primary" />
-                  </div>
+              {!teacher.basic_salary ? (
+                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-8 card-shadow text-center text-slate-400 font-semibold">
+                  No salary structure or records configured for this teacher.
                 </div>
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex items-center justify-between">
-                  <div>
-                    <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-1">Total Gross Salary</p>
-                    <p className="text-[20px] font-bold text-slate-900 dark:text-white">$5,58,380</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-[#E8F8E8] flex items-center justify-center border border-[#1D7F2C]/20">
-                    <Briefcase className="w-5 h-5 text-success" />
-                  </div>
-                </div>
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex items-center justify-between">
-                  <div>
-                    <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-1">Total Deduction</p>
-                    <p className="text-[20px] font-bold text-slate-900 dark:text-white">$2,500</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-[#FFF8E6] flex items-center justify-center border border-primary/20">
-                    <Download className="w-5 h-5 text-primary" />
-                  </div>
-                </div>
-              </div>
+              ) : (() => {
+                const basic = teacher.basic_salary || 0;
+                const allowances = Math.round(basic * 0.10);
+                const deductions = Math.round(basic * 0.05);
+                const net = basic + allowances - deductions;
 
-              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
-                <div className="p-4 border-b border-border">
-                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Salary</h3>
-                </div>
+                // Past 6 months dynamic history
+                const months = ["May", "Apr", "Mar", "Feb", "Jan", "Dec"];
+                const years = [2026, 2026, 2026, 2026, 2026, 2025];
+                const history = months.map((m, idx) => {
+                  const payDate = `05 ${m} ${years[idx]}`;
+                  return {
+                    id: String(8200 - idx),
+                    month: `${m} - ${years[idx]}`,
+                    date: payDate,
+                    method: idx % 3 === 0 ? "Cheque" : "Bank Transfer",
+                    salary: `₹${net.toLocaleString()}`
+                  };
+                });
 
-                <div className="p-4 flex items-center justify-between border-b border-border">
-                  <div className="flex items-center gap-2 text-[12px] text-slate-600 dark:text-slate-300 font-medium">
-                    <span>Row Per Page</span>
-                    <select className="border border-border rounded px-2 py-1 outline-none bg-white dark:bg-slate-900 font-bold text-slate-700 dark:text-slate-200"><option>10</option></select>
-                    <span>Entries</span>
-                  </div>
-                  <input type="text" placeholder="Search" className="px-3 py-1.5 border border-border rounded-lg text-[12px] outline-none w-64 focus:border-primary/50 transition-colors" />
-                </div>
+                return (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex items-center justify-between">
+                        <div>
+                          <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-1">Net Salary (Monthly)</p>
+                          <p className="text-[20px] font-bold text-slate-900 dark:text-white">₹{net.toLocaleString()}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-[#E8F8E8] flex items-center justify-center border border-[#1D7F2C]/20">
+                          <CheckCircle className="w-5 h-5 text-success" />
+                        </div>
+                      </div>
+                      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex items-center justify-between">
+                        <div>
+                          <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-1">Gross Salary (Monthly)</p>
+                          <p className="text-[20px] font-bold text-slate-900 dark:text-white">₹{(basic + allowances).toLocaleString()}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                          <Briefcase className="w-5 h-5 text-primary" />
+                        </div>
+                      </div>
+                      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex items-center justify-between">
+                        <div>
+                          <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-1">Deduction (Monthly)</p>
+                          <p className="text-[20px] font-bold text-slate-900 dark:text-white">₹{deductions.toLocaleString()}</p>
+                        </div>
+                        <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
+                          <Download className="w-5 h-5 text-rose-500" />
+                        </div>
+                      </div>
+                    </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-[12px]">
-                    <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border">
-                      <tr>
-                        <th className="px-5 py-3 font-semibold"><input type="checkbox" className="rounded" /></th>
-                        <th className="px-5 py-3 font-semibold">ID <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-1">⇅</span></th>
-                        <th className="px-5 py-3 font-semibold">Salary For <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-1">⇅</span></th>
-                        <th className="px-5 py-3 font-semibold">Date <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-1">⇅</span></th>
-                        <th className="px-5 py-3 font-semibold">Payment Method</th>
-                        <th className="px-5 py-3 font-semibold">Net Salary</th>
-                        <th className="px-5 py-3"></th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border text-slate-600 dark:text-slate-300 font-medium">
-                      {[
-                        { id: "8198", month: "Apr - 2024", date: "04 May 2024", method: "Cash", salary: "$20,000" },
-                        { id: "8197", month: "Mar - 2024", date: "05 Apr 2024", method: "Cheque", salary: "$19,000" },
-                        { id: "8196", month: "Feb - 2024", date: "05 Mar 2024", method: "Cash", salary: "$19,500" },
-                        { id: "8195", month: "Jan - 2024", date: "06 Feb 2024", method: "Cash", salary: "$20,000" },
-                        { id: "8194", month: "Dec - 2023", date: "03 Jan 2024", method: "Cheque", salary: "$19,430" },
-                        { id: "8193", month: "Nov - 2023", date: "05 Dec 2023", method: "Cheque", salary: "$19,480" },
-                        { id: "8192", month: "Oct - 2023", date: "03 Nov 2023", method: "Cheque", salary: "$19,480" },
-                        { id: "8191", month: "Sep - 2023", date: "04 Oct 2023", method: "Cheque", salary: "$18,000" },
-                        { id: "8190", month: "Aug - 2023", date: "06 Sep 2023", method: "Cheque", salary: "$20,000" }
-                      ].map((s, i) => (
-                        <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                          <td className="px-5 py-3"><input type="checkbox" className="rounded" /></td>
-                          <td className="px-5 py-3 text-primary font-bold">{s.id}</td>
-                          <td className="px-5 py-3">{s.month}</td>
-                          <td className="px-5 py-3">{s.date}</td>
-                          <td className="px-5 py-3">{s.method}</td>
-                          <td className="px-5 py-3">{s.salary}</td>
-                          <td className="px-5 py-3">
-                            <button className="px-3 py-1 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[11px] font-bold rounded shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">View Payslip</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                      {/* Salary Structure Info */}
+                      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow text-left h-fit space-y-4">
+                        <h3 className="text-[14px] font-bold text-slate-900 dark:text-white border-b border-border pb-2">Salary Structure</h3>
+                        <div className="space-y-3 text-[13px]">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 dark:text-slate-400 font-medium">Basic Salary</span>
+                            <span className="font-bold text-slate-900 dark:text-white">₹{basic.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 dark:text-slate-400 font-medium">Allowances (HRA/TA)</span>
+                            <span className="font-bold text-slate-900 dark:text-white">₹{allowances.toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500 dark:text-slate-400 font-medium">Deductions (EPF/Tax)</span>
+                            <span className="font-bold text-slate-900 dark:text-white">₹{deductions.toLocaleString()}</span>
+                          </div>
+                          <div className="h-px bg-border" />
+                          <div className="flex justify-between text-[14px]">
+                            <span className="font-bold text-slate-800 dark:text-slate-100">Net Salary</span>
+                            <span className="font-extrabold text-primary">₹{net.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Salary History */}
+                      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden lg:col-span-2">
+                        <div className="p-4 border-b border-border">
+                          <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Monthly Salary Records</h3>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-[12px]">
+                            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border">
+                              <tr>
+                                <th className="px-5 py-3 font-semibold">ID</th>
+                                <th className="px-5 py-3 font-semibold">Salary For</th>
+                                <th className="px-5 py-3 font-semibold">Payment Date</th>
+                                <th className="px-5 py-3 font-semibold">Method</th>
+                                <th className="px-5 py-3 font-semibold">Net Salary</th>
+                                <th className="px-5 py-3 font-semibold">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border text-slate-600 dark:text-slate-300 font-medium">
+                              {history.map((s) => (
+                                <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                  <td className="px-5 py-3 text-primary font-bold">#{s.id}</td>
+                                  <td className="px-5 py-3">{s.month}</td>
+                                  <td className="px-5 py-3">{s.date}</td>
+                                  <td className="px-5 py-3">{s.method}</td>
+                                  <td className="px-5 py-3 font-bold text-slate-950 dark:text-white">{s.salary}</td>
+                                  <td className="px-5 py-3">
+                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold bg-success/10 text-success border border-success/20">
+                                      Paid
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           )}
 

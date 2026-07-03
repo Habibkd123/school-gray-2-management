@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { LeaveRequest } from "@/lib/models/index";
+import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
+import { paginateQuery } from "@/lib/utils/pagination";
 
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
@@ -12,8 +14,15 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const status = url.searchParams.get("status");
     const userIdParam = url.searchParams.get("userId");
+    const search = url.searchParams.get("search");
+    const leaveType = url.searchParams.get("leaveType");
+    const fromDate = url.searchParams.get("from");
+    const toDate = url.searchParams.get("to");
+
     const query: any = { school_id: schoolId };
-    if (status) query.status = status;
+    
+    if (status) query.status = status.toLowerCase();
+    if (leaveType) query.leave_type = leaveType.toLowerCase();
     
     // Only admins can see everyone's leave. Teachers/students see only their own.
     const { user } = requireAuth(req, ["school_admin", "super_admin", "teacher", "student"]);
@@ -23,12 +32,43 @@ export async function GET(req: NextRequest) {
       query.user_id = userIdParam;
     }
 
-    const leaves = await LeaveRequest.find(query)
-      .sort({ createdAt: -1 })
-      .populate("user_id", "name email role photo_url")
-      .lean();
+    // Date Range: overlapping leave check
+    if (fromDate && toDate) {
+      query.from_date = { $lte: new Date(toDate) };
+      query.to_date = { $gte: new Date(fromDate) };
+    }
 
-    return NextResponse.json({ success: true, data: { leaves } });
+    // Search query: resolve User ID matching user name
+    if (search?.trim()) {
+      const trimmedSearch = search.trim();
+      const matchedUsers = await User.find({
+        school_id: schoolId,
+        name: { $regex: trimmedSearch, $options: "i" }
+      }).select("_id").lean();
+      
+      const userIds = matchedUsers.map(u => u._id);
+      query.$or = [
+        { user_id: { $in: userIds } },
+        { leave_type: { $regex: trimmedSearch, $options: "i" } },
+        { reason: { $regex: trimmedSearch, $options: "i" } }
+      ];
+    }
+
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+    const limit = Math.max(1, parseInt(url.searchParams.get("limit") || "25"));
+
+    const { items: leaves, total, totalPages } = await paginateQuery(
+      LeaveRequest,
+      query,
+      {
+        page,
+        limit,
+        sort: { createdAt: -1 },
+        populate: [{ path: "user_id", select: "name email role photo_url" }]
+      }
+    );
+
+    return NextResponse.json({ success: true, data: { leaves, total, page, totalPages, limit } });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

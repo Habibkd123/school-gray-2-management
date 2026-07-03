@@ -239,7 +239,6 @@ export async function POST(req: NextRequest) {
 
       if (changes.length > 0) {
         const studentIds = changes.map(c => c.student_id);
-        const { Student } = require("@/lib/models/index");
         const studentsList = await Student.find({ _id: { $in: studentIds } }).select("name").lean();
         const studentNameMap = new Map();
         studentsList.forEach((s: any) => {

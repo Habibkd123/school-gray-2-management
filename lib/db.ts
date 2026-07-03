@@ -53,28 +53,8 @@ async function connectDB(): Promise<typeof mongoose> {
   try {
     cached.conn = await cached.promise;
     
-    // ─── Auto-migration: Assign and correct usernames for all user accounts ───
-    const User = mongoose.models.User || mongoose.model("User");
-    const { generateUsernameForUser } = await import("./utils/username");
-    const allUsers = await User.find({});
-    let migrationCount = 0;
-    
-    for (const u of allUsers) {
-      try {
-        const correctUsername = await generateUsernameForUser(u.email, u.school_id);
-        if (!u.username || u.username !== correctUsername) {
-          u.username = correctUsername;
-          await u.save({ validateBeforeSave: false });
-          migrationCount++;
-        }
-      } catch (err) {
-        console.error(`[Migration] Failed to migrate/correct user ${u._id}:`, err);
-      }
-    }
-    
-    if (migrationCount > 0) {
-      console.log(`[Migration] Auto-migrated/corrected ${migrationCount} usernames successfully.`);
-    }
+    // Database connection established successfully.
+    // (Bulk username migrations are now run offline via scratch/migrate-usernames.js)
   } catch (e) {
     cached.promise = null;
     throw e;

@@ -510,6 +510,7 @@ function StudentViewContent() {
             <TabItem icon={<Calendar className="w-3.5 h-3.5" />} label="Time Table" active={activeMainTab === "Time Table"} onClick={() => setActiveMainTab("Time Table")} />
             <TabItem icon={<Clock className="w-3.5 h-3.5" />} label="Leave & Attendance" active={activeMainTab === "Leave & Attendance"} onClick={() => setActiveMainTab("Leave & Attendance")} />
             <TabItem icon={<CheckCircle className="w-3.5 h-3.5" />} label="Exam & Results" active={activeMainTab === "Exam & Results"} onClick={() => setActiveMainTab("Exam & Results")} />
+            <TabItem icon={<FileText className="w-3.5 h-3.5" />} label="Report Card" active={activeMainTab === "Report Card"} onClick={() => setActiveMainTab("Report Card")} />
           </div>
 
           {/* 1. Student Details Tab Content */}
@@ -820,6 +821,128 @@ function StudentViewContent() {
                   )}
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Report Card Content */}
+          {activeMainTab === "Report Card" && (
+            <div className="space-y-6 text-left animate-in fade-in zoom-in-95 duration-200">
+              {resultsLoading || examsLoading ? (
+                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-8 card-shadow text-center text-slate-400 font-semibold">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto mb-2" />
+                  Loading academic report cards...
+                </div>
+              ) : examResultsGrouped.length === 0 ? (
+                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-8 card-shadow text-center text-slate-400 font-semibold">
+                  No report card data found for this student.
+                </div>
+              ) : (
+                examResultsGrouped.map((grp) => {
+                  const examObj = exams.find(e => e._id === grp.examId);
+                  const academicYear = examObj?.academic_year || "—";
+                  const totalMaxMarks = grp.results.reduce((sum, r) => sum + (r.total_marks || 100), 0);
+                  const totalObtainedMarks = grp.results.reduce((sum, r) => sum + (r.obtained_marks ?? r.marks_obtained ?? 0), 0);
+                  const averagePercentage = totalMaxMarks > 0 ? (totalObtainedMarks / totalMaxMarks) * 100 : 0;
+                  const isOverallPass = grp.results.every(r => r.is_pass !== false);
+
+                  const getGrade = (pct: number) => {
+                    if (pct >= 90) return "O";
+                    if (pct >= 80) return "A+";
+                    if (pct >= 70) return "A";
+                    if (pct >= 60) return "B+";
+                    if (pct >= 50) return "B";
+                    if (pct >= 40) return "C+";
+                    if (pct >= 35) return "C";
+                    return "F";
+                  };
+
+                  return (
+                    <div key={grp.examId} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
+                      {/* Card Header */}
+                      <div className="p-5 border-b border-border bg-slate-50/50 dark:bg-slate-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">{grp.examName}</h3>
+                          <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Academic Year: {academicYear}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold border ${
+                            isOverallPass
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                              : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${isOverallPass ? "bg-emerald-500" : "bg-rose-500"}`} />
+                            {isOverallPass ? "Pass" : "Fail"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Subjects Table */}
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-[13px] border-collapse">
+                          <thead>
+                            <tr className="border-b border-border bg-slate-50/20 dark:bg-slate-800/20 text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                              <th className="px-6 py-3.5">Subject</th>
+                              <th className="px-6 py-3.5 text-center">Marks Obtained</th>
+                              <th className="px-6 py-3.5 text-center">Total Marks</th>
+                              <th className="px-6 py-3.5 text-center">Grade</th>
+                              <th className="px-6 py-3.5 text-center">Result</th>
+                              <th className="px-6 py-3.5">Teacher Remarks</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-border font-medium">
+                            {grp.results.map((r) => {
+                              const subName = typeof r.subject_id === 'object' ? r.subject_id?.name : "Subject";
+                              const obtained = r.obtained_marks ?? r.marks_obtained ?? 0;
+                              const pct = r.total_marks > 0 ? (obtained / r.total_marks) * 100 : 0;
+                              const subGrade = r.grade || getGrade(pct);
+                              const pass = r.is_pass !== false;
+
+                              return (
+                                <tr key={r._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                  <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{subName}</td>
+                                  <td className="px-6 py-4 text-center font-bold text-slate-900 dark:text-white">{obtained}</td>
+                                  <td className="px-6 py-4 text-center text-slate-500 dark:text-slate-400">{r.total_marks}</td>
+                                  <td className="px-6 py-4 text-center text-indigo-600 dark:text-indigo-400 font-bold">{subGrade}</td>
+                                  <td className="px-6 py-4 text-center">
+                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold ${
+                                      pass ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                                    }`}>
+                                      {pass ? "Pass" : "Fail"}
+                                    </span>
+                                  </td>
+                                  <td className="px-6 py-4 text-slate-500 dark:text-slate-400 italic text-[12px]">{r.remarks || "—"}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Summary Section */}
+                      <div className="p-5 border-t border-border bg-slate-50/30 dark:bg-slate-800/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-[13px] font-bold">
+                        <div className="flex flex-wrap items-center gap-6">
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 mr-2 font-medium">Grand Total:</span>
+                            <span className="text-slate-900 dark:text-white font-extrabold">{totalObtainedMarks} / {totalMaxMarks}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 mr-2 font-medium">Percentage:</span>
+                            <span className="text-primary font-extrabold">{averagePercentage.toFixed(2)}%</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 mr-2 font-medium">Grade:</span>
+                            <span className="text-indigo-600 dark:text-indigo-400 font-extrabold">{getGrade(averagePercentage)}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400 mr-2 font-medium">Rank:</span>
+                            <span className="text-slate-700 dark:text-slate-200 font-extrabold">—</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           )}
 

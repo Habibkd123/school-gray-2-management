@@ -42,6 +42,7 @@ let _classesCache: ApiClass[] | null = null;
 let _cacheTimestamp = 0;
 const CACHE_TTL_MS = 60_000; // 60 seconds
 const _listeners = new Set<(classes: ApiClass[]) => void>();
+const _classesFetchPromises = new Map<string, Promise<{ classes: ApiClass[]; total: number; totalPages: number; currentPage: number }>>();
 
 function invalidateCache() {
   _classesCache = null;
@@ -79,36 +80,68 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
 
     setIsLoading(true);
     setError(null);
-    try {
-      const qs = new URLSearchParams();
-      if (params.search)        qs.set("search", params.search);
-      if (params.academic_year) qs.set("academic_year", params.academic_year);
-      if (params.section)       qs.set("section", params.section);
-      if (params.sort)          qs.set("sort", params.sort);
-      if (params.page)          qs.set("page", String(params.page));
-      if (params.limit)         qs.set("limit", String(params.limit));
 
-      const res = await fetch(`/api/classes?${qs.toString()}`, {
+    // Build unique query string as the cache key
+    const qs = new URLSearchParams();
+    if (params.search)        qs.set("search", params.search);
+    if (params.academic_year) qs.set("academic_year", params.academic_year);
+    if (params.section)       qs.set("section", params.section);
+    if (params.sort)          qs.set("sort", params.sort);
+    if (params.page)          qs.set("page", String(params.page));
+    if (params.limit)         qs.set("limit", String(params.limit));
+
+    const cacheKey = qs.toString();
+
+    if (_classesFetchPromises.has(cacheKey)) {
+      try {
+        const cachedData = await _classesFetchPromises.get(cacheKey)!;
+        setClasses(cachedData.classes);
+        setTotal(cachedData.total);
+        setTotalPages(cachedData.totalPages);
+        setCurrentPage(cachedData.currentPage);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load classes");
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    const promise = (async () => {
+      const res = await fetch(`/api/classes?${cacheKey}`, {
         headers: getAuthHeaders(),
       });
 
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch");
 
+      return {
+        classes: data.data.classes,
+        total: data.data.total ?? data.data.classes.length,
+        totalPages: data.data.totalPages ?? 1,
+        currentPage: data.data.page ?? 1,
+      };
+    })();
+
+    _classesFetchPromises.set(cacheKey, promise);
+
+    try {
+      const data = await promise;
       // Only cache unfiltered results
       if (!isFiltered) {
-        _classesCache = data.data.classes;
+        _classesCache = data.classes;
         _cacheTimestamp = Date.now();
-        _listeners.forEach(fn => fn(data.data.classes));
+        _listeners.forEach(fn => fn(data.classes));
       }
 
-      setClasses(data.data.classes);
-      setTotal(data.data.total ?? data.data.classes.length);
-      setTotalPages(data.data.totalPages ?? 1);
-      setCurrentPage(data.data.page ?? 1);
+      setClasses(data.classes);
+      setTotal(data.total);
+      setTotalPages(data.totalPages);
+      setCurrentPage(data.currentPage);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load classes");
     } finally {
+      _classesFetchPromises.delete(cacheKey);
       setIsLoading(false);
     }
   }, []);

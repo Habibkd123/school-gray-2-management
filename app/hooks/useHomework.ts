@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
+import { getPersistedPageSize } from "@/app/components/ui/pagination-bar";
 
 export interface ApiHomeworkSubmission {
   student_id: {
@@ -41,41 +42,57 @@ export interface ApiHomework {
   submissions: ApiHomeworkSubmission[];
 }
 
-export function useHomework(classId?: string, options?: { skip?: boolean }) {
+export function useHomework(
+  classId?: string,
+  options?: { skip?: boolean; initialPage?: number; initialPageSize?: number }
+) {
   const [homework, setHomework] = useState<ApiHomework[]>([]);
   const [isLoading, setIsLoading] = useState(options?.skip ? false : true);
   const [error, setError] = useState<string | null>(null);
 
+  const [page, setPage] = useState(options?.initialPage ?? 1);
+  const [pageSize, setPageSize] = useState(() => getPersistedPageSize(options?.initialPageSize ?? 25));
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
   const { academicYear } = useAppState();
 
-  const fetchHomework = useCallback(async (cId?: string) => {
+  const fetchHomework = useCallback(async (cId?: string, pNum = page, pSize = pageSize) => {
     setIsLoading(true);
-    setHomework([]);
     setError(null);
     try {
       const params = new URLSearchParams();
       if (cId) params.set("classId", cId);
       if (academicYear) params.set("academic_year", academicYear);
+      params.set("page", pNum.toString());
+      params.set("limit", pSize.toString());
 
       const res = await fetch(`/api/homework?${params.toString()}`, {
         headers: getAuthHeaders(),
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch homework");
-      setHomework(data.data);
+      setHomework(data.data.homeworks);
+      setTotal(data.data.total);
+      setTotalPages(data.data.totalPages);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load homework");
     } finally {
       setIsLoading(false);
     }
-  }, [academicYear]);
+  }, [academicYear, page, pageSize]);
+
+  // Reset to page 1 on filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [classId]);
 
   const authReady = useAuthReady();
   useEffect(() => {
     if (options?.skip) return;
     if (!authReady) return;
-    fetchHomework(classId);
-  }, [fetchHomework, classId, options?.skip, authReady]);
+    fetchHomework(classId, page, pageSize);
+  }, [fetchHomework, classId, page, pageSize, options?.skip, authReady]);
 
   const createHomework = async (input: {
     title: string;
@@ -201,7 +218,14 @@ export function useHomework(classId?: string, options?: { skip?: boolean }) {
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to delete" };
 
-      setHomework((prev) => prev.filter((hw) => hw._id !== homeworkId));
+      setHomework((prev) => {
+        const nextList = prev.filter((hw) => hw._id !== homeworkId);
+        if (nextList.length === 0 && page > 1) {
+          setPage((p) => p - 1);
+        }
+        return nextList;
+      });
+      setTotal((t) => Math.max(0, t - 1));
       return { success: true, message: "Homework deleted successfully" };
     } catch {
       return { success: false, message: "Network error" };
@@ -212,6 +236,12 @@ export function useHomework(classId?: string, options?: { skip?: boolean }) {
     homework,
     isLoading,
     error,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    total,
+    totalPages,
     fetchHomework,
     createHomework,
     submitHomework,

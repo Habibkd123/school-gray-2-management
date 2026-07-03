@@ -145,14 +145,7 @@ export async function GET(request: NextRequest) {
 
     const [students, total] = await Promise.all([
       Student.find(filter)
-        .populate({
-          path: "class_id",
-          select: "name section class_teacher_id",
-          populate: {
-            path: "class_teacher_id",
-            select: "name"
-          }
-        })
+        .populate("class_id", "name section")       // flat — no nested class_teacher_id for list view
         .populate("user_id", "name email role is_active plain_password must_change_password")
         .sort(sortObj)
         .skip(skip)

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   saveSession,
@@ -80,7 +80,7 @@ export function StudentAuthProvider({ children }: { children: React.ReactNode })
   }, [fetchProfile]);
 
   // ── Login ────────────────────────────────────────────────────────
-  const login = async (
+  const login = useCallback(async (
     username: string,
     password: string
   ): Promise<{ success: boolean; message: string }> => {
@@ -126,7 +126,7 @@ export function StudentAuthProvider({ children }: { children: React.ReactNode })
     } catch {
       return { success: false, message: "Network error. Please try again." };
     }
-  };
+  }, [fetchProfile]);
 
   // ── Logout ────────────────────────────────────────────────────────
   const logout = useCallback(() => {
@@ -141,18 +141,18 @@ export function StudentAuthProvider({ children }: { children: React.ReactNode })
     await fetchProfile();
   }, [fetchProfile]);
 
+  const contextValue = useMemo(() => ({
+    user,
+    studentProfile,
+    isLoading,
+    isAuthenticated: !!user && user.role === "student",
+    login,
+    logout,
+    refreshProfile,
+  }), [user, studentProfile, isLoading, login, logout, refreshProfile]);
+
   return (
-    <StudentAuthContext.Provider
-      value={{
-        user,
-        studentProfile,
-        isLoading,
-        isAuthenticated: !!user && user.role === "student",
-        login,
-        logout,
-        refreshProfile,
-      }}
-    >
+    <StudentAuthContext.Provider value={contextValue}>
       {children}
     </StudentAuthContext.Provider>
   );

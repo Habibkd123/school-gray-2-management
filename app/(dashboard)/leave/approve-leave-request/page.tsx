@@ -54,7 +54,6 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
 }
 
 export default function ApproveLeaveRequestPage() {
-  const { leaveRequests, loading, approveLeave, rejectLeave } = useLeave();
   const [searchTerm, setSearchTerm] = useState("");
   
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -91,6 +90,24 @@ export default function ApproveLeaveRequestPage() {
   // Filter States
   const [filterLeaveType, setFilterLeaveType] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+
+  const {
+    leaveRequests,
+    loading,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    total,
+    totalPages,
+    approveLeave,
+    rejectLeave
+  } = useLeave(filterStatus, undefined, {
+    leaveType: filterLeaveType,
+    search: searchTerm,
+    from: activeFrom ? activeFrom.toISOString() : undefined,
+    to: activeTo ? activeTo.toISOString() : undefined,
+  });
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -178,8 +195,6 @@ export default function ApproveLeaveRequestPage() {
 
     return list;
   }, [leaveRequests, searchTerm, filterLeaveType, filterStatus, activeFrom, activeTo, selectedSort]);
-
-  const pag = usePagination(filteredData, 10);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -451,13 +466,13 @@ export default function ApproveLeaveRequestPage() {
                     <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading leave requests...</p>
                   </td>
                 </tr>
-              ) : pag.paged.length === 0 ? (
+              ) : filteredData.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-16 text-center text-slate-500 dark:text-slate-400 text-[13px]">
                     No leave requests found.
                   </td>
                 </tr>
-              ) : pag.paged.map((item) => (
+              ) : filteredData.map((item) => (
                 <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                   <td className="px-6 py-4">
                     <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
@@ -505,14 +520,16 @@ export default function ApproveLeaveRequestPage() {
             </tbody>
           </table>
         </div>
-
+ 
         {/* Pagination */}
         <PaginationBar
-          currentPage={pag.page}
-          totalPages={pag.totalPages}
-          totalItems={pag.totalItems}
-          pageSize={pag.pageSize}
-          onPageChange={pag.setPage}
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={total}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+          isLoading={loading}
           className="rounded-b-xl"
         />
       </div>

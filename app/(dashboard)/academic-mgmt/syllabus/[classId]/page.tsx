@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Loader2, BookOpen, GraduationCap, ArrowRight, User, AlertCircle, BarChart3, ChevronLeft, ArrowLeft, Search, RefreshCw, ChevronDown } from "lucide-react";
+import { Loader2, BookOpen, GraduationCap, ArrowRight, User, AlertCircle, BarChart3, ChevronLeft, ArrowLeft, Search, RefreshCw, ChevronDown, MoreVertical, CheckCircle2 } from "lucide-react";
 import { useTeacherAssignment } from "@/app/hooks/useTeacherAssignment";
 import { useTeachers } from "@/app/hooks/useTeachers";
 import { useClasses } from "@/app/hooks/useClasses";
@@ -10,6 +10,8 @@ import { useAuth } from "@/app/context/auth";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { useSyllabus } from "@/app/hooks/useSyllabus";
+import { Modal } from "@/app/components/ui/modal";
 
 export default function SyllabusSubjectListPage() {
   const router = useRouter();
@@ -21,12 +23,47 @@ export default function SyllabusSubjectListPage() {
   const isTeacher = user?.role === "teacher";
   const { assignments, isLoading: loadingAssignments, fetchAssignments } = useTeacherAssignment();
 
-  const [syllabiStats, setSyllabiStats] = useState<Record<string, { total: number, completed: number, percent: number, updatedAt?: string }>>({});
+  const [syllabiStats, setSyllabiStats] = useState<Record<string, { total: number, completed: number, percent: number, updatedAt?: string, syllabusId?: string }>>({});
   const [loadingStats, setLoadingStats] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTeacherId, setFilterTeacherId] = useState("");
   const { teachers } = useTeachers();
   const { classes } = useClasses();
+  const { deleteSyllabus } = useSyllabus();
+  const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
+  const [activeDropdownCardKey, setActiveDropdownCardKey] = useState<string | null>(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedSyllabusId, setSelectedSyllabusId] = useState<string | null>(null);
+  const [selectedSubjectName, setSelectedSubjectName] = useState<string>("");
+  const [deleting, setDeleting] = useState(false);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const showSuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    setErrorMsg(null);
+    setTimeout(() => setSuccessMsg(null), 3000);
+  };
+
+  const showError = (msg: string) => {
+    setErrorMsg(msg);
+    setSuccessMsg(null);
+    setTimeout(() => setErrorMsg(null), 5000);
+  };
+
+  const handleDelete = async () => {
+    if (!selectedSyllabusId) return;
+    setDeleting(true);
+    const res = await deleteSyllabus(selectedSyllabusId);
+    setDeleting(false);
+    setIsDeleteOpen(false);
+    if (res.success) {
+      showSuccess("Syllabus deleted successfully");
+      fetchAssignments({ limit: 5000 });
+    } else {
+      showError(res.message || "Failed to delete syllabus");
+    }
+  };
 
   useEffect(() => {
     if (!assignments || assignments.length === 0) {
@@ -72,7 +109,7 @@ export default function SyllabusSubjectListPage() {
             const total = chapters.length;
             const completed = chapters.filter((c: any) => c.status === "Completed").length;
             const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
-            stats[a._id] = { total, completed, percent, updatedAt: data.data.updatedAt };
+            stats[a._id] = { total, completed, percent, updatedAt: data.data.updatedAt, syllabusId: data.data._id };
           } else {
             stats[a._id] = { total: 0, completed: 0, percent: 0 };
           }
@@ -265,11 +302,67 @@ export default function SyllabusSubjectListPage() {
                         </p>
                       </div>
                     </div>
-                    {streamName && (
-                      <span className="font-mono text-[10px] bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded font-bold text-purple-600 dark:text-purple-400 whitespace-nowrap mt-1">
-                        {streamName}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2 relative">
+                      {streamName && (
+                        <span className="font-mono text-[10px] bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 rounded font-bold text-purple-600 dark:text-purple-400 whitespace-nowrap">
+                          {streamName}
+                        </span>
+                      )}
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveDropdownCardKey(activeDropdownCardKey === a._id ? null : a._id);
+                          }}
+                          className="p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </button>
+
+                        {activeDropdownCardKey === a._id && (
+                          <>
+                            <div className="fixed inset-0 z-45" onClick={(e) => { e.stopPropagation(); setActiveDropdownCardKey(null); }} />
+                            <div className="absolute right-0 top-7 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left font-medium">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  router.push(`/academic-mgmt/syllabus/${classId}/${a._id}`);
+                                  setActiveDropdownCardKey(null);
+                                }}
+                                className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
+                              >
+                                👁 View Details
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  router.push(`/academic-mgmt/syllabus/${classId}/${a._id}`);
+                                  setActiveDropdownCardKey(null);
+                                }}
+                                className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
+                              >
+                                ✏ Edit Chapters
+                              </button>
+                              {isAdmin && stats.syllabusId && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedSyllabusId(stats.syllabusId || null);
+                                    setSelectedSubjectName(subjectName);
+                                    setIsDeleteOpen(true);
+                                    setActiveDropdownCardKey(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 transition-colors cursor-pointer"
+                                >
+                                  🗑 Delete
+                                </button>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="p-5 space-y-4">
@@ -309,6 +402,37 @@ export default function SyllabusSubjectListPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Delete Modal */}
+      <Modal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="Delete Syllabus">
+        <div className="space-y-5 text-left font-medium">
+          <p className="text-[14px] text-slate-600 dark:text-slate-300">
+            Are you sure you want to delete the syllabus chapters and completion records for subject <span className="font-bold text-red-500">{selectedSubjectName}</span>?
+            <br /><br />
+            <span className="text-red-500 font-bold bg-red-50 dark:bg-red-955/20 p-2 rounded block">Warning: This action is permanent and cannot be undone!</span>
+          </p>
+          <div className="flex justify-end gap-3">
+            <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-900 dark:text-white font-semibold text-[14px] font-bold rounded-lg cursor-pointer">Cancel</button>
+            <button onClick={handleDelete} disabled={deleting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm disabled:opacity-60 flex items-center gap-2 cursor-pointer">
+              {deleting && <Loader2 className="w-4 h-4 animate-spin" />} Delete
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Toasts */}
+      {successMsg && (
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-600 text-white shadow-lg animate-in slide-in-from-bottom-5 duration-300">
+          <CheckCircle2 className="w-4 h-4 shrink-0 stroke-[3]" />
+          <span className="text-[13px] font-medium">{successMsg}</span>
+        </div>
+      )}
+      {errorMsg && (
+        <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-xl bg-rose-600 text-white shadow-lg animate-in slide-in-from-bottom-5 duration-300">
+          <AlertCircle className="w-4 h-4 shrink-0 stroke-[3]" />
+          <span className="text-[13px] font-medium">{errorMsg}</span>
         </div>
       )}
     </div>

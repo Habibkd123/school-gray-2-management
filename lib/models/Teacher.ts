@@ -170,6 +170,9 @@ const teacherSchema = new Schema<ITeacher>(
 );
 
 teacherSchema.index({ school_id: 1, employee_id: 1 }, { unique: true, sparse: true });
+teacherSchema.index({ school_id: 1, is_active: 1 });
+teacherSchema.index({ school_id: 1, name: 1 });
+teacherSchema.index({ user_id: 1 });
 
 if (mongoose.models && mongoose.models.Teacher) {
   const registeredSchema = mongoose.models.Teacher.schema;

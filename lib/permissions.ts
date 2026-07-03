@@ -2,7 +2,7 @@
 // Har role ke liye permissions yahan define hain.
 // Action types: "view" | "create" | "edit" | "delete" | "approve"
 
-export const HIDE_FEES_FEATURE = true;
+export const HIDE_FEES_FEATURE = false;
 
 export type PermissionAction = "view" | "create" | "edit" | "delete" | "approve";
 
@@ -23,6 +23,7 @@ export type PermissionModule =
   | "leaves"
   | "homework"
   | "results"
+  | "salary"
   | "assessments";
 
 export type AppRole =
@@ -77,12 +78,14 @@ export const ROLE_PERMISSIONS: Record<AppRole, RolePermissions> = {
     homework: ["view", "create", "edit", "delete"],
     results: ["view", "create", "edit", "delete"],
     assessments: ["view", "create", "edit", "delete"],
+    salary: ["view", "create", "edit", "delete"],
   },
 
   // ── Accountant: only fees & finance related ──────────────────────────────
   accountant: {
     dashboard: ["view"],
     fees: ["view", "create", "edit", "delete"],
+    salary: ["view", "create", "edit", "delete"],
     students: ["view"],                // read-only for reference
     reports: ["view"],
     notices: ["view"],
@@ -103,6 +106,7 @@ export const ROLE_PERMISSIONS: Record<AppRole, RolePermissions> = {
     results: ["view", "create", "edit"],
     reports: ["view"],
     assessments: ["view", "create", "edit"],
+    salary: ["view"],
   },
 
   // ── Parent: read-only for their child ────────────────────────────────────
@@ -232,6 +236,7 @@ export const MODULE_LABELS: Record<PermissionModule, string> = {
   leaves: "Leave Management",
   homework: "Homework",
   results: "Exam Results",
+  salary: "Salary & Payroll",
   assessments: "Assessments / Tests",
 };
 

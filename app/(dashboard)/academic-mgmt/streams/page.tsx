@@ -7,13 +7,16 @@ import {
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
+import { EnhancedTable } from "@/app/components/ui/EnhancedTable";
 import { useStreams, ApiStream } from "@/app/hooks/useStreams";
 import { useAuth } from "@/app/context/auth";
+
+import { getPersistedPageSize } from "@/app/components/ui/pagination-bar";
 
 export default function StreamsPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
-  const { streams, isLoading, error, total, totalPages, currentPage, fetchStreams, createStream, updateStream, deleteStream } = useStreams({ skip: true });
+  const { streams, isLoading, error, total, totalPages, fetchStreams, createStream, updateStream, deleteStream } = useStreams({ skip: true });
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -26,20 +29,19 @@ export default function StreamsPage() {
   const [formStatus, setFormStatus] = useState<"Active" | "Inactive">("Active");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 10;
+  const [pageSize, setPageSize] = useState(() => getPersistedPageSize(25));
 
-  const searchRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const doFetch = useCallback(() => {
+    fetchStreams({ page, limit: pageSize, search: searchQuery });
+  }, [fetchStreams, page, pageSize, searchQuery]);
 
-  const doFetch = useCallback((overrides: Record<string, any> = {}) => {
-    fetchStreams({ search: overrides.search ?? searchQuery, page: overrides.p ?? page, limit: PAGE_SIZE });
-  }, [fetchStreams, searchQuery, page]);
-
-  React.useEffect(() => { fetchStreams({ limit: PAGE_SIZE }); }, [fetchStreams]);
+  React.useEffect(() => {
+    doFetch();
+  }, [doFetch]);
 
   const handleSearch = (val: string) => {
-    setSearchQuery(val); setPage(1);
-    clearTimeout(searchRef.current);
-    searchRef.current = setTimeout(() => fetchStreams({ search: val, page: 1, limit: PAGE_SIZE }), 400);
+    setSearchQuery(val);
+    setPage(1);
   };
 
   const resetForm = () => { setFormName(""); setFormStatus("Active"); setFormError(""); };
@@ -171,9 +173,19 @@ export default function StreamsPage() {
             )}
           </div>
         ) : (
-          <DataTable columns={columns} data={streams}
+          <EnhancedTable columns={columns} data={streams}
             selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
             renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
+            searchPlaceholder="Search streams..."
+            searchKeys={["name"]}
+            exportFileName="streams-list"
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            isLoading={isLoading}
           />
         )}
       </div>

@@ -547,8 +547,8 @@ export default function ClassHomeWorkPage() {
                   {!formSubject
                     ? "Select a subject to load chapters"
                     : syllabusLoading
-                    ? "Loading chapters..."
-                    : "No syllabus found for this subject"}
+                      ? "Loading chapters..."
+                      : "No syllabus found for this subject"}
                 </div>
               )}
               {syllabusChapters.length > 0 && (
@@ -752,11 +752,11 @@ export default function ClassHomeWorkPage() {
       </Modal>
 
       {/* View Submissions & Grade Modal */}
-      <Modal isOpen={!!viewSubmissionsHw} onClose={() => setViewSubmissionsHw(null)} title="Student Progress & Grading">
+      <Modal size="xl" isOpen={!!viewSubmissionsHw} onClose={() => setViewSubmissionsHw(null)} title="Student Progress & Grading">
         <div className="p-0 text-left max-h-[80vh] overflow-y-auto custom-scrollbar">
           {viewSubmissionsHw && viewSubmissionsHw.status !== "completed" && (
             <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border-b border-border flex justify-between items-center">
-              <span className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">Homework is currently active</span>
+              <span className="text-[12px] font-semibold text-amber-500 dark:text-slate-400">Homework is currently active</span>
               <button
                 onClick={async () => {
                   const res = await markCompleted(viewSubmissionsHw._id);
@@ -764,7 +764,7 @@ export default function ClassHomeWorkPage() {
                     setViewSubmissionsHw(prev => prev ? { ...prev, status: "completed" } : null);
                   }
                 }}
-                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-bold transition-colors cursor-pointer"
+                className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-sm text-xs font-bold transition-colors cursor-pointer"
               >
                 Mark Homework Completed
               </button>

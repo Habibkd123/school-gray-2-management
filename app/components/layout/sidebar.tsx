@@ -52,41 +52,41 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Subjects", href: "/academic-mgmt/subjects" },
         { name: "Subject Assignment", href: "/academic-mgmt/subject-assignment" },
         { name: "Teacher Assignment", href: "/academic-mgmt/teacher-assignment" },
-        // { name: "Schedule", href: "/classes/schedule" },
         { name: "Syllabus", href: "/academic-mgmt/syllabus" },
-        // { name: "Class Room", href: "/academic/class-room" },
         { name: "Class Routine", href: "/academic/class-routine" },
-        { name: "Class Home Work", href: "/academic/class-home-work" },
-        { name: "Progress & Grading", href: "/academic/progress" },
+        { name: "Homework", href: "/academic/class-home-work" },
+        { name: "Assessments", href: "/assessments" },
+        { name: "Exams", href: "/examination/exam" },
+        { name: "Report Cards", href: "/examination/exam-results" }
       ]
     },
 
+    {
+      name: "Finance", icon: <Building2 className="w-4 h-4" />, subItems: [
+        { name: "Fees", href: "/fees" },
+        { name: "Salary", href: "/salary" }
+      ]
+    },
 
     {
       name: "Attendance", icon: <Clock className="w-4 h-4" />, subItems: [
         { name: "Student Attendance", href: "/attendance/student" },
         { name: "Teacher Attendance", href: "/attendance/teacher" },
         { name: "Class Teacher assign", href: "/attendance/class-teacher" }
-        // { name: "Reports", href: "/attendance/reports" }
       ]
-    },
-    {
-      name: "Assessments", icon: <FileText className="w-4 h-4" />, href: "/assessments"
     },
     {
       name: "HR Management", icon: <Calendar className="w-4 h-4" />, subItems: [
         { name: "Approve Leave Request", href: "/leave/approve-leave-request" },
         { name: "Leave Type", href: "/leave/leave-type" },
         { name: "Holidays", href: "/holidays" }
-
       ]
     },
     {
       name: "Reports", icon: <BarChart className="w-4 h-4" />, subItems: [
         { name: "Daily Attendance Report", href: "/reports/daily-attendance" },
         { name: "Monthly Attendance Report", href: "/reports/attendance-report" },
-        // Fees Report hidden (Issue 9)
-        // { name: "Examination Reports", href: "/reports/examination-reports" },
+        { name: "Fees Report", href: "/reports/fees-report" },
         { name: "Merit List", href: "/reports/merit-list" },
         { name: "Student Report", href: "/reports/student-report" },
         { name: "Class Report", href: "/reports/class-report" },
@@ -94,16 +94,9 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Leave Report", href: "/reports/leave-report" }
       ]
     },
-    // ── Fees Collection hidden (Issue 9) ──────────────────────────────
     {
-      name: "Transport", href: "/transport/bus-details", icon: <Bus className="w-4 h-4" />,
-      // subItems: [
-      //   { name: "Bus Details", href: "/transport/bus-details" },
-      //   { name: "Route Management", href: "/transport/route-management" },
-      //   { name: "Student Allocation", href: "/transport/allocation" }
-      // ]
+      name: "Transport", href: "/transport/bus-details", icon: <Bus className="w-4 h-4" />
     },
-
 
     { name: "Notice Board", href: "/notices", icon: <Megaphone className="w-4 h-4" /> },
     {

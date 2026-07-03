@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
   try {
     await connectDB();
-    const schools = await School.find({}).sort({ createdAt: -1 });
+    const schools = await School.find({}).sort({ createdAt: -1 }).lean();
 
     return NextResponse.json({
       success: true,
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     // Check slug uniqueness
     const slug = body.slug.toLowerCase().trim();
-    const existing = await School.findOne({ slug });
+    const existing = await School.findOne({ slug }).lean();
     if (existing) {
       return NextResponse.json(
         { success: false, message: `School with slug '${slug}' already exists` },

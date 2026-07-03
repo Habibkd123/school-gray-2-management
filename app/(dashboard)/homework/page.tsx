@@ -7,6 +7,7 @@ import { useHomework, ApiHomework } from "../../hooks/useHomework";
 import { useAuth } from "../../context/auth";
 import { Modal } from "../../components/ui/modal";
 import { validateSequential } from "@/lib/utils/formValidation";
+import { PaginationBar } from "../../components/ui/pagination-bar";
 import {
   BookOpen, Plus, Calendar, ClipboardCheck, CheckCircle2,
   AlertCircle, FileText, User, GraduationCap, MessageSquare, Loader2
@@ -37,6 +38,12 @@ export default function HomeworkPage() {
   const {
     homework,
     isLoading: homeworkLoading,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    total,
+    totalPages,
     createHomework,
     submitHomework,
     gradeHomework,
@@ -224,85 +231,97 @@ export default function HomeworkPage() {
         </div>
       ) : (
         /* Homework List Grid */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {homework.length === 0 ? (
-            <div className="col-span-full py-16 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow">
-              No homework assignments found.
-            </div>
-          ) : (
-            homework.map((hw) => {
-              const hwClassId = typeof hw.class_id === "object" ? hw.class_id._id : hw.class_id;
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {homework.length === 0 ? (
+              <div className="col-span-full py-16 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow">
+                No homework assignments found.
+              </div>
+            ) : (
+              homework.map((hw) => {
+                const hwClassId = typeof hw.class_id === "object" ? hw.class_id._id : hw.class_id;
 
-              // For students, filter homework that is not assigned to their class
-              if (activeRole === "student" && hwClassId !== activeStudentClassId) return null;
+                // For students, filter homework that is not assigned to their class
+                if (activeRole === "student" && hwClassId !== activeStudentClassId) return null;
 
-              const submission = hw.submissions.find((s) => {
-                const sId = typeof s.student_id === "object" ? s.student_id._id : s.student_id;
-                return sId === (activeStudent?._id || "");
-              });
-              const studentStatus = activeStudent ? getSubmissionStatus(hw, activeStudent._id) : { text: "Pending", class: "" };
+                const submission = hw.submissions.find((s) => {
+                  const sId = typeof s.student_id === "object" ? s.student_id._id : s.student_id;
+                  return sId === (activeStudent?._id || "");
+                });
+                const studentStatus = activeStudent ? getSubmissionStatus(hw, activeStudent._id) : { text: "Pending", class: "" };
 
-              const subjectName = typeof hw.subject_id === "object" ? hw.subject_id.name : hw.subject_id;
+                const subjectName = typeof hw.subject_id === "object" ? hw.subject_id.name : hw.subject_id;
 
-              return (
-                <div
-                  key={hw._id}
-                  className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow transition-all flex flex-col justify-between text-left h-full"
-                >
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 border border-border px-2.5 py-1 rounded-md">
-                        {subjectName || "Subject"} • {getClassName(hw.class_id)}
-                      </span>
-                      {activeRole === "student" ? (
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${studentStatus.class}`}>
-                          {studentStatus.text}
+                return (
+                  <div
+                    key={hw._id}
+                    className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow transition-all flex flex-col justify-between text-left h-full"
+                  >
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 border border-border px-2.5 py-1 rounded-md">
+                          {subjectName || "Subject"} • {getClassName(hw.class_id)}
                         </span>
-                      ) : (
-                        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-full">
-                          {hw.submissions.length} Submissions
-                        </span>
-                      )}
+                        {activeRole === "student" ? (
+                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${studentStatus.class}`}>
+                            {studentStatus.text}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 px-2.5 py-1 rounded-full">
+                            {hw.submissions.length} Submissions
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <h3 className="font-semibold text-[15px] text-slate-900 dark:text-white leading-tight">
+                          {hw.title}
+                        </h3>
+                        <p className="text-[13px] text-slate-500 dark:text-slate-400 line-clamp-3">
+                          {hw.description}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <h3 className="font-semibold text-[15px] text-slate-900 dark:text-white leading-tight">
-                        {hw.title}
-                      </h3>
-                      <p className="text-[13px] text-slate-500 dark:text-slate-400 line-clamp-3">
-                        {hw.description}
-                      </p>
-                    </div>
-                  </div>
+                    <div className="mt-6 pt-4 border-t border-border flex items-center justify-between text-[13px]">
+                      <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-mono text-[11px] font-bold">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                        <span>Due: {new Date(hw.due_date).toLocaleDateString()}</span>
+                      </div>
 
-                  <div className="mt-6 pt-4 border-t border-border flex items-center justify-between text-[13px]">
-                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-mono text-[11px] font-bold">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                      <span>Due: {new Date(hw.due_date).toLocaleDateString()}</span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      {activeRole !== "student" && (
-                        <button
-                          onClick={() => handleDelete(hw._id)}
-                          className="px-2.5 py-2 text-[12px] font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors cursor-pointer"
-                        >
-                          Delete
-                        </button>
-                      )}
-
-                      {/* Role Specific Actions */}
-                      {activeRole === "student" ? (
-                        !submission ? (
+                      <div className="flex flex-wrap items-center gap-2">
+                        {activeRole !== "student" && (
                           <button
-                            onClick={() => {
-                              setSelectedHwId(hw._id);
-                              setIsSubmitOpen(true);
-                            }}
-                            className="px-3.5 py-2 text-[12px] font-bold text-white bg-primary hover:bg-[var(--primary-hover)] rounded-lg shadow-sm transition-colors cursor-pointer"
+                            onClick={() => handleDelete(hw._id)}
+                            className="px-2.5 py-2 text-[12px] font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors cursor-pointer"
                           >
-                            Submit Work
+                            Delete
                           </button>
+                        )}
+
+                        {/* Role Specific Actions */}
+                        {activeRole === "student" ? (
+                          !submission ? (
+                            <button
+                              onClick={() => {
+                                setSelectedHwId(hw._id);
+                                setIsSubmitOpen(true);
+                              }}
+                              className="px-3.5 py-2 text-[12px] font-bold text-white bg-primary hover:bg-[var(--primary-hover)] rounded-lg shadow-sm transition-colors cursor-pointer"
+                            >
+                              Submit Work
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setSelectedHwId(hw._id);
+                                setIsSubmissionsOpen(true);
+                              }}
+                              className="px-3.5 py-2 text-[12px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-border rounded-lg shadow-sm transition-colors cursor-pointer"
+                            >
+                              View Submission
+                            </button>
+                          )
                         ) : (
                           <button
                             onClick={() => {
@@ -311,26 +330,25 @@ export default function HomeworkPage() {
                             }}
                             className="px-3.5 py-2 text-[12px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-border rounded-lg shadow-sm transition-colors cursor-pointer"
                           >
-                            View Submission
+                            Submissions List ({hw.submissions.length})
                           </button>
-                        )
-                      ) : (
-                        <button
-                          onClick={() => {
-                            setSelectedHwId(hw._id);
-                            setIsSubmissionsOpen(true);
-                          }}
-                          className="px-3.5 py-2 text-[12px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-border rounded-lg shadow-sm transition-colors cursor-pointer"
-                        >
-                          Submissions List ({hw.submissions.length})
-                        </button>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })
-          )}
+                );
+              })
+            )}
+          </div>
+          <PaginationBar
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            isLoading={homeworkLoading}
+          />
         </div>
       )}
 

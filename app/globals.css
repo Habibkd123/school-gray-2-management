@@ -249,3 +249,40 @@ body {
     border-color: var(--border-color) !important;
   }
 }
+
+/* ── Print Media Styles ────────────────────────────────── */
+@media print {
+  /* Hide sidebar, header, filters, buttons, pagination, etc. */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  header,
+  footer,
+  aside,
+  nav,
+  button,
+  .no-print,
+  [role="navigation"],
+  [role="banner"] {
+    display: none !important;
+  }
+  /* Keep only the printable element visible and stretch it */
+  body * {
+    visibility: hidden;
+  }
+  .printable-area,
+  .printable-area * {
+    visibility: visible;
+  }
+  .printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+}

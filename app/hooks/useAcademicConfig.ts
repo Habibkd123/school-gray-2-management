@@ -12,6 +12,7 @@ let _configCache: AcademicConfig | null = null;
 let _cacheTimestamp = 0;
 const CACHE_TTL_MS = 120_000; // 2 minutes
 const _listeners = new Set<(config: AcademicConfig) => void>();
+let _fetchPromise: Promise<AcademicConfig> | null = null;
 
 export function useAcademicConfig() {
   const [config, setConfig] = useState<AcademicConfig>(
@@ -30,18 +31,37 @@ export function useAcademicConfig() {
     const isFresh = _configCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
     if (isFresh) { setConfig(_configCache!); setIsLoading(false); return; }
 
+    if (_fetchPromise) {
+      setIsLoading(true);
+      try {
+        const cachedData = await _fetchPromise;
+        setConfig(cachedData);
+      } catch {
+        // ignore
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     setIsLoading(true);
-    try {
+    _fetchPromise = (async () => {
       const res = await fetch("/api/academic/config", { headers: getAuthHeaders() });
       const data = await res.json();
-      if (!res.ok || !data.success) return;
-      _configCache = data.data;
+      if (!res.ok || !data.success) throw new Error("Failed to fetch config");
+      return data.data;
+    })();
+
+    try {
+      const data = await _fetchPromise;
+      _configCache = data;
       _cacheTimestamp = Date.now();
-      _listeners.forEach(fn => fn(data.data));
-      setConfig(data.data);
+      _listeners.forEach(fn => fn(data));
+      setConfig(data);
     } catch {
       // ignore
     } finally {
+      _fetchPromise = null;
       setIsLoading(false);
     }
   }, []);

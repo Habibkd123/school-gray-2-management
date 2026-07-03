@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 
@@ -112,6 +112,7 @@ export function useStudents(options?: { skip?: boolean }) {
   const [isLoading, setIsLoading] = useState(_studentsCache === null);
   const [error, setError] = useState<string | null>(null);
   const [mutationVersion, setMutationVersion] = useState(_version);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Register/unregister this instance as a listener for cache updates
   useEffect(() => {
@@ -188,6 +189,12 @@ export function useStudents(options?: { skip?: boolean }) {
       return { students: _studentsCache!, total: _studentsCache!.length, page: 1, limit: 500 };
     }
 
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setIsLoading(true);
     setError(null);
     try {
@@ -206,6 +213,7 @@ export function useStudents(options?: { skip?: boolean }) {
 
       const res = await fetch(`/api/students?${params.toString()}`, {
         headers: getAuthHeaders(),
+        signal: controller.signal,
       });
 
       const data = await res.json();
@@ -227,10 +235,15 @@ export function useStudents(options?: { skip?: boolean }) {
         limit: data.data.limit ?? limit,
       };
     } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") {
+        return null;
+      }
       setError(err instanceof Error ? err.message : "Failed to load students");
       return null;
     } finally {
-      setIsLoading(false);
+      if (abortControllerRef.current === controller) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -240,7 +253,9 @@ export function useStudents(options?: { skip?: boolean }) {
   useEffect(() => {
     if (options?.skip) return;
     if (!authReady) return; // Wait until the JWT token is in localStorage
-    fetchStudents({ academic_year: academicYear, limit: 1000 });
+    // Default to 25 for contexts that only need summary data (e.g. dashboard).
+    // Pages that need all students call fetchStudents({ limit: <n> }) explicitly.
+    fetchStudents({ academic_year: academicYear, limit: 25 });
   }, [fetchStudents, options?.skip, academicYear, authReady, mutationVersion]);
 
   // ─── Create student ─────────────────────────────────────────────

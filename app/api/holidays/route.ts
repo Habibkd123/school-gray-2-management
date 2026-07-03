@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { Holiday } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
+import { paginateQuery } from "@/lib/utils/pagination";
 
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin", "teacher", "student"]);
@@ -9,9 +10,22 @@ export async function GET(req: NextRequest) {
 
   try {
     await connectToDatabase();
-    const holidays = await Holiday.find({ school_id: schoolId }).sort({ date: 1 });
+    const url = new URL(req.url);
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+    const limit = Math.max(1, parseInt(url.searchParams.get("limit") || "25"));
+
+    const { items: holidays, total, totalPages } = await paginateQuery(
+      Holiday,
+      { school_id: schoolId },
+      {
+        page,
+        limit,
+        sort: { date: 1 }
+      }
+    );
+
     return NextResponse.json(
-      { success: true, data: holidays },
+      { success: true, data: { holidays, total, page, totalPages, limit } },
       { headers: { "Cache-Control": "private, max-age=300, stale-while-revalidate=600" } }
     );
   } catch (err: any) {

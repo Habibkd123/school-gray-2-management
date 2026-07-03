@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Plus, Search, RefreshCcw, Trash2, Loader2, AlertCircle,
-  BookOpen, Layers, GraduationCap, User
+  BookOpen, Layers, GraduationCap, User, MoreVertical
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { useTeacherAssignment, PopulatedTeacherAssignment } from "@/app/hooks/useTeacherAssignment";
@@ -19,12 +20,36 @@ import { useAppState } from "@/app/context/store";
 const ACADEMIC_YEARS = ["2026-2027"];
 
 export default function TeacherAssignmentPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
   const { academicYear } = useAppState();
   const { enableStreams, enableSections } = useAcademicConfig();
 
   const { assignments, isLoading, error, fetchAssignments, createAssignment, deleteAssignment } = useTeacherAssignment();
+  const [activeDropdownCardKey, setActiveDropdownCardKey] = useState<string | null>(null);
+  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState<any>(null);
+
+  const handleBulkDelete = async () => {
+    if (!groupToDelete) return;
+    setSubmitting(true);
+    const assignmentIds: string[] = [];
+    for (const classInfo of Object.values(groupToDelete.classes) as any[]) {
+      for (const sub of classInfo.subjects) {
+        assignmentIds.push(sub.assignmentId);
+      }
+    }
+    try {
+      await Promise.all(assignmentIds.map(id => deleteAssignment(id)));
+    } catch (e) {
+      console.error(e);
+    }
+    setSubmitting(false);
+    setIsBulkDeleteOpen(false);
+    setGroupToDelete(null);
+    doFetch();
+  };
   const { assignments: subjectAssignments, fetchAssignments: fetchSubjectAssignments } = useSubjectAssignment();
   const { subjects: subjectList } = useSubjectMaster();
   const { streams } = useStreams({ skip: !enableStreams });
@@ -200,6 +225,7 @@ export default function TeacherAssignmentPage() {
   // Group assignments by Teacher
   const groupedAssignments = useMemo(() => {
     const teacherGroups: Record<string, {
+      teacherId: string;
       teacherName: string;
       academic_year: string;
       classes: Record<string, {
@@ -229,6 +255,7 @@ export default function TeacherAssignmentPage() {
 
       if (!teacherGroups[teacherKey]) {
         teacherGroups[teacherKey] = {
+          teacherId: String(teacherId),
           teacherName,
           academic_year: a.academic_year,
           classes: {}
@@ -363,9 +390,69 @@ export default function TeacherAssignmentPage() {
                       </h4>
                     </div>
                   </div>
-                  <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap mt-1">
-                    {group.academic_year}
-                  </span>
+                  <div className="flex items-center gap-2 relative">
+                    <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-bold text-slate-600 dark:text-slate-300 whitespace-nowrap">
+                      {group.academic_year}
+                    </span>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const cardKey = `${group.teacherId}-${group.academic_year}`;
+                          setActiveDropdownCardKey(activeDropdownCardKey === cardKey ? null : cardKey);
+                        }}
+                        className="p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+
+                      {activeDropdownCardKey === `${group.teacherId}-${group.academic_year}` && (
+                        <>
+                          <div className="fixed inset-0 z-45" onClick={(e) => { e.stopPropagation(); setActiveDropdownCardKey(null); }} />
+                          <div className="absolute right-0 top-7 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left font-medium">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                router.push(`/academic-mgmt/teacher-assignment/details?teacherId=${group.teacherId}&year=${group.academic_year}`);
+                                setActiveDropdownCardKey(null);
+                              }}
+                              className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
+                            >
+                              👁 View Details
+                            </button>
+                            {isAdmin && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setFormTeacherId(group.teacherId);
+                                    setFormYear(group.academic_year);
+                                    setIsAddOpen(true);
+                                    setActiveDropdownCardKey(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
+                                >
+                                  ✏ Edit
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setGroupToDelete(group);
+                                    setIsBulkDeleteOpen(true);
+                                    setActiveDropdownCardKey(null);
+                                  }}
+                                  className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 transition-colors cursor-pointer"
+                                >
+                                  🗑 Delete
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Assigned classes and subjects */}
@@ -493,6 +580,23 @@ export default function TeacherAssignmentPage() {
             <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-[14px] font-bold rounded-lg">Cancel</button>
             <button onClick={handleDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm disabled:opacity-60 flex items-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Remove
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Bulk Delete Modal */}
+      <Modal isOpen={isBulkDeleteOpen} onClose={() => { setIsBulkDeleteOpen(false); setGroupToDelete(null); }} title="Remove Teacher Assignments">
+        <div className="space-y-5 text-left">
+          <p className="text-[14px] text-slate-600 dark:text-slate-300">
+            Are you sure you want to remove all assignments for teacher <span className="font-bold text-red-500">{groupToDelete?.teacherName}</span> for academic year <span className="font-bold text-primary">{groupToDelete?.academic_year}</span>?
+            <br /><br />
+            <span className="text-red-500 font-bold bg-red-50 p-2 rounded block">Warning: This will delete all class assignments and their associated syllabus records for this teacher!</span>
+          </p>
+          <div className="flex justify-end gap-3">
+            <button onClick={() => { setIsBulkDeleteOpen(false); setGroupToDelete(null); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-[14px] font-bold rounded-lg">Cancel</button>
+            <button onClick={handleBulkDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm disabled:opacity-60 flex items-center gap-2">
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Remove All
             </button>
           </div>
         </div>

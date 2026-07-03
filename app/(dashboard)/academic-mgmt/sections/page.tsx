@@ -4,13 +4,26 @@ import React, { useState, useCallback } from "react";
 import { Plus, Search, RefreshCcw, MoreVertical, Edit, Trash2, Loader2, AlertCircle, LayoutGrid } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
+import { EnhancedTable } from "@/app/components/ui/EnhancedTable";
 import { useSections, ApiSection } from "@/app/hooks/useSections";
 import { useAuth } from "@/app/context/auth";
+
+import { getPersistedPageSize } from "@/app/components/ui/pagination-bar";
 
 export default function SectionsPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
-  const { sections, isLoading, error, total, fetchSections, createSection, updateSection, deleteSection } = useSections({ skip: true });
+  const {
+    sections,
+    isLoading,
+    error,
+    total,
+    totalPages,
+    fetchSections,
+    createSection,
+    updateSection,
+    deleteSection
+  } = useSections({ skip: true });
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -23,14 +36,18 @@ export default function SectionsPage() {
   const [formStatus, setFormStatus] = useState<"Active" | "Inactive">("Active");
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(() => getPersistedPageSize(25));
+
   const searchRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
-  React.useEffect(() => { fetchSections({ limit: 100 }); }, [fetchSections]);
+  React.useEffect(() => {
+    fetchSections({ page, limit: pageSize, search: searchQuery });
+  }, [fetchSections, page, pageSize, searchQuery]);
 
   const handleSearch = (val: string) => {
     setSearchQuery(val);
-    clearTimeout(searchRef.current);
-    searchRef.current = setTimeout(() => fetchSections({ search: val, limit: 100 }), 400);
+    setPage(1);
   };
 
   const resetForm = () => { setFormName(""); setFormStatus("Active"); setFormError(""); };
@@ -195,9 +212,19 @@ export default function SectionsPage() {
             {isAdmin && <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="px-4 py-2 text-[13px] font-bold bg-primary hover:bg-[var(--primary-hover)] text-white rounded-lg">Add First Section</button>}
           </div>
         ) : (
-          <DataTable columns={columns} data={sections}
+          <EnhancedTable columns={columns} data={sections}
             selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
             renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
+            searchPlaceholder="Search sections..."
+            searchKeys={["name"]}
+            exportFileName="sections-list"
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            isLoading={isLoading}
           />
         )}
       </div>

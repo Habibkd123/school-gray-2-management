@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
   saveSession,
@@ -38,6 +38,8 @@ interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+let _permissionsFetchPromise: Promise<any> | null = null;
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<StoredUser | null>(null);
@@ -47,15 +49,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [sessionExpiredToast, setSessionExpiredToast] = useState(false);
 
   const fetchPermissions = useCallback(async () => {
-    try {
+    if (_permissionsFetchPromise) {
+      try {
+        const data = await _permissionsFetchPromise;
+        setPermissions(data);
+      } catch (err) {
+        console.error("Failed to fetch permissions", err);
+      }
+      return;
+    }
+
+    _permissionsFetchPromise = (async () => {
       const res = await fetch("/api/settings/permissions", {
         headers: getAuthHeaders(),
       });
       const data = await res.json();
-      if (data.success) {
-        setPermissions(data.data);
+      if (!res.ok || !data.success) {
+        throw new Error(data.message || "Failed to fetch permissions");
       }
+      return data.data;
+    })();
+
+    try {
+      const data = await _permissionsFetchPromise;
+      setPermissions(data);
     } catch (err) {
+      _permissionsFetchPromise = null;
       console.error("Failed to fetch permissions", err);
     }
   }, []);
@@ -89,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // ─── Login ────────────────────────────────────────────────────
-  const login = async (
+  const login = useCallback(async (
     username: string,
     password: string,
     loginType?: string
@@ -140,10 +159,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       return { success: false, message: "Network error. Please try again." };
     }
-  };
+  }, []);
 
   // ─── Register ─────────────────────────────────────────────────
-  const register = async (
+  const register = useCallback(async (
     formData: RegisterData
   ): Promise<{ success: boolean; message: string }> => {
     try {
@@ -188,13 +207,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       return { success: false, message: "Network error. Please try again." };
     }
-  };
+  }, []);
 
   // ─── Logout ───────────────────────────────────────────────────
   const logout = useCallback(() => {
     clearSession();
     setUser(null);
+    setPermissions(null);
     setMustChangePassword(false);
+    _permissionsFetchPromise = null;
     router.push("/");
   }, [router]);
 
@@ -236,33 +257,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setMustChangePassword(false);
   }, []);
 
-  // ─── Refresh user data from /me ──────────────────────────────
-  const refreshUser = async () => {
-    try {
-      const res = await fetch("/api/auth/me", {
-        headers: getAuthHeaders(),
-      });
-
-      if (!res.ok) {
-        // Token expired — try refresh
-        const newToken = await tryRefreshToken();
-        if (!newToken) {
-          logout();
-          return;
-        }
-      }
-
-      const data = await res.json();
-      if (data.success) {
-        setUser(data.data);
-      }
-    } catch {
-      // Silent fail
-    }
-  };
-
   // ─── Token Refresh ────────────────────────────────────────────
-  const tryRefreshToken = async (): Promise<boolean> => {
+  const tryRefreshToken = useCallback(async (): Promise<boolean> => {
     try {
       const refreshToken = getRefreshToken();
       if (!refreshToken) return false;
@@ -286,9 +282,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       return false;
     }
-  };
+  }, []);
 
-  const updateRolePermissions = async (role: string, perms: Record<string, string[]>) => {
+  // ─── Refresh user data from /me ──────────────────────────────
+  const refreshUser = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me", {
+        headers: getAuthHeaders(),
+      });
+
+      if (!res.ok) {
+        // Token expired — try refresh
+        const newToken = await tryRefreshToken();
+        if (!newToken) {
+          logout();
+          return;
+        }
+      }
+
+      const data = await res.json();
+      if (data.success) {
+        setUser(data.data);
+      }
+    } catch {
+      // Silent fail
+    }
+  }, [logout, tryRefreshToken]);
+
+  const updateRolePermissions = useCallback(async (role: string, perms: Record<string, string[]>) => {
     try {
       const res = await fetch("/api/settings/permissions", {
         method: "POST",
@@ -312,24 +333,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       throw err;
     }
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    user,
+    permissions,
+    isLoading,
+    isAuthenticated: !!user,
+    mustChangePassword,
+    login,
+    register,
+    logout,
+    refreshUser,
+    updateRolePermissions,
+    clearMustChangePasswordFlag,
+  }), [
+    user,
+    permissions,
+    isLoading,
+    login,
+    register,
+    logout,
+    refreshUser,
+    updateRolePermissions,
+    clearMustChangePasswordFlag,
+  ]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        permissions,
-        isLoading,
-        isAuthenticated: !!user,
-        mustChangePassword,
-        login,
-        register,
-        logout,
-        refreshUser,
-        updateRolePermissions,
-        clearMustChangePasswordFlag,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
       {sessionExpiredToast && (
         <div className="fixed top-5 right-5 z-[9999] flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-[13px] font-medium transition-all bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-400">

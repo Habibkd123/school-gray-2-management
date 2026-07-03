@@ -123,6 +123,9 @@ const studentSchema = new Schema<IStudent>(
 
 studentSchema.index({ school_id: 1, class_id: 1, roll_no: 1 });
 studentSchema.index({ school_id: 1, name: 1 });
+studentSchema.index({ school_id: 1, is_active: 1 });
+studentSchema.index({ school_id: 1, academic_year: 1 });
+studentSchema.index({ school_id: 1, admission_no: 1 });
 studentSchema.index({ name: 1 });
 studentSchema.index({ parent_id: 1 });
 studentSchema.index({ user_id: 1 });

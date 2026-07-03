@@ -266,6 +266,10 @@ attendanceSchema.index(
   { unique: true, partialFilterExpression: { type: "teacher" } }
 );
 
+// Fast date-range queries (dashboard stats, reports)
+attendanceSchema.index({ school_id: 1, class_id: 1, date: 1 });
+attendanceSchema.index({ school_id: 1, type: 1, date: 1 });
+
 // ─── Homework ─────────────────────────────────────────────────────
 export interface IHomework extends Document {
   school_id: mongoose.Types.ObjectId;
@@ -317,6 +321,10 @@ const homeworkSchema = new Schema<IHomework>(
   { timestamps: true }
 );
 
+homeworkSchema.index({ school_id: 1, class_id: 1, status: 1 });
+homeworkSchema.index({ school_id: 1, teacher_id: 1 });
+homeworkSchema.index({ school_id: 1, due_date: -1 });
+
 // ─── Notice ───────────────────────────────────────────────────────
 export interface INotice extends Document {
   school_id: mongoose.Types.ObjectId;
@@ -346,6 +354,9 @@ const noticeSchema = new Schema<INotice>(
   },
   { timestamps: true }
 );
+
+noticeSchema.index({ school_id: 1, is_published: 1, publish_date: -1 });
+noticeSchema.index({ school_id: 1, target_audience: 1, publish_date: -1 });
 
 // ─── Fees ─────────────────────────────────────────────────────────
 export interface IFeesStructure extends Document {
@@ -535,6 +546,9 @@ const leaveRequestSchema = new Schema<ILeaveRequest>(
   },
   { timestamps: true }
 );
+
+leaveRequestSchema.index({ school_id: 1, user_id: 1, status: 1 });
+leaveRequestSchema.index({ school_id: 1, status: 1, createdAt: -1 });
 
 // ─── Room ─────────────────────────────────────────────────────────
 export interface IRoom extends Document {

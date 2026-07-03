@@ -125,7 +125,7 @@ export async function GET() {
       });
     }
 
-    const schools = await School.find({}, "name slug _id is_active").limit(10);
+    const schools = await School.find({}, "name slug _id is_active").limit(10).lean();
     return NextResponse.json({
       success: true,
       status: "configured",

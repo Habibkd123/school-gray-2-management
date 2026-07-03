@@ -8,6 +8,7 @@ import { Modal } from "../../components/ui/modal";
 import { DataTable } from "@/app/components/ui/data-table";
 import { useNotices, ApiNotice } from "@/app/hooks/useNotices";
 import { useUpload } from "@/app/hooks/useUpload";
+import { PaginationBar } from "../../components/ui/pagination-bar";
 
 const AUDIENCE_MAP: Record<string, string> = {
   "Student": "students",
@@ -31,7 +32,19 @@ const REVERSE_AUDIENCE_MAP: Record<string, string> = {
 };
 
 export default function NoticesPage() {
-  const { notices, loading, createNotice, updateNotice, deleteNotice } = useNotices();
+  const {
+    notices,
+    loading,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    total,
+    totalPages,
+    createNotice,
+    updateNotice,
+    deleteNotice
+  } = useNotices();
   const { uploadFile: upload, uploading } = useUpload();
 
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -286,7 +299,7 @@ export default function NoticesPage() {
       </div>
 
       {/* Notice List */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm text-left mt-4">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm text-left mt-4 overflow-hidden">
         {loading ? (
           <div className="px-6 py-16 text-center">
             <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
@@ -297,56 +310,61 @@ export default function NoticesPage() {
             No notices found. Click &quot;Add Message&quot; to post one.
           </div>
         ) : (
-          <DataTable 
-            columns={[
-              { header: "Title", accessorKey: "title", render: (item) => (
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0 text-primary">
-                      <FileText className="w-5 h-5" />
+          <>
+            <DataTable 
+              columns={[
+                { header: "Title", accessorKey: "title", render: (item) => (
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0 text-primary">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="font-bold text-foreground dark:text-slate-100 block">{item.title}</span>
+                        {item.target_audience && item.target_audience !== "all" && (
+                          <span className="text-[11px] text-slate-400 capitalize">→ {item.target_audience}</span>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <span className="font-bold text-foreground dark:text-slate-100 block">{item.title}</span>
-                      {item.target_audience && item.target_audience !== "all" && (
-                        <span className="text-[11px] text-slate-400 capitalize">→ {item.target_audience}</span>
-                      )}
+                )},
+                { header: "Date", accessorKey: "publish_date", render: (item) => (
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-medium">
+                      <Calendar className="w-4 h-4" />
+                      <span>Added on : {formatDate(item.publish_date || item.createdAt)}</span>
                     </div>
-                  </div>
-              )},
-              { header: "Date", accessorKey: "publish_date", render: (item) => (
-                  <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-medium">
-                    <Calendar className="w-4 h-4" />
-                    <span>Added on : {formatDate(item.publish_date || item.createdAt)}</span>
-                  </div>
-              )},
-              { header: "Action", sortable: false, className: "text-center w-24", render: (item) => (
-                  <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => openEditModal(item)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={() => setDeleteConfirmId(item._id)}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-              )}
-            ]}
-            data={notices}
-            selectionHeader={<input type="checkbox" checked={selectAll} onChange={toggleSelectAll} className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />}
-            renderSelection={(item) => <input type="checkbox" checked={selectedNotices.includes(item._id)} onChange={() => toggleSelect(item._id)} className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />}
-          />
+                )},
+                { header: "Action", sortable: false, className: "text-center w-24", render: (item) => (
+                    <div className="flex items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => openEditModal(item)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => setDeleteConfirmId(item._id)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                )}
+              ]}
+              data={notices}
+              selectionHeader={<input type="checkbox" checked={selectAll} onChange={toggleSelectAll} className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />}
+              renderSelection={(item) => <input type="checkbox" checked={selectedNotices.includes(item._id)} onChange={() => toggleSelect(item._id)} className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />}
+            />
+            <PaginationBar
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={total}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              isLoading={loading}
+              className="border-t border-border"
+            />
+          </>
         )}
-      </div>
-
-      {/* Load More */}
-      <div className="flex justify-center pt-4 pb-8">
-        <button className="px-6 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg transition-colors shadow-sm flex items-center gap-2 cursor-pointer">
-          <RefreshCw className="w-4 h-4" /> Load More
-        </button>
       </div>
 
       {/* Delete Confirm */}

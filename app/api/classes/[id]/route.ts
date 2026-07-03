@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import Class from "@/lib/models/Class";
+import Class, { computeSortWeight } from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -45,13 +45,16 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const { name, section, academic_year, class_teacher_id, capacity, class_code, status } = body;
 
     const updateData: Record<string, unknown> = {};
-    if (name !== undefined) updateData.name = name.trim();
-    if (section !== undefined) updateData.section = section.trim();
-    if (academic_year !== undefined) updateData.academic_year = academic_year.trim();
+    if (name !== undefined) {
+      updateData.name        = name.trim();
+      updateData.sort_weight = computeSortWeight(name.trim());  // keep ordering in sync
+    }
+    if (section !== undefined)          updateData.section          = section.trim();
+    if (academic_year !== undefined)    updateData.academic_year    = academic_year.trim();
     if (class_teacher_id !== undefined) updateData.class_teacher_id = class_teacher_id || null;
-    if (capacity !== undefined) updateData.capacity = parseInt(capacity);
-    if (class_code !== undefined) updateData.class_code = class_code?.trim().toUpperCase() || null;
-    if (status !== undefined) updateData.status = status;
+    if (capacity !== undefined)         updateData.capacity         = parseInt(capacity);
+    if (class_code !== undefined)       updateData.class_code       = class_code?.trim().toUpperCase() || null;
+    if (status !== undefined)           updateData.status           = status;
 
     const updated = await Class.findOneAndUpdate(
       { _id: id, school_id: schoolId as string },
