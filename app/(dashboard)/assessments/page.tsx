@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useAuth } from "@/app/context/auth";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useClasses } from "@/app/hooks/useClasses";
-import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import {
   Search, Loader2, AlertCircle, BookOpen, BarChart2, RefreshCw, GraduationCap, ArrowRight,
   ClipboardList, Calendar, CheckCircle2, FileText
@@ -28,7 +27,6 @@ interface Test {
 
 export default function AssessmentsClassListPage() {
   const { user } = useAuth();
-  const { academicYear } = useAcademicConfig();
 
   const [tests, setTests] = useState<Test[]>([]);
   const [isLoading, setIsLoading] = useState(true);
