@@ -1,4 +1,6 @@
 import School from "@/lib/models/School";
+import connectDB from "@/lib/db";
+
 
 export async function resolveSchoolIdServer(
   headersList: { get: (name: string) => string | null },
@@ -62,6 +64,7 @@ export async function resolveSchoolIdServer(
     return schoolId;
   }
   if (schoolSlug) {
+    await connectDB();
     const school = await School.findOne({ slug: schoolSlug }).select("_id").lean();
     if (school) {
       return school._id.toString();
