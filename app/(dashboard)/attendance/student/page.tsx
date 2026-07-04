@@ -22,7 +22,7 @@ export default function StudentAttendancePage() {
   const { attendance, isLoading: loadingAttendance, error, fetchAttendance, saveAttendance } = useStudentAttendance();
   const { classes } = useClasses({ filterByYear: true });
   const { streams } = useStreams({ skip: !enableStreams });
-  const { students, fetchStudents, isLoading: loadingStudents } = useStudents();
+  const { students, fetchStudents, isLoading: loadingStudents } = useStudents({ skip: true });
 
   const { user } = useAuth();
   const isTeacher = user?.role === "teacher";

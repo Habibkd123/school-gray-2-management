@@ -13,6 +13,7 @@ async function resolveSchoolId(id: string): Promise<string | null> {
   if (mongoose.isValidObjectId(id)) {
     return id;
   }
+  await connectDB();
   const school = await School.findOne({ slug: id.toLowerCase() }).select("_id").lean();
   return school ? school._id.toString() : null;
 }

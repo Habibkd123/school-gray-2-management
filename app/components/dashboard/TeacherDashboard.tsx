@@ -61,7 +61,7 @@ const TeacherDashboard = React.memo(function TeacherDashboard({ user }: TeacherD
   const { academicYear } = useAppState();
 
   const { teachers } = useTeachers();
-  const { students, fetchStudents } = useStudents();
+  const { students, fetchStudents } = useStudents({ skip: true });
   const { classes } = useClasses();
   const { holidays } = useHolidays();
   const { results } = useResults();

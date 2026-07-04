@@ -7,7 +7,7 @@ import { useStudents } from "@/app/hooks/useStudents";
 import { useFeeAllocations, useFeeMasters, useFeePayments } from "@/app/hooks/useFees";
 
 export default function CollectFeesPage() {
-  const { students, isLoading: studentsLoading, fetchStudents: fetchAllStudents } = useStudents();
+  const { students, isLoading: studentsLoading, fetchStudents: fetchAllStudents } = useStudents({ skip: true });
   const { allocations, loading: allocLoading, fetchAllocations } = useFeeAllocations();
   const { masters, loading: mastersLoading, fetchMasters } = useFeeMasters();
   const { payments, loading: paymentsLoading, fetchPayments, recordPayment } = useFeePayments();

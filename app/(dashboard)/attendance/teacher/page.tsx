@@ -11,7 +11,7 @@ export default function TeacherAttendancePage() {
   const { academicYear } = useAppState();
 
   const { attendance, isLoading: loadingAttendance, error, fetchAttendance, saveAttendance } = useTeacherAttendance();
-  const { teachers, fetchTeachers, isLoading: loadingTeachers } = useTeachers();
+  const { teachers, fetchTeachers, isLoading: loadingTeachers } = useTeachers({ skip: true });
 
   // Filters
   const [filterYear, setFilterYear] = useState(academicYear);

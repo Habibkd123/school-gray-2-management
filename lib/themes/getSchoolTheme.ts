@@ -1,6 +1,8 @@
 import School from "@/lib/models/School";
 import mongoose from "mongoose";
 import { resolveThemeConfig, themeColorsToCssVars, type ThemeConfig } from "@/lib/themes/presets";
+import connectDB from "@/lib/db";
+
 
 export interface ResolvedSchoolTheme {
   school_id: string;
@@ -13,6 +15,7 @@ export interface ResolvedSchoolTheme {
 }
 
 export async function getSchoolThemeById(schoolId: string): Promise<ResolvedSchoolTheme | null> {
+  await connectDB();
   let school;
   if (mongoose.isValidObjectId(schoolId)) {
     school = await School.findById(schoolId).lean();

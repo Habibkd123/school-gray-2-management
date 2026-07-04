@@ -110,7 +110,7 @@ export default function ClassHomeWorkPage() {
   }, [formChapterId, syllabusChapters]);
 
   const viewClassId = viewSubmissionsHw ? (typeof viewSubmissionsHw.class_id === 'object' ? viewSubmissionsHw.class_id?._id : viewSubmissionsHw.class_id) as string : undefined;
-  const { students, fetchStudents } = useStudents();
+  const { students, fetchStudents } = useStudents({ skip: true });
 
   // When viewSubmissionsHw changes, fetch students for that class
   React.useEffect(() => {

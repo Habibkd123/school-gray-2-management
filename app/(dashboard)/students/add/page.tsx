@@ -146,7 +146,7 @@ function AddStudentContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
   const { classes: apiClasses } = useClasses();
-  const { createStudent, updateStudent, getStudent } = useStudents();
+  const { createStudent, updateStudent, getStudent } = useStudents({ skip: true });
   const { uploadFile } = useUpload();
 
   const [isSubmitting, setIsSubmitting] = useState(false);

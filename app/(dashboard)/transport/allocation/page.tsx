@@ -36,7 +36,7 @@ export default function AllocationPage() {
   const { allocations, isLoading, error, addAllocation, updateAllocation, deleteAllocation, fetchAllocations } = useAllocations();
   const { routes } = useRoutes();
   const { buses } = useBuses();
-  const { students, fetchStudents } = useStudents();
+  const { students, fetchStudents } = useStudents({ skip: true });
 
   useEffect(() => {
     fetchStudents({ limit: 1000 });

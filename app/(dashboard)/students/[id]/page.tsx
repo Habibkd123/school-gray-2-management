@@ -23,7 +23,7 @@ function StudentViewContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const studentId = params.id as string;
-  const { getStudent } = useStudents();
+  const { getStudent } = useStudents({ skip: true });
   const { classes } = useClasses();
 
   const [student, setStudent] = useState<ApiStudent | null>(null);

@@ -10,7 +10,7 @@ import { useStudents } from "@/app/hooks/useStudents";
 export default function AssignFeesPage() {
   const { groups, loading: groupsLoading } = useFeeGroups();
   const { classes, isLoading: classesLoading } = useClasses();
-  const { students, isLoading: studentsLoading, fetchStudents } = useStudents();
+  const { students, isLoading: studentsLoading, fetchStudents } = useStudents({ skip: true });
   const { allocations, loading: allocLoading, allocateFees, fetchAllocations } = useFeeAllocations();
 
   const [selectedGroup, setSelectedGroup] = useState("");

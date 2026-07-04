@@ -13,7 +13,7 @@ interface TeacherRecentAttendanceMap {
 }
 
 export default function TeacherReportPage() {
-  const { teachers, isLoading, fetchTeachers } = useTeachers();
+  const { teachers, isLoading, fetchTeachers } = useTeachers({ skip: true });
   const [attendanceMap, setAttendanceMap] = useState<TeacherRecentAttendanceMap>({});
   const [attendanceLoading, setAttendanceLoading] = useState(true);
 

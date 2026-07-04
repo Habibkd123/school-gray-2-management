@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import connectDB from "@/lib/db";
 
 /**
  * Utility to generate unique school username (subdomain style) for a user.
@@ -19,6 +20,7 @@ export async function generateUsernameForUser(
   const localPart = email.split("@")[0].toLowerCase().trim().replace(/[^a-z0-9.]/g, "");
 
   if (schoolId) {
+    await connectDB();
     const School = mongoose.models.School || mongoose.model("School");
     const school = await School.findById(schoolId).select("slug").lean() as any;
     if (school && school.slug) {
