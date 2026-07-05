@@ -1,0 +1,2001 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>School Document Builder</title>
+  <style>
+    :root {
+      --app-bg: #eef1f5;
+      --panel-bg: #ffffff;
+      --ink: #1f2430;
+      --muted: #6b7280;
+      --line: #e2e5eb;
+      --accent: #2f6f4f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--app-bg);
+      color: var(--ink);
+    }
+
+    .app {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ---------- LEFT CONTROL PANEL ---------- */
+    .panel {
+      width: 380px;
+      min-width: 340px;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--line);
+      padding: 20px;
+      overflow-y: auto;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .brand .logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), #1f4d38);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .brand h1 {
+      font-size: 16px;
+      margin: 0;
+    }
+
+    .brand p {
+      margin: 0;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .doc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .doc-btn {
+      border: 1.5px solid var(--line);
+      background: #fbfbfd;
+      border-radius: 10px;
+      padding: 10px 8px;
+      font-size: 12px;
+      text-align: left;
+      cursor: pointer;
+      transition: .15s;
+      line-height: 1.3;
+    }
+
+    .doc-btn b {
+      display: block;
+      font-size: 12.5px;
+      margin-bottom: 2px;
+    }
+
+    .doc-btn span {
+      color: var(--muted);
+      font-size: 10.5px;
+    }
+
+    .doc-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .doc-btn.active {
+      border-color: var(--accent);
+      background: #eef7f1;
+      box-shadow: 0 0 0 1px var(--accent) inset;
+    }
+
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      font-weight: 700;
+      margin: 20px 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .theme-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .theme-swatch {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .theme-swatch.active {
+      border-color: var(--ink);
+    }
+
+    .theme-swatch::after {
+      content: "";
+      position: absolute;
+      inset: 4px;
+      border-radius: 50%;
+      background: var(--sw2);
+    }
+
+    label {
+      display: block;
+      font-size: 11.5px;
+      color: var(--muted);
+      margin: 10px 0 4px;
+      font-weight: 600;
+    }
+
+    input[type=text],
+    input[type=date],
+    input[type=number],
+    textarea,
+    select {
+      width: 100%;
+      padding: 8px 9px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      font-size: 13px;
+      font-family: inherit;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 56px;
+    }
+
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .row3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .subj-row {
+      display: grid;
+      grid-template-columns: 1.6fr .8fr .8fr auto;
+      gap: 6px;
+      margin-bottom: 6px;
+      align-items: center;
+    }
+
+    .subj-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      margin-bottom: 8px;
+      background: #fafbfc;
+    }
+
+    .subj-card input[type=text] {
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    .subj-grid4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      gap: 5px;
+      align-items: end;
+    }
+
+    .subj-grid4 .cell {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .subj-grid4 .cell span {
+      font-size: 9px;
+      color: var(--muted);
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+    }
+
+    .subj-grid4 input {
+      padding: 5px 6px;
+      font-size: 12px;
+    }
+
+    .mini-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 6px;
+      padding: 6px 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .mini-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .add-row-btn {
+      width: 100%;
+      margin-top: 4px;
+      padding: 8px;
+      border: 1.5px dashed var(--line);
+      background: #fafbfc;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12.5px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .add-row-btn:hover {
+      background: #eef7f1;
+    }
+
+    .photo-drop {
+      border: 1.5px dashed var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      font-size: 11.5px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .photo-drop:hover {
+      border-color: var(--accent);
+    }
+
+    .print-btn {
+      width: 100%;
+      margin-top: 22px;
+      padding: 12px;
+      border: none;
+      border-radius: 9px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .print-btn:hover {
+      filter: brightness(1.08);
+    }
+
+    .hint {
+      font-size: 10.5px;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    /* ---------- RIGHT PREVIEW ---------- */
+    .stage {
+      flex: 1;
+      padding: 36px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow: auto;
+      height: 100vh;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      background: #fff;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .15);
+      padding: 14mm;
+      position: relative;
+    }
+
+    .page.card-size {
+      width: 340px;
+      min-height: auto;
+      height: auto;
+      padding: 0;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .2);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+
+    /* --- certificate frame --- */
+    .frame {
+      border: 3px double var(--pri);
+      padding: 16px;
+      height: 100%;
+      position: relative;
+      min-height: calc(297mm - 28mm - 32px);
+    }
+
+    .wm {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: .06;
+      pointer-events: none;
+    }
+
+    .wm svg {
+      width: 340px;
+      height: 340px;
+    }
+
+    .letterhead {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 2px solid var(--pri);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+    }
+
+    .emblem {
+      width: 64px;
+      height: 64px;
+      flex: 0 0 auto;
+    }
+
+    .lh-text {
+      flex: 1;
+      text-align: center;
+    }
+
+    .lh-text h2 {
+      margin: 0;
+      color: var(--pri);
+      font-size: 23px;
+      letter-spacing: .02em;
+      font-family: Georgia, 'Times New Roman', serif;
+    }
+
+    .lh-text .sub {
+      font-size: 11.5px;
+      color: #444;
+      margin-top: 2px;
+    }
+
+    .lh-text .meta {
+      font-size: 10px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    .cert-title {
+      text-align: center;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--pri);
+      margin: 10px 0 4px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .cert-title-wrap {
+      text-align: center;
+    }
+
+    .cert-title-wrap .rule {
+      width: 150px;
+      height: 2px;
+      background: var(--acc);
+      margin: 2px auto 16px;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 14px;
+      color: #333;
+    }
+
+    .body-text {
+      font-size: 13.5px;
+      line-height: 2;
+      text-align: justify;
+      color: #232323;
+    }
+
+    .body-text b {
+      color: #000;
+    }
+
+    .fill {
+      border-bottom: 1px solid #999;
+      padding: 0 3px;
+      font-weight: 600;
+    }
+
+    .sign-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 56px;
+      font-size: 12px;
+    }
+
+    .sign-box {
+      text-align: center;
+      width: 150px;
+    }
+
+    .sign-line {
+      border-top: 1px solid #333;
+      margin-bottom: 4px;
+      padding-top: 4px;
+    }
+
+    .seal {
+      width: 80px;
+      height: 80px;
+      border: 2px dashed #999;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: #999;
+      text-align: center;
+      margin: 0 auto 6px;
+    }
+
+    table.doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      margin: 10px 0;
+    }
+
+    table.doc-table th,
+    table.doc-table td {
+      border: 1px solid #bbb;
+      padding: 6px 8px;
+    }
+
+    table.doc-table th {
+      background: var(--pri);
+      color: #fff;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    table.tc-fields td {
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+      vertical-align: top;
+    }
+
+    table.tc-fields td.num {
+      width: 26px;
+      color: #666;
+      font-weight: 700;
+    }
+
+    table.tc-fields td.label {
+      width: 280px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .badge-strip {
+      height: 8px;
+      background: linear-gradient(90deg, var(--pri), var(--acc));
+      margin: -14mm -14mm 14px -14mm;
+    }
+
+    /* ---- MARKSHEET (theory/practical statement style) ---- */
+    .ms-titleband {
+      background: linear-gradient(90deg, var(--pri), var(--acc));
+      color: #fff;
+      text-align: center;
+      padding: 7px 10px;
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      border-radius: 4px;
+      margin: 12px 0 14px;
+    }
+
+    .ms-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 18px;
+      font-size: 12px;
+      margin-bottom: 12px;
+    }
+
+    .ms-info-grid div {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dotted #ccc;
+      padding: 4px 0;
+    }
+
+    .ms-info-grid b {
+      color: #333;
+    }
+
+    table.ms-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    table.ms-table th,
+    table.ms-table td {
+      border: 1px solid #999;
+      padding: 6px 7px;
+      text-align: center;
+    }
+
+    table.ms-table thead tr:first-child th {
+      background: var(--pri);
+      color: #fff;
+    }
+
+    table.ms-table thead tr:last-child th {
+      background: #eef0f3;
+      color: #333;
+      font-size: 10.5px;
+    }
+
+    table.ms-table td.subj-name {
+      text-align: left;
+      font-weight: 600;
+    }
+
+    tr.ms-grandtotal td {
+      background: var(--acc);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .ms-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 26px;
+    }
+
+    .qr-box {
+      width: 70px;
+      height: 70px;
+      border: 1px solid #999;
+      padding: 3px;
+    }
+
+    .qr-box svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .qr-caption {
+      font-size: 8.5px;
+      color: #777;
+      text-align: center;
+      margin-top: 3px;
+      width: 70px;
+    }
+
+    .ms-result-strip {
+      display: flex;
+      justify-content: space-around;
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 6px;
+      font-size: 12.5px;
+    }
+
+    .ms-result-strip b {
+      display: block;
+      color: var(--pri);
+      font-size: 15px;
+    }
+
+    /* ---- ID CARD ---- */
+    .idcard {
+      width: 340px;
+      background: #fff;
+    }
+
+    .idc-head {
+      background: linear-gradient(135deg, var(--pri), var(--acc));
+      color: #fff;
+      padding: 12px 14px 30px;
+      text-align: center;
+      position: relative;
+    }
+
+    .idc-head h3 {
+      margin: 0;
+      font-size: 14.5px;
+      font-family: Georgia, serif;
+    }
+
+    .idc-head p {
+      margin: 2px 0 0;
+      font-size: 9.5px;
+      opacity: .9;
+    }
+
+    .idc-photo {
+      width: 78px;
+      height: 90px;
+      background: #f1f1f1;
+      border: 3px solid #fff;
+      border-radius: 6px;
+      position: absolute;
+      left: 50%;
+      top: 52px;
+      transform: translateX(-50%);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, .25);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: #999;
+    }
+
+    .idc-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .idc-body {
+      padding: 46px 16px 12px;
+      text-align: center;
+    }
+
+    .idc-name {
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--pri);
+      margin-bottom: 1px;
+    }
+
+    .idc-role {
+      font-size: 11px;
+      color: var(--acc);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 10px;
+    }
+
+    .idc-grid {
+      text-align: left;
+      font-size: 11px;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 8px;
+      margin-top: 8px;
+    }
+
+    .idc-grid b {
+      color: #444;
+      font-weight: 600;
+    }
+
+    .idc-foot {
+      background: #f5f5f5;
+      padding: 8px 14px;
+      font-size: 9px;
+      color: #666;
+      text-align: center;
+      border-top: 1px solid #e2e2e2;
+    }
+
+    .idc-strip {
+      height: 6px;
+      background: repeating-linear-gradient(90deg, var(--pri) 0 6px, #fff 6px 8px);
+    }
+
+    /* ---- SALARY SLIP ---- */
+    .pay-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid #bbb;
+      margin-top: 10px;
+    }
+
+    .pay-col {
+      padding: 0;
+    }
+
+    .pay-col h4 {
+      margin: 0;
+      background: var(--pri);
+      color: #fff;
+      padding: 7px 10px;
+      font-size: 12px;
+    }
+
+    .pay-line {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 10px;
+      font-size: 12.5px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .pay-total {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 800;
+      background: #f7f7f7;
+      border-top: 2px solid #ccc;
+    }
+
+    .netpay {
+      margin-top: 12px;
+      text-align: center;
+      background: #f4f9f6;
+      border: 1.5px solid var(--pri);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .netpay .amt {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--pri);
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+
+      .page,
+      .page * {
+        visibility: visible;
+      }
+
+      .page {
+        position: absolute;
+        left: 0;
+        top: 0;
+        box-shadow: none;
+        margin: 0;
+      }
+
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      .page.card-size {
+        width: 85.6mm;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+
+    <!-- ============ LEFT CONTROL PANEL ============ -->
+    <div class="panel">
+      <div class="brand">
+        <div class="logo">SD</div>
+        <div>
+          <h1>School Document Builder</h1>
+          <p>Certificates &amp; records — Indian school format</p>
+        </div>
+      </div>
+
+      <div class="section-title">Choose Document</div>
+      <div class="doc-grid" id="docGrid"></div>
+
+      <div class="section-title">Theme Color</div>
+      <div class="theme-row" id="themeRow"></div>
+
+      <div class="section-title">School Details (applies to all documents)</div>
+      <div id="schoolFields"></div>
+
+      <div class="section-title" id="docFieldsTitle">Document Details</div>
+      <div id="docFields"></div>
+
+      <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+      <p class="hint">Tip: In the print dialog choose "Save as PDF" as the destination to download the document instead
+        of printing it.</p>
+    </div>
+
+    <!-- ============ RIGHT PREVIEW ============ -->
+    <div class="stage">
+      <div class="page" id="pageEl">
+        <div id="previewRoot"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ===================== CONFIG ===================== */
+
+    const THEMES = {
+      navy: { name: 'Navy & Gold', pri: '#12305c', acc: '#b8860b' },
+      emerald: { name: 'Emerald', pri: '#0f5132', acc: '#b08d57' },
+      maroon: { name: 'Maroon Heritage', pri: '#6b1e2b', acc: '#c9a227' },
+      slate: { name: 'Slate Blue', pri: '#28324a', acc: '#3f8f78' },
+      indigo: { name: 'Royal Indigo', pri: '#2b2560', acc: '#d1a13d' },
+    };
+
+    const DOC_TYPES = [
+      { id: 'bonafide', name: 'Bonafide Certificate', desc: 'Enrollment proof' },
+      { id: 'tc', name: 'Transfer Certificate', desc: 'TC / Leaving' },
+      { id: 'character', name: 'Character Certificate', desc: 'Conduct proof' },
+      { id: 'study', name: 'Study Certificate', desc: 'Currently studying' },
+      { id: 'experience', name: 'Experience Certificate', desc: 'For staff/teachers' },
+      { id: 'salary', name: 'Salary Slip', desc: 'Monthly payslip' },
+      { id: 'idcard', name: 'ID Card', desc: 'Student / staff' },
+      { id: 'marksheet', name: 'Mark Sheet', desc: '4 formats — pick below' },
+    ];
+
+    let state = {
+      docType: 'bonafide',
+      theme: 'navy',
+      msFormat: 'iti',
+      school: {
+        schoolName: 'GOVERNMENT UPPER PRIMARY SCHOOL, KHERLI',
+        schoolAddress: 'Village Kherli, Tehsil Kota, District Kota, Rajasthan - 324001',
+        schoolPhone: '+91 98765 43210',
+        udise: '08251234567',
+        affNo: 'AFF/2011/00456',
+        estd: '1978',
+      },
+      data: {},   // per-document fields, keyed by docType
+      subjects: { // marksheet subject rows, keyed by format
+        iti: [
+          { name: 'Fire Prevention & Protection', thMax: 100, thObt: 78, prMax: 50, prObt: 42 },
+          { name: 'Industrial Safety Management', thMax: 100, thObt: 85, prMax: 50, prObt: 45 },
+          { name: 'First Aid & Rescue Operations', thMax: 100, thObt: 80, prMax: 50, prObt: 40 },
+          { name: 'Hazardous Material Handling', thMax: 100, thObt: 75, prMax: 50, prObt: 38 },
+          { name: 'Practical Training & Fire Drill', thMax: 0, thObt: 0, prMax: 100, prObt: 88 },
+        ],
+        villagePrimary: [
+          { name: 'हिन्दी', max: 200, obt: 150 },
+          { name: 'अंग्रेजी', max: 100, obt: 74 },
+          { name: 'गणित', max: 200, obt: 137 },
+          { name: 'पर्यावरण अध्ययन', max: 200, obt: 176 },
+        ],
+        boardDivision: [
+          { name: 'Hindi', max: 100, obt: 78 },
+          { name: 'English', max: 100, obt: 82 },
+          { name: 'Mathematics', max: 100, obt: 88 },
+          { name: 'Science', max: 100, obt: 75 },
+          { name: 'Social Science', max: 100, obt: 80 },
+          { name: 'Sanskrit', max: 100, obt: 85 },
+        ],
+        cceGrade: [
+          { name: 'Hindi', term1: 'A1', term2: 'A2' },
+          { name: 'English', term1: 'B1', term2: 'A2' },
+          { name: 'Mathematics', term1: 'A2', term2: 'A1' },
+          { name: 'Science', term1: 'B1', term2: 'B1' },
+          { name: 'Social Science', term1: 'A2', term2: 'A2' },
+        ],
+      },
+      coScholastic: {
+        villagePrimary: [
+          { name: 'कार्यानुभव (Work Experience)', max: 100, obt: 95, grade: 'अ' },
+          { name: 'कला शिक्षा (Art Education)', max: 100, obt: 90, grade: 'अ' },
+          { name: 'स्वास्थ्य एवं शारीरिक शिक्षा (Health & Phy. Edu.)', max: 100, obt: 85, grade: 'अ' },
+        ],
+        cceGrade: [
+          { name: 'Work Education', grade: 'A' },
+          { name: 'Art Education', grade: 'A' },
+          { name: 'Health & Physical Education', grade: 'A' },
+        ],
+      },
+      photo: null,
+    };
+
+    /* ---------- field definitions per document type ---------- */
+    const FIELD_DEFS = {
+      bonafide: [
+        ['certNo', 'Certificate No.', 'text', 'BC/2026/014'],
+        ['date', 'Date of Issue', 'date', today()],
+        ['studentName', 'Student Name', 'text', 'Ramesh Kumar Meena'],
+        ['fatherName', "Father's Name", 'text', 'Suresh Kumar Meena'],
+        ['motherName', "Mother's Name", 'text', 'Geeta Devi'],
+        ['className', 'Class', 'text', '8th'],
+        ['section', 'Section', 'text', 'A'],
+        ['session', 'Academic Session', 'text', '2025-26'],
+        ['dob', 'Date of Birth', 'date', '2012-04-15'],
+        ['purpose', 'Purpose', 'textarea', 'for the purpose of obtaining a caste certificate / scholarship'],
+      ],
+      tc: [
+        ['tcNo', 'TC No.', 'text', 'TC/2026/031'],
+        ['admissionNo', 'Admission No.', 'text', 'A-1123'],
+        ['studentName', 'Student Name', 'text', 'Ramesh Kumar Meena'],
+        ['fatherName', "Father's Name", 'text', 'Suresh Kumar Meena'],
+        ['motherName', "Mother's Name", 'text', 'Geeta Devi'],
+        ['nationality', 'Nationality', 'text', 'Indian'],
+        ['religion', 'Religion', 'text', 'Hindu'],
+        ['category', 'Category', 'text', 'OBC'],
+        ['dobFigures', 'Date of Birth (figures)', 'date', '2012-04-15'],
+        ['dobWords', 'Date of Birth (in words)', 'text', 'Fifteenth April, Two Thousand Twelve'],
+        ['lastClass', 'Class Last Studied', 'text', '8th'],
+        ['admissionDate', 'Date of Admission', 'date', '2019-06-10'],
+        ['leavingDate', 'Date of Leaving', 'date', today()],
+        ['reasonForLeaving', 'Reason for Leaving', 'text', 'Parents shifted to another village'],
+        ['conduct', 'Conduct', 'text', 'Good'],
+        ['workingDays', 'Total Working Days', 'text', '220'],
+        ['presentDays', 'Days Present', 'text', '208'],
+        ['promoted', 'Promoted to Higher Class', 'select', 'Yes|No|N/A'],
+        ['remarks', 'Remarks', 'textarea', 'No dues pending against the school.'],
+      ],
+      character: [
+        ['certNo', 'Certificate No.', 'text', 'CC/2026/019'],
+        ['studentName', 'Student Name', 'text', 'Ramesh Kumar Meena'],
+        ['fatherName', "Father's Name", 'text', 'Suresh Kumar Meena'],
+        ['className', 'Class', 'text', '8th'],
+        ['session', 'Session / Duration', 'text', '2019 to 2026'],
+        ['conductText', 'Conduct Remarks', 'textarea', 'His moral character and conduct during this period has been found to be excellent. He is disciplined, honest and respectful towards teachers and fellow students.'],
+        ['date', 'Date of Issue', 'date', today()],
+      ],
+      study: [
+        ['certNo', 'Certificate No.', 'text', 'SC/2026/022'],
+        ['studentName', 'Student Name', 'text', 'Ramesh Kumar Meena'],
+        ['fatherName', "Father's Name", 'text', 'Suresh Kumar Meena'],
+        ['className', 'Class', 'text', '8th'],
+        ['session', 'Academic Session', 'text', '2025-26'],
+        ['studyingSince', 'Studying Since', 'text', '1st April 2019'],
+        ['date', 'Date of Issue', 'date', today()],
+      ],
+      experience: [
+        ['certNo', 'Certificate No.', 'text', 'EC/2026/007'],
+        ['employeeName', 'Employee Name', 'text', 'Smt. Kavita Sharma'],
+        ['designation', 'Designation', 'text', 'Assistant Teacher (Hindi)'],
+        ['subjectTaught', 'Subject(s) Taught', 'text', 'Hindi, Social Science'],
+        ['joiningDate', 'Date of Joining', 'date', '2018-07-01'],
+        ['relievingDate', 'Date of Relieving', 'date', today()],
+        ['duration', 'Total Duration', 'text', '7 years, 6 months'],
+        ['conductText', 'Remarks', 'textarea', 'During her tenure she has been sincere, hard-working and dedicated towards her duties. Her conduct has always been exemplary.'],
+        ['date', 'Date of Issue', 'date', today()],
+      ],
+      salary: [
+        ['month', 'Salary Month', 'text', 'June 2026'],
+        ['employeeName', 'Employee Name', 'text', 'Smt. Kavita Sharma'],
+        ['designation', 'Designation', 'text', 'Assistant Teacher'],
+        ['employeeId', 'Employee / PEN No.', 'text', 'RJ-PEN-45210'],
+        ['bankAcNo', 'Bank A/c No.', 'text', 'XXXXXXXX3456'],
+        ['daysPresent', 'Days Present', 'text', '26'],
+        ['daysInMonth', 'Days in Month', 'text', '30'],
+        ['basic', 'Basic Pay', 'number', '32000'],
+        ['da', 'Dearness Allowance (DA)', 'number', '6400'],
+        ['hra', 'House Rent Allowance (HRA)', 'number', '3200'],
+        ['ta', 'Travel Allowance (TA)', 'number', '1600'],
+        ['otherAllow', 'Other Allowance', 'number', '500'],
+        ['pf', 'Provident Fund (PF)', 'number', '3840'],
+        ['profTax', 'Professional Tax', 'number', '200'],
+        ['otherDeduct', 'Other Deduction', 'number', '0'],
+      ],
+      idcard: [
+        ['role', 'Role', 'select', 'Student|Teacher|Staff'],
+        ['name', 'Full Name', 'text', 'Ramesh Kumar Meena'],
+        ['classOrDesig', 'Class / Designation', 'text', 'Class 8th - A'],
+        ['idNo', 'Roll No. / Employee ID', 'text', '23'],
+        ['bloodGroup', 'Blood Group', 'text', 'B+'],
+        ['dob', 'Date of Birth', 'date', '2012-04-15'],
+        ['address', 'Address', 'textarea', 'Village Kherli, Tehsil Kota, Rajasthan'],
+        ['contact', 'Contact No.', 'text', '+91 98765 43210'],
+        ['validTill', 'Valid Till', 'text', '31 March 2027'],
+      ],
+      marksheet: [
+        ['studentName', 'Student Name', 'text', 'Ramesh Kumar Meena'],
+        ['fatherName', "Father's Name", 'text', 'Suresh Kumar Meena'],
+        ['motherName', "Mother's Name", 'text', 'Geeta Devi'],
+        ['className', 'Class / Course', 'text', '8th'],
+        ['section', 'Section', 'text', 'A'],
+        ['rollNo', 'Roll No.', 'text', '23'],
+        ['registrationNo', 'Registration No.', 'text', 'REG/2026/00458'],
+        ['session', 'Session', 'text', '2025-26'],
+        ['examName', 'Examination', 'text', 'Annual Examination'],
+        ['dob', 'Date of Birth', 'date', '2012-04-15'],
+      ],
+    };
+
+    /* ---------- marksheet format variants ---------- */
+    const MS_FORMATS = [
+      { id: 'iti', name: 'ITI / Institute (Theory + Practical)' },
+      { id: 'villagePrimary', name: 'Village Primary School (Hindi)' },
+      { id: 'boardDivision', name: 'Secondary Board (Division & Result)' },
+      { id: 'cceGrade', name: 'CCE Grade Report (Term-wise)' },
+    ];
+
+    const VILLAGE_FIELDS = [
+      ['enrollmentNo', 'नामांक (Enrollment No.)', 'text', '504'],
+      ['session', 'सत्र (Session)', 'text', '2025-2026'],
+      ['studentName', 'नाम विद्यार्थी (Student Name)', 'text', 'आरिफ बीन'],
+      ['fatherName', "पिता का नाम (Father's Name)", 'text', 'श्री उमर बीन देशवाली'],
+      ['motherName', "माता का नाम (Mother's Name)", 'text', 'श्रीमती रुकसाना जानी'],
+      ['classCategory', 'कक्षा (Class)', 'select', 'I|II|III|IV|V'],
+      ['dob', 'जन्म तिथि (Date of Birth)', 'date', '2018-09-06'],
+      ['supplementarySubject', 'पूरक विषय (Supplementary Subject)', 'text', '—'],
+      ['specialAch1', 'विशेष योग्यता 1 (Special Achievement 1)', 'text', 'हिन्दी'],
+      ['specialAch2', 'विशेष योग्यता 2 (Special Achievement 2)', 'text', 'पर्यावरण अध्ययन'],
+      ['resultStatus', 'परिणाम (Result)', 'select', 'उत्तीर्ण|अनुत्तीर्ण|पूरक'],
+      ['division', 'श्रेणी (Division)', 'select', 'प्रथम|द्वितीय|तृतीय'],
+    ];
+
+    const BOARD_EXTRA_FIELDS = [
+      ['division', 'Division', 'select', 'First|Second|Third|Fail'],
+      ['resultStatus', 'Result', 'select', 'PASS|FAIL|SUPPLEMENTARY'],
+    ];
+
+    function getFieldDefsForFormat(format) {
+      if (format === 'villagePrimary') return VILLAGE_FIELDS;
+      if (format === 'boardDivision') return [...FIELD_DEFS.marksheet, ...BOARD_EXTRA_FIELDS];
+      return FIELD_DEFS.marksheet; // iti, cceGrade
+    }
+
+    const DOC_TITLES = {
+      bonafide: 'Bonafide Certificate', tc: 'Transfer Certificate', character: 'Character Certificate',
+      study: 'Study Certificate', experience: 'Experience Certificate', salary: 'Salary Slip',
+      idcard: 'Identity Card', marksheet: 'Mark Sheet',
+    };
+
+    function today() { return new Date().toISOString().slice(0, 10); }
+    function fmtDate(d) {
+      if (!d) return '__________';
+      const dt = new Date(d + 'T00:00:00');
+      if (isNaN(dt)) return d;
+      return dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+    }
+    function num(v) { return Number(v) || 0; }
+    function money(v) { return '₹ ' + num(v).toLocaleString('en-IN'); }
+
+    /* init default data for each doc type */
+    Object.keys(FIELD_DEFS).forEach(dt => {
+      state.data[dt] = {};
+      FIELD_DEFS[dt].forEach(([key, label, type, def]) => {
+        state.data[dt][key] = type === 'select' ? def.split('|')[0] : def;
+      });
+    });
+    /* extra marksheet-format-only fields (village primary + board division extras) */
+    [...VILLAGE_FIELDS, ...BOARD_EXTRA_FIELDS].forEach(([key, label, type, def]) => {
+      if (!(key in state.data.marksheet)) {
+        state.data.marksheet[key] = type === 'select' ? def.split('|')[0] : def;
+      }
+    });
+
+    /* ===================== RENDER: LEFT PANEL ===================== */
+
+    function renderDocGrid() {
+      const el = document.getElementById('docGrid');
+      el.innerHTML = DOC_TYPES.map(d => `
+    <div class="doc-btn ${d.id === state.docType ? 'active' : ''}" data-doc="${d.id}">
+      <b>${d.name}</b><span>${d.desc}</span>
+    </div>`).join('');
+      el.querySelectorAll('.doc-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          state.docType = b.dataset.doc;
+          renderAll();
+        });
+      });
+    }
+
+    function renderThemeRow() {
+      const el = document.getElementById('themeRow');
+      el.innerHTML = Object.entries(THEMES).map(([id, t]) => `
+    <div class="theme-swatch ${id === state.theme ? 'active' : ''}"
+         style="--sw2:${t.acc};background:${t.pri}" title="${t.name}" data-theme="${id}"></div>
+  `).join('');
+      el.querySelectorAll('.theme-swatch').forEach(s => {
+        s.addEventListener('click', () => { state.theme = s.dataset.theme; renderAll(); });
+      });
+    }
+
+    function inputField(container, keyPrefix, key, label, type, value, onChange) {
+      const wrap = document.createElement('div');
+      if (type === 'select') {
+        // value here is "opt1|opt2" originally, but we pass current value + options separately handled outside
+      }
+      wrap.innerHTML = `<label>${label}</label>`;
+      let inputEl;
+      if (type === 'textarea') {
+        inputEl = document.createElement('textarea');
+        inputEl.value = value;
+      } else if (type === 'select') {
+        inputEl = document.createElement('select');
+      } else {
+        inputEl = document.createElement('input');
+        inputEl.type = type;
+        inputEl.value = value;
+      }
+      wrap.appendChild(inputEl);
+      container.appendChild(wrap);
+      inputEl.addEventListener('input', () => onChange(inputEl.value));
+      return inputEl;
+    }
+
+    function renderSchoolFields() {
+      const el = document.getElementById('schoolFields');
+      el.innerHTML = '';
+      const defs = [
+        ['schoolName', 'School Name', 'text'],
+        ['schoolAddress', 'Address', 'textarea'],
+        ['schoolPhone', 'Phone', 'text'],
+        ['udise', 'UDISE Code', 'text'],
+        ['affNo', 'Affiliation / Recognition No.', 'text'],
+        ['estd', 'Established Year', 'text'],
+      ];
+      defs.forEach(([key, label, type]) => {
+        inputField(el, 'school', key, label, type, state.school[key], (v) => {
+          state.school[key] = v; renderPreview();
+        });
+      });
+    }
+
+    function renderDocFields() {
+      document.getElementById('docFieldsTitle').textContent = DOC_TITLES[state.docType] + ' Details';
+      const el = document.getElementById('docFields');
+      el.innerHTML = '';
+
+      if (state.docType === 'marksheet') {
+        renderMarksheetPanel(el);
+        return;
+      }
+
+      const defs = FIELD_DEFS[state.docType];
+      const data = state.data[state.docType];
+
+      defs.forEach(([key, label, type, def]) => {
+        if (type === 'select') {
+          const wrap = document.createElement('div');
+          wrap.innerHTML = `<label>${label}</label>`;
+          const sel = document.createElement('select');
+          def.split('|').forEach(opt => {
+            const o = document.createElement('option');
+            o.value = opt; o.textContent = opt;
+            if (data[key] === opt) o.selected = true;
+            sel.appendChild(o);
+          });
+          sel.addEventListener('change', () => { data[key] = sel.value; renderPreview(); });
+          wrap.appendChild(sel);
+          el.appendChild(wrap);
+        } else {
+          inputField(el, state.docType, key, label, type, data[key], (v) => {
+            data[key] = v; renderPreview();
+          });
+        }
+      });
+
+      // extra: photo upload for ID card
+      if (state.docType === 'idcard') {
+        const wrap = document.createElement('div');
+        wrap.innerHTML = `<label>Photo</label>`;
+        const drop = document.createElement('div');
+        drop.className = 'photo-drop';
+        drop.textContent = state.photo ? 'Photo selected — click to change' : 'Click to upload photo (optional)';
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file'; fileInput.accept = 'image/*'; fileInput.style.display = 'none';
+        fileInput.addEventListener('change', e => {
+          const f = e.target.files[0];
+          if (!f) return;
+          const reader = new FileReader();
+          reader.onload = () => { state.photo = reader.result; renderPreview(); drop.textContent = 'Photo selected — click to change'; };
+          reader.readAsDataURL(f);
+        });
+        drop.addEventListener('click', () => fileInput.click());
+        wrap.appendChild(drop); wrap.appendChild(fileInput);
+        el.appendChild(wrap);
+      }
+    }
+
+    /* ===================== MARKSHEET: multi-format panel ===================== */
+
+    function renderMarksheetPanel(el) {
+      // format selector
+      const fmtWrap = document.createElement('div');
+      fmtWrap.innerHTML = `<label>Marksheet Format</label>`;
+      const fmtSel = document.createElement('select');
+      MS_FORMATS.forEach(f => {
+        const o = document.createElement('option');
+        o.value = f.id; o.textContent = f.name;
+        if (f.id === state.msFormat) o.selected = true;
+        fmtSel.appendChild(o);
+      });
+      fmtSel.addEventListener('change', () => {
+        state.msFormat = fmtSel.value;
+        renderDocFields();
+        renderPreview();
+      });
+      fmtWrap.appendChild(fmtSel);
+      el.appendChild(fmtWrap);
+
+      // fields for the chosen format
+      const data = state.data.marksheet;
+      const defs = getFieldDefsForFormat(state.msFormat);
+      defs.forEach(([key, label, type, def]) => {
+        if (type === 'select') {
+          const wrap = document.createElement('div');
+          wrap.innerHTML = `<label>${label}</label>`;
+          const sel = document.createElement('select');
+          def.split('|').forEach(opt => {
+            const o = document.createElement('option');
+            o.value = opt; o.textContent = opt;
+            if (data[key] === opt) o.selected = true;
+            sel.appendChild(o);
+          });
+          sel.addEventListener('change', () => { data[key] = sel.value; renderPreview(); });
+          wrap.appendChild(sel);
+          el.appendChild(wrap);
+        } else {
+          inputField(el, 'marksheet', key, label, type, data[key], (v) => {
+            data[key] = v; renderPreview();
+          });
+        }
+      });
+
+      // subject editor (shape depends on format)
+      const subjWrap = document.createElement('div');
+      subjWrap.innerHTML = `<label>Subjects &amp; Marks</label>`;
+      const listDiv = document.createElement('div');
+      subjWrap.appendChild(listDiv);
+      el.appendChild(subjWrap);
+
+      if (state.msFormat === 'iti') {
+        renderTheoryPracticalEditor(listDiv, state.subjects.iti, subjWrap);
+      } else if (state.msFormat === 'cceGrade') {
+        renderGradeTermEditor(listDiv, state.subjects.cceGrade, subjWrap);
+      } else {
+        renderSimpleSubjectEditor(listDiv, state.subjects[state.msFormat], subjWrap);
+      }
+
+      // co-scholastic editor, if this format has one
+      const co = state.coScholastic[state.msFormat];
+      if (co) {
+        const coTitle = document.createElement('div');
+        coTitle.innerHTML = `<label>Co-Scholastic Activities</label>`;
+        el.appendChild(coTitle);
+        co.forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'subj-card';
+          if ('max' in item) {
+            row.innerHTML = `<div style="font-size:12px;font-weight:600;margin-bottom:6px;">${item.name}</div>
+          <div class="subj-grid4" style="grid-template-columns:1fr 1fr 1fr;">
+            <div class="cell"><span>Max</span><input type="number" value="${item.max}" data-k="max"></div>
+            <div class="cell"><span>Obt.</span><input type="number" value="${item.obt}" data-k="obt"></div>
+            <div class="cell"><span>Grade</span><input type="text" value="${item.grade}" data-k="grade"></div>
+          </div>`;
+          } else {
+            row.innerHTML = `<div style="font-size:12px;font-weight:600;margin-bottom:6px;">${item.name}</div>
+          <div class="subj-grid4" style="grid-template-columns:1fr;">
+            <div class="cell"><span>Grade</span><input type="text" value="${item.grade}" data-k="grade"></div>
+          </div>`;
+          }
+          row.querySelectorAll('input').forEach(inp => {
+            inp.addEventListener('input', () => {
+              const k = inp.dataset.k;
+              item[k] = (k === 'grade') ? inp.value : (Number(inp.value) || 0);
+              renderPreview();
+            });
+          });
+          el.appendChild(row);
+        });
+      }
+    }
+
+    function renderTheoryPracticalEditor(listDiv, arr, wrap) {
+      function draw() {
+        listDiv.innerHTML = '';
+        arr.forEach((s, i) => {
+          const card = document.createElement('div');
+          card.className = 'subj-card';
+          card.innerHTML = `
+        <input type="text" value="${s.name}">
+        <div class="subj-grid4">
+          <div class="cell"><span>Th. Max</span><input type="number" value="${s.thMax}"></div>
+          <div class="cell"><span>Th. Obt.</span><input type="number" value="${s.thObt}"></div>
+          <div class="cell"><span>Pr. Max</span><input type="number" value="${s.prMax}"></div>
+          <div class="cell"><span>Pr. Obt.</span><input type="number" value="${s.prObt}"></div>
+          <button class="mini-btn" title="Remove">✕</button>
+        </div>`;
+          const nameI = card.querySelector('input[type=text]');
+          const [a, b, c, d] = card.querySelectorAll('input[type=number]');
+          nameI.addEventListener('input', () => { s.name = nameI.value; renderPreview(); });
+          a.addEventListener('input', () => { s.thMax = Number(a.value) || 0; renderPreview(); });
+          b.addEventListener('input', () => { s.thObt = Number(b.value) || 0; renderPreview(); });
+          c.addEventListener('input', () => { s.prMax = Number(c.value) || 0; renderPreview(); });
+          d.addEventListener('input', () => { s.prObt = Number(d.value) || 0; renderPreview(); });
+          card.querySelector('.mini-btn').addEventListener('click', () => { arr.splice(i, 1); draw(); renderPreview(); });
+          listDiv.appendChild(card);
+        });
+      }
+      draw();
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-row-btn'; addBtn.textContent = '+ Add Subject';
+      addBtn.addEventListener('click', () => {
+        arr.push({ name: 'New Subject', thMax: 100, thObt: 0, prMax: 0, prObt: 0 });
+        draw(); renderPreview();
+      });
+      wrap.appendChild(addBtn);
+    }
+
+    function renderSimpleSubjectEditor(listDiv, arr, wrap) {
+      function draw() {
+        listDiv.innerHTML = '';
+        arr.forEach((s, i) => {
+          const card = document.createElement('div');
+          card.className = 'subj-card';
+          card.innerHTML = `
+        <input type="text" value="${s.name}">
+        <div class="subj-grid4" style="grid-template-columns:1fr 1fr auto;">
+          <div class="cell"><span>Max</span><input type="number" value="${s.max}"></div>
+          <div class="cell"><span>Obt.</span><input type="number" value="${s.obt}"></div>
+          <button class="mini-btn" title="Remove">✕</button>
+        </div>`;
+          const nameI = card.querySelector('input[type=text]');
+          const [a, b] = card.querySelectorAll('input[type=number]');
+          nameI.addEventListener('input', () => { s.name = nameI.value; renderPreview(); });
+          a.addEventListener('input', () => { s.max = Number(a.value) || 0; renderPreview(); });
+          b.addEventListener('input', () => { s.obt = Number(b.value) || 0; renderPreview(); });
+          card.querySelector('.mini-btn').addEventListener('click', () => { arr.splice(i, 1); draw(); renderPreview(); });
+          listDiv.appendChild(card);
+        });
+      }
+      draw();
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-row-btn'; addBtn.textContent = '+ Add Subject';
+      addBtn.addEventListener('click', () => {
+        arr.push({ name: 'New Subject', max: 100, obt: 0 });
+        draw(); renderPreview();
+      });
+      wrap.appendChild(addBtn);
+    }
+
+    function renderGradeTermEditor(listDiv, arr, wrap) {
+      const GRADES = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'D', 'E'];
+      function draw() {
+        listDiv.innerHTML = '';
+        arr.forEach((s, i) => {
+          const card = document.createElement('div');
+          card.className = 'subj-card';
+          card.innerHTML = `
+        <input type="text" value="${s.name}">
+        <div class="subj-grid4" style="grid-template-columns:1fr 1fr auto;">
+          <div class="cell"><span>Term 1</span><select data-k="term1"></select></div>
+          <div class="cell"><span>Term 2</span><select data-k="term2"></select></div>
+          <button class="mini-btn" title="Remove" style="align-self:end;">✕</button>
+        </div>`;
+          const nameI = card.querySelector('input[type=text]');
+          nameI.addEventListener('input', () => { s.name = nameI.value; renderPreview(); });
+          card.querySelectorAll('select').forEach(selEl => {
+            const key = selEl.dataset.k;
+            GRADES.forEach(g => {
+              const o = document.createElement('option');
+              o.value = g; o.textContent = g;
+              if (s[key] === g) o.selected = true;
+              selEl.appendChild(o);
+            });
+            selEl.addEventListener('change', () => { s[key] = selEl.value; renderPreview(); });
+          });
+          card.querySelector('.mini-btn').addEventListener('click', () => { arr.splice(i, 1); draw(); renderPreview(); });
+          listDiv.appendChild(card);
+        });
+      }
+      draw();
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-row-btn'; addBtn.textContent = '+ Add Subject';
+      addBtn.addEventListener('click', () => {
+        arr.push({ name: 'New Subject', term1: 'B1', term2: 'B1' });
+        draw(); renderPreview();
+      });
+      wrap.appendChild(addBtn);
+    }
+
+    /* ===================== SVG EMBLEM (generic, non-copyrighted) ===================== */
+    function emblemSVG(pri, acc) {
+      return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="${pri}" stroke-width="3"/>
+    <circle cx="50" cy="50" r="38" fill="none" stroke="${acc}" stroke-width="1.5"/>
+    <path d="M50 20 L58 42 L82 42 L62 56 L70 78 L50 64 L30 78 L38 56 L18 42 L42 42 Z" fill="${pri}" opacity="0.85"/>
+    <circle cx="50" cy="50" r="8" fill="${acc}"/>
+  </svg>`;
+    }
+    function watermarkSVG(pri) {
+      return `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="90" fill="none" stroke="${pri}" stroke-width="4"/>
+    <circle cx="100" cy="100" r="70" fill="none" stroke="${pri}" stroke-width="2"/>
+    <path d="M100 40 L116 84 L164 84 L124 112 L140 156 L100 128 L60 156 L76 112 L36 84 L84 84 Z" fill="${pri}"/>
+  </svg>`;
+    }
+
+    /* ===================== RENDER: PREVIEW TEMPLATES ===================== */
+
+    function schoolHeader() {
+      const s = state.school;
+      const t = THEMES[state.theme];
+      return `
+    <div class="letterhead">
+      <div class="emblem">${emblemSVG(t.pri, t.acc)}</div>
+      <div class="lh-text">
+        <h2>${s.schoolName}</h2>
+        <div class="sub">${s.schoolAddress}</div>
+        <div class="meta">UDISE: ${s.udise} &nbsp;|&nbsp; Affiliation No: ${s.affNo} &nbsp;|&nbsp; Estd. ${s.estd} &nbsp;|&nbsp; Ph: ${s.schoolPhone}</div>
+      </div>
+      <div class="emblem" style="opacity:0">${emblemSVG(t.pri, t.acc)}</div>
+    </div>`;
+    }
+
+    function certWrap(title, certNo, date, bodyHtml, signLeft = 'Class Teacher', signRight = 'Principal') {
+      const t = THEMES[state.theme];
+      return `
+    <div class="badge-strip"></div>
+    <div class="frame">
+      <div class="wm">${watermarkSVG(t.pri)}</div>
+      ${schoolHeader()}
+      <div class="cert-title-wrap">
+        <div class="cert-title">${title}</div>
+        <div class="rule"></div>
+      </div>
+      <div class="meta-row">
+        <span><b>Ref No.:</b> ${certNo}</span>
+        <span><b>Date:</b> ${fmtDate(date)}</span>
+      </div>
+      <div class="body-text">${bodyHtml}</div>
+      <div class="sign-row">
+        <div class="sign-box"><div class="seal">SCHOOL<br>SEAL</div></div>
+        <div class="sign-box"><div class="sign-line">${signLeft}</div></div>
+        <div class="sign-box"><div class="sign-line">${signRight}</div></div>
+      </div>
+    </div>`;
+    }
+
+    function tplBonafide() {
+      const d = state.data.bonafide;
+      const body = `This is to certify that <b>${d.studentName}</b>, ${d.className === '' ? '' : `studying in Class <b>${d.className}</b>${d.section ? ` (Section ${d.section})` : ''}`}
+    during the academic session <b>${d.session}</b>, is a bonafide student of this school.
+    Son/Daughter of <b>${d.fatherName}</b> and Smt. <b>${d.motherName}</b>, born on <b>${fmtDate(d.dob)}</b>, has been studying
+    in this institution since his/her admission and his/her conduct and character during this period has been found satisfactory.
+    <br><br>This certificate is issued on the request of the student/guardian ${d.purpose}.`;
+      return certWrap('Bonafide Certificate', d.certNo, d.date, body);
+    }
+
+    function tplCharacter() {
+      const d = state.data.character;
+      const body = `This is to certify that <b>${d.studentName}</b>, Son/Daughter of <b>${d.fatherName}</b>, was a student of Class
+    <b>${d.className}</b> in this school during the period <b>${d.session}</b>.
+    <br><br>${d.conductText}
+    <br><br>We wish him/her every success in future life.`;
+      return certWrap('Character Certificate', d.certNo, d.date, body, 'Class Teacher', 'Principal');
+    }
+
+    function tplStudy() {
+      const d = state.data.study;
+      const body = `This is to certify that <b>${d.studentName}</b>, Son/Daughter of <b>${d.fatherName}</b>, is currently studying in
+    Class <b>${d.className}</b> of this school during the academic session <b>${d.session}</b>.
+    He/She has been studying in this school since <b>${d.studyingSince}</b>.
+    <br><br>This certificate is issued for official purposes.`;
+      return certWrap('Study Certificate', d.certNo, d.date, body);
+    }
+
+    function tplExperience() {
+      const d = state.data.experience;
+      const body = `This is to certify that <b>${d.employeeName}</b> worked as <b>${d.designation}</b> in this school
+    from <b>${fmtDate(d.joiningDate)}</b> to <b>${fmtDate(d.relievingDate)}</b>, a total duration of <b>${d.duration}</b>.
+    During this tenure, she/he taught <b>${d.subjectTaught}</b>.
+    <br><br>${d.conductText}
+    <br><br>We wish her/him success in all future endeavours.`;
+      return certWrap('Experience Certificate', d.certNo, d.date, body, 'Principal', 'Chairman/Manager');
+    }
+
+    function tplTC() {
+      const d = state.data.tc;
+      const s = state.school;
+      const t = THEMES[state.theme];
+      const rows = [
+        ['1', 'Admission No.', d.admissionNo],
+        ['2', "Student's Name", d.studentName],
+        ['3', "Father's Name", d.fatherName],
+        ['4', "Mother's Name", d.motherName],
+        ['5', 'Nationality', d.nationality],
+        ['6', 'Religion / Category', `${d.religion} / ${d.category}`],
+        ['7', 'Date of Birth (Figures)', fmtDate(d.dobFigures)],
+        ['8', 'Date of Birth (Words)', d.dobWords],
+        ['9', 'Class in which last studied', d.lastClass],
+        ['10', 'Date of Admission', fmtDate(d.admissionDate)],
+        ['11', 'Date of Leaving School', fmtDate(d.leavingDate)],
+        ['12', 'Reason for Leaving School', d.reasonForLeaving],
+        ['13', 'Conduct', d.conduct],
+        ['14', 'Total Working Days / Days Present', `${d.workingDays} / ${d.presentDays}`],
+        ['15', 'Whether Qualified for Promotion', d.promoted],
+        ['16', 'Remarks', d.remarks],
+      ];
+      return `
+    <div class="badge-strip"></div>
+    <div class="frame">
+      <div class="wm">${watermarkSVG(t.pri)}</div>
+      ${schoolHeader()}
+      <div class="cert-title-wrap">
+        <div class="cert-title">Transfer Certificate</div>
+        <div class="rule"></div>
+      </div>
+      <div class="meta-row">
+        <span><b>TC No.:</b> ${d.tcNo}</span>
+        <span><b>Date:</b> ${fmtDate(d.leavingDate)}</span>
+      </div>
+      <table class="doc-table tc-fields">
+        ${rows.map(r => `<tr><td class="num">${r[0]}</td><td class="label">${r[1]}</td><td>${r[2]}</td></tr>`).join('')}
+      </table>
+      <div class="sign-row">
+        <div class="sign-box"><div class="seal">SCHOOL<br>SEAL</div></div>
+        <div class="sign-box"><div class="sign-line">Class Teacher</div></div>
+        <div class="sign-box"><div class="sign-line">Principal / Headmaster</div></div>
+      </div>
+    </div>`;
+    }
+
+    function qrSVG(seedStr) {
+      // deterministic pseudo-QR decorative pattern (not a scannable code, purely visual)
+      let seed = 0;
+      for (let i = 0; i < seedStr.length; i++) seed = (seed * 31 + seedStr.charCodeAt(i)) >>> 0;
+      function rnd() { seed = (seed * 1103515245 + 12345) >>> 0; return (seed >>> 8) % 100 / 100; }
+      const n = 9, cell = 100 / n;
+      let rects = '';
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          const isFinder = (r < 3 && c < 3) || (r < 3 && c > n - 4) || (r > n - 4 && c < 3);
+          const on = isFinder ? (r === 0 || r === 2 || c === 0 || c === 2 || (r === 1 && c === 1)) : rnd() > 0.55;
+          if (on) rects += `<rect x="${c * cell}" y="${r * cell}" width="${cell}" height="${cell}" fill="#222"/>`;
+        }
+      }
+      return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#fff"/>${rects}</svg>`;
+    }
+
+    function gradeFor(pct) {
+      if (pct >= 90) return 'A1'; if (pct >= 80) return 'A2'; if (pct >= 70) return 'B1';
+      if (pct >= 60) return 'B2'; if (pct >= 50) return 'C1'; if (pct >= 40) return 'C2';
+      if (pct >= 33) return 'D'; return 'E';
+    }
+
+    function tplMarksheetITI() {
+      const d = state.data.marksheet;
+      const t = THEMES[state.theme];
+      const subs = state.subjects.iti;
+
+      const rows = subs.map(s => {
+        const tot = num(s.thMax) + num(s.prMax);
+        const obt = num(s.thObt) + num(s.prObt);
+        return `
+    <tr>
+      <td class="subj-name">${s.name}</td>
+      <td>${s.thMax || '-'}</td>
+      <td>${s.thObt || '-'}</td>
+      <td>${s.prMax || '-'}</td>
+      <td>${s.prObt || '-'}</td>
+      <td>${tot}</td>
+      <td>${obt}</td>
+    </tr>`;
+      }).join('');
+
+      const totThMax = subs.reduce((a, s) => a + num(s.thMax), 0);
+      const totThObt = subs.reduce((a, s) => a + num(s.thObt), 0);
+      const totPrMax = subs.reduce((a, s) => a + num(s.prMax), 0);
+      const totPrObt = subs.reduce((a, s) => a + num(s.prObt), 0);
+      const grandMax = totThMax + totPrMax;
+      const grandObt = totThObt + totPrObt;
+      const pct = grandMax ? (grandObt / grandMax * 100) : 0;
+      const grade = gradeFor(pct);
+      const result = pct >= 33 ? 'PASS' : 'FAIL';
+      const qrSeed = `${d.registrationNo}|${d.rollNo}|${d.studentName}`;
+
+      return `
+    <div class="badge-strip"></div>
+    <div class="frame">
+      <div class="wm">${watermarkSVG(t.pri)}</div>
+      ${schoolHeader()}
+      <div class="ms-titleband">Annual Statement of Marks</div>
+
+      <div class="ms-info-grid">
+        <div><span>Registration No.</span><b>${d.registrationNo}</b></div>
+        <div><span>Roll No.</span><b>${d.rollNo}</b></div>
+        <div><span>Student Name</span><b>${d.studentName}</b></div>
+        <div><span>Father's Name</span><b>${d.fatherName}</b></div>
+        <div><span>Mother's Name</span><b>${d.motherName}</b></div>
+        <div><span>Date of Birth</span><b>${fmtDate(d.dob)}</b></div>
+        <div><span>Class / Course</span><b>${d.className}${d.section ? ' - ' + d.section : ''}</b></div>
+        <div><span>Session</span><b>${d.session}</b></div>
+        <div style="grid-column:1/-1"><span>Examination</span><b>${d.examName}</b></div>
+      </div>
+
+      <table class="ms-table">
+        <thead>
+          <tr>
+            <th rowspan="2">Subject</th>
+            <th colspan="2">Theory</th>
+            <th colspan="2">Practical</th>
+            <th colspan="2">Total</th>
+          </tr>
+          <tr>
+            <th>Max</th><th>Obt.</th><th>Max</th><th>Obt.</th><th>Max</th><th>Obt.</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+          <tr class="ms-grandtotal">
+            <td>Grand Total</td>
+            <td>${totThMax}</td><td>${totThObt}</td>
+            <td>${totPrMax}</td><td>${totPrObt}</td>
+            <td>${grandMax}</td><td>${grandObt}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="ms-result-strip">
+        <div>Percentage<b>${pct.toFixed(2)}%</b></div>
+        <div>Grade<b>${grade}</b></div>
+        <div>Result<b>${result}</b></div>
+      </div>
+
+      <div class="ms-footer">
+        <div style="text-align:center;">
+          <div class="qr-box">${qrSVG(qrSeed)}</div>
+          <div class="qr-caption">Scan to verify authenticity</div>
+        </div>
+        <div class="sign-row" style="margin-top:0;">
+          <div class="sign-box"><div class="seal">SCHOOL<br>SEAL</div></div>
+          <div class="sign-box"><div class="sign-line">Examination Controller</div></div>
+          <div class="sign-box"><div class="sign-line">Principal / Headmaster</div></div>
+        </div>
+      </div>
+    </div>`;
+    }
+
+    /* ---- Village Primary School (Hindi) marksheet format ---- */
+    function tplMarksheetVillagePrimary() {
+      const d = state.data.marksheet;
+      const t = THEMES[state.theme];
+      const subs = state.subjects.villagePrimary;
+      const co = state.coScholastic.villagePrimary;
+
+      const totalMax = subs.reduce((a, s) => a + num(s.max), 0);
+      const totalObt = subs.reduce((a, s) => a + num(s.obt), 0);
+      const pct = totalMax ? (totalObt / totalMax * 100) : 0;
+      const grade = gradeFor(pct);
+
+      const rows = subs.map(s => `
+    <tr><td class="subj-name">${s.name}</td><td>${s.max}</td><td>${s.obt}</td></tr>`).join('');
+      const coRows = co.map(c => `
+    <tr><td class="subj-name">${c.name}</td><td>${c.max}</td><td>${c.obt}</td><td>${c.grade}</td></tr>`).join('');
+
+      return `
+    <div class="badge-strip"></div>
+    <div class="frame" style="font-family:'Nirmala UI','Mangal','Noto Sans Devanagari',Arial,sans-serif;">
+      <div class="wm">${watermarkSVG(t.pri)}</div>
+      ${schoolHeader()}
+      <div class="ms-titleband">परीक्षा परिणाम पत्रक &nbsp;/&nbsp; Exam Result Sheet</div>
+
+      <div class="ms-info-grid">
+        <div><span>नामांक (Enrollment No.)</span><b>${d.enrollmentNo}</b></div>
+        <div><span>सत्र (Session)</span><b>${d.session}</b></div>
+        <div><span>नाम विद्यार्थी (Student Name)</span><b>${d.studentName}</b></div>
+        <div><span>पिता का नाम (Father's Name)</span><b>${d.fatherName}</b></div>
+        <div><span>माता का नाम (Mother's Name)</span><b>${d.motherName}</b></div>
+        <div><span>कक्षा (Class)</span><b>${d.classCategory}</b></div>
+        <div style="grid-column:1/-1"><span>जन्म तिथि (Date of Birth)</span><b>${fmtDate(d.dob)}</b></div>
+      </div>
+
+      <table class="ms-table">
+        <thead><tr><th>विषय (Subject)</th><th>पूर्णांक (Max)</th><th>प्राप्तांक (Obtained)</th></tr></thead>
+        <tbody>
+          ${rows}
+          <tr class="ms-grandtotal"><td>योग (Total)</td><td>${totalMax}</td><td>${totalObt}</td></tr>
+        </tbody>
+      </table>
+
+      <div class="ms-result-strip">
+        <div>प्रतिशत (%)<b>${pct.toFixed(2)}%</b></div>
+        <div>ग्रेड (Grade)<b>${grade}</b></div>
+      </div>
+
+      <div class="section-title" style="margin:14px 0 8px;">सह-शैक्षिक गतिविधियाँ (Co-Scholastic Activities)</div>
+      <table class="ms-table">
+        <thead><tr><th>गतिविधि (Activity)</th><th>पूर्णांक</th><th>प्राप्तांक</th><th>ग्रेड</th></tr></thead>
+        <tbody>${coRows}</tbody>
+      </table>
+
+      <div class="ms-info-grid" style="margin-top:10px;">
+        <div><span>विशेष योग्यता 1</span><b>${d.specialAch1}</b></div>
+        <div><span>विशेष योग्यता 2</span><b>${d.specialAch2}</b></div>
+        <div><span>पूरक विषय (Suppl. Subject)</span><b>${d.supplementarySubject}</b></div>
+        <div><span>श्रेणी (Division)</span><b>${d.division}</b></div>
+        <div style="grid-column:1/-1"><span>परिणाम (Result)</span><b>${d.resultStatus}</b></div>
+      </div>
+
+      <div class="sign-row">
+        <div class="sign-box" style="width:120px;"><div class="seal">विद्यालय<br>मुहर</div></div>
+        <div class="sign-box" style="width:120px;"><div class="sign-line">अध्यापक</div></div>
+        <div class="sign-box" style="width:120px;"><div class="sign-line">परीक्षा प्रभारी</div></div>
+        <div class="sign-box" style="width:120px;"><div class="sign-line">संस्था प्रधान</div></div>
+      </div>
+    </div>`;
+    }
+
+    /* ---- Secondary Board (Division & Result) marksheet format ---- */
+    function tplMarksheetBoardDivision() {
+      const d = state.data.marksheet;
+      const t = THEMES[state.theme];
+      const subs = state.subjects.boardDivision;
+
+      const totalMax = subs.reduce((a, s) => a + num(s.max), 0);
+      const totalObt = subs.reduce((a, s) => a + num(s.obt), 0);
+      const pct = totalMax ? (totalObt / totalMax * 100) : 0;
+
+      const rows = subs.map(s => `
+    <tr><td class="subj-name">${s.name}</td><td>${s.max}</td><td>${s.obt}</td></tr>`).join('');
+
+      return `
+    <div class="badge-strip"></div>
+    <div class="frame">
+      <div class="wm">${watermarkSVG(t.pri)}</div>
+      ${schoolHeader()}
+      <div class="cert-title-wrap">
+        <div class="cert-title">Statement of Marks</div>
+        <div class="rule"></div>
+      </div>
+      <div class="meta-row">
+        <span><b>Registration No.:</b> ${d.registrationNo}</span>
+        <span><b>Roll No.:</b> ${d.rollNo}</span>
+      </div>
+      <div class="ms-info-grid">
+        <div><span>Student Name</span><b>${d.studentName}</b></div>
+        <div><span>Father's Name</span><b>${d.fatherName}</b></div>
+        <div><span>Mother's Name</span><b>${d.motherName}</b></div>
+        <div><span>Class / Section</span><b>${d.className} - ${d.section}</b></div>
+        <div><span>Session</span><b>${d.session}</b></div>
+        <div><span>Examination</span><b>${d.examName}</b></div>
+        <div style="grid-column:1/-1"><span>Date of Birth</span><b>${fmtDate(d.dob)}</b></div>
+      </div>
+
+      <table class="ms-table">
+        <thead><tr><th>Subject</th><th>Maximum Marks</th><th>Marks Obtained</th></tr></thead>
+        <tbody>
+          ${rows}
+          <tr class="ms-grandtotal"><td>Grand Total</td><td>${totalMax}</td><td>${totalObt}</td></tr>
+        </tbody>
+      </table>
+
+      <div class="ms-result-strip">
+        <div>Percentage<b>${pct.toFixed(2)}%</b></div>
+        <div>Division<b>${d.division}</b></div>
+        <div>Result<b>${d.resultStatus}</b></div>
+      </div>
+
+      <div class="sign-row">
+        <div class="sign-box"><div class="seal">SCHOOL<br>SEAL</div></div>
+        <div class="sign-box"><div class="sign-line">Class Teacher</div></div>
+        <div class="sign-box"><div class="sign-line">Examination Controller</div></div>
+        <div class="sign-box"><div class="sign-line">Principal / Headmaster</div></div>
+      </div>
+    </div>`;
+    }
+
+    /* ---- CCE Grade Report (term-wise grades) marksheet format ---- */
+    function tplMarksheetCCE() {
+      const d = state.data.marksheet;
+      const t = THEMES[state.theme];
+      const subs = state.subjects.cceGrade;
+      const co = state.coScholastic.cceGrade;
+
+      const rows = subs.map(s => `
+    <tr><td class="subj-name">${s.name}</td><td>${s.term1}</td><td>${s.term2}</td></tr>`).join('');
+      const coRows = co.map(c => `
+    <tr><td class="subj-name">${c.name}</td><td colspan="2">${c.grade}</td></tr>`).join('');
+
+      return `
+    <div class="badge-strip"></div>
+    <div class="frame">
+      <div class="wm">${watermarkSVG(t.pri)}</div>
+      ${schoolHeader()}
+      <div class="cert-title-wrap">
+        <div class="cert-title">Continuous & Comprehensive Evaluation (CCE) Report</div>
+        <div class="rule"></div>
+      </div>
+      <div class="ms-info-grid">
+        <div><span>Student Name</span><b>${d.studentName}</b></div>
+        <div><span>Father's Name</span><b>${d.fatherName}</b></div>
+        <div><span>Class / Section</span><b>${d.className} - ${d.section}</b></div>
+        <div><span>Roll No.</span><b>${d.rollNo}</b></div>
+        <div style="grid-column:1/-1"><span>Session</span><b>${d.session}</b></div>
+      </div>
+
+      <table class="ms-table">
+        <thead><tr><th>Scholastic Area</th><th>Term 1</th><th>Term 2</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+
+      <div class="section-title" style="margin:14px 0 8px;">Co-Scholastic Areas</div>
+      <table class="ms-table">
+        <thead><tr><th>Activity</th><th colspan="2">Grade</th></tr></thead>
+        <tbody>${coRows}</tbody>
+      </table>
+
+      <p style="font-size:10.5px;color:#666;margin-top:10px;">
+        Grading scale: A1 (91-100) &nbsp;A2 (81-90) &nbsp;B1 (71-80) &nbsp;B2 (61-70) &nbsp;C1 (51-60) &nbsp;C2 (41-50) &nbsp;D (33-40) &nbsp;E (below 33)
+      </p>
+
+      <div class="sign-row">
+        <div class="sign-box"><div class="seal">SCHOOL<br>SEAL</div></div>
+        <div class="sign-box"><div class="sign-line">Class Teacher</div></div>
+        <div class="sign-box"><div class="sign-line">Principal / Headmaster</div></div>
+      </div>
+    </div>`;
+    }
+
+    function tplMarksheet() {
+      switch (state.msFormat) {
+        case 'villagePrimary': return tplMarksheetVillagePrimary();
+        case 'boardDivision': return tplMarksheetBoardDivision();
+        case 'cceGrade': return tplMarksheetCCE();
+        default: return tplMarksheetITI();
+      }
+    }
+
+    function tplSalary() {
+      const d = state.data.salary;
+      const t = THEMES[state.theme];
+      const gross = num(d.basic) + num(d.da) + num(d.hra) + num(d.ta) + num(d.otherAllow);
+      const totalDeduct = num(d.pf) + num(d.profTax) + num(d.otherDeduct);
+      const net = gross - totalDeduct;
+      return `
+    <div class="badge-strip"></div>
+    <div class="frame">
+      <div class="wm">${watermarkSVG(t.pri)}</div>
+      ${schoolHeader()}
+      <div class="cert-title-wrap">
+        <div class="cert-title">Salary Slip — ${d.month}</div>
+        <div class="rule"></div>
+      </div>
+      <table class="doc-table" style="border:1px solid #bbb;">
+        <tr><td><b>Employee Name</b>: ${d.employeeName}</td><td><b>Designation</b>: ${d.designation}</td></tr>
+        <tr><td><b>Employee/PEN No.</b>: ${d.employeeId}</td><td><b>Bank A/c No.</b>: ${d.bankAcNo}</td></tr>
+        <tr><td><b>Days Present</b>: ${d.daysPresent}</td><td><b>Days in Month</b>: ${d.daysInMonth}</td></tr>
+      </table>
+      <div class="pay-grid">
+        <div class="pay-col">
+          <h4>EARNINGS</h4>
+          <div class="pay-line"><span>Basic Pay</span><span>${money(d.basic)}</span></div>
+          <div class="pay-line"><span>Dearness Allowance</span><span>${money(d.da)}</span></div>
+          <div class="pay-line"><span>House Rent Allowance</span><span>${money(d.hra)}</span></div>
+          <div class="pay-line"><span>Travel Allowance</span><span>${money(d.ta)}</span></div>
+          <div class="pay-line"><span>Other Allowance</span><span>${money(d.otherAllow)}</span></div>
+          <div class="pay-total"><span>Gross Earnings</span><span>${money(gross)}</span></div>
+        </div>
+        <div class="pay-col">
+          <h4>DEDUCTIONS</h4>
+          <div class="pay-line"><span>Provident Fund</span><span>${money(d.pf)}</span></div>
+          <div class="pay-line"><span>Professional Tax</span><span>${money(d.profTax)}</span></div>
+          <div class="pay-line"><span>Other Deduction</span><span>${money(d.otherDeduct)}</span></div>
+          <div class="pay-total"><span>Total Deductions</span><span>${money(totalDeduct)}</span></div>
+        </div>
+      </div>
+      <div class="netpay">
+        <div>NET PAYABLE SALARY</div>
+        <div class="amt">${money(net)}</div>
+      </div>
+      <div class="sign-row">
+        <div class="sign-box"><div class="seal">SCHOOL<br>SEAL</div></div>
+        <div class="sign-box"><div class="sign-line">Accountant</div></div>
+        <div class="sign-box"><div class="sign-line">Principal / Headmaster</div></div>
+      </div>
+    </div>`;
+    }
+
+    function tplIdCard() {
+      const d = state.data.idcard;
+      const s = state.school;
+      const photoInner = state.photo ? `<img src="${state.photo}">` : 'PHOTO';
+      return `
+    <div class="idcard">
+      <div class="idc-head">
+        <h3>${s.schoolName}</h3>
+        <p>${s.schoolAddress}</p>
+        <div class="idc-photo">${photoInner}</div>
+      </div>
+      <div class="idc-body">
+        <div class="idc-name">${d.name}</div>
+        <div class="idc-role">${d.role}</div>
+        <div class="idc-grid">
+          <b>Class/Desig.</b><span>${d.classOrDesig}</span>
+          <b>Roll/ID No.</b><span>${d.idNo}</span>
+          <b>Blood Group</b><span>${d.bloodGroup}</span>
+          <b>DOB</b><span>${fmtDate(d.dob)}</span>
+          <b>Contact</b><span>${d.contact}</span>
+          <b>Address</b><span>${d.address}</span>
+        </div>
+      </div>
+      <div class="idc-strip"></div>
+      <div class="idc-foot">Valid till ${d.validTill} &nbsp;•&nbsp; If found, please return to school office</div>
+    </div>`;
+    }
+
+    const TEMPLATE_FNS = {
+      bonafide: tplBonafide, tc: tplTC, character: tplCharacter, study: tplStudy,
+      experience: tplExperience, salary: tplSalary, idcard: tplIdCard, marksheet: tplMarksheet,
+    };
+
+    function renderPreview() {
+      const t = THEMES[state.theme];
+      const pageEl = document.getElementById('pageEl');
+      pageEl.style.setProperty('--pri', t.pri);
+      pageEl.style.setProperty('--acc', t.acc);
+      pageEl.classList.toggle('card-size', state.docType === 'idcard');
+      document.getElementById('previewRoot').innerHTML = TEMPLATE_FNS[state.docType]();
+    }
+
+    function renderAll() {
+      renderDocGrid();
+      renderThemeRow();
+      renderSchoolFields();
+      renderDocFields();
+      renderPreview();
+    }
+
+    renderAll();
+  </script>
+</body>
+
+</html>

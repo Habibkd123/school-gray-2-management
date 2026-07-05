@@ -111,6 +111,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Contact Us", href: "/website/contact" },
       ]
     },
+    { name: "Document Center", href: "/document-center/templates", icon: <FileText className="w-4 h-4" /> },
     { name: "Settings", icon: <Settings2 className="w-4 h-4" />, href: "/settings/profile" }
   ];
 

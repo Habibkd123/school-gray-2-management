@@ -21,7 +21,7 @@ export default function TeacherDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const teacherId = params.id as string;
-  const { getTeacher } = useTeachers();
+  const { getTeacher } = useTeachers({ skip: true });
   const { classes } = useClasses();
 
   const [teacher, setTeacher] = useState<ApiTeacher | null>(null);

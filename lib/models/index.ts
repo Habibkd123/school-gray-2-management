@@ -936,3 +936,6 @@ classTestMarkSchema.index({ test_id: 1, student_id: 1 }, { unique: true });
 export const ClassTestMark: Model<IClassTestMark> =
   mongoose.models.ClassTestMark || mongoose.model<IClassTestMark>("ClassTestMark", classTestMarkSchema);
 
+import SalaryPayment from "./SalaryPayment";
+export { SalaryPayment };
+

@@ -338,7 +338,7 @@ function AddTeacherContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
   const { subjects: apiSubjects } = useSubjectMaster();
-  const { createTeacher, updateTeacher, getTeacher } = useTeachers();
+  const { createTeacher, updateTeacher, getTeacher } = useTeachers({ skip: true });
   const { uploadFile } = useUpload();
 
   const [isSubmitting, setIsSubmitting] = useState(false);

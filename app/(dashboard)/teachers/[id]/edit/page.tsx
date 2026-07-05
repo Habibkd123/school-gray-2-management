@@ -235,7 +235,7 @@ export default function EditTeacherPage() {
   const router = useRouter();
   const params = useParams();
   const editId = params.id as string;
-  const { createTeacher, updateTeacher, getTeacher } = useTeachers();
+  const { createTeacher, updateTeacher, getTeacher } = useTeachers({ skip: true });
   const { classes } = useClasses();
   const { uploadFile } = useUpload();
   const { subjects: apiSubjects } = useSubjectMaster();
