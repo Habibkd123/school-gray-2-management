@@ -43,6 +43,11 @@ const studentFeePaymentSchema = new Schema<IStudentFeePayment>(
   { timestamps: true }
 );
 
+// Fast receipt history lookups: "show me all payments for student X, newest first"
+studentFeePaymentSchema.index({ school_id: 1, student_id: 1, createdAt: -1 });
+// Fast payment-date range queries for reporting
+studentFeePaymentSchema.index({ school_id: 1, payment_date: -1 });
+
 const StudentFeePayment: Model<IStudentFeePayment> =
   mongoose.models.StudentFeePayment || mongoose.model<IStudentFeePayment>("StudentFeePayment", studentFeePaymentSchema);
 export default StudentFeePayment;

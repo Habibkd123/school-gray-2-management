@@ -386,7 +386,8 @@ const feesStructureSchema = new Schema<IFeesStructure>(
   { timestamps: true }
 );
 
-
+// Fast fee structure lookup: "which fee heads exist for class X in year Y?"
+feesStructureSchema.index({ school_id: 1, class_id: 1, academic_year: 1, is_active: 1 });
 
 // ─── Grade ─────────────────────────────────────────────────────────
 export interface IGrade extends Document {
@@ -486,6 +487,9 @@ const examSchema = new Schema<IExam>(
   { timestamps: true }
 );
 
+// Exam listing per class: "show me all exams for Class 10 in 2026-2027 that are active"
+examSchema.index({ school_id: 1, class_id: 1, academic_year: 1, status: 1 });
+
 export interface IResult extends Document {
   school_id: mongoose.Types.ObjectId;
   exam_id: mongoose.Types.ObjectId;
@@ -520,6 +524,8 @@ const resultSchema = new Schema<IResult>(
 );
 
 resultSchema.index({ school_id: 1, exam_id: 1, student_id: 1, subject_id: 1 }, { unique: true });
+// Report card query: "get all results for student X across all exams in this year"
+resultSchema.index({ school_id: 1, student_id: 1, exam_id: 1 });
 
 // ─── Leave Request ────────────────────────────────────────────────
 export interface ILeaveRequest extends Document {

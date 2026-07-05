@@ -625,7 +625,7 @@ export default function GuardiansPage() {
                       {/* Parent Name */}
                       <td className="px-4 py-4">
                         <div className="flex flex-wrap items-center gap-3">
-                          <img src={getAvatar(parent.name, parent.photo_url)} className="w-8 h-8 rounded-full object-cover border border-border" alt="" />
+                          <img src={getAvatar(parent.name, parent.photo_url)} className="w-8 h-8 rounded-full object-cover border border-border" alt="" loading="lazy" decoding="async" />
                           <div>
                             <div className="font-semibold text-slate-900 dark:text-white">{parent.name}</div>
                             <div className="text-[11px] text-slate-400 dark:text-slate-500">Added {formatDate(parent.createdAt)}</div>

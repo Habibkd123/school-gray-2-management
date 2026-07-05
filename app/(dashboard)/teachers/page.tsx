@@ -246,7 +246,7 @@ export default function TeachersPage() {
     { header: "ID", accessorKey: "displayId", render: (t) => <span className="font-semibold text-primary cursor-pointer hover:underline">{t.displayId}</span> },
     { header: "Name", accessorKey: "name", render: (t) => (
         <div className="flex flex-wrap items-center gap-3">
-          <img src={t.photo_url || getAvatar(t.name)} className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={t.name} />
+          <img src={t.photo_url || getAvatar(t.name)} className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={t.name} loading="lazy" decoding="async" />
           <span className="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors cursor-pointer">{t.name}</span>
         </div>
     ) },

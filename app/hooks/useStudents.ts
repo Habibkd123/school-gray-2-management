@@ -170,7 +170,7 @@ export function useStudents(options?: { skip?: boolean }) {
       dateRange = p.dateRange ?? "";
       sort = p.sort ?? "";
       page = p.page ?? 1;
-      limit = p.limit ?? 1000;
+      limit = p.limit ?? 10; // Object-path default; explicit callers pass their own limit
       academic_year = p.academic_year ?? "";
     } else {
       search = (arg1 as string) ?? "";
@@ -186,7 +186,7 @@ export function useStudents(options?: { skip?: boolean }) {
       setStudents(_studentsCache!);
       setTotal(_studentsCache!.length);
       setIsLoading(false);
-      return { students: _studentsCache!, total: _studentsCache!.length, page: 1, limit: 500 };
+      return { students: _studentsCache!, total: _studentsCache!.length, page: 1, limit: 10 };
     }
 
     if (abortControllerRef.current) {

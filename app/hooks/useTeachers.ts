@@ -251,7 +251,7 @@ export function useTeachers(options?: { skip?: boolean }) {
       academic_year = p.academic_year ?? "";
     } else {
       search = (arg1 as string) ?? "";
-      limit = 500;
+      limit = 10; // Legacy string-path: default to 10; paginated pages pass limit explicitly
     }
 
     const isFiltered = !!(search || status || dateRange || sort || academic_year || isObject);

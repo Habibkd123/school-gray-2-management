@@ -335,7 +335,7 @@ export default function StudentsPage() {
     {
       header: "Name", accessorKey: "name", render: (s) => (
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push(`/students/${s.id}`)}>
-          <img src={s.avatar} className="w-8 h-8 rounded-full object-cover" alt="Avatar" />
+          <img src={s.avatar} className="w-8 h-8 rounded-full object-cover" alt="Avatar" loading="lazy" decoding="async" />
           <span className="font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{s.name}</span>
         </div>
       )

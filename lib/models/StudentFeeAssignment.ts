@@ -37,6 +37,11 @@ const studentFeeAssignmentSchema = new Schema<IStudentFeeAssignment>(
   { timestamps: true }
 );
 
+// Student fee ledger: "show fee assignment for student X in year Y"
+studentFeeAssignmentSchema.index({ school_id: 1, student_id: 1, academic_year: 1 });
+// Year-level listing for fee reports
+studentFeeAssignmentSchema.index({ school_id: 1, academic_year: 1 });
+
 const StudentFeeAssignment: Model<IStudentFeeAssignment> =
   mongoose.models.StudentFeeAssignment || mongoose.model<IStudentFeeAssignment>("StudentFeeAssignment", studentFeeAssignmentSchema);
 export default StudentFeeAssignment;

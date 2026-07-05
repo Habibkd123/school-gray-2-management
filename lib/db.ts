@@ -30,7 +30,7 @@ if (!cached) {
 const MONGOOSE_OPTS: mongoose.ConnectOptions = {
   // Connection pool — allows up to 10 simultaneous DB operations
   maxPoolSize: 10,
-  minPoolSize: 2,
+  minPoolSize: 0,  // serverless-friendly: no idle connections kept open permanently
 
   // Timeout settings
   serverSelectionTimeoutMS: 5_000,  // give up finding a server after 5 s

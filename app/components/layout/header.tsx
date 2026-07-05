@@ -161,7 +161,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 <div className="max-h-[360px] overflow-y-auto">
                   {/* Item 1 */}
                   <div className="p-4 border-b border-border hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex gap-3">
-                    <img src="https://preskool.dreamstechnologies.com/html/assets/img/profiles/avatar-02.jpg" className="w-10 h-10 rounded-lg object-cover" />
+                    <img src="https://preskool.dreamstechnologies.com/html/assets/img/profiles/avatar-02.jpg" className="w-10 h-10 rounded-lg object-cover" loading="lazy" decoding="async" />
                     <div className="flex-1">
                       <p className="text-[14px] text-slate-700 dark:text-slate-300">
                         <span className="font-bold text-slate-900 dark:text-white">Shawn</span> performance in Math is below the threshold.
@@ -172,7 +172,7 @@ export function Header({ onMenuClick }: HeaderProps) {
 
                   {/* Item 2 */}
                   <div className="p-4 border-b border-border hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex gap-3">
-                    <img src="https://preskool.dreamstechnologies.com/html/assets/img/profiles/avatar-03.jpg" className="w-10 h-10 rounded-lg object-cover" />
+                    <img src="https://preskool.dreamstechnologies.com/html/assets/img/profiles/avatar-03.jpg" className="w-10 h-10 rounded-lg object-cover" loading="lazy" decoding="async" />
                     <div className="flex-1">
                       <p className="text-[14px] text-slate-700 dark:text-slate-300">
                         <span className="font-bold text-slate-900 dark:text-white">Sylvia</span> added appointment on 02:00 PM
@@ -187,7 +187,7 @@ export function Header({ onMenuClick }: HeaderProps) {
 
                   {/* Item 3 */}
                   <div className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex gap-3">
-                    <img src="https://preskool.dreamstechnologies.com/html/assets/img/profiles/avatar-04.jpg" className="w-10 h-10 rounded-lg object-cover" />
+                    <img src="https://preskool.dreamstechnologies.com/html/assets/img/profiles/avatar-04.jpg" className="w-10 h-10 rounded-lg object-cover" loading="lazy" decoding="async" />
                     <div className="flex-1">
                       <p className="text-[14px] text-slate-700 dark:text-slate-300">
                         New student record <span className="font-bold text-slate-900 dark:text-white">George</span> is created by <span className="font-bold text-slate-900 dark:text-white">Teressa</span>
