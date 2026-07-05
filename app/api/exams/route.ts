@@ -33,24 +33,38 @@ export async function POST(req: NextRequest) {
     await connectToDatabase();
     const body = await req.json();
     console.log("[POST /api/exams] received body:", body);
-    const { name, type, class_id, academic_year, start_date, end_date } = body;
+    const { name, type, class_id, class_ids, academic_year, start_date, end_date, description, status } = body;
 
     if (!name || !academic_year) {
       return NextResponse.json({ success: false, message: "Name and academic year are required" }, { status: 400 });
     }
 
-    const exam = await Exam.create({
-      school_id: schoolId as string,
-      class_id: class_id || new (await import("mongoose")).default.Types.ObjectId(),
-      name: name.trim(),
-      type: type || "other",
-      academic_year,
-      start_date: start_date ? new Date(start_date) : undefined,
-      end_date: end_date ? new Date(end_date) : undefined,
-      is_published: false,
-    });
+    const classesToCreate = Array.isArray(class_ids) && class_ids.length > 0 
+      ? class_ids 
+      : (class_id ? [class_id] : []);
 
-    return NextResponse.json({ success: true, data: exam }, { status: 201 });
+    if (classesToCreate.length === 0) {
+      return NextResponse.json({ success: false, message: "Class selection is required" }, { status: 400 });
+    }
+
+    const createdExams = [];
+    for (const cId of classesToCreate) {
+      const exam = await Exam.create({
+        school_id: schoolId as string,
+        class_id: cId,
+        name: name.trim(),
+        type: type || "other",
+        academic_year,
+        start_date: start_date ? new Date(start_date) : undefined,
+        end_date: end_date ? new Date(end_date) : undefined,
+        is_published: false,
+        description: description || "",
+        status: status || "upcoming",
+      });
+      createdExams.push(exam);
+    }
+
+    return NextResponse.json({ success: true, data: createdExams[0], all: createdExams }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

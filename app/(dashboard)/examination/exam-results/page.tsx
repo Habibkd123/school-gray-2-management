@@ -477,21 +477,21 @@ export default function ExamResultsPage() {
       {/* Report Card Modal */}
       {reportCardData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200 dark:bg-slate-900">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[95vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200 dark:bg-slate-900">
             
             {/* Modal Header (Not Printed) */}
             <div className="flex items-center justify-between p-4 border-b border-border print:hidden">
-              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Report Card</h2>
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Student Report Card</h2>
               <div className="flex flex-wrap items-center gap-2">
                 <button 
                   onClick={() => window.print()}
-                  className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors"
+                  className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
                 >
-                  <Printer className="w-4 h-4" /> Print
+                  <Printer className="w-4 h-4" /> Print Report Card
                 </button>
                 <button 
                   onClick={() => setReportCardData(null)}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -499,110 +499,171 @@ export default function ExamResultsPage() {
             </div>
 
             {/* Printable Content */}
-            <div className="p-8 overflow-y-auto print:p-0 print:overflow-visible print:w-full print:absolute print:left-0 print:top-0" id="printable-report-card">
+            <div className="p-6 overflow-y-auto print:p-0 print:overflow-visible print:w-full print:absolute print:left-0 print:top-0 scrollbar-thin" id="printable-report-card">
               
               <style dangerouslySetInnerHTML={{__html: `
                 @media print {
                   body * { visibility: hidden; }
                   #printable-report-card, #printable-report-card * { visibility: visible; }
-                  #printable-report-card { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; }
+                  #printable-report-card { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 24px; box-shadow: none !important; border: none !important; }
+                  .print-border { border: 12px double #1e293b !important; }
                 }
               `}} />
 
-              {/* School Header */}
-              <div className="text-center mb-8 border-b-2 border-slate-800 pb-6">
-                <h1 className="text-3xl font-black text-slate-900 uppercase tracking-wider mb-2 dark:text-white">MySchoolLife Academy</h1>
-                <p className="text-slate-600 text-[14px] dark:text-slate-300">123 Education Lane, Learning City, 10001</p>
-                <p className="text-slate-600 text-[14px] dark:text-slate-300">Email: contact@myschoollife.edu | Phone: +1 234 567 8900</p>
-                <div className="mt-6 inline-block bg-slate-800 text-white px-6 py-2 rounded-full font-bold text-[15px] uppercase tracking-widest shadow-sm">
-                  Academic Report Card
+              {/* Certificate Border Frame */}
+              <div className="border-[12px] border-double border-slate-800 dark:border-slate-700 p-6 md:p-10 relative overflow-hidden bg-white dark:bg-slate-900 print-border rounded-xl">
+                
+                {/* Subtle Guilloche Watermark Effect */}
+                <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03] pointer-events-none select-none flex items-center justify-center">
+                  <svg className="w-96 h-96 text-slate-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5">
+                    <circle cx="12" cy="12" r="10" />
+                    <circle cx="12" cy="12" r="8" />
+                    <circle cx="12" cy="12" r="6" />
+                    <path d="M12 2v20M2 12h20M5.6 5.6l12.8 12.8M5.6 18.4L18.4 5.6" />
+                  </svg>
                 </div>
-              </div>
 
-              {/* Student Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-8 text-[14px]">
-                <div className="flex border-b border-dashed border-slate-300 pb-1">
-                  <span className="font-bold text-slate-700 w-32 dark:text-slate-200">Student Name:</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{reportCardData.studentName}</span>
-                </div>
-                <div className="flex border-b border-dashed border-slate-300 pb-1">
-                  <span className="font-bold text-slate-700 w-32 dark:text-slate-200">Roll Number:</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{reportCardData.rollNo || "N/A"}</span>
-                </div>
-                <div className="flex border-b border-dashed border-slate-300 pb-1">
-                  <span className="font-bold text-slate-700 w-32 dark:text-slate-200">Examination:</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{exams.find(e => e._id === selectedExamId)?.name || "All Exams"}</span>
-                </div>
-                <div className="flex border-b border-dashed border-slate-300 pb-1">
-                  <span className="font-bold text-slate-700 w-32 dark:text-slate-200">Date:</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{new Date().toLocaleDateString('en-GB')}</span>
-                </div>
-              </div>
+                {/* School Header */}
+                <div className="text-center relative mb-8 border-b-2 border-slate-800 dark:border-slate-700 pb-5">
+                  {/* SVG Premium School Crest */}
+                  <div className="mb-3 flex justify-center">
+                    <svg className="w-16 h-16 text-slate-800 dark:text-slate-200" viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M32 4L12 12v16c0 14.5 20 28 20 28s20-13.5 20-28V12L32 4z" fill="currentColor" fillOpacity="0.05" />
+                      <path d="M32 4L12 12v16c0 14.5 20 28 20 28s20-13.5 20-28V12L32 4z" strokeWidth="2" />
+                      <path d="M32 18v16" strokeWidth="2" strokeLinecap="round" />
+                      <path d="M22 26h20" strokeWidth="2" strokeLinecap="round" />
+                      <circle cx="32" cy="18" r="2" fill="currentColor" />
+                      <path d="M24 40c4-4 12-4 16 0" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                  <span className="text-[10px] tracking-[0.2em] font-extrabold text-slate-400 uppercase">Affiliated to National Education Board</span>
+                  <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white uppercase tracking-wider mt-1.5">MySchoolLife Academy</h1>
+                  <p className="text-slate-500 text-[12px] dark:text-slate-400 mt-1">UDISE School Code: 27230500123 | School Affiliation No: 1930245</p>
+                  <p className="text-slate-500 text-[12px] dark:text-slate-400">123 Education Lane, Learning City, 10001 | Email: contact@myschoollife.edu</p>
 
-              {/* Marks Table */}
-              <table className="w-full text-left border-collapse mb-8">
-                <thead>
-                  <tr className="bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-100">
-                    <th className="border border-slate-300 px-4 py-3 font-bold uppercase text-[12px] tracking-wider">Subject</th>
-                    <th className="border border-slate-300 px-4 py-3 font-bold uppercase text-[12px] tracking-wider text-center">Total Marks</th>
-                    <th className="border border-slate-300 px-4 py-3 font-bold uppercase text-[12px] tracking-wider text-center">Marks Obtained</th>
-                    <th className="border border-slate-300 px-4 py-3 font-bold uppercase text-[12px] tracking-wider text-center">Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reportCardData.subjects.map((sub: any, idx: number) => (
-                    <tr key={idx} className="hover:bg-slate-50">
-                      <td className="border border-slate-300 px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">{sub.name}</td>
-                      <td className="border border-slate-300 px-4 py-3 text-center text-slate-600 dark:text-slate-300">{sub.total}</td>
-                      <td className="border border-slate-300 px-4 py-3 text-center font-bold text-slate-900 dark:text-white">{sub.marks}</td>
-                      <td className="border border-slate-300 px-4 py-3 text-center">
-                        <span className={`font-bold ${sub.pass ? 'text-emerald-600' : 'text-rose-600'}`}>
-                          {sub.pass ? 'PASS' : 'FAIL'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {/* Total Row */}
-                  <tr className="bg-slate-50 font-bold dark:bg-slate-800/50">
-                    <td className="border border-slate-300 px-4 py-3 text-right uppercase text-[13px] text-slate-800 dark:text-slate-100">Grand Total</td>
-                    <td className="border border-slate-300 px-4 py-3 text-center text-slate-800 dark:text-slate-100">{reportCardData.totalMax}</td>
-                    <td className="border border-slate-300 px-4 py-3 text-center text-slate-900 text-[15px] dark:text-white">{reportCardData.totalObtained}</td>
-                    <td className="border border-slate-300 px-4 py-3"></td>
-                  </tr>
-                </tbody>
-              </table>
-
-              {/* Summary Section */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex items-center justify-between mb-12 dark:bg-slate-800/50 dark:border-slate-800">
-                <div className="text-center">
-                  <div className="text-[12px] uppercase font-bold text-slate-500 mb-1 dark:text-slate-400">Percentage</div>
-                  <div className="text-2xl font-black text-primary">{reportCardData.percent}%</div>
-                </div>
-                <div className="w-px h-12 bg-slate-200"></div>
-                <div className="text-center">
-                  <div className="text-[12px] uppercase font-bold text-slate-500 mb-1 dark:text-slate-400">Grade</div>
-                  <div className="text-2xl font-black text-indigo-600">{reportCardData.grade}</div>
-                </div>
-                <div className="w-px h-12 bg-slate-200"></div>
-                <div className="text-center">
-                  <div className="text-[12px] uppercase font-bold text-slate-500 mb-1 dark:text-slate-400">Final Result</div>
-                  <div className={`text-2xl font-black uppercase ${reportCardData.failed ? 'text-rose-600' : 'text-emerald-600'}`}>
-                    {reportCardData.failed ? 'Fail' : 'Pass'}
+                  <div className="mt-5 inline-block bg-slate-800 text-white dark:bg-slate-700 px-6 py-2 rounded-lg font-black text-[13px] uppercase tracking-[0.15em] shadow-sm">
+                    Academic Achievement Report
                   </div>
                 </div>
-              </div>
 
-              {/* Signatures */}
-              <div className="flex justify-between items-end mt-16 pt-8 text-[14px] font-bold text-slate-800 dark:text-slate-100">
-                <div className="text-center w-40">
-                  <div className="border-t-2 border-slate-800 pt-2">Class Teacher</div>
+                {/* Student Details Grid */}
+                <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl p-5 mb-8 text-[13.5px]">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-3.5">
+                    <div className="flex border-b border-dashed border-slate-300 dark:border-slate-700 pb-1.5">
+                      <span className="font-extrabold text-slate-500 w-32 uppercase text-[11px] self-end">Student Name:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100 flex-1">{reportCardData.studentName}</span>
+                    </div>
+                    <div className="flex border-b border-dashed border-slate-300 dark:border-slate-700 pb-1.5">
+                      <span className="font-extrabold text-slate-500 w-32 uppercase text-[11px] self-end">Roll Number:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100 flex-1">{reportCardData.rollNo || "—"}</span>
+                    </div>
+                    <div className="flex border-b border-dashed border-slate-300 dark:border-slate-700 pb-1.5">
+                      <span className="font-extrabold text-slate-500 w-32 uppercase text-[11px] self-end">Examination:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100 flex-1">{exams.find(e => e._id === selectedExamId)?.name || "Annual Term Evaluation"}</span>
+                    </div>
+                    <div className="flex border-b border-dashed border-slate-300 dark:border-slate-700 pb-1.5">
+                      <span className="font-extrabold text-slate-500 w-32 uppercase text-[11px] self-end">Report Date:</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100 flex-1">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-center w-40">
-                  <div className="border-t-2 border-slate-800 pt-2">Principal</div>
+
+                {/* Marks Table */}
+                <div className="overflow-hidden border border-slate-300 dark:border-slate-800 rounded-lg mb-8">
+                  <table className="w-full text-left border-collapse text-[13px]">
+                    <thead>
+                      <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold border-b border-slate-300 dark:border-slate-800">
+                        <th className="px-5 py-3 uppercase text-[11px] tracking-wider">Subject Title</th>
+                        <th className="px-5 py-3 uppercase text-[11px] tracking-wider text-center w-32">Maximum Marks</th>
+                        <th className="px-5 py-3 uppercase text-[11px] tracking-wider text-center w-32">Marks Obtained</th>
+                        <th className="px-5 py-3 uppercase text-[11px] tracking-wider text-center w-32">Result</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                      {reportCardData.subjects.map((sub: any, idx: number) => (
+                        <tr key={idx} className="hover:bg-slate-50/50">
+                          <td className="px-5 py-3 font-semibold text-slate-800 dark:text-slate-250">{sub.name}</td>
+                          <td className="px-5 py-3 text-center text-slate-500 dark:text-slate-400 font-medium">{sub.total}</td>
+                          <td className="px-5 py-3 text-center font-bold text-slate-900 dark:text-white text-[14px]">{sub.marks}</td>
+                          <td className="px-5 py-3 text-center">
+                            {sub.pass ? (
+                              <span className="text-emerald-600 font-black text-[12px] uppercase">PASS</span>
+                            ) : (
+                              <span className="text-rose-600 font-black text-[12px] uppercase">FAIL</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                      {/* Total Row */}
+                      <tr className="bg-slate-50 dark:bg-slate-800/30 font-bold border-t-2 border-slate-300 dark:border-slate-700">
+                        <td className="px-5 py-3.5 text-right uppercase text-[11px] tracking-wider text-slate-500">Aggregate Summary</td>
+                        <td className="px-5 py-3.5 text-center text-slate-700 dark:text-slate-350">{reportCardData.totalMax}</td>
+                        <td className="px-5 py-3.5 text-center text-slate-900 dark:text-white text-[15px]">{reportCardData.totalObtained}</td>
+                        <td className="px-5 py-3.5 text-center">
+                          {reportCardData.failed ? (
+                            <span className="text-rose-600 font-black text-[12px]">FAILED</span>
+                          ) : (
+                            <span className="text-emerald-600 font-black text-[12px]">PASSED</span>
+                          )}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
-                <div className="text-center w-40">
-                  <div className="border-t-2 border-slate-800 pt-2">Parent / Guardian</div>
+
+                {/* Score Summary Metrics */}
+                <div className="grid grid-cols-3 gap-4 border border-slate-200 dark:border-slate-800 rounded-xl p-5 mb-10 bg-slate-50/40 dark:bg-slate-800/20 relative">
+                  <div className="text-center">
+                    <span className="text-[10px] uppercase font-extrabold text-slate-400 block tracking-wider">Final Score</span>
+                    <div className="text-2xl font-black text-slate-900 dark:text-white mt-1">{reportCardData.percent}%</div>
+                  </div>
+                  <div className="text-center border-x border-slate-200 dark:border-slate-800">
+                    <span className="text-[10px] uppercase font-extrabold text-slate-400 block tracking-wider">Assigned Grade</span>
+                    <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">{reportCardData.grade}</div>
+                  </div>
+                  <div className="text-center">
+                    <span className="text-[10px] uppercase font-extrabold text-slate-400 block tracking-wider">Promotion Status</span>
+                    <div className={`text-2xl font-black uppercase mt-1 ${reportCardData.failed ? 'text-rose-600' : 'text-emerald-600'}`}>
+                      {reportCardData.failed ? 'Retained' : 'Promoted'}
+                    </div>
+                  </div>
+
+                  {/* Certified stamp Overlay */}
+                  {!reportCardData.failed && (
+                    <div className="absolute right-6 -bottom-1 rotate-[-12deg] opacity-[0.15] dark:opacity-[0.25] pointer-events-none select-none print:opacity-[0.2]">
+                      <div className="border-4 border-emerald-600 text-emerald-650 text-[14px] font-black tracking-widest px-4 py-1.5 uppercase rounded">
+                        {reportCardData.percent >= 75 ? "Distinction" : "Passed"}
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                {/* Grading Scale Legend */}
+                <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-4 mb-10 text-[11px] text-slate-500 dark:text-slate-400 text-center leading-relaxed">
+                  <span className="font-extrabold text-slate-700 dark:text-slate-300 block mb-1 uppercase tracking-wider text-[9.5px]">Grading Scale System</span>
+                  O (Outstanding): &gt;=90% | A+ (Excellent): 80-89% | A (Very Good): 70-79% | B+ (Good): 60-69% | B (Above Average): 50-59% | C (Pass): 35-49% | F (Failed): &lt;35%
+                </div>
+
+                {/* Signatures Footer */}
+                <div className="flex justify-between items-end mt-16 pt-8 text-[13px] font-extrabold text-slate-700 dark:text-slate-300">
+                  <div className="text-center w-36">
+                    <div className="border-t border-slate-800 dark:border-slate-700 pt-2 uppercase text-[10px] tracking-wider text-slate-500">Class Teacher</div>
+                  </div>
+                  <div className="text-center w-36 relative flex flex-col items-center">
+                    {/* SVG Subtle Principal Seal */}
+                    <div className="absolute -top-10 opacity-[0.08] text-slate-900 pointer-events-none print:opacity-[0.1]">
+                      <svg className="w-16 h-16 animate-spin-slow" viewBox="0 0 100 100" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="50" cy="50" r="40" strokeDasharray="6,4" />
+                        <path d="M50 20v60M20 50h60" />
+                      </svg>
+                    </div>
+                    <div className="border-t border-slate-800 dark:border-slate-700 pt-2 uppercase text-[10px] tracking-wider text-slate-500">Principal</div>
+                  </div>
+                  <div className="text-center w-36">
+                    <div className="border-t border-slate-800 dark:border-slate-700 pt-2 uppercase text-[10px] tracking-wider text-slate-500">Parent Signature</div>
+                  </div>
+                </div>
+
               </div>
 
             </div>

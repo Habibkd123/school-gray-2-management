@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   Plus, Search, List, MoreVertical, Edit, Trash2,
-  Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, FileText, Loader2
+  Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, FileText, Loader2, Eye, CalendarRange, PenTool
 } from "lucide-react";
 import { Modal } from "../../../components/ui/modal";
 import { useExams } from "@/app/hooks/useExams";
@@ -12,107 +14,125 @@ import { useClasses } from "@/app/hooks/useClasses";
 import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar";
 import { useAppState } from "@/app/context/store";
 
-const DATE_RANGES = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year", "All Time", "Custom Range"] as const;
-
-function getDateRangeDates(range: string): { from: Date | null; to: Date | null } {
-  const now = new Date();
-  const to = new Date(now);
-  const from = new Date(now);
-  switch (range) {
-    case "Today": 
-      from.setHours(0, 0, 0, 0); 
-      to.setHours(23, 59, 59, 999);
-      break;
-    case "Yesterday":
-      from.setDate(from.getDate() - 1); from.setHours(0, 0, 0, 0);
-      to.setDate(to.getDate() - 1); to.setHours(23, 59, 59, 999);
-      break;
-    case "Last 7 Days": 
-      from.setDate(from.getDate() - 7); 
-      from.setHours(0, 0, 0, 0);
-      to.setHours(23, 59, 59, 999);
-      break;
-    case "Last 30 Days": 
-      from.setDate(from.getDate() - 30); 
-      from.setHours(0, 0, 0, 0);
-      to.setHours(23, 59, 59, 999);
-      break;
-    case "This Year": 
-      from.setMonth(0, 1); 
-      from.setHours(0, 0, 0, 0); 
-      to.setHours(23, 59, 59, 999);
-      break;
-    case "All Time":
-      return { from: null, to: null };
-    default: 
-      return { from: null, to: null };
-  }
-  return { from, to };
-}
-
 export default function ExamListPage() {
+  const router = useRouter();
   const { exams, loading, createExam, updateExam, deleteExam } = useExams();
   const { classes } = useClasses();
   const { academicYear } = useAppState();
+
+  const [menuAnchorRect, setMenuAnchorRect] = useState<DOMRect | null>(null);
+  const [activeExam, setActiveExam] = useState<any | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    const handleClose = () => {
+      setActionMenuId(null);
+      setMenuAnchorRect(null);
+      setActiveExam(null);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+
+    if (actionMenuId) {
+      window.addEventListener("scroll", handleClose, true);
+      window.addEventListener("resize", handleClose);
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("scroll", handleClose, true);
+      window.removeEventListener("resize", handleClose);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [actionMenuId]);
+
+  const dropdownStyles = useMemo(() => {
+    if (!menuAnchorRect) return {};
+    const spaceBelow = window.innerHeight - menuAnchorRect.bottom;
+    const dropdownHeight = 180; 
+    const margin = 4;
+    const left = menuAnchorRect.right - 176 + window.scrollX;
+    
+    if (spaceBelow < dropdownHeight && menuAnchorRect.top > dropdownHeight) {
+      const top = menuAnchorRect.top - dropdownHeight - margin + window.scrollY;
+      return { position: "absolute" as const, top: `${top}px`, left: `${left}px`, width: "176px" };
+    } else {
+      const top = menuAnchorRect.bottom + margin + window.scrollY;
+      return { position: "absolute" as const, top: `${top}px`, left: `${left}px`, width: "176px" };
+    }
+  }, [menuAnchorRect]);
+
+  const handleTriggerClick = (e: React.MouseEvent, item: any) => {
+    e.stopPropagation();
+    if (actionMenuId === item._id) {
+      setActionMenuId(null);
+      setMenuAnchorRect(null);
+      setActiveExam(null);
+    } else {
+      setActionMenuId(item._id);
+      setMenuAnchorRect(e.currentTarget.getBoundingClientRect());
+      setActiveExam(item);
+    }
+  };
+
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedClassFilter, setSelectedClassFilter] = useState("All");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState("All");
+
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isViewOpen, setIsViewOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
-  
-  // Date range state
-  const [selectedRange, setSelectedRange] = useState("All Time");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
-  const [isCustom, setIsCustom] = useState(false);
-  const [activeFrom, setActiveFrom] = useState<Date | null>(null);
-  const [activeTo, setActiveTo] = useState<Date | null>(null);
-
-  const applyDateRange = (range: string) => {
-    if (range === "Custom Range") { setIsCustom(true); return; }
-    setIsCustom(false);
-    const { from, to } = getDateRangeDates(range);
-    setActiveFrom(from); setActiveTo(to);
-    setSelectedRange(range); setIsDateRangeOpen(false);
-  };
-
-  const applyCustomRange = () => {
-    if (!customFrom || !customTo) return;
-    setActiveFrom(new Date(customFrom)); setActiveTo(new Date(customTo));
-    setSelectedRange(`${customFrom} — ${customTo}`);
-    setIsCustom(false); setIsDateRangeOpen(false);
-  };
-
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filterType, setFilterType] = useState("All");
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const [selectedSort, setSelectedSort] = useState("Ascending");
+  const [selectedSort, setSelectedSort] = useState("Recently Added");
   
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
-  const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+  const [viewingExam, setViewingExam] = useState<any>(null);
 
   // Form states
   const [formExamName, setFormExamName] = useState("");
   const [formExamType, setFormExamType] = useState("other");
   const [formClassId, setFormClassId] = useState("");
+  const [formClassIds, setFormClassIds] = useState<string[]>([]);
   const [formAcademicYear, setFormAcademicYear] = useState(academicYear || "");
   const [formStartDate, setFormStartDate] = useState("");
   const [formEndDate, setFormEndDate] = useState("");
+  const [formDescription, setFormDescription] = useState("");
+  const [formStatus, setFormStatus] = useState<"upcoming" | "ongoing" | "completed">("upcoming");
 
   const openAddModal = () => {
     setFormExamName("");
     setFormExamType("other");
     setFormClassId("");
+    setFormClassIds([]);
     setFormAcademicYear(academicYear);
     setFormStartDate("");
     setFormEndDate("");
+    setFormDescription("");
+    setFormStatus("upcoming");
     setIsAddOpen(true);
   };
 
-  const openEditModal = (item: (typeof exams)[0]) => {
+  const openViewModal = (item: any) => {
+    setViewingExam(item);
+    setIsViewOpen(true);
+    setActionMenuId(null);
+  };
+
+  const openEditModal = (item: any) => {
     setSelectedExamId(item._id);
     setFormExamName(item.name || "");
     setFormExamType(item.type || "other");
@@ -120,6 +140,8 @@ export default function ExamListPage() {
     setFormAcademicYear(item.academic_year || "");
     setFormStartDate(item.start_date ? new Date(item.start_date).toISOString().slice(0, 10) : "");
     setFormEndDate(item.end_date ? new Date(item.end_date).toISOString().slice(0, 10) : "");
+    setFormDescription(item.description || "");
+    setFormStatus(item.status || "upcoming");
     setIsEditOpen(true);
     setActionMenuId(null);
   };
@@ -133,14 +155,18 @@ export default function ExamListPage() {
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    // Send formClassIds if multi-select is used
     await createExam({
       name: formExamName,
       type: formExamType as any,
-      class_id: formClassId,
+      class_id: formClassIds.length > 0 ? formClassIds[0] : undefined,
+      class_ids: formClassIds as any,
       academic_year: formAcademicYear,
       start_date: formStartDate || undefined,
       end_date: formEndDate || undefined,
-    });
+      description: formDescription,
+      status: formStatus
+    } as any);
     setSaving(false);
     setIsAddOpen(false);
   };
@@ -156,6 +182,8 @@ export default function ExamListPage() {
       academic_year: formAcademicYear,
       start_date: formStartDate || undefined,
       end_date: formEndDate || undefined,
+      description: formDescription,
+      status: formStatus
     });
     setSaving(false);
     setIsEditOpen(false);
@@ -169,40 +197,59 @@ export default function ExamListPage() {
 
   const formatDate = (d?: string) => {
     if (!d) return "—";
-    try { return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); }
-    catch { return d; }
+    try { 
+      return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); 
+    } catch { 
+      return d; 
+    }
   };
 
-  const dateRangeLabel = (activeFrom && activeTo && !isCustom)
-    ? `${new Date(activeFrom).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} — ${new Date(activeTo).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`
-    : selectedRange;
+  const calculateStatus = (item: any): "upcoming" | "ongoing" | "completed" => {
+    if (item.status) return item.status;
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    const start = item.start_date ? new Date(item.start_date) : null;
+    const end = item.end_date ? new Date(item.end_date) : null;
+    if (start && start > now) return "upcoming";
+    if (end && end < now) return "completed";
+    return "ongoing";
+  };
 
-  const triggerCls = (open: boolean) =>
-    `flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors cursor-pointer
-     ${open
-      ? "border-primary text-primary"
-      : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
+  const getStatusBadge = (status: "upcoming" | "ongoing" | "completed") => {
+    switch (status) {
+      case "upcoming":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 capitalize">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Upcoming
+          </span>
+        );
+      case "ongoing":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 capitalize">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> Ongoing
+          </span>
+        );
+      case "completed":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400 capitalize">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Completed
+          </span>
+        );
+    }
+  };
 
   const filteredData = useMemo(() => {
     let list = exams.filter(s => {
       const matchesSearch = (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                             (s.type || '').toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesType = filterType === "All"
-        ? true
-        : s.type === filterType;
+      const sClassId = s.class_id ? (typeof s.class_id === "object" ? s.class_id?._id : s.class_id) : "";
+      const matchesClass = selectedClassFilter === "All" || sClassId === selectedClassFilter;
 
-      let matchesDate = true;
-      if (activeFrom && activeTo) {
-        if (s.start_date) {
-          const d = new Date(s.start_date);
-          matchesDate = d >= activeFrom && d <= activeTo;
-        } else {
-          matchesDate = false;
-        }
-      }
+      const currentStatus = calculateStatus(s);
+      const matchesStatus = selectedStatusFilter === "All" || currentStatus === selectedStatusFilter;
 
-      return matchesSearch && matchesType && matchesDate;
+      return matchesSearch && matchesClass && matchesStatus;
     });
 
     if (selectedSort === "Ascending") {
@@ -218,7 +265,7 @@ export default function ExamListPage() {
     }
 
     return list;
-  }, [exams, searchTerm, filterType, activeFrom, activeTo, selectedSort]);
+  }, [exams, searchTerm, selectedClassFilter, selectedStatusFilter, selectedSort]);
 
   const pag = usePagination(filteredData, 10);
 
@@ -227,7 +274,7 @@ export default function ExamListPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Exam</h1>
+          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Exam List</h1>
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
@@ -240,9 +287,6 @@ export default function ExamListPage() {
         <div className="flex flex-wrap items-center gap-3">
           <button onClick={() => window.location.reload()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
-          </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
-            <Printer className="w-4 h-4" />
           </button>
           
           <div className="relative">
@@ -279,100 +323,43 @@ export default function ExamListPage() {
       {/* Main Content */}
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
         {/* Table Header Section */}
-        <div className="p-5 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Exam List</h2>
+        <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Exam List Overview</h2>
           
           <div className="flex flex-wrap items-center gap-3">
-            {/* ── Date Range ── */}
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => setIsDateRangeOpen(!isDateRangeOpen)} className={triggerCls(isDateRangeOpen)}>
-                <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span className="max-w-full sm:w-[120px] truncate">{dateRangeLabel}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isDateRangeOpen ? "rotate-180" : ""}`} />
-              </button>
-              {isDateRangeOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsDateRangeOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1">
-                    {DATE_RANGES.map((range) => (
-                      <button key={range} onClick={() => applyDateRange(range)}
-                        className={`w-full px-4 py-2.5 text-left text-[13px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer
-                          ${selectedRange === range ? "bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-semibold" : "text-slate-700 dark:text-slate-300"}`}>
-                        {range}
-                      </button>
-                    ))}
-                    {isCustom && (
-                      <div className="px-4 py-3 border-t border-border bg-slate-50/50 dark:bg-slate-800/50">
-                        <div className="space-y-2">
-                          <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-                            className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
-                          <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-                            className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
-                          <button onClick={applyCustomRange} disabled={!customFrom || !customTo}
-                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-primary hover:bg-[var(--primary-hover)] rounded transition-colors disabled:opacity-50 cursor-pointer">
-                            Apply
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {(activeFrom || activeTo) && !isCustom && (
-                      <div className="px-4 pt-2 pb-1 border-t border-border mt-1">
-                        <button onClick={() => { setActiveFrom(null); setActiveTo(null); setSelectedRange("All Time"); setIsDateRangeOpen(false); }}
-                          className="w-full text-[12px] font-semibold text-rose-500 hover:text-rose-600 transition-colors cursor-pointer">
-                          Clear Filter
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
+            {/* Class Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">Class:</span>
+              <select 
+                value={selectedClassFilter} 
+                onChange={(e) => setSelectedClassFilter(e.target.value)}
+                className="px-3 py-1.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
+              >
+                <option value="All">All Classes</option>
+                {classes.map(cls => (
+                  <option key={cls._id} value={cls._id}>{cls.name} - {cls.section}</option>
+                ))}
+              </select>
             </div>
 
-            {/* ── Filter ── */}
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={triggerCls(isFilterOpen)}>
-                <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span className="whitespace-nowrap">Filter</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
-              </button>
-              {isFilterOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
-                  <div className="absolute right-0 sm:left-0 sm:right-auto top-full mt-2 w-64 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 text-left">
-                    <div className="p-4 border-b border-border">
-                      <h3 className="text-[15px] font-bold text-foreground dark:text-slate-100">Filter</h3>
-                    </div>
-                    <div className="p-4 space-y-4">
-                      <div className="space-y-1.5">
-                        <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Exam Type</label>
-                        <div className="relative">
-                          <select 
-                            value={filterType} 
-                            onChange={(e) => setFilterType(e.target.value)}
-                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
-                          >
-                            <option value="All" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Types</option>
-                            <option value="unit_test" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Unit Test</option>
-                            <option value="mid_term" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Mid Term</option>
-                            <option value="pre_board" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Pre Board</option>
-                            <option value="annual" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Annual</option>
-                          </select>
-                          <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-2.5 pointer-events-none" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 flex justify-end gap-3 bg-white dark:bg-slate-900 rounded-b-lg border-t border-border mt-2">
-                      <button onClick={() => { setFilterType("All"); setIsFilterOpen(false); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-foreground dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer">Reset</button>
-                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer">Apply</button>
-                    </div>
-                  </div>
-                </>
-              )}
+            {/* Status Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">Status:</span>
+              <select 
+                value={selectedStatusFilter} 
+                onChange={(e) => setSelectedStatusFilter(e.target.value)}
+                className="px-3 py-1.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
+              >
+                <option value="All">All Statuses</option>
+                <option value="upcoming">Upcoming</option>
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+              </select>
             </div>
 
-            {/* ── Sort by ── */}
+            {/* Sort by */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => setIsSortOpen(!isSortOpen)} className={triggerCls(isSortOpen)}>
+              <button onClick={() => setIsSortOpen(!isSortOpen)} className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors cursor-pointer text-slate-600 dark:text-slate-300 hover:bg-slate-50">
                 <List className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                 <span>Sort: {selectedSort}</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isSortOpen ? "rotate-180" : ""}`} />
@@ -385,7 +372,7 @@ export default function ExamListPage() {
                       <button 
                         key={item} 
                         onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
-                        className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-primary font-bold" : "text-slate-700 dark:text-slate-200"}`}
+                        className={`w-full px-4 py-2.5 text-[13px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-primary font-bold" : "text-slate-700 dark:text-slate-200"}`}
                       >
                         {item}
                       </button>
@@ -397,7 +384,7 @@ export default function ExamListPage() {
           </div>
         </div>
 
-        {/* Controls Section */}
+        {/* Search and Counts Section */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
             <span>Total</span>
@@ -412,7 +399,7 @@ export default function ExamListPage() {
               placeholder="Search exams..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
+              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors text-slate-800 dark:text-slate-100"
             />
           </div>
         </div>
@@ -422,22 +409,20 @@ export default function ExamListPage() {
           <table className="w-full text-[13px]">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">
-                  <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
-                </th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Exam Name</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Type</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Academic Year</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Start Date</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">End Date</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-20">Action</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Status</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-20">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center">
+                  <td colSpan={8} className="px-6 py-16 text-center">
                     <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
                     <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading exams...</p>
                   </td>
@@ -448,48 +433,34 @@ export default function ExamListPage() {
                     No exams found. Click &quot;Add Exam&quot; to create one.
                   </td>
                 </tr>
-              ) : pag.paged.map((item) => (
-                <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
-                  </td>
-                  <td className="px-6 py-4 font-semibold text-slate-800 dark:text-slate-100">{item.name}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">
-                    {typeof item.class_id === "object"
-                      ? `${item.class_id?.name || ""} - ${item.class_id?.section || ""}`
-                      : "—"}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 capitalize">
+              ) : pag.paged.map((item) => {
+                const currentStatus = calculateStatus(item);
+                return (
+                  <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="px-6 py-4 font-semibold text-slate-800 dark:text-slate-100">{item.name}</td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium capitalize">
                       {item.type.replace("_", " ")}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{item.academic_year}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{formatDate(item.start_date)}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{formatDate(item.end_date)}</td>
-                  <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
-                    <button 
-                      onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                    {actionMenuId === item._id && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                        <div className="absolute right-10 top-10 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
-                          <button onClick={() => openEditModal(item)} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
-                            <Edit className="w-4 h-4 text-foreground dark:text-slate-100" /> Edit
-                          </button>
-                          <button onClick={() => openDeleteModal(item._id)} className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
-                            <Trash2 className="w-4 h-4" /> Delete
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{item.academic_year}</td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                      {typeof item.class_id === "object"
+                        ? `${item.class_id?.name || ""} - ${item.class_id?.section || ""}`
+                        : "—"}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{formatDate(item.start_date)}</td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{formatDate(item.end_date)}</td>
+                    <td className="px-6 py-4">{getStatusBadge(currentStatus)}</td>
+                    <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
+                      <button 
+                        onClick={(e) => handleTriggerClick(e, item)}
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -504,17 +475,76 @@ export default function ExamListPage() {
         />
       </div>
 
-      {/* Add / Edit Modals */}
-      <Modal isOpen={isAddOpen || isEditOpen} onClose={() => { setIsAddOpen(false); setIsEditOpen(false); }} title={isAddOpen ? "Add Exam" : "Edit Exam"}>
-        <form onSubmit={isAddOpen ? handleAddSubmit : handleEditSubmit} className="p-6 space-y-5 text-left max-h-[80vh] overflow-y-auto custom-scrollbar">
-          
+      {/* View Exam Modal */}
+      <Modal isOpen={isViewOpen} onClose={() => setIsViewOpen(false)} title="Exam Details">
+        {viewingExam && (
+          <div className="p-6 space-y-4 text-left text-[14px]">
+            <div className="grid grid-cols-2 gap-4 pb-4 border-b border-border">
+              <div>
+                <span className="block text-[11px] font-bold text-slate-400 uppercase">Exam Name</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-100">{viewingExam.name}</span>
+              </div>
+              <div>
+                <span className="block text-[11px] font-bold text-slate-400 uppercase">Exam Type</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-100 capitalize">{viewingExam.type?.replace("_", " ")}</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 pb-4 border-b border-border">
+              <div>
+                <span className="block text-[11px] font-bold text-slate-400 uppercase">Class</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-100">
+                  {typeof viewingExam.class_id === "object"
+                    ? `${viewingExam.class_id?.name || ""} - ${viewingExam.class_id?.section || ""}`
+                    : "—"}
+                </span>
+              </div>
+              <div>
+                <span className="block text-[11px] font-bold text-slate-400 uppercase">Academic Year</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-100">{viewingExam.academic_year}</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 pb-4 border-b border-border">
+              <div>
+                <span className="block text-[11px] font-bold text-slate-400 uppercase">Start Date</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-100">{formatDate(viewingExam.start_date)}</span>
+              </div>
+              <div>
+                <span className="block text-[11px] font-bold text-slate-400 uppercase">End Date</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-100">{formatDate(viewingExam.end_date)}</span>
+              </div>
+            </div>
+            <div className="pb-4 border-b border-border">
+              <span className="block text-[11px] font-bold text-slate-400 uppercase">Status</span>
+              <span className="inline-block mt-1">{getStatusBadge(calculateStatus(viewingExam))}</span>
+            </div>
+            <div>
+              <span className="block text-[11px] font-bold text-slate-400 uppercase">Description</span>
+              <p className="text-slate-600 dark:text-slate-350 mt-1 leading-relaxed bg-slate-50 dark:bg-slate-800/40 p-3 rounded-lg border border-border">
+                {viewingExam.description || "No description provided."}
+              </p>
+            </div>
+            <div className="flex justify-end pt-2">
+              <button 
+                onClick={() => setIsViewOpen(false)}
+                className="px-6 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-[13px] font-bold rounded-lg transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Add Exam Modal */}
+      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Add Exam">
+        <form onSubmit={handleAddSubmit} className="p-6 space-y-5 text-left max-h-[80vh] overflow-y-auto custom-scrollbar">
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Exam Name</label>
             <input 
               type="text"
               value={formExamName}
               onChange={(e) => setFormExamName(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-750 dark:text-slate-200"
               required
               placeholder="e.g. Mid Term Exam"
             />
@@ -537,25 +567,7 @@ export default function ExamListPage() {
               <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class</label>
-            <div className="relative">
-              <select 
-                value={formClassId}
-                onChange={(e) => setFormClassId(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
-                required
-              >
-                <option value="">Select Class</option>
-                {classes.map((cls) => (
-                  <option key={cls._id} value={cls._id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
-                    {cls.name} - {cls.section}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
+
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Academic Year</label>
             <input 
@@ -568,6 +580,31 @@ export default function ExamListPage() {
             />
           </div>
 
+          {/* Applicable Classes checkboxes (Multi-Class Selection) */}
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Applicable Classes</label>
+            <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto border border-border p-3 rounded-lg bg-slate-50/50 dark:bg-slate-800/20">
+              {classes.map((cls) => (
+                <label key={cls._id} className="flex items-center gap-2 text-[13px] text-slate-750 dark:text-slate-350 cursor-pointer hover:text-primary">
+                  <input
+                    type="checkbox"
+                    checked={formClassIds.includes(cls._id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setFormClassIds([...formClassIds, cls._id]);
+                      } else {
+                        setFormClassIds(formClassIds.filter(id => id !== cls._id));
+                      }
+                    }}
+                    className="rounded border-slate-300 text-primary focus:ring-primary"
+                  />
+                  <span>{cls.name} - {cls.section}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-[11px] text-slate-400">Selecting multiple classes will generate a separate exam record for each class.</p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Start Date</label>
@@ -576,6 +613,7 @@ export default function ExamListPage() {
                 value={formStartDate}
                 onChange={(e) => setFormStartDate(e.target.value)}
                 className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
+                required
               />
             </div>
             <div className="space-y-1.5">
@@ -585,14 +623,173 @@ export default function ExamListPage() {
                 value={formEndDate}
                 onChange={(e) => setFormEndDate(e.target.value)}
                 className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
+                required
               />
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Status</label>
+            <div className="relative">
+              <select 
+                value={formStatus}
+                onChange={(e) => setFormStatus(e.target.value as any)}
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+              >
+                <option value="upcoming">Upcoming</option>
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Description (Optional)</label>
+            <textarea 
+              value={formDescription}
+              onChange={(e) => setFormDescription(e.target.value)}
+              rows={3}
+              placeholder="Enter exam description..."
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200 resize-none"
+            />
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
             <button 
               type="button" 
-              onClick={() => { setIsAddOpen(false); setIsEditOpen(false); }}
+              onClick={() => setIsAddOpen(false)}
+              className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              disabled={saving || formClassIds.length === 0}
+              className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              Add Exam
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Exam Modal */}
+      <Modal isOpen={isEditOpen} onClose={() => { setIsEditOpen(false); }} title="Edit Exam">
+        <form onSubmit={handleEditSubmit} className="p-6 space-y-5 text-left max-h-[80vh] overflow-y-auto custom-scrollbar">
+          
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Exam Name</label>
+            <input 
+              type="text"
+              value={formExamName}
+              onChange={(e) => setFormExamName(e.target.value)}
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-755 dark:text-slate-200"
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Exam Type</label>
+            <div className="relative">
+              <select 
+                value={formExamType}
+                onChange={(e) => setFormExamType(e.target.value)}
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+              >
+                <option value="unit_test">Unit Test</option>
+                <option value="mid_term">Mid Term</option>
+                <option value="pre_board">Pre Board</option>
+                <option value="annual">Annual</option>
+                <option value="other">Other</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class</label>
+            <div className="relative">
+              <select 
+                value={formClassId}
+                onChange={(e) => setFormClassId(e.target.value)}
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                required
+              >
+                <option value="">Select Class</option>
+                {classes.map((cls) => (
+                  <option key={cls._id} value={cls._id}>{cls.name} - {cls.section}</option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Academic Year</label>
+            <input 
+              type="text"
+              value={formAcademicYear}
+              onChange={(e) => setFormAcademicYear(e.target.value)}
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Start Date</label>
+              <input 
+                type="date"
+                value={formStartDate}
+                onChange={(e) => setFormStartDate(e.target.value)}
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">End Date</label>
+              <input 
+                type="date"
+                value={formEndDate}
+                onChange={(e) => setFormEndDate(e.target.value)}
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Status</label>
+            <div className="relative">
+              <select 
+                value={formStatus}
+                onChange={(e) => setFormStatus(e.target.value as any)}
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+              >
+                <option value="upcoming">Upcoming</option>
+                <option value="ongoing">Ongoing</option>
+                <option value="completed">Completed</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Description (Optional)</label>
+            <textarea 
+              value={formDescription}
+              onChange={(e) => setFormDescription(e.target.value)}
+              rows={3}
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200 resize-none"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+            <button 
+              type="button" 
+              onClick={() => { setIsEditOpen(false); }}
               className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               Cancel
@@ -603,7 +800,7 @@ export default function ExamListPage() {
               className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              {isAddOpen ? "Add Exam" : "Save Changes"}
+              Save Changes
             </button>
           </div>
         </form>
@@ -637,6 +834,38 @@ export default function ExamListPage() {
             </div>
           </div>
         </>
+      )}
+
+      {/* RENDERED POPUP PORTAL TO ESCAPE OVERFLOW CLIPPING */}
+      {isMounted && actionMenuId && activeExam && (
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-[90] bg-transparent" onClick={() => { setActionMenuId(null); setMenuAnchorRect(null); setActiveExam(null); }} />
+            <div 
+              style={dropdownStyles}
+              className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-[100] overflow-hidden py-1.5 text-left animate-in fade-in duration-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button onClick={() => { openViewModal(activeExam); setActionMenuId(null); }} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                <Eye className="w-4 h-4 text-slate-500" /> View Details
+              </button>
+              <button onClick={() => { openEditModal(activeExam); setActionMenuId(null); }} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                <Edit className="w-4 h-4 text-slate-500" /> Edit
+              </button>
+              <button onClick={() => { router.push(`/examination/exam-schedule?exam_id=${activeExam._id}`); setActionMenuId(null); }} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                <CalendarRange className="w-4 h-4 text-slate-500" /> Schedule
+              </button>
+              <button onClick={() => { router.push(`/examination/marks-entry?exam_id=${activeExam._id}`); setActionMenuId(null); }} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                <PenTool className="w-4 h-4 text-slate-500" /> Marks Entry
+              </button>
+              <div className="h-px bg-border my-1" />
+              <button onClick={() => { openDeleteModal(activeExam._id); setActionMenuId(null); }} className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
+                <Trash2 className="w-4 h-4 text-rose-600" /> Delete
+              </button>
+            </div>
+          </>,
+          document.body
+        )
       )}
 
     </div>

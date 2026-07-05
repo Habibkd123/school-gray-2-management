@@ -9,6 +9,8 @@ const REPORT_TABS = [
   { label: "Student Report",          href: "/reports/student-report" },
   { label: "Teacher Report",          href: "/reports/teacher-report" },
   { label: "Class Report",            href: "/reports/class-report" },
+  { label: "Finance Report",          href: "/reports/finance" },
+  { label: "Exam Report",             href: "/reports/examination-reports" },
 ];
 
 export default function ReportTabs() {

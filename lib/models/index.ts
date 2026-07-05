@@ -466,6 +466,8 @@ export interface IExam extends Document {
   start_date?: Date;
   end_date?: Date;
   is_published: boolean;
+  description?: string;
+  status?: "upcoming" | "ongoing" | "completed";
 }
 
 const examSchema = new Schema<IExam>(
@@ -478,6 +480,8 @@ const examSchema = new Schema<IExam>(
     start_date: { type: Date },
     end_date: { type: Date },
     is_published: { type: Boolean, default: false },
+    description: { type: String, trim: true },
+    status: { type: String, enum: ["upcoming", "ongoing", "completed"], default: "upcoming" },
   },
   { timestamps: true }
 );
@@ -493,6 +497,7 @@ export interface IResult extends Document {
   grade?: string;
   is_pass?: boolean;
   remarks?: string;
+  status: "draft" | "final";
   entered_by?: mongoose.Types.ObjectId;
 }
 
@@ -508,6 +513,7 @@ const resultSchema = new Schema<IResult>(
     grade: { type: String, trim: true },
     is_pass: { type: Boolean },
     remarks: { type: String, trim: true },
+    status: { type: String, enum: ["draft", "final"], default: "final" },
     entered_by: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },
   },
   { timestamps: true }
@@ -937,5 +943,46 @@ export const ClassTestMark: Model<IClassTestMark> =
   mongoose.models.ClassTestMark || mongoose.model<IClassTestMark>("ClassTestMark", classTestMarkSchema);
 
 import SalaryPayment from "./SalaryPayment";
-export { SalaryPayment };
+import ClassFee from "./ClassFee";
+import StudentFeePayment from "./StudentFeePayment";
+import StudentFeeAssignment from "./StudentFeeAssignment";
+export { SalaryPayment, ClassFee, StudentFeePayment, StudentFeeAssignment };
+
+// ─── Exam Schedule ───────────────────────────────────────────────
+
+export interface IExamSchedule extends Document {
+  school_id: mongoose.Types.ObjectId;
+  exam_id: mongoose.Types.ObjectId;
+  subject_id: mongoose.Types.ObjectId;
+  date: Date;
+  start_time: string;
+  end_time: string;
+  max_marks: number;
+  passing_marks: number;
+  room?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const examScheduleSchema = new Schema<IExamSchedule>(
+  {
+    school_id: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true, index: true },
+    exam_id: { type: mongoose.Schema.Types.ObjectId, ref: "Exam", required: true, index: true },
+    subject_id: { type: mongoose.Schema.Types.ObjectId, ref: "Subject", required: true },
+    date: { type: Date, required: true },
+    start_time: { type: String, required: true },
+    end_time: { type: String, required: true },
+    max_marks: { type: Number, required: true, min: 0 },
+    passing_marks: { type: Number, required: true, min: 0 },
+    room: { type: String, trim: true, default: null }
+  },
+  { timestamps: true }
+);
+
+// Unique index to prevent duplicate schedules for the same exam, subject, and date
+examScheduleSchema.index({ exam_id: 1, subject_id: 1, date: 1 }, { unique: true });
+
+export const ExamSchedule: Model<IExamSchedule> =
+  mongoose.models.ExamSchedule || mongoose.model<IExamSchedule>("ExamSchedule", examScheduleSchema);
+
 

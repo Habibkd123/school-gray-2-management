@@ -355,7 +355,7 @@ export default function StudentsPage() {
     { header: "DOB", accessorKey: "dobStr" },
     {
       header: "Action", sortable: false, render: (s) => (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 whitespace-nowrap">
           <button
             onClick={(e) => { e.stopPropagation(); setSelectedStudent(s as ApiStudent); setIsCollectFeesOpen(true); }}
             className="px-3 py-1.5 rounded bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-[#E2E8F0] dark:hover:bg-slate-700 transition-colors"

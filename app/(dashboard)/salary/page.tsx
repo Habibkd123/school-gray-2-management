@@ -89,7 +89,7 @@ export default function SalaryDashboardPage() {
   const fetchPayments = useCallback(async () => {
     setIsPaymentsLoading(true);
     try {
-      const res = await fetch(`/api/salaries?start_date=${startDateStr}&end_date=${endDateStr}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/salaries?start_date=${startDateStr}&end_date=${endDateStr}&_t=${Date.now()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setPaymentsData(data.data);
@@ -99,11 +99,11 @@ export default function SalaryDashboardPage() {
     } finally {
       setIsPaymentsLoading(false);
     }
-  }, [selectedPeriod]);
+  }, [selectedPeriod, startDateStr, endDateStr]);
 
   const fetchAllPayments = useCallback(async () => {
     try {
-      const res = await fetch(`/api/salaries`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/salaries?_t=${Date.now()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setAllPayments(data.data.payments);
@@ -221,7 +221,7 @@ export default function SalaryDashboardPage() {
     setIsPreviewLoading(true);
     setPreviewData(null);
     try {
-      const res = await fetch(`/api/salaries/preview?teacher_id=${teacher.id}&start_date=${startDateStr}&end_date=${endDateStr}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/salaries/preview?teacher_id=${teacher.id}&start_date=${startDateStr}&end_date=${endDateStr}&_t=${Date.now()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setPreviewData(data.data);
@@ -246,7 +246,7 @@ export default function SalaryDashboardPage() {
     setIsPayLoading(true);
     setPayData(null);
     try {
-      const res = await fetch(`/api/salaries/preview?teacher_id=${teacherId}&start_date=${sDate}&end_date=${eDate}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/salaries/preview?teacher_id=${teacherId}&start_date=${sDate}&end_date=${eDate}&_t=${Date.now()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setPayData(data.data);
@@ -411,19 +411,38 @@ export default function SalaryDashboardPage() {
       });
       const result = await res.json();
       if (result.success) {
-        // Refresh local details
-        await fetchPayments();
-        await fetchAllPayments();
-        setPayTeacher(null);
-        // Load slip of the completed transaction
-        setSelectedSlip({
+        const newPaymentPopulated = {
           ...result.data,
           teacher_id: {
+            _id: payData.teacherId,
             name: payData.teacherName,
             employee_id: payData.employeeId,
             designation: payTeacher.role
           }
-        });
+        };
+
+        // Instantly update states so page doesn't need to refresh
+        setPaymentsData(prev => ({
+          ...prev,
+          payments: [newPaymentPopulated, ...prev.payments],
+          summary: {
+            ...prev.summary,
+            totalPaid: prev.summary.totalPaid + Number(payData.totalPayableAmount),
+            totalPending: Math.max(0, prev.summary.totalPending - Number(payData.monthlySalary)),
+            pendingCount: Math.max(0, prev.summary.pendingCount - 1),
+            count: prev.summary.count + 1
+          }
+        }));
+
+        setAllPayments(prev => [newPaymentPopulated, ...prev]);
+
+        // Background sync
+        fetchPayments();
+        fetchAllPayments();
+
+        setPayTeacher(null);
+        // Load slip of the completed transaction
+        setSelectedSlip(newPaymentPopulated);
       } else {
         alert(result.message || "Disbursement failed.");
       }
@@ -441,7 +460,7 @@ export default function SalaryDashboardPage() {
     setIsHistoryLoading(true);
     setHistoryPayments([]);
     try {
-      const res = await fetch(`/api/salaries?teacher_id=${teacher.id}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/salaries?teacher_id=${teacher.id}&_t=${Date.now()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setHistoryPayments(data.data);

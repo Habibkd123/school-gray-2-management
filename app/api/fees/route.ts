@@ -1,22 +1,154 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { FeesStructure } from "@/lib/models/index";
+import { ClassFee, StudentFeePayment, StudentFeeAssignment } from "@/lib/models/index";
+import Student from "@/lib/models/Student";
 import { requireAuth } from "@/lib/utils/auth";
+import mongoose from "mongoose";
 
 export async function GET(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin", "student", "parent", "accountant"]);
+  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin", "accountant"]);
   if (error) return error;
 
   try {
     await connectToDatabase();
     const url = new URL(req.url);
     const classId = url.searchParams.get("class_id");
-    const academic_year = url.searchParams.get("academic_year");
-    const query: any = { school_id: schoolId };
-    if (classId) query.class_id = classId;
-    if (academic_year) query.academic_year = academic_year;
-    const fees = await FeesStructure.find(query).sort({ createdAt: -1 }).populate("class_id", "name section").lean();
-    return NextResponse.json({ success: true, data: { fees } });
+    const studentId = url.searchParams.get("student_id");
+    const configOnly = url.searchParams.get("config_only") === "true";
+    const academic_year = url.searchParams.get("academic_year") || "2026";
+
+    if (configOnly) {
+      if (studentId) {
+        const studentFee = await StudentFeeAssignment.findOne({
+          school_id: schoolId,
+          student_id: studentId,
+          academic_year
+        }).lean();
+        if (studentFee) {
+          return NextResponse.json({ success: true, data: studentFee });
+        }
+      }
+      if (!classId) {
+        return NextResponse.json({ success: false, message: "class_id required for config" }, { status: 400 });
+      }
+      const classFee = await ClassFee.findOne({
+        school_id: schoolId,
+        class_id: classId,
+        academic_year
+      }).lean();
+      return NextResponse.json({ success: true, data: classFee });
+    }
+
+    const statusFilter = url.searchParams.get("status"); // Paid / Partial / Pending
+    const search = url.searchParams.get("search") || "";
+    const page = parseInt(url.searchParams.get("page") || "1");
+    const limit = parseInt(url.searchParams.get("limit") || "10");
+
+    // 1. Build Student Query
+    const studentQuery: any = { school_id: schoolId, is_active: true };
+    if (studentId) {
+      studentQuery._id = studentId;
+    }
+    if (classId) {
+      studentQuery.class_id = classId;
+    }
+    if (search) {
+      studentQuery.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { admission_no: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // 2. Fetch all matching students to compute statuses in memory
+    const students = await Student.find(studentQuery)
+      .populate("class_id", "name section")
+      .lean();
+
+    // Get all ClassFees for this school to avoid N+1 queries
+    const classFeesList = await ClassFee.find({ school_id: schoolId }).lean();
+    const classFeesMap = new Map(classFeesList.map((cf) => [cf.class_id.toString(), cf]));
+
+    // Get all StudentFeeAssignments for this school to avoid N+1 queries
+    const studentAssignments = await StudentFeeAssignment.find({ school_id: schoolId }).lean();
+    const studentAssignmentsMap = new Map(studentAssignments.map((sa) => [sa.student_id.toString(), sa]));
+
+    // 3. Gather calculations for all matching students
+    const computedList = await Promise.all(
+      students.map(async (student: any) => {
+        const studentIdStr = student._id.toString();
+        const studentClassId = student.class_id?._id?.toString() || student.class_id?.toString();
+
+        // Check if custom StudentFeeAssignment exists
+        const customAssignDoc = studentAssignmentsMap.get(studentIdStr);
+        const classFeeDoc = studentClassId ? classFeesMap.get(studentClassId) : null;
+
+        // Total Fees: Use custom override total_amount if available, fallback to Class Setup
+        const totalFees = customAssignDoc ? customAssignDoc.total_amount : (classFeeDoc ? classFeeDoc.total_amount : 0);
+
+        // Total Paid from Payments
+        const payments = await StudentFeePayment.find({
+          school_id: schoolId,
+          student_id: student._id,
+        })
+          .sort({ payment_date: -1 })
+          .lean();
+
+        const totalPaid = payments.reduce((sum, p) => sum + p.amount_paid, 0);
+        const balanceAmount = Math.max(0, totalFees - totalPaid);
+
+        const lastPayment = payments[0] || null;
+        const lastPaidAmount = lastPayment ? lastPayment.amount_paid : 0;
+        const lastPaymentDate = lastPayment ? lastPayment.payment_date : null;
+
+        // Determine Status
+        let status: "Paid" | "Partial" | "Pending" = "Pending";
+        if (totalFees > 0) {
+          if (totalPaid >= totalFees) {
+            status = "Paid";
+          } else if (totalPaid > 0) {
+            status = "Partial";
+          }
+        }
+
+        return {
+          _id: student._id,
+          name: student.name,
+          admission_no: student.admission_no || "N/A",
+          class_name: student.class_id ? `${student.class_id.name} - ${student.class_id.section}` : "N/A",
+          class_id: studentClassId,
+          totalFees,
+          totalPaid,
+          balanceAmount,
+          lastPaidAmount,
+          lastPaymentDate,
+          status,
+        };
+      })
+    );
+
+    // 4. Filter by status if requested
+    const filteredList = statusFilter
+      ? computedList.filter((item) => item.status.toLowerCase() === statusFilter.toLowerCase())
+      : computedList;
+
+    // 5. Apply pagination slicing
+    const totalItems = filteredList.length;
+    const totalPages = Math.ceil(totalItems / limit);
+    const startIndex = (page - 1) * limit;
+    const paginatedList = filteredList.slice(startIndex, startIndex + limit);
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        students: paginatedList,
+        pagination: {
+          totalItems,
+          totalPages,
+          currentPage: page,
+          limit,
+        },
+      },
+    });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
@@ -29,26 +161,70 @@ export async function POST(req: NextRequest) {
   try {
     await connectToDatabase();
     const body = await req.json();
-    const { name, amount, class_id, frequency, due_day, late_fee, academic_year } = body;
+    const { class_id, student_id, fee_types, academic_year } = body;
 
-    if (!name || !amount) {
-      return NextResponse.json({ success: false, message: "Name and amount are required" }, { status: 400 });
+    // 1. If student_id is provided, save as Custom Student Fee Override
+    if (student_id) {
+      if (!fee_types || !Array.isArray(fee_types) || !academic_year) {
+        return NextResponse.json(
+          { success: false, message: "Missing required fields (student_id, fee_types, academic_year)" },
+          { status: 400 }
+        );
+      }
+
+      // Calculate total amount from enabled custom fee types
+      const total_amount = fee_types
+        .filter((ft: any) => ft.is_enabled)
+        .reduce((sum: number, ft: any) => sum + Number(ft.amount || 0), 0);
+
+      const studentFee = await StudentFeeAssignment.findOneAndUpdate(
+        {
+          school_id: new mongoose.Types.ObjectId(schoolId as string),
+          student_id: new mongoose.Types.ObjectId(student_id),
+          academic_year,
+        },
+        {
+          fee_types,
+          total_amount,
+        },
+        {
+          new: true,
+          upsert: true,
+        }
+      );
+
+      return NextResponse.json({ success: true, data: studentFee }, { status: 201 });
     }
 
-    const fee = await FeesStructure.create({
-      school_id: schoolId as string,
-      class_id: class_id || new (await import("mongoose")).default.Types.ObjectId(),
+    // 2. Class-wide Setup fallback
+    if (!class_id || !fee_types || !Array.isArray(fee_types) || !academic_year) {
+      return NextResponse.json(
+        { success: false, message: "Missing required fields (class_id, fee_types, academic_year)" },
+        { status: 400 }
+      );
+    }
 
-      name: name.trim(),
-      amount: Number(amount),
-      frequency: frequency || "monthly",
-      due_day: due_day ? Number(due_day) : 10,
-      late_fee: late_fee ? Number(late_fee) : 0,
-      academic_year: academic_year || new Date().getFullYear().toString(),
-      is_active: true,
-    });
+    const total_amount = fee_types
+      .filter((ft: any) => ft.is_enabled)
+      .reduce((sum: number, ft: any) => sum + Number(ft.amount || 0), 0);
 
-    return NextResponse.json({ success: true, data: fee }, { status: 201 });
+    const classFee = await ClassFee.findOneAndUpdate(
+      {
+        school_id: new mongoose.Types.ObjectId(schoolId as string),
+        class_id: new mongoose.Types.ObjectId(class_id),
+        academic_year,
+      },
+      {
+        fee_types,
+        total_amount,
+      },
+      {
+        new: true,
+        upsert: true,
+      }
+    );
+
+    return NextResponse.json({ success: true, data: classFee }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

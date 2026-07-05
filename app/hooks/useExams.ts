@@ -13,6 +13,8 @@ export interface ApiExam {
   start_date?: string;
   end_date?: string;
   is_published: boolean;
+  description?: string;
+  status?: "upcoming" | "ongoing" | "completed";
   createdAt: string;
 }
 

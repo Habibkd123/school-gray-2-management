@@ -7,13 +7,14 @@ import { useStudents, ApiStudent } from "../../../hooks/useStudents";
 import { useClasses } from "../../../hooks/useClasses";
 import { Loader2 } from "lucide-react";
 import {
-  User, Phone, Mail, FileText, Calendar, Droplet, Users, BookOpen, Clock, Settings, Building2, MapPin, Bus, Lock, Edit, ChevronDown, CheckCircle, RefreshCcw, Check, X, Download, Paperclip
+  User, Phone, Mail, FileText, Calendar, Droplet, Users, BookOpen, Clock, Settings, Building2, MapPin, Bus, Lock, Edit, ChevronDown, CheckCircle, RefreshCcw, Check, X, Download, Paperclip, Plus, Trash2
 } from "lucide-react";
 import { useLeave } from "../../../hooks/useLeave";
 import { useSchedules } from "../../../hooks/useSchedules";
 import { useAttendanceSummary } from "../../../hooks/useAttendanceSummary";
 import { useFeeAllocations, useFeePayments, useFeeMasters } from "../../../hooks/useFees";
 import { useExams, useResults } from "../../../hooks/useExams";
+import { useSubjects } from "../../../hooks/useSubjects";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { LoginDetailsModal } from "@/app/components/modals/LoginDetailsModal";
 import { ResetPasswordModal } from "@/app/components/modals/ResetPasswordModal";
@@ -55,11 +56,127 @@ function StudentViewContent() {
   const { masters, loading: mastersLoading } = useFeeMasters();
 
   const { exams, loading: examsLoading } = useExams(studentClassId);
-  const { results, loading: resultsLoading } = useResults(undefined, studentId);
+  const { results, loading: resultsLoading, fetchResults } = useResults(undefined, studentId);
+  const { subjects } = useSubjects(studentClassId);
 
   // Custom states
   const [siblings, setSiblings] = useState<ApiStudent[]>([]);
   const [selectedYear, setSelectedYear] = useState("2026-2027");
+  const [selectedExamYear, setSelectedExamYear] = useState("2024 / 2025");
+  const [selectedFeesYear, setSelectedFeesYear] = useState("2024 / 2025");
+
+  // Editable/Manipulatable Marks states
+  const [editingResult, setEditingResult] = useState<any | null>(null);
+  const [editMarksObtained, setEditMarksObtained] = useState("");
+  const [editTotalMarks, setEditTotalMarks] = useState("100");
+  const [editPassingMarks, setEditPassingMarks] = useState("33");
+  const [editRemarks, setEditRemarks] = useState("");
+
+  // Add Result states
+  const [isAddResultOpen, setIsAddResultOpen] = useState(false);
+  const [addExamId, setAddExamId] = useState("");
+  const [addSubjectId, setAddSubjectId] = useState("");
+  const [addMarksObtained, setAddMarksObtained] = useState("");
+  const [addTotalMarks, setAddTotalMarks] = useState("100");
+  const [addPassingMarks, setAddPassingMarks] = useState("33");
+  const [addRemarks, setAddRemarks] = useState("");
+
+  const handleOpenEditModal = (res: any) => {
+    setEditingResult(res);
+    setEditMarksObtained((res.obtained_marks ?? res.marks_obtained ?? 0).toString());
+    setEditTotalMarks((res.total_marks || 100).toString());
+    setEditPassingMarks((res.passing_marks || 33).toString());
+    setEditRemarks(res.remarks || "");
+  };
+
+  const handleSaveEditedMarks = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingResult) return;
+    try {
+      const res = await fetch("/api/results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({
+          exam_id: typeof editingResult.exam_id === "object" ? editingResult.exam_id._id : editingResult.exam_id,
+          student_id: typeof editingResult.student_id === "object" ? editingResult.student_id._id : editingResult.student_id,
+          subject_id: typeof editingResult.subject_id === "object" ? editingResult.subject_id._id : editingResult.subject_id,
+          marks_obtained: Number(editMarksObtained),
+          total_marks: Number(editTotalMarks),
+          passing_marks: Number(editPassingMarks),
+          remarks: editRemarks
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setEditingResult(null);
+        fetchResults();
+      } else {
+        alert(data.message || "Failed to update results");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Network error updating marks");
+    }
+  };
+
+  const handleSaveNewResult = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addExamId || !addSubjectId || !addMarksObtained || !addTotalMarks) {
+      alert("Please fill all required fields");
+      return;
+    }
+    try {
+      const res = await fetch("/api/results", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({
+          exam_id: addExamId,
+          student_id: studentId,
+          subject_id: addSubjectId,
+          marks_obtained: Number(addMarksObtained),
+          total_marks: Number(addTotalMarks),
+          passing_marks: addPassingMarks ? Number(addPassingMarks) : undefined,
+          remarks: addRemarks
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsAddResultOpen(false);
+        setAddExamId("");
+        setAddSubjectId("");
+        setAddMarksObtained("");
+        setAddTotalMarks("100");
+        setAddPassingMarks("33");
+        setAddRemarks("");
+        fetchResults();
+      } else {
+        alert(data.message || "Failed to add result");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Network error saving result");
+    }
+  };
+
+  const handleDeleteResult = async (resToDelete: any) => {
+    if (!confirm("Are you sure you want to delete this result?")) return;
+    try {
+      const resId = resToDelete._id;
+      const res = await fetch(`/api/results?id=${resId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchResults();
+      } else {
+        alert(data.message || "Failed to delete result");
+      }
+    } catch(e) {
+      console.error(e);
+      alert("Network error deleting result");
+    }
+  };
   const [attendanceSummary, setAttendanceSummary] = useState({ present: 0, absent: 0, late: 0, holiday: 0, half_day: 0 });
   const [dailyAttendance, setDailyAttendance] = useState<Array<{ date: string; status: string; note?: string }>>([]);
   const [attendanceLoading, setAttendanceLoading] = useState(false);
@@ -152,12 +269,25 @@ function StudentViewContent() {
   // Group results by exam
   const examResultsGrouped = React.useMemo(() => {
     const groups: Record<string, { examName: string; examId: string; results: any[] }> = {};
+    const targetYear = selectedExamYear.replace(/\s+/g, ""); // e.g. "2024/2025" or "2024-2025"
+
     results.forEach(res => {
       const eId = typeof res.exam_id === 'object' ? res.exam_id?._id : res.exam_id;
       if (!eId) return;
+      
+      const matchingExam = exams.find(ex => ex._id === eId);
+      const examYear = matchingExam?.academic_year || (res.exam_id && typeof res.exam_id === 'object' ? res.exam_id.academic_year : "");
+      
+      if (examYear) {
+        const normExamYear = examYear.replace(/\s+/g, "").replace(/\//g, "-");
+        const normTargetYear = targetYear.replace(/\//g, "-");
+        if (normExamYear !== normTargetYear) {
+          return;
+        }
+      }
+
       const eName = typeof res.exam_id === 'object' ? (res.exam_id?.title || res.exam_id?.name) : undefined;
       if (!groups[eId]) {
-        const matchingExam = exams.find(ex => ex._id === eId);
         groups[eId] = {
           examId: eId,
           examName: eName || matchingExam?.title || matchingExam?.name || "Exam",
@@ -167,7 +297,7 @@ function StudentViewContent() {
       groups[eId].results.push(res);
     });
     return Object.values(groups);
-  }, [results, exams]);
+  }, [results, exams, selectedExamYear]);
 
   // Dynamic grouped schedules
   const daysOfWeek = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
@@ -265,6 +395,15 @@ function StudentViewContent() {
     const found = classes.find(c => c._id === cid);
     return found ? `${found.name} ${found.section || ""}`.trim() : "Not Assigned";
   };
+
+  const filteredExamsForAdd = React.useMemo(() => {
+    return exams.filter(ex => {
+      const examYear = ex.academic_year || "2024 / 2025";
+      const normExamYear = examYear.replace(/\s+/g, "").replace(/\//g, "-");
+      const normSelected = selectedExamYear.replace(/\s+/g, "").replace(/\//g, "-");
+      return normExamYear === normSelected;
+    });
+  }, [exams, selectedExamYear]);
 
   if (loading) return <div className="p-10 flex items-center gap-3"><Loader2 className="w-5 h-5 animate-spin text-primary" /><span>Loading student...</span></div>;
   if (!student) return <div className="p-10 text-slate-500 dark:text-slate-400">Student not found.</div>;
@@ -712,10 +851,18 @@ function StudentViewContent() {
               <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
                 <div className="p-4 border-b border-border flex items-center justify-between">
                   <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Fees</h3>
-                  <div className="px-3 py-1.5 border border-border rounded-lg flex items-center gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 text-[11px] font-bold text-slate-700 dark:text-slate-200">
+                  <div className="flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                    <span>Year : 2024 / 2025</span>
-                    <ChevronDown className="w-3.5 h-3.5" />
+                    <select
+                      value={selectedFeesYear}
+                      onChange={(e) => setSelectedFeesYear(e.target.value)}
+                      className="px-3 py-1.5 border border-border rounded-lg outline-none bg-white dark:bg-slate-900 font-bold text-xs text-slate-700 dark:text-slate-200 cursor-pointer shadow-sm focus:border-primary/50"
+                    >
+                      <option value="2023 / 2024">Year : 2023 / 2024</option>
+                      <option value="2024 / 2025">Year : 2024 / 2025</option>
+                      <option value="2025 / 2026">Year : 2025 / 2026</option>
+                      <option value="2026 / 2027">Year : 2026 / 2027</option>
+                    </select>
                   </div>
                 </div>
 
@@ -797,10 +944,28 @@ function StudentViewContent() {
               <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
                 <div className="p-4 border-b border-border flex items-center justify-between">
                   <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Exams & Results</h3>
-                  <div className="px-3 py-1.5 border border-border rounded-lg flex items-center gap-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 text-[11px] font-bold text-slate-700 dark:text-slate-200">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                    <span>Year : 2024 / 2025</span>
-                    <ChevronDown className="w-3.5 h-3.5" />
+                  <div className="flex items-center gap-3">
+                    {/* Add Result Button */}
+                    <button
+                      onClick={() => setIsAddResultOpen(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-[11px] font-bold shadow-sm hover:bg-[var(--primary-hover)] transition-colors cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> Add Result
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                      <select
+                        value={selectedExamYear}
+                        onChange={(e) => setSelectedExamYear(e.target.value)}
+                        className="px-3 py-1.5 border border-border rounded-lg outline-none bg-white dark:bg-slate-900 font-bold text-xs text-slate-700 dark:text-slate-200 cursor-pointer shadow-sm focus:border-primary/50"
+                      >
+                        <option value="2023 / 2024">Year : 2023 / 2024</option>
+                        <option value="2024 / 2025">Year : 2024 / 2025</option>
+                        <option value="2025 / 2026">Year : 2025 / 2026</option>
+                        <option value="2026 / 2027">Year : 2026 / 2027</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
@@ -816,6 +981,7 @@ function StudentViewContent() {
                         title={grp.examName}
                         initiallyExpanded={idx === 0}
                         results={grp.results}
+                        onEdit={handleOpenEditModal}
                       />
                     ))
                   )}
@@ -1342,6 +1508,189 @@ function StudentViewContent() {
         </div>
       )}
 
+      {editingResult && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
+          <form onSubmit={handleSaveEditedMarks} className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md overflow-hidden my-auto animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">Edit Subject Marks</h2>
+              <button type="button" onClick={() => setEditingResult(null)} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-6 text-left space-y-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-slate-900 dark:text-white">Subject</label>
+                <input 
+                  type="text" 
+                  value={typeof editingResult.subject_id === "object" ? editingResult.subject_id.name : editingResult.subject_id || ""} 
+                  disabled 
+                  className="w-full px-3 py-2.5 border border-border bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[13px] font-medium rounded-lg"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[12px] font-bold text-slate-900 dark:text-white">Marks Obtained</label>
+                  <input 
+                    type="number" 
+                    value={editMarksObtained} 
+                    onChange={(e) => setEditMarksObtained(e.target.value)} 
+                    required 
+                    min={0}
+                    max={Number(editTotalMarks) || 9999}
+                    className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[12px] font-bold text-slate-900 dark:text-white">Total Marks</label>
+                  <input 
+                    type="number" 
+                    value={editTotalMarks} 
+                    onChange={(e) => setEditTotalMarks(e.target.value)} 
+                    required 
+                    min={1}
+                    className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[12px] font-bold text-slate-900 dark:text-white">Passing Marks</label>
+                  <input 
+                    type="number" 
+                    value={editPassingMarks} 
+                    onChange={(e) => setEditPassingMarks(e.target.value)} 
+                    required 
+                    min={0}
+                    className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-slate-900 dark:text-white">Remarks (Optional)</label>
+                <input 
+                  type="text" 
+                  value={editRemarks} 
+                  onChange={(e) => setEditRemarks(e.target.value)} 
+                  className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-border mt-2">
+                <button type="button" onClick={() => setEditingResult(null)} className="px-5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-bold rounded-lg hover:bg-slate-200 transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" className="px-5 py-2 bg-primary text-white text-[13px] font-bold rounded-lg hover:bg-[var(--primary-hover)] shadow-sm transition-colors">
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {isAddResultOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
+          <form onSubmit={handleSaveNewResult} className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md overflow-hidden my-auto animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">Add Exam Marks</h2>
+              <button type="button" onClick={() => setIsAddResultOpen(false)} className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-200 transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-6 text-left space-y-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-slate-900 dark:text-white">Exam</label>
+                <div className="relative border border-border rounded-lg overflow-hidden bg-white dark:bg-slate-900">
+                  <select
+                    value={addExamId}
+                    onChange={(e) => setAddExamId(e.target.value)}
+                    required
+                    className="w-full px-3 py-2.5 text-[13px] font-medium text-slate-700 dark:text-slate-200 outline-none appearance-none bg-white dark:bg-slate-900 cursor-pointer"
+                  >
+                    <option value="">Select Exam</option>
+                    {filteredExamsForAdd.map(ex => (
+                      <option key={ex._id} value={ex._id}>{ex.title || ex.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-3 pointer-events-none" />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-slate-900 dark:text-white">Subject</label>
+                <div className="relative border border-border rounded-lg overflow-hidden bg-white dark:bg-slate-900">
+                  <select
+                    value={addSubjectId}
+                    onChange={(e) => setAddSubjectId(e.target.value)}
+                    required
+                    className="w-full px-3 py-2.5 text-[13px] font-medium text-slate-700 dark:text-slate-200 outline-none appearance-none bg-white dark:bg-slate-900 cursor-pointer"
+                  >
+                    <option value="">Select Subject</option>
+                    {subjects.map(sub => (
+                      <option key={sub._id} value={sub._id}>{sub.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-3 pointer-events-none" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[12px] font-bold text-slate-900 dark:text-white">Marks Obtained</label>
+                  <input 
+                    type="number" 
+                    value={addMarksObtained} 
+                    onChange={(e) => setAddMarksObtained(e.target.value)} 
+                    required 
+                    min={0}
+                    max={Number(addTotalMarks) || 9999}
+                    className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[12px] font-bold text-slate-900 dark:text-white">Total Marks</label>
+                  <input 
+                    type="number" 
+                    value={addTotalMarks} 
+                    onChange={(e) => setAddTotalMarks(e.target.value)} 
+                    required 
+                    min={1}
+                    className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[12px] font-bold text-slate-900 dark:text-white">Passing Marks</label>
+                  <input 
+                    type="number" 
+                    value={addPassingMarks} 
+                    onChange={(e) => setAddPassingMarks(e.target.value)} 
+                    required 
+                    min={0}
+                    className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[12px] font-bold text-slate-900 dark:text-white">Remarks (Optional)</label>
+                <input 
+                  type="text" 
+                  value={addRemarks} 
+                  onChange={(e) => setAddRemarks(e.target.value)} 
+                  className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4 border-t border-border mt-2">
+                <button type="button" onClick={() => setIsAddResultOpen(false)} className="px-5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-bold rounded-lg hover:bg-slate-200 transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" className="px-5 py-2 bg-primary text-white text-[13px] font-bold rounded-lg hover:bg-[var(--primary-hover)] shadow-sm transition-colors">
+                  Add Marks
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
       {isLeaveModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
           <form onSubmit={handleApplyLeaveSubmit} className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-lg overflow-hidden my-auto animate-in zoom-in-95 duration-200">
@@ -1554,7 +1903,17 @@ function FeeRow({ group, code, due, amount, status, refId, mode, paid, discount 
   );
 }
 
-function ExamCard({ title, initiallyExpanded, results = [] }: { title: string, initiallyExpanded: boolean, results: any[] }) {
+function ExamCard({ 
+  title, 
+  initiallyExpanded, 
+  results = [],
+  onEdit 
+}: { 
+  title: string, 
+  initiallyExpanded: boolean, 
+  results: any[],
+  onEdit?: (result: any) => void 
+}) {
   const [expanded, setExpanded] = useState(initiallyExpanded);
 
   const totalMaxMarks = results.reduce((sum, r) => sum + (r.total_marks || 100), 0);
@@ -1598,6 +1957,7 @@ function ExamCard({ title, initiallyExpanded, results = [] }: { title: string, i
                       min={r.passing_marks || 33}
                       obtained={obtained}
                       isPass={r.is_pass !== false}
+                      onEdit={onEdit ? () => onEdit(r) : undefined}
                     />
                   );
                 })}
@@ -1620,14 +1980,28 @@ function ExamCard({ title, initiallyExpanded, results = [] }: { title: string, i
   );
 }
 
-function ExamRow({ subject, max, min, obtained, isPass }: { subject: string, max: number, min: number, obtained: number, isPass: boolean }) {
+function ExamRow({ 
+  subject, 
+  max, 
+  min, 
+  obtained, 
+  isPass,
+  onEdit 
+}: { 
+  subject: string, 
+  max: number, 
+  min: number, 
+  obtained: number, 
+  isPass: boolean,
+  onEdit?: () => void 
+}) {
   return (
     <tr className="hover:bg-slate-50/30 transition-colors">
       <td className="py-3 px-4">{subject}</td>
       <td className="py-3 px-4">{max}</td>
       <td className="py-3 px-4">{min}</td>
       <td className="py-3 px-4">{obtained}</td>
-      <td className="py-3 px-4 text-right">
+      <td className="py-3 px-4 text-right flex items-center justify-end gap-3">
         {isPass ? (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-success/10 text-success">
             <span className="w-1.5 h-1.5 rounded-full bg-success mr-1.5" /> Pass
@@ -1636,6 +2010,15 @@ function ExamRow({ subject, max, min, obtained, isPass }: { subject: string, max
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-danger/10 text-danger">
             <span className="w-1.5 h-1.5 rounded-full bg-danger mr-1.5" /> Fail
           </span>
+        )}
+        {onEdit && (
+          <button 
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer text-slate-400 hover:text-slate-600"
+          >
+            <Edit className="w-3.5 h-3.5" />
+          </button>
         )}
       </td>
     </tr>

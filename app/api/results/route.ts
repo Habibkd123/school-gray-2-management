@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
     const entries = Array.isArray(body) ? body : [body];
 
     const results = await Promise.all(entries.map(async (entry) => {
-      const { exam_id, student_id, subject_id, marks_obtained, total_marks, passing_marks, grade, remarks } = entry;
+      const { exam_id, student_id, subject_id, marks_obtained, total_marks, passing_marks, grade, remarks, status } = entry;
       const is_pass = passing_marks ? Number(marks_obtained) >= Number(passing_marks) : undefined;
 
       return Result.findOneAndUpdate(
@@ -120,6 +120,7 @@ export async function POST(req: NextRequest) {
             grade: grade?.trim(),
             is_pass,
             remarks: remarks?.trim(),
+            status: status || "final"
           }
         },
         { upsert: true, new: true }
@@ -127,6 +128,29 @@ export async function POST(req: NextRequest) {
     }));
 
     return NextResponse.json({ success: true, data: { results } }, { status: 201 });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
+  if (error) return error;
+
+  try {
+    await connectToDatabase();
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+    if (!id) {
+      return NextResponse.json({ success: false, message: "Result ID is required" }, { status: 400 });
+    }
+
+    const result = await Result.findOneAndDelete({ _id: id, school_id: schoolId });
+    if (!result) {
+      return NextResponse.json({ success: false, message: "Result not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: "Result deleted successfully" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

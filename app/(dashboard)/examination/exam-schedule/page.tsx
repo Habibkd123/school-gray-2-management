@@ -1,620 +1,336 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
-  Plus, Search, List, MoreVertical, Edit, Trash2,
-  Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, FileText, Loader2
+  Plus, Search, Edit, Trash2, Calendar, ChevronDown, RefreshCw, Printer, Loader2, ArrowLeft
 } from "lucide-react";
 import { Modal } from "../../../components/ui/modal";
 import { useExams } from "../../../hooks/useExams";
-import { useClasses } from "../../../hooks/useClasses";
-import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar";
-import { useAppState } from "@/app/context/store";
-
-const DATE_RANGES = ["Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year", "All Time", "Custom Range"] as const;
-
-function getDateRangeDates(range: string): { from: Date | null; to: Date | null } {
-  const now = new Date();
-  const to = new Date(now);
-  const from = new Date(now);
-  switch (range) {
-    case "Today": 
-      from.setHours(0, 0, 0, 0); 
-      to.setHours(23, 59, 59, 999);
-      break;
-    case "Yesterday":
-      from.setDate(from.getDate() - 1); from.setHours(0, 0, 0, 0);
-      to.setDate(to.getDate() - 1); to.setHours(23, 59, 59, 999);
-      break;
-    case "Last 7 Days": 
-      from.setDate(from.getDate() - 7); 
-      from.setHours(0, 0, 0, 0);
-      to.setHours(23, 59, 59, 999);
-      break;
-    case "Last 30 Days": 
-      from.setDate(from.getDate() - 30); 
-      from.setHours(0, 0, 0, 0);
-      to.setHours(23, 59, 59, 999);
-      break;
-    case "This Year": 
-      from.setMonth(0, 1); 
-      from.setHours(0, 0, 0, 0); 
-      to.setHours(23, 59, 59, 999);
-      break;
-    case "All Time":
-      return { from: null, to: null };
-    default: 
-      return { from: null, to: null };
-  }
-  return { from, to };
-}
-
-
+import { useExamSchedule, ApiExamSchedule } from "../../../hooks/useExamSchedule";
+import { useSubjects } from "../../../hooks/useSubjects";
 
 export default function ExamSchedulePage() {
-  const { exams, loading: isLoading, createExam, deleteExam } = useExams();
-  const { classes } = useClasses();
-  const { academicYear } = useAppState();
+  const searchParams = useSearchParams();
+  const examIdParam = searchParams.get("exam_id") || "";
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const { exams, loading: examsLoading } = useExams();
+  const [selectedExamId, setSelectedExamId] = useState(examIdParam);
+
+  // Sync selected exam from URL query parameter
+  useEffect(() => {
+    if (examIdParam) setSelectedExamId(examIdParam);
+  }, [examIdParam]);
+
+  // Find selected exam object
+  const selectedExam = useMemo(() => {
+    return exams.find(e => e._id === selectedExamId);
+  }, [exams, selectedExamId]);
+
+  // Extract selected class ID
+  const selectedClassId = useMemo(() => {
+    if (!selectedExam) return "";
+    return typeof selectedExam.class_id === "object" ? selectedExam.class_id?._id : selectedExam.class_id || "";
+  }, [selectedExam]);
+
+  // Fetch subjects of selected class
+  const { subjects, loading: subjectsLoading } = useSubjects(selectedClassId || undefined);
+
+  // Fetch schedules for selected exam
+  const { schedules, loading: schedulesLoading, createSchedule, updateSchedule, deleteSchedule, fetchSchedules } = useExamSchedule(selectedExamId || undefined);
+
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [isExportOpen, setIsExportOpen] = useState(false);
-  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
-  
-  // Date range state
-  const [selectedRange, setSelectedRange] = useState("All Time");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
-  const [isCustom, setIsCustom] = useState(false);
-  const [activeFrom, setActiveFrom] = useState<Date | null>(null);
-  const [activeTo, setActiveTo] = useState<Date | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  const parseLocalDate = (dateInput: string | Date | undefined): Date | null => {
-    if (!dateInput) return null;
-    if (dateInput instanceof Date) return dateInput;
-    const parts = dateInput.split('T')[0].split('-');
-    if (parts.length === 3) {
-      const year = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const day = parseInt(parts[2], 10);
-      return new Date(year, month, day);
+  const [selectedSchedule, setSelectedSchedule] = useState<ApiExamSchedule | null>(null);
+
+  // Form states
+  const [formSubjectId, setFormSubjectId] = useState("");
+  const [formDate, setFormDate] = useState("");
+  const [formStartTime, setFormStartTime] = useState("09:30 AM");
+  const [formEndTime, setFormEndTime] = useState("12:30 PM");
+  const [formMaxMarks, setFormMaxMarks] = useState("100");
+  const [formPassingMarks, setFormPassingMarks] = useState("33");
+  const [formRoom, setFormRoom] = useState("");
+
+  // Update default marks when subject selection changes in Add modal
+  useEffect(() => {
+    if (formSubjectId) {
+      const sub = subjects.find(s => s._id === formSubjectId);
+      if (sub) {
+        setFormMaxMarks(sub.full_marks?.toString() || "100");
+        setFormPassingMarks(sub.pass_marks?.toString() || "33");
+      }
     }
-    return new Date(dateInput);
-  };
-
-  const applyDateRange = (range: string) => {
-    if (range === "Custom Range") { setIsCustom(true); return; }
-    setIsCustom(false);
-    const { from, to } = getDateRangeDates(range);
-    setActiveFrom(from); setActiveTo(to);
-    setSelectedRange(range); setIsDateRangeOpen(false);
-  };
-
-  const applyCustomRange = () => {
-    if (!customFrom || !customTo) return;
-    const fromDate = new Date(customFrom);
-    fromDate.setHours(0, 0, 0, 0);
-    const toDate = new Date(customTo);
-    toDate.setHours(23, 59, 59, 999);
-    setActiveFrom(fromDate); 
-    setActiveTo(toDate);
-    setSelectedRange(`${customFrom} — ${customTo}`);
-    setIsCustom(false); setIsDateRangeOpen(false);
-  };
-
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [filterType, setFilterType] = useState("All");
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [pendingType, setPendingType] = useState("All");
-  const [pendingStatus, setPendingStatus] = useState("All");
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const [selectedSort, setSelectedSort] = useState("Ascending");
-  const [pageSize, setPageSize] = useState(10);
-  const [selectedExam, setSelectedExam] = useState<any>(null);
-  const [actionMenuId, setActionMenuId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Form state
-  const [formName, setFormName] = useState("");
-  const [formClassId, setFormClassId] = useState("");
-  const [formType, setFormType] = useState<"unit_test" | "mid_term" | "pre_board" | "annual" | "other">("other");
-  const [formAcademicYear, setFormAcademicYear] = useState("");
-  const [formFrom, setFormFrom] = useState("");
-  const [formTo, setFormTo] = useState("");
+  }, [formSubjectId, subjects]);
 
   const openAddModal = () => {
-    setFormName("");
-    setFormClassId("");
-    setFormType("other");
-    setFormAcademicYear(academicYear || "2025-2026");
-    setFormFrom("");
-    setFormTo("");
+    setFormSubjectId("");
+    setFormDate("");
+    setFormStartTime("09:30 AM");
+    setFormEndTime("12:30 PM");
+    setFormMaxMarks("100");
+    setFormPassingMarks("33");
+    setFormRoom("");
     setIsAddOpen(true);
   };
 
-  const openDeleteModal = (item: any) => {
-    setSelectedExam(item);
+  const openEditModal = (item: ApiExamSchedule) => {
+    setSelectedSchedule(item);
+    setFormSubjectId(typeof item.subject_id === "object" ? item.subject_id?._id : item.subject_id || "");
+    setFormDate(item.date ? new Date(item.date).toISOString().slice(0, 10) : "");
+    setFormStartTime(item.start_time || "");
+    setFormEndTime(item.end_time || "");
+    setFormMaxMarks(item.max_marks?.toString() || "100");
+    setFormPassingMarks(item.passing_marks?.toString() || "33");
+    setFormRoom(item.room || "");
+    setIsEditOpen(true);
+  };
+
+  const openDeleteModal = (item: ApiExamSchedule) => {
+    setSelectedSchedule(item);
     setIsDeleteOpen(true);
-    setActionMenuId(null);
   };
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formName || !formFrom || !formTo) return;
-    setIsSubmitting(true);
-    await createExam({
-      name: formName,
-      class_id: formClassId || undefined,
-      type: formType as "unit_test" | "mid_term" | "pre_board" | "annual" | "other",
-      academic_year: formAcademicYear || academicYear || "2025-2026",
-      start_date: formFrom,
-      end_date: formTo,
+    if (!selectedExamId || !formSubjectId || !formDate || !formStartTime || !formEndTime) return;
+
+    // Check duplicate client-side (exam_id, subject_id, date)
+    const isDuplicate = schedules.some(s => {
+      const sSubId = typeof s.subject_id === "object" ? s.subject_id?._id : s.subject_id;
+      const sDateStr = new Date(s.date).toISOString().slice(0, 10);
+      const newDateStr = new Date(formDate).toISOString().slice(0, 10);
+      return sSubId === formSubjectId && sDateStr === newDateStr;
     });
-    setIsSubmitting(false);
-    setIsAddOpen(false);
+
+    if (isDuplicate) {
+      alert("A schedule for this subject and date already exists for this exam.");
+      return;
+    }
+
+    setSaving(true);
+    const res = await createSchedule({
+      exam_id: selectedExamId,
+      subject_id: formSubjectId,
+      date: formDate,
+      start_time: formStartTime,
+      end_time: formEndTime,
+      max_marks: Number(formMaxMarks),
+      passing_marks: Number(formPassingMarks),
+      room: formRoom || undefined
+    });
+    setSaving(false);
+
+    if (res.success) {
+      setIsAddOpen(false);
+    } else {
+      alert(res.message || "Failed to create schedule.");
+    }
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSchedule || !formDate || !formStartTime || !formEndTime) return;
+
+    setSaving(true);
+    const res = await updateSchedule(selectedSchedule._id, {
+      date: formDate,
+      start_time: formStartTime,
+      end_time: formEndTime,
+      max_marks: Number(formMaxMarks),
+      passing_marks: Number(formPassingMarks),
+      room: formRoom || undefined
+    });
+    setSaving(false);
+
+    if (res.success) {
+      setIsEditOpen(false);
+    } else {
+      alert(res.message || "Failed to update schedule.");
+    }
   };
 
   const handleDeleteConfirm = async () => {
-    if (selectedExam) {
-      await deleteExam(selectedExam._id);
+    if (!selectedSchedule) return;
+    const res = await deleteSchedule(selectedSchedule._id);
+    if (res.success) {
+      setIsDeleteOpen(false);
+    } else {
+      alert(res.message || "Failed to delete schedule.");
     }
-    setIsDeleteOpen(false);
   };
 
   const formatDateLabel = (d: string | Date) => {
     try {
-      const date = parseLocalDate(d);
-      if (!date) return String(d);
-      return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+      return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    } catch {
+      return String(d);
     }
-    catch { return String(d); }
   };
-
-  const dateRangeLabel = (activeFrom && activeTo && !isCustom)
-    ? `${formatDateLabel(activeFrom)} — ${formatDateLabel(activeTo)}`
-    : selectedRange;
-
-  const triggerCls = (open: boolean) =>
-    `flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors cursor-pointer
-     ${open
-      ? "border-primary text-primary"
-      : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
-
-  const filteredData = useMemo(() => {
-    let list = exams.filter(item => {
-      const matchesSearch = (item.name || '').toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesType = filterType === "All"
-        ? true
-        : item.type === filterType;
-
-      let matchesStatus = true;
-      if (filterStatus !== "All") {
-        const todayStart = new Date();
-        todayStart.setHours(0, 0, 0, 0);
-        const isActive = item.end_date ? new Date(item.end_date) >= todayStart : true;
-        matchesStatus = filterStatus === "Active" ? isActive : !isActive;
-      }
-
-      let matchesDate = true;
-      if (activeFrom && activeTo) {
-        if (item.start_date) {
-          const itemDate = parseLocalDate(item.start_date);
-          if (itemDate) {
-            const fromCompare = new Date(activeFrom);
-            fromCompare.setHours(0, 0, 0, 0);
-            const toCompare = new Date(activeTo);
-            toCompare.setHours(23, 59, 59, 999);
-            matchesDate = itemDate >= fromCompare && itemDate <= toCompare;
-          } else {
-            matchesDate = false;
-          }
-        } else {
-          matchesDate = false;
-        }
-      }
-
-      return matchesSearch && matchesType && matchesStatus && matchesDate;
-    });
-
-    if (selectedSort === "Ascending") {
-      list = [...list].sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    } else if (selectedSort === "Descending") {
-      list = [...list].sort((a, b) => (b.name || "").localeCompare(a.name || ""));
-    } else if (selectedSort === "Recently Added") {
-      list = [...list].sort((a, b) => {
-        const ad = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const bd = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return bd - ad;
-      });
-    }
-
-    return list;
-  }, [exams, searchTerm, filterType, filterStatus, activeFrom, activeTo, selectedSort]);
-
-  const pag = usePagination(filteredData, pageSize);
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Exam Schedule</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="flex items-center gap-2">
+            <Link href="/examination/exam" className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors text-slate-500 mr-1">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Exam Schedule</h1>
+          </div>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 pl-8">
             <span>Dashboard</span>
             <span>/</span>
-            <Link href="/examination" className="hover:text-primary">Examination</Link>
+            <Link href="/examination/exam" className="hover:text-primary">Exam</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Exam Schedule</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => fetchSchedules()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
-            <Printer className="w-4 h-4" />
-          </button>
-          
-          <div className="relative">
-            <button 
-              onClick={() => setIsExportOpen(!isExportOpen)}
-              className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
+          {selectedExamId && (
+            <button
+              onClick={openAddModal}
+              className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
             >
-              <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
+              <Plus className="w-4 h-4" /> Add Subject
             </button>
-            {isExportOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-2 text-left">
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
-                    <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as PDF
-                  </button>
-                  <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
-                    <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as Excel
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-
-          <button 
-            onClick={openAddModal}
-            className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
-          >
-            <Plus className="w-4 h-4" /> Add Exam Schedule
-          </button>
+          )}
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
-        {/* Table Header Section */}
-        <div className="p-5 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Exam Schedule</h2>
-          
-          <div className="flex flex-wrap items-center gap-3">
-            {/* ── Date Range ── */}
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button 
-                onClick={() => setIsDateRangeOpen(!isDateRangeOpen)} 
-                className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors cursor-pointer
-                  ${(activeFrom && activeTo) || isDateRangeOpen
-                    ? "border-primary bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-bold"
-                    : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                  }`}
-              >
-                <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span className="max-w-full sm:w-[120px] truncate">{dateRangeLabel}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isDateRangeOpen ? "rotate-180" : ""}`} />
-              </button>
-              {isDateRangeOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsDateRangeOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1">
-                    {DATE_RANGES.map((range) => (
-                      <button key={range} onClick={() => applyDateRange(range)}
-                        className={`w-full px-4 py-2.5 text-left text-[13px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer
-                          ${selectedRange === range ? "bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-semibold" : "text-slate-700 dark:text-slate-300"}`}>
-                        {range}
-                      </button>
-                    ))}
-                    {isCustom && (
-                      <div className="px-4 py-3 border-t border-border bg-slate-50/50 dark:bg-slate-800/50">
-                        <div className="space-y-2">
-                          <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-                            className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
-                          <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-                            className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200" />
-                          <button onClick={applyCustomRange} disabled={!customFrom || !customTo}
-                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-primary hover:bg-[var(--primary-hover)] rounded transition-colors disabled:opacity-50 cursor-pointer">
-                            Apply
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {(activeFrom || activeTo) && !isCustom && (
-                      <div className="px-4 pt-2 pb-1 border-t border-border mt-1">
-                        <button onClick={() => { setActiveFrom(null); setActiveTo(null); setSelectedRange("All Time"); setIsDateRangeOpen(false); }}
-                          className="w-full text-[12px] font-semibold text-rose-500 hover:text-rose-600 transition-colors cursor-pointer">
-                          Clear Filter
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
- 
-            {/* ── Filter ── */}
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button 
-                onClick={() => {
-                  if (isFilterOpen) {
-                    setIsFilterOpen(false);
-                  } else {
-                    setPendingType(filterType);
-                    setPendingStatus(filterStatus);
-                    setIsFilterOpen(true);
-                  }
-                }}
-                className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors cursor-pointer
-                  ${filterType !== "All" || filterStatus !== "All" || isFilterOpen
-                    ? "border-primary bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-bold"
-                    : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                  }`}
-              >
-                <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span>Filter{filterType !== "All" || filterStatus !== "All" ? " (Active)" : ""}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
-              </button>
-              {isFilterOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 text-left">
-                    <div className="p-4 border-b border-border">
-                      <h3 className="text-[15px] font-bold text-foreground dark:text-slate-100">Filter</h3>
-                    </div>
-                    <div className="p-4 space-y-4">
-                      <div className="space-y-1.5">
-                        <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Type</label>
-                        <div className="relative">
-                          <select 
-                            value={pendingType} 
-                            onChange={(e) => setPendingType(e.target.value)}
-                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
-                          >
-                            <option value="All" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Types</option>
-                            <option value="unit_test" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Unit Test</option>
-                            <option value="mid_term" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Mid Term</option>
-                            <option value="pre_board" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Pre Board</option>
-                            <option value="annual" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Annual</option>
-                            <option value="other" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Other</option>
-                          </select>
-                          <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-2.5 pointer-events-none" />
-                        </div>
-                      </div>
-                      <div className="space-y-1.5">
-                        <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Status</label>
-                        <div className="relative">
-                          <select 
-                            value={pendingStatus}
-                            onChange={(e) => setPendingStatus(e.target.value)}
-                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
-                          >
-                            <option value="All" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Statuses</option>
-                            <option value="Active" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Active</option>
-                            <option value="Inactive" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Inactive</option>
-                          </select>
-                          <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-2.5 pointer-events-none" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-4 flex justify-end gap-3 bg-white dark:bg-slate-900 rounded-b-lg border-t border-border mt-2">
-                      <button 
-                        onClick={() => { 
-                          setPendingType("All"); 
-                          setPendingStatus("All"); 
-                          setFilterType("All"); 
-                          setFilterStatus("All"); 
-                          setIsFilterOpen(false); 
-                        }} 
-                        className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-foreground dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer"
-                      >
-                        Reset
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setFilterType(pendingType);
-                          setFilterStatus(pendingStatus);
-                          setIsFilterOpen(false);
-                        }} 
-                        className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
-                      >
-                        Apply
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
- 
-            {/* ── Sort by ── */}
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button 
-                onClick={() => setIsSortOpen(!isSortOpen)} 
-                className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors cursor-pointer
-                  ${selectedSort !== "Ascending" || isSortOpen
-                    ? "border-primary bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-bold"
-                    : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                  }`}
-              >
-                <List className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span>Sort: {selectedSort === "Ascending" ? "A-Z" : selectedSort === "Descending" ? "Z-A" : "Recently Added"}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isSortOpen ? "rotate-180" : ""}`} />
-              </button>
-              {isSortOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
-                    {["Ascending", "Descending", "Recently Added"].map((item) => (
-                      <button 
-                        key={item} 
-                        onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
-                        className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-primary font-bold" : "text-slate-700 dark:text-slate-200"}`}
-                      >
-                        {item}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
- 
-        {/* Controls Section */}
-        <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
-            <span>Row Per Page</span>
-            <select 
-              value={pageSize} 
-              onChange={(e) => setPageSize(Number(e.target.value))}
-              className="px-2 py-1.5 bg-white dark:bg-slate-900 border border-border rounded-lg outline-none text-slate-700 dark:text-slate-200 font-medium cursor-pointer"
-            >
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-            </select>
-            <span>Entries</span>
-          </div>
-
+      {/* Select Exam Dropdown */}
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm p-5 text-left">
+        <div className="max-w-md space-y-1.5">
+          <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Select Exam</label>
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text" 
-              placeholder="Search" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
-            />
+            <select
+              value={selectedExamId}
+              onChange={(e) => setSelectedExamId(e.target.value)}
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+            >
+              <option value="">Choose an Exam to schedule...</option>
+              {exams.map((ex) => (
+                <option key={ex._id} value={ex._id}>
+                  {ex.name} {typeof ex.class_id === "object" ? `(${ex.class_id?.name || ""} - ${ex.class_id?.section || ""})` : ""}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
+      </div>
 
-        {/* Table */}
-        <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
+      {/* Schedule Table */}
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
+        <div className="p-5 border-b border-border flex items-center justify-between">
+          <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">
+            {selectedExam ? `Schedule for: ${selectedExam.name}` : "Exam Schedule details"}
+          </h2>
+          {selectedExam && (
+            <span className="text-[12px] font-semibold text-slate-500 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1 rounded border border-border">
+              Class: {typeof selectedExam.class_id === "object" ? `${selectedExam.class_id?.name} - ${selectedExam.class_id?.section}` : "—"}
+            </span>
+          )}
+        </div>
+
+        <div className="overflow-x-auto">
           <table className="w-full text-[13px]">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">
-                  <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
-                </th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Exam Name</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Type</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Start Date</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">End Date</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-20">Action</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Subject</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Exam Date</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Start Time</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">End Time</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Max Marks</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Passing Marks</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Room</th>
+                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-24">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {isLoading ? (
-                <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-400"><Loader2 className="w-5 h-5 animate-spin inline" /></td></tr>
-              ) : pag.paged.length === 0 ? (
-                <tr><td colSpan={6} className="px-6 py-8 text-center text-slate-400">No exams found.</td></tr>
-              ) : pag.paged.map((item) => (
-                <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4">
-                    <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
-                  </td>
-                  <td className="px-6 py-4">
-                    <button className="font-semibold text-primary hover:text-[var(--primary-hover)] transition-colors cursor-pointer">
-                      {item.name}
-                    </button>
-                  </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300 capitalize">{item.type || "—"}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{item.start_date ? new Date(item.start_date).toLocaleDateString() : "—"}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{item.end_date ? new Date(item.end_date).toLocaleDateString() : "—"}</td>
-                  <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
-                    <button 
-                      onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
-                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </button>
-                    {actionMenuId === item._id && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                        <div className="absolute right-10 top-10 w-36 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
-                          <button onClick={() => openDeleteModal(item)} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
-                            <Trash2 className="w-4 h-4 text-rose-500" /> Delete
-                          </button>
-                        </div>
-                      </>
-                    )}
+              {!selectedExamId ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-16 text-center text-slate-500 dark:text-slate-400">
+                    Please select an exam from the dropdown above to manage its subject schedule.
                   </td>
                 </tr>
-              ))}
+              ) : (schedulesLoading || examsLoading) ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-16 text-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+                    <p className="text-slate-500 mt-2">Loading schedules...</p>
+                  </td>
+                </tr>
+              ) : schedules.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="px-6 py-16 text-center text-slate-500 dark:text-slate-400">
+                    No subjects scheduled for this exam yet. Click &quot;Add Subject&quot; to begin.
+                  </td>
+                </tr>
+              ) : schedules.map((item) => {
+                const subName = typeof item.subject_id === "object" ? item.subject_id?.name : item.subject_id;
+                const subCode = typeof item.subject_id === "object" ? item.subject_id?.code : "";
+                return (
+                  <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
+                    <td className="px-6 py-4 font-semibold text-slate-800 dark:text-slate-100">
+                      {subName} {subCode ? `(${subCode})` : ""}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">
+                      {formatDateLabel(item.date)}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{item.start_time}</td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{item.end_time}</td>
+                    <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-200">{item.max_marks}</td>
+                    <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-200">{item.passing_marks}</td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{item.room || "—"}</td>
+                    <td className="px-6 py-4 flex items-center gap-2">
+                      <button
+                        onClick={() => openEditModal(item)}
+                        className="p-1.5 rounded bg-slate-150 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+                        title="Edit"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(item)}
+                        className="p-1.5 rounded bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 text-rose-600 dark:text-rose-450 transition-colors cursor-pointer"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
-
-        {/* Pagination */}
-        <PaginationBar
-          currentPage={pag.page}
-          totalPages={pag.totalPages}
-          totalItems={pag.totalItems}
-          pageSize={pag.pageSize}
-          onPageChange={pag.setPage}
-        />
       </div>
 
-      {/* Add Modal */}
-      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Add Exam" size="md">
-        <form onSubmit={handleAddSubmit} className="p-6 text-left space-y-5">
+      {/* Add Schedule Modal */}
+      <Modal isOpen={isAddOpen} size="lg" onClose={() => setIsAddOpen(false)} title="Add Subject Schedule">
+        <form onSubmit={handleAddSubmit} className="p-6 space-y-5 text-left max-h-[80vh] overflow-y-auto custom-scrollbar">
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Exam Name</label>
-            <input
-              type="text"
-              value={formName}
-              onChange={(e) => setFormName(e.target.value)}
-              placeholder="e.g. Half Yearly 2025"
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
-              required
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Type</label>
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Subject</label>
             <div className="relative">
               <select
-                value={formType}
-                onChange={(e) => setFormType(e.target.value as "unit_test" | "mid_term" | "pre_board" | "annual" | "other")}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                value={formSubjectId}
+                onChange={(e) => setFormSubjectId(e.target.value)}
+                required
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary appearance-none text-slate-750 dark:text-slate-200 cursor-pointer"
               >
-                <option value="unit_test" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Unit Test</option>
-                <option value="mid_term" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Mid Term</option>
-                <option value="pre_board" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Pre Board</option>
-                <option value="annual" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Annual</option>
-                <option value="other" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Other</option>
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class (optional)</label>
-            <div className="relative">
-              <select
-                value={formClassId}
-                onChange={(e) => setFormClassId(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
-              >
-                <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">All Classes</option>
-                {classes.map((c) => (
-                  <option key={c._id} value={c._id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{c.name} — {c.section}</option>
+                <option value="">Select Subject</option>
+                {subjects.map((sub) => (
+                  <option key={sub._id} value={sub._id}>{sub.name} {sub.code ? `(${sub.code})` : ""}</option>
                 ))}
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -622,45 +338,168 @@ export default function ExamSchedulePage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Academic Year</label>
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Exam Date</label>
             <input
-              type="text"
-              value={formAcademicYear}
-              onChange={(e) => setFormAcademicYear(e.target.value)}
-              placeholder="e.g. 2025-2026"
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
+              type="date"
+              value={formDate}
+              onChange={(e) => setFormDate(e.target.value)}
               required
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary text-slate-700 dark:text-slate-200"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5 text-left">
+              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Start Time</label>
+              <TimePicker value={formStartTime} onChange={setFormStartTime} />
+            </div>
+            <div className="space-y-1.5 text-left">
+              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">End Time</label>
+              <TimePicker value={formEndTime} onChange={setFormEndTime} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Start Date</label>
+              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Maximum Marks</label>
               <input
-                type="date"
-                value={formFrom}
-                onChange={(e) => setFormFrom(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
+                type="number"
+                value={formMaxMarks}
+                onChange={(e) => setFormMaxMarks(e.target.value)}
                 required
+                min={1}
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary text-slate-700 dark:text-slate-200"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">End Date</label>
+              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Passing Marks</label>
               <input
-                type="date"
-                value={formTo}
-                onChange={(e) => setFormTo(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
+                type="number"
+                value={formPassingMarks}
+                onChange={(e) => setFormPassingMarks(e.target.value)}
                 required
+                min={0}
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary text-slate-700 dark:text-slate-200"
               />
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <button type="button" onClick={() => setIsAddOpen(false)} className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 transition-colors cursor-pointer">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer flex items-center gap-2">
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
-              Add Exam
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Room (Optional)</label>
+            <input
+              type="text"
+              value={formRoom}
+              onChange={(e) => setFormRoom(e.target.value)}
+              placeholder="e.g. Room 102"
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary text-slate-700 dark:text-slate-200"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+            <button
+              type="button"
+              onClick={() => setIsAddOpen(false)}
+              className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer flex items-center gap-2"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              Save Schedule
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Edit Schedule Modal */}
+      <Modal isOpen={isEditOpen} size="lg" onClose={() => setIsEditOpen(false)} title="Edit Subject Schedule">
+        <form onSubmit={handleEditSubmit} className="p-6 space-y-5 text-left max-h-[80vh] overflow-y-auto custom-scrollbar">
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Subject</label>
+            <input
+              type="text"
+              value={selectedSchedule && typeof selectedSchedule.subject_id === "object" ? selectedSchedule.subject_id.name : ""}
+              disabled
+              className="w-full px-4 py-2.5 text-[14px] bg-slate-50 dark:bg-slate-800 border border-border rounded-lg text-slate-500 cursor-not-allowed outline-none"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Exam Date</label>
+            <input
+              type="date"
+              value={formDate}
+              onChange={(e) => setFormDate(e.target.value)}
+              required
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary text-slate-700 dark:text-slate-200"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5 text-left">
+              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Start Time</label>
+              <TimePicker value={formStartTime} onChange={setFormStartTime} />
+            </div>
+            <div className="space-y-1.5 text-left">
+              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">End Time</label>
+              <TimePicker value={formEndTime} onChange={setFormEndTime} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Maximum Marks</label>
+              <input
+                type="number"
+                value={formMaxMarks}
+                onChange={(e) => setFormMaxMarks(e.target.value)}
+                required
+                min={1}
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary text-slate-700 dark:text-slate-200"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Passing Marks</label>
+              <input
+                type="number"
+                value={formPassingMarks}
+                onChange={(e) => setFormPassingMarks(e.target.value)}
+                required
+                min={0}
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary text-slate-700 dark:text-slate-200"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Room (Optional)</label>
+            <input
+              type="text"
+              value={formRoom}
+              onChange={(e) => setFormRoom(e.target.value)}
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary text-slate-700 dark:text-slate-200"
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+            <button
+              type="button"
+              onClick={() => setIsEditOpen(false)}
+              className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 transition-colors cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer flex items-center gap-2"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              Save Changes
             </button>
           </div>
         </form>
@@ -674,28 +513,114 @@ export default function ExamSchedulePage() {
             <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <Trash2 className="w-8 h-8 text-rose-500" />
             </div>
-            <h2 className="text-xl font-bold text-foreground dark:text-slate-100 mb-3">Confirm Deletion</h2>
+            <h2 className="text-xl font-bold text-foreground dark:text-slate-100 mb-3">Delete Subject Schedule</h2>
             <p className="text-[14px] text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
-              You want to delete all the marked items, this cant be undone once you delete.
+              Are you sure you want to delete the schedule for this subject?
             </p>
             <div className="flex justify-center gap-3">
-              <button 
+              <button
                 onClick={() => setIsDeleteOpen(false)}
                 className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleDeleteConfirm}
-                className="px-6 py-2.5 bg-rose-500 text-white text-[14px] font-bold rounded-lg hover:bg-rose-600 transition-colors shadow-sm shadow-rose-500/20 cursor-pointer"
+                className="px-6 py-2.5 bg-rose-500 text-white text-[14px] font-bold rounded-lg hover:bg-rose-600 transition-colors shadow-sm cursor-pointer"
               >
-                Yes, Delete
+                Delete
               </button>
             </div>
           </div>
         </>
       )}
 
+    </div>
+  );
+}
+
+interface TimePickerProps {
+  value: string;
+  onChange: (val: string) => void;
+}
+
+function TimePicker({ value, onChange }: TimePickerProps) {
+  const match = value?.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+  let currentHour = "09";
+  let currentMinute = "00";
+  let currentPeriod = "AM";
+  if (match) {
+    let [, h, m, p] = match;
+    if (h.length === 1) h = `0${h}`;
+    currentHour = h;
+    currentMinute = m;
+    currentPeriod = p.toUpperCase();
+  }
+
+  const hours = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0"));
+  const minutes = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
+  const periods = ["AM", "PM"];
+
+  const handleHourChange = (newHour: string) => {
+    onChange(`${newHour}:${currentMinute} ${currentPeriod}`);
+  };
+
+  const handleMinuteChange = (newMinute: string) => {
+    onChange(`${currentHour}:${newMinute} ${currentPeriod}`);
+  };
+
+  const handlePeriodChange = (newPeriod: string) => {
+    onChange(`${currentHour}:${currentMinute} ${newPeriod}`);
+  };
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <div className="relative flex-1">
+        <select
+          value={currentHour}
+          onChange={(e) => handleHourChange(e.target.value)}
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+        >
+          {hours.map((h) => (
+            <option key={h} value={h}>
+              {h}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
+
+      <span className="text-slate-400 font-bold">:</span>
+
+      <div className="relative flex-1">
+        <select
+          value={currentMinute}
+          onChange={(e) => handleMinuteChange(e.target.value)}
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+        >
+          {minutes.map((m) => (
+            <option key={m} value={m}>
+              {m}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
+
+      <div className="relative w-[75px]">
+        <select
+          value={currentPeriod}
+          onChange={(e) => handlePeriodChange(e.target.value)}
+          className="w-full pl-3 pr-7 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary appearance-none text-slate-700 dark:text-slate-200 font-semibold cursor-pointer"
+        >
+          {periods.map((p) => (
+            <option key={p} value={p}>
+              {p}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+      </div>
     </div>
   );
 }

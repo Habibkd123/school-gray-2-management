@@ -86,7 +86,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
       name: "Reports", icon: <BarChart className="w-4 h-4" />, subItems: [
         { name: "Daily Attendance Report", href: "/reports/daily-attendance" },
         { name: "Monthly Attendance Report", href: "/reports/attendance-report" },
-        { name: "Fees Report", href: "/reports/fees-report" },
+        { name: "Finance Report", href: "/reports/finance" },
         { name: "Merit List", href: "/reports/merit-list" },
         { name: "Student Report", href: "/reports/student-report" },
         { name: "Class Report", href: "/reports/class-report" },

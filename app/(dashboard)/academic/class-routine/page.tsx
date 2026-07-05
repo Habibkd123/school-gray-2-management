@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useSchedules } from "../../../hooks/useSchedules";
 import { useClasses } from "../../../hooks/useClasses";
@@ -61,6 +62,68 @@ export default function ClassRoutinePage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedRoutineId, setSelectedRoutineId] = useState<string | null>(null);
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+  const [menuAnchorRect, setMenuAnchorRect] = useState<DOMRect | null>(null);
+  const [activeRoutine, setActiveRoutine] = useState<any | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Listeners to dismiss portal popover menu
+  useEffect(() => {
+    const handleClose = () => {
+      setActionMenuId(null);
+      setMenuAnchorRect(null);
+      setActiveRoutine(null);
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
+
+    if (actionMenuId) {
+      window.addEventListener("scroll", handleClose, true);
+      window.addEventListener("resize", handleClose);
+      window.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      window.removeEventListener("scroll", handleClose, true);
+      window.removeEventListener("resize", handleClose);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [actionMenuId]);
+
+  const dropdownStyles = useMemo(() => {
+    if (!menuAnchorRect) return {};
+    const spaceBelow = window.innerHeight - menuAnchorRect.bottom;
+    const dropdownHeight = 90; 
+    const margin = 4;
+    const left = menuAnchorRect.right - 128 + window.scrollX;
+    
+    if (spaceBelow < dropdownHeight && menuAnchorRect.top > dropdownHeight) {
+      const top = menuAnchorRect.top - dropdownHeight - margin + window.scrollY;
+      return { position: "absolute" as const, top: `${top}px`, left: `${left}px`, width: "128px" };
+    } else {
+      const top = menuAnchorRect.bottom + margin + window.scrollY;
+      return { position: "absolute" as const, top: `${top}px`, left: `${left}px`, width: "128px" };
+    }
+  }, [menuAnchorRect]);
+
+  const handleTriggerClick = (e: React.MouseEvent, routine: any) => {
+    e.stopPropagation();
+    if (actionMenuId === routine._id) {
+      setActionMenuId(null);
+      setMenuAnchorRect(null);
+      setActiveRoutine(null);
+    } else {
+      setActionMenuId(routine._id);
+      setMenuAnchorRect(e.currentTarget.getBoundingClientRect());
+      setActiveRoutine(routine);
+    }
+  };
 
   // Form states
   const [formTeacherId, setFormTeacherId] = useState("");
@@ -470,24 +533,11 @@ export default function ClassRoutinePage() {
                               {/* Actions */}
                               <div className="relative" onClick={(e) => e.stopPropagation()}>
                                 <button
-                                  onClick={() => setActionMenuId(actionMenuId === routine._id ? null : routine._id)}
+                                  onClick={(e) => handleTriggerClick(e, routine)}
                                   className={`p-1 rounded-lg transition-colors cursor-pointer ${actionMenuId === routine._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 dark:text-slate-500 border border-border bg-white dark:bg-slate-900"}`}
                                 >
                                   <MoreVertical className="w-3.5 h-3.5" />
                                 </button>
-                                {actionMenuId === routine._id && (
-                                  <>
-                                    <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                                    <div className="absolute right-0 mt-1 w-32 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-1.5 text-left">
-                                      <button onClick={() => openEditModal(routine)} className="w-full px-4 py-2 text-[12.5px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-semibold transition-colors cursor-pointer">
-                                        <Edit className="w-4 h-4 text-slate-500" /> Edit
-                                      </button>
-                                      <button onClick={() => handleDelete(routine._id)} className="w-full px-4 py-2 text-[12.5px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-2 font-semibold transition-colors cursor-pointer">
-                                        <Trash2 className="w-4 h-4 text-rose-500" /> Delete
-                                      </button>
-                                    </div>
-                                  </>
-                                )}
                               </div>
                             </div>
                           </div>
@@ -702,6 +752,28 @@ export default function ClassRoutinePage() {
           </div>
         </form>
       </Modal>
+
+      {/* RENDERED POPUP PORTAL TO ESCAPE OVERFLOW CLIIPPING */}
+      {isMounted && actionMenuId && activeRoutine && (
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-[90] bg-transparent" onClick={() => { setActionMenuId(null); setMenuAnchorRect(null); setActiveRoutine(null); }} />
+            <div 
+              style={dropdownStyles}
+              className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-[100] overflow-hidden py-1.5 text-left"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button onClick={() => openEditModal(activeRoutine)} className="w-full px-4 py-2 text-[12.5px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-semibold transition-colors cursor-pointer">
+                <Edit className="w-4 h-4 text-slate-500" /> Edit
+              </button>
+              <button onClick={() => handleDelete(activeRoutine._id)} className="w-full px-4 py-2 text-[12.5px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-2 font-semibold transition-colors cursor-pointer">
+                <Trash2 className="w-4 h-4 text-rose-500" /> Delete
+              </button>
+            </div>
+          </>,
+          document.body
+        )
+      )}
     </div>
   );
 }
