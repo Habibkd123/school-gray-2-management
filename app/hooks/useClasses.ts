@@ -152,7 +152,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
   useEffect(() => {
     if (options?.skip) return;
     if (!authReady) return; // Wait until the JWT token is in localStorage
-    const params: FetchClassesParams = { limit: 500 };
+    const params: FetchClassesParams = { limit: 10 };
     if (options?.filterByYear) params.academic_year = academicYear;
     fetchClasses(params);
   }, [fetchClasses, academicYear, options?.skip, options?.filterByYear, authReady]);

@@ -503,9 +503,6 @@ export default function ExamResultsPage() {
               
               <style dangerouslySetInnerHTML={{__html: `
                 @media print {
-                  body * { visibility: hidden; }
-                  #printable-report-card, #printable-report-card * { visibility: visible; }
-                  #printable-report-card { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 24px; box-shadow: none !important; border: none !important; }
                   .print-border { border: 12px double #1e293b !important; }
                 }
               `}} />

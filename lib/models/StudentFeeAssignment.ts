@@ -3,6 +3,8 @@ import mongoose, { Document, Schema, Model } from "mongoose";
 export interface IStudentFeeItem {
   name: string;
   amount: number;
+  frequency?: "One Time" | "Monthly" | "Quarterly" | "Half Yearly" | "Yearly";
+  is_mandatory?: boolean;
   is_enabled: boolean;
 }
 
@@ -25,6 +27,8 @@ const studentFeeAssignmentSchema = new Schema<IStudentFeeAssignment>(
       {
         name: { type: String, required: true },
         amount: { type: Number, required: true, min: 0 },
+        frequency: { type: String, enum: ["One Time", "Monthly", "Quarterly", "Half Yearly", "Yearly"], default: "Monthly" },
+        is_mandatory: { type: Boolean, default: true },
         is_enabled: { type: Boolean, default: true },
       },
     ],
@@ -36,3 +40,4 @@ const studentFeeAssignmentSchema = new Schema<IStudentFeeAssignment>(
 const StudentFeeAssignment: Model<IStudentFeeAssignment> =
   mongoose.models.StudentFeeAssignment || mongoose.model<IStudentFeeAssignment>("StudentFeeAssignment", studentFeeAssignmentSchema);
 export default StudentFeeAssignment;
+

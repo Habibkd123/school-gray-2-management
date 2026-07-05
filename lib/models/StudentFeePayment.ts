@@ -1,5 +1,10 @@
 import mongoose, { Document, Schema, Model } from "mongoose";
 
+export interface IFeeBreakdownItem {
+  name: string;
+  amount_paid: number;
+}
+
 export interface IStudentFeePayment extends Document {
   school_id: mongoose.Types.ObjectId;
   student_id: mongoose.Types.ObjectId;
@@ -11,6 +16,7 @@ export interface IStudentFeePayment extends Document {
   start_date: Date;
   end_date: Date;
   collection_type: "Monthly" | "Day Wise";
+  fee_breakdown?: IFeeBreakdownItem[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -27,6 +33,12 @@ const studentFeePaymentSchema = new Schema<IStudentFeePayment>(
     start_date: { type: Date, required: true },
     end_date: { type: Date, required: true },
     collection_type: { type: String, enum: ["Monthly", "Day Wise"], default: "Monthly", required: true },
+    fee_breakdown: [
+      {
+        name: { type: String, required: true },
+        amount_paid: { type: Number, required: true }
+      }
+    ]
   },
   { timestamps: true }
 );
@@ -34,3 +46,4 @@ const studentFeePaymentSchema = new Schema<IStudentFeePayment>(
 const StudentFeePayment: Model<IStudentFeePayment> =
   mongoose.models.StudentFeePayment || mongoose.model<IStudentFeePayment>("StudentFeePayment", studentFeePaymentSchema);
 export default StudentFeePayment;
+

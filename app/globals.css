@@ -252,37 +252,129 @@ body {
 
 /* ── Print Media Styles ────────────────────────────────── */
 @media print {
-  /* Hide sidebar, header, filters, buttons, pagination, etc. */
+  /* Universal Page setup */
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+
+  /* Reset layout constraints to allow natural scroll/page breaks */
+  html, 
   body {
+    height: auto !important;
+    min-height: initial !important;
+    max-height: initial !important;
+    width: auto !important;
+    overflow: visible !important;
+    position: static !important;
+    display: block !important;
     background: white !important;
     color: black !important;
   }
-  header,
-  footer,
+
+  /* Reset Tailwind and framework layout constraints */
+  .flex,
+  .h-screen,
+  .w-screen,
+  .h-full,
+  .w-full,
+  .min-h-screen,
+  .overflow-hidden,
+  .overflow-y-auto,
+  main,
+  #doc-builder-wrapper,
+  .db-app,
+  .db-stage {
+    height: auto !important;
+    min-height: initial !important;
+    max-height: initial !important;
+    width: auto !important;
+    overflow: visible !important;
+    position: static !important;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    transform: none !important;
+  }
+
+  /* Hide default UI Chrome / Navigation components */
   aside,
+  header,
   nav,
   button,
   .no-print,
+  .print-hidden,
+  .print\:hidden,
   [role="navigation"],
-  [role="banner"] {
+  [role="banner"],
+  .command-menu,
+  .pagination-container,
+  div[class*="sidebar"],
+  div[class*="header"] {
     display: none !important;
   }
-  /* Keep only the printable element visible and stretch it */
-  body * {
-    visibility: hidden;
+
+  /* Ensure colors and backgrounds print correctly */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
-  .printable-area,
-  .printable-area * {
-    visibility: visible;
+
+  /* 
+    Case 1: Printing standalone documents (Receipts, Payslips, Report Cards, Templates).
+    We hide all elements in the DOM that do not contain the target element,
+    ensuring that only the target element and its ancestors are rendered.
+    This eliminates all extra space, height, and extra blank pages completely,
+    allowing a natural flow that splits only if the content overflows A4.
+  */
+  body:has(#printable-receipt) *:not(:has(#printable-receipt)):not(#printable-receipt),
+  body:has(#printable-payslip) *:not(:has(#printable-payslip)):not(#printable-payslip),
+  body:has(#printable-report-card) *:not(:has(#printable-report-card)):not(#printable-report-card),
+  body:has(#doc-builder-wrapper) *:not(:has(.db-page)):not(.db-page):not(.db-zoom-wrapper) {
+    display: none !important;
   }
-  .printable-area {
-    position: absolute;
-    left: 0;
-    top: 0;
+
+  /* Reset target element positioning to top left of first A4 page */
+  #printable-receipt,
+  #printable-payslip,
+  #printable-report-card,
+  .db-page {
     width: 100% !important;
-    margin: 0 !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    position: relative !important;
+    margin: 0 auto !important;
     padding: 0 !important;
-    box-shadow: none !important;
     border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    display: block !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-before: avoid !important;
+    break-after: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Neutralize the zoom scale transform on the wrapper — print always at 100% */
+  .db-zoom-wrapper {
+    transform: none !important;
+    width: 100% !important;
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Template card-size exceptions */
+  body:has(#doc-builder-wrapper) .db-page.card-size {
+    width: 85.6mm !important;
+    height: auto !important;
   }
 }

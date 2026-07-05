@@ -204,19 +204,42 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                         </td>
                         <td className="px-6 py-4 text-right">
                           <button
-                            onClick={() => {
-                              // We copy the student details into the printable view
-                              setPrintedReceipt({
-                                ...p,
-                                student_id: {
-                                  name: studentDetails.name,
-                                  admission_no: studentDetails.admission_no,
-                                  class_id: {
-                                    name: studentDetails.class_name.split(" - ")[0],
-                                    section: studentDetails.class_name.split(" - ")[1] || ""
+                            onClick={async () => {
+                              try {
+                                const configRes = await fetch(
+                                  `/api/fees?config_only=true&student_id=${studentId}`,
+                                  { headers: getAuthHeaders() }
+                                );
+                                const configData = await configRes.json();
+                                const config = configData.success ? configData.data.fee_types : [];
+
+                                setPrintedReceipt({
+                                  ...p,
+                                  feeTypesConfig: config,
+                                  paymentsHistory: payments,
+                                  student_id: {
+                                    name: studentDetails.name,
+                                    admission_no: studentDetails.admission_no,
+                                    class_id: {
+                                      name: studentDetails.class_name.split(" - ")[0],
+                                      section: studentDetails.class_name.split(" - ")[1] || ""
+                                    }
                                   }
-                                }
-                              });
+                                });
+                              } catch (err) {
+                                console.error(err);
+                                setPrintedReceipt({
+                                  ...p,
+                                  student_id: {
+                                    name: studentDetails.name,
+                                    admission_no: studentDetails.admission_no,
+                                    class_id: {
+                                      name: studentDetails.class_name.split(" - ")[0],
+                                      section: studentDetails.class_name.split(" - ")[1] || ""
+                                    }
+                                  }
+                                });
+                              }
                             }}
                             className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-lg transition-colors cursor-pointer"
                           >
@@ -248,14 +271,6 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
 
             {/* Receipt template container */}
             <div className="p-8 border border-slate-200 rounded-2xl bg-white text-slate-800 text-left font-serif text-xs relative overflow-hidden" id="printable-receipt">
-              <style dangerouslySetInnerHTML={{__html: `
-                @media print {
-                  body * { visibility: hidden; }
-                  #printable-receipt, #printable-receipt * { visibility: visible; }
-                  #printable-receipt { position: absolute; left: 0; top: 0; width: 100%; border: none; margin: 0; padding: 20px; }
-                }
-              `}} />
-
               {/* School branding header */}
               <div className="text-center border-b-2 border-slate-800 pb-4 mb-5">
                 <h1 className="text-xl font-black uppercase tracking-wider text-slate-900 mb-0.5">My School Life</h1>
@@ -293,21 +308,123 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                 </div>
               </div>
 
-              {/* Transaction amounts summary card */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4.5 font-sans space-y-2 mb-8 text-[11px]">
-                <div className="flex justify-between">
-                  <span className="text-slate-450 font-bold">Total Fees Invoice:</span>
-                  <span className="font-mono font-bold text-slate-900">{money(printedReceipt.totalFees || (studentDetails ? studentDetails.totalFees : 0))}</span>
-                </div>
-                <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-slate-800">
-                  <span>Amount Paid Now ({printedReceipt.payment_method}):</span>
-                  <span className="font-mono text-emerald-600">{money(printedReceipt.amount_paid || printedReceipt.total_amount)}</span>
-                </div>
-                <div className="flex justify-between border-t border-dashed border-slate-200 pt-2 font-bold text-slate-900 text-xs">
-                  <span>Outstanding Balance Due:</span>
-                  <span className="font-mono text-rose-500">{money(printedReceipt.balanceAmount || (studentDetails ? Math.max(0, studentDetails.totalFees - studentDetails.totalPaid) : 0))}</span>
-                </div>
-              </div>
+
+              {/* Enriched Ledger Breakdown Table */}
+              {(() => {
+                const receiptBreakdown = (printedReceipt.fee_breakdown || []).map((item: any) => {
+                  const config = (printedReceipt.feeTypesConfig || []).find((c: any) => c.name === item.name);
+                  
+                  // Calculate multiplier for the transaction billing range
+                  const start = new Date(printedReceipt.start_date);
+                  const end = new Date(printedReceipt.end_date);
+                  let mult = 1;
+                  if (config && !isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
+                    if (config.frequency !== "One Time") {
+                      const monthsDiff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+                      switch (config.frequency) {
+                        case "Monthly":
+                          mult = Math.max(1, monthsDiff);
+                          break;
+                        case "Quarterly":
+                          mult = Math.max(1, Math.ceil(monthsDiff / 3));
+                          break;
+                        case "Half Yearly":
+                          mult = Math.max(1, Math.ceil(monthsDiff / 6));
+                          break;
+                        case "Yearly":
+                          mult = Math.max(1, Math.ceil(monthsDiff / 12));
+                          break;
+                      }
+                    }
+                  }
+
+                  const totalAmount = config ? (config.amount * mult) : item.amount_paid;
+
+                  // Calculate amount paid BEFORE this transaction
+                  let paidBefore = 0;
+                  if (printedReceipt.paymentsHistory) {
+                    printedReceipt.paymentsHistory.forEach((p: any) => {
+                      if (p._id !== printedReceipt._id) {
+                        const match = p.fee_breakdown?.find((f: any) => f.name === item.name);
+                        if (match) paidBefore += match.amount_paid;
+                      }
+                    });
+                  }
+
+                  const paidNow = item.amount_paid;
+                  const totalPaid = paidBefore + paidNow;
+                  const outstanding = Math.max(0, totalAmount - totalPaid);
+
+                  let status = "Pending";
+                  if (totalAmount > 0) {
+                    if (totalPaid >= totalAmount) status = "Paid";
+                    else if (totalPaid > 0) status = "Partial";
+                  }
+
+                  return {
+                    name: item.name,
+                    totalAmount,
+                    paidBefore,
+                    paidNow,
+                    totalPaid,
+                    outstanding,
+                    status
+                  };
+                });
+
+                return (
+                  <>
+                    <div className="mb-6 font-sans border border-slate-300 rounded-xl overflow-hidden">
+                      <table className="w-full text-[10px] border-collapse text-left">
+                        <thead>
+                          <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-extrabold uppercase text-[9px] tracking-wider">
+                            <th className="px-3 py-2">Fee Head</th>
+                            <th className="px-3 py-2 text-right">Total Fee</th>
+                            <th className="px-3 py-2 text-right">Paid Before</th>
+                            <th className="px-3 py-2 text-right text-primary">Paid Now</th>
+                            <th className="px-3 py-2 text-right">Total Paid</th>
+                            <th className="px-3 py-2 text-right text-rose-600">Outstanding</th>
+                            <th className="px-3 py-2 text-center">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          {receiptBreakdown.map((ft: any, i: number) => (
+                            <tr key={i} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-3 py-2.5 font-bold text-slate-800">{ft.name}</td>
+                              <td className="px-3 py-2.5 text-right font-mono text-slate-700">{money(ft.totalAmount)}</td>
+                              <td className="px-3 py-2.5 text-right font-mono text-slate-500">{money(ft.paidBefore)}</td>
+                              <td className="px-3 py-2.5 text-right font-mono font-black text-primary bg-primary/5">{money(ft.paidNow)}</td>
+                              <td className="px-3 py-2.5 text-right font-mono text-slate-800">{money(ft.totalPaid)}</td>
+                              <td className="px-3 py-2.5 text-right font-mono font-bold text-rose-600 bg-rose-50/20">{money(ft.outstanding)}</td>
+                              <td className="px-3 py-2.5 text-center">
+                                <span className={`px-2 py-0.3 rounded text-[8px] font-black uppercase tracking-wider ${
+                                  ft.status === "Paid"
+                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                    : ft.status === "Partial"
+                                    ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                    : "bg-rose-100 text-rose-800 border border-rose-200"
+                                }`}>
+                                  {ft.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Summary aggregate details */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-sans space-y-1.5 mb-6 text-[10px]">
+                      <div className="flex justify-between font-bold text-slate-850">
+                        <span>Total Amount Paid In This Transaction:</span>
+                        <span className="font-mono text-emerald-600 font-black text-sm">
+                          {money(printedReceipt.amount_paid || printedReceipt.total_amount)}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
 
               {printedReceipt.remarks && (
                 <p className="italic text-[10px] text-slate-450 font-sans mb-8">Remarks: {printedReceipt.remarks}</p>

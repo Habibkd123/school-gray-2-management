@@ -46,18 +46,20 @@ interface StudentFeeRow {
 interface FeeTypeItem {
   name: string;
   amount: number;
+  frequency?: "One Time" | "Monthly" | "Quarterly" | "Half Yearly" | "Yearly";
+  is_mandatory?: boolean;
   is_enabled: boolean;
 }
 
-const DEFAULT_FEE_TYPES = [
-  { name: "Academic Fees", amount: 0, is_enabled: true },
-  { name: "Tuition Fees", amount: 0, is_enabled: true },
-  { name: "Transport Fees", amount: 0, is_enabled: true },
-  { name: "Admission Fees", amount: 0, is_enabled: true },
-  { name: "Exam Fees", amount: 0, is_enabled: true },
-  { name: "Library Fees", amount: 0, is_enabled: true },
-  { name: "Computer Fees", amount: 0, is_enabled: true },
-  { name: "Other Fees", amount: 0, is_enabled: true }
+const DEFAULT_FEE_TYPES: FeeTypeItem[] = [
+  { name: "Academic Fees", amount: 0, frequency: "Yearly", is_mandatory: true, is_enabled: true },
+  { name: "Tuition Fees", amount: 0, frequency: "Monthly", is_mandatory: true, is_enabled: true },
+  { name: "Transport Fees", amount: 0, frequency: "Monthly", is_mandatory: true, is_enabled: true },
+  { name: "Admission Fees", amount: 0, frequency: "One Time", is_mandatory: true, is_enabled: true },
+  { name: "Exam Fees", amount: 0, frequency: "Quarterly", is_mandatory: true, is_enabled: true },
+  { name: "Library Fees", amount: 0, frequency: "Yearly", is_mandatory: true, is_enabled: true },
+  { name: "Computer Fees", amount: 0, frequency: "Monthly", is_mandatory: true, is_enabled: true },
+  { name: "Other Fees", amount: 0, frequency: "Monthly", is_mandatory: true, is_enabled: true }
 ];
 
 export default function FeesPage() {
@@ -82,6 +84,8 @@ export default function FeesPage() {
   const [isSavingSetup, setIsSavingSetup] = useState(false);
   const [newFeeTypeName, setNewFeeTypeName] = useState("");
   const [newFeeTypeAmount, setNewFeeTypeAmount] = useState("");
+  const [newFeeTypeFrequency, setNewFeeTypeFrequency] = useState<"One Time" | "Monthly" | "Quarterly" | "Half Yearly" | "Yearly">("Monthly");
+  const [newFeeTypeIsMandatory, setNewFeeTypeIsMandatory] = useState(true);
 
   // Individual Student Fee Assignment Modal states
   const [isCustomSetupOpen, setIsCustomSetupOpen] = useState(false);
@@ -90,6 +94,8 @@ export default function FeesPage() {
   const [isSavingCustomSetup, setIsSavingCustomSetup] = useState(false);
   const [newCustomFeeTypeName, setNewCustomFeeTypeName] = useState("");
   const [newCustomFeeTypeAmount, setNewCustomFeeTypeAmount] = useState("");
+  const [newCustomFeeTypeFrequency, setNewCustomFeeTypeFrequency] = useState<"One Time" | "Monthly" | "Quarterly" | "Half Yearly" | "Yearly">("Monthly");
+  const [newCustomFeeTypeIsMandatory, setNewCustomFeeTypeIsMandatory] = useState(true);
 
   // Pay Fee side modal states
   const [payStudent, setPayStudent] = useState<StudentFeeRow | null>(null);
@@ -142,35 +148,16 @@ export default function FeesPage() {
 
     const loadClassFees = async () => {
       try {
-        const res = await fetch(`/api/fees?class_id=${setupClassId}&academic_year=${academicYear || "2026"}`, {
-          headers: getAuthHeaders()
-        });
-        const data = await res.json();
-        // Since api/fees returns students in standard GET, let's fetch class configurations directly
-        const configRes = await fetch(`/api/classes/${setupClassId}`, { headers: getAuthHeaders() });
-        // Let's create an endpoint or config loader. We can also fetch the ClassFee structures from a simple query:
-        // Wait, does the API return ClassFee inside api/fees? The POST accepts class fee configuration.
-        // Let's retrieve the structure of a specific class. Let's make a call to a ClassFee query
-        const structRes = await fetch(`/api/fees?class_id=${setupClassId}`, { headers: getAuthHeaders() });
-        // Wait! We can just fetch all setup fees or create a helper query.
-        // Actually, let's just make a fetch call directly to load the class fees config from DB!
-        // Where can we query the configured ClassFee?
-        // Let's see: we can query the backend with a parameter `type=config` or make a custom fetch.
-        // Let's make GET /api/fees with a query parameter `config_only=true` or just fetch the class configurations!
-        // In our route GET, we had:
-        // `const classFeesList = await ClassFee.find({ school_id: schoolId }).lean();`
-        // We can create a dedicated endpoint /api/fees/config/route.ts or simply return it in GET when config=true!
-        // Wait! Let's check how we wrote GET in app/api/fees/route.ts:
-        // It fetches computed list. Let's add a check inside it or fetch the config from `/api/fees?class_id=XYZ` if we want, or fetch `/api/classes/XYZ`.
-        // Let's make a GET request to `/api/fees` and if a query param `config_only=true` is set, return the ClassFee object!
-        // Wait! Let's modify app/api/fees/route.ts to support `config_only=true`!
-        // That is extremely simple. Let's do that or query it. Let's write a fetch and if we get nothing, default to DEFAULT_FEE_TYPES.
         const cRes = await fetch(`/api/fees?config_only=true&class_id=${setupClassId}&academic_year=${academicYear || "2026"}`, {
           headers: getAuthHeaders()
         });
         const cData = await cRes.json();
         if (cData.success && cData.data?.fee_types) {
-          setFeeTypes(cData.data.fee_types);
+          setFeeTypes(cData.data.fee_types.map((ft: any) => ({
+            ...ft,
+            frequency: ft.frequency || "Monthly",
+            is_mandatory: ft.is_mandatory !== false
+          })));
         } else {
           setFeeTypes(DEFAULT_FEE_TYPES.map(ft => ({ ...ft })));
         }
@@ -196,7 +183,11 @@ export default function FeesPage() {
         );
         const data = await res.json();
         if (data.success && data.data?.fee_types) {
-          setCustomFeeTypes(data.data.fee_types);
+          setCustomFeeTypes(data.data.fee_types.map((ft: any) => ({
+            ...ft,
+            frequency: ft.frequency || "Monthly",
+            is_mandatory: ft.is_mandatory !== false
+          })));
         } else {
           setCustomFeeTypes(DEFAULT_FEE_TYPES.map(ft => ({ ...ft })));
         }
@@ -220,6 +211,18 @@ export default function FeesPage() {
     );
   };
 
+  const handleUpdateCustomFeeTypeFrequency = (index: number, freq: any) => {
+    setCustomFeeTypes((prev) =>
+      prev.map((ft, idx) => (idx === index ? { ...ft, frequency: freq } : ft))
+    );
+  };
+
+  const handleToggleCustomFeeTypeMandatory = (index: number) => {
+    setCustomFeeTypes((prev) =>
+      prev.map((ft, idx) => (idx === index ? { ...ft, is_mandatory: !ft.is_mandatory } : ft))
+    );
+  };
+
   const handleRemoveCustomFeeType = (index: number) => {
     setCustomFeeTypes((prev) => prev.filter((_, idx) => idx !== index));
   };
@@ -229,11 +232,15 @@ export default function FeesPage() {
     const newItem: FeeTypeItem = {
       name: newCustomFeeTypeName.trim(),
       amount: Number(newCustomFeeTypeAmount || 0),
+      frequency: newCustomFeeTypeFrequency,
+      is_mandatory: newCustomFeeTypeIsMandatory,
       is_enabled: true,
     };
     setCustomFeeTypes((prev) => [...prev, newItem]);
     setNewCustomFeeTypeName("");
     setNewCustomFeeTypeAmount("");
+    setNewCustomFeeTypeFrequency("Monthly");
+    setNewCustomFeeTypeIsMandatory(true);
   };
 
   const handleSaveCustomSetup = async () => {
@@ -305,11 +312,15 @@ export default function FeesPage() {
     const item: FeeTypeItem = {
       name: newFeeTypeName.trim(),
       amount: Number(newFeeTypeAmount),
+      frequency: newFeeTypeFrequency,
+      is_mandatory: newFeeTypeIsMandatory,
       is_enabled: true
     };
     setFeeTypes([...feeTypes, item]);
     setNewFeeTypeName("");
     setNewFeeTypeAmount("");
+    setNewFeeTypeFrequency("Monthly");
+    setNewFeeTypeIsMandatory(true);
   };
 
   const handleRemoveFeeType = (index: number) => {
@@ -327,6 +338,18 @@ export default function FeesPage() {
   const handleUpdateFeeTypeAmount = (index: number, val: number) => {
     const list = [...feeTypes];
     list[index].amount = Math.max(0, val);
+    setFeeTypes(list);
+  };
+
+  const handleUpdateFeeTypeFrequency = (index: number, freq: any) => {
+    const list = [...feeTypes];
+    list[index].frequency = freq;
+    setFeeTypes(list);
+  };
+
+  const handleToggleFeeTypeMandatory = (index: number) => {
+    const list = [...feeTypes];
+    list[index].is_mandatory = !list[index].is_mandatory;
     setFeeTypes(list);
   };
 
@@ -354,6 +377,7 @@ export default function FeesPage() {
       setIsSavingSetup(false);
     }
   };
+
 
   const handleConfirmPayment = async () => {
     if (!payStudent || !payAmount || Number(payAmount) <= 0) return;
@@ -541,16 +565,14 @@ export default function FeesPage() {
                       {money(student.balanceAmount)}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                        student.status === "Paid"
-                          ? "bg-emerald-50 text-emerald-700 border border-emerald-250 dark:bg-emerald-500/10 dark:text-emerald-400"
-                          : student.status === "Partial"
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${student.status === "Paid"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-250 dark:bg-emerald-500/10 dark:text-emerald-400"
+                        : student.status === "Partial"
                           ? "bg-amber-50 text-amber-700 border border-amber-250 dark:bg-amber-500/10 dark:text-amber-400"
                           : "bg-rose-50 text-rose-700 border border-rose-250 dark:bg-rose-500/10 dark:text-rose-400"
-                      }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          student.status === "Paid" ? "bg-emerald-500" : student.status === "Partial" ? "bg-amber-500" : "bg-rose-500"
-                        }`} />
+                        }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${student.status === "Paid" ? "bg-emerald-500" : student.status === "Partial" ? "bg-amber-500" : "bg-rose-500"
+                          }`} />
                         {student.status}
                       </span>
                     </td>
@@ -623,7 +645,7 @@ export default function FeesPage() {
 
       {/* MODAL: CLASS FEE SETUP */}
       {isSetupOpen && (
-        <Modal isOpen={isSetupOpen} onClose={() => setIsSetupOpen(false)} title="Configure Class Fees Structure">
+        <Modal size="lg" isOpen={isSetupOpen} onClose={() => setIsSetupOpen(false)} title="Configure Class Fees Structure">
           <div className="space-y-5 text-left">
             {/* Class Metadata card */}
             <div className="p-4 bg-slate-50 dark:bg-slate-950 border border-border rounded-xl grid grid-cols-2 gap-4">
@@ -661,16 +683,16 @@ export default function FeesPage() {
               <div className="flex justify-between items-center border-b border-border pb-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-white">Configure Fee Amounts</h3>
                 <div className="flex gap-2">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setFeeTypes(feeTypes.map(f => ({ ...f, is_enabled: true })))}
                     className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
                   >
                     Enable All
                   </button>
                   <span className="text-[10px] text-slate-300">|</span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setFeeTypes(feeTypes.map(f => ({ ...f, is_enabled: false })))}
                     className="text-[10px] font-bold text-slate-450 hover:underline cursor-pointer"
                   >
@@ -679,32 +701,66 @@ export default function FeesPage() {
                 </div>
               </div>
 
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                 {feeTypes.map((ft, index) => (
-                  <div key={index} className="flex items-center gap-3 bg-slate-50/50 dark:bg-slate-950/40 border border-border/80 p-2.5 rounded-xl hover:border-border transition-colors">
+                  <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-slate-50/50 dark:bg-slate-950/40 border border-border/80 p-2.5 rounded-xl hover:border-border transition-colors">
                     {/* Toggle button */}
-                    <button
-                      type="button"
-                      onClick={() => handleToggleFeeType(index)}
-                      className={`w-9 h-5 rounded-full relative cursor-pointer transition-colors focus:outline-none shrink-0 ${
-                        ft.is_enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"
-                      }`}
-                    >
-                      <div className={`w-3.5 h-3.5 bg-white dark:bg-slate-900 rounded-full absolute top-0.5 shadow-sm transition-transform ${
-                        ft.is_enabled ? "left-[18px]" : "left-0.5"
-                      }`} />
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleFeeType(index)}
+                        className={`w-9 h-5 rounded-full relative cursor-pointer transition-colors focus:outline-none ${ft.is_enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"
+                          }`}
+                      >
+                        <div className={`w-3.5 h-3.5 bg-white dark:bg-slate-900 rounded-full absolute top-0.5 shadow-sm transition-transform ${ft.is_enabled ? "left-[18px]" : "left-0.5"
+                          }`} />
+                      </button>
+                      <span className={`text-xs font-bold w-32 truncate ${ft.is_enabled ? "text-slate-850 dark:text-white" : "text-slate-400 line-through"}`} title={ft.name}>
+                        {ft.name}
+                      </span>
+                    </div>
 
-                    <span className={`text-xs font-bold flex-1 ${ft.is_enabled ? "text-slate-850 dark:text-white" : "text-slate-400 line-through"}`}>
-                      {ft.name}
-                    </span>
-                    <input
-                      type="number"
-                      value={ft.amount}
-                      disabled={!ft.is_enabled}
-                      onChange={(e) => handleUpdateFeeTypeAmount(index, Number(e.target.value))}
-                      className="w-24 px-2.5 py-1 border border-border bg-white dark:bg-slate-900 font-mono font-bold text-xs rounded-lg outline-none text-right focus:border-primary/50"
-                    />
+                    {/* Amount Input */}
+                    <div className="flex items-center gap-1.5 flex-1 min-w-[100px]">
+                      <span className="text-[10px] text-slate-500 font-bold">Amount:</span>
+                      <input
+                        type="number"
+                        value={ft.amount}
+                        disabled={!ft.is_enabled}
+                        onChange={(e) => handleUpdateFeeTypeAmount(index, Number(e.target.value))}
+                        className="w-full px-2 py-1 border border-border bg-white dark:bg-slate-900 font-mono font-bold text-xs rounded-lg outline-none text-right focus:border-primary/50"
+                      />
+                    </div>
+
+                    {/* Frequency Dropdown */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] text-slate-500 font-bold">Freq:</span>
+                      <select
+                        value={ft.frequency || "Monthly"}
+                        disabled={!ft.is_enabled}
+                        onChange={(e) => handleUpdateFeeTypeFrequency(index, e.target.value as any)}
+                        className="px-2 py-1 border border-border bg-white dark:bg-slate-900 font-bold text-xs rounded-lg outline-none cursor-pointer focus:border-primary/50"
+                      >
+                        <option value="One Time">One Time</option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Quarterly">Quarterly</option>
+                        <option value="Half Yearly">Half Yearly</option>
+                        <option value="Yearly">Yearly</option>
+                      </select>
+                    </div>
+
+                    {/* Mandatory Switch */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] text-slate-500 font-bold">Mandatory:</span>
+                      <input
+                        type="checkbox"
+                        checked={ft.is_mandatory !== false}
+                        disabled={!ft.is_enabled}
+                        onChange={() => handleToggleFeeTypeMandatory(index)}
+                        className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                      />
+                    </div>
+
                     {/* Delete Custom Fee item if not a default key item */}
                     {index >= DEFAULT_FEE_TYPES.length && (
                       <button
@@ -720,13 +776,13 @@ export default function FeesPage() {
               </div>
 
               {/* Add Custom Type Field Form */}
-              <div className="pt-3 border-t border-border flex gap-2">
+              <div className="pt-3 border-t border-border flex flex-wrap gap-2.5 items-center">
                 <input
                   type="text"
                   placeholder="Custom Fee Name (e.g. Activity Fee)"
                   value={newFeeTypeName}
                   onChange={(e) => setNewFeeTypeName(e.target.value)}
-                  className="flex-1 px-3 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none focus:border-primary/30"
+                  className="flex-1 min-w-[150px] px-3 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none focus:border-primary/30"
                 />
                 <input
                   type="number"
@@ -735,10 +791,30 @@ export default function FeesPage() {
                   onChange={(e) => setNewFeeTypeAmount(e.target.value)}
                   className="w-20 px-2 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none font-mono focus:border-primary/30"
                 />
+                <select
+                  value={newFeeTypeFrequency}
+                  onChange={(e) => setNewFeeTypeFrequency(e.target.value as any)}
+                  className="px-2 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none cursor-pointer"
+                >
+                  <option value="One Time">One Time</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Quarterly">Quarterly</option>
+                  <option value="Half Yearly">Half Yearly</option>
+                  <option value="Yearly">Yearly</option>
+                </select>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-655 dark:text-slate-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newFeeTypeIsMandatory}
+                    onChange={(e) => setNewFeeTypeIsMandatory(e.target.checked)}
+                    className="w-3.5 h-3.5 accent-primary"
+                  />
+                  <span>Mandatory</span>
+                </label>
                 <button
                   type="button"
                   onClick={handleAddCustomFeeType}
-                  className="px-3 bg-slate-800 hover:bg-slate-750 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add
                 </button>
@@ -778,9 +854,9 @@ export default function FeesPage() {
 
       {/* MODAL: INDIVIDUAL CUSTOM STUDENT FEE SETUP */}
       {isCustomSetupOpen && customSetupStudent && (
-        <Modal 
-          isOpen={isCustomSetupOpen} 
-          onClose={() => { setIsCustomSetupOpen(false); setCustomSetupStudent(null); }} 
+        <Modal
+          isOpen={isCustomSetupOpen}
+          onClose={() => { setIsCustomSetupOpen(false); setCustomSetupStudent(null); }}
           title="Configure Individual Student Fees Structure"
         >
           <div className="space-y-5 text-left">
@@ -799,20 +875,21 @@ export default function FeesPage() {
             </div>
 
             {/* Custom Fee Types Checklist Editor */}
+
             <div className="border border-border rounded-xl overflow-hidden bg-white dark:bg-slate-900 p-4 space-y-4">
               <div className="flex justify-between items-center border-b border-border pb-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-white">Configure Individual Fee Overrides</h3>
                 <div className="flex gap-2">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setCustomFeeTypes(customFeeTypes.map(f => ({ ...f, is_enabled: true })))}
                     className="text-[10px] font-bold text-primary hover:underline cursor-pointer"
                   >
                     Enable All
                   </button>
                   <span className="text-[10px] text-slate-300">|</span>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setCustomFeeTypes(customFeeTypes.map(f => ({ ...f, is_enabled: false })))}
                     className="text-[10px] font-bold text-slate-450 hover:underline cursor-pointer"
                   >
@@ -821,32 +898,66 @@ export default function FeesPage() {
                 </div>
               </div>
 
-              <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                 {customFeeTypes.map((ft, index) => (
-                  <div key={index} className="flex items-center gap-3 bg-slate-50/50 dark:bg-slate-950/40 border border-border/80 p-2.5 rounded-xl hover:border-border transition-colors">
+                  <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-slate-50/50 dark:bg-slate-950/40 border border-border/80 p-2.5 rounded-xl hover:border-border transition-colors">
                     {/* Toggle button switch */}
-                    <button
-                      type="button"
-                      onClick={() => handleToggleCustomFeeType(index)}
-                      className={`w-9 h-5 rounded-full relative cursor-pointer transition-colors focus:outline-none shrink-0 ${
-                        ft.is_enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"
-                      }`}
-                    >
-                      <div className={`w-3.5 h-3.5 bg-white dark:bg-slate-900 rounded-full absolute top-0.5 shadow-sm transition-transform ${
-                        ft.is_enabled ? "left-[18px]" : "left-0.5"
-                      }`} />
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleCustomFeeType(index)}
+                        className={`w-9 h-5 rounded-full relative cursor-pointer transition-colors focus:outline-none ${ft.is_enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"
+                          }`}
+                      >
+                        <div className={`w-3.5 h-3.5 bg-white dark:bg-slate-900 rounded-full absolute top-0.5 shadow-sm transition-transform ${ft.is_enabled ? "left-[18px]" : "left-0.5"
+                          }`} />
+                      </button>
+                      <span className={`text-xs font-bold w-32 truncate ${ft.is_enabled ? "text-slate-850 dark:text-white" : "text-slate-400 line-through"}`} title={ft.name}>
+                        {ft.name}
+                      </span>
+                    </div>
 
-                    <span className={`text-xs font-bold flex-1 ${ft.is_enabled ? "text-slate-850 dark:text-white" : "text-slate-400 line-through"}`}>
-                      {ft.name}
-                    </span>
-                    <input
-                      type="number"
-                      value={ft.amount}
-                      disabled={!ft.is_enabled}
-                      onChange={(e) => handleUpdateCustomFeeTypeAmount(index, Number(e.target.value))}
-                      className="w-24 px-2.5 py-1 border border-border bg-white dark:bg-slate-900 font-mono font-bold text-xs rounded-lg outline-none text-right focus:border-primary/50"
-                    />
+                    {/* Amount Input */}
+                    <div className="flex items-center gap-1.5 flex-1 min-w-[100px]">
+                      <span className="text-[10px] text-slate-500 font-bold">Amount:</span>
+                      <input
+                        type="number"
+                        value={ft.amount}
+                        disabled={!ft.is_enabled}
+                        onChange={(e) => handleUpdateCustomFeeTypeAmount(index, Number(e.target.value))}
+                        className="w-full px-2 py-1 border border-border bg-white dark:bg-slate-900 font-mono font-bold text-xs rounded-lg outline-none text-right focus:border-primary/50"
+                      />
+                    </div>
+
+                    {/* Frequency Dropdown */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] text-slate-500 font-bold">Freq:</span>
+                      <select
+                        value={ft.frequency || "Monthly"}
+                        disabled={!ft.is_enabled}
+                        onChange={(e) => handleUpdateCustomFeeTypeFrequency(index, e.target.value as any)}
+                        className="px-2 py-1 border border-border bg-white dark:bg-slate-900 font-bold text-xs rounded-lg outline-none cursor-pointer focus:border-primary/50"
+                      >
+                        <option value="One Time">One Time</option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Quarterly">Quarterly</option>
+                        <option value="Half Yearly">Half Yearly</option>
+                        <option value="Yearly">Yearly</option>
+                      </select>
+                    </div>
+
+                    {/* Mandatory Switch */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] text-slate-500 font-bold">Mandatory:</span>
+                      <input
+                        type="checkbox"
+                        checked={ft.is_mandatory !== false}
+                        disabled={!ft.is_enabled}
+                        onChange={() => handleToggleCustomFeeTypeMandatory(index)}
+                        className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                      />
+                    </div>
+
                     {/* Delete Custom Fee item if not a default key item */}
                     {index >= DEFAULT_FEE_TYPES.length && (
                       <button
@@ -862,13 +973,13 @@ export default function FeesPage() {
               </div>
 
               {/* Add Custom Type Field Form */}
-              <div className="pt-3 border-t border-border flex gap-2">
+              <div className="pt-3 border-t border-border flex flex-wrap gap-2.5 items-center">
                 <input
                   type="text"
                   placeholder="Custom Fee Name (e.g. Lab Fee)"
                   value={newCustomFeeTypeName}
                   onChange={(e) => setNewCustomFeeTypeName(e.target.value)}
-                  className="flex-1 px-3 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none focus:border-primary/30"
+                  className="flex-1 min-w-[150px] px-3 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none focus:border-primary/30"
                 />
                 <input
                   type="number"
@@ -877,15 +988,36 @@ export default function FeesPage() {
                   onChange={(e) => setNewCustomFeeTypeAmount(e.target.value)}
                   className="w-20 px-2 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none font-mono focus:border-primary/30"
                 />
+                <select
+                  value={newCustomFeeTypeFrequency}
+                  onChange={(e) => setNewCustomFeeTypeFrequency(e.target.value as any)}
+                  className="px-2 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none cursor-pointer"
+                >
+                  <option value="One Time">One Time</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Quarterly">Quarterly</option>
+                  <option value="Half Yearly">Half Yearly</option>
+                  <option value="Yearly">Yearly</option>
+                </select>
+                <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-655 dark:text-slate-400 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newCustomFeeTypeIsMandatory}
+                    onChange={(e) => setNewCustomFeeTypeIsMandatory(e.target.checked)}
+                    className="w-3.5 h-3.5 accent-primary"
+                  />
+                  <span>Mandatory</span>
+                </label>
                 <button
                   type="button"
                   onClick={handleAddCustomFeeTypeItem}
-                  className="px-3 bg-slate-800 hover:bg-slate-750 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add
                 </button>
               </div>
             </div>
+
 
             {/* Total display summary card (premium gradient design) */}
             <div className="p-4 bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-xl flex items-center justify-between shadow-sm">
@@ -917,7 +1049,7 @@ export default function FeesPage() {
           </div>
         </Modal>
       )}
-            {/* MODAL: RECORD STUDENT PAYMENT */}
+      {/* MODAL: RECORD STUDENT PAYMENT */}
       <CollectFeesModal
         isOpen={!!payStudent}
         onClose={() => {
@@ -942,14 +1074,6 @@ export default function FeesPage() {
 
             {/* Receipt template container */}
             <div className="p-8 border border-slate-200 rounded-2xl bg-white text-slate-800 text-left font-serif text-xs relative overflow-hidden" id="printable-receipt">
-              <style dangerouslySetInnerHTML={{__html: `
-                @media print {
-                  body * { visibility: hidden; }
-                  #printable-receipt, #printable-receipt * { visibility: visible; }
-                  #printable-receipt { position: absolute; left: 0; top: 0; width: 100%; border: none; margin: 0; padding: 20px; }
-                }
-              `}} />
-
               {/* School branding header */}
               <div className="text-center border-b-2 border-slate-800 pb-4 mb-5">
                 <h1 className="text-xl font-black uppercase tracking-wider text-slate-900 mb-0.5">My School Life</h1>
@@ -972,7 +1096,7 @@ export default function FeesPage() {
                 <div className="flex border-b border-dashed border-slate-200 pb-1 col-span-2">
                   <span className="font-bold text-slate-400 w-28">Class Assigned:</span>
                   <span className="font-bold text-slate-900">
-                    {printedReceipt.student_id?.class_id?.name 
+                    {printedReceipt.student_id?.class_id?.name
                       ? `${printedReceipt.student_id.class_id.name} - ${printedReceipt.student_id.class_id.section}`
                       : "N/A"}
                   </span>
@@ -987,50 +1111,129 @@ export default function FeesPage() {
                 </div>
               </div>
 
-              {/* Fee Breakdown list */}
-              {printedReceipt.fee_breakdown && printedReceipt.fee_breakdown.length > 0 && (
-                <div className="border border-slate-200 rounded-xl overflow-hidden mb-5 font-sans">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
-                        <th className="px-4 py-2">Fee Type Item</th>
-                        <th className="px-4 py-2 text-right">Amount (₹)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {printedReceipt.fee_breakdown.map((ft: any, i: number) => (
-                        <tr key={i}>
-                          <td className="px-4 py-2 font-semibold text-slate-700">{ft.name}</td>
-                          <td className="px-4 py-2 text-right font-mono font-bold text-slate-900">{money(ft.amount)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              {/* Enriched Ledger Breakdown Table */}
+              {(() => {
+                const receiptBreakdown = (printedReceipt.fee_breakdown || []).map((item: any) => {
+                  const config = (printedReceipt.feeTypesConfig || []).find((c: any) => c.name === item.name);
+                  
+                  // Calculate multiplier for the transaction billing range
+                  const start = new Date(printedReceipt.start_date);
+                  const end = new Date(printedReceipt.end_date);
+                  let mult = 1;
+                  if (config && !isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
+                    if (config.frequency !== "One Time") {
+                      const monthsDiff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
+                      switch (config.frequency) {
+                        case "Monthly":
+                          mult = Math.max(1, monthsDiff);
+                          break;
+                        case "Quarterly":
+                          mult = Math.max(1, Math.ceil(monthsDiff / 3));
+                          break;
+                        case "Half Yearly":
+                          mult = Math.max(1, Math.ceil(monthsDiff / 6));
+                          break;
+                        case "Yearly":
+                          mult = Math.max(1, Math.ceil(monthsDiff / 12));
+                          break;
+                      }
+                    }
+                  }
 
-              {/* Transaction amounts summary card */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4.5 font-sans space-y-2 mb-8 text-[11px]">
-                <div className="flex justify-between">
-                  <span className="text-slate-450 font-bold">Total Fees Invoice:</span>
-                  <span className="font-mono font-bold text-slate-900">{money(printedReceipt.totalFees || 0)}</span>
-                </div>
-                <div className="flex justify-between border-t border-slate-200 pt-2 font-bold text-slate-800">
-                  <span>Amount Paid Now ({printedReceipt.payment_method}):</span>
-                  <span className="font-mono text-emerald-600">{money(printedReceipt.amount_paid || printedReceipt.total_amount)}</span>
-                </div>
-                <div className="flex justify-between border-t border-dashed border-slate-200 pt-2 font-bold text-slate-900 text-xs">
-                  <span>Outstanding Balance Due:</span>
-                  <span className="font-mono text-rose-500">{money(printedReceipt.balanceAmount || 0)}</span>
-                </div>
-              </div>
+                  const totalAmount = config ? (config.amount * mult) : item.amount_paid;
+
+                  // Calculate amount paid BEFORE this transaction
+                  let paidBefore = 0;
+                  if (printedReceipt.paymentsHistory) {
+                    printedReceipt.paymentsHistory.forEach((p: any) => {
+                      if (p._id !== printedReceipt._id) {
+                        const match = p.fee_breakdown?.find((f: any) => f.name === item.name);
+                        if (match) paidBefore += match.amount_paid;
+                      }
+                    });
+                  }
+
+                  const paidNow = item.amount_paid;
+                  const totalPaid = paidBefore + paidNow;
+                  const outstanding = Math.max(0, totalAmount - totalPaid);
+
+                  let status = "Pending";
+                  if (totalAmount > 0) {
+                    if (totalPaid >= totalAmount) status = "Paid";
+                    else if (totalPaid > 0) status = "Partial";
+                  }
+
+                  return {
+                    name: item.name,
+                    totalAmount,
+                    paidBefore,
+                    paidNow,
+                    totalPaid,
+                    outstanding,
+                    status
+                  };
+                });
+
+                return (
+                  <>
+                    <div className="mb-6 font-sans border border-slate-300 rounded-xl overflow-hidden">
+                      <table className="w-full text-[10px] border-collapse text-left">
+                        <thead>
+                          <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-extrabold uppercase text-[9px] tracking-wider">
+                            <th className="px-3 py-2">Fee Head</th>
+                            <th className="px-3 py-2 text-right">Total Fee</th>
+                            <th className="px-3 py-2 text-right">Paid Before</th>
+                            <th className="px-3 py-2 text-right text-primary">Paid Now</th>
+                            <th className="px-3 py-2 text-right">Total Paid</th>
+                            <th className="px-3 py-2 text-right text-rose-600">Outstanding</th>
+                            <th className="px-3 py-2 text-center">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-200">
+                          {receiptBreakdown.map((ft: any, i: number) => (
+                            <tr key={i} className="hover:bg-slate-50 transition-colors">
+                              <td className="px-3 py-2.5 font-bold text-slate-800">{ft.name}</td>
+                              <td className="px-3 py-2.5 text-right font-mono text-slate-700">{money(ft.totalAmount)}</td>
+                              <td className="px-3 py-2.5 text-right font-mono text-slate-500">{money(ft.paidBefore)}</td>
+                              <td className="px-3 py-2.5 text-right font-mono font-black text-primary bg-primary/5">{money(ft.paidNow)}</td>
+                              <td className="px-3 py-2.5 text-right font-mono text-slate-800">{money(ft.totalPaid)}</td>
+                              <td className="px-3 py-2.5 text-right font-mono font-bold text-rose-600 bg-rose-50/20">{money(ft.outstanding)}</td>
+                              <td className="px-3 py-2.5 text-center">
+                                <span className={`px-2 py-0.3 rounded text-[8px] font-black uppercase tracking-wider ${
+                                  ft.status === "Paid"
+                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                    : ft.status === "Partial"
+                                    ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                    : "bg-rose-100 text-rose-800 border border-rose-200"
+                                }`}>
+                                  {ft.status}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Summary aggregate details */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-sans space-y-1.5 mb-6 text-[10px]">
+                      <div className="flex justify-between font-bold text-slate-850">
+                        <span>Total Amount Paid In This Transaction:</span>
+                        <span className="font-mono text-emerald-600 font-black text-sm">
+                          {money(printedReceipt.amount_paid || printedReceipt.total_amount)}
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
 
               {printedReceipt.remarks && (
-                <p className="italic text-[10px] text-slate-450 font-sans mb-8">Remarks: {printedReceipt.remarks}</p>
+                <p className="italic text-[10px] text-slate-455 font-sans mb-8">Remarks: {printedReceipt.remarks}</p>
               )}
 
               {/* Signatures */}
-              <div className="flex justify-between items-end pt-6 font-sans text-[10px] font-bold text-slate-750">
+              <div className="flex justify-between items-end pt-6 font-sans text-[10px] font-bold text-slate-755">
                 <div className="text-center w-32 border-t border-slate-350 pt-1.5">Depositor Signature</div>
                 <div className="text-center w-32 border-t border-slate-350 pt-1.5">Authorized cashier</div>
               </div>
@@ -1058,14 +1261,14 @@ export default function FeesPage() {
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
             ) : studentHistoryLogs.length === 0 ? (
-              <div className="py-10 text-center text-slate-450 font-bold text-xs">
+              <div className="py-10 text-center text-slate-455 font-bold text-xs">
                 No past transactions recorded for this student.
               </div>
             ) : (
               <div className="overflow-x-auto border border-border rounded-xl">
                 <table className="w-full text-left text-xs">
                   <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-950 border-b border-border text-slate-500 font-bold">
+                    <tr className="bg-slate-50 dark:bg-slate-955 border-b border-border text-slate-500 font-bold">
                       <th className="px-4 py-3">Receipt No</th>
                       <th className="px-4 py-3">Payment Date</th>
                       <th className="px-4 py-3">Method</th>
@@ -1076,29 +1279,56 @@ export default function FeesPage() {
                   <tbody className="divide-y divide-border">
                     {studentHistoryLogs.map((log: any) => (
                       <tr key={log._id}>
-                        <td className="px-4 py-3 font-mono font-bold text-primary">{log.receipt_no}</td>
+                        <td className="px-4 py-3 font-mono font-bold text-primary">{log.receipt_number || log.receipt_no}</td>
                         <td className="px-4 py-3 font-semibold">{fmtDate(log.payment_date)}</td>
                         <td className="px-4 py-3">
                           <span className="px-2 py-0.5 rounded bg-slate-100 text-[10px] font-bold">
                             {log.payment_method}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600">{money(log.total_amount)}</td>
+                        <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600">{money(log.amount_paid || log.total_amount)}</td>
+
+
                         <td className="px-4 py-3 text-right">
                           <button
-                            onClick={() => {
-                              // We can simulate breakdown from the class config or just print simple totals
-                              setPrintedReceipt({
-                                ...log,
-                                student_id: {
-                                  name: historyStudent.name,
-                                  admission_no: historyStudent.admission_no,
-                                  class_id: {
-                                    name: historyStudent.class_name.split(" - ")[0],
-                                    section: historyStudent.class_name.split(" - ")[1] || ""
+                            onClick={async () => {
+                              try {
+                                const sId = historyStudent._id || (historyStudent as any).id;
+                                const classId = (historyStudent as any).class_id || "";
+                                const configRes = await fetch(
+                                  `/api/fees?config_only=true&student_id=${sId}&class_id=${classId}`,
+                                  { headers: getAuthHeaders() }
+                                );
+                                const configData = await configRes.json();
+                                const config = configData.success ? configData.data.fee_types : [];
+
+                                setPrintedReceipt({
+                                  ...log,
+                                  feeTypesConfig: config,
+                                  paymentsHistory: studentHistoryLogs,
+                                  student_id: {
+                                    name: historyStudent.name,
+                                    admission_no: historyStudent.admission_no,
+                                    class_id: {
+                                      name: historyStudent.class_name.split(" - ")[0],
+                                      section: historyStudent.class_name.split(" - ")[1] || ""
+                                    }
                                   }
-                                }
-                              });
+                                });
+                              } catch (err) {
+                                console.error(err);
+                                setPrintedReceipt({
+                                  ...log,
+                                  student_id: {
+                                    name: historyStudent.name,
+                                    admission_no: historyStudent.admission_no,
+                                    class_id: {
+                                      name: historyStudent.class_name.split(" - ")[0],
+                                      section: historyStudent.class_name.split(" - ")[1] || ""
+                                    }
+                                  }
+                                });
+                              }
                             }}
                             className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[10px] transition-colors cursor-pointer"
                           >

@@ -227,14 +227,6 @@ export default function MeritListPage() {
       {/* Main Content */}
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left" id="printable-area">
         
-        <style dangerouslySetInnerHTML={{__html: `
-          @media print {
-            body * { visibility: hidden; }
-            #printable-area, #printable-area *, .print\\:block { visibility: visible; }
-            #printable-area { position: absolute; left: 0; top: 150px; width: 100%; border: none; box-shadow: none; }
-          }
-        `}} />
-
         {/* Controls Section */}
         <div className="p-5 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50 print:hidden">
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">

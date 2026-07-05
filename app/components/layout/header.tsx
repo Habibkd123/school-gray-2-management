@@ -35,7 +35,7 @@ export function Header({ onMenuClick }: HeaderProps) {
       // Always include fallback years so 2026-2027 is selectable even before DB has data
       const fallbackYears = ["2026-2027"];
       try {
-        const res = await fetch("/api/classes?limit=1000", { headers: getAuthHeaders() });
+        const res = await fetch("/api/classes?limit=50", { headers: getAuthHeaders() });
         const data = await res.json();
         if (res.ok && data.success && data.data?.classes?.length > 0) {
           const dbYears: string[] = Array.from(

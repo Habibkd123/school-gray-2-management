@@ -792,6 +792,7 @@ export interface IFeeMaster extends Document {
   fee_type_id: mongoose.Types.ObjectId;
   amount: number;
   due_date: Date;
+  frequency: "One Time" | "Monthly" | "Quarterly" | "Half Yearly" | "Yearly";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -802,6 +803,7 @@ const feeMasterSchema = new Schema<IFeeMaster>({
   fee_type_id: { type: mongoose.Schema.Types.ObjectId, ref: "FeeType", required: true },
   amount: { type: Number, required: true, min: 0 },
   due_date: { type: Date, required: true },
+  frequency: { type: String, enum: ["One Time", "Monthly", "Quarterly", "Half Yearly", "Yearly"], default: "Monthly" },
 }, { timestamps: true });
 
 export interface IFeeAllocation extends Document {

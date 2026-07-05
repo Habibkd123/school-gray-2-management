@@ -20,7 +20,8 @@ import {
   Clock,
   History,
   TrendingDown,
-  FileSpreadsheet
+  FileSpreadsheet,
+  AlertCircle
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { getPersistedPageSize, PaginationBar } from "@/app/components/ui/pagination-bar";
@@ -78,6 +79,27 @@ export default function SalaryDashboardPage() {
   const [paymentStartDate, setPaymentStartDate] = useState("");
   const [paymentEndDate, setPaymentEndDate] = useState("");
   const [calculationType, setCalculationType] = useState<"Monthly" | "Day Wise">("Monthly");
+
+  // Adjustment States
+  const [bonus, setBonus] = useState("0");
+  const [deduction, setDeduction] = useState("0");
+  const [finalSalaryAmount, setFinalSalaryAmount] = useState("");
+  const [isManualOverride, setIsManualOverride] = useState(false);
+
+  // Instantly recalculate final salary amount whenever preview data, bonus, or deduction changes
+  useEffect(() => {
+    if (isManualOverride) return;
+    if (payData) {
+      const payable = Number(payData.totalPayableAmount || 0);
+      const b = Number(bonus || 0);
+      const d = Number(deduction || 0);
+      const finalAmt = Math.max(0, payable + b - d);
+      setFinalSalaryAmount(String(finalAmt));
+    } else {
+      setFinalSalaryAmount("");
+    }
+  }, [payData, bonus, deduction, isManualOverride]);
+
 
   const [selectedSlip, setSelectedSlip] = useState<any | null>(null);
 
@@ -286,10 +308,30 @@ export default function SalaryDashboardPage() {
     return "";
   }, [paymentStartDate, paymentEndDate, payTeacher, allPayments]);
 
+  const validationMessage = useMemo(() => {
+    if (payValidationMsg) return payValidationMsg;
+    if (isNaN(Number(bonus)) || Number(bonus) < 0) {
+      return "Please enter a valid non-negative bonus amount.";
+    }
+    if (isNaN(Number(deduction)) || Number(deduction) < 0) {
+      return "Please enter a valid non-negative deduction amount.";
+    }
+    if (isNaN(Number(finalSalaryAmount)) || Number(finalSalaryAmount) < 0) {
+      return "Final Salary Amount cannot be negative and must be a valid number.";
+    }
+    return "";
+  }, [payValidationMsg, bonus, deduction, finalSalaryAmount]);
+
+
   const handleCalculationTypeChange = (type: "Monthly" | "Day Wise") => {
     setCalculationType(type);
+    setBonus("0");
+    setDeduction("0");
+    setFinalSalaryAmount("");
+    setIsManualOverride(false);
     if (!payTeacher) return;
     if (type === "Monthly") {
+
       const payouts = allPayments.filter(
         p => p.teacher_id && (p.teacher_id._id === payTeacher.id || p.teacher_id === payTeacher.id)
       );
@@ -324,12 +366,16 @@ export default function SalaryDashboardPage() {
     }
   };
 
-  // ─── Pay Salary Action ──────────────────────────────────────────
   const openPaySalary = async (teacher: any) => {
     setPayTeacher(teacher);
     setPaymentRemarks("");
     setPaymentDate(new Date().toISOString().split("T")[0]);
     setCalculationType("Monthly");
+    setBonus("0");
+    setDeduction("0");
+    setFinalSalaryAmount("");
+    setIsManualOverride(false);
+
 
     // Determine default start date (Monthly Mode: Last Paid Date + 1 Day)
     const payouts = allPayments.filter(
@@ -388,6 +434,25 @@ export default function SalaryDashboardPage() {
 
   const handleConfirmPayment = async () => {
     if (!payData) return;
+    
+    // Validate again before submitting
+    const bAmt = Number(bonus || 0);
+    const dAmt = Number(deduction || 0);
+    const fAmt = Number(finalSalaryAmount || 0);
+
+    if (isNaN(bAmt) || bAmt < 0) {
+      alert("Please enter a valid non-negative bonus amount.");
+      return;
+    }
+    if (isNaN(dAmt) || dAmt < 0) {
+      alert("Please enter a valid non-negative deduction amount.");
+      return;
+    }
+    if (isNaN(fAmt) || fAmt < 0) {
+      alert("Final Salary Amount cannot be negative and must be a valid number.");
+      return;
+    }
+
     setIsConfirmingPayment(true);
     try {
       const res = await fetch("/api/salaries", {
@@ -400,8 +465,11 @@ export default function SalaryDashboardPage() {
           working_days: payData.workingDays,
           present_days: payData.presentDays,
           absent_days: payData.absentDays,
-          suggested_deduction: 0,
-          final_salary: payData.totalPayableAmount,
+          suggested_deduction: payData.monthlySalary - payData.totalPayableAmount,
+          payable_amount: payData.totalPayableAmount,
+          bonus: bAmt,
+          deduction: dAmt,
+          final_salary: fAmt,
           payment_date: paymentDate,
           remarks: paymentRemarks,
           start_date: payData.startDate,
@@ -427,7 +495,7 @@ export default function SalaryDashboardPage() {
           payments: [newPaymentPopulated, ...prev.payments],
           summary: {
             ...prev.summary,
-            totalPaid: prev.summary.totalPaid + Number(payData.totalPayableAmount),
+            totalPaid: prev.summary.totalPaid + fAmt,
             totalPending: Math.max(0, prev.summary.totalPending - Number(payData.monthlySalary)),
             pendingCount: Math.max(0, prev.summary.pendingCount - 1),
             count: prev.summary.count + 1
@@ -453,6 +521,7 @@ export default function SalaryDashboardPage() {
       setIsConfirmingPayment(false);
     }
   };
+
 
   // ─── History Payouts Action ─────────────────────────────────────
   const openHistory = async (teacher: any) => {
@@ -1098,9 +1167,8 @@ export default function SalaryDashboardPage() {
                 <>
                   {/* Payment Details overview */}
                   <div className="p-4 bg-slate-900 text-white rounded-xl space-y-3">
-                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Payable Amount</span>
-                    <h3 className="text-2xl font-mono font-bold text-emerald-400">{money(payData.totalPayableAmount)}</h3>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-slate-700 pt-3 text-[12px] text-slate-350">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Payroll Disburse Overview</span>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-slate-800 pt-3 text-[12px] text-slate-350">
                       <div>Employee: <span className="text-white font-bold">{payData.teacherName}</span></div>
                       <div>ID: <span className="text-white font-bold">{payData.employeeId}</span></div>
                       <div>Monthly Salary: <span className="text-white font-bold">{money(payData.monthlySalary)}</span></div>
@@ -1113,10 +1181,6 @@ export default function SalaryDashboardPage() {
                     <div className="flex justify-between">
                       <span>Calculation Type</span>
                       <span className="font-bold text-slate-900 dark:text-white">{calculationType}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total Days</span>
-                      <span className="font-bold text-slate-900 dark:text-white">{payData.totalDays} days</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Total Working Days</span>
@@ -1137,6 +1201,108 @@ export default function SalaryDashboardPage() {
                     <div className="flex justify-between">
                       <span>Payable Days</span>
                       <span className="font-bold text-emerald-600">{payData.payableDays} days</span>
+                    </div>
+                  </div>
+
+                  {/* Salary Summary Adjustments Card */}
+                  <div className="bg-slate-50 dark:bg-slate-950 p-4 border border-border rounded-xl space-y-3.5 text-xs">
+                    <h4 className="text-[10px] uppercase font-bold tracking-wider text-slate-500 border-b border-border pb-1">
+                      Salary Summary
+                    </h4>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {/* Payable Amount */}
+                      <div className="flex flex-col gap-1 text-left">
+                        <label className="font-bold text-slate-500">Payable Amount (Auto Calculated)</label>
+                        <div className="relative mt-1">
+                          <span className="absolute left-3 top-2 text-slate-450 font-bold">₹</span>
+                          <input 
+                            type="text"
+                            readOnly
+                            value={(payData.totalPayableAmount || 0).toLocaleString("en-IN")}
+                            className="w-full pl-6 pr-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 border border-border rounded-lg font-mono font-bold outline-none cursor-not-allowed text-right"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Manual Override Flag Toggle */}
+                      <div className="flex items-center justify-between border border-border rounded-lg px-3 py-1.5 bg-white dark:bg-slate-900 mt-5">
+                        <label className="font-bold text-slate-700 dark:text-slate-350 cursor-pointer flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isManualOverride}
+                            onChange={(e) => {
+                              setIsManualOverride(e.target.checked);
+                              if (!e.target.checked) {
+                                // Reset to calculation formula
+                                const payable = Number(payData.totalPayableAmount || 0);
+                                const b = Number(bonus || 0);
+                                const d = Number(deduction || 0);
+                                setFinalSalaryAmount(String(Math.max(0, payable + b - d)));
+                              }
+                            }}
+                            className="w-3.5 h-3.5 accent-primary"
+                          />
+                          <span>Manual Override Final Salary</span>
+                        </label>
+                      </div>
+
+                      {/* Bonus Input */}
+                      <div className="flex flex-col gap-1 text-left">
+                        <label className="font-bold text-slate-700 dark:text-slate-300">Bonus (₹)</label>
+                        <div className="relative mt-1">
+                          <span className="absolute left-3 top-2 text-slate-450 font-bold">₹</span>
+                          <input 
+                            type="number"
+                            min="0"
+                            value={bonus}
+                            onChange={(e) => setBonus(e.target.value)}
+                            className="w-full pl-6 pr-3 py-1.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-border rounded-lg font-mono font-bold outline-none focus:border-primary/50 text-right"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Deduction Input */}
+                      <div className="flex flex-col gap-1 text-left">
+                        <label className="font-bold text-slate-700 dark:text-slate-300">Deduction (₹)</label>
+                        <div className="relative mt-1">
+                          <span className="absolute left-3 top-2 text-slate-450 font-bold">₹</span>
+                          <input 
+                            type="number"
+                            min="0"
+                            value={deduction}
+                            onChange={(e) => setDeduction(e.target.value)}
+                            className="w-full pl-6 pr-3 py-1.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-border rounded-lg font-mono font-bold outline-none focus:border-primary/50 text-right"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Final Salary Amount */}
+                      <div className="flex flex-col gap-1 text-left sm:col-span-2 border-t border-border pt-3">
+                        <label className="font-bold text-slate-750 dark:text-slate-300 flex justify-between items-center">
+                          <span>Final Salary Amount (₹)</span>
+                          {isManualOverride ? (
+                            <span className="text-[9px] text-primary font-black uppercase tracking-wider">Manual Editing Active</span>
+                          ) : (
+                            <span className="text-[9px] text-emerald-600 font-bold">Formula: Payable + Bonus - Deduction</span>
+                          )}
+                        </label>
+                        <div className="relative mt-1.5">
+                          <span className="absolute left-3 top-2.5 text-slate-400 font-bold text-sm">₹</span>
+                          <input 
+                            type="number"
+                            min="0"
+                            readOnly={!isManualOverride}
+                            value={finalSalaryAmount}
+                            onChange={(e) => setFinalSalaryAmount(e.target.value)}
+                            className={`w-full pl-7 pr-3 py-2 font-mono text-sm font-black border rounded-lg outline-none text-right ${
+                              isManualOverride 
+                                ? "bg-white dark:bg-slate-900 text-primary border-primary" 
+                                : "bg-slate-100 dark:bg-slate-800 text-slate-655 border-border cursor-not-allowed"
+                            }`}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1171,6 +1337,14 @@ export default function SalaryDashboardPage() {
                 </div>
               )}
 
+              {/* Dynamic validation warning alert */}
+              {validationMessage && (
+                <div className="p-3.5 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-750 dark:text-rose-400 rounded-xl flex items-center gap-2 text-xs font-bold animate-pulse">
+                  <AlertCircle className="w-4.5 h-4.5 text-rose-500 shrink-0" />
+                  <span>{validationMessage}</span>
+                </div>
+              )}
+
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button
                   type="button"
@@ -1182,13 +1356,14 @@ export default function SalaryDashboardPage() {
                 <button
                   type="button"
                   onClick={handleConfirmPayment}
-                  disabled={isConfirmingPayment || !payData || !payData.hasAttendance || !!payValidationMsg}
+                  disabled={isConfirmingPayment || !payData || !payData.hasAttendance || !!validationMessage}
                   className="px-4 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-60 flex items-center gap-1.5"
                 >
                   {isConfirmingPayment && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   Confirm Payment
                 </button>
               </div>
+
             </div>
           )}
         </Modal>
@@ -1303,13 +1478,6 @@ export default function SalaryDashboardPage() {
 
             {/* Printable Slip Container */}
             <div className="p-8 overflow-y-auto print:p-0 print:overflow-visible print:w-full print:absolute print:left-0 print:top-0 text-left font-serif" id="printable-payslip">
-              <style dangerouslySetInnerHTML={{__html: `
-                @media print {
-                  body * { visibility: hidden; }
-                  #printable-payslip, #printable-payslip * { visibility: visible; }
-                  #printable-payslip { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; }
-                }
-              `}} />
 
               {/* School Details */}
               <div className="text-center mb-8 border-b-2 border-slate-800 pb-5">
@@ -1404,8 +1572,22 @@ export default function SalaryDashboardPage() {
                       <td className="px-4 py-3">Payable Days (Present Days)</td>
                       <td className="px-4 py-3 text-right font-bold text-slate-800">{selectedSlip.present_days} days</td>
                     </tr>
+                    <tr className="bg-slate-50/50">
+                      <td className="px-4 py-3 font-bold text-slate-700">Payable Amount (Auto Calculated)</td>
+                      <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">
+                        {money(selectedSlip.payable_amount !== undefined ? selectedSlip.payable_amount : (selectedSlip.final_salary - (selectedSlip.bonus || 0) + (selectedSlip.deduction || 0)))}
+                      </td>
+                    </tr>
                     <tr>
-                      <td className="px-4 py-3 font-bold text-slate-900">Total Payable Amount</td>
+                      <td className="px-4 py-3 text-emerald-600 font-bold">Bonus (+)</td>
+                      <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600">+{money(selectedSlip.bonus || 0)}</td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-3 text-rose-500 font-bold">Deduction (-)</td>
+                      <td className="px-4 py-3 text-right font-mono font-bold text-rose-500">-{money(selectedSlip.deduction || 0)}</td>
+                    </tr>
+                    <tr className="bg-slate-100/80">
+                      <td className="px-4 py-3 font-bold text-slate-900">Final Salary Paid</td>
                       <td className="px-4 py-3 text-right font-mono font-bold text-primary">{money(selectedSlip.final_salary)}</td>
                     </tr>
                     {selectedSlip.remarks && (
@@ -1418,22 +1600,30 @@ export default function SalaryDashboardPage() {
               </div>
 
               {/* Payout summary strip */}
-              <div className="bg-slate-900 text-white rounded-xl p-5 flex items-center justify-between mb-12 font-sans">
+              <div className="bg-slate-900 text-white rounded-xl p-5 flex items-center justify-between mb-12 font-sans text-[11px]">
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Daily Salary Rate</span>
-                  <div className="text-base font-bold">{money(Math.round((selectedSlip.monthly_salary / 30) * 100) / 100)}</div>
+                  <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Payable Amount</span>
+                  <div className="text-xs font-bold font-mono">
+                    {money(selectedSlip.payable_amount !== undefined ? selectedSlip.payable_amount : (selectedSlip.final_salary - (selectedSlip.bonus || 0) + (selectedSlip.deduction || 0)))}
+                  </div>
                 </div>
-                <div className="w-px h-10 bg-slate-800"></div>
+                <div className="w-px h-8 bg-slate-800"></div>
                 <div>
-                  <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Payable Days</span>
-                  <div className="text-base font-bold">{selectedSlip.present_days} days</div>
+                  <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider">Bonus</span>
+                  <div className="text-xs font-bold font-mono text-emerald-400">+{money(selectedSlip.bonus || 0)}</div>
                 </div>
-                <div className="w-px h-10 bg-slate-800"></div>
+                <div className="w-px h-8 bg-slate-800"></div>
+                <div>
+                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Deduction</span>
+                  <div className="text-xs font-bold font-mono text-rose-450">-{money(selectedSlip.deduction || 0)}</div>
+                </div>
+                <div className="w-px h-8 bg-slate-800"></div>
                 <div className="text-right">
-                  <span className="text-[10px] uppercase font-bold text-emerald-450 tracking-wider">Total Salary Paid</span>
-                  <div className="text-xl font-black text-emerald-400">{money(selectedSlip.final_salary)}</div>
+                  <span className="text-[9px] uppercase font-bold text-emerald-450 tracking-wider">Final Paid</span>
+                  <div className="text-sm font-black text-emerald-400 font-mono">{money(selectedSlip.final_salary)}</div>
                 </div>
               </div>
+
 
               {/* Signature block */}
               <div className="flex justify-between items-end mt-12 pt-8 text-xs font-sans font-bold text-slate-800 dark:text-slate-100">

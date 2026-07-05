@@ -120,6 +120,9 @@ export async function POST(req: NextRequest) {
       present_days,
       absent_days,
       suggested_deduction,
+      payable_amount,
+      bonus,
+      deduction,
       final_salary,
       payment_date,
       remarks,
@@ -201,6 +204,9 @@ export async function POST(req: NextRequest) {
       present_days: Number(present_days) || 0,
       absent_days: Number(absent_days) || 0,
       suggested_deduction: Number(suggested_deduction) || 0,
+      payable_amount: Number(payable_amount) || Number(monthly_salary - suggested_deduction) || 0,
+      bonus: Number(bonus) || 0,
+      deduction: Number(deduction) || 0,
       final_salary: Number(final_salary) || 0,
       payment_date: payment_date ? new Date(payment_date) : new Date(),
       receipt_number,
@@ -210,6 +216,7 @@ export async function POST(req: NextRequest) {
     });
 
     await payment.save();
+
 
     return NextResponse.json({
       success: true,

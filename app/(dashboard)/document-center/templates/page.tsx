@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Search, ChevronDown } from "lucide-react";
+import { Search, ChevronDown, Printer, Download, X, Loader2, User, FileText, CreditCard, Award, Edit3, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, Settings2, Save } from "lucide-react";
 import { useStudents } from "@/app/hooks/useStudents";
 import { useTeachers } from "@/app/hooks/useTeachers";
 import { getAuthHeaders } from "@/lib/utils/session";
@@ -272,12 +272,39 @@ function SearchableDropdown({ options, placeholder, onSelect }: { options: any[]
   );
 }
 
+function isFieldEditable(docType: string, key: string, isRecordSelected: boolean): boolean {
+  if (!isRecordSelected) return true; // Show all fields if no record is selected
+  
+  const editableMap: Record<string, string[]> = {
+    bonafide: ['certNo', 'date', 'purpose'],
+    tc: ['tcNo', 'leavingDate', 'reasonForLeaving', 'conduct', 'workingDays', 'presentDays', 'promoted', 'remarks'],
+    character: ['certNo', 'date', 'conductText'],
+    study: ['certNo', 'date', 'studyingSince'],
+    experience: ['certNo', 'date', 'duration', 'conductText'],
+    salary: ['month', 'daysPresent', 'daysInMonth', 'otherAllow', 'otherDeduct', 'bankAcNo'],
+    idcard: ['validTill'],
+    marksheet: ['examName', 'registrationNo', 'specialAch1', 'specialAch2', 'supplementarySubject', 'division', 'resultStatus']
+  };
+  
+  return editableMap[docType]?.includes(key) ?? true;
+}
+
 export default function DocumentBuilderPage() {
   const [category, setCategory] = useState<'student' | 'teacher'>('student');
   const [docType, setDocType] = useState('bonafide');
   
   const [msFormat, setMsFormat] = useState('iti');
   const [theme, setTheme] = useState('sepia');
+
+  // Zoom level & collapsible & student summary states
+  const [zoomLevel, setZoomLevel] = useState<number | 'fit'>(1.0);
+  const [isSchoolDetailsOpen, setIsSchoolDetailsOpen] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
+
+  // Template Editor State
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [customTemplates, setCustomTemplates] = useState<Record<string, any>>({});
+  const [activeEditField, setActiveEditField] = useState<string>('body');
   
   const [school, setSchool] = useState({
     schoolName: 'My School Life',
@@ -302,6 +329,12 @@ export default function DocumentBuilderPage() {
 
   // Auto-fill logic
   const handleSelectRecord = (record: any) => {
+    setSelectedRecord(record);
+    if (!record) {
+      setData(getInitialData());
+      setPhoto(null);
+      return;
+    }
     const recordName = record.name || '';
 
     // Standard synchronous state update first
@@ -523,9 +556,9 @@ export default function DocumentBuilderPage() {
     <div class="letterhead">
       <div class="emblem">${emblemSVG(t.pri, t.acc)}</div>
       <div class="lh-text">
-        <h2>${school.schoolName}</h2>
-        <div class="sub">${school.schoolAddress}</div>
-        <div class="meta">UDISE: ${school.udise} &nbsp;|&nbsp; Affiliation No: ${school.affNo} &nbsp;|&nbsp; Estd. ${school.estd} &nbsp;|&nbsp; Ph: ${school.schoolPhone}</div>
+        <h2 ${isEditMode ? 'contenteditable="true" data-edit-id="schoolName" title="Click to edit school name" class="editable"' : ''}>${customTemplates[docType]?.schoolName ?? school.schoolName}</h2>
+        <div class="sub" ${isEditMode ? 'contenteditable="true" data-edit-id="schoolAddress" title="Click to edit address" class="editable"' : ''}>${customTemplates[docType]?.schoolAddress ?? school.schoolAddress}</div>
+        <div class="meta" ${isEditMode ? 'contenteditable="true" data-edit-id="schoolMeta" title="Click to edit meta info" class="editable"' : ''}>${customTemplates[docType]?.schoolMeta ?? `UDISE: ${school.udise} &nbsp;|&nbsp; Affiliation No: ${school.affNo} &nbsp;|&nbsp; Estd. ${school.estd} &nbsp;|&nbsp; Ph: ${school.schoolPhone}`}</div>
       </div>
       <div class="emblem" style="opacity:0">${emblemSVG(t.pri, t.acc)}</div>
     </div>`;
@@ -536,18 +569,18 @@ export default function DocumentBuilderPage() {
       <div class="wm">${watermarkSVG(t.pri)}</div>
       ${schoolHeader(t)}
       <div class="cert-title-wrap">
-        <div class="cert-title">${title}</div>
+        <div class="cert-title" ${isEditMode ? 'contenteditable="true" data-edit-id="title" title="Click to edit title" class="editable"' : ''}>${customTemplates[docType]?.title ?? title}</div>
         <div class="rule"></div>
       </div>
       <div class="meta-row">
         <span><b>Ref No.:</b> ${certNo}</span>
         <span><b>Date:</b> ${fmtDate(date)}</span>
       </div>
-      <div class="body-text">${bodyHtml}</div>
+      <div class="body-text" ${isEditMode ? 'contenteditable="true" data-edit-id="body" title="Click to edit body" class="editable"' : ''}>${customTemplates[docType]?.body ?? bodyHtml}</div>
       <div class="sign-row">
         <div class="sign-box"><div class="seal">SCHOOL<br>SEAL</div></div>
-        <div class="sign-box"><div class="sign-line">${signLeft}</div></div>
-        <div class="sign-box"><div class="sign-line">${signRight}</div></div>
+        <div class="sign-box"><div class="sign-line" ${isEditMode ? 'contenteditable="true" data-edit-id="signLeft" title="Click to edit signature" class="editable"' : ''}>${customTemplates[docType]?.signLeft ?? signLeft}</div></div>
+        <div class="sign-box"><div class="sign-line" ${isEditMode ? 'contenteditable="true" data-edit-id="signRight" title="Click to edit signature" class="editable"' : ''}>${customTemplates[docType]?.signRight ?? signRight}</div></div>
       </div>
     </div>`;
 
@@ -935,91 +968,94 @@ export default function DocumentBuilderPage() {
   return (
     <div id="doc-builder-wrapper">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
         #doc-builder-wrapper {
-          --app-bg: #eef1f5;
+          --app-bg: #f3f4f6;
           --panel-bg: #ffffff;
-          --ink: #1f2430;
-          --muted: #6b7280;
-          --line: #e2e5eb;
+          --ink: #0f172a;
+          --muted: #64748b;
+          --line: #e2e8f0;
           --accent: #2f6f4f;
-          font-family: 'Roboto', sans-serif;
+          font-family: 'Outfit', sans-serif;
           background: var(--app-bg);
           color: var(--ink);
-          margin: -24px;
+          margin: -32px;
         }
         #doc-builder-wrapper * { box-sizing: border-box; }
+        
+        /* App Main Shell */
         .db-app { display: flex; min-height: 100vh; }
+        
+        /* Left Sidebar Panel */
         .db-panel {
-          width: 380px; min-width: 340px; background: var(--panel-bg);
-          border-right: 1px solid var(--line); padding: 20px; overflow-y: auto; height: 100vh;
-          position: sticky; top: 0;
+          width: 380px; min-width: 380px; background: var(--panel-bg);
+          border-right: 1px solid var(--line); padding: 24px; overflow-y: auto; height: 100vh;
+          position: sticky; top: 0; display: flex; flex-direction: column; gap: 20px;
+          box-shadow: 4px 0 24px rgba(0,0,0,0.02); z-index: 20;
         }
         .db-panel::-webkit-scrollbar { width: 6px; }
-        .db-panel::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+        .db-panel::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
         
-        .db-tabs { display: flex; background: #f1f3f5; border-radius: 8px; padding: 4px; margin-bottom: 16px; }
-        .db-tab { flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; border-radius: 6px; }
-        .db-tab.active { background: #fff; color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+        /* Tabs Switcher */
+        .db-tabs { display: flex; bg: #f8fafc; border: 1px solid var(--line); border-radius: 4px; padding: 4px; }
+        .db-tab { flex: 1; text-align: center; padding: 10px 8px; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; border-radius: 4px; transition: all 0.2s; }
+        .db-tab.active { background: #fff; color: var(--ink); box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid var(--line); }
 
-        .search-dropdown-wrapper { position: relative; margin-bottom: 20px; }
-        .search-input-box { display: flex; align-items: center; background: #fff; border: 1.5px solid var(--accent); border-radius: 8px; padding: 8px 12px; cursor: pointer; }
-        .search-input-box input { border: none; outline: none; width: 100%; font-size: 13px; font-family: inherit; margin: 0 8px; }
-        .search-icon, .chevron { color: var(--muted); }
-        .search-options { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.1); z-index: 10; max-height: 250px; overflow-y: auto; }
-        .search-opt-item { padding: 10px 12px; cursor: pointer; border-bottom: 1px solid #f1f1f1; }
-        .search-opt-item:hover { background: #f8f9fa; }
-        .search-opt-empty { padding: 12px; text-align: center; color: var(--muted); font-size: 12px; }
+        /* Search Dropdown Box styling */
+        .search-dropdown-wrapper { position: relative; }
+        .search-input-box { display: flex; align-items: center; bg: #fff; border: 1.5px solid var(--line); border-radius: 4px; padding: 12px 14px; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .search-input-box:hover { border-color: var(--accent); }
+        .search-input-box input { border: none; outline: none; width: 100%; font-size: 13.5px; font-family: inherit; margin: 0 8px; font-weight: 550; color: var(--ink); }
+        .search-icon { color: var(--muted); }
+        .search-options { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); z-index: 30; max-height: 250px; overflow-y: auto; }
+        .search-opt-item { padding: 12px 14px; cursor: pointer; border-bottom: 1px solid #f1f5f9; transition: background 0.15s; text-align: left; }
+        .search-opt-item:hover { background: #f8fafc; }
+        .search-opt-empty { padding: 14px; text-align: center; color: var(--muted); font-size: 12px; }
 
-        .db-doc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
-        .db-doc-btn { border: 1.5px solid var(--line); background: #fbfbfd; border-radius: 10px; padding: 10px 8px; font-size: 12px; text-align: left; cursor: pointer; transition: .15s; line-height: 1.3; }
-        .db-doc-btn b { display: block; font-size: 12.5px; margin-bottom: 2px; }
-        .db-doc-btn span { color: var(--muted); font-size: 10.5px; }
-        .db-doc-btn:hover { border-color: var(--accent); }
-        .db-doc-btn.active { border-color: var(--accent); background: #eef7f1; box-shadow: 0 0 0 1px var(--accent) inset; }
-        
-        .db-section-title { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink); font-weight: 800; margin: 24px 0 10px; display: flex; align-items: center; gap: 6px; }
-        .db-section-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-        
+        /* Theme selection */
         .db-theme-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
         .db-theme-swatch { width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; position: relative; flex: 0 0 auto; }
         .db-theme-swatch.active { border-color: var(--ink); }
         .db-theme-swatch::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--sw2); }
         
-        .db-panel label { display: block; font-size: 11.5px; color: var(--muted); margin: 10px 0 4px; font-weight: 600; }
+        .db-panel label { display: block; font-size: 11px; color: var(--muted); margin: 12px 0 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         .db-panel input[type=text], .db-panel input[type=date], .db-panel input[type=number], .db-panel textarea, .db-panel select {
-          width: 100%; padding: 8px 9px; border: 1px solid var(--line); border-radius: 7px; font-size: 13px;
-          font-family: inherit; background: #fff; color: var(--ink);
+          width: 100%; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 4px; font-size: 13px;
+          font-family: inherit; background: #fff; color: var(--ink); outline: none; transition: border-color 0.2s;
         }
-        .db-panel textarea { resize: vertical; min-height: 56px; }
+        .db-panel input:focus, .db-panel textarea:focus, .db-panel select:focus { border-color: var(--accent); }
+        .db-panel textarea { resize: vertical; min-height: 64px; }
         
-        .subj-card { border: 1px solid var(--line); border-radius: 8px; padding: 8px; margin-bottom: 8px; background: #fafbfc; }
-        .subj-card input[type=text] { margin-bottom: 6px; font-weight: 600; }
-        .subj-grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 5px; align-items: end; }
+        .subj-card { border: 1.5px solid var(--line); border-radius: 4px; padding: 12px; margin-bottom: 10px; background: #f8fafc; text-align: left; }
+        .subj-card input[type=text] { margin-bottom: 8px; font-weight: 700; }
+        .subj-grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr auto; gap: 6px; align-items: end; }
         .subj-grid4 .cell { display: flex; flex-direction: column; }
-        .subj-grid4 .cell span { font-size: 9px; color: var(--muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .03em; }
-        .subj-grid4 input, .subj-grid4 select { padding: 5px 6px; font-size: 12px; }
-
-        .db-mini-btn { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 6px 8px; cursor: pointer; font-size: 12px; height: 30px; }
-        .db-mini-btn:hover { border-color: var(--accent); color: var(--accent); }
-        .db-add-row-btn { width: 100%; margin-top: 4px; padding: 8px; border: 1.5px dashed var(--line); background: #fafbfc; border-radius: 8px; cursor: pointer; font-size: 12.5px; color: var(--accent); font-weight: 600; }
-        .db-add-row-btn:hover { background: #eef7f1; }
-        .db-photo-drop { border: 1.5px dashed var(--line); border-radius: 8px; padding: 10px; text-align: center; font-size: 11.5px; color: var(--muted); cursor: pointer; }
-        .db-photo-drop:hover { border-color: var(--accent); }
+        .subj-grid4 .cell span { font-size: 9px; color: var(--muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: .03em; font-weight: 700; }
+        .subj-grid4 input, .subj-grid4 select { padding: 6px 8px; font-size: 12px; border-radius: 4px; }
+        
+        .db-mini-btn { border: 1px solid var(--line); background: #fff; border-radius: 4px; padding: 6px 8px; cursor: pointer; font-size: 12px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+        .db-mini-btn:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
+        .db-add-row-btn { width: 100%; margin-top: 4px; padding: 10px; border: 1.5px dashed var(--line); background: #fafbfc; border-radius: 4px; cursor: pointer; font-size: 12px; color: var(--accent); font-weight: 700; transition: all 0.15s; }
+        .db-add-row-btn:hover { background: #eef7f1; border-color: var(--accent); }
+        .db-photo-drop { border: 1.5px dashed var(--line); border-radius: 4px; padding: 12px; text-align: center; font-size: 12px; color: var(--muted); cursor: pointer; display: block; transition: all 0.2s; }
+        .db-photo-drop:hover { border-color: var(--accent); background: #f8fafc; }
+        
         .db-print-btn { width: 100%; margin-top: 22px; padding: 12px; border: none; border-radius: 9px; background: var(--accent); color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; }
         .db-print-btn:hover { filter: brightness(1.08); }
-        .db-hint { font-size: 10.5px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
-        .db-stage { flex: 1; padding: 36px; display: flex; justify-content: center; align-items: flex-start; overflow: auto; height: 100vh; }
+        .db-hint { font-size: 10.5px; color: var(--muted); margin-top: 8px; line-height: 1.5; text-align: left; }
         
-        .db-page { width: 210mm; min-height: 297mm; background: #fff; box-shadow: 0 6px 24px rgba(0,0,0,.15); padding: 14mm; position: relative; color: #1f2430; font-family: 'Roboto', sans-serif; }
-        .db-page.card-size { width: 340px; min-height: auto; height: auto; padding: 0; box-shadow: 0 8px 20px rgba(0,0,0,.2); border-radius: 14px; overflow: hidden; }
+        /* Preview Workspace */
+        .db-stage { flex: 1; padding: 0 0 100px 0; display: flex; flex-direction: column; align-items: center; overflow: auto; height: 100vh; background: var(--app-bg); position: relative; }
+        
+        .db-page { width: 210mm; min-height: 297mm; background: #fff; padding: 14mm; position: relative; color: #1f2430; font-family: 'Outfit', sans-serif; }
+        .db-page.card-size { width: 340px; min-height: auto; height: auto; padding: 0; border-radius: 4px; overflow: hidden; }
 
         .db-page .frame { border: 3px double var(--pri); padding: 16px; height: 100%; position: relative; min-height: calc(297mm - 28mm - 32px); }
         .db-page .wm { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; opacity: .06; pointer-events: none; }
         .db-page .wm svg { width: 340px; height: 340px; }
         
-        .db-page .letterhead { display: flex; align-items: center; gap: 16px; border-bottom: 2px solid var(--pri); padding-bottom: 10px; margin-bottom: 14px; }
+        .db-page .letterhead { display: flex; align-items: center; gap: 16px; border-bottom: 2px solid var(--pri); padding-bottom: 10px; margin-bottom: 14px; text-align: left; }
         .db-page .emblem { width: 64px; height: 64px; flex: 0 0 auto; }
         .db-page .lh-text { flex: 1; text-align: center; }
         .db-page .lh-text h2 { margin: 0; color: var(--pri); font-size: 24px; letter-spacing: .02em; font-family: Georgia, 'Times New Roman', serif; font-weight: 800; }
@@ -1030,45 +1066,45 @@ export default function DocumentBuilderPage() {
         .db-page .cert-title-wrap { text-align: center; }
         .db-page .cert-title-wrap .rule { width: 150px; height: 2px; background: var(--acc); margin: 2px auto 16px; }
         
-        .db-page .meta-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 14px; color: #333; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        .db-page .meta-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 14px; color: #333; font-family: inherit; }
         .db-page .body-text { font-size: 14px; line-height: 2.2; text-align: justify; color: #232323; }
-        .db-page .body-text b { color: #000; font-family: 'Segoe UI', Arial, sans-serif; }
+        .db-page .body-text b { color: #000; font-family: inherit; }
         
-        .db-page .sign-row { display: flex; justify-content: space-between; margin-top: 56px; font-size: 12px; font-family: 'Segoe UI', Tahoma, sans-serif; font-weight: 600; }
+        .db-page .sign-row { display: flex; justify-content: space-between; margin-top: 56px; font-size: 12px; font-family: inherit; font-weight: 600; }
         .db-page .sign-box { text-align: center; width: 150px; }
         .db-page .sign-line { border-top: 1px solid #333; margin-bottom: 4px; padding-top: 4px; }
         .db-page .seal { width: 80px; height: 80px; border: 2px dashed #999; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #999; text-align: center; margin: 0 auto 6px; }
 
-        .db-page table.doc-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin: 10px 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        .db-page table.doc-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin: 10px 0; font-family: inherit; }
         .db-page table.doc-table th, .db-page table.doc-table td { border: 1px solid #888; padding: 6px 8px; }
         .db-page table.doc-table th { background: var(--pri); color: #fff; font-weight: 700; text-align: center; text-transform: uppercase; font-size: 10px; letter-spacing: 0.04em; padding: 8px; }
-        .db-page table.tc-fields td { border: 1px solid #ccc; padding: 6px 8px; vertical-align: top; font-family: 'Segoe UI', sans-serif; }
+        .db-page table.tc-fields td { border: 1px solid #ccc; padding: 6px 8px; vertical-align: top; font-family: inherit; }
         .db-page table.tc-fields td.num { width: 26px; color: #666; font-weight: 700; }
         .db-page table.tc-fields td.label { width: 280px; font-weight: 600; color: #333; }
         .db-page .badge-strip { height: 8px; background: linear-gradient(90deg, var(--pri), var(--acc)); margin: -14mm -14mm 14px -14mm; }
 
         .ms-titleband { background: linear-gradient(90deg, var(--pri), var(--acc)); color: #fff; text-align: center; padding: 7px 10px; font-weight: 800; font-size: 15px; letter-spacing: .08em; text-transform: uppercase; border-radius: 4px; margin: 12px 0 14px; }
-        .ms-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; font-size: 12px; margin-bottom: 12px; font-family: 'Segoe UI', sans-serif; }
+        .ms-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; font-size: 12px; margin-bottom: 12px; font-family: inherit; }
         .ms-info-grid div { display: flex; justify-content: space-between; border-bottom: 1px dotted #ccc; padding: 4px 0; }
         .ms-info-grid b { color: #333; }
-        table.ms-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; font-family: 'Segoe UI', sans-serif; }
+        table.ms-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; font-family: inherit; }
         table.ms-table th, table.ms-table td { border: 1px solid #999; padding: 6px 7px; text-align: center; }
         table.ms-table thead tr:first-child th { background: var(--pri); color: #fff; }
         table.ms-table thead tr:last-child th { background: #eef0f3; color: #333; font-size: 10.5px; }
         table.ms-table td.subj-name { text-align: left; font-weight: 600; }
         tr.ms-grandtotal td { background: var(--acc); color: #fff; font-weight: 800; }
-        .ms-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 26px; font-family: 'Segoe UI', sans-serif; }
+        .ms-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 26px; font-family: inherit; }
         .qr-box { width: 70px; height: 70px; border: 1px solid #999; padding: 3px; margin:0 auto; }
         .qr-box svg { width: 100%; height: 100%; }
         .qr-caption { font-size: 8.5px; color: #777; text-align: center; margin-top: 3px; width: 70px; }
-        .ms-result-strip { display: flex; justify-content: space-around; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; padding: 8px; margin-bottom: 6px; font-size: 12.5px; font-family: 'Segoe UI', sans-serif; }
+        .ms-result-strip { display: flex; justify-content: space-around; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; padding: 8px; margin-bottom: 6px; font-size: 12.5px; font-family: inherit; }
         .ms-result-strip b { display: block; color: var(--pri); font-size: 15px; }
 
-        .db-page .idcard { width: 340px; background: #fff; font-family: 'Segoe UI', sans-serif; }
+        .db-page .idcard { width: 340px; background: #fff; font-family: inherit; }
         .db-page .idc-head { background: linear-gradient(135deg, var(--pri), var(--acc)); color: #fff; padding: 12px 14px 30px; text-align: center; position: relative; }
         .db-page .idc-head h3 { margin: 0; font-size: 14.5px; font-family: Georgia, serif; }
         .db-page .idc-head p { margin: 2px 0 0; font-size: 9.5px; opacity: .9; }
-        .db-page .idc-photo { width: 78px; height: 90px; background: #f1f1f1; border: 3px solid #fff; border-radius: 6px; position: absolute; left: 50%; top: 52px; transform: translateX(-50%); box-shadow: 0 2px 6px rgba(0,0,0,.25); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #999; }
+        .db-page .idc-photo { width: 78px; height: 90px; background: #f1f1f1; border: 3px solid #fff; border-radius: 4px; position: absolute; left: 50%; top: 52px; transform: translateX(-50%); box-shadow: 0 2px 6px rgba(0,0,0,.25); overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #999; }
         .db-page .idc-photo img { width: 100%; height: 100%; object-fit: cover; }
         .db-page .idc-body { padding: 46px 16px 12px; text-align: center; }
         .db-page .idc-name { font-size: 15px; font-weight: 800; color: var(--pri); margin-bottom: 1px; }
@@ -1078,23 +1114,40 @@ export default function DocumentBuilderPage() {
         .db-page .idc-foot { background: #f5f5f5; padding: 8px 14px; font-size: 9px; color: #666; text-align: center; border-top: 1px solid #e2e2e2; }
         .db-page .idc-strip { height: 6px; background: repeating-linear-gradient(90deg, var(--pri) 0 6px, #fff 6px 8px); }
 
-        .db-page .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #bbb; margin-top: 10px; font-family: 'Segoe UI', sans-serif; }
+        .db-page .pay-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; border: 1px solid #bbb; margin-top: 10px; font-family: inherit; }
         .db-page .pay-col { padding: 0; }
         .db-page .pay-col h4 { margin: 0; background: var(--pri); color: #fff; padding: 7px 10px; font-size: 12px; }
         .db-page .pay-line { display: flex; justify-content: space-between; padding: 6px 10px; font-size: 12.5px; border-bottom: 1px solid #eee; }
         .db-page .pay-total { display: flex; justify-content: space-between; padding: 8px 10px; font-size: 13px; font-weight: 800; background: #f7f7f7; border-top: 2px solid #ccc; }
-        .db-page .netpay { margin-top: 12px; text-align: center; background: #f4f9f6; border: 1.5px solid var(--pri); border-radius: 8px; padding: 12px; font-family: 'Segoe UI', sans-serif; }
+        .db-page .netpay { margin-top: 12px; text-align: center; background: #f4f9f6; border: 1.5px solid var(--pri); border-radius: 8px; padding: 12px; font-family: inherit; }
         .db-page .netpay .amt { font-size: 22px; font-weight: 800; color: var(--pri); }
 
         @media print {
-          body > * { display: none !important; }
-          body { background: white !important; }
-          #doc-builder-wrapper { display: block !important; margin: 0 !important; }
+          /* Hide sidebar panel completely */
           #doc-builder-wrapper .db-panel { display: none !important; }
-          #doc-builder-wrapper .db-stage { padding: 0 !important; display: block !important; overflow: visible !important; height: auto !important; }
-          #doc-builder-wrapper .db-page { position: absolute; left: 0; top: 0; box-shadow: none; margin: 0; }
-          @page { size: A4 portrait; margin: 0; }
-          #doc-builder-wrapper .db-page.card-size { width: 85.6mm; }
+          /* Reset wrapper heights / overflow so print engine sees only db-page content */
+          #doc-builder-wrapper,
+          #doc-builder-wrapper .db-app,
+          #doc-builder-wrapper .db-stage {
+            display: block !important;
+            height: auto !important;
+            min-height: 0 !important;
+            max-height: none !important;
+            overflow: visible !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+          }
+          /* Remove the zoom scale transform — print at 100% */
+          #doc-builder-wrapper .db-zoom-wrapper {
+            transform: none !important;
+            width: 100% !important;
+            display: block !important;
+          }
+          /* Toolbar hidden during print */
+          #doc-builder-wrapper .db-stage > div:first-child { display: none !important; }
+          /* Spacer divs hidden during print */
+          #doc-builder-wrapper .db-stage > div:last-child { display: none !important; }
         }
       `}</style>
       
@@ -1103,6 +1156,7 @@ export default function DocumentBuilderPage() {
         {/* ============ LEFT CONTROL PANEL ============ */}
         <div className="db-panel">
           
+          {/* Group 1: Choose category */}
           <div className="db-tabs">
             <div className={`db-tab ${category === 'student' ? 'active' : ''}`} onClick={() => setCategory('student')}>
               Student Documents
@@ -1112,255 +1166,505 @@ export default function DocumentBuilderPage() {
             </div>
           </div>
 
-          <SearchableDropdown 
-            key={category}
-            options={category === 'student' ? students : teachers}
-            placeholder={`Search ${category} to auto-fill data...`}
-            onSelect={handleSelectRecord}
-          />
+          {/* Group 2: Search */}
+          <div className="space-y-1">
+            <SearchableDropdown 
+              key={category}
+              options={category === 'student' ? students : teachers}
+              placeholder="Search Student / Teacher"
+              onSelect={handleSelectRecord}
+            />
+            <span className="block text-[10px] text-slate-400 text-left font-medium">Type Name, Admission No, Employee ID...</span>
+          </div>
 
-          <div className="db-doc-grid">
-            {activeDocs.map(d => (
-              <div key={d.id} className={`db-doc-btn ${d.id === docType ? 'active' : ''}`} onClick={() => setDocType(d.id)}>
-                <b>{d.name}</b><span>{d.desc}</span>
+          {/* Profile Card if student/teacher selected */}
+          {selectedRecord && (
+            <div className="bg-[#f8fafc] border border-border rounded p-4 flex gap-3 text-left animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="w-10 h-10 rounded-sm bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 text-slate-500">
+                <User className="w-5 h-5" />
               </div>
-            ))}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-extrabold text-xs text-slate-800 truncate">{selectedRecord.name}</h4>
+                <p className="text-[10px] text-slate-500 font-medium truncate mt-0.5">
+                  {category === 'student' 
+                    ? `Class ${selectedRecord.class_id?.name || 'N/A'} • Adm: ${selectedRecord.admission_no || 'N/A'}`
+                    : `${selectedRecord.department || 'Staff'} • Emp ID: ${selectedRecord.employee_id || 'N/A'}`
+                  }
+                </p>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 mt-2 text-[9.5px] text-slate-650 border-t border-dashed border-slate-200 pt-1.5">
+                  <div className="truncate"><b>DOB:</b> {selectedRecord.dob ? new Date(selectedRecord.dob).toLocaleDateString('en-GB', {day:'2-digit', month:'short'}) : '—'}</div>
+                  <div className="truncate"><b>Father:</b> {selectedRecord.father_name || '—'}</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Group 3: Document Type Dropdown */}
+          <div className="space-y-1.5 text-left">
+            <label className="block text-[11px] font-bold text-slate-550 uppercase tracking-wider">Document Type</label>
+            <select
+              value={docType}
+              onChange={e => setDocType(e.target.value)}
+              className="w-full px-3 py-2.5 bg-white border border-border rounded text-xs outline-none focus:border-primary font-bold text-slate-800"
+            >
+              {activeDocs.map(d => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
           </div>
 
           {docType === 'marksheet' && (
-            <div className="db-format-selector" style={{ marginTop: '-10px', marginBottom: '18px', padding: '12px', background: '#f5f7fa', borderRadius: '8px', border: '1px solid var(--line)' }}>
-              <label style={{ margin: '0 0 6px 0', fontSize: '11px', display: 'block', textTransform: 'uppercase', fontWeight: 700, color: 'var(--muted)' }}>Marksheet Format</label>
-              <select value={msFormat} onChange={e => setMsFormat(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid var(--line)', borderRadius: '6px', fontSize: '13px' }}>
+            <div className="db-format-selector" style={{ marginTop: '5px', padding: '12px', background: '#f8fafc', borderRadius: '4px', border: '1px solid var(--line)' }}>
+              <label style={{ margin: '0 0 6px 0', fontSize: '10.5px', display: 'block', textTransform: 'uppercase', fontWeight: 700, color: 'var(--muted)' }}>Marksheet Format</label>
+              <select value={msFormat} onChange={e => setMsFormat(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid var(--line)', borderRadius: '4px', fontSize: '13px' }}>
                 {MS_FORMATS.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
               </select>
             </div>
           )}
 
-          <div className="db-section-title">Theme Color</div>
-          <div className="db-theme-row">
-            {Object.entries(THEMES).map(([id, t]) => (
-              <div 
-                key={id}
-                className={`db-theme-swatch ${id === theme ? 'active' : ''}`}
-                style={{ "--sw2": t.acc, background: t.pri } as any}
-                title={t.name}
-                onClick={() => setTheme(id)}
-              />
-            ))}
-          </div>
-
-          <div className="db-section-title">School Details (applies to all documents)</div>
-          <div>
-            {[
-              ['schoolName', 'School Name', 'text'],
-              ['schoolAddress', 'Address', 'textarea'],
-              ['schoolPhone', 'Phone', 'text'],
-              ['udise', 'UDISE Code', 'text'],
-              ['affNo', 'Affiliation / Recognition No.', 'text'],
-              ['estd', 'Established Year', 'text'],
-            ].map(([key, label, type]) => (
-              <div key={key}>
-                <label>{label}</label>
-                {type === 'textarea' ? (
-                  <textarea value={(school as any)[key]} onChange={e => setSchool({...school, [key]: e.target.value})} />
-                ) : (
-                  <input type="text" value={(school as any)[key]} onChange={e => setSchool({...school, [key]: e.target.value})} />
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div className="db-section-title">{DOC_TITLES[docType]} Details</div>
-          
-          {docType === 'marksheet' ? (
-            <div>
-
-              {getFieldDefsForFormat(msFormat).map(([key, label, type, def]) => {
-                const val = data.marksheet?.[key] ?? '';
-                const handleChange = (e: any) => setData(prev => ({...prev, marksheet: {...prev.marksheet, [key]: e.target.value}}));
-                if (type === 'select') {
-                  return (
-                    <div key={key}>
-                      <label>{label}</label>
-                      <select value={val} onChange={handleChange}>
-                        {def.split('|').map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
+          {/* Group 4: Design Theme */}
+          <div className="space-y-2">
+            <span className="block text-[10.5px] font-extrabold text-slate-500 uppercase tracking-wider text-left">Design Theme</span>
+            <div className="grid grid-cols-1 gap-2">
+              {[
+                { id: 'sepia', name: 'Classic Brown', pri: '#5c3a21', acc: '#d4a373' },
+                { id: 'navy', name: 'Modern Blue', pri: '#12305c', acc: '#b8860b' },
+                { id: 'emerald', name: 'Green', pri: '#0f5132', acc: '#b08d57' },
+                { id: 'indigo', name: 'Royal Purple', pri: '#2b2560', acc: '#d1a13d' },
+                { id: 'slate', name: 'Minimal Black', pri: '#28324a', acc: '#3f8f78' },
+              ].map((th) => {
+                const isActive = th.id === theme;
+                return (
+                  <button
+                    key={th.id}
+                    onClick={() => setTheme(th.id)}
+                    className={`w-full px-3 py-2 rounded border text-left transition-all flex items-center justify-between cursor-pointer
+                      ${isActive 
+                        ? 'border-primary bg-primary/5 text-primary shadow-sm font-bold' 
+                        : 'border-border bg-white hover:bg-slate-50 text-slate-700'
+                      }`}
+                  >
+                    <span className="text-[12px] font-bold text-slate-800">{th.name}</span>
+                    <div className="flex gap-1.5 items-center">
+                      <span className="w-5 h-5 rounded-full border border-border shadow-sm" style={{ backgroundColor: th.pri }} />
+                      <span className="w-5 h-5 rounded-full border border-border shadow-sm" style={{ backgroundColor: th.acc }} />
                     </div>
-                  );
-                }
-                if (type === 'textarea') {
-                  return <div key={key}><label>{label}</label><textarea value={val} onChange={handleChange} /></div>;
-                }
-                return <div key={key}><label>{label}</label><input type={type} value={val} onChange={handleChange} /></div>;
+                  </button>
+                );
               })}
+            </div>
+          </div>
+
+          {/* Group 5: Collapsible School Details */}
+          <div className="space-y-1">
+            <button
+              onClick={() => setIsSchoolDetailsOpen(!isSchoolDetailsOpen)}
+              className="w-full flex items-center justify-between py-2 text-left font-bold text-xs uppercase tracking-wider text-slate-500 hover:text-slate-800 transition-colors border-b border-border cursor-pointer"
+            >
+              <span>{isSchoolDetailsOpen ? '▲' : '▼'} School Details</span>
+              <span className="text-[10px] text-slate-450 normal-case font-medium">Click to configure</span>
+            </button>
+            
+            {isSchoolDetailsOpen && (
+              <div className="mt-2 space-y-3.5 border border-border rounded p-4 bg-slate-50/50 animate-in fade-in duration-200">
+                {[
+                  ['schoolName', 'School Name', 'text'],
+                  ['schoolAddress', 'Address', 'textarea'],
+                  ['schoolPhone', 'Phone', 'text'],
+                  ['udise', 'UDISE Code', 'text'],
+                  ['affNo', 'Affiliation / Recognition No.', 'text'],
+                  ['estd', 'Established Year', 'text'],
+                ].map(([key, label, type]) => (
+                  <div key={key} className="space-y-1 text-left">
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">{label}</label>
+                    {type === 'textarea' ? (
+                      <textarea 
+                        value={(school as any)[key]} 
+                        onChange={e => setSchool({...school, [key]: e.target.value})} 
+                        className="w-full px-3 py-2 bg-white border border-border rounded text-xs outline-none focus:border-primary"
+                      />
+                    ) : (
+                      <input 
+                        type="text" 
+                        value={(school as any)[key]} 
+                        onChange={e => setSchool({...school, [key]: e.target.value})} 
+                        className="w-full px-3 py-2 bg-white border border-border rounded text-xs outline-none focus:border-primary"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Group 6: Form fields details OR Template Editor */}
+          {!isEditMode ? (
+            <div className="space-y-3 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="block text-[10.5px] font-extrabold text-slate-500 uppercase tracking-wider text-left">{DOC_TITLES[docType]} Details</span>
+                <button 
+                  onClick={() => setIsEditMode(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-bold transition-colors cursor-pointer border border-emerald-200"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  Edit Template
+                </button>
+              </div>
               
-              <div style={{marginTop:'15px'}}><label>Subjects &amp; Marks</label></div>
-              {msFormat === 'iti' && (
-                <div>
-                  {subjects.iti.map((s, i) => (
-                    <div key={i} className="subj-card">
-                      <input type="text" value={s.name} onChange={e => { const next={...subjects}; next.iti[i].name=e.target.value; setSubjects(next); }} />
-                      <div className="subj-grid4">
-                        <div className="cell"><span>Th. Max</span><input type="number" value={s.thMax} onChange={e => { const next={...subjects}; next.iti[i].thMax=Number(e.target.value)||0; setSubjects(next); }}/></div>
-                        <div className="cell"><span>Th. Obt.</span><input type="number" value={s.thObt} onChange={e => { const next={...subjects}; next.iti[i].thObt=Number(e.target.value)||0; setSubjects(next); }}/></div>
-                        <div className="cell"><span>Pr. Max</span><input type="number" value={s.prMax} onChange={e => { const next={...subjects}; next.iti[i].prMax=Number(e.target.value)||0; setSubjects(next); }}/></div>
-                        <div className="cell"><span>Pr. Obt.</span><input type="number" value={s.prObt} onChange={e => { const next={...subjects}; next.iti[i].prObt=Number(e.target.value)||0; setSubjects(next); }}/></div>
-                        <button className="db-mini-btn" onClick={() => { const next={...subjects}; next.iti.splice(i,1); setSubjects(next); }}>✕</button>
-                      </div>
-                    </div>
-                  ))}
-                  <button className="db-add-row-btn" onClick={() => { const next={...subjects}; next.iti.push({name:'New', thMax:100, thObt:0, prMax:50, prObt:0}); setSubjects(next); }}>+ Add Subject</button>
-                </div>
-              )}
-
-              {(msFormat === 'villagePrimary' || msFormat === 'boardDivision') && (
-                <div>
-                  {subjects[msFormat].map((s, i) => (
-                    <div key={i} className="subj-card">
-                      <input type="text" value={s.name} onChange={e => { const next={...subjects}; next[msFormat][i].name=e.target.value; setSubjects(next); }} />
-                      <div className="subj-grid4" style={{gridTemplateColumns:'1fr 1fr auto'}}>
-                        <div className="cell"><span>Max</span><input type="number" value={s.max} onChange={e => { const next={...subjects}; next[msFormat][i].max=Number(e.target.value)||0; setSubjects(next); }}/></div>
-                        <div className="cell"><span>Obt.</span><input type="number" value={s.obt} onChange={e => { const next={...subjects}; next[msFormat][i].obt=Number(e.target.value)||0; setSubjects(next); }}/></div>
-                        <button className="db-mini-btn" onClick={() => { const next={...subjects}; next[msFormat].splice(i,1); setSubjects(next); }}>✕</button>
-                      </div>
-                    </div>
-                  ))}
-                  <button className="db-add-row-btn" onClick={() => { const next={...subjects}; next[msFormat].push({name:'New', max:100, obt:0}); setSubjects(next); }}>+ Add Subject</button>
-                </div>
-              )}
-
-              {msFormat === 'cceGrade' && (
-                <div>
-                  {subjects.cceGrade.map((s, i) => (
-                    <div key={i} className="subj-card">
-                      <input type="text" value={s.name} onChange={e => { const next={...subjects}; next.cceGrade[i].name=e.target.value; setSubjects(next); }} />
-                      <div className="subj-grid4" style={{gridTemplateColumns:'1fr 1fr auto'}}>
-                        <div className="cell">
-                          <span>Term 1</span>
-                          <select value={s.term1} onChange={e => { const next={...subjects}; next.cceGrade[i].term1=e.target.value; setSubjects(next); }}>
-                            {['A1','A2','B1','B2','C1','C2','D','E'].map(g=><option key={g} value={g}>{g}</option>)}
-                          </select>
+              {docType === 'marksheet' ? (
+                <div className="space-y-3.5">
+                  {getFieldDefsForFormat(msFormat)
+                    .filter(([key]) => isFieldEditable('marksheet', key, !!selectedRecord))
+                    .map(([key, label, type, def]) => {
+                      const val = data.marksheet?.[key] ?? '';
+                      const handleChange = (e: any) => setData(prev => ({...prev, marksheet: {...prev.marksheet, [key]: e.target.value}}));
+                      if (type === 'select') {
+                        return (
+                          <div key={key} className="space-y-1 text-left">
+                            <label>{label}</label>
+                            <select value={val} onChange={handleChange}>
+                              {def.split('|').map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                          </div>
+                        );
+                      }
+                      if (type === 'textarea') {
+                        return <div key={key} className="space-y-1 text-left"><label>{label}</label><textarea value={val} onChange={handleChange} className="rounded" /></div>;
+                      }
+                      return <div key={key} className="space-y-1 text-left"><label>{label}</label><input type={type} value={val} onChange={handleChange} className="rounded" /></div>;
+                    })}
+                  
+                  <div style={{marginTop:'15px', textAlign:'left'}}><label>Subjects &amp; Marks</label></div>
+                  {msFormat === 'iti' && (
+                    <div>
+                      {subjects.iti.map((s, i) => (
+                        <div key={i} className="subj-card">
+                          <input type="text" value={s.name} onChange={e => { const next={...subjects}; next.iti[i].name=e.target.value; setSubjects(next); }} className="w-full px-3 py-1.5 bg-white border border-border rounded text-xs outline-none focus:border-primary" />
+                          <div className="subj-grid4 mt-2">
+                            <div className="cell"><span>Th. Max</span><input type="number" value={s.thMax} onChange={e => { const next={...subjects}; next.iti[i].thMax=Number(e.target.value)||0; setSubjects(next); }}/></div>
+                            <div className="cell"><span>Th. Obt.</span><input type="number" value={s.thObt} onChange={e => { const next={...subjects}; next.iti[i].thObt=Number(e.target.value)||0; setSubjects(next); }}/></div>
+                            <div className="cell"><span>Pr. Max</span><input type="number" value={s.prMax} onChange={e => { const next={...subjects}; next.iti[i].prMax=Number(e.target.value)||0; setSubjects(next); }}/></div>
+                            <div className="cell"><span>Pr. Obt.</span><input type="number" value={s.prObt} onChange={e => { const next={...subjects}; next.iti[i].prObt=Number(e.target.value)||0; setSubjects(next); }}/></div>
+                            <button className="db-mini-btn" onClick={() => { const next={...subjects}; next.iti.splice(i,1); setSubjects(next); }}>✕</button>
+                          </div>
                         </div>
-                        <div className="cell">
-                          <span>Term 2</span>
-                          <select value={s.term2} onChange={e => { const next={...subjects}; next.cceGrade[i].term2=e.target.value; setSubjects(next); }}>
-                            {['A1','A2','B1','B2','C1','C2','D','E'].map(g=><option key={g} value={g}>{g}</option>)}
-                          </select>
-                        </div>
-                        <button className="db-mini-btn" onClick={() => { const next={...subjects}; next.cceGrade.splice(i,1); setSubjects(next); }}>✕</button>
-                      </div>
+                      ))}
+                      <button className="db-add-row-btn" onClick={() => { const next={...subjects}; next.iti.push({name:'New', thMax:100, thObt:0, prMax:50, prObt:0}); setSubjects(next); }}>+ Add Subject</button>
                     </div>
-                  ))}
-                  <button className="db-add-row-btn" onClick={() => { const next={...subjects}; next.cceGrade.push({name:'New', term1:'B1', term2:'B1'}); setSubjects(next); }}>+ Add Subject</button>
-                </div>
-              )}
+                  )}
 
-              {(msFormat === 'villagePrimary' || msFormat === 'cceGrade') && (
-                <div style={{marginTop:'15px'}}>
-                  <label>Co-Scholastic Activities</label>
-                  {msFormat === 'villagePrimary' && coScholastic.villagePrimary.map((c, i) => (
-                    <div key={i} className="subj-card">
-                      <input type="text" value={c.name} onChange={e => { const next={...coScholastic}; next.villagePrimary[i].name=e.target.value; setCoScholastic(next); }} />
-                      <div className="subj-grid4" style={{gridTemplateColumns:'1fr 1fr 1fr auto'}}>
-                        <div className="cell"><span>Max</span><input type="number" value={c.max} onChange={e => { const next={...coScholastic}; next.villagePrimary[i].max=Number(e.target.value)||0; setCoScholastic(next); }}/></div>
-                        <div className="cell"><span>Obt.</span><input type="number" value={c.obt} onChange={e => { const next={...coScholastic}; next.villagePrimary[i].obt=Number(e.target.value)||0; setCoScholastic(next); }}/></div>
-                        <div className="cell"><span>Grade</span><input type="text" value={c.grade} onChange={e => { const next={...coScholastic}; next.villagePrimary[i].grade=e.target.value; setCoScholastic(next); }}/></div>
-                        <button className="db-mini-btn" onClick={() => { const next={...coScholastic}; next.villagePrimary.splice(i,1); setCoScholastic(next); }}>✕</button>
-                      </div>
+                  {(msFormat === 'villagePrimary' || msFormat === 'boardDivision') && (
+                    <div>
+                      {subjects[msFormat].map((s, i) => (
+                        <div key={i} className="subj-card">
+                          <input type="text" value={s.name} onChange={e => { const next={...subjects}; next[msFormat][i].name=e.target.value; setSubjects(next); }} className="w-full px-3 py-1.5 bg-white border border-border rounded text-xs outline-none focus:border-primary" />
+                          <div className="subj-grid4 mt-2" style={{gridTemplateColumns:'1fr 1fr auto'}}>
+                            <div className="cell"><span>Max</span><input type="number" value={s.max} onChange={e => { const next={...subjects}; next[msFormat][i].max=Number(e.target.value)||0; setSubjects(next); }}/></div>
+                            <div className="cell"><span>Obt.</span><input type="number" value={s.obt} onChange={e => { const next={...subjects}; next[msFormat][i].obt=Number(e.target.value)||0; setSubjects(next); }}/></div>
+                            <button className="db-mini-btn" onClick={() => { const next={...subjects}; next[msFormat].splice(i,1); setSubjects(next); }}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+                      <button className="db-add-row-btn" onClick={() => { const next={...subjects}; next[msFormat].push({name:'New', max:100, obt:0}); setSubjects(next); }}>+ Add Subject</button>
                     </div>
-                  ))}
-                  {msFormat === 'cceGrade' && coScholastic.cceGrade.map((c, i) => (
-                    <div key={i} className="subj-card">
-                      <input type="text" value={c.name} onChange={e => { const next={...coScholastic}; next.cceGrade[i].name=e.target.value; setCoScholastic(next); }} />
-                      <div className="subj-grid4" style={{gridTemplateColumns:'1fr auto'}}>
-                        <div className="cell"><span>Grade</span><input type="text" value={c.grade} onChange={e => { const next={...coScholastic}; next.cceGrade[i].grade=e.target.value; setCoScholastic(next); }}/></div>
-                        <button className="db-mini-btn" onClick={() => { const next={...coScholastic}; next.cceGrade.splice(i,1); setCoScholastic(next); }}>✕</button>
-                      </div>
+                  )}
+
+                  {msFormat === 'cceGrade' && (
+                    <div>
+                      {subjects.cceGrade.map((s, i) => (
+                        <div key={i} className="subj-card">
+                          <input type="text" value={s.name} onChange={e => { const next={...subjects}; next.cceGrade[i].name=e.target.value; setSubjects(next); }} className="w-full px-3 py-1.5 bg-white border border-border rounded text-xs outline-none focus:border-primary" />
+                          <div className="subj-grid4 mt-2" style={{gridTemplateColumns:'1fr 1fr auto'}}>
+                            <div className="cell">
+                              <span>Term 1</span>
+                              <select value={s.term1} onChange={e => { const next={...subjects}; next.cceGrade[i].term1=e.target.value; setSubjects(next); }}>
+                                {['A1','A2','B1','B2','C1','C2','D','E'].map(g=><option key={g} value={g}>{g}</option>)}
+                              </select>
+                            </div>
+                            <div className="cell">
+                              <span>Term 2</span>
+                              <select value={s.term2} onChange={e => { const next={...subjects}; next.cceGrade[i].term2=e.target.value; setSubjects(next); }}>
+                                {['A1','A2','B1','B2','C1','C2','D','E'].map(g=><option key={g} value={g}>{g}</option>)}
+                              </select>
+                            </div>
+                            <button className="db-mini-btn" onClick={() => { const next={...subjects}; next.cceGrade.splice(i,1); setSubjects(next); }}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+                      <button className="db-add-row-btn" onClick={() => { const next={...subjects}; next.cceGrade.push({name:'New', term1:'B1', term2:'B1'}); setSubjects(next); }}>+ Add Subject</button>
                     </div>
-                  ))}
-                  <button className="db-add-row-btn" onClick={() => {
-                    const next={...coScholastic};
-                    if (msFormat === 'villagePrimary') next.villagePrimary.push({name:'New', max:100, obt:0, grade:'A'});
-                    else next.cceGrade.push({name:'New', grade:'A'});
-                    setCoScholastic(next);
-                  }}>+ Add Activity</button>
+                  )}
+
+                  {(msFormat === 'villagePrimary' || msFormat === 'cceGrade') && (
+                    <div style={{marginTop:'15px', textAlign:'left'}}>
+                      <label>Co-Scholastic Activities</label>
+                      {msFormat === 'villagePrimary' && coScholastic.villagePrimary.map((c, i) => (
+                        <div key={i} className="subj-card">
+                          <input type="text" value={c.name} onChange={e => { const next={...coScholastic}; next.villagePrimary[i].name=e.target.value; setCoScholastic(next); }} className="w-full px-3 py-1.5 bg-white border border-border rounded text-xs outline-none focus:border-primary" />
+                          <div className="subj-grid4 mt-2" style={{gridTemplateColumns:'1fr 1fr 1fr auto'}}>
+                            <div className="cell"><span>Max</span><input type="number" value={c.max} onChange={e => { const next={...coScholastic}; next.villagePrimary[i].max=Number(e.target.value)||0; setCoScholastic(next); }}/></div>
+                            <div className="cell"><span>Obt.</span><input type="number" value={c.obt} onChange={e => { const next={...coScholastic}; next.villagePrimary[i].obt=Number(e.target.value)||0; setCoScholastic(next); }}/></div>
+                            <div className="cell"><span>Grade</span><input type="text" value={c.grade} onChange={e => { const next={...coScholastic}; next.villagePrimary[i].grade=e.target.value; setCoScholastic(next); }}/></div>
+                            <button className="db-mini-btn" onClick={() => { const next={...coScholastic}; next.villagePrimary.splice(i,1); setCoScholastic(next); }}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+                      {msFormat === 'cceGrade' && coScholastic.cceGrade.map((c, i) => (
+                        <div key={i} className="subj-card">
+                          <input type="text" value={c.name} onChange={e => { const next={...coScholastic}; next.cceGrade[i].name=e.target.value; setCoScholastic(next); }} className="w-full px-3 py-1.5 bg-white border border-border rounded text-xs outline-none focus:border-primary" />
+                          <div className="subj-grid4 mt-2" style={{gridTemplateColumns:'1fr auto'}}>
+                            <div className="cell"><span>Grade</span><input type="text" value={c.grade} onChange={e => { const next={...coScholastic}; next.cceGrade[i].grade=e.target.value; setCoScholastic(next); }}/></div>
+                            <button className="db-mini-btn" onClick={() => { const next={...coScholastic}; next.cceGrade.splice(i,1); setCoScholastic(next); }}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+                      <button className="db-add-row-btn" onClick={() => {
+                        const next={...coScholastic};
+                        if (msFormat === 'villagePrimary') next.villagePrimary.push({name:'New', max:100, obt:0, grade:'A'});
+                        else next.cceGrade.push({name:'New', grade:'A'});
+                        setCoScholastic(next);
+                      }}>+ Add Activity</button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-3.5">
+                  {FIELD_DEFS[docType]
+                    .filter(([key]) => isFieldEditable(docType, key, !!selectedRecord))
+                    .map(([key, label, type, def]) => {
+                      const val = data[docType]?.[key] ?? '';
+                      const handleChange = (e: any) => setData(prev => ({...prev, [docType]: {...prev[docType], [key]: e.target.value}}));
+                      if (type === 'select') {
+                        return (
+                          <div key={key} className="space-y-1 text-left">
+                            <label>{label}</label>
+                            <select value={val} onChange={handleChange} className="rounded">
+                              {def.split('|').map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                            </select>
+                          </div>
+                        );
+                      }
+                      if (type === 'textarea') {
+                        return <div key={key} className="space-y-1 text-left"><label>{label}</label><textarea value={val} onChange={handleChange} className="rounded" /></div>;
+                      }
+                      if (docType === 'salary' && key === 'otherDeduct') {
+                        const suggestedVal = data.salary?.suggestedDeduction;
+                        return (
+                          <div key={key} className="space-y-1 text-left">
+                            <div className="flex justify-between items-center mb-1">
+                              <label className="m-0">{label}</label>
+                              {suggestedVal && Number(suggestedVal) > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => setData(prev => ({...prev, salary: {...prev.salary, otherDeduct: String(suggestedVal)}}))}
+                                  className="text-[10px] text-primary hover:underline font-bold"
+                                >
+                                  Apply suggested: ₹{suggestedVal}
+                                </button>
+                              )}
+                            </div>
+                            <input type={type} value={val} onChange={handleChange} className="rounded" />
+                          </div>
+                        );
+                      }
+                      return <div key={key} className="space-y-1 text-left"><label>{label}</label><input type={type} value={val} onChange={handleChange} className="rounded" /></div>;
+                    })}
+
+                  {docType === 'idcard' && (
+                    <div className="text-left space-y-1.5">
+                      <label>Photo</label>
+                      <label className="db-photo-drop">
+                        {photo ? 'Photo selected — click to change' : 'Click to upload photo (optional)'}
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) {
+                            const reader = new FileReader();
+                            reader.onload = () => setPhoto(reader.result as string);
+                            reader.readAsDataURL(f);
+                          }
+                        }} />
+                      </label>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           ) : (
-            <div>
-              {FIELD_DEFS[docType].map(([key, label, type, def]) => {
-                const val = data[docType]?.[key] ?? '';
-                const handleChange = (e: any) => setData(prev => ({...prev, [docType]: {...prev[docType], [key]: e.target.value}}));
-                if (type === 'select') {
-                  return (
-                    <div key={key}>
-                      <label>{label}</label>
-                      <select value={val} onChange={handleChange}>
-                        {def.split('|').map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                      </select>
-                    </div>
-                  );
-                }
-                if (type === 'textarea') {
-                  return <div key={key}><label>{label}</label><textarea value={val} onChange={handleChange} /></div>;
-                }
-                if (docType === 'salary' && key === 'otherDeduct') {
-                  const suggestedVal = data.salary?.suggestedDeduction;
-                  return (
-                    <div key={key}>
-                      <div className="flex justify-between items-center mb-1">
-                        <label className="m-0">{label}</label>
-                        {suggestedVal && Number(suggestedVal) > 0 && (
-                          <button
-                            type="button"
-                            onClick={() => setData(prev => ({...prev, salary: {...prev.salary, otherDeduct: String(suggestedVal)}}))}
-                            className="text-[10px] text-primary hover:underline font-bold"
-                          >
-                            Apply suggested: ₹{suggestedVal}
-                          </button>
-                        )}
-                      </div>
-                      <input type={type} value={val} onChange={handleChange} />
-                    </div>
-                  );
-                }
-                return <div key={key}><label>{label}</label><input type={type} value={val} onChange={handleChange} /></div>;
-              })}
-
-              {docType === 'idcard' && (
-                <div>
-                  <label>Photo</label>
-                  <label className="db-photo-drop">
-                    {photo ? 'Photo selected — click to change' : 'Click to upload photo (optional)'}
-                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) {
-                        const reader = new FileReader();
-                        reader.onload = () => setPhoto(reader.result as string);
-                        reader.readAsDataURL(f);
-                      }
-                    }} />
-                  </label>
+            <div className="space-y-3 animate-in fade-in slide-in-from-right-2 duration-200 bg-emerald-50/40 p-4 rounded-lg border border-emerald-100 shadow-sm relative">
+              <button 
+                onClick={() => setIsEditMode(false)}
+                className="absolute top-4 right-4 p-1 rounded hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer"
+                title="Close Editor"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <div className="flex items-center gap-2 mb-4 border-b border-emerald-100 pb-3">
+                <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
+                  <Settings2 className="w-3.5 h-3.5" />
                 </div>
-              )}
+                <div className="text-left">
+                  <h3 className="font-bold text-[13px] text-emerald-900 leading-tight">Template Editor</h3>
+                  <p className="text-[9.5px] text-emerald-600 font-bold uppercase tracking-wider">Customizing: {DOC_TITLES[docType]}</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="p-3 bg-white border border-emerald-100 rounded shadow-sm">
+                  <p className="text-xs text-slate-600 mb-2 leading-relaxed">
+                    Click on the text blocks in the <b>Live Preview</b> on the right to edit them directly. 
+                  </p>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    Use the tools below to format your selected text.
+                  </p>
+                </div>
+
+                <div className="space-y-1 text-left mt-4">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Text Formatting</label>
+                  
+                  {/* Font Family & Size */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <select 
+                      className="flex-1 px-2 py-1.5 bg-white border border-border rounded text-xs outline-none"
+                      onChange={(e) => document.execCommand('fontName', false, e.target.value)}
+                    >
+                      <option value="Inter, sans-serif">Inter</option>
+                      <option value="serif">Serif (Times)</option>
+                      <option value="monospace">Monospace</option>
+                      <option value="'Comic Sans MS', cursive">Comic Sans</option>
+                    </select>
+                    <select 
+                      className="w-20 px-2 py-1.5 bg-white border border-border rounded text-xs outline-none"
+                      onChange={(e) => document.execCommand('fontSize', false, e.target.value)}
+                    >
+                      <option value="1">Small</option>
+                      <option value="3">Normal</option>
+                      <option value="5">Large</option>
+                      <option value="7">Huge</option>
+                    </select>
+                  </div>
+
+                  {/* Toolbar Row 1 */}
+                  <div className="flex items-center gap-1 bg-white border border-border rounded p-1">
+                    <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('bold', false); }} className="p-1.5 hover:bg-slate-100 rounded text-slate-700 cursor-pointer transition-colors" title="Bold"><Bold className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('italic', false); }} className="p-1.5 hover:bg-slate-100 rounded text-slate-700 cursor-pointer transition-colors" title="Italic"><Italic className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('underline', false); }} className="p-1.5 hover:bg-slate-100 rounded text-slate-700 cursor-pointer transition-colors" title="Underline"><Underline className="w-3.5 h-3.5" /></button>
+                    <div className="w-px h-4 bg-border mx-1" />
+                    <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('justifyLeft', false); }} className="p-1.5 hover:bg-slate-100 rounded text-slate-700 cursor-pointer transition-colors" title="Align Left"><AlignLeft className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('justifyCenter', false); }} className="p-1.5 hover:bg-slate-100 rounded text-slate-700 cursor-pointer transition-colors" title="Align Center"><AlignCenter className="w-3.5 h-3.5" /></button>
+                    <button type="button" onClick={(e) => { e.preventDefault(); document.execCommand('justifyRight', false); }} className="p-1.5 hover:bg-slate-100 rounded text-slate-700 cursor-pointer transition-colors" title="Align Right"><AlignRight className="w-3.5 h-3.5" /></button>
+                    <div className="w-px h-4 bg-border mx-1" />
+                    <div className="relative flex items-center justify-center p-1.5 hover:bg-slate-100 rounded cursor-pointer group" title="Text Color">
+                      <Type className="w-3.5 h-3.5 text-slate-700" />
+                      <input type="color" onChange={(e) => document.execCommand('foreColor', false, e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Example sidebar controls for global settings */}
+                <div className="space-y-1 text-left">
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider">Global Settings</label>
+                  <div className="flex items-center justify-between p-2.5 bg-white border border-emerald-100 rounded text-xs font-medium text-slate-700 cursor-pointer hover:bg-slate-50">
+                    <span>Show Watermark</span>
+                    <input type="checkbox" defaultChecked className="w-3.5 h-3.5 rounded text-emerald-600" />
+                  </div>
+                  <div className="flex items-center justify-between p-2.5 bg-white border border-emerald-100 rounded text-xs font-medium text-slate-700 cursor-pointer hover:bg-slate-50">
+                    <span>Show Borders</span>
+                    <input type="checkbox" defaultChecked className="w-3.5 h-3.5 rounded text-emerald-600" />
+                  </div>
+                </div>
+
+                <button className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer mt-4">
+                  <Save className="w-3.5 h-3.5" />
+                  Save as Custom Template
+                </button>
+              </div>
             </div>
           )}
 
-          <button className="db-print-btn" onClick={() => window.print()}>🖨️ Print / Save as PDF</button>
-          <p className="db-hint">Tip: In the print dialog choose "Save as PDF" as the destination to download the document instead of printing it.</p>
+          <div className="h-20" /> {/* Spacer */}
         </div>
 
         {/* ============ RIGHT PREVIEW ============ */}
         <div className="db-stage">
+          {/* Zoom & Action Top Toolbar */}
+          <div className="w-full bg-white border-b border-border flex items-center justify-between px-6 py-3.5 mb-8 print:hidden sticky top-0 z-30 shadow-sm">
+            <div className="font-extrabold text-[15px] text-slate-800">Live Preview</div>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center rounded border border-border bg-white overflow-hidden">
+                <button onClick={() => setZoomLevel(Math.max(0.5, (zoomLevel as number) - 0.25))} className="px-3.5 py-1.5 hover:bg-slate-50 text-slate-600 border-r border-border transition-colors cursor-pointer font-bold">—</button>
+                <div className="px-3 py-1.5 text-xs font-bold text-slate-700 min-w-[64px] text-center">{typeof zoomLevel === 'number' ? `${Math.round(zoomLevel * 100)}%` : 'Fit'}</div>
+                <button onClick={() => setZoomLevel(Math.min(2.0, (zoomLevel as number) + 0.25))} className="px-3.5 py-1.5 hover:bg-slate-50 text-slate-600 border-l border-border transition-colors cursor-pointer font-bold">+</button>
+              </div>
+              <button onClick={() => setZoomLevel('fit')} className="px-4 py-1.5 rounded border border-border bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+                <Search className="w-3.5 h-3.5" /> Fit Width
+              </button>
+              <div className="w-px h-5 bg-border mx-1" />
+              <button onClick={() => window.print()} className="px-4 py-1.5 rounded border border-border bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+                <Printer className="w-3.5 h-3.5" /> Print
+              </button>
+              <button onClick={() => window.print()} className="px-4 py-1.5 rounded border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+                <Download className="w-3.5 h-3.5" /> Download
+              </button>
+            </div>
+          </div>
+
+          {/* Interactive Document Page Canvas */}
           <div 
-            className={`db-page ${docType === 'idcard' ? 'card-size' : ''}`}
-            style={{ "--pri": currentTheme.pri, "--acc": currentTheme.acc } as any}
-            dangerouslySetInnerHTML={{ __html: renderPreviewHtml() }}
-          />
+            className="db-zoom-wrapper flex items-start justify-center transition-all duration-200"
+            style={{
+              transform: zoomLevel === 'fit' ? 'none' : `scale(${zoomLevel})`,
+              transformOrigin: 'top center',
+              width: zoomLevel === 'fit' ? '100%' : 'auto',
+            }}
+          >
+            <style>{`
+              .editable { transition: all 0.2s ease; cursor: text; border-radius: 4px; border: 1px solid transparent; }
+              .editable:hover { outline: 1px dashed #10b981; outline-offset: 4px; background: rgba(16, 185, 129, 0.05); }
+              .editable:focus { outline: 2px solid #10b981; outline-offset: 4px; background: rgba(16, 185, 129, 0.05); border-color: transparent; }
+              .editable:empty:before { content: attr(title); color: #94a3b8; font-style: italic; font-weight: normal; }
+            `}</style>
+            <div 
+              className={`db-page ${docType === 'idcard' ? 'card-size' : ''}`}
+              style={{ 
+                "--pri": currentTheme.pri, 
+                "--acc": currentTheme.acc,
+                boxShadow: '0 20px 50px rgba(15, 23, 42, 0.08)',
+                border: '1px solid var(--line)',
+                borderRadius: docType === 'idcard' ? '4px' : '0px'
+              } as any}
+              dangerouslySetInnerHTML={{ __html: renderPreviewHtml() }}
+              onBlur={(e) => {
+                if (!isEditMode) return;
+                const target = e.target as HTMLElement;
+                if (target.hasAttribute('data-edit-id')) {
+                  const editId = target.getAttribute('data-edit-id') as string;
+                  const newHtml = target.innerHTML;
+                  setCustomTemplates(prev => ({
+                    ...prev,
+                    [docType]: {
+                      ...(prev[docType] || {}),
+                      [editId]: newHtml
+                    }
+                  }));
+                }
+              }}
+            />
+          </div>
+
+          <div className="h-28" /> {/* Spacer */}
         </div>
 
       </div>
+
+      {/* Fixed Bottom Action Bar */}
+      <div className="fixed bottom-0 left-[380px] right-0 bg-white border-t border-border flex justify-center items-center py-4 px-6 gap-4 z-40 print:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
+        <button onClick={() => handleSelectRecord(null)} className="px-10 py-2.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition-colors cursor-pointer w-40">Cancel</button>
+        <button onClick={() => alert('Template configurations saved successfully!')} className="px-10 py-2.5 rounded border border-emerald-600 bg-white hover:bg-emerald-50 text-emerald-700 text-sm font-bold transition-colors cursor-pointer w-56">Save as Template</button>
+        <button onClick={() => window.print()} className="px-10 py-2.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-2 w-56">
+          <FileText className="w-4 h-4" /> Generate Document <span className="text-lg leading-none ml-1">→</span>
+        </button>
+      </div>
+
     </div>
   );
 }

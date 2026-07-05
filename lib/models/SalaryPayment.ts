@@ -11,6 +11,9 @@ export interface ISalaryPayment extends Document {
   present_days: number;
   absent_days: number;
   suggested_deduction: number;
+  payable_amount?: number;
+  bonus?: number;
+  deduction?: number;
   final_salary: number;
   payment_date: Date;
   receipt_number: string;
@@ -33,6 +36,9 @@ const salaryPaymentSchema = new Schema<ISalaryPayment>(
     present_days: { type: Number, required: true, min: 0 },
     absent_days: { type: Number, required: true, min: 0 },
     suggested_deduction: { type: Number, required: true, min: 0 },
+    payable_amount: { type: Number, default: 0 },
+    bonus: { type: Number, default: 0 },
+    deduction: { type: Number, default: 0 },
     final_salary: { type: Number, required: true, min: 0 },
     payment_date: { type: Date, required: true, default: Date.now },
     receipt_number: { type: String, required: true, unique: true },
@@ -42,6 +48,7 @@ const salaryPaymentSchema = new Schema<ISalaryPayment>(
   },
   { timestamps: true }
 );
+
 
 salaryPaymentSchema.index({ school_id: 1, teacher_id: 1, salary_period: 1 }, { unique: true });
 
