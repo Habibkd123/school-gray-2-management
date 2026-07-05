@@ -16,6 +16,7 @@ export interface ISalaryPayment extends Document {
   receipt_number: string;
   remarks?: string;
   status: "Paid";
+  calculation_type: string; // "Monthly" or "Day Wise"
   createdAt: Date;
   updatedAt: Date;
 }
@@ -36,7 +37,8 @@ const salaryPaymentSchema = new Schema<ISalaryPayment>(
     payment_date: { type: Date, required: true, default: Date.now },
     receipt_number: { type: String, required: true, unique: true },
     remarks: { type: String, trim: true },
-    status: { type: String, enum: ["Paid"], default: "Paid" }
+    status: { type: String, enum: ["Paid"], default: "Paid" },
+    calculation_type: { type: String, enum: ["Monthly", "Day Wise"], default: "Monthly" }
   },
   { timestamps: true }
 );

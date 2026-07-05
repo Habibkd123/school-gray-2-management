@@ -111,11 +111,15 @@ export async function GET(req: NextRequest) {
 
     const hasAttendance = workingDays > 0;
 
-    // Daily Salary Calculation (Assumed standard 26 working days division for school payroll)
-    const dailySalary = Math.round((monthlySalary / 26) * 100) / 100;
+    // Total Calendar Days in range
+    const diffTime = endDate.getTime() - startDate.getTime();
+    const totalDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1);
+
+    // Daily Salary Calculation (Dividing by 30 days including Sundays)
+    const dailySalary = Math.round((monthlySalary / 30) * 100) / 100;
     
-    // Payable days = present days
-    const payableDays = presentDays;
+    // Payable days = total calendar range days minus absent days
+    const payableDays = Math.max(0, totalDays - absentDays);
 
     // Total Payable Amount = Daily Salary * Payable Days
     const totalPayableAmount = hasAttendance ? Math.round((dailySalary * payableDays) * 100) / 100 : 0;
@@ -130,6 +134,7 @@ export async function GET(req: NextRequest) {
         salaryPeriod: periodLabel,
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
+        totalDays,
         workingDays,
         presentDays,
         absentDays,

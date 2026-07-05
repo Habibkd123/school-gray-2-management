@@ -122,7 +122,8 @@ export async function POST(req: NextRequest) {
       suggested_deduction,
       final_salary,
       payment_date,
-      remarks
+      remarks,
+      calculation_type
     } = body;
 
     // Validation
@@ -204,7 +205,8 @@ export async function POST(req: NextRequest) {
       payment_date: payment_date ? new Date(payment_date) : new Date(),
       receipt_number,
       remarks: remarks || "",
-      status: "Paid"
+      status: "Paid",
+      calculation_type: calculation_type || "Monthly"
     });
 
     await payment.save();

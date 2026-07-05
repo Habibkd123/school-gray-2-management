@@ -77,6 +77,7 @@ export default function SalaryDashboardPage() {
   const [isConfirmingPayment, setIsConfirmingPayment] = useState(false);
   const [paymentStartDate, setPaymentStartDate] = useState("");
   const [paymentEndDate, setPaymentEndDate] = useState("");
+  const [calculationType, setCalculationType] = useState<"Monthly" | "Day Wise">("Monthly");
 
   const [selectedSlip, setSelectedSlip] = useState<any | null>(null);
 
@@ -238,6 +239,10 @@ export default function SalaryDashboardPage() {
   };
 
   const recalculatePayPreview = async (teacherId: string, sDate: string, eDate: string) => {
+    if (!sDate || !eDate) {
+      setPayData(null);
+      return;
+    }
     setIsPayLoading(true);
     setPayData(null);
     try {
@@ -281,30 +286,74 @@ export default function SalaryDashboardPage() {
     return "";
   }, [paymentStartDate, paymentEndDate, payTeacher, allPayments]);
 
+  const handleCalculationTypeChange = (type: "Monthly" | "Day Wise") => {
+    setCalculationType(type);
+    if (!payTeacher) return;
+    if (type === "Monthly") {
+      const payouts = allPayments.filter(
+        p => p.teacher_id && (p.teacher_id._id === payTeacher.id || p.teacher_id === payTeacher.id)
+      );
+      let start = "";
+      if (payouts.length > 0) {
+        const sorted = [...payouts].sort(
+          (a, b) => new Date(b.end_date || b.payment_date).getTime() - new Date(a.end_date || a.payment_date).getTime()
+        );
+        const latest = sorted[0];
+        const latestDateStr = latest.end_date || latest.payment_date;
+        const d = new Date(latestDateStr);
+        d.setDate(d.getDate() + 1);
+        start = d.toISOString().split("T")[0];
+      } else {
+        if (payTeacher.join_date) {
+          start = new Date(payTeacher.join_date).toISOString().split("T")[0];
+        } else if (payTeacher.createdAt) {
+          start = new Date(payTeacher.createdAt).toISOString().split("T")[0];
+        } else {
+          const d = new Date();
+          start = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+        }
+      }
+      const end = new Date().toISOString().split("T")[0];
+      setPaymentStartDate(start);
+      setPaymentEndDate(end);
+      recalculatePayPreview(payTeacher.id, start, end);
+    } else {
+      setPaymentStartDate("");
+      setPaymentEndDate("");
+      setPayData(null);
+    }
+  };
+
   // ─── Pay Salary Action ──────────────────────────────────────────
   const openPaySalary = async (teacher: any) => {
     setPayTeacher(teacher);
     setPaymentRemarks("");
     setPaymentDate(new Date().toISOString().split("T")[0]);
+    setCalculationType("Monthly");
 
-    // Determine default start date
+    // Determine default start date (Monthly Mode: Last Paid Date + 1 Day)
     const payouts = allPayments.filter(
       p => p.teacher_id && (p.teacher_id._id === teacher.id || p.teacher_id === teacher.id)
     );
     let start = "";
     if (payouts.length > 0) {
       const sorted = [...payouts].sort(
-        (a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()
+        (a, b) => new Date(b.end_date || b.payment_date).getTime() - new Date(a.end_date || a.payment_date).getTime()
       );
       const latest = sorted[0];
-      if (latest.end_date) {
-        start = new Date(latest.end_date).toISOString().split("T")[0];
-      } else {
-        start = new Date(latest.payment_date).toISOString().split("T")[0];
-      }
+      const latestDateStr = latest.end_date || latest.payment_date;
+      const d = new Date(latestDateStr);
+      d.setDate(d.getDate() + 1);
+      start = d.toISOString().split("T")[0];
     } else {
-      const d = new Date();
-      start = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+      if (teacher.join_date) {
+        start = new Date(teacher.join_date).toISOString().split("T")[0];
+      } else if (teacher.createdAt) {
+        start = new Date(teacher.createdAt).toISOString().split("T")[0];
+      } else {
+        const d = new Date();
+        start = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+      }
     }
     const end = new Date().toISOString().split("T")[0];
 
@@ -356,7 +405,8 @@ export default function SalaryDashboardPage() {
           payment_date: paymentDate,
           remarks: paymentRemarks,
           start_date: payData.startDate,
-          end_date: payData.endDate
+          end_date: payData.endDate,
+          calculation_type: calculationType
         })
       });
       const result = await res.json();
@@ -969,17 +1019,23 @@ export default function SalaryDashboardPage() {
             <div className="h-40 flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
             </div>
-          ) : payData ? (
+          ) : (
             <div className="space-y-4 text-left">
-              {payValidationMsg ? (
-                <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-750 dark:text-rose-400 p-4 rounded-xl text-xs font-bold">
-                  ⚠️ {payValidationMsg}
+              {/* Calculation Type Dropdown Selector */}
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 border border-border rounded-xl">
+                <label className="block text-xs font-bold text-slate-500 mb-2">Salary Calculation Type</label>
+                <div className="relative">
+                  <select
+                    value={calculationType}
+                    onChange={(e) => handleCalculationTypeChange(e.target.value as "Monthly" | "Day Wise")}
+                    className="w-full pl-3 pr-8 py-2.5 bg-white dark:bg-slate-900 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                  >
+                    <option value="Monthly">Monthly</option>
+                    <option value="Day Wise">Day Wise</option>
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3.5 pointer-events-none" />
                 </div>
-              ) : !payData.hasAttendance ? (
-                <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-750 dark:text-rose-400 p-4 rounded-xl text-xs font-bold">
-                  ⚠️ No attendance data found for this period in the database. Attendance records must exist before disburse.
-                </div>
-              ) : null}
+              </div>
 
               {/* Date Selectors for Payout */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950 p-4 border border-border rounded-xl">
@@ -1009,66 +1065,92 @@ export default function SalaryDashboardPage() {
                 </div>
               </div>
 
-              {/* Payment Details overview */}
-              <div className="p-4 bg-slate-900 text-white rounded-xl space-y-3">
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Payable Amount</span>
-                <h3 className="text-2xl font-mono font-bold text-emerald-400">{money(payData.totalPayableAmount)}</h3>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-slate-700 pt-3 text-[12px] text-slate-350">
-                  <div>Employee: <span className="text-white font-bold">{payData.teacherName}</span></div>
-                  <div>ID: <span className="text-white font-bold">{payData.employeeId}</span></div>
-                  <div>Monthly Salary: <span className="text-white font-bold">{money(payData.monthlySalary)}</span></div>
-                  <div>Period: <span className="text-white font-bold">{payData.salaryPeriod}</span></div>
+              {payValidationMsg ? (
+                <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-750 dark:text-rose-400 p-4 rounded-xl text-xs font-bold">
+                  ⚠️ {payValidationMsg}
                 </div>
-              </div>
+              ) : payData && !payData.hasAttendance ? (
+                <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-750 dark:text-rose-400 p-4 rounded-xl text-xs font-bold">
+                  ⚠️ No attendance data found for this period in the database. Attendance records must exist before disburse.
+                </div>
+              ) : null}
 
-              {/* Date Range Payout Details Summary */}
-              <div className="bg-slate-50 dark:bg-slate-950 p-4 border border-border rounded-xl space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
-                <div className="flex justify-between">
-                  <span>Total Working Days</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{payData.workingDays} days</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Present Days</span>
-                  <span className="font-bold text-emerald-600">{payData.presentDays} days</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Absent Days</span>
-                  <span className="font-bold text-rose-500">{payData.absentDays} days</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Daily Salary (Monthly ÷ 26)</span>
-                  <span className="font-bold text-slate-900 dark:text-white">{money(payData.dailySalary)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Payable Days</span>
-                  <span className="font-bold text-emerald-600">{payData.payableDays} days</span>
-                </div>
-              </div>
+              {payData ? (
+                <>
+                  {/* Payment Details overview */}
+                  <div className="p-4 bg-slate-900 text-white rounded-xl space-y-3">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Payable Amount</span>
+                    <h3 className="text-2xl font-mono font-bold text-emerald-400">{money(payData.totalPayableAmount)}</h3>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2 border-t border-slate-700 pt-3 text-[12px] text-slate-350">
+                      <div>Employee: <span className="text-white font-bold">{payData.teacherName}</span></div>
+                      <div>ID: <span className="text-white font-bold">{payData.employeeId}</span></div>
+                      <div>Monthly Salary: <span className="text-white font-bold">{money(payData.monthlySalary)}</span></div>
+                      <div>Period: <span className="text-white font-bold">{payData.salaryPeriod}</span></div>
+                    </div>
+                  </div>
 
-              {/* Form fields */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="text-left">
-                    <label className="block text-xs font-bold text-slate-500 mb-2">Payment Date</label>
-                    <input
-                      type="date"
-                      value={paymentDate}
-                      onChange={e => setPaymentDate(e.target.value)}
-                      className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none"
-                    />
+                  {/* Date Range Payout Details Summary */}
+                  <div className="bg-slate-50 dark:bg-slate-950 p-4 border border-border rounded-xl space-y-2.5 text-xs text-slate-700 dark:text-slate-300">
+                    <div className="flex justify-between">
+                      <span>Calculation Type</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{calculationType}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Total Days</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{payData.totalDays} days</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Total Working Days</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{payData.workingDays} days</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Present Days</span>
+                      <span className="font-bold text-emerald-600">{payData.presentDays} days</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Absent Days</span>
+                      <span className="font-bold text-rose-500">{payData.absentDays} days</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Daily Salary (Monthly ÷ 30)</span>
+                      <span className="font-bold text-slate-900 dark:text-white">{money(payData.dailySalary)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Payable Days</span>
+                      <span className="font-bold text-emerald-600">{payData.payableDays} days</span>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <label className="block text-xs font-bold text-slate-500 mb-2">Remarks / Notes</label>
-                    <input
-                      type="text"
-                      placeholder="Optional notes..."
-                      value={paymentRemarks}
-                      onChange={e => setPaymentRemarks(e.target.value)}
-                      className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none"
-                    />
+
+                  {/* Form fields */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="text-left">
+                        <label className="block text-xs font-bold text-slate-500 mb-2">Payment Date</label>
+                        <input
+                          type="date"
+                          value={paymentDate}
+                          onChange={e => setPaymentDate(e.target.value)}
+                          className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none"
+                        />
+                      </div>
+                      <div className="text-left">
+                        <label className="block text-xs font-bold text-slate-500 mb-2">Remarks / Notes</label>
+                        <input
+                          type="text"
+                          placeholder="Optional notes..."
+                          value={paymentRemarks}
+                          onChange={e => setPaymentRemarks(e.target.value)}
+                          className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none"
+                        />
+                      </div>
+                    </div>
                   </div>
+                </>
+              ) : (
+                <div className="p-10 text-center border border-dashed border-border rounded-xl text-slate-400 dark:text-slate-500 text-xs font-bold">
+                  📅 Please select a valid Start Date and End Date to compute salary metrics.
                 </div>
-              </div>
+              )}
 
               <div className="flex justify-end gap-3 pt-4 border-t border-border">
                 <button
@@ -1081,7 +1163,7 @@ export default function SalaryDashboardPage() {
                 <button
                   type="button"
                   onClick={handleConfirmPayment}
-                  disabled={isConfirmingPayment || !payData.hasAttendance || !!payValidationMsg}
+                  disabled={isConfirmingPayment || !payData || !payData.hasAttendance || !!payValidationMsg}
                   className="px-4 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-60 flex items-center gap-1.5"
                 >
                   {isConfirmingPayment && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
@@ -1089,8 +1171,6 @@ export default function SalaryDashboardPage() {
                 </button>
               </div>
             </div>
-          ) : (
-            <div className="py-10 text-center text-slate-450">Unable to load details.</div>
           )}
         </Modal>
       )}
@@ -1236,6 +1316,10 @@ export default function SalaryDashboardPage() {
                   <span className="font-bold text-slate-900 dark:text-white">{selectedSlip.teacher_id?.designation || "Teacher"}</span>
                 </div>
                 <div className="flex border-b border-dashed border-slate-200 pb-1">
+                  <span className="font-bold text-slate-500 w-32">Calculation Type:</span>
+                  <span className="font-bold text-slate-900 dark:text-white">{selectedSlip.calculation_type || "Monthly"}</span>
+                </div>
+                <div className="flex border-b border-dashed border-slate-200 pb-1 col-span-2">
                   <span className="font-bold text-slate-500 w-32">Salary Period:</span>
                   <span className="font-bold text-slate-900 dark:text-white">
                     {selectedSlip.salary_period || "—"}
@@ -1252,7 +1336,15 @@ export default function SalaryDashboardPage() {
               </div>
 
               {/* Attendance metrics summary */}
-              <div className="bg-slate-50 dark:bg-slate-950 p-4 border border-slate-200 rounded-xl mb-6 text-xs font-sans grid grid-cols-4 gap-4 text-center">
+              <div className="bg-slate-50 dark:bg-slate-950 p-4 border border-slate-200 rounded-xl mb-6 text-xs font-sans grid grid-cols-5 gap-4 text-center">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Total Days</span>
+                  <span className="text-sm font-bold text-slate-800 dark:text-white mt-1 block">
+                    {selectedSlip.start_date && selectedSlip.end_date 
+                      ? Math.floor((new Date(selectedSlip.end_date).getTime() - new Date(selectedSlip.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1 
+                      : 30} days
+                  </span>
+                </div>
                 <div>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Working Days</span>
                   <span className="text-sm font-bold text-slate-800 dark:text-white mt-1 block">{selectedSlip.working_days} days</span>
@@ -1286,8 +1378,8 @@ export default function SalaryDashboardPage() {
                       <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">{money(selectedSlip.monthly_salary)}</td>
                     </tr>
                     <tr>
-                      <td className="px-4 py-3">Daily Salary Rate (Monthly ÷ 26)</td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">{money(Math.round((selectedSlip.monthly_salary / 26) * 100) / 100)}</td>
+                      <td className="px-4 py-3">Daily Salary Rate (Monthly ÷ 30)</td>
+                      <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">{money(Math.round((selectedSlip.monthly_salary / 30) * 100) / 100)}</td>
                     </tr>
                     <tr>
                       <td className="px-4 py-3">Payable Days (Present Days)</td>
@@ -1310,7 +1402,7 @@ export default function SalaryDashboardPage() {
               <div className="bg-slate-900 text-white rounded-xl p-5 flex items-center justify-between mb-12 font-sans">
                 <div>
                   <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Daily Salary Rate</span>
-                  <div className="text-base font-bold">{money(Math.round((selectedSlip.monthly_salary / 26) * 100) / 100)}</div>
+                  <div className="text-base font-bold">{money(Math.round((selectedSlip.monthly_salary / 30) * 100) / 100)}</div>
                 </div>
                 <div className="w-px h-10 bg-slate-800"></div>
                 <div>
