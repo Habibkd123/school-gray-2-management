@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Loader2, DollarSign, Printer, CheckCircle2, User, Save, CheckSquare, Square } from "lucide-react";
+import { Search, Loader2, DollarSign, Printer, CheckCircle2, User, Save, CheckSquare, Square, FileText } from "lucide-react";
 import { useStudents } from "@/app/hooks/useStudents";
 import { useFeeAllocations, useFeeMasters, useFeePayments } from "@/app/hooks/useFees";
+import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
 
 export default function CollectFeesPage() {
   const { students, isLoading: studentsLoading, fetchStudents: fetchAllStudents } = useStudents({ skip: true });
@@ -26,6 +27,10 @@ export default function CollectFeesPage() {
   // Receipt Modal
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [lastReceipts, setLastReceipts] = useState<any[]>([]);
+
+  // Generate Receipt Wizard
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [generatePaymentId, setGeneratePaymentId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAllStudents();
@@ -452,6 +457,18 @@ export default function CollectFeesPage() {
             {/* Action Buttons (Hidden on print) */}
             <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-border flex justify-end gap-3 print:hidden">
               <button onClick={() => setReceiptModalOpen(false)} className="px-4 py-2 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">Close</button>
+              <button
+                onClick={() => {
+                  if (lastReceipts[0]?._id) {
+                    setGeneratePaymentId(lastReceipts[0]._id);
+                    setIsGenerateOpen(true);
+                  }
+                }}
+                className="px-4 py-2 text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+                style={{ background: "linear-gradient(90deg, #4338ca, #7c3aed)" }}
+              >
+                <FileText className="w-4 h-4" /> Generate Receipt (PDF)
+              </button>
               <button onClick={handlePrintReceipt} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm">
                 <Printer className="w-4 h-4" /> Print Receipt
               </button>
@@ -459,6 +476,17 @@ export default function CollectFeesPage() {
           </div>
         </div>
       )}
+
+      {/* Generate Fee Receipt Wizard */}
+      <GenerateDocumentWizard
+        open={isGenerateOpen}
+        onClose={() => setIsGenerateOpen(false)}
+        defaultModule="fees"
+        defaultStudentId={selectedStudent?._id}
+        defaultStudentName={selectedStudent?.name}
+        defaultReferenceId={generatePaymentId || undefined}
+        defaultReferenceLabel={selectedStudent?.name ? `Fee Receipt — ${selectedStudent.name}` : undefined}
+      />
     </div>
   );
 }

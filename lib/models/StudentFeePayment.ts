@@ -26,9 +26,11 @@ const studentFeePaymentSchema = new Schema<IStudentFeePayment>(
     school_id: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true, index: true },
     student_id: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true, index: true },
     receipt_number: { type: String, required: true, unique: true },
-    amount_paid: { type: Number, required: true, min: 0 },
+    // Fix HIGH-4: min 0.01 — prevents ₹0 payment records at schema level
+    amount_paid: { type: Number, required: true, min: 0.01 },
     payment_date: { type: Date, default: Date.now },
-    payment_method: { type: String, enum: ["Cash", "Cheque", "Bank Transfer", "Online"], required: true },
+    // Fix HIGH-3: "UPI" added as a valid enum value — no more silent remapping to "Online"
+    payment_method: { type: String, enum: ["Cash", "Cheque", "Bank Transfer", "Online", "UPI"], required: true },
     remarks: { type: String, trim: true },
     start_date: { type: Date, required: true },
     end_date: { type: Date, required: true },

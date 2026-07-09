@@ -127,17 +127,21 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
         }
 
         const todayStr = new Date().toISOString().split("T")[0];
-        setEndDate(todayStr);
 
         if (lastEndPaidStr && !isNaN(new Date(lastEndPaidStr).getTime())) {
           const nextDay = new Date(lastEndPaidStr);
           nextDay.setDate(nextDay.getDate() + 1);
-          setStartDate(nextDay.toISOString().split("T")[0]);
+          const nextDayStr = nextDay.toISOString().split("T")[0];
+          setStartDate(nextDayStr);
+          // Fix: if auto-calculated start is in the future, set end to match it
+          // so the form isn't pre-broken (end < start). User can still edit both.
+          setEndDate(nextDayStr >= todayStr ? nextDayStr : todayStr);
         } else {
           // Fallback to student's joined / admission date
           const rawJoin = student.admission_date || student.joinedDate || student.createdAt;
           const fallbackStart = rawJoin && !isNaN(new Date(rawJoin).getTime()) ? new Date(rawJoin).toISOString().split("T")[0] : "2026-01-01";
           setStartDate(fallbackStart);
+          setEndDate(todayStr);
         }
 
       } catch (err) {
@@ -256,21 +260,25 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
       }
     }
 
-    // 6. Overlap range / duplicate validation
+    // 6. Date range validation — end must be on or after start
     if (startDate && endDate) {
       const startVal = new Date(startDate);
       const endVal = new Date(endDate);
-      if (endVal >= startVal) {
-        const hasOverlap = paymentsHistory.some((p) => {
-          if (!p.start_date || !p.end_date) return false;
-          const pStart = new Date(p.start_date).getTime();
-          const pEnd = new Date(p.end_date).getTime();
-          return pStart <= endVal.getTime() && pEnd >= startVal.getTime();
-        });
 
-        if (hasOverlap) {
-          return "Overlapping date range: duplicate fee payments are already recorded for this period.";
-        }
+      if (endVal < startVal) {
+        return `End date (${endDate}) cannot be before start date (${startDate}). You can change both dates above.`;
+      }
+
+      // 7. Overlap range / duplicate check (only runs when date range is valid)
+      const hasOverlap = paymentsHistory.some((p) => {
+        if (!p.start_date || !p.end_date) return false;
+        const pStart = new Date(p.start_date).getTime();
+        const pEnd = new Date(p.end_date).getTime();
+        return pStart <= endVal.getTime() && pEnd >= startVal.getTime();
+      });
+
+      if (hasOverlap) {
+        return "Overlapping date range: duplicate fee payments are already recorded for this period.";
       }
     }
 
@@ -300,7 +308,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
         body: JSON.stringify({
           student_id: studentId,
           amount_paid: grandTotalCollecting,
-          payment_method: paymentMethod === "UPI" ? "Online" : paymentMethod,
+          payment_method: paymentMethod, // Fix HIGH-3: no silent UPI remapping
           remarks: `${notes}${referenceNo ? ` [Ref: ${referenceNo}]` : ""}`,
           payment_date: collectionDate,
           start_date: startDate,
@@ -347,6 +355,55 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
   }
 
   const isRefVisible = ["Cheque", "Bank Transfer", "UPI"].includes(paymentMethod);
+
+  // Fix HIGH-1: receiptBreakdown computed at TOP LEVEL (not inside JSX IIFE)
+  const receiptBreakdown = React.useMemo(() => {
+    if (!lastPaymentResult || !lastPaymentResult.fee_breakdown) return [];
+
+    return lastPaymentResult.fee_breakdown.map((item: any) => {
+      const config = feeTypesConfig.find((c: any) => c.name === item.name);
+
+      const start = new Date(lastPaymentResult.start_date);
+      const end = new Date(lastPaymentResult.end_date);
+      let mult = 1;
+      if (config && !isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
+        if (config.frequency !== "One Time") {
+          const monthsDiff =
+            (end.getFullYear() - start.getFullYear()) * 12 +
+            (end.getMonth() - start.getMonth()) +
+            1;
+          switch (config.frequency) {
+            case "Monthly":    mult = Math.max(1, monthsDiff); break;
+            case "Quarterly":  mult = Math.max(1, Math.ceil(monthsDiff / 3)); break;
+            case "Half Yearly":mult = Math.max(1, Math.ceil(monthsDiff / 6)); break;
+            case "Yearly":     mult = Math.max(1, Math.ceil(monthsDiff / 12)); break;
+          }
+        }
+      }
+
+      const totalAmount = config ? config.amount * mult : item.amount_paid;
+
+      let paidBefore = 0;
+      paymentsHistory.forEach((p: any) => {
+        if (p._id !== lastPaymentResult._id) {
+          const match = p.fee_breakdown?.find((f: any) => f.name === item.name);
+          if (match) paidBefore += match.amount_paid;
+        }
+      });
+
+      const paidNow = item.amount_paid;
+      const totalPaid = paidBefore + paidNow;
+      const outstanding = Math.max(0, totalAmount - totalPaid);
+
+      let status = "Pending";
+      if (totalAmount > 0) {
+        if (totalPaid >= totalAmount) status = "Paid";
+        else if (totalPaid > 0) status = "Partial";
+      }
+
+      return { name: item.name, totalAmount, paidBefore, paidNow, totalPaid, outstanding, status };
+    });
+  }, [lastPaymentResult, feeTypesConfig, paymentsHistory]);
 
   if (!isOpen || !student) return null;
 
@@ -561,6 +618,42 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                       />
                     </div>
 
+                    {/* Billing Period — visible & editable so user can see and correct auto-calculated dates */}
+                    <div className="flex flex-col gap-1 text-left">
+                      <label className="font-bold text-slate-500">
+                        Billing Period <span className="text-[9px] font-normal text-slate-400 ml-1">(start – end)</span>
+                      </label>
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="date"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          className={`flex-1 px-2 py-1.5 border rounded-lg bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-white outline-none ${
+                            startDate && endDate && new Date(endDate) < new Date(startDate)
+                              ? "border-rose-400 bg-rose-50 dark:bg-rose-900/20"
+                              : "border-border"
+                          }`}
+                        />
+                        <span className="text-slate-400 font-bold text-[10px] shrink-0">to</span>
+                        <input
+                          type="date"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          min={startDate}
+                          className={`flex-1 px-2 py-1.5 border rounded-lg bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-white outline-none ${
+                            startDate && endDate && new Date(endDate) < new Date(startDate)
+                              ? "border-rose-400 bg-rose-50 dark:bg-rose-900/20"
+                              : "border-border"
+                          }`}
+                        />
+                      </div>
+                      {startDate && endDate && new Date(endDate) < new Date(startDate) && (
+                        <p className="text-[9px] text-rose-500 font-bold mt-0.5">
+                          ⚠ End date is before start date — please adjust above.
+                        </p>
+                      )}
+                    </div>
+
                     <div className="flex flex-col gap-1 text-left">
                       <label className="font-bold text-slate-550">Payment Method</label>
                       <select 
@@ -634,185 +727,188 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
 
             {/* STEP 2: PRINTABLE FEE RECEIPT */}
             {step === "receipt" && lastPaymentResult && (() => {
-              const isRefVisible = ["Cheque", "Bank Transfer", "UPI"].includes(paymentMethod);
+              // Build print-ready HTML with inline styles (no Tailwind dependency)
+              const buildReceiptHTML = () => {
+                const rows = receiptBreakdown.map((ft: any) => {
+                  const statusColor = ft.status === "Paid"
+                    ? "background:#d1fae5;color:#065f46;border:1px solid #a7f3d0"
+                    : ft.status === "Partial"
+                    ? "background:#fef3c7;color:#92400e;border:1px solid #fde68a"
+                    : "background:#fee2e2;color:#991b1b;border:1px solid #fecaca";
 
-              // Compute detailed metrics for each fee head in the receipt
-              const receiptBreakdown = React.useMemo(() => {
-                if (!lastPaymentResult || !lastPaymentResult.fee_breakdown) return [];
-                
-                return lastPaymentResult.fee_breakdown.map((item: any) => {
-                  const config = feeTypesConfig.find(c => c.name === item.name);
-                  
-                  // Calculate multiplier for the transaction billing range
-                  const start = new Date(lastPaymentResult.start_date);
-                  const end = new Date(lastPaymentResult.end_date);
-                  let mult = 1;
-                  if (config && !isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
-                    if (config.frequency !== "One Time") {
-                      const monthsDiff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
-                      switch (config.frequency) {
-                        case "Monthly":
-                          mult = Math.max(1, monthsDiff);
-                          break;
-                        case "Quarterly":
-                          mult = Math.max(1, Math.ceil(monthsDiff / 3));
-                          break;
-                        case "Half Yearly":
-                          mult = Math.max(1, Math.ceil(monthsDiff / 6));
-                          break;
-                        case "Yearly":
-                          mult = Math.max(1, Math.ceil(monthsDiff / 12));
-                          break;
-                      }
-                    }
-                  }
+                  return `
+                    <tr>
+                      <td style="padding:7px 10px;text-align:left;font-family:sans-serif;font-weight:700;color:#1e293b;border-top:1px solid #e2e8f0">${ft.name}</td>
+                      <td style="padding:7px 10px;text-align:right;font-family:monospace;border-top:1px solid #e2e8f0">${money(ft.totalAmount)}</td>
+                      <td style="padding:7px 10px;text-align:right;font-family:monospace;color:#64748b;border-top:1px solid #e2e8f0">${money(ft.paidBefore)}</td>
+                      <td style="padding:7px 10px;text-align:right;font-family:monospace;font-weight:900;color:#6366f1;border-top:1px solid #e2e8f0">${money(ft.paidNow)}</td>
+                      <td style="padding:7px 10px;text-align:right;font-family:monospace;font-weight:700;border-top:1px solid #e2e8f0">${money(ft.totalPaid)}</td>
+                      <td style="padding:7px 10px;text-align:right;font-family:monospace;font-weight:700;color:#e11d48;border-top:1px solid #e2e8f0">${money(ft.outstanding)}</td>
+                      <td style="padding:7px 10px;text-align:center;border-top:1px solid #e2e8f0">
+                        <span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;${statusColor}">
+                          ${ft.status}
+                        </span>
+                      </td>
+                    </tr>`;
+                }).join("");
 
-                  const totalAmount = config ? (config.amount * mult) : item.amount_paid;
+                const remarksHtml = notes
+                  ? `<p style="font-style:italic;font-size:9px;color:#64748b;margin-bottom:20px;font-family:sans-serif">Remarks: ${notes}</p>`
+                  : "";
 
-                  // Calculate amount paid BEFORE this transaction
-                  let paidBefore = 0;
-                  paymentsHistory.forEach((p: any) => {
-                    if (p._id !== lastPaymentResult._id) {
-                      const match = p.fee_breakdown?.find((f: any) => f.name === item.name);
-                      if (match) paidBefore += match.amount_paid;
-                    }
-                  });
+                return `<!DOCTYPE html>
+<html>
+<head>
+  <title>Fee Receipt — ${lastPaymentResult.receipt_number}</title>
+  <meta charset="utf-8" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, serif; font-size: 11px; color: #1e293b; background: #fff; padding: 32px; }
+    @media print { body { padding: 0; } @page { margin: 14mm; } }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div style="text-align:center;border-bottom:2px solid #1e293b;padding-bottom:14px;margin-bottom:18px">
+    <h1 style="font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px">${lastPaymentResult.school_name || "My School ERP"}</h1>
+    <p style="font-size:9px;letter-spacing:0.05em;font-family:sans-serif;color:#475569">Student Fee Payment Receipt</p>
+    <div style="display:inline-block;background:#1e293b;color:#fff;padding:2px 14px;border-radius:999px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;font-family:sans-serif;margin-top:8px">
+      Official Receipt
+    </div>
+  </div>
 
-                  const paidNow = item.amount_paid;
-                  const totalPaid = paidBefore + paidNow;
-                  const outstanding = Math.max(0, totalAmount - totalPaid);
+  <!-- Details Grid -->
+  <table style="width:100%;border-collapse:collapse;font-family:sans-serif;font-size:10px;margin-bottom:18px">
+    <tr>
+      <td style="padding:3px 0;width:50%">
+        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Student Name:</span>
+        <strong>${student.name}</strong>
+      </td>
+      <td style="padding:3px 0">
+        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Admission No:</span>
+        <strong style="font-family:monospace">${student.admission_no || "N/A"}</strong>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:3px 0">
+        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Class:</span>
+        <strong>${student.class_name || student.class_id?.name || "N/A"}</strong>
+      </td>
+      <td style="padding:3px 0">
+        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Receipt No:</span>
+        <strong style="font-family:monospace;color:#4f46e5">${lastPaymentResult.receipt_number}</strong>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:3px 0" colspan="2">
+        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Billing Period:</span>
+        <strong>${fmtDate(lastPaymentResult.start_date)} – ${fmtDate(lastPaymentResult.end_date)}</strong>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:3px 0">
+        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Payment Method:</span>
+        <strong>${lastPaymentResult.payment_method}</strong>
+      </td>
+      <td style="padding:3px 0">
+        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Payment Date:</span>
+        <strong>${fmtDate(lastPaymentResult.payment_date)}</strong>
+      </td>
+    </tr>
+  </table>
 
-                  let status = "Pending";
-                  if (totalAmount > 0) {
-                    if (totalPaid >= totalAmount) status = "Paid";
-                    else if (totalPaid > 0) status = "Partial";
-                  }
+  <!-- Fee Breakdown Table -->
+  <table style="width:100%;border-collapse:collapse;font-size:9px;border:1px solid #cbd5e1;margin-bottom:16px">
+    <thead>
+      <tr style="background:#f1f5f9;border-bottom:1px solid #cbd5e1">
+        <th style="padding:7px 10px;text-align:left;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569;letter-spacing:0.05em">Fee Head</th>
+        <th style="padding:7px 10px;text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Total Fee</th>
+        <th style="padding:7px 10px;text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Paid Before</th>
+        <th style="padding:7px 10px;text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#4f46e5">Paid Now</th>
+        <th style="padding:7px 10px;text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Total Paid</th>
+        <th style="padding:7px 10px;text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#e11d48">Outstanding</th>
+        <th style="padding:7px 10px;text-align:center;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Status</th>
+      </tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
 
-                  return {
-                    name: item.name,
-                    totalAmount,
-                    paidBefore,
-                    paidNow,
-                    totalPaid,
-                    outstanding,
-                    status
-                  };
-                });
-              }, [lastPaymentResult, feeTypesConfig, paymentsHistory]);
+  <!-- Total Summary -->
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-family:sans-serif;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-weight:700;color:#1e293b;font-size:11px">Total Amount Paid (${lastPaymentResult.payment_method}):</span>
+    <span style="font-family:monospace;font-size:16px;font-weight:900;color:#059669">${money(lastPaymentResult.amount_paid)}</span>
+  </div>
+
+  ${remarksHtml}
+
+  <!-- Signatures -->
+  <div style="display:flex;justify-content:space-between;padding-top:24px;margin-top:16px">
+    <div style="text-align:center;width:130px;border-top:1px solid #cbd5e1;padding-top:6px;font-family:sans-serif;font-size:9px;font-weight:700;color:#64748b">
+      Depositor Signature
+    </div>
+    <div style="text-align:center;width:130px;border-top:1px solid #cbd5e1;padding-top:6px;font-family:sans-serif;font-size:9px;font-weight:700;color:#64748b">
+      Authorized Cashier
+    </div>
+  </div>
+</body>
+</html>`;
+              };
 
               return (
                 <div className="space-y-4">
                   {/* Success Banner */}
                   <div className="p-3.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-250 text-emerald-600 rounded-xl flex items-center gap-2.5 text-xs font-bold">
                     <CheckCircle className="w-4.5 h-4.5 text-emerald-500 shrink-0" />
-                    <span>Success! Fee payment recorded and receipt generated.</span>
+                    <span>Success! Fee payment recorded. Click <strong>Print / Download PDF</strong> below.</span>
                   </div>
 
-                  <div id="printable-receipt" className="p-6 border border-slate-200 rounded-2xl bg-white text-slate-800 font-serif text-xs relative overflow-hidden">
-                    
-                    {/* Branding Header */}
-                    <div className="text-center border-b-2 border-slate-800 pb-3.5 mb-4">
-                      <h1 className="text-lg font-black uppercase tracking-wider text-slate-900 mb-0.5">My School ERP</h1>
-                      <p className="text-slate-455 text-[9px] tracking-wide font-sans">Student Fee Payment Receipt</p>
-                      <div className="mt-2.5 inline-block bg-slate-900 text-white px-3 py-0.5 rounded-full font-bold text-[9px] uppercase tracking-widest font-sans">
-                        Fees Payment Receipt
-                      </div>
+                  {/* On-screen preview of key details */}
+                  <div className="p-5 border border-slate-200 rounded-2xl bg-white text-slate-800 font-sans text-xs space-y-3 text-left">
+                    <div className="text-center border-b border-slate-200 pb-3 mb-3">
+                      <p className="text-base font-black uppercase tracking-widest text-slate-900">Fee Payment Receipt</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5 font-mono">{lastPaymentResult.receipt_number}</p>
                     </div>
 
-                    {/* Fields list */}
-                    <div className="grid grid-cols-2 gap-y-2 gap-x-6 mb-5 font-sans text-[10px]">
-                      <div className="flex border-b border-dashed border-slate-200 pb-0.5">
-                        <span className="font-bold text-slate-455 w-24 text-left">Student Name:</span>
-                        <span className="font-bold text-slate-900">{student.name}</span>
-                      </div>
-                      <div className="flex border-b border-dashed border-slate-200 pb-0.5">
-                        <span className="font-bold text-slate-455 w-24 text-left">Admission No:</span>
-                        <span className="font-mono font-bold text-slate-900">{student.admission_no || "N/A"}</span>
-                      </div>
-                      <div className="flex border-b border-dashed border-slate-200 pb-0.5">
-                        <span className="font-bold text-slate-455 w-24 text-left">Class Details:</span>
-                        <span className="font-bold text-slate-900">{student.class_name || student.class_id?.name || "N/A"}</span>
-                      </div>
-                      <div className="flex border-b border-dashed border-slate-200 pb-0.5">
-                        <span className="font-bold text-slate-455 w-24 text-left">Receipt Number:</span>
-                        <span className="font-mono font-bold text-primary">{lastPaymentResult.receipt_number}</span>
-                      </div>
-                      <div className="flex border-b border-dashed border-slate-200 pb-0.5 col-span-2">
-                        <span className="font-bold text-slate-455 w-24 text-left">Collection Period:</span>
-                        <span className="font-semibold text-slate-900">
-                          {fmtDate(lastPaymentResult.start_date)} – {fmtDate(lastPaymentResult.end_date)}
-                        </span>
-                      </div>
-                      <div className="flex border-b border-dashed border-slate-200 pb-0.5">
-                        <span className="font-bold text-slate-455 w-24 text-left">Payment Method:</span>
-                        <span className="font-semibold text-slate-900">{lastPaymentResult.payment_method}</span>
-                      </div>
-                      <div className="flex border-b border-dashed border-slate-200 pb-0.5">
-                        <span className="font-bold text-slate-455 w-24 text-left">Payment Date:</span>
-                        <span className="font-semibold text-slate-900">{fmtDate(lastPaymentResult.payment_date)}</span>
-                      </div>
+                    <div className="grid grid-cols-2 gap-2 text-[11px]">
+                      <div><span className="text-slate-400 font-bold">Student:</span> <strong>{student.name}</strong></div>
+                      <div><span className="text-slate-400 font-bold">Adm No:</span> <strong>{student.admission_no || "N/A"}</strong></div>
+                      <div><span className="text-slate-400 font-bold">Class:</span> <strong>{student.class_name || "N/A"}</strong></div>
+                      <div><span className="text-slate-400 font-bold">Method:</span> <strong>{lastPaymentResult.payment_method}</strong></div>
+                      <div className="col-span-2"><span className="text-slate-400 font-bold">Period:</span> <strong>{fmtDate(lastPaymentResult.start_date)} – {fmtDate(lastPaymentResult.end_date)}</strong></div>
                     </div>
 
-                    {/* Breakdown Table */}
-                    <div className="mb-6 font-sans border border-slate-300 rounded-xl overflow-hidden">
-                      <table className="w-full text-[10px] border-collapse text-left">
-                        <thead>
-                          <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-extrabold uppercase text-[9px] tracking-wider">
-                            <th className="px-3 py-2">Fee Head</th>
-                            <th className="px-3 py-2 text-right">Total Fee</th>
-                            <th className="px-3 py-2 text-right">Paid Before</th>
-                            <th className="px-3 py-2 text-right text-primary">Paid Now</th>
-                            <th className="px-3 py-2 text-right">Total Paid</th>
-                            <th className="px-3 py-2 text-right text-rose-600">Outstanding</th>
-                            <th className="px-3 py-2 text-center">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200">
-                          {receiptBreakdown.map((ft: any, i: number) => (
-                            <tr key={i} className="hover:bg-slate-50 transition-colors">
-                              <td className="px-3 py-2.5 font-bold text-slate-800">{ft.name}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-slate-700">{money(ft.totalAmount)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-slate-500">{money(ft.paidBefore)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono font-black text-primary bg-primary/5">{money(ft.paidNow)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-slate-800">{money(ft.totalPaid)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono font-bold text-rose-600 bg-rose-50/20">{money(ft.outstanding)}</td>
-                              <td className="px-3 py-2.5 text-center">
-                                <span className={`px-2 py-0.3 rounded text-[8px] font-black uppercase tracking-wider ${
-                                  ft.status === "Paid"
-                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                    : ft.status === "Partial"
-                                    ? "bg-amber-100 text-amber-800 border border-amber-200"
-                                    : "bg-rose-100 text-rose-800 border border-rose-200"
-                                }`}>
-                                  {ft.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="flex justify-between items-center bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                      <span className="font-bold text-slate-700">Amount Paid</span>
+                      <span className="font-mono font-black text-emerald-700 text-lg">{money(lastPaymentResult.amount_paid)}</span>
                     </div>
 
-                    {/* Summary aggregate details */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-sans space-y-1.5 mb-6 text-[10px]">
-                      <div className="flex justify-between border-slate-200 pt-1.5 font-bold text-slate-800">
-                        <span>Total Amount Paid ({paymentMethod}):</span>
-                        <span className="font-mono text-emerald-600 font-black text-sm">
-                          {money(lastPaymentResult.amount_paid)}
-                        </span>
-                      </div>
-                    </div>
+                    <p className="text-center text-[10px] text-slate-400">
+                      Click <strong>Print / Download PDF</strong> below to get the full formatted receipt.
+                    </p>
+                  </div>
 
-                    {/* Remarks */}
-                    {notes && (
-                      <p className="italic text-[9px] text-slate-455 font-sans mb-6">Remarks: {notes}</p>
-                    )}
-
-                    {/* Signature pads */}
-                    <div className="flex justify-between items-end pt-5 font-sans text-[9px] font-bold text-slate-550">
-                      <div className="text-center w-28 border-t border-slate-300 pt-1.5">Depositor Signature</div>
-                      <div className="text-center w-28 border-t border-slate-300 pt-1.5">Authorized cashier</div>
-                    </div>
+                  <div className="flex justify-end gap-3 pt-1">
+                    <button
+                      onClick={() => {
+                        const html = buildReceiptHTML();
+                        const printWin = window.open("", "_blank", "width=820,height=950");
+                        if (!printWin) {
+                          alert("Pop-up blocked! Please allow pop-ups for this site.");
+                          return;
+                        }
+                        printWin.document.write(html);
+                        printWin.document.close();
+                        printWin.focus();
+                        setTimeout(() => { printWin.print(); printWin.close(); }, 400);
+                      }}
+                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Print / Download PDF</span>
+                    </button>
+                    <button onClick={onClose} className="px-4 py-2 border border-border text-xs font-bold rounded-xl bg-white hover:bg-slate-50 text-slate-700 transition-colors">
+                      Close
+                    </button>
                   </div>
                 </div>
               );
@@ -821,44 +917,22 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
         )}
 
         {/* Footer controls */}
-        {!isLoadingDetails && (
+        {!isLoadingDetails && step === "form" && (
           <div className="p-4 border-t border-border flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-950/20">
-            {step === "form" ? (
-              <>
-                <button 
-                  onClick={onClose} 
-                  className="px-4 py-2 border border-border text-xs font-bold rounded-xl bg-white hover:bg-slate-50 text-slate-700 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={handleCollectFeesSubmit}
-                  disabled={isRecording || grandTotalCollecting <= 0 || !!validationMessage}
-                  className="px-4 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm"
-                >
-                  {isRecording && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>Collect Fees</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <button 
-                  onClick={() => {
-                    window.print();
-                  }}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  <span>Print / Download PDF</span>
-                </button>
-                <button 
-                  onClick={onClose} 
-                  className="px-4 py-2 border border-border text-xs font-bold rounded-xl bg-white hover:bg-slate-50 text-slate-700 transition-colors"
-                >
-                  Close
-                </button>
-              </>
-            )}
+            <button 
+              onClick={onClose} 
+              className="px-4 py-2 border border-border text-xs font-bold rounded-xl bg-white hover:bg-slate-50 text-slate-700 transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              onClick={handleCollectFeesSubmit}
+              disabled={isRecording || grandTotalCollecting <= 0 || !!validationMessage}
+              className="px-4 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm"
+            >
+              {isRecording && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>Collect Fees</span>
+            </button>
           </div>
         )}
       </div>

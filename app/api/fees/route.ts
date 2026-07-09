@@ -72,59 +72,67 @@ export async function GET(req: NextRequest) {
     const studentAssignments = await StudentFeeAssignment.find({ school_id: schoolId }).lean();
     const studentAssignmentsMap = new Map(studentAssignments.map((sa) => [sa.student_id.toString(), sa]));
 
-    // 3. Gather calculations for all matching students
-    const computedList = await Promise.all(
-      students.map(async (student: any) => {
-        const studentIdStr = student._id.toString();
-        const studentClassId = student.class_id?._id?.toString() || student.class_id?.toString();
+    // 3. Batch-fetch ALL payments for the matching students in ONE query (Fix HIGH-2 — N+1 elimination)
+    const studentIds = students.map((s: any) => s._id);
+    const allPayments = await StudentFeePayment.find({
+      school_id: schoolId,
+      student_id: { $in: studentIds },
+    })
+      .sort({ payment_date: -1 })
+      .lean();
 
-        // Check if custom StudentFeeAssignment exists
-        const customAssignDoc = studentAssignmentsMap.get(studentIdStr);
-        const classFeeDoc = studentClassId ? classFeesMap.get(studentClassId) : null;
+    // Group payments by student_id string for O(1) lookup
+    const paymentsByStudentId = new Map<string, typeof allPayments>();
+    for (const p of allPayments) {
+      const sid = p.student_id.toString();
+      if (!paymentsByStudentId.has(sid)) paymentsByStudentId.set(sid, []);
+      paymentsByStudentId.get(sid)!.push(p);
+    }
 
-        // Total Fees: Use custom override total_amount if available, fallback to Class Setup
-        const totalFees = customAssignDoc ? customAssignDoc.total_amount : (classFeeDoc ? classFeeDoc.total_amount : 0);
+    // 4. Compute status/totals for each student using pre-grouped payments
+    const computedList = students.map((student: any) => {
+      const studentIdStr = student._id.toString();
+      const studentClassId = student.class_id?._id?.toString() || student.class_id?.toString();
 
-        // Total Paid from Payments
-        const payments = await StudentFeePayment.find({
-          school_id: schoolId,
-          student_id: student._id,
-        })
-          .sort({ payment_date: -1 })
-          .lean();
+      const customAssignDoc = studentAssignmentsMap.get(studentIdStr);
+      const classFeeDoc = studentClassId ? classFeesMap.get(studentClassId) : null;
 
-        const totalPaid = payments.reduce((sum, p) => sum + p.amount_paid, 0);
-        const balanceAmount = Math.max(0, totalFees - totalPaid);
+      const totalFees = customAssignDoc
+        ? customAssignDoc.total_amount
+        : classFeeDoc
+        ? classFeeDoc.total_amount
+        : 0;
 
-        const lastPayment = payments[0] || null;
-        const lastPaidAmount = lastPayment ? lastPayment.amount_paid : 0;
-        const lastPaymentDate = lastPayment ? lastPayment.payment_date : null;
+      const payments = paymentsByStudentId.get(studentIdStr) || [];
+      const totalPaid = payments.reduce((sum: number, p: any) => sum + p.amount_paid, 0);
+      const balanceAmount = Math.max(0, totalFees - totalPaid);
 
-        // Determine Status
-        let status: "Paid" | "Partial" | "Pending" = "Pending";
-        if (totalFees > 0) {
-          if (totalPaid >= totalFees) {
-            status = "Paid";
-          } else if (totalPaid > 0) {
-            status = "Partial";
-          }
-        }
+      const lastPayment = payments[0] || null;
+      const lastPaidAmount = lastPayment ? lastPayment.amount_paid : 0;
+      const lastPaymentDate = lastPayment ? lastPayment.payment_date : null;
 
-        return {
-          _id: student._id,
-          name: student.name,
-          admission_no: student.admission_no || "N/A",
-          class_name: student.class_id ? `${student.class_id.name} - ${student.class_id.section}` : "N/A",
-          class_id: studentClassId,
-          totalFees,
-          totalPaid,
-          balanceAmount,
-          lastPaidAmount,
-          lastPaymentDate,
-          status,
-        };
-      })
-    );
+      let status: "Paid" | "Partial" | "Pending" = "Pending";
+      if (totalFees > 0) {
+        if (totalPaid >= totalFees) status = "Paid";
+        else if (totalPaid > 0) status = "Partial";
+      }
+
+      return {
+        _id: student._id,
+        name: student.name,
+        admission_no: student.admission_no || "N/A",
+        class_name: student.class_id
+          ? `${student.class_id.name} - ${student.class_id.section}`
+          : "N/A",
+        class_id: studentClassId,
+        totalFees,
+        totalPaid,
+        balanceAmount,
+        lastPaidAmount,
+        lastPaymentDate,
+        status,
+      };
+    });
 
     // 4. Filter by status if requested
     const filteredList = statusFilter

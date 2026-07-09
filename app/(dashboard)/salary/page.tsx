@@ -26,6 +26,7 @@ import {
 import { Modal } from "@/app/components/ui/modal";
 import { getPersistedPageSize, PaginationBar } from "@/app/components/ui/pagination-bar";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
 
 export default function SalaryDashboardPage() {
   const { teachers, isLoading: isTeachersLoading, fetchTeachers } = useTeachers();
@@ -106,6 +107,12 @@ export default function SalaryDashboardPage() {
   const [historyTeacher, setHistoryTeacher] = useState<any | null>(null);
   const [historyPayments, setHistoryPayments] = useState<any[]>([]);
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+
+  // Generate Document Wizard
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [generateSalaryId, setGenerateSalaryId] = useState<string | null>(null);
+  const [generateTeacherId, setGenerateTeacherId] = useState<string | null>(null);
+  const [generateTeacherName, setGenerateTeacherName] = useState("");
 
   // ─── Fetch API Payments ─────────────────────────────────────────
   const fetchPayments = useCallback(async () => {
@@ -778,12 +785,26 @@ export default function SalaryDashboardPage() {
                             </td>
                             <td className="px-6 py-4 text-center">
                               {s.status === "Paid" ? (
-                                <button
-                                  onClick={() => setSelectedSlip(s.payoutRecord)}
-                                  className="px-2.5 py-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-md hover:bg-emerald-100 transition-all flex items-center gap-1 mx-auto"
-                                >
-                                  <FileText className="w-3.5 h-3.5" /> Slip
-                                </button>
+                                <div className="flex items-center justify-center gap-2">
+                                  <button
+                                    onClick={() => setSelectedSlip(s.payoutRecord)}
+                                    className="px-2.5 py-1 text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-md hover:bg-emerald-100 transition-all flex items-center gap-1 mx-auto"
+                                  >
+                                    <FileText className="w-3.5 h-3.5" /> Slip
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setGenerateSalaryId(s.payoutRecord?._id || null);
+                                      setGenerateTeacherId(s.id);
+                                      setGenerateTeacherName(s.name);
+                                      setIsGenerateOpen(true);
+                                    }}
+                                    className="px-2.5 py-1 text-[11px] font-bold text-indigo-600 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 rounded-md hover:bg-indigo-100 transition-all flex items-center gap-1 mx-auto"
+                                    title="Generate Salary Slip"
+                                  >
+                                    <FileText className="w-3.5 h-3.5" /> PDF
+                                  </button>
+                                </div>
                               ) : (
                                 <button
                                   disabled={s.basic === 0}
@@ -1642,6 +1663,15 @@ export default function SalaryDashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Generate Salary Slip Wizard */}
+      <GenerateDocumentWizard
+        open={isGenerateOpen}
+        onClose={() => setIsGenerateOpen(false)}
+        defaultModule="salary"
+        defaultReferenceId={generateSalaryId || undefined}
+        defaultReferenceLabel={generateTeacherName ? `Salary Slip — ${generateTeacherName}` : undefined}
+      />
     </div>
   );
 }

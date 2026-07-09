@@ -13,6 +13,7 @@ import { Loader2 } from "lucide-react";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { LoginDetailsModal } from "../../../components/modals/LoginDetailsModal";
 import { ResetPasswordModal } from "../../../components/modals/ResetPasswordModal";
+import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
 import {
   User, Phone, Mail, FileText, Calendar, Droplet, Users, BookOpen, Clock, Settings, Building2, MapPin, Bus, Lock, Edit, ChevronDown, CheckCircle, RefreshCcw, Check, X, Download, Paperclip, Briefcase, Copy, Plus
 } from "lucide-react";
@@ -36,6 +37,7 @@ export default function TeacherDetailsPage() {
   const [isApplyLeaveOpen, setIsApplyLeaveOpen] = useState(false);
   const [isLoginDetailsOpen, setIsLoginDetailsOpen] = useState(false);
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
 
   // Dynamic schedules & leaves
   const { schedules, isLoading: schedulesLoading } = useSchedules(undefined, teacherId);
@@ -319,6 +321,13 @@ export default function TeacherDetailsPage() {
           >
             <Lock className="w-3.5 h-3.5" />
             <span>Login Details</span>
+          </button>
+          <button
+            onClick={() => setIsGenerateOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 border border-indigo-200 dark:border-indigo-700/50 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-[12px] font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 shadow-sm transition-colors"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Generate Document</span>
           </button>
           <button
             onClick={() => setIsResetPasswordOpen(true)}
@@ -1152,6 +1161,15 @@ export default function TeacherDetailsPage() {
         userName={teacher?.name || ""}
         userEmail={(teacher?.user_id && typeof teacher.user_id === "object" && teacher.user_id.email) ? teacher.user_id.email : (teacher?.email || "")}
         onSuccess={() => getTeacher(teacherId).then(t => { if (t) setTeacher(t); })}
+      />
+
+      {/* Generate Document Wizard */}
+      <GenerateDocumentWizard
+        open={isGenerateOpen}
+        onClose={() => setIsGenerateOpen(false)}
+        defaultModule="teacher"
+        defaultReferenceId={teacher._id}
+        defaultReferenceLabel={teacher.name}
       />
 
     </div>

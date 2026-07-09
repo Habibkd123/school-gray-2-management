@@ -97,15 +97,10 @@ export default function FeesPage() {
   const [newCustomFeeTypeFrequency, setNewCustomFeeTypeFrequency] = useState<"One Time" | "Monthly" | "Quarterly" | "Half Yearly" | "Yearly">("Monthly");
   const [newCustomFeeTypeIsMandatory, setNewCustomFeeTypeIsMandatory] = useState(true);
 
-  // Pay Fee side modal states
+  // Pay Fee modal state — CollectFeesModal manages its own internal state
   const [payStudent, setPayStudent] = useState<StudentFeeRow | null>(null);
-  const [payAmount, setPayAmount] = useState("");
-  const [paymentDate, setPaymentDate] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<"Cash" | "Cheque" | "Bank Transfer" | "Online">("Cash");
-  const [paymentRemarks, setPaymentRemarks] = useState("");
-  const [isRecordingPayment, setIsRecordingPayment] = useState(false);
 
-  // Printable Receipt Modal
+  // Printable Receipt Modal (for old-style direct pay flow, now unused but kept for receipt display)
   const [printedReceipt, setPrintedReceipt] = useState<any | null>(null);
 
   // Student Payment History Modal
@@ -300,11 +295,8 @@ export default function FeesPage() {
 
   const handleOpenPay = (student: StudentFeeRow) => {
     setPayStudent(student);
-    setPayAmount(student.balanceAmount.toString());
-    setPaymentDate(new Date().toISOString().split("T")[0]);
-    setPaymentMethod("Cash");
-    setPaymentRemarks("");
   };
+
 
   const handleAddCustomFeeType = (e: React.FormEvent) => {
     e.preventDefault();
@@ -375,36 +367,6 @@ export default function FeesPage() {
       console.error(e);
     } finally {
       setIsSavingSetup(false);
-    }
-  };
-
-
-  const handleConfirmPayment = async () => {
-    if (!payStudent || !payAmount || Number(payAmount) <= 0) return;
-    setIsRecordingPayment(true);
-    try {
-      const res = await fetch("/api/fees/payments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({
-          student_id: payStudent._id,
-          amount_paid: Number(payAmount),
-          payment_method: paymentMethod,
-          payment_date: paymentDate,
-          remarks: paymentRemarks
-        })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setPayStudent(null);
-        fetchStudents();
-        // Immediately show printable receipt
-        setPrintedReceipt(data.data.payment);
-      }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsRecordingPayment(false);
     }
   };
 

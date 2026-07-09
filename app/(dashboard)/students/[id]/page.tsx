@@ -18,6 +18,7 @@ import { useSubjects } from "../../../hooks/useSubjects";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { LoginDetailsModal } from "@/app/components/modals/LoginDetailsModal";
 import { ResetPasswordModal } from "@/app/components/modals/ResetPasswordModal";
+import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
 
 function StudentViewContent() {
   const params = useParams();
@@ -41,6 +42,7 @@ function StudentViewContent() {
   const [resetPassTarget, setResetPassTarget] = useState<{ userId: string | undefined; name: string; email: string } | null>(null);
   const [isFeesModalOpen, setIsFeesModalOpen] = useState(false);
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
 
   // Dynamic hooks integration
   const studentClassId = student ? (typeof student.class_id === "object" ? student.class_id?._id : student.class_id) : undefined;
@@ -62,8 +64,8 @@ function StudentViewContent() {
   // Custom states
   const [siblings, setSiblings] = useState<ApiStudent[]>([]);
   const [selectedYear, setSelectedYear] = useState("2026-2027");
-  const [selectedExamYear, setSelectedExamYear] = useState("2024 / 2025");
-  const [selectedFeesYear, setSelectedFeesYear] = useState("2024 / 2025");
+  const [selectedExamYear, setSelectedExamYear] = useState("2026 / 2027");
+  const [selectedFeesYear, setSelectedFeesYear] = useState("2026 / 2027");
 
   // Editable/Manipulatable Marks states
   const [editingResult, setEditingResult] = useState<any | null>(null);
@@ -172,7 +174,7 @@ function StudentViewContent() {
       } else {
         alert(data.message || "Failed to delete result");
       }
-    } catch(e) {
+    } catch (e) {
       console.error(e);
       alert("Network error deleting result");
     }
@@ -274,10 +276,10 @@ function StudentViewContent() {
     results.forEach(res => {
       const eId = typeof res.exam_id === 'object' ? res.exam_id?._id : res.exam_id;
       if (!eId) return;
-      
+
       const matchingExam = exams.find(ex => ex._id === eId);
       const examYear = matchingExam?.academic_year || (res.exam_id && typeof res.exam_id === 'object' ? res.exam_id.academic_year : "");
-      
+
       if (examYear) {
         const normExamYear = examYear.replace(/\s+/g, "").replace(/\//g, "-");
         const normTargetYear = targetYear.replace(/\//g, "-");
@@ -398,7 +400,7 @@ function StudentViewContent() {
 
   const filteredExamsForAdd = React.useMemo(() => {
     return exams.filter(ex => {
-      const examYear = ex.academic_year || "2024 / 2025";
+      const examYear = ex.academic_year || "2026 / 2027";
       const normExamYear = examYear.replace(/\s+/g, "").replace(/\//g, "-");
       const normSelected = selectedExamYear.replace(/\s+/g, "").replace(/\//g, "-");
       return normExamYear === normSelected;
@@ -460,25 +462,33 @@ function StudentViewContent() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button 
-            onClick={() => { setLoginModalTarget("student"); setIsLoginModalOpen(true); }} 
+          <button
+            onClick={() => { setLoginModalTarget("student"); setIsLoginModalOpen(true); }}
             className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[12px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors cursor-pointer"
           >
             <Lock className="w-3.5 h-3.5" />
             <span>Login Details</span>
           </button>
-          <button 
-            onClick={() => { 
+          <button
+            onClick={() => {
               const studentUser = student?.user_id;
               const sUid = studentUser && typeof studentUser === "object" ? studentUser._id : undefined;
               const sEmail = studentUser && typeof studentUser === "object" ? studentUser.email : student.email || "";
-              setResetPassTarget({ userId: sUid, name: student.name, email: sEmail }); 
-              setIsResetPassModalOpen(true); 
-            }} 
+              setResetPassTarget({ userId: sUid, name: student.name, email: sEmail });
+              setIsResetPassModalOpen(true);
+            }}
             className="flex items-center gap-2 px-3 py-1.5 bg-[#EF4444] hover:bg-[#DC2626] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
           >
             <Lock className="w-3.5 h-3.5" />
             <span>Reset Password</span>
+          </button>
+          <button
+            onClick={() => setIsGenerateOpen(true)}
+            className="flex items-center gap-2 px-3 py-1.5 text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+            style={{ background: "linear-gradient(90deg, #4338ca, #7c3aed)" }}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Generate Document</span>
           </button>
           <button
             onClick={() => router.push(`/students/add?edit=${student._id}`)}
@@ -1031,11 +1041,10 @@ function StudentViewContent() {
                           <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Academic Year: {academicYear}</p>
                         </div>
                         <div className="flex items-center gap-3">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold border ${
-                            isOverallPass
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                              : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
-                          }`}>
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold border ${isOverallPass
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                            : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
+                            }`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${isOverallPass ? "bg-emerald-500" : "bg-rose-500"}`} />
                             {isOverallPass ? "Pass" : "Fail"}
                           </span>
@@ -1070,9 +1079,8 @@ function StudentViewContent() {
                                   <td className="px-6 py-4 text-center text-slate-500 dark:text-slate-400">{r.total_marks}</td>
                                   <td className="px-6 py-4 text-center text-indigo-600 dark:text-indigo-400 font-bold">{subGrade}</td>
                                   <td className="px-6 py-4 text-center">
-                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold ${
-                                      pass ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
-                                    }`}>
+                                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold ${pass ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"
+                                      }`}>
                                       {pass ? "Pass" : "Fail"}
                                     </span>
                                   </td>
@@ -1520,21 +1528,21 @@ function StudentViewContent() {
             <div className="p-6 text-left space-y-4">
               <div className="flex flex-col gap-1.5">
                 <label className="text-[12px] font-bold text-slate-900 dark:text-white">Subject</label>
-                <input 
-                  type="text" 
-                  value={typeof editingResult.subject_id === "object" ? editingResult.subject_id.name : editingResult.subject_id || ""} 
-                  disabled 
+                <input
+                  type="text"
+                  value={typeof editingResult.subject_id === "object" ? editingResult.subject_id.name : editingResult.subject_id || ""}
+                  disabled
                   className="w-full px-3 py-2.5 border border-border bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[13px] font-medium rounded-lg"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[12px] font-bold text-slate-900 dark:text-white">Marks Obtained</label>
-                  <input 
-                    type="number" 
-                    value={editMarksObtained} 
-                    onChange={(e) => setEditMarksObtained(e.target.value)} 
-                    required 
+                  <input
+                    type="number"
+                    value={editMarksObtained}
+                    onChange={(e) => setEditMarksObtained(e.target.value)}
+                    required
                     min={0}
                     max={Number(editTotalMarks) || 9999}
                     className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
@@ -1542,11 +1550,11 @@ function StudentViewContent() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[12px] font-bold text-slate-900 dark:text-white">Total Marks</label>
-                  <input 
-                    type="number" 
-                    value={editTotalMarks} 
-                    onChange={(e) => setEditTotalMarks(e.target.value)} 
-                    required 
+                  <input
+                    type="number"
+                    value={editTotalMarks}
+                    onChange={(e) => setEditTotalMarks(e.target.value)}
+                    required
                     min={1}
                     className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
                   />
@@ -1555,11 +1563,11 @@ function StudentViewContent() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[12px] font-bold text-slate-900 dark:text-white">Passing Marks</label>
-                  <input 
-                    type="number" 
-                    value={editPassingMarks} 
-                    onChange={(e) => setEditPassingMarks(e.target.value)} 
-                    required 
+                  <input
+                    type="number"
+                    value={editPassingMarks}
+                    onChange={(e) => setEditPassingMarks(e.target.value)}
+                    required
                     min={0}
                     className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
                   />
@@ -1567,10 +1575,10 @@ function StudentViewContent() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-[12px] font-bold text-slate-900 dark:text-white">Remarks (Optional)</label>
-                <input 
-                  type="text" 
-                  value={editRemarks} 
-                  onChange={(e) => setEditRemarks(e.target.value)} 
+                <input
+                  type="text"
+                  value={editRemarks}
+                  onChange={(e) => setEditRemarks(e.target.value)}
                   className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
                 />
               </div>
@@ -1634,11 +1642,11 @@ function StudentViewContent() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[12px] font-bold text-slate-900 dark:text-white">Marks Obtained</label>
-                  <input 
-                    type="number" 
-                    value={addMarksObtained} 
-                    onChange={(e) => setAddMarksObtained(e.target.value)} 
-                    required 
+                  <input
+                    type="number"
+                    value={addMarksObtained}
+                    onChange={(e) => setAddMarksObtained(e.target.value)}
+                    required
                     min={0}
                     max={Number(addTotalMarks) || 9999}
                     className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
@@ -1646,11 +1654,11 @@ function StudentViewContent() {
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[12px] font-bold text-slate-900 dark:text-white">Total Marks</label>
-                  <input 
-                    type="number" 
-                    value={addTotalMarks} 
-                    onChange={(e) => setAddTotalMarks(e.target.value)} 
-                    required 
+                  <input
+                    type="number"
+                    value={addTotalMarks}
+                    onChange={(e) => setAddTotalMarks(e.target.value)}
+                    required
                     min={1}
                     className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
                   />
@@ -1659,11 +1667,11 @@ function StudentViewContent() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[12px] font-bold text-slate-900 dark:text-white">Passing Marks</label>
-                  <input 
-                    type="number" 
-                    value={addPassingMarks} 
-                    onChange={(e) => setAddPassingMarks(e.target.value)} 
-                    required 
+                  <input
+                    type="number"
+                    value={addPassingMarks}
+                    onChange={(e) => setAddPassingMarks(e.target.value)}
+                    required
                     min={0}
                     className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
                   />
@@ -1671,10 +1679,10 @@ function StudentViewContent() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-[12px] font-bold text-slate-900 dark:text-white">Remarks (Optional)</label>
-                <input 
-                  type="text" 
-                  value={addRemarks} 
-                  onChange={(e) => setAddRemarks(e.target.value)} 
+                <input
+                  type="text"
+                  value={addRemarks}
+                  onChange={(e) => setAddRemarks(e.target.value)}
                   className="w-full px-3 py-2.5 border border-border rounded-lg text-[13px] font-medium outline-none bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
                 />
               </div>
@@ -1790,6 +1798,16 @@ function StudentViewContent() {
           </form>
         </div>
       )}
+
+      {/* Generate Document Wizard */}
+      <GenerateDocumentWizard
+        open={isGenerateOpen}
+        onClose={() => setIsGenerateOpen(false)}
+        defaultModule="student"
+        defaultStudentId={student._id}
+        defaultStudentName={student.name}
+        defaultReferenceLabel={student.name}
+      />
     </div>
   );
 }
@@ -1837,20 +1855,20 @@ function ParentRow({ name, role, phone, email, hideBorder = false, onViewLogin, 
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {onViewLogin && (
-          <button 
-            type="button" 
-            onClick={onViewLogin} 
-            title="View Login Details" 
+          <button
+            type="button"
+            onClick={onViewLogin}
+            title="View Login Details"
             className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 flex items-center justify-center transition-colors shadow-sm cursor-pointer border border-border text-slate-600 dark:text-slate-350"
           >
             <Lock className="w-3.5 h-3.5" />
           </button>
         )}
         {onResetPassword && (
-          <button 
-            type="button" 
-            onClick={onResetPassword} 
-            title="Reset Password" 
+          <button
+            type="button"
+            onClick={onResetPassword}
+            title="Reset Password"
             className="w-8 h-8 rounded-lg bg-[#EF4444] hover:bg-[#DC2626] flex items-center justify-center transition-colors shadow-sm cursor-pointer text-white"
           >
             <Lock className="w-3.5 h-3.5" />
@@ -1903,16 +1921,16 @@ function FeeRow({ group, code, due, amount, status, refId, mode, paid, discount 
   );
 }
 
-function ExamCard({ 
-  title, 
-  initiallyExpanded, 
+function ExamCard({
+  title,
+  initiallyExpanded,
   results = [],
-  onEdit 
-}: { 
-  title: string, 
-  initiallyExpanded: boolean, 
+  onEdit
+}: {
+  title: string,
+  initiallyExpanded: boolean,
   results: any[],
-  onEdit?: (result: any) => void 
+  onEdit?: (result: any) => void
 }) {
   const [expanded, setExpanded] = useState(initiallyExpanded);
 
@@ -1980,20 +1998,20 @@ function ExamCard({
   );
 }
 
-function ExamRow({ 
-  subject, 
-  max, 
-  min, 
-  obtained, 
+function ExamRow({
+  subject,
+  max,
+  min,
+  obtained,
   isPass,
-  onEdit 
-}: { 
-  subject: string, 
-  max: number, 
-  min: number, 
-  obtained: number, 
+  onEdit
+}: {
+  subject: string,
+  max: number,
+  min: number,
+  obtained: number,
   isPass: boolean,
-  onEdit?: () => void 
+  onEdit?: () => void
 }) {
   return (
     <tr className="hover:bg-slate-50/30 transition-colors">
@@ -2012,7 +2030,7 @@ function ExamRow({
           </span>
         )}
         {onEdit && (
-          <button 
+          <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
             className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer text-slate-400 hover:text-slate-600"

@@ -13,6 +13,7 @@ import { useExams } from "@/app/hooks/useExams";
 import { useClasses } from "@/app/hooks/useClasses";
 import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar";
 import { useAppState } from "@/app/context/store";
+import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
 
 export default function ExamListPage() {
   const router = useRouter();
@@ -93,6 +94,11 @@ export default function ExamListPage() {
   const [isViewOpen, setIsViewOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Generate Document Wizard
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [generateExamId, setGenerateExamId] = useState<string | null>(null);
+  const [generateExamLabel, setGenerateExamLabel] = useState("");
   
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -316,6 +322,15 @@ export default function ExamListPage() {
             className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
           >
             <Plus className="w-4 h-4" /> Add Exam
+          </button>
+
+          {/* Generate Report Cards button */}
+          <button
+            onClick={() => { setGenerateExamId(null); setGenerateExamLabel(""); setIsGenerateOpen(true); }}
+            className="px-4 py-2 text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+            style={{ background: "linear-gradient(90deg, #4338ca, #7c3aed)" }}
+          >
+            <FileText className="w-4 h-4" /> Generate Report Cards
           </button>
         </div>
       </div>
@@ -859,6 +874,20 @@ export default function ExamListPage() {
                 <PenTool className="w-4 h-4 text-slate-500" /> Marks Entry
               </button>
               <div className="h-px bg-border my-1" />
+              <button
+                onClick={() => {
+                  const cls = typeof activeExam.class_id === "object" ? activeExam.class_id : null;
+                  const label = `${activeExam.name}${cls ? ` (${cls.name}${cls.section ? `-${cls.section}` : ""})` : ""}`;
+                  setGenerateExamId(activeExam._id);
+                  setGenerateExamLabel(label);
+                  setIsGenerateOpen(true);
+                  setActionMenuId(null);
+                }}
+                className="w-full px-4 py-2 text-[13px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 flex items-center gap-2 font-medium transition-colors cursor-pointer"
+              >
+                <FileText className="w-4 h-4 text-indigo-500" /> Generate Report Cards
+              </button>
+              <div className="h-px bg-border my-1" />
               <button onClick={() => { openDeleteModal(activeExam._id); setActionMenuId(null); }} className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
                 <Trash2 className="w-4 h-4 text-rose-600" /> Delete
               </button>
@@ -867,6 +896,15 @@ export default function ExamListPage() {
           document.body
         )
       )}
+
+      {/* Generate Document Wizard */}
+      <GenerateDocumentWizard
+        open={isGenerateOpen}
+        onClose={() => setIsGenerateOpen(false)}
+        defaultModule="exam"
+        defaultReferenceId={generateExamId || undefined}
+        defaultReferenceLabel={generateExamLabel || undefined}
+      />
 
     </div>
   );

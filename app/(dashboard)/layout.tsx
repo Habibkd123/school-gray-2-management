@@ -20,6 +20,7 @@ const ROUTE_MODULE_MAP: { prefix: string; module: PermissionModule }[] = [
   { prefix: "/academic", module: "academic" },
   { prefix: "/academic-mgmt", module: "academic" },
   { prefix: "/examination", module: "examination" },
+  { prefix: "/report-cards", module: "examination" },
   { prefix: "/attendance", module: "attendance" },
   { prefix: "/fees", module: "fees" },
   { prefix: "/fees-collection", module: "fees" },
@@ -31,6 +32,7 @@ const ROUTE_MODULE_MAP: { prefix: string; module: PermissionModule }[] = [
   { prefix: "/results", module: "results" },
   { prefix: "/salary", module: "salary" },
   { prefix: "/assessments", module: "assessments" },
+  { prefix: "/documents", module: "notices" },
 ];
 
 export default function DashboardLayout({

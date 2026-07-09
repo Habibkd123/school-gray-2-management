@@ -57,7 +57,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Homework", href: "/academic/class-home-work" },
         { name: "Assessments", href: "/assessments" },
         { name: "Exams", href: "/examination/exam" },
-        { name: "Report Cards", href: "/examination/exam-results" }
+        { name: "Report Cards", href: "/report-cards" }
       ]
     },
 
@@ -111,7 +111,13 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Contact Us", href: "/website/contact" },
       ]
     },
-    { name: "Document Center", href: "/document-center/templates", icon: <FileText className="w-4 h-4" /> },
+    {
+      name: "Documents", icon: <FileText className="w-4 h-4" />, subItems: [
+        { name: "Documents", href: "/documents" },
+        { name: "Categories", href: "/documents/categories" },
+        { name: "Templates", href: "/documents/templates" },
+      ]
+    },
     { name: "Settings", icon: <Settings2 className="w-4 h-4" />, href: "/settings/profile" }
   ];
 
@@ -127,7 +133,8 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
       name: "Academic", icon: <Building2 className="w-4 h-4" />, subItems: [
         { name: "Syllabus", href: "/academic-mgmt/syllabus" },
         { name: "Home Work", href: "/academic/class-home-work" },
-        { name: "Progress & Grading", href: "/academic/progress" }
+        { name: "Progress & Grading", href: "/academic/progress" },
+        { name: "Report Cards", href: "/report-cards" }
       ]
     },
 
@@ -159,6 +166,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
     // Fees Status hidden (Issue 9)
     { name: "Result View", href: "/parent/results", icon: <ClipboardList className="w-4 h-4" /> },
     { name: "Homework View", href: "/parent/homework", icon: <BookOpen className="w-4 h-4" /> },
+    { name: "Report Cards", href: "/student/report-cards", icon: <BookOpen className="w-4 h-4" /> },
     { name: "Notifications", href: "/notices", icon: <Megaphone className="w-4 h-4" /> }
   ];
 
@@ -170,7 +178,8 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "My Syllabus", href: "/academic-mgmt/syllabus" },
         { name: "My Subjects", href: "/academic/subjects" },
         { name: "Home Work", href: "/academic/class-home-work" },
-        { name: "Progress & Grading", href: "/academic/progress" }
+        { name: "Progress & Grading", href: "/academic/progress" },
+        { name: "My Report Cards", href: "/student/report-cards" }
       ]
     },
 

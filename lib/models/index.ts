@@ -2,6 +2,7 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 // Ensure Class model is registered before any schema that uses ref: "Class"
 import Class from "./Class";
 import Student from "./Student";
+import _Parent from "./Parent";
 export { Class, Student };
 
 // ─── Subject ──────────────────────────────────────────────────────
@@ -606,7 +607,7 @@ export const Room: Model<IRoom> = mongoose.models.Room || mongoose.model("Room",
 export const Grade: Model<IGrade> = mongoose.models.Grade || mongoose.model("Grade", gradeSchema);
 export const Holiday: Model<IHoliday> = mongoose.models.Holiday || mongoose.model("Holiday", holidaySchema);
 export const LeaveType: Model<ILeaveType> = mongoose.models.LeaveType || mongoose.model("LeaveType", leaveTypeSchema);
-export const Parent: Model<any> = mongoose.models.Parent || require("./Parent").default;
+export const Parent: Model<any> = mongoose.models.Parent || _Parent;
 
 // ─── Subject Master (school-scoped catalog) ────────────────────────
 export interface ISubjectMaster extends Document {
@@ -993,4 +994,6 @@ examScheduleSchema.index({ exam_id: 1, subject_id: 1, date: 1 }, { unique: true 
 export const ExamSchedule: Model<IExamSchedule> =
   mongoose.models.ExamSchedule || mongoose.model<IExamSchedule>("ExamSchedule", examScheduleSchema);
 
-
+// ─── Re-export GeneratedDocument (used by the Document Generation Engine) ─────
+import _GeneratedDocument from "./GeneratedDocument";
+export { _GeneratedDocument as GeneratedDocumentModel };

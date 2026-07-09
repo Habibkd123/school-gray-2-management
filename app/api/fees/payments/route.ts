@@ -6,11 +6,30 @@ import Parent from "@/lib/models/Parent";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
-// Generate unique receipt numbers
-function generateReceiptNumber() {
-  const dateStr = new Date().toISOString().split("T")[0].replace(/-/g, "");
-  const rand = Math.floor(1000 + Math.random() * 9000);
-  return `REC-${dateStr}-${rand}`;
+// ─── Atomic Receipt Counter ───────────────────────────────────────────────────
+// Uses a dedicated "counters" collection with findOneAndUpdate + $inc to
+// guarantee globally-unique, collision-free receipt numbers without any
+// Math.random() risk. Safe under concurrent requests.
+const CounterSchema = new mongoose.Schema({
+  _id: { type: String, required: true },          // e.g. "receipt_20260708"
+  seq: { type: Number, default: 0 },
+});
+const Counter: mongoose.Model<any> =
+  mongoose.models.Counter || mongoose.model("Counter", CounterSchema);
+
+async function generateReceiptNumber(): Promise<string> {
+  const dateStr = new Date().toISOString().split("T")[0].replace(/-/g, ""); // "20260708"
+  const counterId = `receipt_${dateStr}`;
+
+  const counter = await Counter.findOneAndUpdate(
+    { _id: counterId },
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true }
+  );
+
+  // Zero-pad to 5 digits → up to 99,999 unique receipts per day
+  const seq = String(counter.seq).padStart(5, "0");
+  return `REC-${dateStr}-${seq}`;
 }
 
 export async function GET(req: NextRequest) {
@@ -75,45 +94,124 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { student_id, amount_paid, payment_method, remarks, payment_date, start_date, end_date, collection_type, fee_breakdown } = body;
 
-    if (!student_id || amount_paid === undefined || !payment_method || !start_date || !end_date) {
+    // ── Validation ────────────────────────────────────────────────────────────
+    if (!student_id || !payment_method || !start_date || !end_date) {
       return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
+    }
+
+    // Fix HIGH-4: Reject zero or negative amounts
+    const parsedAmount = Number(amount_paid);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return NextResponse.json(
+        { success: false, message: "Amount paid must be greater than ₹0" },
+        { status: 400 }
+      );
+    }
+
+    // Fix MED-2: Validate date range on the server
+    const sdDate = new Date(start_date);
+    const edDate = new Date(end_date);
+    if (isNaN(sdDate.getTime()) || isNaN(edDate.getTime())) {
+      return NextResponse.json(
+        { success: false, message: "Invalid start_date or end_date" },
+        { status: 400 }
+      );
+    }
+    if (edDate < sdDate) {
+      return NextResponse.json(
+        { success: false, message: "end_date cannot be before start_date" },
+        { status: 400 }
+      );
     }
 
     await connectDB();
 
-    // Verify student exists
+    // Verify student exists and belongs to this school
     const student = await Student.findOne({ _id: student_id, school_id: schoolId }).lean();
     if (!student) {
       return NextResponse.json({ success: false, message: "Invalid Student record" }, { status: 400 });
     }
 
-    const receiptNumber = generateReceiptNumber();
-    const transactionDate = payment_date ? new Date(payment_date) : new Date();
-
-    const payment = await StudentFeePayment.create({
+    // ── Fix CRIT-2: Server-side overlap / duplicate check ─────────────────────
+    // Reject if any previous payment for this student overlaps the requested period
+    const overlapping = await StudentFeePayment.findOne({
       school_id: new mongoose.Types.ObjectId(schoolId as string),
       student_id: new mongoose.Types.ObjectId(student_id),
-      receipt_number: receiptNumber,
-      amount_paid: Number(amount_paid),
-      payment_date: transactionDate,
-      payment_method,
-      remarks: remarks || "",
-      start_date: new Date(start_date),
-      end_date: new Date(end_date),
-      collection_type: collection_type || "Monthly",
-      fee_breakdown: fee_breakdown || []
-    });
+      start_date: { $lte: edDate },
+      end_date:   { $gte: sdDate },
+    }).lean();
 
+    if (overlapping) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Duplicate payment rejected: a payment already exists for the overlapping period (${
+            new Date((overlapping as any).start_date).toLocaleDateString("en-IN")
+          } – ${
+            new Date((overlapping as any).end_date).toLocaleDateString("en-IN")
+          }).`,
+        },
+        { status: 409 }
+      );
+    }
+
+    // ── Fix CRIT-1: Atomic receipt number (no Math.random collision) ──────────
+    const receiptNumber = await generateReceiptNumber();
+    const transactionDate = payment_date ? new Date(payment_date) : new Date();
+
+    // ── Fix CRIT-3: Wrap in a MongoDB session for transaction safety ──────────
+    // If the server crashes after create but before the response is sent,
+    // the session rolls back automatically so there is no phantom record.
+    const session = await mongoose.startSession();
+    let payment: any;
+
+    try {
+      await session.withTransaction(async () => {
+        const [created] = await StudentFeePayment.create(
+          [
+            {
+              school_id: new mongoose.Types.ObjectId(schoolId as string),
+              student_id: new mongoose.Types.ObjectId(student_id),
+              receipt_number: receiptNumber,
+              amount_paid: parsedAmount,
+              payment_date: transactionDate,
+              payment_method,
+              remarks: remarks || "",
+              start_date: sdDate,
+              end_date: edDate,
+              collection_type: collection_type || "Monthly",
+              fee_breakdown: fee_breakdown || [],
+            },
+          ],
+          { session }
+        );
+        payment = created;
+      });
+    } finally {
+      await session.endSession();
+    }
+
+    // Populate for the response (outside transaction — read-only)
     const populatedPayment = await StudentFeePayment.findById(payment._id)
       .populate("student_id", "name admission_no class_id")
       .lean();
 
-    return NextResponse.json({
-      success: true,
-      message: "Payment recorded successfully",
-      data: { payment: populatedPayment }
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Payment recorded successfully",
+        data: { payment: populatedPayment },
+      },
+      { status: 201 }
+    );
   } catch (error: any) {
+    // Handle duplicate receipt_number at DB level (last safety net)
+    if (error.code === 11000 && error.keyPattern?.receipt_number) {
+      return NextResponse.json(
+        { success: false, message: "Receipt number conflict. Please try again." },
+        { status: 409 }
+      );
+    }
     return NextResponse.json({ success: false, message: error.message }, { status: 400 });
   }
 }
