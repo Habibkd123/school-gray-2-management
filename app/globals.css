@@ -70,7 +70,7 @@
   --section-alt:   #0F2336;
 }
 
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary:    var(--primary);
@@ -250,16 +250,26 @@ body {
   }
 }
 
-/* ── Print Media Styles ────────────────────────────────── */
+/* ── Universal Print Media Styles ─────────────────────────────────────────── */
+/*
+  PrintService Architecture:
+  - PrintService.print(id, opts) sets:
+      body[data-printing="true"]
+      [data-print-zone="true"] on the target element
+      body[data-watermark="PAID"] (optional)
+  - This CSS hides everything except the print zone and restores it after printing.
+  - Every module uses this shared CSS — no per-module print hacks.
+*/
 @media print {
-  /* Universal Page setup */
+
+  /* ── 1. Page setup (default — overridden per-call by PrintService) ───────── */
   @page {
     size: A4 portrait;
-    margin: 15mm;
+    margin: 12mm;
   }
 
-  /* Reset layout constraints to allow natural scroll/page breaks */
-  html, 
+  /* ── 2. Global reset — forces clean white paper layout ───────────────────── */
+  html,
   body {
     height: auto !important;
     min-height: initial !important;
@@ -269,10 +279,19 @@ body {
     position: static !important;
     display: block !important;
     background: white !important;
-    color: black !important;
+    color: #0f172a !important;
+    /* Always print white background regardless of dark mode */
+    color-scheme: light !important;
   }
 
-  /* Reset Tailwind and framework layout constraints */
+  /* ── 3. Color & font fidelity ─────────────────────────────────────────────── */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    font-synthesis: none !important;
+  }
+
+  /* ── 4. Layout normalization — reset all framework constraints ─────────────── */
   .flex,
   .h-screen,
   .w-screen,
@@ -299,11 +318,10 @@ body {
     transform: none !important;
   }
 
-  /* Hide default UI Chrome / Navigation components */
+  /* ── 5. Hide all non-printable UI chrome ─────────────────────────────────── */
   aside,
   header,
   nav,
-  button,
   .no-print,
   .print-hidden,
   .print\:hidden,
@@ -316,31 +334,30 @@ body {
     display: none !important;
   }
 
-  /* Ensure colors and backgrounds print correctly */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* 
-    Case 1: Printing standalone documents (Receipts, Payslips, Report Cards, Templates).
-    We hide all elements in the DOM that do not contain the target element,
-    ensuring that only the target element and its ancestors are rendered.
-    This eliminates all extra space, height, and extra blank pages completely,
-    allowing a natural flow that splits only if the content overflows A4.
+  /* ── 6. UNIVERSAL PRINT ZONE ISOLATION ───────────────────────────────────── */
+  /*
+    When body[data-printing] is set by PrintService, hide every element
+    that is NOT the print zone and NOT on the path to it.
+    This eliminates sidebar, navbar, filters, overlays, and blank pages.
+    
+    Backward-compatible aliases:
+      #printable-receipt     → legacy fees receipt
+      #printable-payslip     → legacy salary slip
+      #printable-report-card → legacy report card / exam results
+      [data-print-zone]      → universal (all new + migrated print buttons)
   */
-  body:has(#printable-receipt) *:not(:has(#printable-receipt)):not(#printable-receipt),
-  body:has(#printable-payslip) *:not(:has(#printable-payslip)):not(#printable-payslip),
-  body:has(#printable-report-card) *:not(:has(#printable-report-card)):not(#printable-report-card),
-  body:has(#doc-builder-wrapper) *:not(:has(.db-page)):not(.db-page):not(.db-zoom-wrapper) {
+  body[data-printing] > *:not([data-print-path]):not([data-print-zone]),
+  [data-print-path] > *:not([data-print-path]):not([data-print-zone]) {
     display: none !important;
   }
 
-  /* Reset target element positioning to top left of first A4 page */
+  /* ── 7. Print zone element reset ─────────────────────────────────────────── */
+  [data-print-zone],
   #printable-receipt,
   #printable-payslip,
   #printable-report-card,
   .db-page {
+    display: block !important;
     width: 100% !important;
     max-width: 100% !important;
     min-height: auto !important;
@@ -352,16 +369,166 @@ body {
     border: none !important;
     box-shadow: none !important;
     background: white !important;
-    display: block !important;
+    opacity: 1 !important; /* Force visibility even if container is animating */
     page-break-before: avoid !important;
     page-break-after: avoid !important;
-    page-break-inside: avoid !important;
     break-before: avoid !important;
     break-after: avoid !important;
+  }
+
+  /* ── 8. Reset modal/overlay wrappers that contain the print zone ─────────── */
+  /*
+    Modals use fixed positioning which clips print output.
+    When printing from inside a modal, make the overlay static.
+  */
+  [data-print-path],
+  body[data-printing] .fixed.inset-0,
+  body:has(#printable-receipt) .fixed.inset-0.z-50,
+  body:has(#printable-payslip) .fixed.inset-0.z-50,
+  body:has(#printable-report-card) .fixed.inset-0.z-50 {
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    inset: auto !important;
+    z-index: auto !important;
+    opacity: 1 !important; /* Force visibility even if container is animating */
+    overflow: visible !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  /* ── 9. Force all text to dark for legibility, preserve semantic colors ───── */
+  [data-print-zone] *,
+  #printable-receipt *,
+  #printable-payslip *,
+  #printable-report-card *,
+  .db-page * {
+    color: #0f172a !important;
+  }
+
+  /* Preserve semantic status colors inside print zones */
+  [data-print-zone] .text-emerald-600,
+  [data-print-zone] .text-emerald-700,
+  [data-print-zone] .text-green-600,
+  [data-print-zone] .text-green-700,
+  #printable-receipt .text-emerald-600,
+  #printable-payslip .text-emerald-600,
+  #printable-report-card .text-emerald-600 {
+    color: #059669 !important;
+  }
+
+  [data-print-zone] .text-rose-500,
+  [data-print-zone] .text-rose-600,
+  [data-print-zone] .text-red-500,
+  [data-print-zone] .text-red-600,
+  #printable-receipt .text-rose-500,
+  #printable-payslip .text-rose-500,
+  #printable-report-card .text-rose-500 {
+    color: #e11d48 !important;
+  }
+
+  [data-print-zone] .text-amber-600,
+  [data-print-zone] .text-amber-700,
+  #printable-receipt .text-amber-600,
+  #printable-payslip .text-amber-600 {
+    color: #d97706 !important;
+  }
+
+  /* ── 10. Table layout — never split a row across pages ───────────────────── */
+  [data-print-zone] table,
+  #printable-receipt table,
+  #printable-payslip table,
+  #printable-report-card table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+  }
+
+  [data-print-zone] thead,
+  #printable-receipt thead,
+  #printable-payslip thead,
+  #printable-report-card thead {
+    display: table-header-group !important; /* repeat on every page */
+  }
+
+  [data-print-zone] tr,
+  [data-print-zone] td,
+  [data-print-zone] th,
+  #printable-receipt tr,
+  #printable-receipt td,
+  #printable-payslip tr,
+  #printable-payslip td,
+  #printable-report-card tr,
+  #printable-report-card td {
+    page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
-  /* Neutralize the zoom scale transform on the wrapper — print always at 100% */
+  /* ── 11. Signature blocks — keep together, never split ───────────────────── */
+  [data-print-zone] .signature-block,
+  [data-print-zone] .print-keep-together,
+  #printable-payslip .signature-block,
+  #printable-receipt .signature-block,
+  #printable-report-card .signature-block {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    break-before: avoid !important;
+    break-after: auto !important;
+  }
+
+  /* ── 12. Images — never clip or shrink ───────────────────────────────────── */
+  [data-print-zone] img,
+  #printable-receipt img,
+  #printable-payslip img,
+  #printable-report-card img {
+    max-width: 100% !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    image-rendering: high-quality !important;
+  }
+
+  /* ── 13. Hide print-only-irrelevant buttons inside print zones ───────────── */
+  [data-print-zone] button,
+  [data-print-zone] .print-hidden,
+  [data-print-zone] .no-print,
+  #printable-receipt button,
+  #printable-payslip button,
+  #printable-report-card button {
+    display: none !important;
+  }
+
+  /* ── 14. Watermark support ────────────────────────────────────────────────── */
+  body[data-watermark]::after {
+    content: attr(data-watermark);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    font-size: 80pt;
+    font-weight: 900;
+    font-family: Arial, sans-serif;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.06;
+    color: #000000;
+    pointer-events: none;
+    z-index: 99999;
+    white-space: nowrap;
+  }
+
+  /* ── 15. Document Builder specific ───────────────────────────────────────── */
+  /* Neutralize zoom transform — print always at 100% */
   .db-zoom-wrapper {
     transform: none !important;
     width: 100% !important;
@@ -372,9 +539,27 @@ body {
     margin: 0 !important;
   }
 
-  /* Template card-size exceptions */
+  /* ID card / small size exception */
   body:has(#doc-builder-wrapper) .db-page.card-size {
     width: 85.6mm !important;
     height: auto !important;
   }
+
+  /* ── 16. Thermal receipt exception ───────────────────────────────────────── */
+  [data-print-zone][data-page-size="thermal"] {
+    width: 80mm !important;
+    font-size: 10pt !important;
+  }
+
+  /* ── 17. Suppress dark-mode UI — always print light ──────────────────────── */
+  [data-print-zone] .dark\:bg-slate-900,
+  [data-print-zone] .dark\:bg-slate-800,
+  [data-print-zone] .dark\:text-white,
+  [data-print-zone] .dark\:text-slate-100 {
+    background-color: white !important;
+    color: #0f172a !important;
+  }
+
 }
+
+

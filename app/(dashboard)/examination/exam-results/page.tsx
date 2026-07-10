@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
@@ -9,6 +9,7 @@ import {
 import { useResults } from "../../../hooks/useResults";
 import { useExams } from "../../../hooks/useExams";
 import { useStudents } from "../../../hooks/useStudents";
+import { PrintService } from "@/app/lib/print-service";
 
 const PASS_MARK = 35;
 
@@ -484,7 +485,7 @@ export default function ExamResultsPage() {
               <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Student Report Card</h2>
               <div className="flex flex-wrap items-center gap-2">
                 <button 
-                  onClick={() => window.print()}
+                  onClick={() => PrintService.print('printable-report-card', { pageSize: 'A4' })}
                   className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
                 >
                   <Printer className="w-4 h-4" /> Print Report Card
@@ -499,7 +500,7 @@ export default function ExamResultsPage() {
             </div>
 
             {/* Printable Content */}
-            <div className="p-6 overflow-y-auto print:p-0 print:overflow-visible print:w-full print:absolute print:left-0 print:top-0 scrollbar-thin" id="printable-report-card">
+            <div className="p-6 overflow-y-auto print:p-0 print:overflow-visible print:w-full print:absolute print:left-0 print:top-0 scrollbar-thin" id="printable-report-card" data-print-zone="true">
               
               <style dangerouslySetInnerHTML={{__html: `
                 @media print {

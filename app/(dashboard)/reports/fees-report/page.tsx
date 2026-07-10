@@ -1,9 +1,10 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Printer, TrendingUp, TrendingDown, DollarSign, Loader2 } from "lucide-react";
 import { useFeeAllocations, useFeeMasters, useFeePayments } from "@/app/hooks/useFees";
+import { PrintService } from "@/app/lib/print-service";
 
 export default function FeesReportPage() {
   const { allocations, loading: allocLoading } = useFeeAllocations();
@@ -49,7 +50,7 @@ export default function FeesReportPage() {
   const totalOutstanding = Math.max(0, totalExpected - totalCollected); // roughly
 
   const handlePrint = () => {
-    window.print();
+    PrintService.print('printable-receipt', { pageSize: 'A4' });
   };
 
   return (

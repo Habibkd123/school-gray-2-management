@@ -6,6 +6,7 @@ import { ArrowLeft, Calendar as CalendarIcon, CheckCircle2, AlertCircle, Loader2
 import { useAuth } from "@/app/context/auth";
 import { useAppState } from "@/app/context/store";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { PrintService } from "@/app/lib/print-service";
 
 export default function IndividualTeacherAttendancePage({ params }: { params: Promise<{ teacherId: string }> }) {
   const router = useRouter();
@@ -164,7 +165,7 @@ export default function IndividualTeacherAttendancePage({ params }: { params: Pr
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => window.print()} className="px-4 py-2 bg-white dark:bg-slate-800 border border-border rounded-lg text-[13px] font-bold shadow-sm hover:bg-slate-50 flex items-center gap-2">
+          <button onClick={() => PrintService.print('printable-area', { pageSize: 'A4' })} className="px-4 py-2 bg-white dark:bg-slate-800 border border-border rounded-lg text-[13px] font-bold shadow-sm hover:bg-slate-50 flex items-center gap-2">
             <Download className="w-4 h-4" /> Export Report
           </button>
         </div>

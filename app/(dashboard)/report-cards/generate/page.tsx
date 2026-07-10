@@ -237,12 +237,12 @@ export default function GenerateReportCardsPage() {
   }).filter(Boolean))];
 
   // Filter students by section
-  const sectionStudents = selectedSection
+  const sectionStudents = (selectedSection && selectedSection !== "All")
     ? students.filter((s) => {
-        const cls = s.class_id;
-        if (typeof cls === "object" && cls) return (cls as any).section === selectedSection;
-        return false;
-      })
+      const cls = s.class_id;
+      if (typeof cls === "object" && cls) return (cls as any).section === selectedSection;
+      return false;
+    })
     : students;
 
   const filteredStudents = sectionStudents.filter((s) =>
@@ -414,7 +414,7 @@ export default function GenerateReportCardsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-          <span className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center">
+          <span className="w-9 h-9 rounded-xl bg-amber-600 flex items-center justify-center">
             <BookOpen className="w-5 h-5 text-white" />
           </span>
           Generate Report Cards
@@ -430,17 +430,15 @@ export default function GenerateReportCardsPage() {
           {STEPS.map((s, i) => (
             <React.Fragment key={s.id}>
               <div
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap text-[12px] font-semibold transition-all cursor-default ${
-                  step === s.id
-                    ? "bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg whitespace-nowrap text-[12px] font-semibold transition-all cursor-default ${step === s.id
+                    ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
                     : step > s.id
-                    ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600"
-                    : "text-slate-400 dark:text-slate-500"
-                }`}
+                      ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600"
+                      : "text-slate-400 dark:text-slate-500"
+                  }`}
               >
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                  step > s.id ? "bg-emerald-500 text-white" : step === s.id ? "bg-indigo-600 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-500"
-                }`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${step > s.id ? "bg-emerald-500 text-white" : step === s.id ? "bg-amber-600 text-white" : "bg-slate-200 dark:bg-slate-700 text-slate-500"
+                  }`}>
                   {step > s.id ? <Check className="w-3 h-3" /> : s.id}
                 </div>
                 {s.label}
@@ -457,17 +455,16 @@ export default function GenerateReportCardsPage() {
         {/* Step 1: Academic Year */}
         {step === 1 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><Calendar className="w-5 h-5 text-indigo-500" /> Select Academic Year</h2>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" /> Select Academic Year</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-4">
               {ACADEMIC_YEARS.map((y) => (
                 <button
                   key={y}
                   onClick={() => setSelectedYear(y)}
-                  className={`py-4 rounded-xl border-2 text-[14px] font-bold transition-all cursor-pointer ${
-                    selectedYear === y
-                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                      : "border-border bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-300"
-                  }`}
+                  className={`py-4 rounded-xl border-2 text-[14px] font-bold transition-all cursor-pointer ${selectedYear === y
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-primary/50"
+                    }`}
                 >
                   {y}
                 </button>
@@ -479,7 +476,7 @@ export default function GenerateReportCardsPage() {
         {/* Step 2: Exam */}
         {step === 2 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><FileText className="w-5 h-5 text-indigo-500" /> Select Exam</h2>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> Select Exam</h2>
             {examsLoading ? (
               <div className="flex items-center gap-2 text-slate-400 py-8 justify-center"><Loader2 className="w-5 h-5 animate-spin" /> Loading exams…</div>
             ) : filteredExams.length === 0 ? (
@@ -490,11 +487,10 @@ export default function GenerateReportCardsPage() {
                   <button
                     key={ex._id}
                     onClick={() => setSelectedExamId(ex._id)}
-                    className={`text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${
-                      selectedExamId === ex._id
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30"
-                        : "border-border hover:border-indigo-300 bg-white dark:bg-slate-800"
-                    }`}
+                    className={`text-left p-4 rounded-xl border-2 transition-all cursor-pointer ${selectedExamId === ex._id
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/50 bg-white dark:bg-slate-800"
+                      }`}
                   >
                     <p className="font-bold text-[14px] text-slate-800 dark:text-slate-100">{ex.name || ex.title}</p>
                     <p className="text-[12px] text-slate-400 mt-1">{ex.type?.replace(/_/g, " ")} · {ex.academic_year}</p>
@@ -508,7 +504,7 @@ export default function GenerateReportCardsPage() {
         {/* Step 3: Class */}
         {step === 3 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><BookOpen className="w-5 h-5 text-indigo-500" /> Select Class</h2>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><BookOpen className="w-5 h-5 text-primary" /> Select Class</h2>
             {classesLoading ? (
               <div className="flex items-center gap-2 text-slate-400 py-8 justify-center"><Loader2 className="w-5 h-5 animate-spin" /> Loading classes…</div>
             ) : (
@@ -517,11 +513,10 @@ export default function GenerateReportCardsPage() {
                   <button
                     key={cls._id}
                     onClick={() => setSelectedClassId(cls._id)}
-                    className={`py-4 px-3 rounded-xl border-2 text-[14px] font-bold transition-all cursor-pointer ${
-                      selectedClassId === cls._id
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                        : "border-border bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-300"
-                    }`}
+                    className={`py-4 px-3 rounded-xl border-2 text-[14px] font-bold transition-all cursor-pointer ${selectedClassId === cls._id
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-primary/50"
+                      }`}
                   >
                     {cls.name}
                   </button>
@@ -534,22 +529,33 @@ export default function GenerateReportCardsPage() {
         {/* Step 4: Section */}
         {step === 4 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><Users className="w-5 h-5 text-indigo-500" /> Select Section</h2>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><Users className="w-5 h-5 text-primary" /> Select Section</h2>
             {studentsLoading ? (
               <div className="flex items-center gap-2 text-slate-400 py-8 justify-center"><Loader2 className="w-5 h-5 animate-spin" /> Loading students…</div>
             ) : sections.length === 0 ? (
-              <p className="text-[13px] text-slate-400 py-8 text-center">No sections found. Students may not have sections assigned.</p>
+              <div className="flex flex-col items-center justify-center py-8 gap-4 bg-slate-50 dark:bg-slate-800/20 border border-dashed border-border rounded-xl w-full">
+                <p className="text-[13px] text-slate-400 text-center font-medium">No sections found. Students may not have sections assigned.</p>
+                <button
+                  type="button"
+                  onClick={() => { setSelectedSection("All"); setStep(5); }}
+                  className={`px-6 py-3 rounded-xl border-2 text-[13px] font-bold transition-all cursor-pointer flex items-center gap-2 ${selectedSection === "All"
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-primary/50 hover:shadow"
+                    }`}
+                >
+                  <Check className="w-4 h-4" /> Skip Section Filter (All Students)
+                </button>
+              </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                 {sections.map((sec) => (
                   <button
                     key={sec}
                     onClick={() => setSelectedSection(sec)}
-                    className={`py-4 rounded-xl border-2 text-[14px] font-bold transition-all cursor-pointer ${
-                      selectedSection === sec
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                        : "border-border bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-300"
-                    }`}
+                    className={`py-4 rounded-xl border-2 text-[14px] font-bold transition-all cursor-pointer ${selectedSection === sec
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-primary/50"
+                      }`}
                   >
                     Section {sec}
                   </button>
@@ -558,11 +564,10 @@ export default function GenerateReportCardsPage() {
                 {sections.length === 0 && (
                   <button
                     onClick={() => setSelectedSection("All")}
-                    className={`py-4 rounded-xl border-2 text-[14px] font-bold transition-all cursor-pointer ${
-                      selectedSection === "All"
-                        ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300"
-                        : "border-border bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-indigo-300"
-                    }`}
+                    className={`py-4 rounded-xl border-2 text-[14px] font-bold transition-all cursor-pointer ${selectedSection === "All"
+                        ? "border-amber-500 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300"
+                        : "border-border bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-300"
+                      }`}
                   >
                     All Students
                   </button>
@@ -575,7 +580,7 @@ export default function GenerateReportCardsPage() {
         {/* Step 5: Students */}
         {step === 5 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><Users className="w-5 h-5 text-indigo-500" /> Choose Students</h2>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><Users className="w-5 h-5 text-primary" /> Choose Students</h2>
 
             <div className="flex gap-3 flex-wrap">
               {[
@@ -586,11 +591,10 @@ export default function GenerateReportCardsPage() {
                 <button
                   key={opt.value}
                   onClick={() => { setStudentMode(opt.value as any); setSelectedStudentIds([]); }}
-                  className={`flex-1 min-w-[150px] p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
-                    studentMode === opt.value
-                      ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-900/30"
-                      : "border-border bg-white dark:bg-slate-800 hover:border-indigo-300"
-                  }`}
+                  className={`flex-1 min-w-[150px] p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${studentMode === opt.value
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-white dark:bg-slate-800 hover:border-primary/50"
+                    }`}
                 >
                   <div className="font-bold text-[13px] text-slate-800 dark:text-slate-100">{opt.label}</div>
                   <div className="text-[11px] text-slate-400 mt-1">{opt.desc}</div>
@@ -607,7 +611,7 @@ export default function GenerateReportCardsPage() {
                     placeholder="Search students…"
                     value={studentSearch}
                     onChange={(e) => setStudentSearch(e.target.value)}
-                    className="pl-9 pr-4 py-2 w-full max-w-xs bg-white dark:bg-slate-800 border border-border rounded-lg text-[13px] outline-none focus:border-indigo-400"
+                    className="pl-9 pr-4 py-2 w-full max-w-xs bg-white dark:bg-slate-800 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50"
                   />
                 </div>
                 <div className="max-h-72 overflow-y-auto divide-y divide-border border border-border rounded-xl">
@@ -625,13 +629,11 @@ export default function GenerateReportCardsPage() {
                             );
                           }
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer ${
-                          isSelected ? "bg-indigo-50 dark:bg-indigo-900/20" : "bg-white dark:bg-slate-900"
-                        }`}
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer ${isSelected ? "bg-amber-50 dark:bg-amber-900/20" : "bg-white dark:bg-slate-900"
+                          }`}
                       >
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-                          isSelected ? "border-indigo-600 bg-indigo-600" : "border-slate-300 dark:border-slate-600"
-                        }`}>
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? "border-amber-600 bg-amber-600" : "border-slate-300 dark:border-slate-600"
+                          }`}>
                           {isSelected && <Check className="w-3 h-3 text-white" />}
                         </div>
                         <div>
@@ -653,18 +655,17 @@ export default function GenerateReportCardsPage() {
         {/* Step 6: Template */}
         {step === 6 && (
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><LayoutTemplate className="w-5 h-5 text-indigo-500" /> Choose Report Card Template</h2>
+            <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><LayoutTemplate className="w-5 h-5 text-amber-500" /> Choose Report Card Template</h2>
             <p className="text-[13px] text-slate-500 dark:text-slate-400">Select a template — it will be opened in the Document Builder with all data pre-filled.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
               {RC_TEMPLATES.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setTemplateId(t.id)}
-                  className={`text-left rounded-xl border-2 overflow-hidden transition-all cursor-pointer ${
-                    templateId === t.id
-                      ? "border-indigo-500 shadow-lg shadow-indigo-100 dark:shadow-indigo-900/20"
-                      : "border-border hover:border-indigo-300"
-                  }`}
+                  className={`text-left rounded-xl border-2 overflow-hidden transition-all cursor-pointer ${templateId === t.id
+                      ? "border-amber-500 shadow-lg shadow-amber-100 dark:shadow-amber-900/20"
+                      : "border-border hover:border-amber-300"
+                    }`}
                 >
                   {/* Template thumbnail */}
                   <div className="h-28 relative flex items-center justify-center" style={{ background: t.thumbnailBg }}>
@@ -672,7 +673,7 @@ export default function GenerateReportCardsPage() {
                       <FileText className="w-6 h-6 text-white/60" />
                     </div>
                     {templateId === t.id && (
-                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center shadow">
+                      <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-amber-600 flex items-center justify-center shadow">
                         <Check className="w-3.5 h-3.5 text-white" />
                       </div>
                     )}
@@ -695,14 +696,12 @@ export default function GenerateReportCardsPage() {
               <button
                 type="button"
                 onClick={() => setEnablePracticalInternal(!enablePracticalInternal)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  enablePracticalInternal ? "bg-indigo-600" : "bg-slate-200 dark:bg-slate-700"
-                }`}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${enablePracticalInternal ? "bg-amber-600" : "bg-slate-200 dark:bg-slate-700"
+                  }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    enablePracticalInternal ? "translate-x-5" : "translate-x-0"
-                  }`}
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${enablePracticalInternal ? "translate-x-5" : "translate-x-0"
+                    }`}
                 />
               </button>
             </div>
@@ -724,7 +723,7 @@ export default function GenerateReportCardsPage() {
             <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => router.push("/report-cards/generated")}
-                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[14px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+                className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[14px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
               >
                 <Eye className="w-4 h-4" /> View Generated Report Cards
               </button>
@@ -735,7 +734,7 @@ export default function GenerateReportCardsPage() {
                 return docId ? (
                   <button
                     onClick={() => router.push(`/documents/builder/${docId}?reportCardMode=true`)}
-                    className="px-6 py-3 bg-white dark:bg-slate-800 border border-border hover:border-indigo-400 text-slate-800 dark:text-slate-100 font-bold text-[14px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
+                    className="px-6 py-3 bg-white dark:bg-slate-800 border border-border hover:border-amber-400 text-slate-800 dark:text-slate-100 font-bold text-[14px] rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <FileText className="w-4 h-4" /> Open in Document Builder
                   </button>
@@ -770,7 +769,7 @@ export default function GenerateReportCardsPage() {
             <button
               onClick={() => canProceed() && setStep(step + 1)}
               disabled={!canProceed()}
-              className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-[13px] rounded-xl transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-[13px] rounded-xl transition-colors cursor-pointer"
             >
               Next <ChevronRight className="w-4 h-4" />
             </button>
@@ -778,7 +777,7 @@ export default function GenerateReportCardsPage() {
             <button
               onClick={handleGenerate}
               disabled={!canProceed() || isGenerating}
-              className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[13px] rounded-xl transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-[13px] rounded-xl transition-colors cursor-pointer"
             >
               {isGenerating ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Generating…</>

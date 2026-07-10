@@ -19,7 +19,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from "lucide-react";
-
+import { PrintService } from "@/app/lib/print-service";
 interface ClassWiseSummary {
   class_id: string;
   class_name: string;
@@ -281,7 +281,7 @@ export default function FinanceReportPage() {
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => PrintService.print('printable-area', { pageSize: 'A4' })}
             className="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer"
             title="Print report layout"
           >

@@ -1,17 +1,17 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { useTeachers } from "@/app/hooks/useTeachers";
-import { 
-  DollarSign, 
-  Users, 
-  TrendingUp, 
-  Search, 
-  Check, 
-  FileText, 
-  Download, 
-  Loader2, 
+import {
+  DollarSign,
+  Users,
+  TrendingUp,
+  Search,
+  Check,
+  FileText,
+  Download,
+  Loader2,
   CreditCard,
   Printer,
   ChevronDown,
@@ -23,6 +23,7 @@ import {
   FileSpreadsheet,
   AlertCircle
 } from "lucide-react";
+import { PrintButton } from "@/app/components/ui/PrintButton";
 import { Modal } from "@/app/components/ui/modal";
 import { getPersistedPageSize, PaginationBar } from "@/app/components/ui/pagination-bar";
 import { getAuthHeaders } from "@/lib/utils/session";
@@ -32,7 +33,7 @@ export default function SalaryDashboardPage() {
   const { teachers, isLoading: isTeachersLoading, fetchTeachers } = useTeachers();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
-  
+
   // Tab State: "desk" | "reports"
   const [activeTab, setActiveTab] = useState<"desk" | "reports">("desk");
 
@@ -151,12 +152,12 @@ export default function SalaryDashboardPage() {
   const salaryList = useMemo(() => {
     return teachers.map((t) => {
       const baseSalary = t.basic_salary || 0;
-      
+
       // Find latest payout from all payments
       const teacherPayouts = allPayments.filter(
         p => p.teacher_id && (p.teacher_id._id === t._id || p.teacher_id === t._id)
       );
-      
+
       let lastPaid = "Never";
       if (teacherPayouts.length > 0) {
         const sorted = [...teacherPayouts].sort(
@@ -190,10 +191,10 @@ export default function SalaryDashboardPage() {
   // Filter Salaries
   const filteredSalaries = useMemo(() => {
     return salaryList.filter((s) => {
-      const matchesSearch = 
+      const matchesSearch =
         s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         s.empId.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = selectedStatus === "all" || 
+      const matchesStatus = selectedStatus === "all" ||
         (selectedStatus === "Paid" && s.status === "Paid") ||
         (selectedStatus === "Unpaid" && s.status === "Unpaid") ||
         (selectedStatus === "Pending Setup" && s.status === "Pending Setup");
@@ -431,7 +432,7 @@ export default function SalaryDashboardPage() {
 
   const pendingMonthsInfo = useMemo(() => {
     if (!payTeacher || !payData) return { count: 1, amount: 0, periods: [] };
-    
+
     return {
       count: 1,
       amount: payData.totalPayableAmount,
@@ -441,7 +442,7 @@ export default function SalaryDashboardPage() {
 
   const handleConfirmPayment = async () => {
     if (!payData) return;
-    
+
     // Validate again before submitting
     const bAmt = Number(bonus || 0);
     const dAmt = Number(deduction || 0);
@@ -555,7 +556,7 @@ export default function SalaryDashboardPage() {
 
   // ─── Helpers ────────────────────────────────────────────────────
   const money = (val: number) => "₹ " + (val || 0).toLocaleString("en-IN");
-  
+
   const fmtDate = (d: string) => {
     if (!d) return "—";
     const date = new Date(d);
@@ -622,21 +623,19 @@ export default function SalaryDashboardPage() {
         <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
           <button
             onClick={() => setActiveTab("desk")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === "desk"
-                ? "bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-sm"
-                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
-            }`}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "desk"
+              ? "bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-sm"
+              : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+              }`}
           >
             Salary Desk
           </button>
           <button
             onClick={() => setActiveTab("reports")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === "reports"
-                ? "bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-sm"
-                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
-            }`}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "reports"
+              ? "bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-sm"
+              : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"
+              }`}
           >
             Reports Desk
           </button>
@@ -700,11 +699,10 @@ export default function SalaryDashboardPage() {
                       <button
                         key={st}
                         onClick={() => { setSelectedStatus(st); setCurrentPage(1); }}
-                        className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-                          selectedStatus === st
-                            ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm border border-border"
-                            : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-350"
-                        }`}
+                        className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${selectedStatus === st
+                          ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm border border-border"
+                          : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-350"
+                          }`}
                       >
                         {st === "all" ? "All Accounts" : st}
                       </button>
@@ -762,13 +760,12 @@ export default function SalaryDashboardPage() {
                             </td>
                             <td className="px-6 py-4 font-bold text-slate-500 dark:text-slate-400">{s.lastPaid}</td>
                             <td className="px-6 py-4">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-                                s.status === "Paid"
-                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                                  : s.status === "Unpaid"
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${s.status === "Paid"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
+                                : s.status === "Unpaid"
                                   ? "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20"
                                   : "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-350 dark:border-slate-700"
-                              }`}>
+                                }`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${s.status === "Paid" ? "bg-emerald-500" : s.status === "Unpaid" ? "bg-rose-500" : "bg-slate-400"}`} />
                                 {s.status}
                               </span>
@@ -857,7 +854,7 @@ export default function SalaryDashboardPage() {
                       className="px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none"
                     />
                   </div>
-                  
+
                   <div className="flex flex-col">
                     <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1">End Date</span>
                     <input
@@ -877,8 +874,8 @@ export default function SalaryDashboardPage() {
                     <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Export CSV
                   </button>
                   <button
-                    onClick={() => window.print()}
-                    className="px-4 py-2.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/95 transition-colors flex items-center gap-2"
+                    onClick={() => { import("@/app/lib/print-service").then(m => m.PrintService.print("printable-salary-report", { pageSize: "A4", margin: "10mm" })) }}
+                    className="print:hidden px-4 py-2.5 bg-primary text-white text-xs font-bold rounded-xl hover:bg-primary/95 transition-colors flex items-center gap-2"
                   >
                     <Printer className="w-4 h-4" /> Print / Export PDF
                   </button>
@@ -931,7 +928,7 @@ export default function SalaryDashboardPage() {
               </div>
 
               {/* Payments Report Table */}
-              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left" id="printable-salary-report">
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left" id="printable-salary-report" data-print-zone="true">
                 <div className="px-6 py-4 border-b border-border bg-slate-50/50 dark:bg-slate-800/50 flex justify-between items-center">
                   <h3 className="font-bold text-slate-800 dark:text-white text-sm">Disbursement Log - {selectedPeriod}</h3>
                 </div>
@@ -1230,14 +1227,14 @@ export default function SalaryDashboardPage() {
                     <h4 className="text-[10px] uppercase font-bold tracking-wider text-slate-500 border-b border-border pb-1">
                       Salary Summary
                     </h4>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                       {/* Payable Amount */}
                       <div className="flex flex-col gap-1 text-left">
                         <label className="font-bold text-slate-500">Payable Amount (Auto Calculated)</label>
                         <div className="relative mt-1">
                           <span className="absolute left-3 top-2 text-slate-450 font-bold">₹</span>
-                          <input 
+                          <input
                             type="text"
                             readOnly
                             value={(payData.totalPayableAmount || 0).toLocaleString("en-IN")}
@@ -1273,7 +1270,7 @@ export default function SalaryDashboardPage() {
                         <label className="font-bold text-slate-700 dark:text-slate-300">Bonus (₹)</label>
                         <div className="relative mt-1">
                           <span className="absolute left-3 top-2 text-slate-450 font-bold">₹</span>
-                          <input 
+                          <input
                             type="number"
                             min="0"
                             value={bonus}
@@ -1288,7 +1285,7 @@ export default function SalaryDashboardPage() {
                         <label className="font-bold text-slate-700 dark:text-slate-300">Deduction (₹)</label>
                         <div className="relative mt-1">
                           <span className="absolute left-3 top-2 text-slate-450 font-bold">₹</span>
-                          <input 
+                          <input
                             type="number"
                             min="0"
                             value={deduction}
@@ -1310,17 +1307,16 @@ export default function SalaryDashboardPage() {
                         </label>
                         <div className="relative mt-1.5">
                           <span className="absolute left-3 top-2.5 text-slate-400 font-bold text-sm">₹</span>
-                          <input 
+                          <input
                             type="number"
                             min="0"
                             readOnly={!isManualOverride}
                             value={finalSalaryAmount}
                             onChange={(e) => setFinalSalaryAmount(e.target.value)}
-                            className={`w-full pl-7 pr-3 py-2 font-mono text-sm font-black border rounded-lg outline-none text-right ${
-                              isManualOverride 
-                                ? "bg-white dark:bg-slate-900 text-primary border-primary" 
-                                : "bg-slate-100 dark:bg-slate-800 text-slate-655 border-border cursor-not-allowed"
-                            }`}
+                            className={`w-full pl-7 pr-3 py-2 font-mono text-sm font-black border rounded-lg outline-none text-right ${isManualOverride
+                              ? "bg-white dark:bg-slate-900 text-primary border-primary"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-655 border-border cursor-not-allowed"
+                              }`}
                           />
                         </div>
                       </div>
@@ -1476,19 +1472,19 @@ export default function SalaryDashboardPage() {
       {/* MODAL: SALARY SLIP VIEW/PRINT */}
       {selectedSlip && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col dark:bg-slate-900 animate-in zoom-in-95 duration-200">
-            
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col dark:bg-slate-900 animate-in zoom-in-95 duration-200">
+
             {/* Slip Header Actions */}
             <div className="flex items-center justify-between p-4 border-b border-border print:hidden">
               <h2 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest">Teacher Salary Slip</h2>
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => window.print()}
-                  className="px-4 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
+                <button
+                  onClick={() => { import("@/app/lib/print-service").then(m => m.PrintService.print("printable-payslip", { pageSize: "A4", margin: "10mm" })) }}
+                  className="print:hidden px-4 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
                 >
                   <Printer className="w-4 h-4" /> Print / PDF
                 </button>
-                <button 
+                <button
                   onClick={() => setSelectedSlip(null)}
                   className="p-2 text-slate-400 hover:text-slate-650 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                 >
@@ -1498,7 +1494,7 @@ export default function SalaryDashboardPage() {
             </div>
 
             {/* Printable Slip Container */}
-            <div className="p-8 overflow-y-auto print:p-0 print:overflow-visible print:w-full print:absolute print:left-0 print:top-0 text-left font-serif" id="printable-payslip">
+            <div className="p-8 overflow-y-auto print:p-0 print:overflow-visible print:w-full print:absolute print:left-0 print:top-0 text-left font-serif" id="printable-payslip" data-print-zone="true">
 
               {/* School Details */}
               <div className="text-center mb-8 border-b-2 border-slate-800 pb-5">
@@ -1548,8 +1544,8 @@ export default function SalaryDashboardPage() {
                 <div>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Total Days</span>
                   <span className="text-sm font-bold text-slate-800 dark:text-white mt-1 block">
-                    {selectedSlip.start_date && selectedSlip.end_date 
-                      ? Math.floor((new Date(selectedSlip.end_date).getTime() - new Date(selectedSlip.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1 
+                    {selectedSlip.start_date && selectedSlip.end_date
+                      ? Math.floor((new Date(selectedSlip.end_date).getTime() - new Date(selectedSlip.start_date).getTime()) / (1000 * 60 * 60 * 24)) + 1
                       : 30} days
                   </span>
                 </div>
@@ -1659,7 +1655,7 @@ export default function SalaryDashboardPage() {
                 </div>
               </div>
             </div>
-            
+
           </div>
         </div>
       )}
@@ -1675,3 +1671,4 @@ export default function SalaryDashboardPage() {
     </div>
   );
 }
+

@@ -11,7 +11,7 @@ import Teacher from "./Teacher";
 import LandingContent from "./LandingContent";
 import GeneratedDocument from "./GeneratedDocument";
 
-export { Class, Student };
+export { Class, Student, School, User, Stream, Section, Teacher, LandingContent, GeneratedDocument };
 
 // ─── Subject ──────────────────────────────────────────────────────
 export interface ISubject extends Document {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -7,6 +7,7 @@ import {
 import { useTeachers } from "../../../hooks/useTeachers";
 import { getAuthHeaders } from "@/lib/utils/session";
 import ReportTabs from "../ReportTabs";
+import { PrintService } from "@/app/lib/print-service";
 
 interface TeacherRecentAttendanceMap {
   [teacherId: string]: string[];
@@ -216,7 +217,7 @@ export default function TeacherReportPage() {
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => PrintService.print('printable-area', { pageSize: 'A4' })}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer dark:text-slate-400"
           >
             <Printer className="w-4 h-4" />
@@ -569,7 +570,7 @@ export default function TeacherReportPage() {
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => window.print()}
+                  onClick={() => PrintService.print('printable-area', { pageSize: 'A4' })}
                   className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-border text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   <Printer className="w-3.5 h-3.5" /> Print

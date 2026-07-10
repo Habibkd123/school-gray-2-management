@@ -11,6 +11,7 @@ import {
 
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useClasses } from "@/app/hooks/useClasses";
+import { PrintService } from "@/app/lib/print-service";
 
 interface BulkImportProps {
   module: "students" | "teachers";
@@ -487,7 +488,7 @@ export default function BulkImport({
           <tbody>${tableRows}</tbody>
         </table>
         <br/>
-        <button onclick="window.print()" style="padding:8px 20px;background:#1e293b;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px">Print / Save as PDF</button>
+        <button onclick="PrintService.print('printable-area', { pageSize: 'A4' })" style="padding:8px 20px;background:#1e293b;color:white;border:none;border-radius:6px;cursor:pointer;font-size:13px">Print / Save as PDF</button>
       </body>
       </html>
     `);

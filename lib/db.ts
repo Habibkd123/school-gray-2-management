@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import "./models";
+import * as models from "./models";
 
 const MONGODB_URI = process.env.MONGODB_URI as string;
 
@@ -43,6 +43,8 @@ const MONGOOSE_OPTS: mongoose.ConnectOptions = {
 };
 
 async function connectDB(): Promise<typeof mongoose> {
+  // Reference models to prevent tree-shaking of registrations
+  const _ = models;
   if (cached.conn) {
     return cached.conn;
   }

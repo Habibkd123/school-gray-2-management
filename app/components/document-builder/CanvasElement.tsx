@@ -16,15 +16,40 @@ function TableInsertHandles({
 }) {
   const [hoveredRow, setHoveredRow] = useState<number | null>(null);
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
-  const [popover, setPopover] = useState<{ type: "row" | "col"; index: number } | null>(null);
+  // popover: uniquely identified by both type AND a unique handle key string
+  const [popover, setPopover] = useState<{ key: string; type: "row" | "col"; index: number; insertAfter: boolean } | null>(null);
+  const isInsertingRef = useRef(false);
 
+  // Escape key + outside-click closes the active popover
+  // NOTE: useEffect MUST be before any conditional returns (Rules of Hooks)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPopover(null);
+    };
+    const onOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-tbl-handles]")) setPopover(null);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onOutside);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("mousedown", onOutside);
+    };
+  }, []);
+
+  // Early return guard AFTER all hooks
   if (!element.tableData) return null;
-  const { rows, cols, cells } = element.tableData;
+  const { rows, cols } = element.tableData;
   const colWidths = element.tableData.colWidths || Array(cols).fill(element.width / cols);
   const rowHeights = element.tableData.rowHeights || Array(rows).fill(element.height / rows);
   const spans = element.tableData.spans || Array.from({ length: rows }, () => Array(cols).fill({}));
 
   const runTableCmd = (cmd: string, index: number) => {
+    if (isInsertingRef.current) return; // debounce rapid clicks
+    isInsertingRef.current = true;
+    setTimeout(() => { isInsertingRef.current = false; }, 350);
+
     const tData = element.tableData!;
     const cWidths = tData.colWidths || Array(tData.cols).fill(element.width / tData.cols);
     const rHeights = tData.rowHeights || Array(tData.rows).fill(element.height / tData.rows);
@@ -116,136 +141,166 @@ function TableInsertHandles({
   }
 
   const HANDLE_SZ = 16;
+
+  // ROW actions — shown only on left-side row handles
   const ROW_ACTIONS = [
-    { action: "addRowAbove",  label: "Insert Above" },
-    { action: "addRowBelow",  label: "Insert Below" },
-    { action: "duplicateRow", label: "Duplicate" },
-    { action: "deleteRow",    label: "Delete",    danger: true },
+    { action: "addRowAbove",  label: "Insert Row Above", icon: "↑" },
+    { action: "addRowBelow",  label: "Insert Row Below", icon: "↓" },
+    { action: "duplicateRow", label: "Duplicate Row",    icon: "⎘" },
+    { action: "deleteRow",    label: "Delete Row",       icon: "✕", danger: true },
   ];
+  // COL actions — shown only on top-side col handles
   const COL_ACTIONS = [
-    { action: "addColLeft",   label: "Insert Left" },
-    { action: "addColRight",  label: "Insert Right" },
-    { action: "duplicateCol", label: "Duplicate" },
-    { action: "deleteCol",    label: "Delete",   danger: true },
+    { action: "addColLeft",   label: "Insert Column Left",  icon: "←" },
+    { action: "addColRight",  label: "Insert Column Right", icon: "→" },
+    { action: "duplicateCol", label: "Duplicate Column",    icon: "⎘" },
+    { action: "deleteCol",    label: "Delete Column",       icon: "✕", danger: true },
   ];
+
+  const openPopover = (key: string, type: "row" | "col", index: number, insertAfter: boolean) => {
+    // Enforce single-menu: if same key is already open → close; else → switch to new
+    setPopover(prev => prev?.key === key ? null : { key, type, index, insertAfter });
+  };
+
+  const renderPopover = (
+    type: "row" | "col",
+    actions: typeof ROW_ACTIONS,
+    rowIndex: number,
+    colIndex: number,
+    popoverStyle: React.CSSProperties,
+  ) => (
+    <div
+      data-tbl-handles
+      onMouseDown={(e) => e.stopPropagation()}
+      style={{
+        position: "absolute",
+        ...popoverStyle,
+        background: "white",
+        borderRadius: 10,
+        border: "1px solid #E2E8F0",
+        boxShadow: "0 12px 32px -4px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)",
+        padding: "4px 0",
+        zIndex: 10000,
+        minWidth: 175,
+        animation: "tbl-popover-in 0.13s cubic-bezier(0.34,1.56,0.64,1)",
+        whiteSpace: "nowrap",
+        pointerEvents: "all",
+      }}
+    >
+      {actions.map((a) => (
+        <button
+          key={a.action}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            const idx = type === "row" ? rowIndex : colIndex;
+            runTableCmd(a.action, idx);
+          }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            width: "100%",
+            padding: "7px 14px",
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            fontSize: 12,
+            fontWeight: 500,
+            color: (a as any).danger ? "#EF4444" : "#1E293B",
+            textAlign: "left",
+            transition: "background 0.1s",
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.background = (a as any).danger ? "#FEF2F2" : "#F1F5F9";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.background = "transparent";
+          }}
+        >
+          <span style={{ fontSize: 11, opacity: 0.6, width: 14, textAlign: "center" }}>{a.icon}</span>
+          {a.label}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
-    <>
+    <div data-tbl-handles style={{ position: "absolute", inset: 0, pointerEvents: "none" }}>
       <style>{`
-        @keyframes handle-in { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
-        .tbl-handle { animation: handle-in 0.12s ease-out; }
-        .tbl-handle:hover { background: #2563EB !important; color: white !important; transform: scale(1.15) !important; }
-        .tbl-popover-item:hover { background: #F1F5F9 !important; }
-        .tbl-popover-item-danger:hover { background: #FEF2F2 !important; color: #DC2626 !important; }
+        @keyframes tbl-handle-in { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+        @keyframes tbl-popover-in { from { opacity: 0; transform: scale(0.92) translateY(-4px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .tbl-h { animation: tbl-handle-in 0.12s ease-out; pointer-events: all; }
+        .tbl-h:hover { background: #2563EB !important; color: white !important; border-color: #2563EB !important; transform: scale(1.18) !important; box-shadow: 0 3px 10px rgba(37,99,235,0.35) !important; }
+        .tbl-h-active { background: #2563EB !important; color: white !important; border-color: #2563EB !important; }
       `}</style>
 
-      {/* Row handles — left side, between each row */}
-      {rowYPositions.slice(0, rows + 1).map((yPos, idx) => {
-        // idx=0 is above row 0, idx=r is between row r-1 and r, idx=rows is below last row
-        const isVisible = hoveredRow === idx;
-        const midY = idx === 0 ? yPos : idx === rows ? yPos : (rowYPositions[idx - 1] + rowHeights[idx - 1] / 2 + rowYPositions[idx] - rowHeights[idx - 1] / 2) / 2;
-        // Always show handle between existing rows; determine which row this inserts near
-        const nearRow = idx > 0 ? idx - 1 : 0;
+      {/* ── ROW handles — left side, one per row ─────────────────────────── */}
+      {Array.from({ length: rows }).map((_, rIdx) => {
+        const yCenter = rowYPositions[rIdx] + (rowHeights[rIdx] || 32) / 2;
+        const handleKey = `row-mid-${rIdx}`;
+        const isActive = popover?.key === handleKey;
         return (
-          <div
-            key={`row-handle-${idx}`}
-            className="tbl-handle"
-            onMouseEnter={() => setHoveredRow(idx)}
-            onMouseLeave={() => { if (popover?.type !== "row" || popover.index !== nearRow) setHoveredRow(null); }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setPopover(popover?.type === "row" && popover.index === nearRow ? null : { type: "row", index: nearRow });
-            }}
-            title={idx === 0 ? "Insert row above" : idx === rows ? "Insert row below" : "Row options"}
-            style={{
-              position: "absolute",
-              left: -HANDLE_SZ - 6,
-              top: yPos - HANDLE_SZ / 2,
-              width: HANDLE_SZ,
-              height: HANDLE_SZ,
-              borderRadius: "50%",
-              background: "#E0EAFB",
-              border: "1.5px solid #93C5FD",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#2563EB",
-              cursor: "pointer",
-              zIndex: 30,
-              transition: "all 0.1s",
-              userSelect: "none",
-              boxShadow: "0 1px 4px rgba(37,99,235,0.18)",
-            }}
-          >
-            +
-            {/* Popover for row actions */}
-            {popover?.type === "row" && popover.index === nearRow && (
-              <div
-                onMouseLeave={() => { setPopover(null); setHoveredRow(null); }}
-                style={{
-                  position: "absolute",
-                  left: HANDLE_SZ + 4,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "white",
-                  borderRadius: 8,
-                  border: "1px solid #E2E8F0",
-                  boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12)",
-                  padding: "4px 0",
-                  zIndex: 9999,
-                  minWidth: 155,
-                  animation: "handle-in 0.12s ease-out",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                {ROW_ACTIONS.map((a) => (
-                  <button
-                    key={a.action}
-                    className={`tbl-popover-item${(a as any).danger ? " tbl-popover-item-danger" : ""}`}
-                    onMouseDown={(e) => { e.stopPropagation(); runTableCmd(a.action, nearRow); }}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      padding: "6px 14px",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: 12,
-                      fontWeight: 500,
-                      color: (a as any).danger ? "#EF4444" : "#1E293B",
-                      textAlign: "left",
-                    }}
-                  >
-                    {a.label}
-                  </button>
-                ))}
-              </div>
-            )}
+          <div key={handleKey} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "none" }}>
+            <div
+              className={`tbl-h${isActive ? " tbl-h-active" : ""}`}
+              title={`Row ${rIdx + 1} options`}
+              onClick={(e) => { e.stopPropagation(); openPopover(handleKey, "row", rIdx, false); }}
+              onMouseEnter={() => setHoveredRow(rIdx)}
+              onMouseLeave={() => { if (!isActive) setHoveredRow(null); }}
+              style={{
+                position: "absolute",
+                left: -HANDLE_SZ - 6,
+                top: yCenter - HANDLE_SZ / 2,
+                width: HANDLE_SZ,
+                height: HANDLE_SZ,
+                borderRadius: "50%",
+                background: "#E0EAFB",
+                border: "1.5px solid #93C5FD",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#2563EB",
+                cursor: "pointer",
+                zIndex: 30,
+                transition: "all 0.12s",
+                userSelect: "none",
+                boxShadow: "0 1px 4px rgba(37,99,235,0.18)",
+                pointerEvents: "all",
+              }}
+            >
+              +
+              {/* Row popover — only row actions */}
+              {isActive && renderPopover(
+                "row", ROW_ACTIONS, rIdx, 0,
+                { left: HANDLE_SZ + 6, top: "50%", transform: "translateY(-50%)" },
+              )}
+            </div>
           </div>
         );
       })}
 
-      {/* Col handles — above each column */}
-      {colXPositions.slice(0, cols + 1).map((xPos, idx) => {
-        const nearCol = idx > 0 ? idx - 1 : 0;
+      {/* ── BOTTOM row insert — directly inserts a row below the last row ── */}
+      {(() => {
+        const yPos = rowYPositions[rows]; // bottom edge of last row
+        const handleKey = "row-bottom-insert";
+        const isActive = popover?.key === handleKey;
         return (
           <div
-            key={`col-handle-${idx}`}
-            className="tbl-handle"
-            onMouseEnter={() => setHoveredCol(idx)}
-            onMouseLeave={() => { if (popover?.type !== "col" || popover.index !== nearCol) setHoveredCol(null); }}
+            className={`tbl-h${isActive ? " tbl-h-active" : ""}`}
+            title="Insert row below"
             onClick={(e) => {
               e.stopPropagation();
-              setPopover(popover?.type === "col" && popover.index === nearCol ? null : { type: "col", index: nearCol });
+              // Direct action: insert row below the last row — no menu needed
+              runTableCmd("addRowBelow", rows - 1);
             }}
-            title={idx === 0 ? "Insert column left" : idx === cols ? "Insert column right" : "Column options"}
             style={{
               position: "absolute",
-              top: -HANDLE_SZ - 6,
-              left: xPos - HANDLE_SZ / 2,
+              left: "50%",
+              top: yPos + 4,
+              transform: "translateX(-50%)",
               width: HANDLE_SZ,
               height: HANDLE_SZ,
               borderRadius: "50%",
@@ -259,62 +314,73 @@ function TableInsertHandles({
               color: "#2563EB",
               cursor: "pointer",
               zIndex: 30,
-              transition: "all 0.1s",
+              transition: "all 0.12s",
               userSelect: "none",
               boxShadow: "0 1px 4px rgba(37,99,235,0.18)",
+              pointerEvents: "all",
             }}
           >
             +
-            {/* Popover for col actions */}
-            {popover?.type === "col" && popover.index === nearCol && (
-              <div
-                onMouseLeave={() => { setPopover(null); setHoveredCol(null); }}
-                style={{
-                  position: "absolute",
-                  top: HANDLE_SZ + 4,
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  background: "white",
-                  borderRadius: 8,
-                  border: "1px solid #E2E8F0",
-                  boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12)",
-                  padding: "4px 0",
-                  zIndex: 9999,
-                  minWidth: 155,
-                  animation: "handle-in 0.12s ease-out",
-                  whiteSpace: "nowrap",
-                }}
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                {COL_ACTIONS.map((a) => (
-                  <button
-                    key={a.action}
-                    className={`tbl-popover-item${(a as any).danger ? " tbl-popover-item-danger" : ""}`}
-                    onMouseDown={(e) => { e.stopPropagation(); runTableCmd(a.action, nearCol); }}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      padding: "6px 14px",
-                      background: "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: 12,
-                      fontWeight: 500,
-                      color: (a as any).danger ? "#EF4444" : "#1E293B",
-                      textAlign: "left",
-                    }}
-                  >
-                    {a.label}
-                  </button>
-                ))}
-              </div>
-            )}
+          </div>
+        );
+      })()}
+
+      {/* ── COL handles — top side, one per column ───────────────────────── */}
+      {Array.from({ length: cols }).map((_, cIdx) => {
+        const xCenter = colXPositions[cIdx] + (colWidths[cIdx] || 80) / 2;
+        const handleKey = `col-mid-${cIdx}`;
+        const isActive = popover?.key === handleKey;
+        return (
+          <div key={handleKey} style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, pointerEvents: "none" }}>
+            <div
+              className={`tbl-h${isActive ? " tbl-h-active" : ""}`}
+              title={`Column ${cIdx + 1} options`}
+              onClick={(e) => { e.stopPropagation(); openPopover(handleKey, "col", cIdx, false); }}
+              onMouseEnter={() => setHoveredCol(cIdx)}
+              onMouseLeave={() => { if (!isActive) setHoveredCol(null); }}
+              style={{
+                position: "absolute",
+                top: -HANDLE_SZ - 6,
+                left: xCenter - HANDLE_SZ / 2,
+                width: HANDLE_SZ,
+                height: HANDLE_SZ,
+                borderRadius: "50%",
+                background: "#E0EAFB",
+                border: "1.5px solid #93C5FD",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 13,
+                fontWeight: 700,
+                color: "#2563EB",
+                cursor: "pointer",
+                zIndex: 30,
+                transition: "all 0.12s",
+                userSelect: "none",
+                boxShadow: "0 1px 4px rgba(37,99,235,0.18)",
+                pointerEvents: "all",
+              }}
+            >
+              +
+              {/* Col popover — only column actions */}
+              {isActive && renderPopover(
+                "col", COL_ACTIONS, 0, cIdx,
+                { top: HANDLE_SZ + 6, left: "50%", transform: "translateX(-50%)" },
+              )}
+            </div>
           </div>
         );
       })}
-    </>
+    </div>
   );
 }
+
+
+
+
+
+
+
 
 // ── ElementInsertHandle — "+" below any selected element ─────────────────────
 function ElementInsertHandle({
@@ -538,12 +604,14 @@ export function CanvasElement({
 
   // Selected cell coordinates for merge/split (only applicable for tables)
   const [selectedCellCoords, setSelectedCellCoords] = useState<[number, number][]>([]);
+  const [editingCell, setEditingCell] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     if (isSelected && isEditing) {
       (window as any).__selectedTableSelection = { elementId: element.id, coords: selectedCellCoords };
     } else if (!isSelected) {
       setSelectedCellCoords([]);
+      setEditingCell(null);
       if ((window as any).__selectedTableSelection?.elementId === element.id) {
         delete (window as any).__selectedTableSelection;
       }
@@ -560,8 +628,10 @@ export function CanvasElement({
       } else {
         setSelectedCellCoords([...selectedCellCoords, [r, c]]);
       }
+      setEditingCell(null);
     } else {
       setSelectedCellCoords([[r, c]]);
+      setEditingCell([r, c]);
     }
   };
 
@@ -708,7 +778,22 @@ export function CanvasElement({
     if ((!isTextElement && element.type !== "table") || isLocked) return;
     setIsEditing(true);
 
-    if (element.type !== "table") {
+    if (element.type === "table") {
+      const tdElement = (e.target as HTMLElement).closest("td");
+      if (tdElement) {
+        const rowAttr = tdElement.getAttribute("data-row");
+        const colAttr = tdElement.getAttribute("data-col");
+        if (rowAttr !== null && colAttr !== null) {
+          const r = parseInt(rowAttr, 10);
+          const c = parseInt(colAttr, 10);
+          setEditingCell([r, c]);
+          setSelectedCellCoords([[r, c]]);
+          return;
+        }
+      }
+      setEditingCell([0, 0]);
+      setSelectedCellCoords([[0, 0]]);
+    } else {
       requestAnimationFrame(() => {
         const el = editableRef.current;
         if (!el) return;
@@ -773,6 +858,7 @@ export function CanvasElement({
         onUpdate(element.id, { content: editableRef.current.innerHTML });
       }
       setIsEditing(false);
+      setEditingCell(null);
     }
   }, [isSelected]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -1124,30 +1210,16 @@ export function CanvasElement({
                     const customStyle = cellStyles[r]?.[c] || {};
 
                     const alternateBg = element.tableData!.alternateRows && (r % 2 === (headerRow ? 0 : 1)) ? "#F8FAFC" : undefined;
+                    const isCellEditing = editingCell && editingCell[0] === r && editingCell[1] === c;
 
                     return (
                       <td
                         key={c}
+                        data-row={r}
+                        data-col={c}
                         colSpan={cellSpan.colspan || 1}
                         rowSpan={cellSpan.rowspan || 1}
-                        contentEditable={isEditing}
-                        suppressContentEditableWarning
-                        onBlur={(e) => {
-                          const newText = e.currentTarget.innerText;
-                          const newCells = cells.map((rowArr, ri) => 
-                            rowArr.map((cellStr, ci) => (ri === r && ci === c ? newText : cellStr))
-                          );
-                          const origCells = (element.tableData!.originalCells || cells).map((rowArr, ri) => 
-                            rowArr.map((cellStr, ci) => (ri === r && ci === c ? newText : cellStr))
-                          );
-                          onUpdate(element.id, {
-                            tableData: {
-                              ...element.tableData!,
-                              cells: newCells,
-                              originalCells: origCells,
-                            }
-                          });
-                        }}
+                        contentEditable={false}
                         onClick={(e) => handleCellClick(e, r, c)}
                         onContextMenu={(e) => {
                           e.preventDefault();
@@ -1171,8 +1243,64 @@ export function CanvasElement({
                           outline: "none",
                         }}
                       >
-
-                        {cells[r]?.[c] ?? ""}
+                        {isCellEditing ? (
+                          <textarea
+                            value={cells[r]?.[c] ?? ""}
+                            onChange={(e) => {
+                              const newText = e.target.value;
+                              const newCells = cells.map((rowArr, ri) => 
+                                rowArr.map((cellStr, ci) => (ri === r && ci === c ? newText : cellStr))
+                              );
+                              const origCells = (element.tableData!.originalCells || cells).map((rowArr, ri) => 
+                                rowArr.map((cellStr, ci) => (ri === r && ci === c ? newText : cellStr))
+                              );
+                              onUpdate(element.id, {
+                                tableData: {
+                                  ...element.tableData!,
+                                  cells: newCells,
+                                  originalCells: origCells,
+                                }
+                              });
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Escape") {
+                                setEditingCell(null);
+                                e.stopPropagation();
+                              }
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                setEditingCell(null);
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }
+                            }}
+                            autoFocus
+                            style={{
+                              position: "absolute",
+                              top: 0,
+                              left: 0,
+                              width: "100%",
+                              height: "100%",
+                              border: "none",
+                              outline: "none",
+                              resize: "none",
+                              background: "transparent",
+                              padding: cellPadding,
+                              boxSizing: "border-box",
+                              fontFamily: customStyle.fontFamily || "inherit",
+                              fontSize: customStyle.fontSize || "inherit",
+                              fontWeight: customStyle.fontWeight || (isHeader ? "bold" : "normal"),
+                              fontStyle: customStyle.fontStyle || "normal",
+                              textDecoration: customStyle.textDecoration || "none",
+                              color: customStyle.color || "inherit",
+                              textAlign: (customStyle.textAlign || (isHeader ? "center" : "left")) as React.CSSProperties["textAlign"],
+                              whiteSpace: "pre-wrap",
+                              overflow: "hidden",
+                              zIndex: 20,
+                            }}
+                          />
+                        ) : (
+                          cells[r]?.[c] ?? ""
+                        )}
                         
                         {/* Column and Row Resizers */}
                         {isSelected && !isLocked && (

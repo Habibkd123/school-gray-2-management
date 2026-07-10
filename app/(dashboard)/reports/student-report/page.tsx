@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -8,6 +8,7 @@ import { useStudents } from "../../../hooks/useStudents";
 import { useClasses } from "../../../hooks/useClasses";
 import { getAuthHeaders } from "@/lib/utils/session";
 import ReportTabs from "../ReportTabs";
+import { PrintService } from "@/app/lib/print-service";
 
 export default function StudentReportPage() {
   const { students, isLoading, fetchStudents } = useStudents();
@@ -174,7 +175,7 @@ export default function StudentReportPage() {
   };
 
   const printReport = () => {
-    window.print();
+    PrintService.print('printable-area', { pageSize: 'A4' });
   };
 
   return (
@@ -203,7 +204,7 @@ export default function StudentReportPage() {
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
-            onClick={() => window.print()}
+            onClick={() => PrintService.print('printable-area', { pageSize: 'A4' })}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer"
           >
             <Printer className="w-4 h-4" />

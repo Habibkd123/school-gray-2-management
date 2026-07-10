@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,7 @@ import { useAuth } from "@/app/context/auth";
 import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { useAppState } from "@/app/context/store";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { PrintService } from "@/app/lib/print-service";
 
 export default function StudentAttendancePage() {
   const router = useRouter();
@@ -429,8 +430,8 @@ export default function StudentAttendancePage() {
               
               <div className="h-px bg-border my-1"></div>
               
-              <button onClick={() => { window.print(); setActionsOpen(false); }} className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50">Export Report (PDF)</button>
-              <button onClick={() => { window.print(); setActionsOpen(false); }} className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50">Print Attendance</button>
+              <button onClick={() => { PrintService.print('printable-area', { pageSize: 'A4' }); setActionsOpen(false); }} className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50">Export Report (PDF)</button>
+              <button onClick={() => { PrintService.print('printable-area', { pageSize: 'A4' }); setActionsOpen(false); }} className="w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700/50">Print Attendance</button>
               
               <div className="h-px bg-border my-1"></div>
               

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
@@ -7,6 +7,7 @@ import { useExams } from "@/app/hooks/useExams";
 import { useClasses } from "@/app/hooks/useClasses";
 import { useResults } from "@/app/hooks/useResults";
 import { useStudents } from "@/app/hooks/useStudents";
+import { PrintService } from "@/app/lib/print-service";
 
 function resolveId(field: { _id: string } | string | undefined): string {
   if (!field) return "";
@@ -143,7 +144,7 @@ export default function MeritListPage() {
             <RefreshCw className="w-4 h-4" />
           </button>
           <button 
-            onClick={() => window.print()}
+            onClick={() => PrintService.print('printable-area', { pageSize: 'A4' })}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer"
           >
             <Printer className="w-4 h-4" />
@@ -225,7 +226,7 @@ export default function MeritListPage() {
       </div>
 
       {/* Main Content */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left" id="printable-area">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left" id="printable-area" data-print-zone="true">
         
         {/* Controls Section */}
         <div className="p-5 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50 print:hidden">

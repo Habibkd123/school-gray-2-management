@@ -9,7 +9,7 @@ import {
   ArrowLeft, Search, Filter, Download, Printer, Loader2,
   CheckCircle, AlertTriangle, ChevronLeft, ChevronRight, Trophy,
 } from "lucide-react";
-
+import { PrintService } from "@/app/lib/print-service";
 interface ResultRow {
   mark_id: string;
   student_id: string;
@@ -84,7 +84,7 @@ export default function ResultsPage({ params }: { params: Promise<{ classId: str
     }
   };
 
-  const handlePrint = () => window.print();
+  const handlePrint = () => PrintService.print('printable-area', { pageSize: 'A4' });
 
   const passCount = rows.filter((r) => r.is_pass).length;
   const failCount = rows.filter((r) => !r.is_pass).length;

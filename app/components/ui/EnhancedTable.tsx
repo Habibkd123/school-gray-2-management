@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo } from "react";
 import { Search, Download, Printer } from "lucide-react";
 import * as XLSX from "xlsx";
 import { DataTable, ColumnDef } from "./data-table";
 import { PaginationBar } from "./pagination-bar";
+import { PrintService } from "@/app/lib/print-service";
 
 interface FilterConfig {
   key: string;
@@ -143,7 +144,7 @@ export function EnhancedTable<T extends Record<string, any>>({
     const tableContainer = document.getElementById(tableId);
     if (tableContainer) {
       tableContainer.classList.add("printable-area");
-      window.print();
+      PrintService.print('printable-area', { pageSize: 'A4' });
       tableContainer.classList.remove("printable-area");
     }
   };

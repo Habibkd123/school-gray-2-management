@@ -130,7 +130,7 @@ export default function GeneratedReportCardsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center">
+            <span className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
               <FileText className="w-5 h-5 text-white" />
             </span>
             Generated Report Cards
@@ -138,7 +138,7 @@ export default function GeneratedReportCardsPage() {
           <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 ml-12">{batches.length} batch{batches.length !== 1 ? "es" : ""} · {batches.reduce((a, b) => a + b.studentIds.length, 0)} report cards total</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={refresh} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer shadow-sm">
+          <button onClick={refresh} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer shadow-sm">
             <RefreshCw className="w-4 h-4" />
           </button>
         </div>
@@ -153,7 +153,7 @@ export default function GeneratedReportCardsPage() {
             placeholder="Search by class, exam, section…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 pr-4 py-2 w-full bg-white dark:bg-slate-800 border border-border rounded-lg text-[13px] outline-none focus:border-indigo-400"
+            className="pl-9 pr-4 py-2 w-full bg-white dark:bg-slate-800 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50"
           />
         </div>
         <div className="flex gap-2">
@@ -163,7 +163,7 @@ export default function GeneratedReportCardsPage() {
               onClick={() => setStatusFilter(s)}
               className={`px-4 py-2 rounded-lg text-[12px] font-semibold transition-colors capitalize cursor-pointer ${
                 statusFilter === s
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-primary text-white"
                   : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
               }`}
             >
@@ -180,7 +180,7 @@ export default function GeneratedReportCardsPage() {
           <p className="text-[13px] font-medium">No report card batches found</p>
           <button
             onClick={() => router.push("/report-cards/generate")}
-            className="text-[13px] text-indigo-600 font-semibold hover:underline cursor-pointer"
+            className="text-[13px] text-primary font-semibold hover:underline cursor-pointer"
           >
             Generate report cards →
           </button>
@@ -193,8 +193,8 @@ export default function GeneratedReportCardsPage() {
               {/* Batch Header */}
               <div className="p-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
-                    <Users className="w-5 h-5 text-indigo-600" />
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5 text-primary" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[14px] font-bold text-slate-800 dark:text-slate-100 truncate">
@@ -236,7 +236,7 @@ export default function GeneratedReportCardsPage() {
 
                   <button
                     onClick={() => handlePrintAll(batch)}
-                    className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors cursor-pointer"
+                    className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors cursor-pointer"
                     title="Print All"
                   >
                     <Printer className="w-4 h-4" />
@@ -269,7 +269,7 @@ export default function GeneratedReportCardsPage() {
                     return (
                       <div key={docId} className="px-4 py-3 flex items-center justify-between gap-3 bg-slate-50/60 dark:bg-slate-800/30 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <div className="flex items-center gap-3">
-                          <div className="w-7 h-7 rounded-lg bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-[11px] font-bold text-indigo-600">
+                          <div className="w-7 h-7 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center text-[11px] font-bold text-primary">
                             {idx + 1}
                           </div>
                           <div>
@@ -282,13 +282,13 @@ export default function GeneratedReportCardsPage() {
                             <>
                               <button
                                 onClick={() => handleOpenBuilder(docId)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-[12px] font-semibold text-slate-700 dark:text-slate-200 rounded-lg hover:border-indigo-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-[12px] font-semibold text-slate-700 dark:text-slate-200 rounded-lg hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
                               >
                                 <Eye className="w-3.5 h-3.5" /> View / Edit
                               </button>
                               <button
                                 onClick={() => printDocumentById(docId)}
-                                className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors cursor-pointer"
+                                className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
                                 title="Print PDF"
                               >
                                 <Printer className="w-3.5 h-3.5" />

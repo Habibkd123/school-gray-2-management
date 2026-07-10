@@ -17,7 +17,7 @@ import {
   ChevronDown, Calendar, FileText, CheckCircle2, MoreVertical, List, GraduationCap,
   LayoutGrid, Table
 } from "lucide-react";
-
+import { PrintService } from "@/app/lib/print-service";
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   draft:      { bg: "bg-slate-500/10", text: "text-slate-500", label: "Draft" },
   scheduled:  { bg: "bg-blue-500/10",  text: "text-blue-600 dark:text-blue-400", label: "Scheduled" },
@@ -392,7 +392,7 @@ export default function AssessmentsPage() {
       : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
 
   const handlePrint = () => {
-    window.print();
+    PrintService.print('printable-area', { pageSize: 'A4' });
   };
 
   return (

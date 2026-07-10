@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { Search, ChevronDown, Printer, Download, X, Loader2, User, FileText, CreditCard, Award, Edit3, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, Settings2, Save } from "lucide-react";
 import { useStudents } from "@/app/hooks/useStudents";
 import { useTeachers } from "@/app/hooks/useTeachers";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { PrintService } from "@/app/lib/print-service";
 
 // ===================== CONFIG & DATA =====================
 
@@ -966,7 +967,7 @@ export default function DocumentBuilderPage() {
   const activeDocs = DOC_TYPES.filter(d => d.category === category || d.category === 'both');
 
   return (
-    <div id="doc-builder-wrapper">
+    <div id="doc-builder-wrapper" data-print-zone="true">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
@@ -1599,10 +1600,10 @@ export default function DocumentBuilderPage() {
                 <Search className="w-3.5 h-3.5" /> Fit Width
               </button>
               <div className="w-px h-5 bg-border mx-1" />
-              <button onClick={() => window.print()} className="px-4 py-1.5 rounded border border-border bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+              <button onClick={() => PrintService.print('doc-builder-wrapper', { pageSize: 'A4' })} className="px-4 py-1.5 rounded border border-border bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
                 <Printer className="w-3.5 h-3.5" /> Print
               </button>
-              <button onClick={() => window.print()} className="px-4 py-1.5 rounded border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
+              <button onClick={() => PrintService.print('doc-builder-wrapper', { pageSize: 'A4' })} className="px-4 py-1.5 rounded border border-emerald-200 bg-white hover:bg-emerald-50 text-emerald-700 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer">
                 <Download className="w-3.5 h-3.5" /> Download
               </button>
             </div>
@@ -1660,7 +1661,7 @@ export default function DocumentBuilderPage() {
       <div className="fixed bottom-0 left-[380px] right-0 bg-white border-t border-border flex justify-center items-center py-4 px-6 gap-4 z-40 print:hidden shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
         <button onClick={() => handleSelectRecord(null)} className="px-10 py-2.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold transition-colors cursor-pointer w-40">Cancel</button>
         <button onClick={() => alert('Template configurations saved successfully!')} className="px-10 py-2.5 rounded border border-emerald-600 bg-white hover:bg-emerald-50 text-emerald-700 text-sm font-bold transition-colors cursor-pointer w-56">Save as Template</button>
-        <button onClick={() => window.print()} className="px-10 py-2.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-2 w-56">
+        <button onClick={() => PrintService.print('doc-builder-wrapper', { pageSize: 'A4' })} className="px-10 py-2.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold transition-colors cursor-pointer flex items-center justify-center gap-2 w-56">
           <FileText className="w-4 h-4" /> Generate Document <span className="text-lg leading-none ml-1">→</span>
         </button>
       </div>

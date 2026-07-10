@@ -26,6 +26,7 @@ import {
   Eye,
   SlidersHorizontal
 } from "lucide-react";
+import { PrintButton } from "@/app/components/ui/PrintButton";
 import Link from "next/link";
 import { CollectFeesModal } from "../../components/modals/CollectFeesModal";
 
@@ -1026,16 +1027,11 @@ export default function FeesPage() {
         <Modal isOpen={!!printedReceipt} onClose={() => setPrintedReceipt(null)} title="Payment Transaction Receipt">
           <div className="space-y-4">
             <div className="flex justify-end gap-2 print:hidden border-b border-border pb-2.5">
-              <button
-                onClick={() => window.print()}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
-              >
-                <Printer className="w-4 h-4" /> Print / PDF Receipt
-              </button>
+              <PrintButton targetId="printable-receipt" label="Print / Save PDF" pageSize="A4" margin="8mm" />
             </div>
 
             {/* Receipt template container */}
-            <div className="p-8 border border-slate-200 rounded-2xl bg-white text-slate-800 text-left font-serif text-xs relative overflow-hidden" id="printable-receipt">
+            <div className="p-8 border border-slate-200 rounded-2xl bg-white text-slate-800 text-left font-serif text-xs relative overflow-hidden" id="printable-receipt" data-print-zone="true">
               {/* School branding header */}
               <div className="text-center border-b-2 border-slate-800 pb-4 mb-5">
                 <h1 className="text-xl font-black uppercase tracking-wider text-slate-900 mb-0.5">My School Life</h1>
@@ -1319,3 +1315,4 @@ export default function FeesPage() {
     </div>
   );
 }
+

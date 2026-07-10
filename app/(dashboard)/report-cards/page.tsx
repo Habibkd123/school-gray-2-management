@@ -25,8 +25,8 @@ export default function ReportCardsDashboard() {
   const stats = [
     { label: "Total Generated", value: total, icon: FileText, color: "from-blue-500 to-blue-600", bg: "bg-blue-50 dark:bg-blue-900/20", text: "text-blue-600" },
     { label: "Published", value: published, icon: CheckCircle, color: "from-emerald-500 to-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20", text: "text-emerald-600" },
-    { label: "Drafts", value: draft, icon: Clock, color: "from-amber-500 to-amber-600", bg: "bg-amber-50 dark:bg-amberald-900/20", text: "text-amber-600" },
-    { label: "Templates", value: rcTemplates.length, icon: LayoutTemplate, color: "from-indigo-500 to-indigo-600", bg: "bg-indigo-50 dark:bg-indigo-900/20", text: "text-indigo-600" },
+    { label: "Drafts", value: draft, icon: Clock, color: "from-amber-500 to-amber-600", bg: "bg-amber-50 dark:bg-amber-900/20", text: "text-amber-600" },
+    { label: "Templates", value: rcTemplates.length, icon: LayoutTemplate, color: "from-primary/80 to-primary", bg: "bg-primary/10 dark:bg-slate-800", text: "text-primary dark:text-blue-400" },
   ];
 
   const recentBatches = batches.slice(0, 5);
@@ -38,7 +38,7 @@ export default function ReportCardsDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center">
+            <span className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-white" />
             </span>
             Report Cards
@@ -49,7 +49,7 @@ export default function ReportCardsDashboard() {
         </div>
         <Link
           href="/report-cards/generate"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-[14px] font-semibold rounded-xl shadow-lg shadow-indigo-500/25 transition-all hover:shadow-indigo-500/40 hover:-translate-y-0.5"
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[14px] font-semibold rounded-xl shadow-lg shadow-primary/25 transition-all hover:shadow-primary/40 hover:-translate-y-0.5"
         >
           <Plus className="w-4 h-4" />
           Generate Report Cards
@@ -75,8 +75,8 @@ export default function ReportCardsDashboard() {
       {/* ── Quick Actions ───────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { href: "/report-cards/generate", icon: Plus, label: "Generate Report Cards", desc: "7-step wizard with auto-fill", color: "bg-indigo-600 hover:bg-indigo-700" },
-          { href: "/report-cards/generated", icon: FileText, label: "Generated Report Cards", desc: "View, download & publish", color: "bg-slate-700 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700" },
+          { href: "/report-cards/generate", icon: Plus, label: "Generate Report Cards", desc: "7-step wizard with auto-fill", color: "bg-primary hover:bg-[var(--primary-hover)] shadow-primary/20" },
+          { href: "/report-cards/generated", icon: FileText, label: "Generated Report Cards", desc: "View, download & publish", color: "bg-slate-800 hover:bg-slate-900 dark:bg-slate-800/80 dark:hover:bg-slate-800" },
           { href: "/report-cards/templates", icon: LayoutTemplate, label: "Templates", desc: "Browse all report card templates", color: "bg-emerald-600 hover:bg-emerald-700" },
         ].map((a) => (
           <Link key={a.href} href={a.href} className={`${a.color} text-white rounded-xl p-5 flex items-center gap-4 transition-all hover:-translate-y-0.5 shadow-sm group`}>
@@ -108,7 +108,7 @@ export default function ReportCardsDashboard() {
             "Generate PDF",
           ].map((step, i) => (
             <div key={step} className="flex flex-col items-center text-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 font-bold text-[13px] flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-full bg-primary/10 dark:bg-slate-800 text-primary dark:text-blue-400 font-bold text-[13px] flex items-center justify-center shrink-0">
                 {i + 1}
               </div>
               <p className="text-[11px] font-medium text-slate-600 dark:text-slate-400 leading-tight">{step}</p>
@@ -122,7 +122,7 @@ export default function ReportCardsDashboard() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden">
         <div className="p-5 border-b border-border flex items-center justify-between">
           <h2 className="text-[15px] font-bold text-slate-800 dark:text-slate-100">Recent Batches</h2>
-          <Link href="/report-cards/generated" className="text-[13px] font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+          <Link href="/report-cards/generated" className="text-[13px] font-semibold text-primary dark:text-blue-400 hover:text-[var(--primary-hover)] flex items-center gap-1">
             View All <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -130,7 +130,7 @@ export default function ReportCardsDashboard() {
           <div className="py-16 flex flex-col items-center gap-3 text-slate-400">
             <BookOpen className="w-10 h-10 opacity-40" />
             <p className="text-[13px] font-medium">No report cards generated yet</p>
-            <Link href="/report-cards/generate" className="text-[13px] text-indigo-600 font-semibold hover:underline">
+            <Link href="/report-cards/generate" className="text-[13px] text-primary dark:text-blue-400 font-semibold hover:underline">
               Generate your first batch →
             </Link>
           </div>
@@ -139,8 +139,8 @@ export default function ReportCardsDashboard() {
             {recentBatches.map((b) => (
               <div key={b.id} className="p-4 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center shrink-0">
-                    <Users className="w-4 h-4 text-indigo-600" />
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 dark:bg-primary/20 flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4 text-primary" />
                   </div>
                   <div>
                     <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
@@ -152,17 +152,16 @@ export default function ReportCardsDashboard() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-                    b.status === "published"
-                      ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
-                      : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                  }`}>
+                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${b.status === "published"
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                    }`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${b.status === "published" ? "bg-emerald-500" : "bg-amber-500"}`} />
                     {b.status === "published" ? "Published" : "Draft"}
                   </span>
                   <Link
                     href="/report-cards/generated"
-                    className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition-colors"
+                    className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
                   >
                     <Eye className="w-3.5 h-3.5" />
                   </Link>
@@ -177,7 +176,7 @@ export default function ReportCardsDashboard() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[15px] font-bold text-slate-800 dark:text-slate-100">Available Templates</h2>
-          <Link href="/report-cards/templates" className="text-[13px] font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1">
+          <Link href="/report-cards/templates" className="text-[13px] font-semibold text-primary dark:text-blue-400 hover:text-[var(--primary-hover)] flex items-center gap-1">
             Browse All <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -186,7 +185,7 @@ export default function ReportCardsDashboard() {
             <Link
               key={t.id}
               href="/report-cards/generate"
-              className="group flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:border-indigo-300 dark:hover:border-indigo-700 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all cursor-pointer"
+              className="group flex flex-col items-center gap-2 p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer"
             >
               <div
                 className="w-full h-20 rounded-lg flex items-center justify-center shadow-inner"
@@ -196,7 +195,7 @@ export default function ReportCardsDashboard() {
                   <FileText className="w-4 h-4 text-white/70" />
                 </div>
               </div>
-              <span className="text-[12px] font-semibold text-slate-700 dark:text-slate-300 text-center group-hover:text-indigo-600 transition-colors">
+              <span className="text-[12px] font-semibold text-slate-700 dark:text-slate-300 text-center group-hover:text-primary dark:group-hover:text-blue-400 transition-colors">
                 {t.name}
               </span>
             </Link>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -6,6 +6,7 @@ import { Search, Loader2, DollarSign, Printer, CheckCircle2, User, Save, CheckSq
 import { useStudents } from "@/app/hooks/useStudents";
 import { useFeeAllocations, useFeeMasters, useFeePayments } from "@/app/hooks/useFees";
 import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
+import { PrintService } from "@/app/lib/print-service";
 
 export default function CollectFeesPage() {
   const { students, isLoading: studentsLoading, fetchStudents: fetchAllStudents } = useStudents({ skip: true });
@@ -145,7 +146,7 @@ export default function CollectFeesPage() {
   };
 
   const handlePrintReceipt = () => {
-    window.print();
+    PrintService.print('printable-receipt', { pageSize: 'A4' });
   };
 
   const grandTotal = Object.values(amounts).reduce((sum, val) => sum + Number(val || 0), 0);
