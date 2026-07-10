@@ -10,7 +10,7 @@ if (!MONGODB_URI) {
 
 // ─── Mongoose global options ───────────────────────────────────────
 // Applied once; subsequent connectDB() calls reuse the cached connection.
-mongoose.set("bufferCommands", false); // fail fast — no silent query queuing
+mongoose.set("bufferCommands", true); // buffer queries while connecting (important for Vercel cold starts)
 
 // ─── Global cache to reuse connection across hot reloads ──────────
 declare global {
@@ -32,10 +32,10 @@ const MONGOOSE_OPTS: mongoose.ConnectOptions = {
   maxPoolSize: 10,
   minPoolSize: 0,  // serverless-friendly: no idle connections kept open permanently
 
-  // Timeout settings
-  serverSelectionTimeoutMS: 5_000,  // give up finding a server after 5 s
+  // Timeout settings — increased for Vercel cold start tolerance
+  serverSelectionTimeoutMS: 10_000, // give up finding a server after 10 s (was 5 s)
   socketTimeoutMS: 45_000,          // close idle sockets after 45 s
-  connectTimeoutMS: 10_000,         // TCP connect timeout
+  connectTimeoutMS: 15_000,         // TCP connect timeout (was 10 s)
 
   // Keep connections alive through load-balancer idle timeouts
   heartbeatFrequencyMS: 10_000,

@@ -23,54 +23,63 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     );
   }
 
-  try {
-    await connectDB();
+  // Retry once on cold-start connection failures (Vercel serverless)
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      await connectDB();
 
-    const student = await Student.findOne({ _id: id, school_id: schoolId })
-      .populate("class_id", "name section")
-      .populate("user_id", "name email role is_active plain_password")
-      .populate({
-        path: "parent_id",
-        select: "name phone email relation photo_url user_id",
-        populate: {
-          path: "user_id",
-          select: "name email role is_active plain_password"
+      const student = await Student.findOne({ _id: id, school_id: schoolId })
+        .populate("class_id", "name section")
+        .populate("user_id", "name email role is_active plain_password")
+        .populate({
+          path: "parent_id",
+          select: "name phone email relation photo_url user_id",
+          populate: {
+            path: "user_id",
+            select: "name email role is_active plain_password"
+          }
+        })
+        .lean();
+
+      if (!student) {
+        return NextResponse.json(
+          { success: false, message: "Student not found" },
+          { status: 404 }
+        );
+      }
+
+      // Role-based access checks
+      if (role === "student") {
+        const studentUserId = (student as any).user_id;
+        const sUserId = typeof studentUserId === "object" && studentUserId ? (studentUserId._id || studentUserId).toString() : studentUserId?.toString();
+        if (sUserId !== userId) {
+          return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
         }
-      })
-      .lean();
+      } else if (role === "parent") {
+        const parentDoc = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
+        const studentParentId = (student as any).parent_id;
+        const sParentId = typeof studentParentId === "object" && studentParentId ? (studentParentId._id || studentParentId).toString() : studentParentId?.toString();
+        if (!parentDoc || sParentId !== parentDoc._id.toString()) {
+          return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+        }
+      }
 
-    if (!student) {
+      return NextResponse.json({ success: true, data: student });
+    } catch (err) {
+      console.error(`[GET /api/students/[id]] attempt ${attempt}`, err);
+      if (attempt < 2) {
+        // Wait 1s before retrying (gives MongoDB time to establish connection)
+        await new Promise((res) => setTimeout(res, 1000));
+        continue;
+      }
       return NextResponse.json(
-        { success: false, message: "Student not found" },
-        { status: 404 }
+        { success: false, message: "Failed to fetch student" },
+        { status: 500 }
       );
     }
-
-    // Role-based access checks
-    if (role === "student") {
-      const studentUserId = (student as any).user_id;
-      const sUserId = typeof studentUserId === "object" && studentUserId ? (studentUserId._id || studentUserId).toString() : studentUserId?.toString();
-      if (sUserId !== userId) {
-        return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
-      }
-    } else if (role === "parent") {
-      const parentDoc = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
-      const studentParentId = (student as any).parent_id;
-      const sParentId = typeof studentParentId === "object" && studentParentId ? (studentParentId._id || studentParentId).toString() : studentParentId?.toString();
-      if (!parentDoc || sParentId !== parentDoc._id.toString()) {
-        return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
-      }
-    }
-
-    return NextResponse.json({ success: true, data: student });
-  } catch (err) {
-    console.error("[GET /api/students/[id]]", err);
-    return NextResponse.json(
-      { success: false, message: "Failed to fetch student" },
-      { status: 500 }
-    );
   }
 }
+
 
 // ─── PUT /api/students/[id] — Update student ──────────────────────
 export async function PUT(request: NextRequest, { params }: RouteParams) {
