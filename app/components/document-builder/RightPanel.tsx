@@ -937,8 +937,169 @@ export function RightPanel({
                     </label>
                   </div>
                 </div>
+
+                <div style={rowStyle}>
+                  <div style={colStyle}>
+                    <label style={{ display: "flex", flexDirection: "column", gap: 4, cursor: "pointer", userSelect: "none" }}>
+                      <span style={labelStyle}>Alternate Rows</span>
+                      <input
+                        type="checkbox"
+                        checked={!!td.alternateRows}
+                        onChange={(e) => updateTableData({ alternateRows: e.target.checked })}
+                        style={{ width: 16, height: 16, cursor: "pointer", marginTop: 4 }}
+                      />
+                    </label>
+                  </div>
+                  <div style={colStyle}>
+                    <div style={labelStyle}>ERP Loop Binding</div>
+                    <select
+                      value={td.erpBinding || ""}
+                      onChange={(e) => updateTableData({ erpBinding: e.target.value || undefined })}
+                      style={{ ...inputStyle, padding: "4px 6px" }}
+                    >
+                      <option value="">None (Static Table)</option>
+                      <option value="student.marks">Student Marks</option>
+                      <option value="student.fees">Student Fees</option>
+                      <option value="student.attendance">Student Attendance</option>
+                      <option value="student.siblings">Student Siblings</option>
+                      <option value="school.exams">School Exams</option>
+                      <option value="custom">Custom Bind...</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Table Actions */}
+                <div style={{ marginTop: 12 }}>
+                  <div style={labelStyle}>Grid Actions</div>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 4 }}>
+                    <button
+                      onClick={() => {
+                        const newColWidths = Array(td.cols).fill(el.width / td.cols);
+                        updateTableData({ colWidths: newColWidths });
+                      }}
+                      style={btnFmt}
+                      title="Distribute columns equally"
+                    >
+                      Distribute ↔
+                    </button>
+                    <button
+                      onClick={() => {
+                        const newRowHeights = Array(td.rows).fill(el.height / td.rows);
+                        updateTableData({ rowHeights: newRowHeights });
+                      }}
+                      style={btnFmt}
+                      title="Distribute rows equally"
+                    >
+                      Distribute ↕
+                    </button>
+                    <button
+                      onClick={() => {
+                        updateTableData({ colWidths: undefined, rowHeights: undefined });
+                      }}
+                      style={btnFmt}
+                      title="Reset custom row/column sizes to autofit content"
+                    >
+                      Autofit
+                    </button>
+                  </div>
+                </div>
+
+                {/* Merge / Split */}
+                {(() => {
+                  const selection = (window as any).__selectedTableSelection;
+                  const isMultiSelected = (selection?.coords?.length || 0) > 1;
+                  const activeR = selection?.coords?.[0]?.[0];
+                  const activeC = selection?.coords?.[0]?.[1];
+                  const spans = td.spans || Array.from({ length: td.rows }, () => Array(td.cols).fill({}));
+                  const cellSpan = activeR !== undefined && activeC !== undefined ? spans[activeR]?.[activeC] : null;
+                  const canSplit = cellSpan && (cellSpan.colspan > 1 || cellSpan.rowspan > 1);
+
+                  return (
+                    <div style={{ marginTop: 10 }}>
+                      <div style={labelStyle}>Cell Operations</div>
+                      <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                        <button
+                          disabled={!isMultiSelected}
+                          onClick={() => {
+                            const coords = (selection?.coords || []) as [number, number][];
+                            if (coords.length < 2) return;
+                            const rowsList = coords.map(([r, c]) => r);
+                            const colsList = coords.map(([r, c]) => c);
+                            const minR = Math.min(...rowsList);
+                            const maxR = Math.max(...rowsList);
+                            const minC = Math.min(...colsList);
+                            const maxC = Math.max(...colsList);
+                            const colspan = maxC - minC + 1;
+                            const rowspan = maxR - minR + 1;
+                            const newSpans = JSON.parse(JSON.stringify(spans));
+
+                            let mergedText = "";
+                            for (let ri = minR; ri <= maxR; ri++) {
+                              for (let ci = minC; ci <= maxC; ci++) {
+                                const text = td.cells[ri]?.[ci] || "";
+                                if (text) mergedText += (mergedText ? " " : "") + text;
+                                if (ri === minR && ci === minC) {
+                                  newSpans[ri][ci] = { colspan, rowspan };
+                                } else {
+                                  newSpans[ri][ci] = { merged: true, mergedInto: [minR, minC] };
+                                }
+                              }
+                            }
+
+                            const newCells = td.cells.map((row, ri) => 
+                              row.map((cell, ci) => {
+                                if (ri === minR && ci === minC) return mergedText;
+                                if (ri >= minR && ri <= maxR && ci >= minC && ci <= maxC) return "";
+                                return cell;
+                              })
+                            );
+                            const newOrig = (td.originalCells || td.cells).map((row, ri) => 
+                              row.map((cell, ci) => {
+                                if (ri === minR && ci === minC) return mergedText;
+                                if (ri >= minR && ri <= maxR && ci >= minC && ci <= maxC) return "";
+                                return cell;
+                              })
+                            );
+
+                            updateTableData({
+                              cells: newCells,
+                              originalCells: newOrig,
+                              spans: newSpans,
+                            });
+                          }}
+                          style={{ ...btnFmt, opacity: isMultiSelected ? 1 : 0.5, cursor: isMultiSelected ? "pointer" : "not-allowed" }}
+                          title="Select multiple cells inside table using Shift+Click to merge them"
+                        >
+                          Merge Cells
+                        </button>
+                        <button
+                          disabled={!canSplit}
+                          onClick={() => {
+                            if (activeR === undefined || activeC === undefined) return;
+                            const newSpans = JSON.parse(JSON.stringify(spans));
+                            const cs = cellSpan.colspan || 1;
+                            const rs = cellSpan.rowspan || 1;
+                            newSpans[activeR][activeC] = {};
+                            for (let ri = activeR; ri < activeR + rs; ri++) {
+                              for (let ci = activeC; ci < activeC + cs; ci++) {
+                                if (ri === activeR && ci === activeC) continue;
+                                newSpans[ri][ci] = {};
+                              }
+                            }
+                            updateTableData({ spans: newSpans });
+                          }}
+                          style={{ ...btnFmt, opacity: canSplit ? 1 : 0.5, cursor: canSplit ? "pointer" : "not-allowed" }}
+                          title="Split currently selected merged cell"
+                        >
+                          Split Cell
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
+
 
             {/* Image & Logo Settings */}
             {(el.type === "image" || el.type === "logo") && (

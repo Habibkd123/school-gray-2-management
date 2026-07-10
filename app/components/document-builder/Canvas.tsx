@@ -7,6 +7,7 @@ import { PAGE_DIMENSIONS, DEFAULT_TEXT_STYLE } from "./types";
 import { CanvasElement } from "./CanvasElement";
 import { FloatingToolbar } from "./FloatingToolbar";
 import { RightPanel } from "./RightPanel";
+import { TableContextMenu } from "./TableContextMenu";
 import type { VariableDefinition } from "./variable-definitions";
 import { recordRecentVariable } from "./variable-store";
 
@@ -273,11 +274,296 @@ export function Canvas({
       setTableContextMenu({ x, y, elementId, r, c });
     };
 
+    (window as any).__insertElementBelow = (triggerEl: DocumentElement) => {
+      const maxZ = page && page.elements.length > 0
+        ? Math.max(...page.elements.map((e) => e.zIndex))
+        : 0;
+      const newEl: DocumentElement = {
+        id: crypto.randomUUID(),
+        type: "paragraph",
+        x: triggerEl.x,
+        y: triggerEl.y + triggerEl.height + 20,
+        width: triggerEl.width,
+        height: 50,
+        zIndex: maxZ + 1,
+        content: "New paragraph. Double-click to edit...",
+        textStyle: {
+          ...DEFAULT_TEXT_STYLE,
+          fontFamily: "Inter, sans-serif",
+          fontSize: 13,
+          fontWeight: "normal",
+          fontStyle: "normal",
+          textDecoration: "none",
+          textAlign: "left",
+          color: "#000000",
+          backgroundColor: "transparent",
+          letterSpacing: 0,
+          lineHeight: 1.2,
+          paddingTop: 4,
+          paddingRight: 8,
+          paddingBottom: 4,
+          paddingLeft: 8,
+          borderRadius: 4
+        }
+      };
+
+      if ((window as any).__shiftElementsBelow) {
+        (window as any).__shiftElementsBelow(triggerEl.id, 70);
+      }
+
+      updateCurrentPageElements([...(page?.elements ?? []), newEl]);
+      onSelectElements([newEl.id]);
+    };
+
     return () => {
       delete (window as any).__shiftElementsBelow;
       delete (window as any).__showTableCellContextMenu;
+      delete (window as any).__insertElementBelow;
     };
   }, [page, pages, currentPageIdx, onDocumentChange]);
+
+  // ── Table Context Menu Actions Handler ──────────────────────────────────────
+  const handleTableContextAction = useCallback((elementId: string, action: string, r: number, c: number) => {
+    const el = page?.elements.find(e => e.id === elementId);
+    if (!el || !el.tableData) return;
+    const tData = el.tableData;
+    const colWidths = tData.colWidths || Array(tData.cols).fill(el.width / tData.cols);
+    const rowHeights = tData.rowHeights || Array(tData.rows).fill(el.height / tData.rows);
+    const spans = tData.spans || Array.from({ length: tData.rows }, () => Array(tData.cols).fill({}));
+
+    const updateTable = (newTableData: Partial<TableData>, widthHeight?: { width?: number; height?: number }) => {
+      const newPages = pages.map((p, i) => {
+        if (i !== currentPageIdx) return p;
+        return {
+          ...p,
+          elements: p.elements.map((e) =>
+            e.id === elementId
+              ? {
+                  ...e,
+                  ...widthHeight,
+                  tableData: { ...e.tableData!, ...newTableData },
+                }
+              : e
+          ),
+        };
+      });
+      updatePages(newPages);
+    };
+
+    if (action === "copyCell") {
+      styleClipboard.current = { type: "cell", data: tData.cells[r]?.[c] || "" };
+    } else if (action === "pasteCell") {
+      if (styleClipboard.current?.type === "cell") {
+        const newCells = tData.cells.map((rowArr, ri) =>
+          rowArr.map((cellStr, ci) => (ri === r && ci === c ? styleClipboard.current!.data : cellStr))
+        );
+        const origCells = (tData.originalCells || tData.cells).map((rowArr, ri) =>
+          rowArr.map((cellStr, ci) => (ri === r && ci === c ? styleClipboard.current!.data : cellStr))
+        );
+        updateTable({ cells: newCells, originalCells: origCells });
+      }
+    } else if (action === "clearCell") {
+      const newCells = tData.cells.map((rowArr, ri) =>
+        rowArr.map((cellStr, ci) => (ri === r && ci === c ? "" : cellStr))
+      );
+      const origCells = (tData.originalCells || tData.cells).map((rowArr, ri) =>
+        rowArr.map((cellStr, ci) => (ri === r && ci === c ? "" : cellStr))
+      );
+      updateTable({ cells: newCells, originalCells: origCells });
+    } else if (action === "addRowAbove" || action === "addRowBelow") {
+      const insertIdx = action === "addRowAbove" ? r : r + 1;
+      const newCells = [...tData.cells];
+      newCells.splice(insertIdx, 0, Array(tData.cols).fill(""));
+      const newOrig = tData.originalCells ? [...tData.originalCells] : [...tData.cells];
+      newOrig.splice(insertIdx, 0, Array(tData.cols).fill(""));
+      const newHeights = [...rowHeights];
+      newHeights.splice(insertIdx, 0, 32);
+      const newSpans = [...spans];
+      newSpans.splice(insertIdx, 0, Array(tData.cols).fill({}));
+      
+      const newHeight = newHeights.reduce((sum, h) => sum + h, 0);
+      updateTable(
+        { rows: tData.rows + 1, cells: newCells, originalCells: newOrig, rowHeights: newHeights, spans: newSpans },
+        { height: newHeight }
+      );
+      if ((window as any).__shiftElementsBelow) {
+        (window as any).__shiftElementsBelow(elementId, 32);
+      }
+    } else if (action === "deleteRow") {
+      if (tData.rows <= 1) return;
+      const newCells = [...tData.cells];
+      newCells.splice(r, 1);
+      const newOrig = tData.originalCells ? [...tData.originalCells] : [...tData.cells];
+      newOrig.splice(r, 1);
+      const deletedHeight = rowHeights[r] || 32;
+      const newHeights = [...rowHeights];
+      newHeights.splice(r, 1);
+      const newSpans = [...spans];
+      newSpans.splice(r, 1);
+
+      const newHeight = newHeights.reduce((sum, h) => sum + h, 0);
+      updateTable(
+        { rows: tData.rows - 1, cells: newCells, originalCells: newOrig, rowHeights: newHeights, spans: newSpans },
+        { height: newHeight }
+      );
+      if ((window as any).__shiftElementsBelow) {
+        (window as any).__shiftElementsBelow(elementId, -deletedHeight);
+      }
+    } else if (action === "duplicateRow") {
+      const newCells = [...tData.cells];
+      newCells.splice(r + 1, 0, [...tData.cells[r]]);
+      const newOrig = tData.originalCells ? [...tData.originalCells] : [...tData.cells];
+      newOrig.splice(r + 1, 0, [...(tData.originalCells || tData.cells)[r]]);
+      const dupHeight = rowHeights[r] || 32;
+      const newHeights = [...rowHeights];
+      newHeights.splice(r + 1, 0, dupHeight);
+      const newSpans = [...spans];
+      const dupSpans = spans[r].map(s => ({ ...s }));
+      newSpans.splice(r + 1, 0, dupSpans);
+
+      const newHeight = newHeights.reduce((sum, h) => sum + h, 0);
+      updateTable(
+        { rows: tData.rows + 1, cells: newCells, originalCells: newOrig, rowHeights: newHeights, spans: newSpans },
+        { height: newHeight }
+      );
+      if ((window as any).__shiftElementsBelow) {
+        (window as any).__shiftElementsBelow(elementId, dupHeight);
+      }
+    } else if (action === "addColLeft" || action === "addColRight") {
+      const insertIdx = action === "addColLeft" ? c : c + 1;
+      const newCells = tData.cells.map(row => {
+        const rCopy = [...row];
+        rCopy.splice(insertIdx, 0, "");
+        return rCopy;
+      });
+      const newOrig = (tData.originalCells || tData.cells).map(row => {
+        const rCopy = [...row];
+        rCopy.splice(insertIdx, 0, "");
+        return rCopy;
+      });
+      const newWidths = [...colWidths];
+      newWidths.splice(insertIdx, 0, 80);
+      const newSpans = spans.map(row => {
+        const rCopy = [...row];
+        rCopy.splice(insertIdx, 0, {});
+        return rCopy;
+      });
+
+      const newWidth = newWidths.reduce((sum, w) => sum + w, 0);
+      updateTable(
+        { cols: tData.cols + 1, cells: newCells, originalCells: newOrig, colWidths: newWidths, spans: newSpans },
+        { width: newWidth }
+      );
+    } else if (action === "deleteCol") {
+      if (tData.cols <= 1) return;
+      const newCells = tData.cells.map(row => {
+        const rCopy = [...row];
+        rCopy.splice(c, 1);
+        return rCopy;
+      });
+      const newOrig = (tData.originalCells || tData.cells).map(row => {
+        const rCopy = [...row];
+        rCopy.splice(c, 1);
+        return rCopy;
+      });
+      const newWidths = [...colWidths];
+      newWidths.splice(c, 1);
+      const newSpans = spans.map(row => {
+        const rCopy = [...row];
+        rCopy.splice(c, 1);
+        return rCopy;
+      });
+
+      const newWidth = newWidths.reduce((sum, w) => sum + w, 0);
+      updateTable(
+        { cols: tData.cols - 1, cells: newCells, originalCells: newOrig, colWidths: newWidths, spans: newSpans },
+        { width: newWidth }
+      );
+    } else if (action === "duplicateCol") {
+      const newCells = tData.cells.map(row => {
+        const rCopy = [...row];
+        rCopy.splice(c + 1, 0, row[c]);
+        return rCopy;
+      });
+      const newOrig = (tData.originalCells || tData.cells).map(row => {
+        const rCopy = [...row];
+        rCopy.splice(c + 1, 0, row[c]);
+        return rCopy;
+      });
+      const dupWidth = colWidths[c] || 80;
+      const newWidths = [...colWidths];
+      newWidths.splice(c + 1, 0, dupWidth);
+      const newSpans = spans.map(row => {
+        const rCopy = [...row];
+        rCopy.splice(c + 1, 0, { ...row[c] });
+        return rCopy;
+      });
+
+      const newWidth = newWidths.reduce((sum, w) => sum + w, 0);
+      updateTable(
+        { cols: tData.cols + 1, cells: newCells, originalCells: newOrig, colWidths: newWidths, spans: newSpans },
+        { width: newWidth }
+      );
+    } else if (action === "merge") {
+      const selection = (window as any).__selectedTableSelection;
+      const coords = (selection?.coords || []) as [number, number][];
+      if (coords.length < 2) return;
+      const rowsList = coords.map(([ri, ci]) => ri);
+      const colsList = coords.map(([ri, ci]) => ci);
+      const minR = Math.min(...rowsList);
+      const maxR = Math.max(...rowsList);
+      const minC = Math.min(...colsList);
+      const maxC = Math.max(...colsList);
+      const colspan = maxC - minC + 1;
+      const rowspan = maxR - minR + 1;
+      const newSpans = JSON.parse(JSON.stringify(spans));
+
+      let mergedText = "";
+      for (let ri = minR; ri <= maxR; ri++) {
+        for (let ci = minC; ci <= maxC; ci++) {
+          const text = tData.cells[ri]?.[ci] || "";
+          if (text) mergedText += (mergedText ? " " : "") + text;
+          if (ri === minR && ci === minC) {
+            newSpans[ri][ci] = { colspan, rowspan };
+          } else {
+            newSpans[ri][ci] = { merged: true, mergedInto: [minR, minC] };
+          }
+        }
+      }
+
+      const newCells = tData.cells.map((row, ri) => 
+        row.map((cell, ci) => {
+          if (ri === minR && ci === minC) return mergedText;
+          if (ri >= minR && ri <= maxR && ci >= minC && ci <= maxC) return "";
+          return cell;
+        })
+      );
+      const newOrig = (tData.originalCells || tData.cells).map((row, ri) => 
+        row.map((cell, ci) => {
+          if (ri === minR && ci === minC) return mergedText;
+          if (ri >= minR && ri <= maxR && ci >= minC && ci <= maxC) return "";
+          return cell;
+        })
+      );
+
+      updateTable({ cells: newCells, originalCells: newOrig, spans: newSpans });
+    } else if (action === "split") {
+      const cellSpan = spans[r]?.[c];
+      if (cellSpan && (cellSpan.colspan > 1 || cellSpan.rowspan > 1)) {
+        const cs = cellSpan.colspan || 1;
+        const rs = cellSpan.rowspan || 1;
+        const newSpans = JSON.parse(JSON.stringify(spans));
+        newSpans[r][c] = {};
+        for (let ri = r; ri < r + rs; ri++) {
+          for (let ci = c; ci < c + cs; ci++) {
+            if (ri === r && ci === c) continue;
+            newSpans[ri][ci] = {};
+          }
+        }
+        updateTable({ spans: newSpans });
+      }
+    }
+  }, [page, pages, currentPageIdx, updatePages]);
 
   // ── Multiple element alignment ─────────────────────────────────────────────
   const handleAlign = useCallback((alignment: "left" | "center" | "right" | "top" | "bottom" | "distribute-v" | "distribute-h") => {
@@ -1283,10 +1569,16 @@ export function Canvas({
       )}
 
       {tableContextMenu && (
-        <ContextMenu
-          pos={{ x: tableContextMenu.x, y: tableContextMenu.y }}
-          items={buildTableCellContextItems(tableContextMenu.elementId, tableContextMenu.r, tableContextMenu.c)}
+        <TableContextMenu
+          menu={{
+            x: tableContextMenu.x,
+            y: tableContextMenu.y,
+            elementId: tableContextMenu.elementId,
+            row: tableContextMenu.r,
+            col: tableContextMenu.c,
+          }}
           onClose={() => setTableContextMenu(null)}
+          onAction={handleTableContextAction}
         />
       )}
     </div>

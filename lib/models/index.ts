@@ -3,6 +3,14 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 import Class from "./Class";
 import Student from "./Student";
 import _Parent from "./Parent";
+import School from "./School";
+import User from "./User";
+import Stream from "./Stream";
+import Section from "./Section";
+import Teacher from "./Teacher";
+import LandingContent from "./LandingContent";
+import GeneratedDocument from "./GeneratedDocument";
+
 export { Class, Student };
 
 // ─── Subject ──────────────────────────────────────────────────────

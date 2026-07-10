@@ -39,7 +39,10 @@ export interface TableData {
   rowHeights?: number[];      // Custom row heights in pixels
   spans?: TableCellSpan[][];  // Merge cell span structure: spans[r][c]
   cellStyles?: Record<string, string>[][]; // Custom cell style overrides: cellStyles[r][c] = { background, color, textAlign, fontWeight, fontStyle, textDecoration }
+  alternateRows?: boolean;    // Shading for odd/even rows
+  erpBinding?: string;        // Dynamic data array path, e.g., 'student.marks' or 'fees.receipts'
 }
+
 
 export interface TextStyle {
   fontFamily: string;

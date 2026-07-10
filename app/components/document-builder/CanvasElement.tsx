@@ -4,6 +4,371 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import type { DocumentElement, TextStyle, ImageStyle } from "./types";
 import { findVariable } from "./variable-definitions";
 
+// ── TableInsertHandles ───────────────────────────────────────────────────────
+function TableInsertHandles({
+  element,
+  onUpdate,
+  zoom,
+}: {
+  element: DocumentElement;
+  onUpdate: (id: string, updates: Partial<DocumentElement>) => void;
+  zoom: number;
+}) {
+  const [hoveredRow, setHoveredRow] = useState<number | null>(null);
+  const [hoveredCol, setHoveredCol] = useState<number | null>(null);
+  const [popover, setPopover] = useState<{ type: "row" | "col"; index: number } | null>(null);
+
+  if (!element.tableData) return null;
+  const { rows, cols, cells } = element.tableData;
+  const colWidths = element.tableData.colWidths || Array(cols).fill(element.width / cols);
+  const rowHeights = element.tableData.rowHeights || Array(rows).fill(element.height / rows);
+  const spans = element.tableData.spans || Array.from({ length: rows }, () => Array(cols).fill({}));
+
+  const runTableCmd = (cmd: string, index: number) => {
+    const tData = element.tableData!;
+    const cWidths = tData.colWidths || Array(tData.cols).fill(element.width / tData.cols);
+    const rHeights = tData.rowHeights || Array(tData.rows).fill(element.height / tData.rows);
+    const sp = tData.spans || Array.from({ length: tData.rows }, () => Array(tData.cols).fill({}));
+
+    if (cmd === "addRowAbove" || cmd === "addRowBelow") {
+      const insertIdx = cmd === "addRowAbove" ? index : index + 1;
+      const newCells = [...tData.cells];
+      newCells.splice(insertIdx, 0, Array(tData.cols).fill(""));
+      const newOrig = tData.originalCells ? [...tData.originalCells] : [...tData.cells];
+      newOrig.splice(insertIdx, 0, Array(tData.cols).fill(""));
+      const newHeights = [...rHeights]; newHeights.splice(insertIdx, 0, 32);
+      const newSpans = [...sp]; newSpans.splice(insertIdx, 0, Array(tData.cols).fill({}));
+      onUpdate(element.id, {
+        height: newHeights.reduce((s, h) => s + h, 0),
+        tableData: { ...tData, rows: tData.rows + 1, cells: newCells, originalCells: newOrig, rowHeights: newHeights, spans: newSpans },
+      });
+      if ((window as any).__shiftElementsBelow) (window as any).__shiftElementsBelow(element.id, 32);
+    } else if (cmd === "deleteRow") {
+      if (tData.rows <= 1) return;
+      const newCells = [...tData.cells]; newCells.splice(index, 1);
+      const newOrig = tData.originalCells ? [...tData.originalCells] : [...tData.cells]; newOrig.splice(index, 1);
+      const deletedH = rHeights[index] || 32;
+      const newHeights = [...rHeights]; newHeights.splice(index, 1);
+      const newSpans = [...sp]; newSpans.splice(index, 1);
+      onUpdate(element.id, {
+        height: newHeights.reduce((s, h) => s + h, 0),
+        tableData: { ...tData, rows: tData.rows - 1, cells: newCells, originalCells: newOrig, rowHeights: newHeights, spans: newSpans },
+      });
+      if ((window as any).__shiftElementsBelow) (window as any).__shiftElementsBelow(element.id, -deletedH);
+    } else if (cmd === "duplicateRow") {
+      const newCells = [...tData.cells]; newCells.splice(index + 1, 0, [...tData.cells[index]]);
+      const newOrig = tData.originalCells ? [...tData.originalCells] : [...tData.cells]; newOrig.splice(index + 1, 0, [...(tData.originalCells || tData.cells)[index]]);
+      const dupH = rHeights[index] || 32;
+      const newHeights = [...rHeights]; newHeights.splice(index + 1, 0, dupH);
+      const newSpans = [...sp]; newSpans.splice(index + 1, 0, sp[index].map((s: any) => ({ ...s })));
+      onUpdate(element.id, {
+        height: newHeights.reduce((s, h) => s + h, 0),
+        tableData: { ...tData, rows: tData.rows + 1, cells: newCells, originalCells: newOrig, rowHeights: newHeights, spans: newSpans },
+      });
+      if ((window as any).__shiftElementsBelow) (window as any).__shiftElementsBelow(element.id, dupH);
+    } else if (cmd === "addColLeft" || cmd === "addColRight") {
+      const insertIdx = cmd === "addColLeft" ? index : index + 1;
+      const newCells = tData.cells.map(row => { const r = [...row]; r.splice(insertIdx, 0, ""); return r; });
+      const newOrig = (tData.originalCells || tData.cells).map(row => { const r = [...row]; r.splice(insertIdx, 0, ""); return r; });
+      const newWidths = [...cWidths]; newWidths.splice(insertIdx, 0, 80);
+      const newSpans = sp.map((row: any[]) => { const r = [...row]; r.splice(insertIdx, 0, {}); return r; });
+      onUpdate(element.id, {
+        width: newWidths.reduce((s, w) => s + w, 0),
+        tableData: { ...tData, cols: tData.cols + 1, cells: newCells, originalCells: newOrig, colWidths: newWidths, spans: newSpans },
+      });
+    } else if (cmd === "deleteCol") {
+      if (tData.cols <= 1) return;
+      const newCells = tData.cells.map(row => { const r = [...row]; r.splice(index, 1); return r; });
+      const newOrig = (tData.originalCells || tData.cells).map(row => { const r = [...row]; r.splice(index, 1); return r; });
+      const newWidths = [...cWidths]; newWidths.splice(index, 1);
+      const newSpans = sp.map((row: any[]) => { const r = [...row]; r.splice(index, 1); return r; });
+      onUpdate(element.id, {
+        width: newWidths.reduce((s, w) => s + w, 0),
+        tableData: { ...tData, cols: tData.cols - 1, cells: newCells, originalCells: newOrig, colWidths: newWidths, spans: newSpans },
+      });
+    } else if (cmd === "duplicateCol") {
+      const newCells = tData.cells.map(row => { const r = [...row]; r.splice(index + 1, 0, row[index]); return r; });
+      const newOrig = (tData.originalCells || tData.cells).map(row => { const r = [...row]; r.splice(index + 1, 0, row[index]); return r; });
+      const dupW = cWidths[index] || 80;
+      const newWidths = [...cWidths]; newWidths.splice(index + 1, 0, dupW);
+      const newSpans = sp.map((row: any[]) => { const r = [...row]; r.splice(index + 1, 0, { ...row[index] }); return r; });
+      onUpdate(element.id, {
+        width: newWidths.reduce((s, w) => s + w, 0),
+        tableData: { ...tData, cols: tData.cols + 1, cells: newCells, originalCells: newOrig, colWidths: newWidths, spans: newSpans },
+      });
+    }
+    setPopover(null);
+  };
+
+  // Build cumulative positions for row/col handle placement
+  let cumulativeY = 0;
+  const rowYPositions: number[] = [];
+  for (let r = 0; r <= rows; r++) {
+    rowYPositions.push(cumulativeY);
+    if (r < rows) cumulativeY += rowHeights[r] || 32;
+  }
+
+  let cumulativeX = 0;
+  const colXPositions: number[] = [];
+  for (let c = 0; c <= cols; c++) {
+    colXPositions.push(cumulativeX);
+    if (c < cols) cumulativeX += colWidths[c] || 80;
+  }
+
+  const HANDLE_SZ = 16;
+  const ROW_ACTIONS = [
+    { action: "addRowAbove",  label: "Insert Above" },
+    { action: "addRowBelow",  label: "Insert Below" },
+    { action: "duplicateRow", label: "Duplicate" },
+    { action: "deleteRow",    label: "Delete",    danger: true },
+  ];
+  const COL_ACTIONS = [
+    { action: "addColLeft",   label: "Insert Left" },
+    { action: "addColRight",  label: "Insert Right" },
+    { action: "duplicateCol", label: "Duplicate" },
+    { action: "deleteCol",    label: "Delete",   danger: true },
+  ];
+
+  return (
+    <>
+      <style>{`
+        @keyframes handle-in { from { opacity: 0; transform: scale(0.7); } to { opacity: 1; transform: scale(1); } }
+        .tbl-handle { animation: handle-in 0.12s ease-out; }
+        .tbl-handle:hover { background: #2563EB !important; color: white !important; transform: scale(1.15) !important; }
+        .tbl-popover-item:hover { background: #F1F5F9 !important; }
+        .tbl-popover-item-danger:hover { background: #FEF2F2 !important; color: #DC2626 !important; }
+      `}</style>
+
+      {/* Row handles — left side, between each row */}
+      {rowYPositions.slice(0, rows + 1).map((yPos, idx) => {
+        // idx=0 is above row 0, idx=r is between row r-1 and r, idx=rows is below last row
+        const isVisible = hoveredRow === idx;
+        const midY = idx === 0 ? yPos : idx === rows ? yPos : (rowYPositions[idx - 1] + rowHeights[idx - 1] / 2 + rowYPositions[idx] - rowHeights[idx - 1] / 2) / 2;
+        // Always show handle between existing rows; determine which row this inserts near
+        const nearRow = idx > 0 ? idx - 1 : 0;
+        return (
+          <div
+            key={`row-handle-${idx}`}
+            className="tbl-handle"
+            onMouseEnter={() => setHoveredRow(idx)}
+            onMouseLeave={() => { if (popover?.type !== "row" || popover.index !== nearRow) setHoveredRow(null); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setPopover(popover?.type === "row" && popover.index === nearRow ? null : { type: "row", index: nearRow });
+            }}
+            title={idx === 0 ? "Insert row above" : idx === rows ? "Insert row below" : "Row options"}
+            style={{
+              position: "absolute",
+              left: -HANDLE_SZ - 6,
+              top: yPos - HANDLE_SZ / 2,
+              width: HANDLE_SZ,
+              height: HANDLE_SZ,
+              borderRadius: "50%",
+              background: "#E0EAFB",
+              border: "1.5px solid #93C5FD",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#2563EB",
+              cursor: "pointer",
+              zIndex: 30,
+              transition: "all 0.1s",
+              userSelect: "none",
+              boxShadow: "0 1px 4px rgba(37,99,235,0.18)",
+            }}
+          >
+            +
+            {/* Popover for row actions */}
+            {popover?.type === "row" && popover.index === nearRow && (
+              <div
+                onMouseLeave={() => { setPopover(null); setHoveredRow(null); }}
+                style={{
+                  position: "absolute",
+                  left: HANDLE_SZ + 4,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "white",
+                  borderRadius: 8,
+                  border: "1px solid #E2E8F0",
+                  boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12)",
+                  padding: "4px 0",
+                  zIndex: 9999,
+                  minWidth: 155,
+                  animation: "handle-in 0.12s ease-out",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                {ROW_ACTIONS.map((a) => (
+                  <button
+                    key={a.action}
+                    className={`tbl-popover-item${(a as any).danger ? " tbl-popover-item-danger" : ""}`}
+                    onMouseDown={(e) => { e.stopPropagation(); runTableCmd(a.action, nearRow); }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      padding: "6px 14px",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: (a as any).danger ? "#EF4444" : "#1E293B",
+                      textAlign: "left",
+                    }}
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Col handles — above each column */}
+      {colXPositions.slice(0, cols + 1).map((xPos, idx) => {
+        const nearCol = idx > 0 ? idx - 1 : 0;
+        return (
+          <div
+            key={`col-handle-${idx}`}
+            className="tbl-handle"
+            onMouseEnter={() => setHoveredCol(idx)}
+            onMouseLeave={() => { if (popover?.type !== "col" || popover.index !== nearCol) setHoveredCol(null); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setPopover(popover?.type === "col" && popover.index === nearCol ? null : { type: "col", index: nearCol });
+            }}
+            title={idx === 0 ? "Insert column left" : idx === cols ? "Insert column right" : "Column options"}
+            style={{
+              position: "absolute",
+              top: -HANDLE_SZ - 6,
+              left: xPos - HANDLE_SZ / 2,
+              width: HANDLE_SZ,
+              height: HANDLE_SZ,
+              borderRadius: "50%",
+              background: "#E0EAFB",
+              border: "1.5px solid #93C5FD",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#2563EB",
+              cursor: "pointer",
+              zIndex: 30,
+              transition: "all 0.1s",
+              userSelect: "none",
+              boxShadow: "0 1px 4px rgba(37,99,235,0.18)",
+            }}
+          >
+            +
+            {/* Popover for col actions */}
+            {popover?.type === "col" && popover.index === nearCol && (
+              <div
+                onMouseLeave={() => { setPopover(null); setHoveredCol(null); }}
+                style={{
+                  position: "absolute",
+                  top: HANDLE_SZ + 4,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  background: "white",
+                  borderRadius: 8,
+                  border: "1px solid #E2E8F0",
+                  boxShadow: "0 8px 24px -4px rgba(0,0,0,0.12)",
+                  padding: "4px 0",
+                  zIndex: 9999,
+                  minWidth: 155,
+                  animation: "handle-in 0.12s ease-out",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                {COL_ACTIONS.map((a) => (
+                  <button
+                    key={a.action}
+                    className={`tbl-popover-item${(a as any).danger ? " tbl-popover-item-danger" : ""}`}
+                    onMouseDown={(e) => { e.stopPropagation(); runTableCmd(a.action, nearCol); }}
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      padding: "6px 14px",
+                      background: "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: (a as any).danger ? "#EF4444" : "#1E293B",
+                      textAlign: "left",
+                    }}
+                  >
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </>
+  );
+}
+
+// ── ElementInsertHandle — "+" below any selected element ─────────────────────
+function ElementInsertHandle({
+  elementHeight,
+  onAdd,
+}: {
+  elementHeight: number;
+  onAdd: () => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: "50%",
+        top: elementHeight + 8,
+        transform: "translateX(-50%)",
+        zIndex: 20,
+        display: "flex",
+        alignItems: "center",
+        gap: 4,
+        cursor: "pointer",
+        userSelect: "none",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={(e) => { e.stopPropagation(); onAdd(); }}
+      title="Add element below"
+    >
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 5,
+          background: hovered ? "#2563EB" : "white",
+          border: `1.5px solid ${hovered ? "#2563EB" : "#CBD5E1"}`,
+          borderRadius: 20,
+          padding: "3px 10px 3px 7px",
+          boxShadow: hovered ? "0 4px 12px rgba(37,99,235,0.25)" : "0 1px 4px rgba(0,0,0,0.08)",
+          transition: "all 0.15s",
+          fontSize: 11,
+          fontWeight: 700,
+          color: hovered ? "white" : "#64748B",
+          whiteSpace: "nowrap",
+        }}
+      >
+        <span style={{ fontSize: 15, lineHeight: 1, marginTop: -1 }}>+</span>
+        Add element
+      </div>
+    </div>
+  );
+}
+
+
 interface SnapLines {
   vLines: number[]; // x positions (canvas-relative)
   hLines: number[]; // y positions (canvas-relative)
@@ -758,6 +1123,8 @@ export function CanvasElement({
                     const cellStyles = element.tableData!.cellStyles || [];
                     const customStyle = cellStyles[r]?.[c] || {};
 
+                    const alternateBg = element.tableData!.alternateRows && (r % 2 === (headerRow ? 0 : 1)) ? "#F8FAFC" : undefined;
+
                     return (
                       <td
                         key={c}
@@ -798,12 +1165,13 @@ export function CanvasElement({
                           textDecoration: customStyle.textDecoration || "none",
                           color: customStyle.color || undefined,
                           textAlign: (customStyle.textAlign || (isHeader ? "center" : "left")) as React.CSSProperties["textAlign"],
-                          backgroundColor: isCellSelected ? "#DBEAFE" : (customStyle.background || customStyle.backgroundColor || (isHeader ? "#F1F5F9" : undefined)),
+                          backgroundColor: isCellSelected ? "#DBEAFE" : (customStyle.background || customStyle.backgroundColor || (isHeader ? "#F1F5F9" : alternateBg)),
                           verticalAlign: "middle",
                           wordBreak: "break-word",
                           outline: "none",
                         }}
                       >
+
                         {cells[r]?.[c] ?? ""}
                         
                         {/* Column and Row Resizers */}
@@ -922,6 +1290,27 @@ export function CanvasElement({
       <div style={{ width: "100%", height: "100%", position: "relative", zIndex: 0 }}>
         {renderContent()}
       </div>
+
+      {/* Table insertion handles — row/col + buttons */}
+      {isSelected && element.type === "table" && !isLocked && (
+        <TableInsertHandles
+          element={element}
+          onUpdate={onUpdate}
+          zoom={zoom}
+        />
+      )}
+
+      {/* Universal element insert handle */}
+      {isSelected && !isEditing && !isLocked && element.type !== "pageBreak" && (
+        <ElementInsertHandle
+          elementHeight={element.height}
+          onAdd={() => {
+            if ((window as any).__insertElementBelow) {
+              (window as any).__insertElementBelow(element);
+            }
+          }}
+        />
+      )}
 
       {/* Resize & Rotate handles */}
       {isSelected && !isEditing && !isLocked && (
