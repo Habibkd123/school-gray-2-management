@@ -211,7 +211,7 @@ export default function HolidaysPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Holidays</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/dashboard" className="hover:text-primary">HRM</Link>
@@ -393,7 +393,7 @@ export default function HolidaysPage() {
 
         {/* Controls Section */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
+          <div className="card-subtitle flex items-center gap-2 text-[13px]">
             <span>Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{pag.paged.length}</span> of <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredData.length}</span> items</span>
           </div>
 
@@ -544,7 +544,7 @@ export default function HolidaysPage() {
           <div className="flex items-center justify-between pt-2">
             <div>
               <label className="text-[14px] font-bold text-foreground dark:text-slate-100 block">Status</label>
-              <span className="text-[13px] text-slate-500 dark:text-slate-400">Change the Status by toggle</span>
+              <span className="card-subtitle text-[13px]">Change the Status by toggle</span>
             </div>
             <button 
               type="button"

@@ -293,7 +293,7 @@ export function DoughnutChart({ data, colors }: DoughnutChartProps) {
           <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
             Total
           </span>
-          <span className="text-2xl font-bold text-slate-900 dark:text-white mt-0.5">
+          <span className="section-title mt-0.5">
             {total}
           </span>
         </div>

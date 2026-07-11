@@ -182,7 +182,7 @@ export default function NoticesPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Notice Board</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <span className="hover:text-primary cursor-pointer">Announcement</span>
@@ -428,7 +428,7 @@ export default function NoticesPage() {
 
           <div className="p-5 bg-[#EEF2FF] dark:bg-indigo-900/20 border border-[#E0E7FF] dark:border-indigo-500/20 rounded-xl space-y-3">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Attachment</label>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400">Upload size of 4MB, Accepted Format PDF</p>
+            <p className="card-subtitle text-[13px]">Upload size of 4MB, Accepted Format PDF</p>
             <label className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg transition-colors inline-flex items-center gap-2 cursor-pointer shadow-sm">
               <FileText className="w-4 h-4" /> 
               {attachmentFile ? attachmentFile.name : "Choose File"}
@@ -513,7 +513,7 @@ export default function NoticesPage() {
 
           <div className="p-5 bg-[#EEF2FF] dark:bg-indigo-900/20 border border-[#E0E7FF] dark:border-indigo-500/20 rounded-xl space-y-3">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Attachment</label>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400">
+            <p className="card-subtitle text-[13px]">
               {editingNotice?.attachment_url
                 ? "Current file attached. Upload new to replace."
                 : "Upload size of 4MB, Accepted Format PDF"}

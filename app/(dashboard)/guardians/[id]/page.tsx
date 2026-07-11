@@ -330,7 +330,7 @@ export default function ParentDetailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Parent Details</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
             <span>Dashboard</span>
             <span>/</span>
             {activeRole !== "parent" ? (
@@ -572,7 +572,7 @@ export default function ParentDetailPage() {
                 {feesLoading ? (
                   <div className="flex items-center justify-center py-10">
                     <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" />
-                    <span className="text-[13px] font-medium text-slate-500">Loading dynamic fee ledgers...</span>
+                    <span className="card-subtitle text-[13px]">Loading dynamic fee ledgers...</span>
                   </div>
                 ) : (
                   <>
@@ -650,7 +650,7 @@ export default function ParentDetailPage() {
                       </div>
 
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[12px] border-collapse text-left whitespace-nowrap">
+                        <table className="erp-table text-[12px] whitespace-nowrap">
                           <thead className="bg-[#F8FAFC] dark:bg-slate-900/30 border-b border-slate-100 dark:border-slate-800">
                             <tr>
                               <th className="px-4 py-3 font-bold text-slate-600 dark:text-slate-350">Receipt Number</th>

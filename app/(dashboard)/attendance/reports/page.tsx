@@ -9,7 +9,7 @@ export default function AttendanceReportsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Attendance Reports</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
             <span>Attendance</span><span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Reports</span>
           </div>

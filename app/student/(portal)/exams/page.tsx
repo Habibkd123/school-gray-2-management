@@ -81,7 +81,7 @@ export default function StudentExamsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">Exam Schedule</h1>
-        <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Upcoming and past examinations</p>
+        <p className="card-subtitle text-[13px] mt-1">Upcoming and past examinations</p>
       </div>
 
       {isLoading ? (

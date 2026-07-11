@@ -353,7 +353,7 @@ export default function ClassesPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Classes List</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <span>Classes</span>
@@ -494,7 +494,7 @@ export default function ClassesPage() {
 
         {/* Search bar */}
         <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left border-b border-border/50">
-          <div className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
+          <div className="card-subtitle text-[13px]">
             Showing{" "}
             <span className="font-bold text-slate-700 dark:text-slate-200">
               {isLoading ? "…" : `${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, total)}`}
@@ -542,7 +542,7 @@ export default function ClassesPage() {
             {/* ── Pagination Bar ── */}
             {totalPages > 1 && (
               <div className="px-5 py-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p className="text-[13px] text-slate-500 dark:text-slate-400">
+                <p className="card-subtitle text-[13px]">
                   Page <span className="font-bold text-slate-700 dark:text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-700 dark:text-slate-200">{totalPages}</span>
                 </p>
                 <div className="flex items-center gap-1">

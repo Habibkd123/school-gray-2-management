@@ -12,7 +12,7 @@ export default function AlertsPage() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">Alerts</h1>
-        <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+        <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
           <span>Dashboard</span>
           <span>/</span>
           <span className="hover:text-primary cursor-pointer">UI Elements</span>
@@ -29,7 +29,7 @@ export default function AlertsPage() {
           {/* Default Alert */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm p-6 text-left">
             <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100 mb-2">Default Alert</h2>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-6">
+            <p className="card-subtitle text-[13px] mb-6">
               For proper styling, use one of the eight <strong className="font-semibold text-slate-700 dark:text-slate-200">required</strong> contextual classes (e.g., <code className="text-rose-500 bg-rose-50 px-1 rounded">.alert-success</code>). For background color use class <code className="text-rose-500 bg-rose-50 px-1 rounded">.bg-*</code> , <code className="text-rose-500 bg-rose-50 px-1 rounded">.text-white</code>
             </p>
             
@@ -48,7 +48,7 @@ export default function AlertsPage() {
           {/* Link Color */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm p-6 text-left">
             <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100 mb-2">Link Color</h2>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-6">
+            <p className="card-subtitle text-[13px] mb-6">
               Use the <code className="text-rose-500 bg-rose-50 px-1 rounded">.alert-link</code> utility class to quickly provide matching colored links within any alert.
             </p>
             
@@ -67,7 +67,7 @@ export default function AlertsPage() {
           {/* Additional Content */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm p-6 text-left">
             <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100 mb-2">Additional Content</h2>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-6">
+            <p className="card-subtitle text-[13px] mb-6">
               Alerts can also contain additional HTML elements like headings, paragraphs and dividers.
             </p>
 
@@ -119,7 +119,7 @@ export default function AlertsPage() {
           {/* Dismissing Alert */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm p-6 text-left">
             <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100 mb-2">Dismissing Alert</h2>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-6">
+            <p className="card-subtitle text-[13px] mb-6">
               Add a dismiss button and the <code className="text-rose-500 bg-rose-50 px-1 rounded">.alert-dismissible</code> class, which adds extra padding to the right of the alert and positions the <code className="text-rose-500 bg-rose-50 px-1 rounded">.btn-close</code> button.
             </p>
             
@@ -138,7 +138,7 @@ export default function AlertsPage() {
           {/* Alerts With Border */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm p-6 text-left">
             <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100 mb-2">Alerts With Border</h2>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-6">
+            <p className="card-subtitle text-[13px] mb-6">
               Display alert with transparent background and with contextual text color. Use classes <code className="text-rose-500 bg-rose-50 px-1 rounded">.bg-white dark:bg-slate-900</code>, and <code className="text-rose-500 bg-rose-50 px-1 rounded">.text-*</code>. E.g. <code className="text-rose-500 bg-rose-50 px-1 rounded">bg-white dark:bg-slate-900 text-primary</code>.
             </p>
             
@@ -157,7 +157,7 @@ export default function AlertsPage() {
           {/* Live Alert */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm p-6 text-left">
             <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100 mb-2">Live Alert</h2>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-6">
+            <p className="card-subtitle text-[13px] mb-6">
               Click the button below to show an alert (hidden with inline styles to start), then dismiss (and destroy) it with the built-in close button.
             </p>
             

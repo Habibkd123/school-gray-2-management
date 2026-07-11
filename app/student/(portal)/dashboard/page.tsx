@@ -128,7 +128,7 @@ export default function StudentDashboardPage() {
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
+            <h1 className="section-title flex items-center gap-2">
               Welcome back, {user?.name?.split(" ")[0] || "Student"} 👋
             </h1>
             <p className="text-indigo-200 text-[13px] mt-1">
@@ -162,7 +162,7 @@ export default function StudentDashboardPage() {
                   <Icon className="w-5 h-5" style={{ color: stat.color }} />
                 </div>
               </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">{stat.value}</p>
+              <p className="section-title">{stat.value}</p>
               <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">{stat.label}</p>
             </div>
           );

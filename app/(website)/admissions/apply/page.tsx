@@ -178,14 +178,14 @@ export default function PublicApplyPage() {
           <div className="w-20 h-20 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-400">
             <CheckCircle2 className="w-10 h-10 animate-bounce" />
           </div>
-          <h1 className="text-3xl font-serif font-bold text-white">Application Submitted!</h1>
+          <h1 className="page-title font-serif">Application Submitted!</h1>
           <p className="text-slate-400 text-[14px] leading-relaxed max-w-md mx-auto">
             Your online admission application has been registered successfully. Please save your application reference number for future communication.
           </p>
 
           <div className="p-5 bg-white/5 border border-white/10 rounded-xl max-w-sm mx-auto">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Application Reference No</span>
-            <span className="text-2xl font-mono font-bold text-primary block mt-1.5 tracking-wider">
+            <span className="section-title font-mono text-primary block mt-1.5 tracking-wider">
               {successData.application_no}
             </span>
           </div>
@@ -215,7 +215,7 @@ export default function PublicApplyPage() {
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div>
-          <h1 className="text-3xl font-serif font-bold text-foreground">Apply for Admission</h1>
+          <h1 className="page-title font-serif">Apply for Admission</h1>
           <p className="text-primary font-bold uppercase tracking-widest text-[11px] mt-1">
             Academic Session 2026-2027
           </p>

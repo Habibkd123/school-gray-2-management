@@ -150,7 +150,7 @@ export default function ClassReportPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left print:hidden">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Class Report</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <span>Reports</span>
@@ -213,7 +213,7 @@ export default function ClassReportPage() {
             <p className={`text-2xl font-bold border rounded-lg px-3 py-1.5 inline-block mb-2 ${card.color}`}>
               {card.value}
             </p>
-            <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400">{card.label}</p>
+            <p className="card-subtitle text-[13px] font-semibold">{card.label}</p>
           </div>
         ))}
       </div>
@@ -316,7 +316,7 @@ export default function ClassReportPage() {
         </div>
 
         <div className="p-5 flex items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <span className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
+          <span className="card-subtitle text-[13px]">
             Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{sortedClasses.length}</span> classes
           </span>
           <div className="relative">
@@ -335,7 +335,7 @@ export default function ClassReportPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-[13px] whitespace-nowrap">
+          <table className="erp-table text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">ID</th>
@@ -390,7 +390,7 @@ export default function ClassReportPage() {
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 disabled:opacity-50 transition-colors"
+              className="card-subtitle px-3 py-1.5 text-[13px] hover:text-slate-700 disabled:opacity-50 transition-colors"
             >
               Prev
             </button>
@@ -410,7 +410,7 @@ export default function ClassReportPage() {
             <button
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
-              className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 disabled:opacity-50 transition-colors"
+              className="card-subtitle px-3 py-1.5 text-[13px] hover:text-slate-700 disabled:opacity-50 transition-colors"
             >
               Next
             </button>
@@ -460,7 +460,7 @@ export default function ClassReportPage() {
                   {/* Print Title Header */}
                   <div className="hidden print:flex items-center justify-between border-b border-slate-300 pb-4 mb-4">
                     <div>
-                      <h2 className="text-2xl font-bold text-slate-900">Class Performance & Attendance Summary</h2>
+                      <h2 className="section-title">Class Performance & Attendance Summary</h2>
                       <p className="text-xs text-slate-500">Class Room: {classDetail.profile.name} — Section: {classDetail.profile.section}</p>
                     </div>
                     <div className="text-right">
@@ -499,7 +499,7 @@ export default function ClassReportPage() {
                         <Calendar className="w-4 h-4 text-emerald-500" />
                       </div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-extrabold text-emerald-600">{classDetail.monthlyAttendance.rate}%</span>
+                        <span className="page-title text-emerald-600">{classDetail.monthlyAttendance.rate}%</span>
                         <span className="text-xs text-slate-400 font-medium">({classDetail.monthlyAttendance.workingDays} days marked)</span>
                       </div>
                       <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -514,7 +514,7 @@ export default function ClassReportPage() {
                         <Award className="w-4 h-4 text-indigo-500" />
                       </div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-extrabold text-indigo-600">{classDetail.tests.overallAveragePercentage}%</span>
+                        <span className="page-title text-indigo-600">{classDetail.tests.overallAveragePercentage}%</span>
                         <span className="text-xs text-slate-400 font-medium">({classDetail.tests.totalCreated} scheduled tests)</span>
                       </div>
                       <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -529,7 +529,7 @@ export default function ClassReportPage() {
                         <Users className="w-4 h-4 text-slate-400" />
                       </div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-extrabold text-slate-900 dark:text-white">{classDetail.dailyAttendance.rate}%</span>
+                        <span className="page-title">{classDetail.dailyAttendance.rate}%</span>
                         <span className="text-xs text-slate-400 font-medium">Present today</span>
                       </div>
                       <div className="flex justify-between text-[11px] text-slate-500 pt-1">
@@ -627,7 +627,7 @@ export default function ClassReportPage() {
                   {activeTab === "roster" && (
                     <div className="border border-border rounded-xl overflow-hidden bg-white dark:bg-slate-900">
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[13px] whitespace-nowrap text-left">
+                        <table className="erp-table text-[13px] whitespace-nowrap">
                           <thead className="bg-[#F8FAFC] dark:bg-slate-800 border-b border-border">
                             <tr>
                               <th className="px-5 py-3 font-bold text-slate-700 dark:text-slate-200">Admission No</th>
@@ -682,7 +682,7 @@ export default function ClassReportPage() {
                   {activeTab === "tests" && (
                     <div className="border border-border rounded-xl overflow-hidden bg-white dark:bg-slate-900">
                       <div className="overflow-x-auto">
-                        <table className="w-full text-[13px] whitespace-nowrap text-left">
+                        <table className="erp-table text-[13px] whitespace-nowrap">
                           <thead className="bg-[#F8FAFC] dark:bg-slate-800 border-b border-border">
                             <tr>
                               <th className="px-5 py-3 font-bold text-slate-700 dark:text-slate-200">Assessment Name</th>

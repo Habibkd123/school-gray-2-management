@@ -160,14 +160,11 @@ body {
 }
 
 .table-header {
-  @apply text-xs font-semibold text-slate-500 uppercase tracking-wider;
-}
-
-.page-title {
-  font-size: 20px;
-  line-height: 24px;
-  font-weight: 600;
-  color: var(--foreground);
+  font-size: var(--text-table-header) !important;
+  font-weight: 500 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-text);
 }
 
 .page-desc {
@@ -579,7 +576,7 @@ body {
   --text-label:         0.8125rem;   /* 13px — form labels                   */
   --text-input:         0.875rem;    /* 14px — input / select values         */
   --text-placeholder:   0.8125rem;   /* 13px — placeholder text              */
-  --text-table-header:  0.75rem;     /* 12px — table column headers          */
+  --text-table-header:  0.8125rem;   /* 13px — table column headers          */
   --text-table-body:    0.875rem;    /* 14px — table cell content            */
   --text-badge:         0.6875rem;   /* 11px — status badge text             */
   --text-btn-sm:        0.8125rem;   /* 13px — small buttons                 */
@@ -671,7 +668,7 @@ body {
 .erp-table thead th {
   padding: 0.5rem var(--px-table);
   font-size: var(--text-table-header) !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted-text);

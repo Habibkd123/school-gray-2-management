@@ -118,7 +118,7 @@ export default function DocumentsListPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="erp-table">
               <thead>
                 <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-800/40 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                   <th className="px-5 py-3.5">Student Applicant</th>

@@ -406,7 +406,7 @@ function StudentPromotionContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Student Promotion</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 mt-1 dark:text-slate-400">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/students" className="hover:text-primary transition-colors">Students</Link>
@@ -452,7 +452,7 @@ function StudentPromotionContent() {
         <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden">
           <div className="p-5 border-b border-border">
             <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">Promotion Configuration</h2>
-            <p className="text-[13px] text-slate-500 mt-0.5 dark:text-slate-400">Define academic sessions and classes for promotion mapping</p>
+            <p className="card-subtitle text-[13px] mt-0.5">Define academic sessions and classes for promotion mapping</p>
           </div>
 
           <div className="p-5">
@@ -606,7 +606,7 @@ function StudentPromotionContent() {
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden">
             <div className="p-5 border-b border-border">
               <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">Map Class Sections Summary</h2>
-              <p className="text-[13px] text-slate-500 mt-0.5 dark:text-slate-400">Verify old class vs new target class mapping</p>
+              <p className="card-subtitle text-[13px] mt-0.5">Verify old class vs new target class mapping</p>
             </div>
             <div className="p-5">
               <div className="flex flex-col lg:flex-row items-center gap-8 relative">
@@ -644,7 +644,7 @@ function StudentPromotionContent() {
             </div>
 
             <div className="overflow-x-auto min-h-[250px]">
-              <table className="w-full border-collapse text-left whitespace-nowrap">
+              <table className="erp-table whitespace-nowrap">
                 <thead>
                   <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-border text-[12px] font-bold text-slate-700 dark:text-slate-200">
                     <th className="px-5 py-4 w-12">

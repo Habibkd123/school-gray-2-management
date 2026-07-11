@@ -114,7 +114,7 @@ export default function ApplyLeavePage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">My Leave Applications</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <span>Leave</span>
@@ -147,7 +147,7 @@ export default function ApplyLeavePage() {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-[13px] whitespace-nowrap">
+          <table className="erp-table text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Leave Type</th>

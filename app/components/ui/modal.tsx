@@ -56,7 +56,7 @@ export function Modal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 dark:border-zinc-800">
-          <h3 className="text-[17px] font-semibold text-zinc-900 dark:text-zinc-50 leading-tight">
+          <h3 className="card-title">
             {title}
           </h3>
           <button

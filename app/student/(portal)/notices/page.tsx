@@ -62,7 +62,7 @@ export default function StudentNoticesPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Notice Board</h1>
-          <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
+          <p className="card-subtitle text-[13px] mt-1">
             Important announcements, events and updates from the administration
           </p>
         </div>

@@ -109,13 +109,13 @@ export default function StudentReportCardsPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+        <h1 className="section-title flex items-center gap-3">
           <span className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center">
             <BookOpen className="w-5 h-5 text-white" />
           </span>
           My Report Cards
         </h1>
-        <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 ml-12">
+        <p className="card-subtitle text-[13px] mt-1 ml-12">
           View and download your academic report cards
         </p>
       </div>

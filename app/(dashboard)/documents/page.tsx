@@ -131,7 +131,7 @@ export default function DocumentsPage() {
     {
       header: "Last Updated",
       accessorKey: "updatedAt",
-      render: (d) => <span className="text-[13px] text-slate-500 dark:text-slate-400">{fmtDate(d.updatedAt)}</span>,
+      render: (d) => <span className="card-subtitle text-[13px]">{fmtDate(d.updatedAt)}</span>,
     },
     {
       header: "Status",
@@ -297,7 +297,7 @@ export default function DocumentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Documents</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
             <span>Dashboard</span><span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Documents</span>
           </div>
@@ -413,7 +413,7 @@ export default function DocumentsPage() {
               <FileText className="w-8 h-8 text-primary/40" />
             </div>
             <h3 className="text-[15px] font-bold text-slate-700 dark:text-slate-200 mb-2">No documents yet</h3>
-            <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-6">
+            <p className="card-subtitle text-[13px] mb-6">
               {search || categoryFilter !== "all" || statusFilter !== "all"
                 ? "No documents match your filters."
                 : "Create your first document to get started."}

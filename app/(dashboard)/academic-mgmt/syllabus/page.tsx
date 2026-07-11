@@ -115,7 +115,7 @@ export default function SyllabusClassListPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Syllabus</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/academic" className="hover:text-primary">Academic</Link>
@@ -138,7 +138,7 @@ export default function SyllabusClassListPage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm text-left">
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
           <div className="flex flex-wrap items-center gap-4 flex-1">
-            <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
+            <div className="card-subtitle flex items-center gap-2 text-[13px]">
               <span>Total</span>
               <span className="font-bold text-slate-700 dark:text-slate-200">{filteredClassGroups.length}</span>
               <span>{filteredClassGroups.length === 1 ? "Class" : "Classes"}</span>

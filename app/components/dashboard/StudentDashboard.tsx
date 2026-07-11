@@ -263,7 +263,7 @@ const StudentDashboard = React.memo(function StudentDashboard({ user, studentId,
                 })}
               </div>
             ) : (
-              <p className="text-[13px] text-slate-500 py-4 text-center">No classes scheduled for today.</p>
+              <p className="card-subtitle text-[13px] py-4 text-center">No classes scheduled for today.</p>
             )}
           </div>
 
@@ -291,7 +291,7 @@ const StudentDashboard = React.memo(function StudentDashboard({ user, studentId,
                 })}
               </div>
             ) : (
-              <p className="text-[13px] text-slate-500 py-4 text-center">No homework recorded yet.</p>
+              <p className="card-subtitle text-[13px] py-4 text-center">No homework recorded yet.</p>
             )}
           </div>
         </div>
@@ -311,7 +311,7 @@ const StudentDashboard = React.memo(function StudentDashboard({ user, studentId,
                 <p className="text-[11px] text-slate-400 mt-2">Posted on: {new Date(latestNotice.publish_date).toLocaleDateString()}</p>
               </div>
             ) : (
-              <p className="text-[13px] text-slate-500 py-4 text-center">No notices posted.</p>
+              <p className="card-subtitle text-[13px] py-4 text-center">No notices posted.</p>
             )}
           </div>
 
@@ -332,7 +332,7 @@ const StudentDashboard = React.memo(function StudentDashboard({ user, studentId,
                   </div>
                 ))
               ) : (
-                <p className="text-[13px] text-slate-500 py-4 text-center">No leave logs submitted.</p>
+                <p className="card-subtitle text-[13px] py-4 text-center">No leave logs submitted.</p>
               )}
             </div>
           </div>

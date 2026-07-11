@@ -45,7 +45,7 @@ export default async function StudentLifePage() {
             <div>
               <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6"><Trophy className="w-7 h-7 text-primary" /></div>
               <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Athletics</h2>
-              <h3 className="text-3xl font-serif font-bold text-foreground mb-6">Sports & Athletics</h3>
+              <h3 className="page-title font-serif mb-6">Sports & Athletics</h3>
               <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{sports}</p>
             </div>
             <img src={sportsImage || "https://images.unsplash.com/photo-1529390079861-591de354faf5?q=80&w=800&auto=format&fit=crop"} alt="Sports" className="w-full h-72 object-cover rounded-sm shadow-xl" />
@@ -60,7 +60,7 @@ export default async function StudentLifePage() {
             <div className="order-1 lg:order-2">
               <div className="w-14 h-14 bg-purple-100 rounded-full flex items-center justify-center mb-6"><Music className="w-7 h-7 text-purple-500" /></div>
               <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Arts</h2>
-              <h3 className="text-3xl font-serif font-bold text-foreground mb-6">Cultural Activities</h3>
+              <h3 className="page-title font-serif mb-6">Cultural Activities</h3>
               <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{cultural}</p>
             </div>
           </div>
@@ -73,7 +73,7 @@ export default async function StudentLifePage() {
             <div>
               <div className="w-14 h-14 bg-blue-50 rounded-full flex items-center justify-center mb-6"><Users className="w-7 h-7 text-blue-500" /></div>
               <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Extracurriculars</h2>
-              <h3 className="text-3xl font-serif font-bold text-foreground mb-6">Clubs & Societies</h3>
+              <h3 className="page-title font-serif mb-6">Clubs & Societies</h3>
               <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{clubs}</p>
             </div>
             <img src={clubsImage || "https://images.unsplash.com/photo-1532094349884-543bc11b234d?q=80&w=800&auto=format&fit=crop"} alt="Clubs" className="w-full h-72 object-cover rounded-sm shadow-xl" />
@@ -87,7 +87,7 @@ export default async function StudentLifePage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12">
               <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Our Pride</h2>
-              <h3 className="text-3xl font-serif font-bold text-white">Achievements</h3>
+              <h3 className="page-title font-serif">Achievements</h3>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {achievements.map((a: any, i: number) => (

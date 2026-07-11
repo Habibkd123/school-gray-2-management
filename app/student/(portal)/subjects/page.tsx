@@ -25,7 +25,7 @@ export default function StudentSubjectsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">My Subjects</h1>
-        <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+        <p className="card-subtitle text-[13px] mt-1">
           Subjects assigned to your class
         </p>
       </div>

@@ -56,7 +56,7 @@ export function AdmissionProcess({ data }: { data?: AdmissionsData | null }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-6xl font-bold text-foreground mb-6 leading-tight"
+            className="page-title md:text-6xl mb-6 leading-tight"
           >
             Begin Your Educational Journey With Us
           </motion.h2>

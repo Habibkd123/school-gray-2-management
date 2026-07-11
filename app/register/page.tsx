@@ -132,7 +132,7 @@ export default function RegisterPage() {
 
             <div className="mb-6">
               <h1 className="text-[24px] font-bold text-slate-900 dark:text-slate-100 mb-1">Create Account</h1>
-              <p className="text-[13px] text-slate-500 dark:text-slate-400">Register as school administrator</p>
+              <p className="card-subtitle text-[13px]">Register as school administrator</p>
             </div>
 
             {/* Error */}

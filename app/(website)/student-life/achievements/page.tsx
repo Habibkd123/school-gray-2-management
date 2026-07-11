@@ -36,7 +36,7 @@ export default async function StudentLifeAchievementsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <Trophy className="w-12 h-12 text-primary mx-auto mb-4" />
-            <h2 className="text-3xl font-serif font-bold text-foreground mb-3">Celebrating Excellence</h2>
+            <h2 className="page-title font-serif mb-3">Celebrating Excellence</h2>
             <p className="text-slate-600 text-[14px] dark:text-slate-300">
               We take immense pride in the achievements of our students across academic, sporting, and creative domains. Here are some of our milestone accomplishments.
             </p>

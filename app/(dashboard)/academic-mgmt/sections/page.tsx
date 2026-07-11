@@ -170,7 +170,7 @@ export default function SectionsPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Sections</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Academic Management</span>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Sections</span>

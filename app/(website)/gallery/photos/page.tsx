@@ -26,7 +26,7 @@ export default async function PhotosPage() {
     : DEFAULT_IMGS;
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
-      <h1 className="text-4xl font-serif font-bold text-foreground mb-3">Photo Gallery</h1>
+      <h1 className="page-title font-serif mb-3">Photo Gallery</h1>
       <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-12">{photos.length} Photos</p>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {photos.map((img: any, idx: number) => (

@@ -229,7 +229,7 @@ export default function GradeListPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Grade</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/examination" className="hover:text-primary">Examination</Link>
@@ -443,7 +443,7 @@ export default function GradeListPage() {
 
         {/* Controls Section */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
+          <div className="card-subtitle flex items-center gap-2 text-[13px]">
             <span>Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredData.length}</span> grades</span>
           </div>
 
@@ -461,7 +461,7 @@ export default function GradeListPage() {
 
         {/* Table */}
         <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
-          <table className="w-full text-[13px]">
+          <table className="erp-table text-[13px]">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Grade</th>
