@@ -40,6 +40,7 @@ const nextConfig: NextConfig = {
   // Immutable static chunks get a 1-year cache (hash in filename guarantees
   // uniqueness on every build). Media and fonts get 7-day caches.
   async headers() {
+    if (process.env.NODE_ENV === "development") return [];
     return [
       {
         // Next.js content-hashed JS/CSS chunks — safe to cache forever

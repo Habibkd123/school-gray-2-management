@@ -962,3 +962,63 @@ body {
 .text-secondary-erp{ font-size: var(--text-secondary) !important; color: var(--muted-text); }
 .content-gap       { margin-bottom: 1.25rem; }
 .section-gap       { margin-bottom: 1.5rem; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CUSTOM TABLE FOR SPECIFIC PAGES (Simple & Isolated)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.custom-page-table-wrap {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+  background: white;
+}
+.dark .custom-page-table-wrap {
+  background: var(--card-bg);
+}
+
+.custom-page-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-table-body);
+}
+
+.custom-page-table thead tr {
+  border-bottom: 1px solid var(--border-color);
+  background-color: #f8fafc;
+}
+.dark .custom-page-table thead tr {
+  background-color: #0f2336;
+}
+
+.custom-page-table thead th {
+  padding: 0.5rem var(--px-table);
+  font-size: var(--text-table-header) !important;
+  font-weight: 500 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-text);
+  white-space: nowrap;
+  text-align: left;
+}
+
+.custom-page-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.12s;
+}
+.custom-page-table tbody tr:last-child {
+  border-bottom: none;
+}
+.custom-page-table tbody tr:hover {
+  background-color: rgba(30, 58, 95, 0.03);
+}
+.dark .custom-page-table tbody tr:hover {
+  background-color: rgba(30, 58, 95, 0.15);
+}
+
+.custom-page-table tbody td {
+  padding: var(--py-table) var(--px-table);
+  font-size: var(--text-table-body);
+  color: var(--foreground);
+  vertical-align: middle;
+}

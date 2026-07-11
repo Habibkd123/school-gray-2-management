@@ -108,9 +108,9 @@ export default function FeesPage() {
     { id: "student", label: "Student Name", visible: true, mandatory: true },
     { id: "admission_no", label: "Admission No", visible: true },
     { id: "class", label: "Class", visible: true },
-    { id: "section", label: "Section", visible: true },
+    { id: "section", label: "Section", visible: false },
     { id: "guardian", label: "Guardian", visible: false },
-    { id: "fee_structure", label: "Fee Structure", visible: true },
+    { id: "fee_structure", label: "Fee Structure", visible: false },
     { id: "total_fees", label: "Total Fees", visible: true },
     { id: "total_paid", label: "Total Paid", visible: true },
     { id: "balance", label: "Balance", visible: true },
@@ -1387,10 +1387,10 @@ export default function FeesPage() {
                           {isColVisible("due_status") && (
                             <td className="p-3">
                               <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${student.dueStatus === "No Due"
-                                  ? "bg-emerald-50 text-emerald-705 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-500/30"
-                                  : student.dueStatus === "Overdue"
-                                    ? "bg-rose-50 text-rose-750 border border-rose-250 dark:bg-rose-955/20 dark:text-rose-450 dark:border-rose-500/30"
-                                    : "bg-amber-50 text-amber-700 border border-amber-250 dark:bg-amber-500/10 dark:text-amber-450 dark:border-amber-500/30"
+                                ? "bg-emerald-50 text-emerald-705 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-500/30"
+                                : student.dueStatus === "Overdue"
+                                  ? "bg-rose-50 text-rose-750 border border-rose-250 dark:bg-rose-955/20 dark:text-rose-450 dark:border-rose-500/30"
+                                  : "bg-amber-50 text-amber-700 border border-amber-250 dark:bg-amber-500/10 dark:text-amber-450 dark:border-amber-500/30"
                                 }`}>
                                 {student.dueStatus}
                               </span>
@@ -1399,10 +1399,10 @@ export default function FeesPage() {
                           {isColVisible("payment_status") && (
                             <td className="p-3">
                               <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${student.status === "Paid"
-                                  ? "bg-emerald-50 text-emerald-705 border border-emerald-255 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30"
-                                  : student.status === "Partial"
-                                    ? "bg-amber-50 text-amber-705 border border-amber-255 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30"
-                                    : "bg-rose-50 text-rose-755 border border-rose-255 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30"
+                                ? "bg-emerald-50 text-emerald-705 border border-emerald-255 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30"
+                                : student.status === "Partial"
+                                  ? "bg-amber-50 text-amber-705 border border-amber-255 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30"
+                                  : "bg-rose-50 text-rose-755 border border-rose-255 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30"
                                 }`}>
                                 <span className={`w-1.5 h-1.5 rounded-full ${student.status === "Paid" ? "bg-emerald-500" : student.status === "Partial" ? "bg-amber-500" : "bg-rose-500"
                                   }`} />

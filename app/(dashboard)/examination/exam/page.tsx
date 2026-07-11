@@ -418,8 +418,8 @@ export default function ExamListPage() {
         </div>
 
         {/* Table */}
-        <div className={`erp-table-wrap overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
-          <table className="erp-table">
+        <div className={`custom-page-table-wrap overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
+          <table className="custom-page-table">
             <thead>
               <tr>
                 <th>Exam Name</th>

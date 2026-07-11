@@ -81,19 +81,9 @@ export default function StudentAttendancePage() {
   const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sunday, 1 = Monday, etc.
 
   // Stats calculation
-  const totalMarked = attendanceRecords.length;
-  const presentCount = attendanceRecords.filter((r) => r.status === "present").length;
+  const presentCount = attendanceRecords.filter((r) => r.status === "present" || r.status === "late" || r.status === "half_day").length;
   const absentCount = attendanceRecords.filter((r) => r.status === "absent").length;
-  const lateCount = attendanceRecords.filter((r) => r.status === "late").length;
-  const halfDayCount = attendanceRecords.filter((r) => r.status === "half_day").length;
-  const holidayCount = attendanceRecords.filter((r) => r.status === "holiday").length;
   const leaveCount = attendanceRecords.filter((r) => r.status === "leave").length;
-
-  const activeDays = totalMarked - holidayCount;
-  const presentRate =
-    activeDays > 0
-      ? Math.round(((presentCount + lateCount + halfDayCount * 0.5) / activeDays) * 100)
-      : 0;
 
   // Status mapping
   const statusStyles: Record<
@@ -113,27 +103,6 @@ export default function StudentAttendancePage() {
       text: "text-rose-700 dark:text-rose-400",
       dot: "bg-rose-500",
       border: "border-rose-200 dark:border-rose-500/20",
-    },
-    late: {
-      label: "Late",
-      bg: "bg-amber-50 dark:bg-amber-500/10",
-      text: "text-amber-700 dark:text-amber-400",
-      dot: "bg-amber-500",
-      border: "border-amber-200 dark:border-amber-500/20",
-    },
-    half_day: {
-      label: "Half Day",
-      bg: "bg-orange-50 dark:bg-orange-500/10",
-      text: "text-orange-700 dark:text-orange-400",
-      dot: "bg-orange-500",
-      border: "border-orange-200 dark:border-orange-500/20",
-    },
-    holiday: {
-      label: "Holiday",
-      bg: "bg-sky-50 dark:bg-sky-500/10",
-      text: "text-sky-700 dark:text-sky-400",
-      dot: "bg-sky-500",
-      border: "border-sky-200 dark:border-sky-500/20",
     },
     leave: {
       label: "Leave",
@@ -194,7 +163,7 @@ export default function StudentAttendancePage() {
       </div>
 
       {/* ── Stats Summary ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Present */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm text-left">
           <div className="flex items-center justify-between mb-3">
@@ -229,21 +198,6 @@ export default function StudentAttendancePage() {
           </div>
           <p className="section-title">{leaveCount}</p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Days on leave</p>
-        </div>
-
-        {/* Attendance Rate */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm relative overflow-hidden text-left">
-          <div className="absolute top-0 right-0 w-[120px] h-[120px] rounded-full opacity-5" style={{ background: "radial-gradient(circle, #6366f1, transparent 70%)", transform: "translate(30px, -30px)" }} />
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20">
-              <TrendingUp className="w-4 h-4 text-indigo-500" />
-            </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Monthly Percentage</span>
-          </div>
-          <p className="section-title">{presentRate}%</p>
-          <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Based on {activeDays} class days
-          </p>
         </div>
       </div>
 
@@ -284,7 +238,8 @@ export default function StudentAttendancePage() {
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
                 const rec = getRecordForDay(day);
-                const styles = rec ? statusStyles[rec.status] : null;
+                const normStatus = rec ? ((rec.status === "late" || rec.status === "half_day") ? "present" : rec.status) : null;
+                const styles = normStatus ? statusStyles[normStatus] : null;
 
                 return (
                   <div
@@ -340,9 +295,10 @@ export default function StudentAttendancePage() {
               [...attendanceRecords]
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                 .map((rec, index) => {
-                  const styles = statusStyles[rec.status] || {
+                  const norm = (rec.status === "late" || rec.status === "half_day") ? "present" : rec.status;
+                  const styles = statusStyles[norm] || {
                     label: rec.status,
-                    bg: "bg-slate-50",
+                    bg: "bg-slate-55",
                     text: "text-slate-600",
                     dot: "bg-slate-400",
                     border: "border-slate-100",

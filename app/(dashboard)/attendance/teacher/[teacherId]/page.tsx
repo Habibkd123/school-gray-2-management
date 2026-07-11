@@ -195,13 +195,9 @@ export default function IndividualTeacherAttendancePage({ params }: { params: Pr
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow lg:col-span-2">
+            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow lg:col-span-2 text-left">
               <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 border-b border-border pb-2">Attendance Statistics ({monthNames[parseInt(filterMonth)-1]})</h2>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-border">
-                  <div className="section-title text-slate-800 dark:text-slate-200">{data?.stats?.totalWorkingDays}</div>
-                  <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mt-1">Working Days</div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/50">
                   <div className="section-title text-emerald-700 dark:text-emerald-400">{data?.stats?.totalPresent}</div>
                   <div className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-500 uppercase tracking-wide mt-1">Present</div>
@@ -213,10 +209,6 @@ export default function IndividualTeacherAttendancePage({ params }: { params: Pr
                 <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/50">
                   <div className="section-title text-amber-700 dark:text-amber-400">{data?.stats?.totalLeave}</div>
                   <div className="text-[11px] font-semibold text-amber-600 dark:text-amber-500 uppercase tracking-wide mt-1">Leave</div>
-                </div>
-                <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/50">
-                  <div className="section-title text-indigo-700 dark:text-indigo-400">{data?.stats?.attendancePercentage}%</div>
-                  <div className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-500 uppercase tracking-wide mt-1">Percentage</div>
                 </div>
               </div>
             </div>

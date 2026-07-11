@@ -111,56 +111,56 @@ export default function StudentFeesPage() {
       {/* ── Stats Cards ───────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Allocated */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm text-left">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="w-8.5 h-8.5 rounded-lg flex items-center justify-center bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20">
               <CreditCard className="w-4 h-4 text-indigo-500" />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Assigned</span>
           </div>
-          <p className="section-title">
+          <p className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">
             ${totalAmount.toLocaleString()}
           </p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Allocated fees</p>
         </div>
 
         {/* Total Paid */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm text-left">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="w-8.5 h-8.5 rounded-lg flex items-center justify-center bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
               <Coins className="w-4 h-4 text-emerald-500" />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Paid</span>
           </div>
-          <p className="section-title">
+          <p className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">
             ${totalPaid.toLocaleString()}
           </p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Paid till date</p>
         </div>
 
         {/* Total Balance */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm text-left">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className="w-8.5 h-8.5 rounded-lg flex items-center justify-center bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20">
               <TrendingDown className="w-4 h-4 text-rose-500" />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Balance Due</span>
           </div>
-          <p className="section-title text-rose-600 dark:text-rose-450">
+          <p className="text-lg font-extrabold text-rose-600 dark:text-rose-450 mt-0.5">
             ${totalBalance.toLocaleString()}
           </p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Outstanding amount</p>
         </div>
 
         {/* Overdue Items */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-3">
-            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${overdueCount > 0 ? "bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20" : "bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-750"}`}>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm text-left">
+          <div className="flex items-center justify-between mb-2.5">
+            <div className={`w-8.5 h-8.5 rounded-lg flex items-center justify-center ${overdueCount > 0 ? "bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20" : "bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-750"}`}>
               <AlertTriangle className={`w-4 h-4 ${overdueCount > 0 ? "text-amber-500 animate-pulse" : "text-slate-400"}`} />
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Overdue Items</span>
           </div>
-          <p className="section-title">
+          <p className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">
             {overdueCount}
           </p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Passed due dates</p>

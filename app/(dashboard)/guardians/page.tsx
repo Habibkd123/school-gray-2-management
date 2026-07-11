@@ -514,7 +514,7 @@ export default function GuardiansPage() {
         </div>
 
         {/* Dynamic Table Layout (Part 2) */}
-        <div className={`erp-table-wrap overflow-x-auto min-h-[300px] relative transition-opacity duration-200 ${isLoading && !isInitialLoad ? "opacity-60 pointer-events-none" : ""}`}>
+        <div className={`custom-page-table-wrap overflow-x-auto min-h-[300px] relative transition-opacity duration-200 ${isLoading && !isInitialLoad ? "opacity-60 pointer-events-none" : ""}`}>
           {isLoading && !isInitialLoad && (
             <div className="absolute top-2 right-4 z-10 flex items-center gap-2 text-[12px] font-medium text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 rounded-md border border-border shadow-sm">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
@@ -528,7 +528,7 @@ export default function GuardiansPage() {
               <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-1">Try resetting filter parameters or searches.</p>
             </div>
           ) : (
-            <table className="erp-table">
+            <table className="custom-page-table">
               <thead>
                 <tr>
                   <th>ID</th>

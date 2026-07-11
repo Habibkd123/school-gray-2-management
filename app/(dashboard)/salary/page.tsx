@@ -32,7 +32,7 @@ import { GenerateDocumentWizard } from "@/app/components/document-builder/Genera
 
 export default function SalaryDashboardPage() {
   const { teachers, isLoading: isTeachersLoading, fetchTeachers } = useTeachers();
-  
+
   // Tab/Search State
   const [activeTab, setActiveTab] = useState<"desk" | "reports">("desk");
   const [searchTerm, setSearchTerm] = useState("");
@@ -173,7 +173,7 @@ export default function SalaryDashboardPage() {
       );
 
       let status = "Unpaid";
-      if (baseSalary === 0) status = "Pending Setup";
+      if (baseSalary === 0) status = "Pending";
       else if (periodPayout) status = periodPayout.status; // Draft, Approved, Paid
 
       return {
@@ -274,7 +274,7 @@ export default function SalaryDashboardPage() {
   // ─── Edit / Disburse Single Payroll Modal ───────────────────────
   const openEditPayroll = async (teacher: any) => {
     let record = teacher.payoutRecord;
-    
+
     // If not generated, fetch preview first to pre-fill calculations
     if (!record) {
       setIsPaymentsLoading(true);
@@ -357,7 +357,7 @@ export default function SalaryDashboardPage() {
 
   const handleSavePayroll = async () => {
     if (!editPayrollRecord) return;
-    
+
     setIsSavingEdit(true);
     try {
       const payload = {
@@ -606,45 +606,45 @@ export default function SalaryDashboardPage() {
             </div>
           )}
           {/* Dashboard Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Disbursed Budget</span>
-                  <span className="text-2xl font-black block text-slate-900 dark:text-white mt-0.5">{money(paymentsData.summary.totalPaid)}</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Disbursed Budget</span>
+                  <span className="text-lg font-extrabold block text-slate-900 dark:text-white mt-0.5">{money(paymentsData.summary.totalPaid)}</span>
                 </div>
               </div>
-              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-500/20 dark:text-emerald-400 px-2 py-0.5 rounded-md">
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-500/20 dark:text-emerald-400 px-2 py-0.5 rounded-md">
                 {paymentsData.summary.count} Paid
               </span>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                  <Clock className="w-6 h-6" />
+            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-100 dark:border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                  <Clock className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Pending Budget</span>
-                  <span className="text-2xl font-black block text-slate-900 dark:text-white mt-0.5">{money(paymentsData.summary.totalPending)}</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Pending Budget</span>
+                  <span className="text-lg font-extrabold block text-slate-900 dark:text-white mt-0.5">{money(paymentsData.summary.totalPending)}</span>
                 </div>
               </div>
-              <span className="text-[11px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400 px-2 py-0.5 rounded-md">
+              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 dark:bg-amber-500/20 dark:text-amber-400 px-2 py-0.5 rounded-md">
                 {paymentsData.summary.pendingCount} Unpaid
               </span>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 shadow-sm flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-                  <Users className="w-6 h-6" />
+            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                  <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Total Staff Size</span>
-                  <span className="text-2xl font-black block text-slate-900 dark:text-white mt-0.5">{teachers.length} Employees</span>
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Total Staff Size</span>
+                  <span className="text-lg font-extrabold block text-slate-900 dark:text-white mt-0.5">{teachers.length} Employees</span>
                 </div>
               </div>
             </div>
@@ -706,7 +706,7 @@ export default function SalaryDashboardPage() {
                 {/* Filter and Bulk Operations Options */}
                 <div className="flex flex-wrap items-center justify-between border-t border-border pt-4 gap-4">
                   <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-950 p-1 rounded-lg border border-border">
-                    {["all", "Draft", "Approved", "Paid", "Unpaid", "Pending Setup"].map((st) => (
+                    {["all", "Draft", "Approved", "Paid", "Unpaid", "Pending"].map((st) => (
                       <button
                         key={st}
                         onClick={() => { setSelectedStatus(st); setCurrentPage(1); }}
@@ -766,7 +766,7 @@ export default function SalaryDashboardPage() {
                           <tr key={s.id}>
                             <td>
                               <span className="font-bold text-slate-900 dark:text-white block">{s.name}</span>
-                              <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{s.role}</span>
+                              {/* <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{s.role}</span> */}
                             </td>
                             <td className="font-mono font-bold text-slate-600 dark:text-slate-400">{s.empId}</td>
                             <td>
@@ -810,7 +810,7 @@ export default function SalaryDashboardPage() {
                               </span>
                             </td>
                             <td className="col-center">
-                              {s.status === "Pending Setup" ? (
+                              {s.status === "Pending" ? (
                                 <span className="text-slate-400 text-xs">—</span>
                               ) : s.status === "Unpaid" ? (
                                 <button
@@ -824,7 +824,8 @@ export default function SalaryDashboardPage() {
                                   onClick={() => openEditPayroll(s)}
                                   className="px-2.5 py-1 text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-md hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 transition-all flex items-center gap-1 mx-auto"
                                 >
-                                  <Edit2 className="w-3 h-3" /> Edit / Process
+                                  {/* <Edit2 className="w-3 h-3" /> */}
+                                  Pay
                                 </button>
                               )}
                             </td>
@@ -885,14 +886,14 @@ export default function SalaryDashboardPage() {
                 </div>
               </div>
 
-                <PaginationBar
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  totalItems={totalItems}
-                  pageSize={pageSize}
-                  onPageChange={setCurrentPage}
-                />
-              </div>
+              <PaginationBar
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+              />
+            </div>
           )}
 
           {/* TAB 2: REPORTS DESK */}
@@ -1003,7 +1004,7 @@ export default function SalaryDashboardPage() {
               </div>
             </div>
           )}
-          </div>
+        </div>
       )}
 
       {/* MODAL: SETUP BASE CONTRACT SALARY */}

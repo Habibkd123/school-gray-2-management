@@ -22,12 +22,10 @@ const MONTH_NAMES = [
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 function statusStyle(status: string) {
-  switch (status) {
+  const norm = (status === "late" || status === "half_day") ? "present" : status;
+  switch (norm) {
     case "present":  return { bg: "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-300", dot: "bg-emerald-500" };
     case "absent":   return { bg: "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300", dot: "bg-red-500" };
-    case "late":     return { bg: "bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300", dot: "bg-amber-500" };
-    case "half_day": return { bg: "bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300", dot: "bg-blue-500" };
-    case "holiday":  return { bg: "bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/30 text-purple-700 dark:text-purple-300", dot: "bg-purple-500" };
     case "leave":    return { bg: "bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/30 text-violet-700 dark:text-violet-300", dot: "bg-violet-500" };
     default:         return { bg: "bg-slate-50 dark:bg-slate-800/60 border-transparent text-slate-400 dark:text-slate-500", dot: "" };
   }
@@ -117,16 +115,13 @@ export default function ParentAttendancePage() {
 
   // Stats
   const stats = useMemo(() => ({
-    present:  records.filter(r => r.status === "present").length,
+    present:  records.filter(r => r.status === "present" || r.status === "late" || r.status === "half_day").length,
     absent:   records.filter(r => r.status === "absent").length,
-    late:     records.filter(r => r.status === "late").length,
-    half_day: records.filter(r => r.status === "half_day").length,
-    holiday:  records.filter(r => r.status === "holiday").length,
     leave:    records.filter(r => r.status === "leave").length,
   }), [records]);
 
-  const totalWorking = stats.present + stats.absent + stats.late + stats.half_day;
-  const attendedDays  = stats.present + stats.late + stats.half_day * 0.5;
+  const totalWorking = stats.present + stats.absent;
+  const attendedDays  = stats.present;
   const pct = totalWorking > 0 ? Math.round((attendedDays / totalWorking) * 100) : 0;
   const pctColor = pct >= 75 ? "#10b981" : pct >= 50 ? "var(--primary)" : "#ef4444";
 
@@ -194,9 +189,6 @@ export default function ParentAttendancePage() {
                   { label: "Present",  val: stats.present,  icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" />, color: "text-emerald-600 dark:text-emerald-400" },
                   { label: "Absent",   val: stats.absent,   icon: <XCircle className="w-4 h-4 text-red-500" />,          color: "text-red-600 dark:text-red-400" },
                   { label: "Leave",    val: stats.leave,    icon: <Clock className="w-4 h-4 text-violet-500" />,        color: "text-violet-600 dark:text-violet-400" },
-                  { label: "Late",     val: stats.late,     icon: <AlertCircle className="w-4 h-4 text-amber-500" />,    color: "text-amber-600 dark:text-amber-400" },
-                  { label: "Half Day", val: stats.half_day, icon: <Sun className="w-4 h-4 text-blue-400" />,             color: "text-blue-600 dark:text-blue-400" },
-                  { label: "Holiday",  val: stats.holiday,  icon: <CalendarIcon className="w-4 h-4 text-purple-400" />,  color: "text-purple-600 dark:text-purple-400" },
                 ].map(({ label, val, icon, color }) => (
                   <div key={label} className="flex items-center justify-between text-[13px] px-1">
                     <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300">{icon} {label}</span>
@@ -214,20 +206,6 @@ export default function ParentAttendancePage() {
               </div>
               <p className="text-4xl font-black">{streak} <span className="card-title /70">days</span></p>
               <p className="text-[12px] text-white/60 mt-1">Consecutive attendance</p>
-            </div>
-
-            {/* Working days */}
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-2xl p-4 card-shadow">
-              <p className="text-[11px] font-bold uppercase text-slate-400 mb-1">Working Days Tracked</p>
-              <p className="text-2xl font-black text-slate-900 dark:text-white">
-                {Math.round(attendedDays)} <span className="text-sm text-slate-400 font-medium">/ {totalWorking}</span>
-              </p>
-              <div className="mt-2 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${pct}%`, backgroundColor: pctColor }}
-                />
-              </div>
             </div>
 
             {error && (
@@ -325,9 +303,6 @@ export default function ParentAttendancePage() {
                 { color: "bg-emerald-500", label: "Present" },
                 { color: "bg-red-500",     label: "Absent" },
                 { color: "bg-violet-500",  label: "Leave" },
-                { color: "bg-amber-500",   label: "Late" },
-                { color: "bg-blue-500",    label: "Half Day" },
-                { color: "bg-purple-500",  label: "Holiday" },
               ].map(({ color, label }) => (
                 <span key={label} className="flex items-center gap-1.5">
                   <span className={`w-2.5 h-2.5 rounded-full ${color}`} />

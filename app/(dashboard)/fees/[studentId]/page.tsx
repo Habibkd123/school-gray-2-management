@@ -121,34 +121,34 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
       ) : (
         <>
           {/* Summary Row cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-650">
-                <FileText className="w-5 h-5" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-3.5 shadow-sm flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-650 flex-shrink-0">
+                <FileText className="w-4.5 h-4.5" />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Fees Invoice</span>
-                <div className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">{money(studentDetails.totalFees)}</div>
+                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{money(studentDetails.totalFees)}</div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-emerald-600">
-                <CheckCircle2 className="w-5 h-5" />
+            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-3.5 shadow-sm flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                <CheckCircle2 className="w-4.5 h-4.5" />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Paid Dues</span>
-                <div className="text-xl font-bold text-emerald-600 mt-0.5">{money(studentDetails.totalPaid)}</div>
+                <div className="text-lg font-bold text-emerald-600 mt-0.5">{money(studentDetails.totalPaid)}</div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-4">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950 flex items-center justify-center text-rose-500">
-                <AlertCircle className="w-5 h-5" />
+            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-3.5 shadow-sm flex items-center gap-3">
+              <div className="w-9 h-9 rounded-lg bg-rose-50 dark:bg-rose-950 flex items-center justify-center text-rose-500 flex-shrink-0">
+                <AlertCircle className="w-4.5 h-4.5" />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Outstanding Dues</span>
-                <div className="text-xl font-bold text-rose-500 mt-0.5">{money(studentDetails.balanceAmount)}</div>
+                <div className="text-lg font-bold text-rose-500 mt-0.5">{money(studentDetails.balanceAmount)}</div>
               </div>
             </div>
           </div>
