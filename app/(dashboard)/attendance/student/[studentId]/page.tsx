@@ -22,11 +22,11 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
   const [filterYear, setFilterYear] = useState(academicYear);
   const currentDate = new Date();
   const [filterMonth, setFilterMonth] = useState(String(currentDate.getMonth() + 1).padStart(2, "0"));
-  
+
   // Modals
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
-  
+
   const [editStatus, setEditStatus] = useState("present");
   const [editNote, setEditNote] = useState("");
   const [editReason, setEditReason] = useState("");
@@ -68,7 +68,7 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
     let y = parseInt(year.split("-")[0]);
     const m = parseInt(monthStr);
     if (m < 4) y += 1;
-    
+
     const start = `${y}-${monthStr}-01`;
     const lastDay = new Date(y, m, 0).getDate();
     const end = `${y}-${monthStr}-${String(lastDay).padStart(2, '0')}`;
@@ -92,7 +92,7 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
       setSaveError("Reason is mandatory for editing attendance.");
       return;
     }
-    
+
     setSaving(true);
     setSaveError("");
     setSaveSuccess("");
@@ -134,7 +134,7 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
 
     const daysInMonth = new Date(y, m, 0).getDate();
     const firstDay = new Date(y, m - 1, 1).getDay(); // 0 is Sunday
-    
+
     const days = [];
     for (let i = 0; i < firstDay; i++) {
       days.push({ day: null, date: null, record: null });
@@ -151,12 +151,12 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mb-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div className="flex items-center gap-3">
-          <button 
-            onClick={() => router.push('/attendance/student')} 
+          <button
+            onClick={() => router.push('/attendance/student')}
             className="w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-slate-800 border border-border shadow-sm hover:bg-slate-50 transition-colors"
           >
             <ArrowLeft className="w-4 h-4 text-slate-600 dark:text-slate-300" />
@@ -201,7 +201,7 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
             </div>
 
             <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow lg:col-span-2">
-              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 border-b border-border pb-2">Attendance Statistics ({monthNames[parseInt(filterMonth)-1]})</h2>
+              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 border-b border-border pb-2">Attendance Statistics ({monthNames[parseInt(filterMonth) - 1]})</h2>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-border">
                   <div className="text-2xl font-bold text-slate-800 dark:text-slate-200">{data?.stats?.totalWorkingDays}</div>
@@ -240,11 +240,11 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
                 <div className="w-3 h-3 rounded-full bg-amber-500"></div><span className="text-[12px] font-medium text-slate-600">Leave</span>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-3">
               <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} className="px-3 py-1.5 border border-border rounded-lg text-[13px] outline-none font-medium bg-slate-50 dark:bg-slate-800">
                 {monthNames.map((m, i) => (
-                  <option key={i} value={String(i+1).padStart(2, "0")}>{m}</option>
+                  <option key={i} value={String(i + 1).padStart(2, "0")}>{m}</option>
                 ))}
               </select>
               <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} className="px-3 py-1.5 border border-border rounded-lg text-[13px] outline-none font-medium bg-slate-50 dark:bg-slate-800">
@@ -260,24 +260,24 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
               <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 flex items-center gap-2">
                 <CalendarIcon className="w-4 h-4 text-indigo-500" /> Calendar View
               </h2>
-              
+
               <div className="grid grid-cols-7 gap-1 text-center mb-2">
                 {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
                   <div key={d} className="text-[11px] font-bold text-slate-400">{d}</div>
                 ))}
               </div>
-              
+
               <div className="grid grid-cols-7 gap-1">
                 {calendarDays.map((d, i) => (
-                  <div 
-                    key={i} 
+                  <div
+                    key={i}
                     onClick={() => d.record && handleEditClick(d.record)}
                     className={`aspect-square rounded-md flex items-center justify-center text-[12px] font-semibold cursor-pointer transition-colors
-                      ${!d.day ? 'bg-transparent' : 
+                      ${!d.day ? 'bg-transparent' :
                         d.record?.status === 'present' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400' :
-                        d.record?.status === 'absent' ? 'bg-rose-100 text-rose-800 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400' :
-                        d.record?.status === 'leave' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/40 dark:text-amber-400' :
-                        'bg-slate-50 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400'
+                          d.record?.status === 'absent' ? 'bg-rose-100 text-rose-800 hover:bg-rose-200 dark:bg-rose-950/40 dark:text-rose-400' :
+                            d.record?.status === 'leave' ? 'bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/40 dark:text-amber-400' :
+                              'bg-slate-50 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-400'
                       }
                       ${!d.record && d.day ? 'opacity-50 cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800' : ''}
                     `}
@@ -318,11 +318,10 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
                             {new Date(record.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                           </td>
                           <td className="px-4 py-3">
-                            <span className={`capitalize px-2.5 py-1 rounded-md text-[11px] font-bold ${
-                              record.status === 'present' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400' :
-                              record.status === 'absent' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400' :
-                              'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
-                            }`}>
+                            <span className={`capitalize px-2.5 py-1 rounded-md text-[11px] font-bold ${record.status === 'present' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400' :
+                                record.status === 'absent' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/30 dark:text-rose-400' :
+                                  'bg-amber-100 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400'
+                              }`}>
                               {record.status}
                             </span>
                           </td>
@@ -366,9 +365,9 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
               </button>
             </div>
             <div className="p-5 space-y-4">
-              {saveError && <div className="text-xs font-bold text-rose-500 bg-rose-50 p-2 rounded-lg flex items-center gap-2"><AlertCircle className="w-4 h-4"/> {saveError}</div>}
-              {saveSuccess && <div className="text-xs font-bold text-emerald-500 bg-emerald-50 p-2 rounded-lg flex items-center gap-2"><CheckCircle2 className="w-4 h-4"/> {saveSuccess}</div>}
-              
+              {saveError && <div className="text-xs font-bold text-rose-500 bg-rose-50 p-2 rounded-lg flex items-center gap-2"><AlertCircle className="w-4 h-4" /> {saveError}</div>}
+              {saveSuccess && <div className="text-xs font-bold text-emerald-500 bg-emerald-50 p-2 rounded-lg flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> {saveSuccess}</div>}
+
               <div className="space-y-1.5">
                 <label className="text-[12px] font-semibold text-slate-600 uppercase tracking-wide">Status</label>
                 <select value={editStatus} onChange={e => setEditStatus(e.target.value)} disabled={saving} className="w-full px-3 py-2 border border-border rounded-lg text-sm font-medium outline-none focus:border-primary bg-white dark:bg-slate-900">

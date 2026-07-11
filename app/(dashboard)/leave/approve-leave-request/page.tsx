@@ -200,22 +200,19 @@ export default function ApproveLeaveRequestPage() {
     switch (status) {
       case "approved":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border bg-emerald-50 text-emerald-700 border-emerald-200">
             Approved
           </span>
         );
       case "pending":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-sky-50 text-sky-600 border border-sky-100">
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border bg-amber-50 text-amber-700 border-amber-200">
             Pending
           </span>
         );
       case "rejected":
         return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-rose-50 text-rose-600 border border-rose-100">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border bg-rose-50 text-rose-700 border-rose-200">
             Rejected
           </span>
         );
@@ -227,10 +224,10 @@ export default function ApproveLeaveRequestPage() {
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Leave Requests</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="page-title">Leave Requests</h1>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/leave" className="hover:text-primary">HRM</Link>
@@ -240,17 +237,17 @@ export default function ApproveLeaveRequestPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => window.location.reload()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => window.location.reload()} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
+          <button className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <Printer className="w-4 h-4" />
           </button>
           
           <div className="relative">
             <button 
               onClick={() => setIsExportOpen(!isExportOpen)}
-              className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
+              className="btn btn-outline flex items-center gap-2"
             >
               <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
             </button>
@@ -272,7 +269,7 @@ export default function ApproveLeaveRequestPage() {
       </div>
 
       {/* Main Content */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm text-left">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm text-left overflow-hidden">
         {/* Table Header Section */}
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4 rounded-t-xl">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">
@@ -442,62 +439,63 @@ export default function ApproveLeaveRequestPage() {
         </div>
 
         {/* Table */}
-        <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
-          <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
+        <div className={`erp-table-wrap overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
+          <table className="erp-table whitespace-nowrap">
+            <thead>
               <tr>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">
+                <th className="w-12 col-center">
                   <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                 </th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Submitted By</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Leave Type</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Leave Date</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">No of Days</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Applied On</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Status</th>
-                <th className="px-6 py-4 text-center font-bold text-slate-700 dark:text-slate-200 w-20">Action</th>
+                <th>Submitted By</th>
+                <th>Leave Type</th>
+                <th>Leave Date</th>
+                <th>No of Days</th>
+                <th>Applied On</th>
+                <th>Status</th>
+                <th className="w-20 col-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-16 text-center">
+                  <td colSpan={8} className="table-loading">
                     <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
                     <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading leave requests...</p>
                   </td>
                 </tr>
               ) : filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-16 text-center text-slate-500 dark:text-slate-400 text-[13px]">
+                  <td colSpan={8} className="table-empty">
                     No leave requests found.
                   </td>
                 </tr>
               ) : filteredData.map((item) => (
-                <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4">
+                <tr key={item._id}>
+                  <td className="col-center">
                     <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                   </td>
-                  <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-200">
-                    {getUserName(item)}
+                  <td>
+                    <div className="font-semibold text-slate-805 dark:text-slate-100">{getUserName(item)}</div>
+                    <div className="text-[10px] text-slate-400 font-bold tracking-wider mt-0.5 capitalize">{getUserRole(item)}</div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400 capitalize">
+                  <td>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border bg-indigo-50 text-indigo-700 border-indigo-200">
                       {item.leave_type}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                  <td className="text-slate-655 font-semibold">
                     {formatDateRange(item.from_date, item.to_date)}
                   </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                  <td className="text-slate-655 font-mono">
                     {item.total_days || 1}
                   </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                  <td className="text-slate-655">
                     {formatDate(item.createdAt)}
                   </td>
-                  <td className="px-6 py-4">
+                  <td>
                     {getStatusBadge(item.status)}
                   </td>
-                  <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
+                  <td className="col-center relative" onClick={(e) => e.stopPropagation()}>
                     <button 
                       onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
                       className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}

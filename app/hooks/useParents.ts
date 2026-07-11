@@ -11,25 +11,44 @@ export type ApiParent = Omit<IParent, "school_id" | "user_id"> & {
 
 export function useParents(options?: { skip?: boolean; filterByYear?: boolean }) {
   const [parents, setParents] = useState<ApiParent[]>([]);
+  const [totalParents, setTotalParents] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const authReady = useAuthReady();
   const { academicYear } = useAppState();
 
-  const fetchParents = useCallback(async (params: { academic_year?: string; search?: string } = {}) => {
+  const fetchParents = useCallback(async (params: {
+    page?: number;
+    limit?: number | "all" | string;
+    search?: string;
+    academic_year?: string;
+    class_id?: string;
+    section?: string;
+    student_id?: string;
+    status?: string;
+    guardian_type?: string;
+  } = {}) => {
     setIsLoading(true);
     setError(null);
     try {
       const qs = new URLSearchParams();
-      if (params.academic_year) qs.set("academic_year", params.academic_year);
+      if (params.page) qs.set("page", String(params.page));
+      if (params.limit) qs.set("limit", String(params.limit));
       if (params.search) qs.set("search", params.search);
+      if (params.academic_year) qs.set("academic_year", params.academic_year);
+      if (params.class_id) qs.set("class_id", params.class_id);
+      if (params.section) qs.set("section", params.section);
+      if (params.student_id) qs.set("student_id", params.student_id);
+      if (params.status) qs.set("status", params.status);
+      if (params.guardian_type) qs.set("guardian_type", params.guardian_type);
 
       const res = await fetch(`/api/parents?${qs.toString()}`, {
         headers: getAuthHeaders(),
       });
       const data = await res.json();
-      if (data.success) {
-        setParents(data.data);
+      if (data.success && data.data) {
+        setParents(data.data.parents || []);
+        setTotalParents(data.data.pagination?.totalItems || 0);
       } else {
         setError(data.message || "Failed to fetch parents");
       }
@@ -43,7 +62,7 @@ export function useParents(options?: { skip?: boolean; filterByYear?: boolean })
   useEffect(() => {
     if (options?.skip) return;
     if (!authReady) return; // Wait until JWT token is available
-    const params: { academic_year?: string } = {};
+    const params: { academic_year?: string; limit?: string } = { limit: "all" };
     if (options?.filterByYear) params.academic_year = academicYear;
     fetchParents(params);
   }, [fetchParents, academicYear, options?.skip, options?.filterByYear, authReady]);
@@ -89,5 +108,5 @@ export function useParents(options?: { skip?: boolean; filterByYear?: boolean })
     throw new Error(data.message || "Failed to delete parent");
   };
 
-  return { parents, isLoading, error, fetchParents, createParent, updateParent, deleteParent };
+  return { parents, totalParents, isLoading, error, fetchParents, createParent, updateParent, deleteParent };
 }

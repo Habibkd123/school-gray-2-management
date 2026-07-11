@@ -14,7 +14,9 @@ export async function GET(req: NextRequest) {
     const search = url.searchParams.get("search") || "";
     const status = url.searchParams.get("status") || "";
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
-    const limit = Math.min(100, parseInt(url.searchParams.get("limit") || "50"));
+    const limitParam = url.searchParams.get("limit");
+    const isAll = limitParam === "all" || (limitParam && parseInt(limitParam) >= 1000);
+    const limit = isAll ? 100000 : parseInt(limitParam || "50");
 
     const query: any = { school_id: schoolId };
     if (search) query.name = { $regex: search, $options: "i" };
@@ -23,7 +25,7 @@ export async function GET(req: NextRequest) {
     const total = await Section.countDocuments(query);
     const sections = await Section.find(query)
       .sort({ name: 1 })
-      .skip((page - 1) * limit)
+      .skip(isAll ? 0 : (page - 1) * limit)
       .limit(limit)
       .lean();
 

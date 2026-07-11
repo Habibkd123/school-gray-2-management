@@ -109,12 +109,12 @@ export default function ApplyLeavePage() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">My Leave Applications</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="page-title">My Leave Applications</h1>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <span>Leave</span>
@@ -130,9 +130,9 @@ export default function ApplyLeavePage() {
               setError("");
               setIsModalOpen(true);
             }}
-            className="px-4 py-2 bg-primary text-white text-[13px] font-semibold rounded-lg hover:bg-[#4b58ce] transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
+            className="btn btn-primary"
           >
-            <Plus className="w-4 h-4" /> Apply Leave
+            <Plus className="w-4 h-4" /> <span>Apply Leave</span>
           </button>
         </div>
       </div>

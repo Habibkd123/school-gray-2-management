@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { TeacherAssignment, Syllabus, SubjectMaster } from "@/lib/models/index";
+import { Syllabus, SubjectMaster } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
 /**
  * GET /api/syllabus-by-class?class_id=...&subject_name=...
- * Finds the TeacherAssignment for a given class+subject, then returns its syllabus chapters.
+ * Finds the Syllabus for a given class+subject, then returns its chapters.
  * Used by the homework form to cascade: Class → Subject → Syllabus → Chapter.
  */
 export async function GET(req: NextRequest) {
@@ -37,26 +37,32 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, data: { chapters: [] } });
     }
 
-    // Find a TeacherAssignment for this class + subject master
-    const assignment = await TeacherAssignment.findOne({
+    // Fetch the syllabus for this class + subject combination directly
+    const syllabus = await Syllabus.findOne({
       school_id: schoolId,
-      subject_master_id: subjectMaster._id,
-      class_id
+      class_id,
+      subject_master_id: subjectMaster._id
     }).lean();
 
-    if (!assignment) {
+    if (!syllabus) {
       return NextResponse.json({ success: true, data: { chapters: [] } });
     }
 
-    // Fetch the syllabus for this assignment
-    const syllabus = await Syllabus.findOne({
-      school_id: schoolId,
-      teacher_assignment_id: assignment._id,
-    }).lean();
+    // Format nodes to legacy flat chapters array for cascading compatibility
+    const chapters = (syllabus.nodes || []).map((n: any, idx: number) => ({
+      _id: n.id || String(idx),
+      chapter_no: idx + 1,
+      chapter_name: n.title,
+      description: n.description || "",
+      status: "Not Started"
+    }));
 
     return NextResponse.json({
       success: true,
-      data: syllabus || { chapters: [] },
+      data: {
+        _id: String(syllabus._id),
+        chapters
+      },
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

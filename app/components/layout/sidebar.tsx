@@ -43,6 +43,15 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
     { name: "Students", href: "/students", icon: <GraduationCap className="w-4 h-4" /> },
     { name: "Teachers", href: "/teachers", icon: <Users className="w-4 h-4" /> },
     { name: "Parents", href: "/guardians", icon: <User className="w-4 h-4" /> },
+    {
+      name: "Admissions", icon: <ClipboardList className="w-4 h-4" />, subItems: [
+        { name: "Dashboard", href: "/admissions-admin" },
+        { name: "Applications", href: "/admissions-admin/applications" },
+        { name: "Documents", href: "/admissions-admin/documents" },
+        { name: "Reports", href: "/admissions-admin/reports" },
+        { name: "Settings", href: "/admissions-admin/settings" }
+      ]
+    },
 
     {
       name: "Academic", icon: <Building2 className="w-4 h-4" />, subItems: [

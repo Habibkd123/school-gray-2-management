@@ -348,15 +348,15 @@ export default function BuilderPage() {
     setLinkLoading(true);
     try {
       let url = "";
-      if (erpModule === "student") url = `/api/students?search=${encodeURIComponent(q)}&limit=10`;
-      else if (erpModule === "teacher") url = `/api/teachers?search=${encodeURIComponent(q)}&limit=10`;
-      else if (erpModule === "fees") url = `/api/fee-payments?search=${encodeURIComponent(q)}&limit=10`;
+      if (erpModule === "student") url = `/api/students?search=${encodeURIComponent(q)}&limit=100`;
+      else if (erpModule === "teacher") url = `/api/teachers?search=${encodeURIComponent(q)}&limit=100`;
+      else if (erpModule === "fees") url = `/api/fee-payments?search=${encodeURIComponent(q)}&limit=100`;
 
       if (!url) { setLinkResults([]); setLinkLoading(false); return; }
 
       const res = await fetch(url, { headers: getAuthHeaders() as any });
       const data = await res.json();
-      const items = (data.data?.students || data.data?.teachers || data.data?.payments || data.data || []).slice(0, 10);
+      const items = (data.data?.students || data.data?.teachers || data.data?.payments || data.data || []).slice(0, 100);
       setLinkResults(items.map((r: any) => ({ ...r, _type: erpModule })));
     } catch {
       setLinkResults([]);

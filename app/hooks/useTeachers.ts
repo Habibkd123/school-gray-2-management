@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
+import { TeacherService } from "@/app/services/TeacherService";
 
 // ─── Types ────────────────────────────────────────────────────────
 export interface ApiTeacher {
@@ -35,6 +36,7 @@ export interface ApiTeacher {
   /** alias for class_id */
   classId?: string;
   department?: string;
+  designation?: string;
   createdAt?: string;
 
   // Family Info
@@ -195,7 +197,7 @@ function bumpVersion() {
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────
-export function useTeachers(options?: { skip?: boolean }) {
+export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }) {
   const [teachers, setTeachers] = useState<ApiTeacher[]>(_teachersCache ?? []);
   const [total, setTotal] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(_teachersCache === null);
@@ -226,8 +228,10 @@ export function useTeachers(options?: { skip?: boolean }) {
       dateRange?: string;
       sort?: string;
       page?: number;
-      limit?: number;
+      limit?: number | "all";
       academic_year?: string;
+      department?: string;
+      designation?: string;
     }
   ) => {
     let search = "";
@@ -235,26 +239,67 @@ export function useTeachers(options?: { skip?: boolean }) {
     let dateRange = "";
     let sort = "";
     let page = 1;
-    let limit = 12;
+    let limit: number | "all" = 12;
     let academic_year = "";
+    let department = "";
+    let designation = "";
 
     const isObject = arg1 && typeof arg1 === "object";
+    const p = (isObject ? arg1 : {}) as any;
 
     if (isObject) {
-      const p = arg1 as any;
       search = p.search ?? "";
       status = p.status ?? "";
       dateRange = p.dateRange ?? "";
       sort = p.sort ?? "";
       page = p.page ?? 1;
-      limit = p.limit ?? 12;
+      limit = p.limit ?? (p.page ? 12 : "all");
       academic_year = p.academic_year ?? "";
+      department = p.department ?? "";
+      designation = p.designation ?? "";
     } else {
       search = (arg1 as string) ?? "";
-      limit = 10; // Legacy string-path: default to 10; paginated pages pass limit explicitly
+      limit = "all"; // Legacy string-path / dropdowns: default to all teachers
     }
 
-    const isFiltered = !!(search || status || dateRange || sort || academic_year || isObject);
+    const isFiltered = !!(search || (status && status !== "all") || (dateRange && dateRange !== "All Time") || sort || (isObject && (p.page || p.search || p.status || p.department || p.designation)));
+    const isAll = limit === "all";
+
+    if (isAll && !isFiltered) {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await TeacherService.getAllTeachers();
+        _teachersCache = data;
+        _cacheTimestamp = Date.now();
+        _listeners.forEach(fn => fn(data));
+        setTeachers(data);
+        setTotal(data.length);
+        return {
+          teachers: data,
+          total: data.length,
+          page: 1,
+          limit: 100000,
+        };
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          return null;
+        }
+        setError(err instanceof Error ? err.message : "Failed to load teachers");
+        return null;
+      } finally {
+        if (abortControllerRef.current === controller) {
+          setIsLoading(false);
+        }
+      }
+    }
+
     const isFresh = _teachersCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
 
     // Use cache only for unfiltered legacy fetch (same strategy as useStudents)
@@ -280,6 +325,8 @@ export function useTeachers(options?: { skip?: boolean }) {
       if (dateRange && dateRange !== "All Time") params.set("dateRange", dateRange);
       if (sort) params.set("sort", sort);
       if (academic_year) params.set("academic_year", academic_year);
+      if (department) params.set("department", department);
+      if (designation) params.set("designation", designation);
       params.set("page", page.toString());
       params.set("limit", limit.toString());
 
@@ -322,8 +369,8 @@ export function useTeachers(options?: { skip?: boolean }) {
   useEffect(() => {
     if (options?.skip) return;
     if (!authReady) return; // Wait until the JWT token is in localStorage
-    fetchTeachers();
-  }, [fetchTeachers, options?.skip, authReady, mutationVersion]);
+    fetchTeachers({ limit: options?.limit });
+  }, [fetchTeachers, options?.skip, options?.limit, authReady, mutationVersion]);
 
   // ─── Create teacher ─────────────────────────────────────────────
   const createTeacher = async (input: CreateTeacherInput): Promise<{ success: boolean; message: string; data?: ApiTeacher; credentials?: { loginId: string; password?: string } }> => {
@@ -336,6 +383,7 @@ export function useTeachers(options?: { skip?: boolean }) {
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to create" };
 
+      TeacherService.invalidateCache();
       const newList = [data.data, ...(_teachersCache ?? [])];
       _teachersCache = newList;
       _cacheTimestamp = Date.now();
@@ -360,6 +408,7 @@ export function useTeachers(options?: { skip?: boolean }) {
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to update" };
 
+      TeacherService.invalidateCache();
       if (_teachersCache) {
         _teachersCache = _teachersCache.map(t => t._id === id ? data.data : t);
         _cacheTimestamp = Date.now();
@@ -386,6 +435,7 @@ export function useTeachers(options?: { skip?: boolean }) {
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to delete" };
 
+      TeacherService.invalidateCache();
       if (_teachersCache) {
         _teachersCache = _teachersCache.filter(t => t._id !== id);
         _cacheTimestamp = Date.now();

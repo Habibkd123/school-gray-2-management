@@ -34,9 +34,11 @@ export async function GET(req: NextRequest) {
     // Optional query params
     const url = new URL(req.url);
     const search = url.searchParams.get("search");
+    const limitParam = url.searchParams.get("limit");
+    const isAll = limitParam === "all";
     const page = parseInt(url.searchParams.get("page") || "1");
-    const limit = parseInt(url.searchParams.get("limit") || "12");
-    const skip = (page - 1) * limit;
+    const limit = isAll ? 100000 : parseInt(limitParam || "12");
+    const skip = isAll ? 0 : (page - 1) * limit;
 
     const query: any = { school_id: schoolId };
 
@@ -45,8 +47,20 @@ export async function GET(req: NextRequest) {
         { name: { $regex: search, $options: "i" } },
         { employee_id: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
-        { subject_specialization: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
+        { department: { $regex: search, $options: "i" } },
+        { designation: { $regex: search, $options: "i" } },
       ];
+    }
+
+    const department = url.searchParams.get("department");
+    if (department && department !== "all") {
+      query.department = { $regex: `^${department}$`, $options: "i" };
+    }
+
+    const designation = url.searchParams.get("designation");
+    if (designation && designation !== "all") {
+      query.designation = { $regex: `^${designation}$`, $options: "i" };
     }
 
     const status = url.searchParams.get("status");
@@ -54,7 +68,7 @@ export async function GET(req: NextRequest) {
       query.is_active = status.toLowerCase() === "active";
     }
 
-    // Date Range preset filter
+    // Date Range preset filter (Applied to join_date)
     const dateRange = url.searchParams.get("dateRange");
     if (dateRange && dateRange !== "All Time") {
       const now = new Date();
@@ -88,7 +102,7 @@ export async function GET(req: NextRequest) {
       if (startDate) {
         const dateFilter: Record<string, any> = { $gte: startDate };
         if (endDate) dateFilter.$lte = endDate;
-        query.createdAt = dateFilter;
+        query.join_date = dateFilter;
       }
     }
 
@@ -185,6 +199,14 @@ export async function POST(req: NextRequest) {
 
     if (!name) {
       return NextResponse.json({ success: false, message: "Name is required" }, { status: 400 });
+    }
+
+    if (phone?.trim()) {
+      const normalizedPhone = phone.trim();
+      const existingPhone = await Teacher.findOne({ phone: normalizedPhone, school_id: schoolId });
+      if (existingPhone) {
+        return NextResponse.json({ success: false, message: "A teacher with this mobile number already exists in this school" }, { status: 409 });
+      }
     }
 
     // Always generate login email for teacher

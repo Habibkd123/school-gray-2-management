@@ -38,7 +38,7 @@ const classSchema = new Schema<IClass>(
     academic_year:    { type: String, required: true },
     class_teacher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher", default: null },
     capacity:         { type: Number, default: 40 },
-    status:           { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    status:           { type: String, enum: ["Active", "Inactive", "Archived"], default: "Active" },
     sort_weight:      { type: Number, default: 100 },
   },
   { timestamps: true }
@@ -50,6 +50,14 @@ classSchema.index({ school_id: 1, name: 1, section: 1, academic_year: 1 }, { uni
 classSchema.index({ school_id: 1, sort_weight: 1, section: 1 });
 
 const Class: Model<IClass> =
-  mongoose.models.Class || mongoose.model<IClass>("Class", classSchema);
+  mongoose.models.Class && mongoose.models.Class.schema.paths.status?.options?.enum?.includes("Archived")
+    ? (mongoose.models.Class as Model<IClass>)
+    : (() => {
+        delete mongoose.models.Class;
+        if (mongoose.connection && (mongoose.connection as any).models && (mongoose.connection as any).models.Class) {
+          delete (mongoose.connection as any).models.Class;
+        }
+        return mongoose.model<IClass>("Class", classSchema);
+      })();
 
 export default Class;

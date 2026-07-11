@@ -175,15 +175,15 @@ export default function ExamSchedulePage() {
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-header">
         <div>
           <div className="flex items-center gap-2">
             <Link href="/examination/exam" className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors text-slate-500 mr-1">
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Exam Schedule</h1>
+            <h1 className="page-title">Exam Schedule</h1>
           </div>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 pl-8">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 pl-8 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/examination/exam" className="hover:text-primary">Exam</Link>

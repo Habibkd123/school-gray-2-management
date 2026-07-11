@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -153,12 +153,12 @@ export default function CollectFeesPage() {
   const payableCount = studentMasters.filter(m => getBalance(m) > 0).length;
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
+      <div className="page-header print:hidden">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Collect Fees</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="page-title">Collect Fees</h1>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/fees-collection" className="hover:text-primary">Fees Collection</Link>
@@ -227,37 +227,36 @@ export default function CollectFeesPage() {
                 {selectedFees.length > 0 && (
                   <button 
                     onClick={handlePaySelectedClick}
-                    className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white rounded-lg text-[13px] font-semibold transition-colors flex items-center gap-2"
+                    className="btn btn-primary"
                   >
                     Pay Selected ({selectedFees.length})
                   </button>
                 )}
               </div>
-              
-              <div className="p-0 overflow-x-auto">
-                <table className="w-full text-[13px]">
-                  <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-b border-border">
+                           <div className="erp-table-wrap">
+                <table className="erp-table">
+                  <thead>
                     <tr>
-                      <th className="px-5 py-3 text-left w-12 cursor-pointer" onClick={toggleAll}>
+                      <th className="w-12 cursor-pointer" onClick={toggleAll}>
                          {payableCount > 0 && selectedFees.length === payableCount ? (
                            <CheckSquare className="w-5 h-5 text-primary" />
                          ) : (
                            <Square className="w-5 h-5 text-slate-400" />
                          )}
                       </th>
-                      <th className="px-5 py-3 text-left font-bold text-slate-700 dark:text-slate-200">Fee Group / Type</th>
-                      <th className="px-5 py-3 text-left font-bold text-slate-700 dark:text-slate-200">Due Date</th>
-                      <th className="px-5 py-3 text-left font-bold text-slate-700 dark:text-slate-200">Freq</th>
-                      <th className="px-5 py-3 text-right font-bold text-slate-700 dark:text-slate-200">Amount</th>
-                      <th className="px-5 py-3 text-right font-bold text-slate-700 dark:text-slate-200">Paid</th>
-                      <th className="px-5 py-3 text-right font-bold text-slate-700 dark:text-slate-200">Balance</th>
-                      <th className="px-5 py-3 text-right font-bold text-slate-700 dark:text-slate-200">Status</th>
+                      <th>Fee Group / Type</th>
+                      <th>Due Date</th>
+                      <th>Freq</th>
+                      <th className="col-right">Amount</th>
+                      <th className="col-right">Paid</th>
+                      <th className="col-right">Balance</th>
+                      <th className="col-right">Status</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody>
                     {studentMasters.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="px-5 py-10 text-center text-slate-500 dark:text-slate-400">No fees assigned to this student.</td>
+                        <td colSpan={8} className="table-empty">No fees assigned to this student.</td>
                       </tr>
                     ) : studentMasters.map(m => {
                       const balance = getBalance(m);
@@ -265,33 +264,33 @@ export default function CollectFeesPage() {
                       const selected = selectedFees.includes(m._id);
                       const mPayments = getMasterPayments(m._id);
                       const totalPaid = mPayments.reduce((sum, p) => sum + p.amount_paid, 0);
-
+ 
                       let statusBadge = <span className="text-rose-600 dark:text-rose-400 font-bold bg-rose-50 dark:bg-rose-500/10 px-2 py-1 rounded">Pending</span>;
                       if (isPaid) {
                         statusBadge = <span className="text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded inline-flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Paid</span>;
                       } else if (totalPaid > 0) {
                         statusBadge = <span className="text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-500/10 px-2 py-1 rounded">Partial</span>;
                       }
-
+ 
                       return (
                         <tr key={m._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                          <td className="px-5 py-3">
+                          <td>
                             {!isPaid && (
                               <div className="cursor-pointer" onClick={() => toggleFee(m._id, balance)}>
                                 {selected ? <CheckSquare className="w-5 h-5 text-primary" /> : <Square className="w-5 h-5 text-slate-400" />}
                               </div>
                             )}
                           </td>
-                          <td className="px-5 py-3">
+                          <td>
                             <div className="text-slate-800 dark:text-slate-100 font-semibold">{typeof m.fee_type_id === 'object' ? m.fee_type_id.name : "—"}</div>
                             <div className="text-[11px] text-slate-500 dark:text-slate-400">{typeof m.fee_group_id === 'object' ? m.fee_group_id.name : "—"}</div>
                           </td>
-                          <td className="px-5 py-3 text-slate-600 dark:text-slate-400">{new Date(m.due_date).toLocaleDateString()}</td>
-                          <td className="px-5 py-3 text-slate-600 dark:text-slate-400">{(m as any).frequency || "Monthly"}</td>
-                          <td className="px-5 py-3 text-right text-slate-800 dark:text-slate-100 font-medium">₹{m.amount.toFixed(2)}</td>
-                          <td className="px-5 py-3 text-right text-emerald-600 dark:text-emerald-400 font-medium">₹{totalPaid.toFixed(2)}</td>
-                          <td className="px-5 py-3 text-right text-rose-600 dark:text-rose-400 font-medium">₹{balance.toFixed(2)}</td>
-                          <td className="px-5 py-3 text-right">{statusBadge}</td>
+                          <td>{new Date(m.due_date).toLocaleDateString()}</td>
+                          <td>{(m as any).frequency || "Monthly"}</td>
+                          <td className="col-right font-medium">₹{m.amount.toFixed(2)}</td>
+                          <td className="col-right text-emerald-600 dark:text-emerald-400 font-medium">₹{totalPaid.toFixed(2)}</td>
+                          <td className="col-right text-rose-600 dark:text-rose-400 font-medium">₹{balance.toFixed(2)}</td>
+                          <td className="col-right">{statusBadge}</td>
                         </tr>
                       );
                     })}

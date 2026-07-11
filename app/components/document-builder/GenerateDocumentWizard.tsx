@@ -388,15 +388,15 @@ export function GenerateDocumentWizard({
     setRecordLoading(true);
     try {
       let url = "";
-      if (activeModule === "student") url = `/api/students?search=${encodeURIComponent(q)}&limit=10`;
-      else if (activeModule === "teacher") url = `/api/teachers?search=${encodeURIComponent(q)}&limit=10`;
-      else if (activeModule === "salary") url = `/api/salaries?search=${encodeURIComponent(q)}&limit=10`;
-      else if (activeModule === "fees") url = `/api/fee-payments?search=${encodeURIComponent(q)}&limit=10`;
+      if (activeModule === "student") url = `/api/students?search=${encodeURIComponent(q)}&limit=100`;
+      else if (activeModule === "teacher") url = `/api/teachers?search=${encodeURIComponent(q)}&limit=100`;
+      else if (activeModule === "salary") url = `/api/salaries?search=${encodeURIComponent(q)}&limit=100`;
+      else if (activeModule === "fees") url = `/api/fee-payments?search=${encodeURIComponent(q)}&limit=100`;
       if (!url) { setRecordResults([]); setRecordLoading(false); return; }
 
       const res = await fetch(url, { headers: getAuthHeaders() as any });
       const data = await res.json();
-      const items = (data.data?.students || data.data?.teachers || data.data?.payments || data.data || []).slice(0, 10);
+      const items = (data.data?.students || data.data?.teachers || data.data?.payments || data.data || []).slice(0, 100);
       setRecordResults(items.map((r: any) => ({ ...r, _type: activeModule })));
     } catch {
       setRecordResults([]);

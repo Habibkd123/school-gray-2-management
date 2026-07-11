@@ -172,10 +172,7 @@ export default function HolidaysPage() {
     : selectedRange;
 
   const triggerCls = (open: boolean) =>
-    `flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors cursor-pointer
-     ${open
-      ? "border-primary text-primary"
-      : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
+    `btn btn-outline flex items-center gap-2 ${open ? "border-primary text-primary" : ""}`;
 
   const filteredData = useMemo(() => {
     let list = holidays.filter(item => {
@@ -209,12 +206,12 @@ export default function HolidaysPage() {
   const pag = usePagination(filteredData, 10);
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Holidays</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="page-title">Holidays</h1>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/dashboard" className="hover:text-primary">HRM</Link>
@@ -224,17 +221,17 @@ export default function HolidaysPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchHolidays()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => fetchHolidays()} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
+          <button className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <Printer className="w-4 h-4" />
           </button>
           
           <div className="relative">
             <button 
               onClick={() => setIsExportOpen(!isExportOpen)}
-              className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
+              className="btn btn-outline flex items-center gap-2"
             >
               <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
             </button>
@@ -255,7 +252,7 @@ export default function HolidaysPage() {
 
           <button 
             onClick={openAddModal}
-            className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+            className="btn btn-primary flex items-center gap-2"
           >
             <Plus className="w-4 h-4" /> Add Holiday
           </button>
@@ -263,7 +260,7 @@ export default function HolidaysPage() {
       </div>
 
       {/* Main Content */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm text-left">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm text-left overflow-hidden">
         {/* Table Header Section */}
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4 rounded-t-xl">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">
@@ -413,65 +410,61 @@ export default function HolidaysPage() {
         </div>
 
         {/* Table */}
-        <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
-          <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
+        <div className={`erp-table-wrap overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
+          <table className="erp-table whitespace-nowrap">
+            <thead>
               <tr>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">
+                <th className="w-12 col-center">
                   <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                 </th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">ID</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Holiday Title</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Date</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Description</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Status</th>
-                <th className="px-6 py-4 text-center font-bold text-slate-700 dark:text-slate-200 w-20">Action</th>
+                <th>ID</th>
+                <th>Holiday Title</th>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th className="w-20 col-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={7} className="table-loading">
                     <Loader2 className="w-5 h-5 animate-spin inline" />
                   </td>
                 </tr>
               ) : pag.paged.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                  <td colSpan={7} className="table-empty">
                     No holidays found. Click "Add Holiday" to create one.
                   </td>
                 </tr>
               ) : pag.paged.map((item) => (
-                <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                  <td className="px-6 py-4">
+                <tr key={item._id}>
+                  <td className="col-center">
                     <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                   </td>
-                  <td className="px-6 py-4 font-semibold text-primary cursor-pointer hover:text-[var(--primary-hover)]">
+                  <td className="font-semibold text-primary cursor-pointer hover:text-[var(--primary-hover)]">
                     {item.display_id}
                   </td>
-                  <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-200">
+                  <td className="font-semibold text-slate-805 dark:text-slate-205">
                     {item.title}
                   </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                    {new Date(item.date).toLocaleDateString()}
+                  <td className="text-slate-655 font-semibold">
+                    {new Date(item.date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
                   </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300 truncate max-w-xs">
+                  <td className="text-slate-655 truncate max-w-xs">
                     {item.description || "—"}
                   </td>
-                  <td className="px-6 py-4">
-                    {item.status === 'Active' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                        Active
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-rose-50 text-rose-600 border border-rose-100">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-                        Inactive
-                      </span>
-                    )}
+                  <td>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
+                      item.status === 'Active' 
+                        ? "bg-emerald-50 text-emerald-705 border-emerald-205" 
+                        : "bg-rose-50 text-rose-755 border-rose-205"
+                    }`}>
+                      {item.status}
+                    </span>
                   </td>
-                  <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
+                  <td className="col-center relative" onClick={(e) => e.stopPropagation()}>
                     <button 
                       onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
                       className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}

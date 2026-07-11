@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { SubjectMaster } from "@/lib/models/index";
+import { SubjectMaster, SubjectAssignment, TeacherAssignment } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 
 type RouteParams = { params: Promise<{ id: string }> };
@@ -55,9 +55,34 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   if (error) return error;
   try {
     await connectToDatabase();
-    const subject = await SubjectMaster.findOneAndDelete({ _id: id, school_id: schoolId });
+
+    const subject = await SubjectMaster.findOne({ _id: id, school_id: schoolId });
     if (!subject) return NextResponse.json({ success: false, message: "Subject not found" }, { status: 404 });
-    return NextResponse.json({ success: true, message: "Subject deleted" });
+
+    const [
+      subjectAssignments,
+      teacherAssignments
+    ] = await Promise.all([
+      SubjectAssignment.countDocuments({ school_id: schoolId, subject_master_id: id }),
+      TeacherAssignment.countDocuments({ school_id: schoolId, subject_master_id: id, is_deleted: false })
+    ]);
+
+    const reasons: string[] = [];
+    if (subjectAssignments > 0) reasons.push(`${subjectAssignments} Class-Subject Assignments`);
+    if (teacherAssignments > 0) reasons.push(`${teacherAssignments} Teacher Assignments`);
+
+    if (reasons.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `This subject catalog item cannot be deleted because it is in use by: ${reasons.join(", ")}. Please deactivate or archive it instead.`
+        },
+        { status: 409 }
+      );
+    }
+
+    await SubjectMaster.deleteOne({ _id: id });
+    return NextResponse.json({ success: true, message: "Subject deleted successfully" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }

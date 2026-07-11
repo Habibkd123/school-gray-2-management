@@ -15,39 +15,98 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get("search");
+    const search = searchParams.get("search") || "";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limitParam = searchParams.get("limit");
+    const isAll = limitParam === "all";
+    const limit = isAll ? 100000 : parseInt(limitParam || "10");
     const academic_year = searchParams.get("academic_year");
+    const class_id = searchParams.get("class_id");
+    const section = searchParams.get("section");
+    const student_id = searchParams.get("student_id");
+    const guardian_type = searchParams.get("guardian_type");
+    const status = searchParams.get("status");
 
     const filter: Record<string, any> = { school_id: schoolId };
+
+    // Search mapping (Part 4)
     if (search) {
+      const studentFilter: any = {
+        school_id: schoolId,
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          { father_name: { $regex: search, $options: "i" } },
+          { mother_name: { $regex: search, $options: "i" } },
+          { guardian_name: { $regex: search, $options: "i" } },
+          { admission_no: { $regex: search, $options: "i" } },
+        ]
+      };
+      const matchingStudents = await Student.find(studentFilter).select("parent_id").lean();
+      const parentIdsFromStudents = matchingStudents.map(s => s.parent_id).filter(Boolean);
+
       filter.$or = [
         { name: { $regex: search, $options: "i" } },
         { email: { $regex: search, $options: "i" } },
         { phone: { $regex: search, $options: "i" } },
+        { _id: { $in: parentIdsFromStudents } }
       ];
     }
 
-    if (academic_year) {
-      const classes = await Class.find({ academic_year, school_id: schoolId }).select("_id").lean();
-      const classIds = classes.map(c => c._id);
-      const students = await Student.find({ class_id: { $in: classIds }, school_id: schoolId }).select("parent_id").lean();
-      const parentIdsInYear = students.map(s => s.parent_id).filter(Boolean);
-      filter._id = { $in: parentIdsInYear };
+    // Student relational filtering (Part 3)
+    const studentFilter: any = { school_id: schoolId };
+    let hasStudentFilter = false;
+
+    if (academic_year && academic_year !== "all") {
+      studentFilter.academic_year = academic_year;
+      hasStudentFilter = true;
     }
+    if (class_id && class_id !== "all") {
+      studentFilter.class_id = new mongoose.Types.ObjectId(class_id);
+      hasStudentFilter = true;
+    }
+    if (section && section !== "all") {
+      const sectionClasses = await mongoose.model("Class").find({
+        school_id: schoolId,
+        section: { $regex: new RegExp(`^${section}$`, "i") }
+      }).select("_id").lean();
+      studentFilter.class_id = { $in: sectionClasses.map(c => c._id) };
+      hasStudentFilter = true;
+    }
+    if (student_id && student_id !== "all") {
+      studentFilter._id = new mongoose.Types.ObjectId(student_id);
+      hasStudentFilter = true;
+    }
+
+    if (hasStudentFilter) {
+      const matchingStudents = await Student.find(studentFilter).select("parent_id").lean();
+      const parentIds = matchingStudents.map(s => s.parent_id).filter(Boolean);
+      if (filter._id) {
+        filter._id = { $and: [filter._id, { $in: parentIds }] };
+      } else {
+        filter._id = { $in: parentIds };
+      }
+    }
+
+    if (guardian_type && guardian_type !== "all") {
+      filter.relation = { $regex: `^${guardian_type}$`, $options: "i" };
+    }
+
+    if (status && status !== "all") {
+      filter.is_active = status.toLowerCase() === "active";
+    }
+
+    const total = await Parent.countDocuments(filter);
+    const skip = isAll ? 0 : (page - 1) * limit;
 
     const parents = await Parent.find(filter)
-      .populate("user_id", "name email role is_active plain_password must_change_password")
+      .populate("user_id", "name email role is_active plain_password")
       .sort({ name: 1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
-    
-    const parentIds = parents.map((p: any) => p._id);
-    const childrenQuery: any = { parent_id: { $in: parentIds } };
 
-    if (academic_year) {
-      const classes = await Class.find({ academic_year, school_id: schoolId }).select("_id").lean();
-      const classIds = classes.map(c => c._id);
-      childrenQuery.class_id = { $in: classIds };
-    }
+    const parentIds = parents.map((p: any) => p._id);
+    const childrenQuery: any = { parent_id: { $in: parentIds }, school_id: schoolId };
 
     const allChildren = await Student.find(childrenQuery)
       .populate("class_id", "name section")
@@ -67,7 +126,15 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: parentsWithChildren,
+      data: {
+        parents: parentsWithChildren,
+        pagination: {
+          totalItems: total,
+          totalPages: Math.ceil(total / limit),
+          currentPage: page,
+          limit,
+        }
+      },
     });
   } catch (err) {
     console.error("[GET /api/parents]", err);

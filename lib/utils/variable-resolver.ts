@@ -108,7 +108,8 @@ export function resolveVariables(ctx: ResolverContext): Record<string, string> {
     const cls = st.class_id;             // populated Class doc or null
 
     vars["student.name"]           = fmt(st.name);
-    vars["student.first_name"]     = fmt(st.name?.split(" ")[0]);
+    vars["student.first_name"]     = fmt(st.name);
+    vars["student.last_name"]      = "";
     vars["student.admission_no"]   = fmt(st.admission_no);
     vars["student.admission_number"] = fmt(st.admission_no);
     vars["student.roll_no"]        = fmt(st.roll_no);

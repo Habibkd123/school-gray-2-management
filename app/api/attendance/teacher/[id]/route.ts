@@ -116,8 +116,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           _id: teacherProfile._id,
           name: teacherProfile.name,
           employee_id: teacherProfile.employee_id,
-          designation: teacherProfile.subject_specialization || "",
-          department: teacherProfile.qualification || "",
+          designation: teacherProfile.designation || teacherProfile.subject_specialization || "Teacher",
+          department: teacherProfile.department || teacherProfile.qualification || "Academic",
         },
         stats: {
           totalWorkingDays,

@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
       title, description, class_id, subject_id,
       test_date, start_time, end_time,
       total_marks, passing_marks, chapter, academic_year,
-      status: requestedStatus,
+      status: requestedStatus, assessment_type
     } = body;
 
     if (!title?.trim()) return NextResponse.json({ success: false, message: "Title is required" }, { status: 400 });
@@ -145,6 +145,7 @@ export async function POST(req: NextRequest) {
       chapter: chapter?.trim() || undefined,
       academic_year,
       status: requestedStatus || "scheduled",
+      assessment_type: assessment_type || "Class Test",
       is_published: false,
     });
 

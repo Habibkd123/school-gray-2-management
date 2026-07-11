@@ -31,6 +31,7 @@ export interface ApiResult {
   grade?: string;
   is_pass?: boolean;
   remarks?: string;
+  attendance_status?: string;
 }
 
 export function useExams(classId?: string) {

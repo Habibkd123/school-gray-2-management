@@ -369,12 +369,12 @@ export default function ProfilePage() {
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
       {activeTab !== "roles" && (
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+        <div className="page-header mb-2">
           <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+            <h1 className="page-title">
               {activeTab === "profile" ? "Profile" : (activeTab === "academic" ? "Academic Settings" : "Login Settings")}
             </h1>
-            <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+            <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
               <span>Dashboard</span>
               <span>/</span>
               <span>Settings</span>
@@ -386,7 +386,7 @@ export default function ProfilePage() {
           </div>
           <button
             onClick={handleRefreshClick}
-            className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/5 transition-colors shadow-sm dark:text-slate-400"
+            className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -644,7 +644,7 @@ export default function ProfilePage() {
                 {!editMode ? (
                   <button
                     onClick={() => setEditMode(true)}
-                    className="flex items-center gap-2 px-4 py-1.5 bg-primary text-white text-[13px] font-bold rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
+                    className="btn btn-primary flex items-center gap-2"
                   >
                     <Edit className="w-3.5 h-3.5" /> Edit
                   </button>
@@ -652,14 +652,14 @@ export default function ProfilePage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={handleCancel}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[13px] font-bold rounded-lg hover:bg-slate-200 transition-colors"
+                      className="btn btn-outline flex items-center gap-2"
                     >
                       <X className="w-3.5 h-3.5" /> Cancel
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={saving}
-                      className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-500 text-white text-[13px] font-bold rounded-lg hover:bg-emerald-600 disabled:opacity-60 transition-colors shadow-sm"
+                      className="btn flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white shadow-sm"
                     >
                       {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                       Save
@@ -833,7 +833,7 @@ export default function ProfilePage() {
                   <button
                     type="submit"
                     disabled={changingPw}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-[13px] font-bold rounded-lg hover:bg-primary/90 disabled:opacity-60 transition-colors shadow-sm"
+                    className="btn btn-primary flex items-center gap-2"
                   >
                     {changingPw ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
                     {changingPw ? "Changing…" : "Change Password"}

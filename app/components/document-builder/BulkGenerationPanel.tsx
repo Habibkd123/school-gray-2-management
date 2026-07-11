@@ -18,6 +18,7 @@ import type { TemplateMeta } from "./types";
 import { encodeVariablesClient } from "@/lib/utils/variable-resolver";
 import { useRouter } from "next/navigation";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { ClassService } from "@/app/services/ClassService";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -64,9 +65,8 @@ export function BulkGenerationPanel() {
   // ── Load classes ──────────────────────────────────────────────────────────
   useEffect(() => {
     setClassesLoading(true);
-    fetch("/api/classes", { headers: getAuthHeaders() })
-      .then(r => r.json())
-      .then(d => setClasses(d.data || d.classes || []))
+    ClassService.getAllClasses()
+      .then(d => setClasses(d))
       .catch(() => setClasses([]))
       .finally(() => setClassesLoading(false));
 

@@ -7,12 +7,33 @@ export interface PopulatedTeacherAssignment {
   _id: string;
   school_id: string;
   academic_year: string;
-  teacher_id: { _id: string; name: string; employee_id?: string };
+  teacher_id: { 
+    _id: string; 
+    name: string; 
+    employee_id?: string; 
+    photo_url?: string; 
+    designation?: string; 
+    is_active?: boolean;
+  };
   class_id?: { _id: string; name: string; section?: string; class_code?: string } | null;
   stream_id?: { _id: string; name: string } | null;
   section_id?: { _id: string; name: string } | null;
-  subject_master_id: { _id: string; name: string; subject_code?: string };
+  subject_master_id?: { _id: string; name: string; subject_code?: string; description?: string } | null;
+  assignment_type: "Class Teacher" | "Subject Teacher" | "Co-Class Teacher" | "Temporary Teacher" | "Substitute Teacher";
+  effective_date?: string;
+  status: "Active" | "Inactive";
+  remarks?: string;
+  weekly_periods?: number;
+  created_by?: { _id: string; name: string } | null;
+  history?: Array<{
+    action: string;
+    changes?: string;
+    updated_by: any;
+    date: string;
+    remarks?: string;
+  }>;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export function useTeacherAssignment() {
@@ -28,6 +49,11 @@ export function useTeacherAssignment() {
     stream_id?: string;
     section_id?: string;
     teacher_id?: string;
+    subject_id?: string;
+    status?: string;
+    assignment_type?: string;
+    search?: string;
+    sort?: string;
     academic_year?: string;
     page?: number;
     limit?: number;
@@ -39,6 +65,11 @@ export function useTeacherAssignment() {
       if (params.stream_id) qs.set("stream_id", params.stream_id);
       if (params.section_id) qs.set("section_id", params.section_id);
       if (params.teacher_id) qs.set("teacher_id", params.teacher_id);
+      if (params.subject_id) qs.set("subject_id", params.subject_id);
+      if (params.status) qs.set("status", params.status);
+      if (params.assignment_type) qs.set("assignment_type", params.assignment_type);
+      if (params.search) qs.set("search", params.search);
+      if (params.sort) qs.set("sort", params.sort);
       if (params.academic_year) qs.set("academic_year", params.academic_year);
       if (params.page) qs.set("page", String(params.page));
       if (params.limit) qs.set("limit", String(params.limit));
@@ -64,7 +95,12 @@ export function useTeacherAssignment() {
     class_id?: string;
     stream_id?: string;
     section_id?: string;
-    subject_master_id: string;
+    subject_master_id?: string;
+    subject_master_ids?: string[];
+    assignment_type?: string;
+    effective_date?: string;
+    status?: string;
+    remarks?: string;
   }) => {
     try {
       const res = await fetch("/api/teacher-assignment", {
@@ -78,6 +114,30 @@ export function useTeacherAssignment() {
     } catch { return { success: false, message: "Network error" }; }
   };
 
+  const updateAssignment = async (id: string, input: {
+    academic_year?: string;
+    teacher_id?: string;
+    class_id?: string;
+    stream_id?: string;
+    section_id?: string;
+    subject_master_id?: string;
+    assignment_type?: string;
+    effective_date?: string;
+    status?: string;
+    remarks?: string;
+  }) => {
+    try {
+      const res = await fetch(`/api/teacher-assignment/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to update" };
+      return { success: true, message: "Assignment updated", data: data.data };
+    } catch { return { success: false, message: "Network error" }; }
+  };
+
   const deleteAssignment = async (id: string) => {
     try {
       const res = await fetch(`/api/teacher-assignment/${id}`, { method: "DELETE", headers: getAuthHeaders() });
@@ -88,5 +148,5 @@ export function useTeacherAssignment() {
     } catch { return { success: false, message: "Network error" }; }
   };
 
-  return { assignments, isLoading, error, total, totalPages, currentPage, fetchAssignments, createAssignment, deleteAssignment };
+  return { assignments, isLoading, error, total, totalPages, currentPage, fetchAssignments, createAssignment, updateAssignment, deleteAssignment };
 }

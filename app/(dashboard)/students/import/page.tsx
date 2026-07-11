@@ -6,8 +6,7 @@ import BulkImport from "@/app/components/BulkImport";
 const sampleHeaders = [
   "Admission No*",
   "Roll No",
-  "First Name*",
-  "Last Name*",
+  "Student Name*",
   "Class*",
   "Section*",
   "Gender",

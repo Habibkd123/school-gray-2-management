@@ -9,6 +9,7 @@ import { Loader2, AlertCircle } from "lucide-react";
 import { PaginationBar } from "@/app/components/ui/pagination-bar";
 import { LoginDetailsModal } from "../../components/modals/LoginDetailsModal";
 import { ResetPasswordModal } from "../../components/modals/ResetPasswordModal";
+import { getAuthHeaders } from "@/lib/utils/session";
 import {
   Search,
   Plus,
@@ -55,9 +56,18 @@ export default function TeachersPage() {
     fetchTeachers
   } = useTeachers({ skip: true });
 
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
+  React.useEffect(() => {
+    if (!isLoading && isInitialLoad) setIsInitialLoad(false);
+  }, [isLoading]);
+
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [deptFilter, setDeptFilter] = useState("all");
+  const [desgFilter, setDesgFilter] = useState("all");
+  const [academicYearFilter, setAcademicYearFilter] = useState("all");
+
   const [selectedTeacher, setSelectedTeacher] = useState<ApiTeacher | null>(null);
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
   const [isLoginDetailsOpen, setIsLoginDetailsOpen] = useState(false);
@@ -77,6 +87,31 @@ export default function TeachersPage() {
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
   const activeRole = "admin" as "admin" | "teacher" | "student";
 
+  // Dynamic filter options state
+  const [filterOptions, setFilterOptions] = useState<{
+    academicYears: string[];
+    departments: string[];
+    designations: string[];
+    statuses: string[];
+  }>({
+    academicYears: [],
+    departments: [],
+    designations: [],
+    statuses: []
+  });
+
+  // Fetch unique filter values from backend on mount
+  useEffect(() => {
+    fetch("/api/teachers/filters", { headers: getAuthHeaders() })
+      .then(res => res.json())
+      .then(res => {
+        if (res.success && res.data) {
+          setFilterOptions(res.data);
+        }
+      })
+      .catch(err => console.error("Error loading filters:", err));
+  }, []);
+
   // Debounce search input to limit API calls
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -95,9 +130,11 @@ export default function TeachersPage() {
       sort: selectedSort,
       page,
       limit: 12,
-      academic_year: academicYear,
+      academic_year: academicYearFilter === "all" ? academicYear : academicYearFilter,
+      department: deptFilter,
+      designation: desgFilter,
     });
-  }, [fetchTeachers, debouncedSearch, statusFilter, selectedDateRange, selectedSort, page, academicYear]);
+  }, [fetchTeachers, debouncedSearch, statusFilter, selectedDateRange, selectedSort, page, academicYear, deptFilter, desgFilter, academicYearFilter]);
 
   const handleDateRangeChange = (val: string) => {
     setSelectedDateRange(val);
@@ -142,7 +179,9 @@ export default function TeachersPage() {
         sort: selectedSort,
         page,
         limit: 12,
-        academic_year: academicYear,
+        academic_year: academicYearFilter === "all" ? academicYear : academicYearFilter,
+        department: deptFilter,
+        designation: desgFilter,
       });
     }
   };
@@ -166,7 +205,9 @@ export default function TeachersPage() {
         sort: selectedSort,
         page,
         limit: 12,
-        academic_year: academicYear,
+        academic_year: academicYearFilter === "all" ? academicYear : academicYearFilter,
+        department: deptFilter,
+        designation: desgFilter,
       });
     }
   };
@@ -304,7 +345,7 @@ export default function TeachersPage() {
     )}
   ];
 
-  if (isLoading) {
+  if (isLoading && isInitialLoad) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -329,9 +370,9 @@ export default function TeachersPage() {
   return (
     <div className="space-y-6 -m-6 p-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+      <div className="page-header">
         <div>
-          <h1 className="page-title text-xl font-bold text-slate-900 dark:text-white">Teacher List</h1>
+          <h1 className="page-title">Teacher List</h1>
           <div className="flex items-center gap-2 text-[14px] leading-[21px] text-[#68718a] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
@@ -343,16 +384,16 @@ export default function TeachersPage() {
 
         {activeRole === "admin" && (
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => fetchTeachers({ academic_year: academicYear })} className="p-2 border border-border bg-white dark:bg-slate-900 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors">
+            <button onClick={() => fetchTeachers({ academic_year: academicYearFilter === "all" ? academicYear : academicYearFilter, department: deptFilter, designation: desgFilter, status: statusFilter })} className="btn btn-outline p-2 w-9 h-9">
               <RefreshCcw className="w-4 h-4" />
             </button>
-            <button className="p-2 border border-border bg-white dark:bg-slate-900 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors">
+            <button className="btn btn-outline p-2 w-9 h-9">
               <Printer className="w-4 h-4" />
             </button>
             <div className="relative">
               <button
                 onClick={() => setIsExportOpen(!isExportOpen)}
-                className="flex items-center gap-2 px-3 py-2 border border-border bg-white dark:bg-slate-900 rounded-lg text-slate-600 dark:text-slate-300 text-[13px] font-semibold hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors"
+                className="btn btn-outline"
               >
                 <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
               </button>
@@ -369,14 +410,14 @@ export default function TeachersPage() {
             </div>
             <button
               onClick={() => router.push('/teachers/import')}
-              className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-border hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg shadow-sm transition-colors cursor-pointer"
+              className="btn btn-outline"
             >
               <Upload className="w-4 h-4" />
               <span>Bulk Import</span>
             </button>
             <button
               onClick={() => router.push('/teachers/add')}
-              className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] rounded-lg shadow-sm transition-colors cursor-pointer"
+              className="btn btn-primary"
             >
               <Plus className="w-4 h-4" />
               <span>Add Teacher</span>
@@ -394,7 +435,7 @@ export default function TeachersPage() {
             <div className="relative">
               <button
                 onClick={() => setIsDateRangeOpen(!isDateRangeOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors bg-white dark:bg-slate-900 shadow-sm"
+                className="btn btn-outline flex items-center gap-2"
               >
                 <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                 {selectedDateRange}
@@ -416,7 +457,7 @@ export default function TeachersPage() {
             <div className="relative">
               <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors bg-white dark:bg-slate-900 shadow-sm"
+                className="btn btn-outline flex items-center gap-2"
               >
                 <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                 Filter <ChevronDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
@@ -429,6 +470,43 @@ export default function TeachersPage() {
                       <h3 className="text-[15px] font-bold text-foreground dark:text-slate-100">Filter</h3>
                     </div>
                     <div className="p-4 space-y-4">
+                      {/* Department Filter */}
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Department</label>
+                        <div className="relative">
+                          <select 
+                            value={deptFilter}
+                            onChange={(e) => { setDeptFilter(e.target.value); setPage(1); }}
+                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
+                          >
+                            <option value="all">All Departments</option>
+                            {filterOptions.departments.map(d => (
+                              <option key={d} value={d}>{d}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-2.5 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* Designation Filter */}
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Designation</label>
+                        <div className="relative">
+                          <select 
+                            value={desgFilter}
+                            onChange={(e) => { setDesgFilter(e.target.value); setPage(1); }}
+                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
+                          >
+                            <option value="all">All Designations</option>
+                            {filterOptions.designations.map(d => (
+                              <option key={d} value={d}>{d}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-2.5 pointer-events-none" />
+                        </div>
+                      </div>
+
+                      {/* Status Filter */}
                       <div className="space-y-1.5">
                         <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status</label>
                         <div className="relative">
@@ -437,16 +515,34 @@ export default function TeachersPage() {
                             onChange={(e) => handleStatusFilterChange(e.target.value)}
                             className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
                           >
-                            <option value="all">All</option>
+                            <option value="all">All Statuses</option>
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>
                           </select>
                           <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-2.5 pointer-events-none" />
                         </div>
                       </div>
+
+                      {/* Academic Year Filter */}
+                      <div className="space-y-1.5">
+                        <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Academic Year</label>
+                        <div className="relative">
+                          <select 
+                            value={academicYearFilter}
+                            onChange={(e) => { setAcademicYearFilter(e.target.value); setPage(1); }}
+                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
+                          >
+                            <option value="all">Current ({academicYear})</option>
+                            {filterOptions.academicYears.map(y => (
+                              <option key={y} value={y}>{y}</option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3 top-2.5 pointer-events-none" />
+                        </div>
+                      </div>
                     </div>
                     <div className="p-4 flex justify-end gap-3 bg-white dark:bg-slate-900 rounded-b-lg pt-2">
-                      <button onClick={() => { setStatusFilter("all"); setPage(1); setIsFilterOpen(false); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-foreground dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer">
+                      <button onClick={() => { setStatusFilter("all"); setDeptFilter("all"); setDesgFilter("all"); setAcademicYearFilter("all"); setPage(1); setIsFilterOpen(false); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-foreground dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer">
                         Reset
                       </button>
 
@@ -475,14 +571,14 @@ export default function TeachersPage() {
             </button>
 
             <div className="flex items-center border border-border rounded-lg p-0.5 bg-slate-50 dark:bg-slate-800/50">
-              <button onClick={() => setViewMode("list")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "list" ? "bg-primary text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><List className="w-4 h-4" /></button>
-              <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "grid" ? "bg-primary text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300"}`}><Grid className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode("list")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "list" ? "bg-primary text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-350"}`}><List className="w-4 h-4" /></button>
+              <button onClick={() => setViewMode("grid")} className={`p-1.5 rounded shadow-sm transition-colors cursor-pointer ${viewMode === "grid" ? "bg-primary text-white" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-350"}`}><Grid className="w-4 h-4" /></button>
             </div>
 
             <div className="relative">
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
-                className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors bg-white dark:bg-slate-900 shadow-sm"
+                className="btn btn-outline flex items-center gap-2"
               >
                 <ArrowDownAZ className="w-4 h-4 text-slate-400 dark:text-slate-500" />
                 Sort: {selectedSort} <ChevronDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
@@ -518,58 +614,67 @@ export default function TeachersPage() {
               {total}
             </span>{" "}teachers
           </div>
-          <div className="relative w-full sm:w-64">
+          <div className="relative w-full sm:w-80">
             <input
               type="text"
-              placeholder="Search Name/ID/Email/Subject"
+              placeholder="Search Name, ID, Email, Phone, Dept, Desg..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900"
+              className="w-full px-3.5 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900"
             />
           </div>
         </div>
 
         {/* List/Grid View */}
         {viewMode === "list" ? (
-          <>
-            <DataTable 
-              columns={columns} 
-              data={tableData} 
-              onRowClick={(item) => router.push(`/teachers/${item.id}`)}
-              selectionHeader={
-                <input
-                  type="checkbox"
-                  checked={tableData.length > 0 && tableData.every(t => selectedIds.includes(t.id))}
-                  onChange={() => {
-                    const allChecked = tableData.length > 0 && tableData.every(t => selectedIds.includes(t.id));
-                    if (allChecked) {
-                      setSelectedIds(prev => prev.filter(id => !tableData.some(t => t.id === id)));
-                    } else {
-                      setSelectedIds(prev => {
-                        const toAdd = tableData.filter(t => !prev.includes(t.id)).map(t => t.id);
-                        return [...prev, ...toAdd];
-                      });
-                    }
-                  }}
-                  className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
-                />
-              }
-              renderSelection={(t) => (
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(t.id)}
-                  onChange={() => {
-                    setSelectedIds(prev =>
-                      prev.includes(t.id)
-                        ? prev.filter(id => id !== t.id)
-                        : [...prev, t.id]
-                    );
-                  }}
-                  className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
-                />
-              )}
-              noDataMessage="No faculty records matching filter."
-            />
+          <div className={`relative transition-opacity duration-200 ${isLoading && !isInitialLoad ? "opacity-60 pointer-events-none" : ""}`}>
+            {isLoading && !isInitialLoad && (
+              <div className="absolute top-2 right-4 z-10 flex items-center gap-2 text-[12px] font-medium text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 rounded-md border border-border shadow-sm">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                <span>Syncing...</span>
+              </div>
+            )}
+
+            <div className="erp-table-wrap">
+              <DataTable 
+                columns={columns} 
+                data={tableData} 
+                onRowClick={(item) => router.push(`/teachers/${item.id}`)}
+                selectionHeader={
+                  <input
+                    type="checkbox"
+                    checked={tableData.length > 0 && tableData.every(t => selectedIds.includes(t.id))}
+                    onChange={() => {
+                      const allChecked = tableData.length > 0 && tableData.every(t => selectedIds.includes(t.id));
+                      if (allChecked) {
+                        setSelectedIds(prev => prev.filter(id => !tableData.some(t => t.id === id)));
+                      } else {
+                        setSelectedIds(prev => {
+                          const toAdd = tableData.filter(t => !prev.includes(t.id)).map(t => t.id);
+                          return [...prev, ...toAdd];
+                        });
+                      }
+                    }}
+                    className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
+                  />
+                }
+                renderSelection={(t) => (
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(t.id)}
+                    onChange={() => {
+                      setSelectedIds(prev =>
+                        prev.includes(t.id)
+                          ? prev.filter(id => id !== t.id)
+                          : [...prev, t.id]
+                      );
+                    }}
+                    className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
+                  />
+                )}
+                noDataMessage="No faculty records matching filter."
+              />
+            </div>
             <PaginationBar
               currentPage={page}
               totalPages={totalPages}
@@ -577,12 +682,18 @@ export default function TeachersPage() {
               pageSize={PAGE_SIZE}
               onPageChange={setPage}
             />
-          </>
+          </div>
         ) : (
-          <>
+          <div className={`relative transition-opacity duration-200 ${isLoading && !isInitialLoad ? "opacity-60 pointer-events-none" : ""}`}>
+            {isLoading && !isInitialLoad && (
+              <div className="absolute top-2 right-4 z-10 flex items-center gap-2 text-[12px] font-medium text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 rounded-md border border-border shadow-sm">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                <span>Syncing...</span>
+              </div>
+            )}
             <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
               {teachers.length === 0 ? (
-                <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400">
+                <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400 font-medium">
                   No faculty records matching filter.
                 </div>
               ) : (
@@ -677,10 +788,10 @@ export default function TeachersPage() {
                         </div>
                       </div>
 
-                      {/* Bottom: Subject & Button */}
+                      {/* Bottom: Department, Designation & Button */}
                       <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
                         <span className="px-2 py-1 bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400 text-[10px] font-bold rounded">
-                          {subject}
+                          {teacher.department || "Academic"}
                         </span>
                         <button
                           onClick={() => router.push(`/teachers/${teacher._id}`)}
@@ -702,7 +813,7 @@ export default function TeachersPage() {
               onPageChange={setPage}
               className="mt-4 border-t-0"
             />
-          </>
+          </div>
         )}
       </div>
 
@@ -720,7 +831,7 @@ export default function TeachersPage() {
         userId={resetPassTarget?.userId}
         userName={resetPassTarget?.name || ""}
         userEmail={resetPassTarget?.email || ""}
-        onSuccess={() => fetchTeachers({ search: debouncedSearch, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 12, academic_year: academicYear })}
+        onSuccess={() => fetchTeachers({ search: debouncedSearch, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 12, academic_year: academicYearFilter === "all" ? academicYear : academicYearFilter, department: deptFilter, designation: desgFilter })}
       />
 
       {/* Floating Bulk Actions Bar */}

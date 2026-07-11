@@ -1,24 +1,24 @@
 "use client";
 
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useParents, ApiParent } from "../../hooks/useParents";
-import { useClasses } from "../../hooks/useClasses";
 import { useUpload } from "../../hooks/useUpload";
 import { useAppState } from "@/app/context/store";
 import { Modal } from "../../components/ui/modal";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../../context/auth";
+import { getAuthHeaders } from "@/lib/utils/session";
 import {
   Search, Filter, ChevronDown, RefreshCw, Printer, Download,
   FileText, Plus, MoreVertical, Edit, Trash2, Loader2,
-  LayoutGrid, List, ArrowUpDown, Calendar, Mail, Phone, Users,
-  ImageIcon, X, CheckSquare
+  Calendar, Mail, Phone, Users, ImageIcon, X, CheckSquare,
+  ShieldAlert, UserCheck, AlertCircle
 } from "lucide-react";
-import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar";
+import { PaginationBar } from "@/app/components/ui/pagination-bar";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────
 function getAvatar(name: string, photo_url?: string) {
   if (photo_url) return photo_url;
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=D2232A&color=fff&bold=true`;
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=E11D48&color=fff&bold=true`;
 }
 
 function formatDate(d?: string | Date) {
@@ -28,103 +28,123 @@ function formatDate(d?: string | Date) {
   return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
-// ─── Date range presets ───────────────────────────────────────────────────
-const DATE_RANGES = ["All Time", "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Month", "This Year", "Custom Range"] as const;
-
-function getDateRangeDates(range: string): { from: Date | null; to: Date | null } {
-  const now = new Date();
-  const to = new Date(now);
-  const from = new Date(now);
-  switch (range) {
-    case "All Time": return { from: null, to: null };
-    case "Today": from.setHours(0, 0, 0, 0); break;
-    case "Yesterday":
-      from.setDate(from.getDate() - 1); from.setHours(0, 0, 0, 0);
-      to.setDate(to.getDate() - 1); to.setHours(23, 59, 59, 999);
-      break;
-    case "Last 7 Days": from.setDate(from.getDate() - 7); break;
-    case "Last 30 Days": from.setDate(from.getDate() - 30); break;
-    case "This Month": from.setDate(1); from.setHours(0, 0, 0, 0); break;
-    case "This Year": from.setMonth(0, 1); from.setHours(0, 0, 0, 0); break;
-    default: from.setDate(from.getDate() - 7);
-  }
-  return { from, to };
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────
 export default function GuardiansPage() {
+  const { user } = useAuth();
+  const activeRole = user?.role;
   const { academicYear } = useAppState();
-  const { parents, isLoading, fetchParents, createParent, updateParent, deleteParent } = useParents({ filterByYear: true });
   const { uploadFile } = useUpload();
-  const { classes } = useClasses({ filterByYear: true });
   const router = useRouter();
 
-  const getClassName = (s: any) => {
-    if (typeof s.class_id === "object" && s.class_id !== null) {
-      const name = s.class_id?.name || "";
-      const section = s.class_id?.section || "";
-      return name ? `${name} ${section}`.trim() : "—";
-    }
-    const cls = classes.find((c) => c._id === s.class_id);
-    return cls ? `${cls.name} ${cls.section}` : "—";
-  };
-
-  // ── UI State ─────────────────────────────────────────────────────────────
+  // State parameters for pagination & filtering
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [selectedSort, setSelectedSort] = useState("Ascending");
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkSelectMode, setBulkSelectMode] = useState(false);
+  const [academicYearFilter, setAcademicYearFilter] = useState("all");
+  const [classFilter, setClassFilter] = useState("all");
+  const [sectionFilter, setSectionFilter] = useState("all");
+  const [studentFilter, setStudentFilter] = useState("all");
+  const [guardianTypeFilter, setGuardianTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  // Date range
-  const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
-  const [selectedRange, setSelectedRange] = useState("All Time");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
-  const [isCustom, setIsCustom] = useState(false);
-  const [activeFrom, setActiveFrom] = useState<Date | null>(null);
-  const [activeTo, setActiveTo] = useState<Date | null>(null);
+  const {
+    parents,
+    totalParents,
+    isLoading,
+    fetchParents,
+    createParent,
+    updateParent,
+    deleteParent
+  } = useParents({ skip: true }); // skip default effect to fetch manually with dependencies
 
-  const applyDateRange = (range: string) => {
-    if (range === "Custom Range") { setIsCustom(true); return; }
-    setIsCustom(false);
-    const { from, to } = getDateRangeDates(range);
-    setActiveFrom(from); setActiveTo(to);
-    setSelectedRange(range); setIsDateRangeOpen(false);
-  };
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
+  useEffect(() => {
+    if (!isLoading && isInitialLoad) setIsInitialLoad(false);
+  }, [isLoading]);
 
-  const applyCustomRange = () => {
-    if (!customFrom || !customTo) return;
-    setActiveFrom(new Date(customFrom)); setActiveTo(new Date(customTo));
-    setSelectedRange(`${customFrom} — ${customTo}`);
-    setIsCustom(false); setIsDateRangeOpen(false);
-  };
+  // Dynamic filters state
+  const [filterOptions, setFilterOptions] = useState<{
+    academicYears: string[];
+    classes: { _id: string; name: string; section: string }[];
+    sections: string[];
+    students: { _id: string; name: string }[];
+    guardianTypes: string[];
+  } | null>(null);
 
-  const dateRangeLabel = (activeFrom && activeTo && !isCustom)
-    ? `${formatDate(activeFrom)} — ${formatDate(activeTo)}`
-    : selectedRange;
-
-  // Filter & Sort
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [isSortOpen, setIsSortOpen] = useState(false);
-  const [filterParent, setFilterParent] = useState("");
-  const [filterChild, setFilterChild] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  // Modals
+  // Fetch filter options on mount
+  useEffect(() => {
+    if (activeRole === "parent" || activeRole === "student") return;
+    const loadFilterOptions = async () => {
+      try {
+        const res = await fetch("/api/parents/filters", {
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+          setFilterOptions(data.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch parent filters", err);
+      }
+    };
+    loadFilterOptions();
+  }, [activeRole]);
+
+  // Fetch parent list with complete dependency array
+  useEffect(() => {
+    if (activeRole === "parent" || activeRole === "student") return;
+    fetchParents({
+      page,
+      limit,
+      search,
+      academic_year: academicYearFilter === "all" ? undefined : academicYearFilter,
+      class_id: classFilter === "all" ? undefined : classFilter,
+      section: sectionFilter === "all" ? undefined : sectionFilter,
+      student_id: studentFilter === "all" ? undefined : studentFilter,
+      guardian_type: guardianTypeFilter === "all" ? undefined : guardianTypeFilter,
+      status: statusFilter === "all" ? undefined : statusFilter
+    });
+  }, [
+    fetchParents,
+    page,
+    limit,
+    search,
+    academicYearFilter,
+    classFilter,
+    sectionFilter,
+    studentFilter,
+    guardianTypeFilter,
+    statusFilter,
+    activeRole
+  ]);
+
+  // Add / Edit Forms
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editParent, setEditParent] = useState<ApiParent | null>(null);
-
-  // Form State
   const [formName, setFormName] = useState("");
   const [formPhone, setFormPhone] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formPhoto, setFormPhoto] = useState("");
+  const [formRelation, setFormRelation] = useState("");
+  const [formOccupation, setFormOccupation] = useState("");
+  const [formAddress, setFormAddress] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Phone input validation error
+  const [phoneError, setPhoneError] = useState("");
+
+  const handlePhoneChange = (value: string) => {
+    setFormPhone(value);
+    if (value && !/^\d{10}$/.test(value)) {
+      setPhoneError("Phone number must be exactly 10 digits");
+    } else {
+      setPhoneError("");
+    }
+  };
 
   const handlePhotoUpload = async (file: File) => {
     setUploadingPhoto(true);
@@ -143,6 +163,10 @@ export default function GuardiansPage() {
     setFormPhone("");
     setFormEmail("");
     setFormPhoto("");
+    setFormRelation("");
+    setFormOccupation("");
+    setFormAddress("");
+    setPhoneError("");
     setIsAddOpen(true);
   };
 
@@ -152,10 +176,15 @@ export default function GuardiansPage() {
     setFormPhone(p.phone || "");
     setFormEmail(p.email || "");
     setFormPhoto(p.photo_url || "");
+    setFormRelation(p.relation || "");
+    setFormOccupation(p.occupation || "");
+    setFormAddress(p.address || "");
+    setPhoneError("");
   };
 
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (phoneError) return;
     setIsSaving(true);
     try {
       await createParent({
@@ -163,12 +192,17 @@ export default function GuardiansPage() {
         phone: formPhone,
         email: formEmail,
         photo_url: formPhoto,
+        relation: formRelation,
+        occupation: formOccupation,
+        address: formAddress
       });
       setIsAddOpen(false);
-      fetchParents({ academic_year: academicYear }); // refresh
-    } catch (err) {
-      console.error("Failed to add parent", err);
-      alert("Failed to add parent");
+      // refresh list
+      setPage(1);
+      fetchParents({ page: 1, limit });
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Failed to create parent");
     } finally {
       setIsSaving(false);
     }
@@ -176,7 +210,7 @@ export default function GuardiansPage() {
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editParent) return;
+    if (!editParent || phoneError) return;
     setIsSaving(true);
     try {
       await updateParent(editParent._id, {
@@ -184,12 +218,16 @@ export default function GuardiansPage() {
         phone: formPhone,
         email: formEmail,
         photo_url: formPhoto,
+        relation: formRelation,
+        occupation: formOccupation,
+        address: formAddress
       });
       setEditParent(null);
-      fetchParents({ academic_year: academicYear }); // refresh
-    } catch (err) {
-      console.error("Failed to update parent", err);
-      alert("Failed to update parent");
+      // refresh list
+      fetchParents({ page, limit });
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Failed to update parent");
     } finally {
       setIsSaving(false);
     }
@@ -200,29 +238,27 @@ export default function GuardiansPage() {
     try {
       await deleteParent(id);
       setActiveDropdown(null);
-    } catch (err) {
-      console.error("Failed to delete parent", err);
-      alert("Failed to delete parent");
+      fetchParents({ page, limit });
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Failed to delete parent");
     }
   };
 
   const handleExport = () => {
-    const dataToExport = selectedIds.length > 0
-      ? filtered.filter(p => selectedIds.includes(p._id))
-      : filtered;
-
-    if (dataToExport.length === 0) {
+    if (parents.length === 0) {
       alert("No parent records available to export.");
       return;
     }
 
-    const headers = ["Parent ID", "Name", "Email", "Phone", "Children", "Date Created"];
-    const rows = dataToExport.map(p => [
+    const headers = ["Parent ID", "Name", "Email", "Phone", "Guardian Type", "Children", "Date Created"];
+    const rows = parents.map(p => [
       p._id.slice(-6).toUpperCase(),
       p.name,
       p.email || "",
       p.phone || "",
-      (p.children || []).map(c => c.name).join(", "),
+      p.relation || "",
+      (p.children || []).map(c => c.name).join("; "),
       p.createdAt ? new Date(p.createdAt).toLocaleDateString("en-GB") : ""
     ]);
 
@@ -238,239 +274,204 @@ export default function GuardiansPage() {
     document.body.removeChild(link);
   };
 
-  const handleBulkDelete = async () => {
-    if (confirm(`Are you sure you want to delete ${selectedIds.length} selected parents?`)) {
-      let successCount = 0;
-      let failCount = 0;
-      for (const id of selectedIds) {
-        try {
-          await deleteParent(id);
-          successCount++;
-        } catch {
-          failCount++;
-        }
-      }
-      alert(`Successfully deleted ${successCount} parents.${failCount > 0 ? ` Failed to delete ${failCount} parents.` : ""}`);
-      setSelectedIds([]);
-      setBulkSelectMode(false);
-    }
+  const resetFilters = () => {
+    setAcademicYearFilter("all");
+    setClassFilter("all");
+    setSectionFilter("all");
+    setStudentFilter("all");
+    setGuardianTypeFilter("all");
+    setStatusFilter("all");
+    setSearch("");
+    setPage(1);
   };
 
-  const handleBulkStatusChange = async (newStatus: boolean) => {
-    if (confirm(`Change status of ${selectedIds.length} selected parents to ${newStatus ? "Active" : "Inactive"}?`)) {
-      let successCount = 0;
-      let failCount = 0;
-      for (const id of selectedIds) {
-        try {
-          await updateParent(id, { is_active: newStatus });
-          successCount++;
-        } catch {
-          failCount++;
-        }
-      }
-      alert(`Successfully updated status for ${successCount} parents.${failCount > 0 ? ` Failed for ${failCount} parents.` : ""}`);
-      setSelectedIds([]);
-      setBulkSelectMode(false);
-    }
-  };
-
-  // ── Filtered list ─────────────────────────────────────────────────────
-  const filtered = useMemo(() => {
-    let list = parents.filter((p) => {
-      const q = search.toLowerCase();
-      const matchSearch =
-        p.name.toLowerCase().includes(q) ||
-        p._id.toLowerCase().includes(q) ||
-        (p.email && p.email.toLowerCase().includes(q)) ||
-        (p.children && p.children.some((c) => c.name.toLowerCase().includes(q)));
-      const matchParent = !filterParent || p.name.toLowerCase().includes(filterParent.toLowerCase());
-      const matchChild = !filterChild || (p.children && p.children.some((c) => c.name.toLowerCase().includes(filterChild.toLowerCase())));
-      
-      let matchDate = true;
-      if (p.createdAt) {
-        const d = new Date(p.createdAt);
-        if (activeFrom) {
-          matchDate = matchDate && d >= activeFrom;
-        }
-        if (activeTo) {
-          matchDate = matchDate && d <= activeTo;
-        }
-      }
-
-      let matchStatus = true;
-      if (filterStatus === "active") {
-        matchStatus = p.is_active === true;
-      } else if (filterStatus === "inactive") {
-        matchStatus = p.is_active === false;
-      }
-
-      return matchSearch && matchParent && matchChild && matchDate && matchStatus;
-    });
-    if (selectedSort === "Descending") list = [...list].reverse();
-    return list;
-  }, [parents, search, filterParent, filterChild, filterStatus, activeFrom, activeTo, selectedSort]);
-
-  // ── Pagination ─────────────────────────────────────────
-  const PAGE_SIZE = 10;
-  const listPag = usePagination(filtered, PAGE_SIZE);
-  const gridPag = usePagination(filtered, PAGE_SIZE);
-
-  // ── Loading ───────────────────────────────────────────────────────────
-  if (isLoading) {
+  // Restrict access for parents/students to maintain strict boundary
+  if (activeRole === "parent" || activeRole === "student") {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          <span className="text-[14px] font-medium">Loading parents...</span>
+      <div className="flex items-center justify-center min-h-[450px] p-6 text-center">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 max-w-md shadow-xl">
+          <ShieldAlert className="w-12 h-12 text-rose-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Access Denied</h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
+            You do not have access to view the parent directory.
+          </p>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg transition-colors cursor-pointer"
+          >
+            Go to Dashboard
+          </button>
         </div>
       </div>
     );
   }
 
-  // ── Shared status badge ───────────────────────────────────────────────
-  const StatusBadge = ({ active }: { active: boolean }) => (
-    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-bold
-      ${active ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${active ? "bg-success" : "bg-danger"}`} />
-      {active ? "Active" : "Inactive"}
-    </span>
-  );
-
-  // ── Toolbar dropdown trigger style ────────────────────────────────────
-  const triggerCls = (open: boolean) =>
-    `flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 shadow-sm transition-colors
-     ${open
-      ? "border-primary text-primary"
-      : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
-
   return (
-    <div
-      className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6"
-      onClick={() => setActiveDropdown(null)}
-    >
-      {/* ── Page Header ────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6" onClick={() => setActiveDropdown(null)}>
+      {/* Header */}
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Parents</h1>
+          <h1 className="page-title">Guardians & Parents</h1>
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
-            <span>Dashboard</span><span>/</span>
-            <span>People</span><span>/</span>
+            <span>Dashboard</span>
+            <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Parents</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchParents({ academic_year: academicYear })} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
+          <button
+            onClick={() => fetchParents({ page, limit })}
+            className="btn btn-outline p-2 w-9 h-9"
+            title="Reload List"
+          >
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
-            <Printer className="w-4 h-4" />
-          </button>
-          <button onClick={handleExport} className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm cursor-pointer">
+          <button
+            onClick={handleExport}
+            className="btn btn-outline"
+          >
             <Download className="w-4 h-4" />
             <span>Export</span>
+          </button>
+          <button
+            onClick={openAdd}
+            className="btn btn-primary"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Parent</span>
           </button>
         </div>
       </div>
 
-      {/* ── Card ───────────────────────────────────────────────────────── */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow">
-
+      {/* Main Table Card */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-850 rounded-xl shadow-sm overflow-hidden">
         {/* Toolbar */}
         <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">
-            Parents List
+            Parents Directory
           </h3>
 
           <div className="flex flex-wrap items-center gap-3">
-            {/* ── Date Range ── */}
+            {/* Dynamic Filter Toggle */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => setIsDateRangeOpen(!isDateRangeOpen)} className={triggerCls(isDateRangeOpen)}>
-                <Calendar className="w-4 h-4" />
-                <span className="max-w-full sm:w-[120px] truncate">{dateRangeLabel}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isDateRangeOpen ? "rotate-180" : ""}`} />
-              </button>
-              {isDateRangeOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsDateRangeOpen(false)} />
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-lg z-50 overflow-hidden py-1">
-                    {DATE_RANGES.map((range) => (
-                      <button key={range} onClick={() => applyDateRange(range)}
-                        className={`w-full px-4 py-2.5 text-left text-[13px] hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors
-                          ${selectedRange === range ? "bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-semibold" : "text-slate-700 dark:text-slate-300"}`}>
-                        {range}
-                      </button>
-                    ))}
-                    {isCustom && (
-                      <div className="px-4 py-3 border-t border-border bg-slate-50/50 dark:bg-slate-800/50">
-                        <div className="space-y-2">
-                          <input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)}
-                            className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900" />
-                          <input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)}
-                            className="w-full text-[12px] px-2 py-1.5 border border-border rounded outline-none bg-white dark:bg-slate-900" />
-                          <button onClick={applyCustomRange} disabled={!customFrom || !customTo}
-                            className="w-full py-1.5 mt-1 text-[12px] font-bold text-white bg-primary hover:bg-[var(--primary-hover)] rounded transition-colors disabled:opacity-50">
-                            Apply
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {(activeFrom || activeTo) && !isCustom && (
-                      <div className="px-4 pt-2 pb-1 border-t border-border mt-1">
-                        <button onClick={() => { setActiveFrom(null); setActiveTo(null); setSelectedRange("All Time"); setIsDateRangeOpen(false); }}
-                          className="w-full text-[12px] font-semibold text-rose-500 hover:text-rose-600 transition-colors">
-                          Clear Filter
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* ── Filter ── */}
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => setIsFilterOpen(!isFilterOpen)} className={triggerCls(isFilterOpen)}>
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`btn btn-outline flex items-center gap-2 ${isFilterOpen ? "border-primary text-primary" : ""}`}
+              >
                 <Filter className="w-4 h-4" />
-                <span className="whitespace-nowrap">Filter</span>
+                <span>Filters</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isFilterOpen ? "rotate-180" : ""}`} />
               </button>
+
               {isFilterOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-full sm:w-[380px] bg-white dark:bg-slate-900 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border z-50 overflow-hidden">
-                    <div className="p-4 border-b border-border">
-                      <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Filter</h3>
+                  <div className="absolute right-0 top-full mt-2 w-full sm:w-[420px] bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 z-50 overflow-hidden text-left">
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                      <h4 className="text-[14px] font-bold text-slate-900 dark:text-white">Dynamic Filters</h4>
+                      <button onClick={resetFilters} className="text-[11px] text-primary hover:underline font-bold cursor-pointer">
+                        Clear All
+                      </button>
                     </div>
-                    <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Parent Name</label>
-                        <input value={filterParent} onChange={e => setFilterParent(e.target.value)} placeholder="Search..."
-                          className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none appearance-none bg-white dark:bg-slate-900 focus:border-primary/50 transition-all" />
+
+                    <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[350px] overflow-y-auto">
+                      {/* Academic Year */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-semibold uppercase text-slate-400">Academic Year</label>
+                        <select
+                          value={academicYearFilter}
+                          onChange={(e) => { setAcademicYearFilter(e.target.value); setPage(1); }}
+                          className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-[13px] bg-white dark:bg-slate-900 dark:text-slate-100"
+                        >
+                          <option value="all">All Academic Years</option>
+                          {filterOptions?.academicYears.map(yr => (
+                            <option key={yr} value={yr}>{yr}</option>
+                          ))}
+                        </select>
                       </div>
-                      <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Child Name</label>
-                        <input value={filterChild} onChange={e => setFilterChild(e.target.value)} placeholder="Search..."
-                          className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none bg-white dark:bg-slate-900 focus:border-primary/50 transition-all" />
+
+                      {/* Guardian Type */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-semibold uppercase text-slate-400">Guardian Type</label>
+                        <select
+                          value={guardianTypeFilter}
+                          onChange={(e) => { setGuardianTypeFilter(e.target.value); setPage(1); }}
+                          className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-[13px] bg-white dark:bg-slate-900 dark:text-slate-100"
+                        >
+                          <option value="all">All Types</option>
+                          {filterOptions?.guardianTypes.map(gt => (
+                            <option key={gt} value={gt}>{gt}</option>
+                          ))}
+                        </select>
                       </div>
-                      <div className="flex flex-col gap-1.5 text-left col-span-2">
-                        <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Status</label>
-                        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                          className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none appearance-none cursor-pointer bg-white dark:bg-slate-900">
-                          <option value="">All</option>
+
+                      {/* Class */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-semibold uppercase text-slate-400">Class</label>
+                        <select
+                          value={classFilter}
+                          onChange={(e) => { setClassFilter(e.target.value); setPage(1); }}
+                          className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-[13px] bg-white dark:bg-slate-900 dark:text-slate-100"
+                        >
+                          <option value="all">All Classes</option>
+                          {filterOptions?.classes.map(c => (
+                            <option key={c._id} value={c._id}>{c.name} {c.section}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Section */}
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-semibold uppercase text-slate-400">Section</label>
+                        <select
+                          value={sectionFilter}
+                          onChange={(e) => { setSectionFilter(e.target.value); setPage(1); }}
+                          className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-[13px] bg-white dark:bg-slate-900 dark:text-slate-100"
+                        >
+                          <option value="all">All Sections</option>
+                          {filterOptions?.sections.map(sec => (
+                            <option key={sec} value={sec}>{sec}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Student */}
+                      <div className="flex flex-col gap-1.5 sm:col-span-2">
+                        <label className="text-[11px] font-semibold uppercase text-slate-400">Linked Student</label>
+                        <select
+                          value={studentFilter}
+                          onChange={(e) => { setStudentFilter(e.target.value); setPage(1); }}
+                          className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-[13px] bg-white dark:bg-slate-900 dark:text-slate-100"
+                        >
+                          <option value="all">All Students</option>
+                          {filterOptions?.students.map(s => (
+                            <option key={s._id} value={s._id}>{s.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Status */}
+                      <div className="flex flex-col gap-1.5 sm:col-span-2">
+                        <label className="text-[11px] font-semibold uppercase text-slate-400">Status</label>
+                        <select
+                          value={statusFilter}
+                          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                          className="px-3 py-2 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-[13px] bg-white dark:bg-slate-900 dark:text-slate-100"
+                        >
+                          <option value="all">All Statuses</option>
                           <option value="active">Active</option>
                           <option value="inactive">Inactive</option>
                         </select>
                       </div>
                     </div>
-                    <div className="p-4 border-t border-border flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-800/50">
-                      <button onClick={() => { setFilterParent(""); setFilterChild(""); setFilterStatus(""); }}
-                        className="px-5 py-2 rounded-lg text-[13px] font-semibold text-slate-600 dark:text-slate-300 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                        Reset
-                      </button>
-                      <button onClick={() => setIsFilterOpen(false)}
-                        className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] transition-colors shadow-sm">
-                        Apply
+
+                    <div className="p-4 border-t border-slate-100 dark:border-slate-850 flex items-center justify-end bg-slate-50/50 dark:bg-slate-800/30">
+                      <button
+                        onClick={() => setIsFilterOpen(false)}
+                        className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
+                      >
+                        Apply Filters
                       </button>
                     </div>
                   </div>
@@ -478,211 +479,179 @@ export default function GuardiansPage() {
               )}
             </div>
 
-            <button
-              onClick={() => {
-                setBulkSelectMode(!bulkSelectMode);
-                setSelectedIds([]);
-              }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm ${
-                bulkSelectMode
-                  ? "bg-primary border-primary text-white"
-                  : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-              }`}
+            {/* Search Input (Comprehensive support Part 4) */}
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search Parent, Student..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="w-full sm:w-[260px] pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-850 rounded-lg text-[13px] text-slate-800 dark:text-slate-200 bg-white dark:bg-slate-900 outline-none focus:border-primary/50 transition-all shadow-sm"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Rows per page */}
+        <div className="px-4 py-3 bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800/50 flex flex-wrap items-center justify-between gap-4 text-[13px] text-slate-500 dark:text-slate-400">
+          <div className="flex items-center gap-2">
+            <span>Show</span>
+            <select
+              value={limit}
+              onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }}
+              className="px-2.5 py-1 border border-slate-200 dark:border-slate-850 rounded bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none"
             >
-              <CheckSquare className="w-4 h-4" />
-              <span>{bulkSelectMode ? "Cancel Select" : "Select"}</span>
-            </button>
-
-            {/* ── View Toggle ── */}
-            <div className="flex items-center border border-border rounded-lg bg-white dark:bg-slate-900 p-1">
-              <button onClick={() => setViewMode("list")} title="List view"
-                className={`p-1 rounded transition-colors ${viewMode === "list" ? "bg-primary text-white" : "text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
-                <List className="w-4 h-4" />
-              </button>
-              <button onClick={() => setViewMode("grid")} title="Grid view"
-                className={`p-1 rounded transition-colors ${viewMode === "grid" ? "bg-primary text-white" : "text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"}`}>
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* ── Sort ── */}
-            <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => setIsSortOpen(!isSortOpen)} className={triggerCls(isSortOpen)}>
-                <ArrowUpDown className="w-4 h-4" />
-                <span className="whitespace-nowrap">Sort by A-Z</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isSortOpen ? "rotate-180" : ""}`} />
-              </button>
-              {isSortOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
-                    {["Ascending", "Descending", "Recently Added"].map((item) => (
-                      <button key={item} onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
-                        className={`w-full px-4 py-2.5 text-[14px] text-left transition-colors font-medium cursor-pointer
-                          ${item === selectedSort ? "bg-primary text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
-                        {item}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
+              {[10, 25, 50, 100].map(val => (
+                <option key={val} value={val}>{val}</option>
+              ))}
+            </select>
+            <span>entries</span>
+          </div>
+          <div>
+            Showing {(page - 1) * limit + 1} to {Math.min(page * limit, totalParents)} of {totalParents} records
           </div>
         </div>
 
-        {/* Row Per Page + Search */}
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-[13px] text-slate-500 dark:text-slate-400">
-          <div className="flex flex-wrap items-center gap-2">
-            <span>Row Per Page</span>
-            <div className="flex items-center gap-2 px-3 py-1.5 border border-border rounded bg-white dark:bg-slate-900 font-medium text-slate-700 dark:text-slate-200 cursor-pointer">
-              10 <ChevronDown className="w-3.5 h-3.5" />
+        {/* Dynamic Table Layout (Part 2) */}
+        <div className={`erp-table-wrap overflow-x-auto min-h-[300px] relative transition-opacity duration-200 ${isLoading && !isInitialLoad ? "opacity-60 pointer-events-none" : ""}`}>
+          {isLoading && !isInitialLoad && (
+            <div className="absolute top-2 right-4 z-10 flex items-center gap-2 text-[12px] font-medium text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 rounded-md border border-border shadow-sm">
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+              <span>Syncing...</span>
             </div>
-            <span>Entries</span>
-          </div>
-          <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-[250px] pl-9 pr-4 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all"
-            />
-          </div>
-        </div>
-
-        {/* ════════ LIST VIEW ════════ */}
-        {viewMode === "list" && (
-          <div className="overflow-x-auto min-h-[280px] pb-4">
-            <table className="w-full text-[13px] whitespace-nowrap">
-              <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
+          )}
+          {parents.length === 0 ? (
+            <div className="text-center py-20 text-slate-400">
+              <Users className="w-12 h-12 mx-auto mb-3 opacity-30 text-rose-500" />
+              <p className="text-[14px] font-semibold text-slate-800 dark:text-slate-200">No parent records found</p>
+              <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-1">Try resetting filter parameters or searches.</p>
+            </div>
+          ) : (
+            <table className="erp-table">
+              <thead>
                 <tr>
-                  <th className="px-4 py-4 text-left w-10">
-                    <input
-                      type="checkbox"
-                      checked={listPag.paged.length > 0 && listPag.paged.every(p => selectedIds.includes(p._id))}
-                      onChange={() => {
-                        const allChecked = listPag.paged.length > 0 && listPag.paged.every(p => selectedIds.includes(p._id));
-                        if (allChecked) {
-                          setSelectedIds(prev => prev.filter(id => !listPag.paged.some(p => p._id === id)));
-                        } else {
-                          setSelectedIds(prev => {
-                            const toAdd = listPag.paged.filter(p => !prev.includes(p._id)).map(p => p._id);
-                            return [...prev, ...toAdd];
-                          });
-                        }
-                      }}
-                      className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
-                    />
-                  </th>
-                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">
-                    <div className="flex items-center gap-1">ID <ArrowUpDown className="w-3 h-3 text-slate-400" /></div>
-                  </th>
-                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Parent Name</th>
-                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Child</th>
-                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Phone</th>
-                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Email</th>
-                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Action</th>
+                  <th>ID</th>
+                  <th>Parent Name</th>
+                  <th>Guardian Type</th>
+                  <th>Father of</th>
+                  <th>Mother of</th>
+                  <th>Students Count</th>
+                  <th>Primary Mobile</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th className="col-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
-                {listPag.paged.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-16 text-center text-slate-400">
-                      <Users className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                      <p className="text-[14px] font-medium">No parents found.</p>
-                    </td>
-                  </tr>
-                ) : listPag.paged.map((parent) => {
-                  const firstChild = parent.children && parent.children[0];
-                  return (
-                    <tr key={parent._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                      <td className="px-4 py-4">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(parent._id)}
-                          onChange={() => {
-                            setSelectedIds(prev =>
-                              prev.includes(parent._id)
-                                ? prev.filter(id => id !== parent._id)
-                                : [...prev, parent._id]
-                            );
-                          }}
-                          className="rounded border-slate-300 w-4 h-4 accent-primary cursor-pointer"
-                        />
-                      </td>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                {parents.map((parent) => {
+                  const childrenCount = parent.children?.length || 0;
+                  const relationLower = (parent.relation || "").trim().toLowerCase();
+                  
+                  // Father/Mother column assignments
+                  const isFather = relationLower === "father";
+                  const isMother = relationLower === "mother";
+                  
+                  const fatherOfText = isFather ? parent.children.map(c => c.name).join(", ") : "—";
+                  const motherOfText = isMother ? parent.children.map(c => c.name).join(", ") : "—";
 
-                      {/* Parent ID — amber, clickable → View Details */}
-                      <td className="px-4 py-4">
+                  return (
+                    <tr key={parent._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <td>
                         <button
-                          onClick={(e) => { e.stopPropagation(); router.push(`/guardians/${parent._id}`); }}
-                          className="font-semibold text-primary hover:text-[var(--primary-hover)] hover:underline transition-colors"
+                          onClick={() => router.push(`/guardians/${parent._id}`)}
+                          className="font-mono text-primary font-bold hover:underline"
                         >
                           {parent._id.slice(-6).toUpperCase()}
                         </button>
                       </td>
 
-                      {/* Parent Name */}
-                      <td className="px-4 py-4">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <img src={getAvatar(parent.name, parent.photo_url)} className="w-8 h-8 rounded-full object-cover border border-border" alt="" loading="lazy" decoding="async" />
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={getAvatar(parent.name, parent.photo_url)}
+                            className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800 shadow-sm"
+                            alt="avatar"
+                          />
                           <div>
                             <div className="font-semibold text-slate-900 dark:text-white">{parent.name}</div>
-                            <div className="text-[11px] text-slate-400 dark:text-slate-500">Added {formatDate(parent.createdAt)}</div>
+                            <div className="text-[11px] text-slate-400">Added {formatDate(parent.createdAt)}</div>
                           </div>
                         </div>
                       </td>
 
-                      {/* First child — click → student detail */}
-                      <td className="px-4 py-4">
-                        {firstChild ? (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); router.push(`/students/${firstChild._id}`); }}
-                            className="flex items-center gap-2 group/child"
-                          >
-                            <img src={getAvatar(firstChild.name)} className="w-7 h-7 rounded-full object-cover border border-border" alt="" />
-                            <div className="text-left">
-                              <div className="font-semibold text-slate-900 dark:text-white group-hover/child:text-primary transition-colors">
-                                {firstChild.name}
-                                {parent.children && parent.children.length > 1 && (
-                                  <span className="ml-1.5 text-[11px] text-slate-400 font-normal">+{parent.children.length - 1} more</span>
-                                )}
-                              </div>
-                              <div className="text-[11px] text-slate-400 dark:text-slate-500">{getClassName(firstChild)}</div>
-                            </div>
-                          </button>
-                        ) : <span className="text-slate-400">—</span>}
+                      <td className="text-slate-700 dark:text-slate-350 capitalize font-medium">
+                        {parent.relation || "—"}
                       </td>
 
-                      <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{parent.phone || "—"}</td>
-                      <td className="px-4 py-4 text-slate-600 dark:text-slate-300 max-w-full sm:w-[180px] truncate">{parent.email || "—"}</td>
+                      <td className="text-slate-600 dark:text-slate-400 font-medium max-w-[150px] truncate" title={fatherOfText}>
+                        {fatherOfText}
+                      </td>
 
-                      {/* Action */}
-                      <td className="px-4 py-4">
-                        <div className="flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                          <div className="relative">
-                            <button
-                              onClick={() => setActiveDropdown(activeDropdown === parent._id ? null : parent._id)}
-                              className="w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-primary text-white hover:bg-[var(--primary-hover)]"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-                            {activeDropdown === parent._id && (
-                              <div className="absolute right-0 top-10 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-border py-2 z-50">
-                                <button onClick={() => { router.push(`/guardians/${parent._id}`); setActiveDropdown(null); }}
-                                  className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                  <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500" /> View Details
+                      <td className="text-slate-600 dark:text-slate-400 font-medium max-w-[150px] truncate" title={motherOfText}>
+                        {motherOfText}
+                      </td>
+
+                      <td>
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary">
+                          {childrenCount} {childrenCount === 1 ? "Student" : "Students"}
+                        </span>
+                      </td>
+
+                      <td className="text-slate-700 dark:text-slate-350 font-medium">
+                        {parent.phone || "—"}
+                      </td>
+
+                      <td className="text-slate-600 dark:text-slate-400 max-w-[160px] truncate">
+                        {parent.email || "—"}
+                      </td>
+
+                      <td>
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold
+                          ${parent.is_active ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${parent.is_active ? "bg-emerald-500" : "bg-rose-500"}`} />
+                          {parent.is_active ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+
+                      <td className="col-center">
+                        <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => setActiveDropdown(activeDropdown === parent._id ? null : parent._id)}
+                            className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"
+                          >
+                            <MoreVertical className="w-4 h-4 text-slate-500" />
+                          </button>
+
+                          {activeDropdown === parent._id && (
+                            <>
+                              <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
+                              <div className="absolute right-0 top-8 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 py-1.5 text-left">
+                                <button
+                                  onClick={() => { router.push(`/guardians/${parent._id}`); setActiveDropdown(null); }}
+                                  className="w-full px-4 py-2 text-[12px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2.5 font-semibold transition-colors cursor-pointer"
+                                >
+                                  <FileText className="w-4 h-4 text-slate-400" />
+                                  <span>View Profile</span>
                                 </button>
-                                <button onClick={() => { openEdit(parent); setActiveDropdown(null); }}
-                                  className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                  <Edit className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Edit
+                                <button
+                                  onClick={() => { openEdit(parent); setActiveDropdown(null); }}
+                                  className="w-full px-4 py-2 text-[12px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2.5 font-semibold transition-colors cursor-pointer"
+                                >
+                                  <Edit className="w-4 h-4 text-slate-400" />
+                                  <span>Edit Parent</span>
                                 </button>
-                                <button onClick={() => handleDelete(parent._id)} className="w-full px-4 py-2 text-left text-[13px] text-rose-600 hover:bg-rose-50 flex items-center gap-3">
-                                  <Trash2 className="w-4 h-4 text-rose-400" /> Delete
+                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
+                                <button
+                                  onClick={() => handleDelete(parent._id)}
+                                  className="w-full px-4 py-2 text-[12px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-2.5 font-semibold transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="w-4 h-4 text-rose-500" />
+                                  <span>Delete</span>
                                 </button>
                               </div>
-                            )}
-                          </div>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -690,153 +659,25 @@ export default function GuardiansPage() {
                 })}
               </tbody>
             </table>
-            <PaginationBar
-              currentPage={listPag.page}
-              totalPages={listPag.totalPages}
-              totalItems={listPag.totalItems}
-              pageSize={PAGE_SIZE}
-              onPageChange={listPag.setPage}
-            />
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* ════════ GRID VIEW ════════ */}
-        {viewMode === "grid" && (
-          <div className="p-6 bg-slate-50/50 dark:bg-slate-900/20 min-h-[400px]">
-            {gridPag.paged.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-slate-400">
-                <Users className="w-10 h-10 mb-3 opacity-30" />
-                <p className="text-[14px] font-medium">No parents found.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {gridPag.paged.map((parent) => (
-                  <div key={parent._id}
-                    className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 relative group flex flex-col hover:border-primary/50 transition-colors">
-
-                    {/* Card top row */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        {bulkSelectMode && (
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.includes(parent._id)}
-                            onChange={() => {
-                              setSelectedIds(prev =>
-                                prev.includes(parent._id)
-                                  ? prev.filter(id => id !== parent._id)
-                                  : [...prev, parent._id]
-                              );
-                            }}
-                            className="rounded border-slate-300 w-3.5 h-3.5 accent-primary cursor-pointer"
-                          />
-                        )}
-                        <button
-                          onClick={() => router.push(`/guardians/${parent._id}`)}
-                          className="font-bold text-[13px] text-primary hover:underline font-mono"
-                        >
-                          {parent._id.slice(-6).toUpperCase()}
-                        </button>
-                      </div>
-                      <div className="relative" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => setActiveDropdown(activeDropdown === parent._id ? null : parent._id)}
-                          className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
-                        {activeDropdown === parent._id && (
-                          <div className="absolute right-0 top-6 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-border py-2 z-50">
-                            <button onClick={() => { router.push(`/guardians/${parent._id}`); setActiveDropdown(null); }}
-                              className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                              <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500" /> View Details
-                            </button>
-                            <button onClick={() => { openEdit(parent); setActiveDropdown(null); }}
-                              className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                              <Edit className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Edit
-                            </button>
-                            <button onClick={() => handleDelete(parent._id)} className="w-full px-4 py-2 text-left text-[13px] text-rose-600 hover:bg-rose-50 flex items-center gap-3">
-                              <Trash2 className="w-4 h-4 text-rose-400" /> Delete
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Avatar + Name */}
-                    <div className="flex items-center gap-4 mb-5 cursor-pointer" onClick={() => router.push(`/guardians/${parent._id}`)}>
-                      <img src={getAvatar(parent.name, parent.photo_url)} className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" alt="" />
-                      <div>
-                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{parent.name}</h3>
-                        <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400">{parent.relation || "Parent"}</p>
-                      </div>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-5 border-t border-b border-slate-100 dark:border-slate-700/50 py-4">
-                      <div>
-                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Children</p>
-                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{parent.children?.length || 0}</p>
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Added on</p>
-                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{formatDate(parent.createdAt)}</p>
-                      </div>
-                    </div>
-
-                    {/* Contact */}
-                    <div className="space-y-1.5 mb-4 text-[12px]">
-                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                        <Phone className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                        <span className="truncate">{parent.phone || "—"}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-                        <Mail className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                        <span className="truncate">{parent.email || "—"}</span>
-                      </div>
-                    </div>
-
-                    {/* Children chips — clickable → student detail */}
-                    {parent.children && parent.children.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 mt-auto">
-                        {parent.children.map((child) => (
-                          <button
-                            key={child._id}
-                            onClick={(e) => { e.stopPropagation(); router.push(`/students/${child._id}`); }}
-                            className="inline-flex items-center px-2.5 py-1 bg-primary/10 hover:bg-primary text-[var(--primary-hover)] hover:text-white text-[11px] font-semibold rounded transition-colors cursor-pointer"
-                            title={`View ${child.name}'s profile`}
-                          >
-                            {child.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-            <PaginationBar
-              currentPage={gridPag.page}
-              totalPages={gridPag.totalPages}
-              totalItems={gridPag.totalItems}
-              pageSize={PAGE_SIZE}
-              onPageChange={gridPag.setPage}
-              className="mt-4 border-t-0"
-            />
-          </div>
-        )}
-
-
+        {/* Pagination Bar — always visible */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800">
+          <PaginationBar
+            currentPage={page}
+            totalPages={Math.ceil(totalParents / limit)}
+            totalItems={totalParents}
+            pageSize={limit}
+            onPageChange={setPage}
+          />
+        </div>
       </div>
 
-
-      {/* ══════════════════════════════════════════════
-          ADD/EDIT PARENT MODAL
-          ══════════════════════════════════════════════ */}
-      {(isAddOpen || editParent) && (
-        <Modal isOpen={true} onClose={() => { setIsAddOpen(false); setEditParent(null); }} title={editParent ? "Edit Parent" : "Add Parent"} size="md">
-          <form onSubmit={editParent ? handleEditSubmit : handleAddSubmit} className="space-y-4">
-
+      {/* Add Parent Modal */}
+      {isAddOpen && (
+        <Modal isOpen={true} onClose={() => setIsAddOpen(false)} title="Add Parent Record" size="md">
+          <form onSubmit={handleAddSubmit} className="space-y-4">
             <input
               type="file"
               ref={fileInputRef}
@@ -849,124 +690,298 @@ export default function GuardiansPage() {
               }}
             />
 
-            {/* Photo upload */}
-            <div className="flex items-center gap-4 p-4 border border-border rounded-xl bg-slate-50/50 dark:bg-slate-800/30">
+            {/* Avatar Upload Box */}
+            <div className="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 text-left">
               {uploadingPhoto ? (
-                <div className="w-16 h-16 rounded-lg border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center bg-white dark:bg-slate-900">
+                <div className="w-16 h-16 rounded-xl border-2 border-slate-350 dark:border-slate-650 flex items-center justify-center bg-white dark:bg-slate-900">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
               ) : formPhoto ? (
-                <img src={formPhoto} className="w-16 h-16 rounded-lg object-cover border border-border shadow-sm" alt="Parent Photo" />
+                <img src={formPhoto} className="w-16 h-16 rounded-xl object-cover border border-slate-200" alt="Avatar Preview" />
               ) : (
-                <div className="w-16 h-16 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center text-slate-400 bg-white dark:bg-slate-900">
+                <div className="w-16 h-16 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400 bg-white dark:bg-slate-900">
                   <ImageIcon className="w-6 h-6" />
                 </div>
               )}
 
               <div className="flex flex-col gap-1.5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <button type="button" disabled={uploadingPhoto} onClick={() => fileInputRef.current?.click()} className="px-3 py-1.5 border border-border rounded-lg text-[13px] font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors disabled:opacity-50">
-                    Upload
+                  <button
+                    type="button"
+                    disabled={uploadingPhoto}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-[13px] font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+                  >
+                    Upload Photo
                   </button>
                   {formPhoto && (
-                    <button type="button" onClick={() => setFormPhoto("")} disabled={uploadingPhoto} className="px-3 py-1.5 bg-[#F1F5F9] dark:bg-slate-800 rounded-lg text-[13px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-[#E2E8F0] disabled:opacity-50 transition-colors">
+                    <button
+                      type="button"
+                      onClick={() => setFormPhoto("")}
+                      className="px-3 py-1.5 bg-[#F1F5F9] dark:bg-slate-800 rounded-lg text-[13px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-[#E2E8F0] cursor-pointer"
+                    >
                       Remove
                     </button>
                   )}
                 </div>
-                <span className="text-[11px] text-slate-400">Max 5MB, JPG/PNG</span>
+                <span className="text-[11px] text-slate-400">JPG, PNG (Max 5MB)</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4">
-              {[
-                { label: "Full Name", value: formName, set: setFormName, placeholder: "e.g. Robert Watson", type: "text", required: true },
-                { label: "Phone Number", value: formPhone, set: setFormPhone, placeholder: "e.g. +1 (555) 123-4567", type: "tel", required: false },
-                { label: "Email Address", value: formEmail, set: setFormEmail, placeholder: "e.g. parent@email.com", type: "email", required: false },
-              ].map(({ label, value, set, placeholder, type, required }) => (
-                <div key={label} className="flex flex-col gap-1.5 text-left">
-                  <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">{label}</label>
-                  <input required={required} type={type} value={value} onChange={e => set(e.target.value)} placeholder={placeholder}
-                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all shadow-sm" />
-                </div>
-              ))}
+            <div className="grid grid-cols-1 gap-4 text-left">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold uppercase text-slate-500">Parent / Guardian Name *</label>
+                <input
+                  required
+                  type="text"
+                  value={formName}
+                  onChange={e => setFormName(e.target.value)}
+                  placeholder="e.g. John Doe"
+                  className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all shadow-sm"
+                />
+              </div>
 
-              {editParent && editParent.children && editParent.children.length > 0 && (
-                <div className="flex flex-col gap-1.5 text-left">
-                  <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Linked Children</label>
-                  <div className="min-h-[44px] px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 flex flex-wrap gap-2 items-center">
-                    {editParent.children.map((c) => (
-                      <span key={c._id} className="inline-flex items-center px-2.5 py-1 bg-primary/10 text-[var(--primary-hover)] text-[12px] font-semibold rounded">
-                        {c.name}
-                      </span>
-                    ))}
-                  </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold uppercase text-slate-500">Relationship *</label>
+                  <select
+                    required
+                    value={formRelation}
+                    onChange={e => setFormRelation(e.target.value)}
+                    className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all shadow-sm cursor-pointer"
+                  >
+                    <option value="">Select Relation</option>
+                    <option value="Father">Father</option>
+                    <option value="Mother">Mother</option>
+                    <option value="Guardian">Guardian</option>
+                  </select>
                 </div>
-              )}
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold uppercase text-slate-500">Occupation</label>
+                  <input
+                    type="text"
+                    value={formOccupation}
+                    onChange={e => setFormOccupation(e.target.value)}
+                    placeholder="e.g. Business Owner"
+                    className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-[13px] outline-none focus:border-primary/50 transition-all shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold uppercase text-slate-500">Phone Number *</label>
+                  <input
+                    required
+                    type="tel"
+                    value={formPhone}
+                    onChange={e => handlePhoneChange(e.target.value)}
+                    placeholder="e.g. 9876543210"
+                    className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] outline-none transition-all shadow-sm
+                      ${phoneError ? "border-rose-500 focus:border-rose-500" : "border-slate-200 dark:border-slate-800 focus:border-primary/50"}`}
+                  />
+                  {phoneError && <span className="text-[11px] text-rose-500 mt-0.5">{phoneError}</span>}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold uppercase text-slate-500">Email Address</label>
+                  <input
+                    type="email"
+                    value={formEmail}
+                    onChange={e => setFormEmail(e.target.value)}
+                    placeholder="e.g. johndoe@gmail.com"
+                    className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-[13px] outline-none focus:border-primary/50 transition-all shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold uppercase text-slate-500">Address</label>
+                <textarea
+                  rows={2}
+                  value={formAddress}
+                  onChange={e => setFormAddress(e.target.value)}
+                  placeholder="Street details..."
+                  className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-[13px] outline-none focus:border-primary/50 transition-all shadow-sm resize-none"
+                />
+              </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-border mt-2">
-              <button type="button" onClick={() => { setIsAddOpen(false); setEditParent(null); }}
-                className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer">
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-2">
+              <button
+                type="button"
+                onClick={() => setIsAddOpen(false)}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-[13px] font-semibold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 text-slate-700 dark:text-slate-205 cursor-pointer shadow-sm"
+              >
                 Cancel
               </button>
-              <button type="submit" disabled={isSaving || uploadingPhoto}
-                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer disabled:opacity-70">
+              <button
+                type="submit"
+                disabled={isSaving || uploadingPhoto}
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer disabled:opacity-70"
+              >
                 {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                {editParent ? "Save Changes" : "Add Parent"}
+                <span>Add Record</span>
               </button>
             </div>
           </form>
         </Modal>
       )}
-      {/* Floating Bulk Actions Bar */}
-      {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-[60] backdrop-blur-md border border-slate-700/60 transition-all duration-300 animate-in slide-in-from-bottom-5">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-[14px] font-bold tracking-wide">{selectedIds.length} Selected</span>
-          </div>
-          
-          <div className="h-4 w-px bg-slate-700" />
-          
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
-            </button>
-            <button
-              onClick={() => handleBulkStatusChange(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
-            >
-              <span>Activate</span>
-            </button>
-            <button
-              onClick={() => handleBulkStatusChange(false)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
-            >
-              <span>Deactivate</span>
-            </button>
-            <button
-              onClick={handleBulkDelete}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete</span>
-            </button>
-          </div>
-          
-          <div className="h-4 w-px bg-slate-700" />
-          
-          <button
-            onClick={() => setSelectedIds([])}
-            className="text-[13px] text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
-          >
-            Clear
-          </button>
-        </div>
+
+      {/* Edit Parent Modal */}
+      {editParent && (
+        <Modal isOpen={true} onClose={() => setEditParent(null)} title="Edit Parent Record" size="md">
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  handlePhotoUpload(e.target.files[0]);
+                }
+              }}
+            />
+
+            {/* Photo preview upload */}
+            <div className="flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-800/30 text-left">
+              {uploadingPhoto ? (
+                <div className="w-16 h-16 rounded-xl border-2 border-slate-300 flex items-center justify-center bg-white dark:bg-slate-900">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                </div>
+              ) : formPhoto ? (
+                <img src={formPhoto} className="w-16 h-16 rounded-xl object-cover border border-slate-200" alt="Avatar Preview" />
+              ) : (
+                <div className="w-16 h-16 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-400 bg-white dark:bg-slate-900">
+                  <ImageIcon className="w-6 h-6" />
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={uploadingPhoto}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-[13px] font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+                  >
+                    Change Photo
+                  </button>
+                  {formPhoto && (
+                    <button
+                      type="button"
+                      onClick={() => setFormPhoto("")}
+                      className="px-3 py-1.5 bg-[#F1F5F9] dark:bg-slate-800 rounded-lg text-[13px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-[#E2E8F0] cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <span className="text-[11px] text-slate-400">JPG, PNG (Max 5MB)</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 text-left">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold uppercase text-slate-500">Parent / Guardian Name *</label>
+                <input
+                  required
+                  type="text"
+                  value={formName}
+                  onChange={e => setFormName(e.target.value)}
+                  placeholder="e.g. John Doe"
+                  className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all shadow-sm"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold uppercase text-slate-500">Relationship *</label>
+                  <select
+                    required
+                    value={formRelation}
+                    onChange={e => setFormRelation(e.target.value)}
+                    className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all shadow-sm cursor-pointer"
+                  >
+                    <option value="">Select Relation</option>
+                    <option value="Father">Father</option>
+                    <option value="Mother">Mother</option>
+                    <option value="Guardian">Guardian</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold uppercase text-slate-500">Occupation</label>
+                  <input
+                    type="text"
+                    value={formOccupation}
+                    onChange={e => setFormOccupation(e.target.value)}
+                    placeholder="e.g. Business Owner"
+                    className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-[13px] outline-none focus:border-primary/50 transition-all shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold uppercase text-slate-500">Phone Number *</label>
+                  <input
+                    required
+                    type="tel"
+                    value={formPhone}
+                    onChange={e => handlePhoneChange(e.target.value)}
+                    placeholder="e.g. 9876543210"
+                    className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] outline-none transition-all shadow-sm
+                      ${phoneError ? "border-rose-500 focus:border-rose-500" : "border-slate-200 dark:border-slate-800 focus:border-primary/50"}`}
+                  />
+                  {phoneError && <span className="text-[11px] text-rose-500 mt-0.5">{phoneError}</span>}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold uppercase text-slate-500">Email Address</label>
+                  <input
+                    type="email"
+                    value={formEmail}
+                    onChange={e => setFormEmail(e.target.value)}
+                    placeholder="e.g. johndoe@gmail.com"
+                    className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-[13px] outline-none focus:border-primary/50 transition-all shadow-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[11px] font-bold uppercase text-slate-500">Address</label>
+                <textarea
+                  rows={2}
+                  value={formAddress}
+                  onChange={e => setFormAddress(e.target.value)}
+                  placeholder="Street details..."
+                  className="px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-900 text-[13px] outline-none focus:border-primary/50 transition-all shadow-sm resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800 mt-2">
+              <button
+                type="button"
+                onClick={() => setEditParent(null)}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-[13px] font-semibold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 text-slate-700 dark:text-slate-205 cursor-pointer shadow-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving || uploadingPhoto}
+                className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer disabled:opacity-70"
+              >
+                {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                <span>Save Changes</span>
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

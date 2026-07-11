@@ -206,6 +206,24 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       }
       updateData.admission_no = admNo;
     }
+
+    if (updateData.phone !== undefined) {
+      const ph = (updateData.phone as string || "").trim();
+      if (ph) {
+        const duplicatePhone = await Student.findOne({
+          school_id: schoolId,
+          phone: ph,
+          _id: { $ne: id }
+        });
+        if (duplicatePhone) {
+          return NextResponse.json(
+            { success: false, message: "Student mobile number already exists" },
+            { status: 409 }
+          );
+        }
+      }
+      updateData.phone = ph;
+    }
     if (updateData.class_id !== undefined) {
       const classIdStr = updateData.class_id as string;
       if (!classIdStr) {

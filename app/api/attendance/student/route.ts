@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { Attendance, Timetable, Student } from "@/lib/models/index";
+import { Attendance, Timetable, Student, TeacherAssignment } from "@/lib/models/index";
 import Class from "@/lib/models/Class";
 import Teacher from "@/lib/models/Teacher";
 import User from "@/lib/models/User";
@@ -50,11 +50,23 @@ export async function GET(req: NextRequest) {
         if (!teacher) {
           return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
         }
-        const teacherClassIds = await Class.find({
+        const classTeacherIds = await Class.find({
           school_id: schoolId,
           class_teacher_id: teacher._id
         }).distinct("_id");
-        query.class_id = { $in: teacherClassIds };
+        const assignedClassIds = await TeacherAssignment.find({
+          school_id: schoolId,
+          teacher_id: teacher._id,
+          academic_year,
+          is_deleted: false,
+          status: "Active"
+        }).distinct("class_id");
+
+        const combinedClassIds = Array.from(new Set([
+          ...classTeacherIds.map(id => id.toString()),
+          ...assignedClassIds.map(id => id?.toString()).filter(Boolean)
+        ]));
+        query.class_id = { $in: combinedClassIds };
       }
 
       const attendanceRecords = await Attendance.find(query).lean();
@@ -70,12 +82,24 @@ export async function GET(req: NextRequest) {
       if (!teacher) {
         return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
       }
-      const teacherClassIds = await Class.find({
+      const classTeacherIds = await Class.find({
         school_id: schoolId,
         class_teacher_id: teacher._id
       }).distinct("_id");
+      const assignedClassIds = await TeacherAssignment.find({
+        school_id: schoolId,
+        teacher_id: teacher._id,
+        academic_year,
+        is_deleted: false,
+        status: "Active"
+      }).distinct("class_id");
 
-      const hasAccess = teacherClassIds.map(id => id.toString()).includes(classId);
+      const combinedClassIds = Array.from(new Set([
+        ...classTeacherIds.map(id => id.toString()),
+        ...assignedClassIds.map(id => id?.toString()).filter(Boolean)
+      ]));
+
+      const hasAccess = combinedClassIds.includes(classId);
       if (!hasAccess) {
         return NextResponse.json({ success: false, message: "You are not assigned to this class" }, { status: 403 });
       }
@@ -139,12 +163,24 @@ export async function POST(req: NextRequest) {
       if (!teacher) {
         return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
       }
-      const teacherClassIds = await Class.find({
+      const classTeacherIds = await Class.find({
         school_id: schoolId,
         class_teacher_id: teacher._id
       }).distinct("_id");
+      const assignedClassIds = await TeacherAssignment.find({
+        school_id: schoolId,
+        teacher_id: teacher._id,
+        academic_year,
+        is_deleted: false,
+        status: "Active"
+      }).distinct("class_id");
 
-      const hasAccess = teacherClassIds.map(id => id.toString()).includes(classId);
+      const combinedClassIds = Array.from(new Set([
+        ...classTeacherIds.map(id => id.toString()),
+        ...assignedClassIds.map(id => id?.toString()).filter(Boolean)
+      ]));
+
+      const hasAccess = combinedClassIds.includes(classId);
       if (!hasAccess) {
         return NextResponse.json({ success: false, message: "You are not assigned to this class" }, { status: 403 });
       }

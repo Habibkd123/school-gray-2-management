@@ -35,7 +35,7 @@ function StudentViewContent() {
   // Tab states
   const initialTab = searchParams.get("tab") || "Student Details";
   const [activeMainTab, setActiveMainTab] = useState<string>(initialTab);
-  const [attendanceSubTab, setAttendanceSubTab] = useState<"Leaves" | "Attendance">("Leaves");
+  const [attendanceSubTab, setAttendanceSubTab] = useState<"Leaves" | "Attendance">("Attendance");
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginModalTarget, setLoginModalTarget] = useState<"student" | "parent">("student");
   const [isResetPassModalOpen, setIsResetPassModalOpen] = useState(false);
@@ -531,23 +531,8 @@ function StudentViewContent() {
                 <InfoRow label="Roll No" value={student.roll_no || "—"} />
                 <InfoRow label="Gender" value={student.gender || "—"} />
                 <InfoRow label="Date Of Birth" value={student.dob ? new Date(student.dob).toLocaleDateString() : "—"} />
-                <InfoRow label="Blood Group" value={student.blood_group || "—"} />
                 <InfoRow label="Religion" value={student.religion || "—"} />
-                <InfoRow label="Caste" value={student.caste || "—"} />
                 <InfoRow label="Category" value={student.category || "—"} />
-                <InfoRow label="Mother tongue" value={student.mother_tongue || "—"} />
-                <div className="flex justify-between py-1">
-                  <span className="text-[14px] leading-[21px] font-medium text-foreground dark:text-slate-100">Language</span>
-                  <div className="flex gap-1.5 flex-wrap justify-end">
-                    {student.languages && student.languages.length > 0 ? (
-                      student.languages.map((lang, idx) => (
-                        <span key={idx} className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-[10px] font-bold text-slate-700 dark:text-slate-200">{lang}</span>
-                      ))
-                    ) : (
-                      <span className="text-slate-400 font-medium">—</span>
-                    )}
-                  </div>
-                </div>
               </div>
               <button onClick={() => setIsFeesModalOpen(true)} className="hidden w-full mt-5 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors">
                 Add Fees
@@ -576,34 +561,9 @@ function StudentViewContent() {
                 </div>
                 <div>
                   <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-0.5">Email Address</p>
-                  <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{student.email || "—"}</p>
+                  <p className="text-[12px] text-slate-550 dark:text-slate-400 font-medium">{student.email || "—"}</p>
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Sibling Information */}
-          <div className="bg-white dark:bg-slate-900 border border-border rounded-xl overflow-hidden card-shadow text-left">
-            <div className="px-4 py-3 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
-              <h3 className="text-[13px] font-bold text-slate-900 dark:text-white">Sibling Information</h3>
-            </div>
-            <div className="p-4 space-y-3.5">
-              {siblings.length === 0 ? (
-                <p className="text-[12px] text-slate-400 font-medium">No siblings registered.</p>
-              ) : (
-                siblings.map((sib) => {
-                  const classVal = typeof sib.class_id === "object" ? `${sib.class_id?.name}, ${sib.class_id?.section}` : getClassName(sib.class_id);
-                  return (
-                    <div key={sib._id} className="flex flex-wrap items-center gap-3">
-                      <img src={sib.photo_url || getAvatar(sib.name)} className="w-9 h-9 rounded object-cover" alt="Sibling" />
-                      <div>
-                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{sib.name}</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{classVal}</p>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
             </div>
           </div>
 
@@ -807,46 +767,6 @@ function StudentViewContent() {
                         <p className="text-[12px] font-bold text-slate-900 dark:text-white mb-0.5">Permanent Address</p>
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{student.permanent_address || student.address || "Not Specified"}</p>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Previous School Details */}
-              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
-                <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
-                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Previous School Details</h3>
-                </div>
-                <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Previous School Name</p>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{student.prev_school_name || "—"}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">School Address</p>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{student.prev_school_address || "—"}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Bank Details Only Row */}
-              <div className="grid grid-cols-1 gap-5">
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden h-full">
-                  <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
-                    <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Bank Details</h3>
-                  </div>
-                  <div className="p-5 grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Bank Name</p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{student.bank_name || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Branch</p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{student.bank_branch || "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">IFSC</p>
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{student.bank_ifsc || "—"}</p>
                     </div>
                   </div>
                 </div>

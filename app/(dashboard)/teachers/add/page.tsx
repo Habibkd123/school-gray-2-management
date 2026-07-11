@@ -1,82 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useRef, useCallback, useMemo } from "react";
+import React, { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTeachers } from "../../../hooks/useTeachers";
 import type { CreateTeacherInput } from "../../../hooks/useTeachers";
-import { useSubjectMaster } from "../../../hooks/useSubjectMaster";
 import { useUpload } from "../../../hooks/useUpload";
+import { useClasses } from "../../../hooks/useClasses";
 import {
   User, Briefcase, Phone, GraduationCap,
-  XCircle, Loader2, ImageIcon, Copy, Check, KeyRound, Lock, ScanLine, AlertCircle
+  Loader2, ImageIcon, Copy, Check, Lock, KeyRound, AlertCircle
 } from "lucide-react";
 
 import { validateSequential } from "@/lib/utils/formValidation";
-
-// ─── Generic Image Uploader ────────────────────────────────────────
-function ImageUploader({
-  label, sublabel, preview, onChange, onRemove, uploading, aspect = "landscape",
-}: {
-  label: string;
-  sublabel?: string;
-  preview: string;
-  onChange: (file: File) => void;
-  onRemove: () => void;
-  uploading?: boolean;
-  aspect?: "square" | "landscape";
-}) {
-  const ref = useRef<HTMLInputElement>(null);
-  const isLandscape = aspect === "landscape";
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">{label}</label>
-      {sublabel && <p className="text-[11px] text-slate-400 dark:text-slate-500 -mt-1">{sublabel}</p>}
-      <input
-        ref={ref}
-        type="file"
-        accept="image/jpeg,image/jpg,image/png,image/webp"
-        className="hidden"
-        onChange={e => { const f = e.target.files?.[0]; if (f) onChange(f); e.target.value = ""; }}
-      />
-      <div
-        onClick={() => !uploading && ref.current?.click()}
-        className={`w-full ${isLandscape ? "h-36" : "h-32 w-32"
-          } bg-[#F1F5F9] dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 overflow-hidden relative cursor-pointer hover:border-primary/70 hover:bg-primary/5 transition-all group`}
-      >
-        {uploading ? (
-          <Loader2 className="w-7 h-7 animate-spin text-primary" />
-        ) : preview ? (
-          <img src={preview} alt={label} className="w-full h-full object-cover" />
-        ) : (
-          <div className="flex flex-col items-center gap-2 opacity-50 group-hover:opacity-70 transition-opacity">
-            <ImageIcon className="w-8 h-8" />
-            <span className="text-[11px] font-medium">Click to upload</span>
-          </div>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => ref.current?.click()}
-          disabled={uploading}
-          className="flex-1 px-3 py-1.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-semibold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-        >
-          {uploading ? "Uploading…" : preview ? "Change" : "Upload"}
-        </button>
-        {preview && !uploading && (
-          <button
-            type="button"
-            onClick={onRemove}
-            className="px-3 py-1.5 bg-rose-500/10 text-rose-500 text-[11px] font-semibold rounded-lg hover:bg-rose-500 hover:text-white transition-colors"
-          >
-            Remove
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ─── Photo Uploader (square, for profile photo) ────────────────────
 function PhotoUploader({
@@ -131,114 +67,6 @@ function PhotoUploader({
           >
             Remove
           </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── Tag input ─────────────────────────────────────────────────────
-function TagInput({ tags, onChange, placeholder }: { tags: string[]; onChange: (t: string[]) => void; placeholder?: string }) {
-  const [input, setInput] = useState("");
-  const add = () => {
-    const v = input.trim();
-    if (v && !tags.includes(v)) onChange([...tags, v]);
-    setInput("");
-  };
-  return (
-    <div className="flex flex-wrap gap-2 p-2 border border-border rounded-lg bg-white dark:bg-slate-900 min-h-[42px]">
-      {tags.map(t => (
-        <span key={t} className="px-3 py-1 bg-[#F1F5F9] dark:bg-slate-800 border border-border rounded-md text-[12px] font-medium text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-          {t}
-          <button type="button" onClick={() => onChange(tags.filter(x => x !== t))}>
-            <XCircle className="w-3.5 h-3.5 text-slate-400 hover:text-rose-500 cursor-pointer" />
-          </button>
-        </span>
-      ))}
-      <input
-        value={input}
-        onChange={e => setInput(e.target.value)}
-        onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(); } }}
-        placeholder={placeholder || "Type and press Enter"}
-        className="flex-1 min-w-full sm:w-[120px] text-[12px] outline-none bg-transparent text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
-      />
-      <button type="button" onClick={add} className="text-[11px] px-2 py-0.5 bg-primary text-white rounded font-semibold hover:bg-[var(--primary-hover)] transition-colors">Add</button>
-    </div>
-  );
-}
-
-// ─── Subject Specialization Input ──────────────────────────────────
-function SubjectSpecializationInput({
-  selectedSubjects,
-  onChange,
-  subjectOptions,
-}: {
-  selectedSubjects: string[];
-  onChange: (subs: string[]) => void;
-  subjectOptions: string[];
-}) {
-  const addSubject = (sub: string) => {
-    const trimmed = sub.trim();
-    if (trimmed && !selectedSubjects.includes(trimmed)) {
-      onChange([...selectedSubjects, trimmed]);
-    }
-  };
-
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    if (val && val !== "Select Subject") {
-      addSubject(val);
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-1.5 col-span-1 md:col-span-2 xl:col-span-1">
-      <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">
-        Subject/Specialization
-      </label>
-      <div className="flex flex-col sm:flex-row gap-2">
-        {/* Dropdown for existing catalog */}
-        <div className="relative flex-1">
-          <select
-            className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
-            value="Select Subject"
-            onChange={handleSelectChange}
-          >
-            <option disabled value="Select Subject">Select from Catalog...</option>
-            {subjectOptions.filter(opt => !selectedSubjects.includes(opt)).length === 0 ? (
-              <option disabled value="">All catalog subjects added</option>
-            ) : (
-              subjectOptions
-                .filter(opt => !selectedSubjects.includes(opt))
-                .map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))
-            )}
-          </select>
-          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">▾</span>
-        </div>
-      </div>
-
-      {/* Selected Subjects Tags */}
-      <div className="flex flex-wrap gap-2 mt-1">
-        {selectedSubjects.length === 0 ? (
-          <span className="text-[12px] text-slate-400 dark:text-slate-500 italic">No subjects added yet</span>
-        ) : (
-          selectedSubjects.map(sub => (
-            <span
-              key={sub}
-              className="px-3 py-1 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-md text-[12px] font-medium text-amber-700 dark:text-amber-300 flex items-center gap-1.5"
-            >
-              {sub}
-              <button
-                type="button"
-                onClick={() => onChange(selectedSubjects.filter(x => x !== sub))}
-                className="text-amber-500 hover:text-rose-500 transition-colors"
-              >
-                <XCircle className="w-3.5 h-3.5" />
-              </button>
-            </span>
-          ))
         )}
       </div>
     </div>
@@ -337,55 +165,32 @@ function AddTeacherContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
-  const { subjects: apiSubjects } = useSubjectMaster();
   const { createTeacher, updateTeacher, getTeacher } = useTeachers({ skip: true });
   const { uploadFile } = useUpload();
+  const { classes } = useClasses();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [valErrors, setValErrors] = useState<Record<string, string>>({});
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [uploadingAadhaarFront, setUploadingAadhaarFront] = useState(false);
-  const [uploadingAadhaarBack, setUploadingAadhaarBack] = useState(false);
 
-  const subjectOptions = useMemo(() => {
-    const names = new Set<string>();
-    apiSubjects.forEach(s => {
-      if (s.name && s.status === "Active") names.add(s.name.trim());
-    });
-    return Array.from(names).sort();
-  }, [apiSubjects]);
-
-  // ── Professional Information ──────────────────────────────────
+  // ── Form States ──────────────────────────────────
   const [teacherId, setTeacherId] = useState("");          // auto-generated, display only
   const [employeeCode, setEmployeeCode] = useState("");    // manual, unique
-  const [qualification, setQualification] = useState("");
-  const [specializations, setSpecializations] = useState<string[]>([]);
-  const [experienceYears, setExperienceYears] = useState("");
-  const [trainingDetails, setTrainingDetails] = useState<string[]>([]);
-
-  // ── Personal Information ──────────────────────────────────────
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [teacherName, setTeacherName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [gender, setGender] = useState("Select");
   const [dob, setDob] = useState("");
-  const [aadhaarFrontUrl, setAadhaarFrontUrl] = useState("");
-  const [aadhaarBackUrl, setAadhaarBackUrl] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
-
-  // ── Contact Information ───────────────────────────────────────
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
-  const [address, setAddress] = useState("");
-
-  // ── Employment Information ────────────────────────────────────
   const [joinDate, setJoinDate] = useState("");
+  const [qualification, setQualification] = useState("");
+  const [experienceYears, setExperienceYears] = useState("");
+  const [department, setDepartment] = useState("Academic");
+  const [designation, setDesignation] = useState("Teacher");
+  const [classId, setClassId] = useState("");
   const [status, setStatus] = useState<"Active" | "Inactive">("Active");
-
-  // ── Payroll Information ───────────────────────────────────────
-  const [basicSalary, setBasicSalary] = useState("");
-  const [contractType, setContractType] = useState("Regular");
-  const [epfNo, setEpfNo] = useState("");
+  const [address, setAddress] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
 
   // ── Login Credentials Popup ───────────────────────────────────
   const [showCredentials, setShowCredentials] = useState(false);
@@ -405,9 +210,7 @@ function AddTeacherContent() {
       if (editId) {
         const teacher = await getTeacher(editId);
         if (teacher) {
-          const [first, ...last] = teacher.name.split(" ");
-          setFirstName(first || "");
-          setLastName(last.join(" ") || "");
+          setTeacherName(teacher.name || "");
           setTeacherId(teacher._id || "");
           setEmployeeCode(teacher.employee_id || "");
           setGender(teacher.gender ? (teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1)) : "Select");
@@ -417,26 +220,18 @@ function AddTeacherContent() {
           setAddress(teacher.address || "");
           setPhotoUrl(teacher.photo_url || "");
           setQualification(teacher.qualification || "");
-          const specs = teacher.subject_specialization
-            ? teacher.subject_specialization.split(",").map((s: string) => s.trim()).filter(Boolean)
-            : [];
-          setSpecializations(specs);
           setExperienceYears(teacher.experience_years != null ? teacher.experience_years.toString() : "");
-          setTrainingDetails(teacher.training_details && Array.isArray(teacher.training_details) ? teacher.training_details : []);
           setJoinDate(teacher.join_date ? new Date(teacher.join_date).toISOString().split("T")[0] : "");
           setStatus(teacher.is_active ? "Active" : "Inactive");
-          setAadhaarFrontUrl((teacher as any).aadhaar_front_url || "");
-          setAadhaarBackUrl((teacher as any).aadhaar_back_url || "");
-          setBasicSalary(teacher.basic_salary != null ? teacher.basic_salary.toString() : "");
-          setContractType(teacher.contract_type || "Regular");
-          setEpfNo(teacher.epf_no || "");
+          setDepartment(teacher.department || "Academic");
+          setDesignation(teacher.designation || "Teacher");
+          const cid = typeof teacher.class_id === "object" ? teacher.class_id?._id : teacher.class_id;
+          setClassId(cid || "");
         }
       }
     }
     loadData();
   }, [editId, getTeacher]);
-
-
 
   // ── Handle photo upload ───────────────────────────────────────
   const handlePhotoUpload = useCallback(async (file: File) => {
@@ -446,36 +241,32 @@ function AddTeacherContent() {
     if (url) setPhotoUrl(url);
   }, [uploadFile]);
 
-  // ── Handle Aadhaar uploads ────────────────────────────────────
-  const handleAadhaarFrontUpload = useCallback(async (file: File) => {
-    setUploadingAadhaarFront(true);
-    const url = await uploadFile(file);
-    setUploadingAadhaarFront(false);
-    if (url) setAadhaarFrontUrl(url);
-  }, [uploadFile]);
-
-  const handleAadhaarBackUpload = useCallback(async (file: File) => {
-    setUploadingAadhaarBack(true);
-    const url = await uploadFile(file);
-    setUploadingAadhaarBack(false);
-    if (url) setAadhaarBackUrl(url);
-  }, [uploadFile]);
-
   // ── Submit ────────────────────────────────────────────────────
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
 
     const fieldsToValidate = [
-      { id: "qualification", value: qualification, label: "Highest Qualification" },
-      { id: "firstName", value: firstName, label: "First Name" },
+      { id: "teacherName", value: teacherName, label: "Teacher Name" },
+      { id: "employeeCode", value: employeeCode, label: "Employee ID" },
       {
         id: "gender",
         value: gender,
         label: "Gender",
         customValidate: (val: any) => (!val || val === "Select" ? "Gender selection is mandatory." : true)
       },
-      { id: "phone", value: phone, label: "Mobile Number" },
+      {
+        id: "phone",
+        value: phone,
+        label: "Mobile Number",
+        customValidate: (val: any) => {
+          if (!val || !val.trim()) return "Mobile Number is required.";
+          const cleaned = val.trim();
+          if (!/^\d+$/.test(cleaned)) return "Mobile Number must contain only digits.";
+          if (cleaned.length !== 10) return "Mobile Number must be exactly 10 digits.";
+          return true;
+        }
+      },
       { id: "joinDate", value: joinDate, label: "Joining Date" }
     ];
 
@@ -490,25 +281,22 @@ function AddTeacherContent() {
     setIsSubmitting(true);
 
     const payload: Record<string, any> = {
-      name: `${firstName} ${lastName}`.trim() || "New Teacher",
-      employee_id: employeeCode || undefined,
+      name: teacherName.trim(),
+      employee_id: employeeCode.trim() || undefined,
       gender: gender !== "Select" ? gender.toLowerCase() : undefined,
       dob: dob || undefined,
-      phone: phone || undefined,
-      email: email || undefined,
-      address: address || undefined,
+      phone: phone.trim() || undefined,
+      email: email.trim() || undefined,
+      address: address.trim() || undefined,
       photo_url: photoUrl || undefined,
-      qualification: qualification || undefined,
-      subject_specialization: specializations.join(", ") || undefined,
+      qualification: qualification.trim() || undefined,
       experience_years: experienceYears ? parseInt(experienceYears) : 0,
-      training_details: trainingDetails.length > 0 ? trainingDetails : undefined,
       join_date: joinDate || undefined,
       is_active: status === "Active",
-      aadhaar_front_url: aadhaarFrontUrl || undefined,
-      aadhaar_back_url: aadhaarBackUrl || undefined,
-      basic_salary: basicSalary ? parseFloat(basicSalary) : undefined,
-      contract_type: contractType || undefined,
-      epf_no: epfNo || undefined,
+      department: department || "Academic",
+      designation: designation || "Teacher",
+      class_id: classId || undefined,
+      class_ids: classId ? [classId] : []
     };
 
     if (editId) {
@@ -520,7 +308,8 @@ function AddTeacherContent() {
       const res = await createTeacher(payload as CreateTeacherInput);
       setIsSubmitting(false);
       if (res.success) {
-        const loginId = res?.credentials?.loginId || `${(firstName + lastName).toLowerCase().trim().replace(/\s+/g, "")}.myschoollife@gmail.com`;
+        const sanitizedName = teacherName.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
+        const loginId = res?.credentials?.loginId || `${sanitizedName}.myschoollife@gmail.com`;
         const pswd = res?.credentials?.password || "Master#2026";
         setCreatedCredentials({ loginId, password: pswd });
         setShowCredentials(true);
@@ -569,22 +358,16 @@ function AddTeacherContent() {
               placeholder="e.g. EMP-001"
               value={employeeCode}
               onChange={e => setEmployeeCode(e.target.value)}
-              hint="Must be unique"
+              required
+              error={valErrors.employeeCode}
+              id="employeeCode"
             />
             <InputGroup
               label="Highest Qualification"
               value={qualification}
               onChange={e => setQualification(e.target.value)}
-              required
               datalistOptions={["B.Ed", "M.Ed", "B.Sc", "M.Sc", "B.A", "M.A", "Ph.D", "B.Tech", "M.Tech", "Diploma"]}
               placeholder="e.g. M.Ed"
-              error={valErrors.qualification}
-              id="qualification"
-            />
-            <SubjectSpecializationInput
-              selectedSubjects={specializations}
-              onChange={setSpecializations}
-              subjectOptions={subjectOptions}
             />
             <InputGroup
               label="Experience (Years)"
@@ -593,19 +376,34 @@ function AddTeacherContent() {
               value={experienceYears}
               onChange={e => setExperienceYears(e.target.value)}
             />
-            <div className="col-span-1 md:col-span-2 xl:col-span-3">
-              <label className="block text-[12px] font-semibold text-slate-700 dark:text-slate-200 mb-1.5">
-                Training Details
-              </label>
-              <TagInput tags={trainingDetails} onChange={setTrainingDetails} placeholder="Add training (press Enter)..." />
-            </div>
+            <InputGroup
+              label="Department"
+              placeholder="e.g. Academic"
+              value={department}
+              onChange={e => setDepartment(e.target.value)}
+            />
+            <InputGroup
+              label="Designation"
+              placeholder="e.g. Teacher"
+              value={designation}
+              onChange={e => setDesignation(e.target.value)}
+            />
+            <InputGroup 
+              label="Class Teacher" 
+              type="select" 
+              value={classId} 
+              onChange={e => setClassId(e.target.value)} 
+              options={[
+                { label: "Select Class", value: "" }, 
+                ...classes.map(c => ({ label: `${c.name} - ${c.section}`, value: c._id }))
+              ]} 
+            />
           </div>
         </SectionCard>
 
         {/* 2. Personal Information */}
         <SectionCard icon={<User className="w-4 h-4" />} title="Personal Information">
           <div className="p-6 space-y-6">
-            {/* Row 1: Photo + Basic Fields */}
             <div className="flex flex-col lg:flex-row gap-8">
               <PhotoUploader
                 label="JPEG, JPG, PNG — Max 5MB"
@@ -615,8 +413,7 @@ function AddTeacherContent() {
                 uploading={uploadingPhoto}
               />
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-5 text-left">
-                <InputGroup label="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} required placeholder="Enter first name" error={valErrors.firstName} id="firstName" />
-                <InputGroup label="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Enter last name" />
+                <InputGroup label="Teacher Name" value={teacherName} onChange={e => setTeacherName(e.target.value)} required placeholder="Enter teacher name" error={valErrors.teacherName} id="teacherName" />
                 <InputGroup
                   label="Gender"
                   type="select"
@@ -628,33 +425,6 @@ function AddTeacherContent() {
                   id="gender"
                 />
                 <InputGroup label="Date of Birth" type="date" value={dob} onChange={e => setDob(e.target.value)} />
-              </div>
-            </div>
-
-            {/* Row 2: Aadhaar Card — full width, front & back side by side */}
-            <div className="pt-5 border-t border-border">
-              <div className="flex items-center gap-2 mb-4">
-                <ScanLine className="w-4 h-4 text-slate-400" />
-                <span className="text-[13px] font-bold text-slate-700 dark:text-slate-200">Aadhaar Card</span>
-                <span className="text-[11px] text-slate-400">(Optional)</span>
-              </div>
-              <div className="grid grid-cols-2 gap-5">
-                <ImageUploader
-                  label="Front Side"
-                  sublabel="Upload front of Aadhaar card"
-                  preview={aadhaarFrontUrl}
-                  onChange={handleAadhaarFrontUpload}
-                  onRemove={() => setAadhaarFrontUrl("")}
-                  uploading={uploadingAadhaarFront}
-                />
-                <ImageUploader
-                  label="Back Side"
-                  sublabel="Upload back of Aadhaar card"
-                  preview={aadhaarBackUrl}
-                  onChange={handleAadhaarBackUpload}
-                  onRemove={() => setAadhaarBackUrl("")}
-                  uploading={uploadingAadhaarBack}
-                />
               </div>
             </div>
           </div>
@@ -711,26 +481,6 @@ function AddTeacherContent() {
               onChange={e => setStatus(e.target.value as "Active" | "Inactive")}
               options={["Active", "Inactive"]}
             />
-            <InputGroup
-              label="Contract Type"
-              type="select"
-              value={contractType}
-              onChange={e => setContractType(e.target.value)}
-              options={["Regular", "Contract", "Part Time"]}
-            />
-            <InputGroup
-              label="Basic Salary (₹)"
-              type="number"
-              placeholder="e.g. 25000"
-              value={basicSalary}
-              onChange={e => setBasicSalary(e.target.value)}
-            />
-            <InputGroup
-              label="EPF Number"
-              placeholder="e.g. EPF/12345/678"
-              value={epfNo}
-              onChange={e => setEpfNo(e.target.value)}
-            />
           </div>
         </SectionCard>
 
@@ -745,7 +495,7 @@ function AddTeacherContent() {
           </button>
           <button
             type="submit"
-            disabled={isSubmitting || uploadingPhoto || uploadingAadhaarFront || uploadingAadhaarBack}
+            disabled={isSubmitting || uploadingPhoto}
             className="px-6 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer flex items-center gap-2 disabled:opacity-75 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
@@ -753,7 +503,6 @@ function AddTeacherContent() {
             ) : editId ? "Update Teacher" : "Add Teacher"}
           </button>
         </div>
-
       </form>
 
       {/* ── Login Credentials Popup ── */}

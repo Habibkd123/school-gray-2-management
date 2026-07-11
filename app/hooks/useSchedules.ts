@@ -26,6 +26,7 @@ export interface ApiSchedule {
   period_no?: number;
   room?: string;
   academic_year?: string;
+  status?: string;
 }
 
 export function useSchedules(classId?: string, teacherId?: string, options?: { skip?: boolean }) {
@@ -34,17 +35,32 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
   const [error, setError] = useState<string | null>(null);
   const authReady = useAuthReady();
 
-  const fetchSchedules = useCallback(async (cId?: string, tId?: string) => {
+  const fetchSchedules = useCallback(async (cIdOrParams?: string | {
+    classId?: string;
+    teacherId?: string;
+    day?: string;
+    academicYear?: string;
+    subjectId?: string;
+    room?: string;
+    status?: string;
+    search?: string;
+  }, tId?: string) => {
     setIsLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams();
-      if (cId) params.set("classId", cId);
-      if (tId) params.set("teacherId", tId);
-      // Note: do NOT filter by academic_year here — timetable records may have
-      // different academic_year values and we want to show all for the class.
+      const query = new URLSearchParams();
+      if (typeof cIdOrParams === "string") {
+        if (cIdOrParams) query.set("classId", cIdOrParams);
+        if (tId) query.set("teacherId", tId);
+      } else if (cIdOrParams) {
+        Object.entries(cIdOrParams).forEach(([key, val]) => {
+          if (val !== undefined && val !== null && val !== "") {
+            query.set(key, String(val));
+          }
+        });
+      }
 
-      const res = await fetch(`/api/schedules?${params.toString()}`, {
+      const res = await fetch(`/api/schedules?${query.toString()}`, {
         headers: getAuthHeaders(),
       });
       const data = await res.json();
@@ -55,12 +71,11 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
     } finally {
       setIsLoading(false);
     }
-  }, []); // no academicYear dependency — avoids re-fetch race condition
-
+  }, []);
 
   useEffect(() => {
     if (options?.skip) return;
-    if (!authReady) return; // Wait until the JWT token is in localStorage
+    if (!authReady) return;
     fetchSchedules(classId, teacherId);
   }, [fetchSchedules, classId, teacherId, options?.skip, authReady]);
 
@@ -74,6 +89,7 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
     room?: string;
     academicYear?: string;
     periodNo?: number;
+    status?: string;
   }): Promise<{ success: boolean; message: string; data?: ApiSchedule }> => {
     try {
       const res = await fetch("/api/schedules", {
@@ -103,6 +119,7 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
       room: string;
       academicYear: string;
       periodNo: number;
+      status: string;
     }>
   ): Promise<{ success: boolean; message: string; data?: ApiSchedule }> => {
     try {

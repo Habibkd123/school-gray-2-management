@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
+import { ClassService } from "@/app/services/ClassService";
 
 // ─── Types ────────────────────────────────────────────────────────
 export interface ApiClass {
@@ -12,7 +13,7 @@ export interface ApiClass {
   section: string;
   class_code?: string;
   academic_year: string;
-  status: "Active" | "Inactive";
+  status: "Active" | "Inactive" | "Archived";
   class_teacher_id?: { _id: string; name: string; employee_id?: string } | null;
   capacity: number;
   createdAt?: string;
@@ -25,7 +26,7 @@ export interface CreateClassInput {
   academic_year: string;
   class_teacher_id?: string;
   capacity?: number;
-  status?: "Active" | "Inactive";
+  status?: "Active" | "Inactive" | "Archived";
 }
 
 export interface FetchClassesParams {
@@ -34,7 +35,7 @@ export interface FetchClassesParams {
   section?: string;
   sort?: "asc" | "desc";
   page?: number;
-  limit?: number;
+  limit?: number | "all";
 }
 
 // ─── Module-level cache (shared across all useClasses() instances) ──
@@ -67,11 +68,35 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
 
   // ─── Fetch all classes ──────────────────────────────────────────
   const fetchClasses = useCallback(async (params: FetchClassesParams = {}) => {
-    const isFiltered = !!(params.search || params.academic_year || params.section || params.sort);
+    const isFiltered = !!(params.search || params.section || params.sort || params.page);
+    const isAll = params.limit === "all" || !params.limit;
+
+    if (isAll && !isFiltered) {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await ClassService.getAllClasses({
+          academic_year: params.academic_year
+        });
+        _classesCache = data;
+        _cacheTimestamp = Date.now();
+        _listeners.forEach(fn => fn(data));
+        setClasses(data);
+        setTotal(data.length);
+        setTotalPages(1);
+        setCurrentPage(1);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load classes");
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
     const isFresh = _classesCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
 
-    // Serve from cache for unfiltered requests
-    if (isFresh && !isFiltered) {
+    // Serve from cache for unfiltered requests requesting all classes
+    if (isFresh && isAll && !isFiltered) {
       setClasses(_classesCache!);
       setTotal(_classesCache!.length);
       setIsLoading(false);
@@ -127,8 +152,8 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
 
     try {
       const data = await promise;
-      // Only cache unfiltered results
-      if (!isFiltered) {
+      // Only cache unfiltered ALL results
+      if (isAll && !isFiltered) {
         _classesCache = data.classes;
         _cacheTimestamp = Date.now();
         _listeners.forEach(fn => fn(data.classes));
@@ -152,7 +177,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
   useEffect(() => {
     if (options?.skip) return;
     if (!authReady) return; // Wait until the JWT token is in localStorage
-    const params: FetchClassesParams = { limit: 10 };
+    const params: FetchClassesParams = { limit: "all" as any };
     if (options?.filterByYear) params.academic_year = academicYear;
     fetchClasses(params);
   }, [fetchClasses, academicYear, options?.skip, options?.filterByYear, authReady]);
@@ -170,6 +195,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to create" };
 
+      ClassService.invalidateCache();
       const sorted = [...(_classesCache ?? []), data.data].sort((a, b) =>
         a.name.localeCompare(b.name) || a.section.localeCompare(b.section)
       );
@@ -198,6 +224,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to update" };
 
+      ClassService.invalidateCache();
       if (_classesCache) {
         _classesCache = _classesCache.map(c => c._id === id ? data.data : c);
         _cacheTimestamp = Date.now();
@@ -223,6 +250,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to delete" };
 
+      ClassService.invalidateCache();
       if (_classesCache) {
         _classesCache = _classesCache.filter(c => c._id !== id);
         _cacheTimestamp = Date.now();

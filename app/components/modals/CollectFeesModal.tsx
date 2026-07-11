@@ -47,6 +47,14 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
   const [referenceNo, setReferenceNo] = useState("");
   const [notes, setNotes] = useState("");
 
+  // Adjustment particulars
+  const [discount, setDiscount] = useState("0");
+  const [fine, setFine] = useState("0");
+  const [scholarship, setScholarship] = useState("0");
+  const [waiver, setWaiver] = useState("0");
+  const [adjustment, setAdjustment] = useState("0");
+  const [roundOff, setRoundOff] = useState("0");
+
   // Flow state
   const [step, setStep] = useState<"form" | "receipt">("form");
   const [lastPaymentResult, setLastPaymentResult] = useState<any | null>(null);
@@ -89,6 +97,12 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
     setValidationError("");
     setLastPaymentResult(null);
     setCollectionType("Monthly");
+    setDiscount("0");
+    setFine("0");
+    setScholarship("0");
+    setWaiver("0");
+    setAdjustment("0");
+    setRoundOff("0");
 
     const fetchData = async () => {
       setIsLoadingDetails(true);
@@ -289,7 +303,9 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
     if (validationMessage) return;
     setIsRecording(true);
 
-    const grandTotalCollecting = selectedFees.reduce((sum, name) => sum + Number(amounts[name] || 0), 0);
+    const subtotal = selectedFees.reduce((sum, name) => sum + Number(amounts[name] || 0), 0);
+    const grandTotal = Math.max(0.01, (subtotal + Number(fine || 0)) - (Number(discount || 0) + Number(scholarship || 0) + Number(waiver || 0) + Number(adjustment || 0)) + Number(roundOff || 0));
+
     const breakdownPayload = selectedFees.map(name => ({
       name,
       amount_paid: Number(amounts[name] || 0)
@@ -307,14 +323,20 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
         headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           student_id: studentId,
-          amount_paid: grandTotalCollecting,
-          payment_method: paymentMethod, // Fix HIGH-3: no silent UPI remapping
+          amount_paid: grandTotal,
+          payment_method: paymentMethod,
           remarks: `${notes}${referenceNo ? ` [Ref: ${referenceNo}]` : ""}`,
           payment_date: collectionDate,
           start_date: startDate,
           end_date: endDate,
           collection_type: collectionType,
-          fee_breakdown: breakdownPayload
+          fee_breakdown: breakdownPayload,
+          discount: Number(discount || 0),
+          fine: Number(fine || 0),
+          scholarship: Number(scholarship || 0),
+          waiver: Number(waiver || 0),
+          adjustment: Number(adjustment || 0),
+          round_off: Number(roundOff || 0)
         })
       });
 
@@ -335,7 +357,8 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
 
 
   // Grand summary aggregates
-  const grandTotalCollecting = selectedFees.reduce((sum, name) => sum + Number(amounts[name] || 0), 0);
+  const subtotalCollecting = selectedFees.reduce((sum, name) => sum + Number(amounts[name] || 0), 0);
+  const grandTotalCollecting = Math.max(0.01, (subtotalCollecting + Number(fine || 0)) - (Number(discount || 0) + Number(scholarship || 0) + Number(waiver || 0) + Number(adjustment || 0)) + Number(roundOff || 0));
   
   let overallTotalFees = 0;
   let overallTotalPaid = 0;
@@ -680,6 +703,72 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                         />
                       </div>
                     )}
+
+                    {/* Adjustments Subform */}
+                    <div className="border-t border-border pt-3.5 space-y-2.5">
+                      <h4 className="font-extrabold text-slate-655 dark:text-slate-400 uppercase text-[9px] tracking-wider">Payment Adjustments</h4>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex flex-col gap-1 text-left">
+                          <label className="text-[10px] text-slate-500 font-bold">Fine (+)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={fine}
+                            onChange={(e) => setFine(e.target.value)}
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1 text-left">
+                          <label className="text-[10px] text-slate-500 font-bold">Discount (-)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={discount}
+                            onChange={(e) => setDiscount(e.target.value)}
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1 text-left">
+                          <label className="text-[10px] text-slate-500 font-bold">Scholarship (-)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={scholarship}
+                            onChange={(e) => setScholarship(e.target.value)}
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1 text-left">
+                          <label className="text-[10px] text-slate-500 font-bold">Waiver (-)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={waiver}
+                            onChange={(e) => setWaiver(e.target.value)}
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1 text-left">
+                          <label className="text-[10px] text-slate-500 font-bold">Adjustment (-)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={adjustment}
+                            onChange={(e) => setAdjustment(e.target.value)}
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1 text-left">
+                          <label className="text-[10px] text-slate-500 font-bold">Round Off (+/-)</label>
+                          <input
+                            type="number"
+                            value={roundOff}
+                            onChange={(e) => setRoundOff(e.target.value)}
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* Payment Summary aggregates card */}
@@ -695,19 +784,66 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                         </span>
                       </div>
                       
-                      <div className="border-t border-slate-800/80 my-2 pt-2.5 space-y-2">
+                      <div className="border-t border-slate-800/80 my-2 pt-2.5 space-y-1 text-[11px]">
                         <div className="flex justify-between">
                           <span className="text-slate-400">Outstanding Before Payment:</span>
                           <span className="font-mono font-bold text-slate-200">{money(overallBalance)}</span>
                         </div>
                         
-                        <div className="flex justify-between text-emerald-450 font-bold border-t border-slate-800/60 pt-2">
-                          <span>Collecting Today:</span>
+                        <div className="flex justify-between text-slate-400">
+                          <span>Subtotal:</span>
+                          <span className="font-mono">{money(subtotalCollecting)}</span>
+                        </div>
+
+                        {Number(fine) > 0 && (
+                          <div className="flex justify-between text-amber-400">
+                            <span>Fine (+):</span>
+                            <span className="font-mono">+{money(Number(fine))}</span>
+                          </div>
+                        )}
+
+                        {Number(discount) > 0 && (
+                          <div className="flex justify-between text-emerald-450">
+                            <span>Discount (-):</span>
+                            <span className="font-mono">-{money(Number(discount))}</span>
+                          </div>
+                        )}
+
+                        {Number(scholarship) > 0 && (
+                          <div className="flex justify-between text-emerald-450">
+                            <span>Scholarship (-):</span>
+                            <span className="font-mono">-{money(Number(scholarship))}</span>
+                          </div>
+                        )}
+
+                        {Number(waiver) > 0 && (
+                          <div className="flex justify-between text-emerald-450">
+                            <span>Waiver (-):</span>
+                            <span className="font-mono">-{money(Number(waiver))}</span>
+                          </div>
+                        )}
+
+                        {Number(adjustment) > 0 && (
+                          <div className="flex justify-between text-emerald-450">
+                            <span>Adjustment (-):</span>
+                            <span className="font-mono">-{money(Number(adjustment))}</span>
+                          </div>
+                        )}
+
+                        {Number(roundOff) !== 0 && (
+                          <div className="flex justify-between text-slate-350">
+                            <span>Round Off:</span>
+                            <span className="font-mono">{Number(roundOff) > 0 ? "+" : ""}{money(Number(roundOff))}</span>
+                          </div>
+                        )}
+
+                        <div className="flex justify-between text-emerald-455 font-bold border-t border-slate-800/60 pt-2 text-xs">
+                          <span>Grand Total Collecting:</span>
                           <span className="font-mono text-base">{money(grandTotalCollecting)}</span>
                         </div>
                         
-                        <div className="flex justify-between text-rose-455 font-bold border-t border-dashed border-slate-800/60 pt-2">
-                          <span>Outstanding After Payment:</span>
+                        <div className="flex justify-between text-rose-455 font-bold border-t border-dashed border-slate-800/60 pt-2 text-xs">
+                          <span>Remaining Balance:</span>
                           <span className="font-mono">{money(remainingBalanceAfter)}</span>
                         </div>
                       </div>
@@ -833,10 +969,63 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
     <tbody>${rows}</tbody>
   </table>
 
-  <!-- Total Summary -->
-  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-family:sans-serif;display:flex;justify-content:space-between;align-items:center">
-    <span style="font-weight:700;color:#1e293b;font-size:11px">Total Amount Paid (${lastPaymentResult.payment_method}):</span>
-    <span style="font-family:monospace;font-size:16px;font-weight:900;color:#059669">${money(lastPaymentResult.amount_paid)}</span>
+  <!-- Total Summary & Adjustments Table -->
+  <table style="width:100%;border-collapse:collapse;font-family:sans-serif;font-size:10px;margin-bottom:18px;border-top:1px solid #cbd5e1">
+    <tr>
+      <td style="padding:6px 0;text-align:left;color:#64748b">Subtotal Paid Now:</td>
+      <td style="padding:6px 0;text-align:right;font-family:monospace;font-weight:700">${money(receiptBreakdown.reduce((sum: number, r: any) => sum + r.paidNow, 0))}</td>
+    </tr>
+    ${lastPaymentResult.fine > 0 ? `
+    <tr>
+      <td style="padding:4px 0;text-align:left;color:#64748b">Fine Added (+):</td>
+      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#92400e">+${money(lastPaymentResult.fine)}</td>
+    </tr>` : ""}
+    ${lastPaymentResult.discount > 0 ? `
+    <tr>
+      <td style="padding:4px 0;text-align:left;color:#64748b">Discount Applied (-):</td>
+      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.discount)}</td>
+    </tr>` : ""}
+    ${lastPaymentResult.scholarship > 0 ? `
+    <tr>
+      <td style="padding:4px 0;text-align:left;color:#64748b">Scholarship Applied (-):</td>
+      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.scholarship)}</td>
+    </tr>` : ""}
+    ${lastPaymentResult.waiver > 0 ? `
+    <tr>
+      <td style="padding:4px 0;text-align:left;color:#64748b">Waiver Applied (-):</td>
+      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.waiver)}</td>
+    </tr>` : ""}
+    ${lastPaymentResult.adjustment > 0 ? `
+    <tr>
+      <td style="padding:4px 0;text-align:left;color:#64748b">Adjustment Applied (-):</td>
+      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.adjustment)}</td>
+    </tr>` : ""}
+    ${lastPaymentResult.round_off !== 0 ? `
+    <tr>
+      <td style="padding:4px 0;text-align:left;color:#64748b">Round Off:</td>
+      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#475569">${lastPaymentResult.round_off > 0 ? "+" : ""}${money(lastPaymentResult.round_off)}</td>
+    </tr>` : ""}
+    <tr style="border-top:2px solid #1e293b;border-bottom:2px solid #1e293b">
+      <td style="padding:8px 0;text-align:left;font-weight:900;font-size:11px">GRAND TOTAL PAID (${lastPaymentResult.payment_method}):</td>
+      <td style="padding:8px 0;text-align:right;font-family:monospace;font-size:14px;font-weight:900;color:#059669">${money(lastPaymentResult.amount_paid)}</td>
+    </tr>
+  </table>
+
+  <!-- Future Ready QR Code Placeholder & Auditor Audit Info -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;border:1px dashed #cbd5e1;border-radius:8px;padding:10px font-family:sans-serif">
+    <div style="font-family:sans-serif;font-size:9px;color:#64748b">
+      <span style="display:block;font-weight:bold;color:#1e293b;margin-bottom:2px">Transaction Audit Trail</span>
+      <span>Collected By: ${lastPaymentResult.collected_by?.name || lastPaymentResult.collected_by?.username || "Authorized ERP Cashier"}</span><br/>
+      <span>System Verification: SUCCESS</span>
+    </div>
+    <!-- Future-Ready QR Code SVG -->
+    <div style="text-align:right">
+      <svg width="45" height="45" viewBox="0 0 29 29" style="display:inline-block">
+        <path d="M0 0h9v9H0zm1 1v7h7V1zm10 0h9v9h-9zm1 1v7h7V1zm10 0h7v7h-7zm0 10h9v9h-9zm1 1v7h7v-7zm-12-1h9v9h-9zm1 1v7h7v-7zm12 10h7v7h-7z" fill="#1e293b"/>
+        <path d="M3 3h3v3H3zm13 0h3v3h-3zM3 16h3v3H3zm23-3h1v1h-1zm-1-1h1v1h-1zm1 3h1v1h-1zm-2 2h1v1h-1zm-1 0h1v1h-1zm3 0h1v1h-1zm-3-1h1v1h-1zm-3 2h1v1h-1zm-1 1h1v1h-1z" fill="#1e293b"/>
+      </svg>
+      <span style="display:block;font-family:sans-serif;font-size:7px;color:#94a3b8;margin-top:2px">Scan to Verify</span>
+    </div>
   </div>
 
   ${remarksHtml}

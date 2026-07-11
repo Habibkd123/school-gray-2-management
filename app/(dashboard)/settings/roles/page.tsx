@@ -151,19 +151,19 @@ function ModuleRow({
           ${hasAny ? "hover:bg-slate-50 dark:hover:bg-slate-800/30" : "opacity-60 hover:bg-slate-50/50 dark:hover:bg-slate-800/10"}`}
         onClick={onToggle}
       >
-        <td className="py-3 px-4">
+        <td>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[13px] font-medium text-slate-800 dark:text-slate-200">
+            <span className="text-[13px] font-medium text-slate-805 dark:text-slate-205">
               {MODULE_LABELS[module]}
             </span>
             {hasAny && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-400 font-bold">
                 {modulePerms.length} action{modulePerms.length !== 1 ? "s" : ""}
               </span>
             )}
           </div>
         </td>
-        <td className="py-3 px-4">
+        <td>
           <div className="flex items-center gap-2 flex-wrap">
             {ALL_ACTIONS.map((action) => {
               const allowed = modulePerms.includes(action);
@@ -171,7 +171,15 @@ function ModuleRow({
               return allowed ? (
                 <span
                   key={action}
-                  className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${cfg.bg} ${cfg.color}`}
+                  className={`text-[9px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded-full border ${
+                    action === "delete" 
+                      ? "bg-rose-50 text-rose-700 border-rose-200" 
+                      : action === "create" || action === "approve"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : action === "edit"
+                          ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-sky-50 text-sky-700 border-sky-200"
+                  }`}
                 >
                   {cfg.label}
                 </span>
@@ -182,7 +190,7 @@ function ModuleRow({
             )}
           </div>
         </td>
-        <td className="py-3 px-4 text-right">
+        <td className="text-right">
           {isExpanded
             ? <ChevronUp className="w-4 h-4 text-slate-400 dark:text-slate-500 ml-auto" />
             : <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 ml-auto" />
@@ -267,15 +275,13 @@ function ComparisonTable({
   permissions: Record<string, Record<string, string[]>> | null;
 }) {
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm border-collapse">
+    <div className="erp-table-wrap overflow-x-auto">
+      <table className="erp-table">
         <thead>
-          <tr className="border-b border-border">
-            <th className="py-3 px-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-40">
-              Module
-            </th>
+          <tr>
+            <th>Module</th>
             {ALL_ROLES.map((role) => (
-              <th key={role} className="py-3 px-3 text-center">
+              <th key={role} className="col-center">
                 <div className="flex flex-col items-center gap-1">
                   <div className={`p-1.5 rounded-lg ${roleIconBg[role]}`}>
                     {roleIcons[role]}
@@ -292,10 +298,9 @@ function ComparisonTable({
           {ALL_MODULES.map((module, i) => (
             <tr
               key={module}
-              className={`border-b border-border transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/20
-                ${i % 2 === 0 ? "bg-transparent" : "bg-slate-50/50 dark:bg-slate-900/20"}`}
+              className={i % 2 === 0 ? "bg-transparent" : "bg-slate-50/50 dark:bg-slate-900/20"}
             >
-              <td className="py-2.5 px-4 text-[12px] font-medium text-slate-800 dark:text-slate-300">
+              <td className="font-semibold text-slate-805 dark:text-slate-305">
                 {MODULE_LABELS[module]}
               </td>
               {ALL_ROLES.map((role) => {
@@ -304,7 +309,7 @@ function ComparisonTable({
                 const hasView = modulePerms.includes("view");
                 const hasMore = modulePerms.length > 1;
                 return (
-                  <td key={role} className="py-2.5 px-3 text-center">
+                  <td key={role} className="col-center">
                     {!hasView ? (
                       <Minus className="w-4 h-4 text-slate-300 dark:text-slate-700 mx-auto" />
                     ) : (
@@ -488,36 +493,34 @@ export default function RolesPermissionsPage() {
           </div>
 
           {/* Permissions Table */}
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-slate-50 dark:bg-slate-900/60">
-                <th className="py-3 px-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Module
-                </th>
-                <th className="py-3 px-4 text-left text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Allowed Actions
-                </th>
-                <th className="py-3 px-4 w-10"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {ALL_MODULES.map((module) => (
-                <ModuleRow
-                  key={module}
-                  module={module}
-                  role={selectedRole}
-                  isExpanded={expandedModule === module}
-                  onToggle={() =>
-                    setExpandedModule(expandedModule === module ? null : module)
-                  }
-                  permissions={permissions}
-                  onPermissionToggle={handlePermissionToggle}
-                  isUpdating={updatingRole === selectedRole}
-                  canEdit={canEdit}
-                />
-              ))}
-            </tbody>
-          </table>
+          <div className="erp-table-wrap overflow-x-auto">
+            <table className="erp-table">
+              <thead>
+                <tr>
+                  <th>Module</th>
+                  <th>Allowed Actions</th>
+                  <th className="w-10"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {ALL_MODULES.map((module) => (
+                  <ModuleRow
+                    key={module}
+                    module={module}
+                    role={selectedRole}
+                    isExpanded={expandedModule === module}
+                    onToggle={() =>
+                      setExpandedModule(expandedModule === module ? null : module)
+                    }
+                    permissions={permissions}
+                    onPermissionToggle={handlePermissionToggle}
+                    isUpdating={updatingRole === selectedRole}
+                    canEdit={canEdit}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
         /* ── Comparison Panel ────────────────────────────────────────── */

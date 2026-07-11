@@ -7,7 +7,7 @@ export interface ApiStream {
   _id: string;
   school_id: string;
   name: string;
-  status: "Active" | "Inactive";
+  status: "Active" | "Inactive" | "Archived";
   createdAt?: string;
 }
 
@@ -46,9 +46,13 @@ export function useStreams(options?: { skip?: boolean }) {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch streams");
 
-      _streamsCache = data.data.streams;
-      _cacheTimestamp = Date.now();
-      _listeners.forEach(fn => fn(data.data.streams));
+      const isFiltered = !!(params.search || params.page);
+      const isAll = (params.limit ?? 0) >= 100;
+      if (isAll && !isFiltered) {
+        _streamsCache = data.data.streams;
+        _cacheTimestamp = Date.now();
+        _listeners.forEach(fn => fn(data.data.streams));
+      }
       setStreams(data.data.streams);
       setTotal(data.data.total ?? 0);
       setTotalPages(data.data.totalPages ?? 1);
@@ -62,6 +66,8 @@ export function useStreams(options?: { skip?: boolean }) {
 
   useEffect(() => {
     if (options?.skip || !authReady) return;
+    const isFresh = _streamsCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
+    if (isFresh) return;
     fetchStreams({ limit: 100 });
   }, [fetchStreams, options?.skip, authReady]);
 

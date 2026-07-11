@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import ReportTabs from "../ReportTabs";
 import { useClasses } from "@/app/hooks/useClasses";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { TeacherService } from "@/app/services/TeacherService";
 import {
   BarChart2,
   Calendar,
@@ -100,11 +101,8 @@ export default function FinanceReportPage() {
       }
 
       // Also get teachers list to sum contract salaries for "Pending Salary"
-      const teachRes = await fetch("/api/teachers", { headers: getAuthHeaders() });
-      const teachData = await teachRes.json();
-      if (teachData.success) {
-        setTeachersList(teachData.data.teachers || []);
-      }
+      const teachers = await TeacherService.getAllTeachers();
+      setTeachersList(teachers);
     } catch (e) {
       console.error(e);
     } finally {

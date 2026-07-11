@@ -348,34 +348,34 @@ export default function ClassesPage() {
   }, [enableSections, isAdmin, actionMenuId]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+      <div className="page-header">
         <div>
-          <h1 className="text-[20px] leading-[24px] font-bold text-foreground dark:text-slate-100">Classes List</h1>
-          <div className="flex items-center gap-2 text-[14px] leading-[21px] text-[#68718a] mt-1 font-medium">
+          <h1 className="page-title">Classes List</h1>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <span>Classes</span>
             <span>/</span>
-            <span className="text-foreground dark:text-slate-100">All Classes</span>
+            <span className="text-slate-900 dark:text-white font-medium">All Classes</span>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => fetchClasses()}
-            className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors"
+            className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center"
           >
             <RefreshCcw className="w-4 h-4" />
           </button>
-          <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors">
+          <button className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <Printer className="w-4 h-4" />
           </button>
           <div className="relative">
             <button
               onClick={() => setIsExportOpen(!isExportOpen)}
-              className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors"
+              className="btn btn-outline flex items-center gap-2"
             >
               <Download className="w-4 h-4" />
               <span>Export</span>
@@ -398,7 +398,7 @@ export default function ClassesPage() {
           {isAdmin && (
             <button
               onClick={() => { resetForm(); setIsAddClassOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors"
+              className="btn btn-primary flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
               <span>Add Class</span>
@@ -408,7 +408,7 @@ export default function ClassesPage() {
       </div>
 
       {/* Table Card */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
         {/* Top bar */}
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4 text-left">
           <h3 className="text-[16px] font-bold text-slate-900 dark:text-white">
@@ -425,8 +425,7 @@ export default function ClassesPage() {
               <div className="relative">
                 <button
                   onClick={() => { setIsFilterOpen(!isFilterOpen); setPendingSection(filterSection); }}
-                  className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors ${filterSection ? "border-primary bg-primary/10 text-[var(--primary-hover)]" : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-                    }`}
+                  className={`btn btn-outline flex items-center gap-2 ${filterSection ? "border-primary text-primary" : ""}`}
                 >
                   <Filter className="w-4 h-4" />
                   <span>Filter{filterSection ? `: ${filterSection}` : ""}</span>
@@ -469,7 +468,7 @@ export default function ClassesPage() {
             <div className="relative">
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
-                className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-600 dark:text-slate-300 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                className="btn btn-outline flex items-center gap-2"
               >
                 <ArrowUpDown className="w-4 h-4 text-slate-400" />
                 <span>Sort: {sortOrder === "asc" ? "A → Z" : "Z → A"}</span>
@@ -614,6 +613,7 @@ export default function ClassesPage() {
                 >
                   <option value="">Select Class</option>
                   {[
+                    "Nursery", "LKG", "UKG",
                     "Class 1", "Class 2", "Class 3", "Class 4", "Class 5",
                     "Class 6", "Class 7", "Class 8", "Class 9", "Class 10",
                     "Class 11", "Class 12"
@@ -791,6 +791,7 @@ export default function ClassesPage() {
                 >
                   <option value="">Select Class</option>
                   {[
+                    "Nursery", "LKG", "UKG",
                     "Class 1", "Class 2", "Class 3", "Class 4", "Class 5",
                     "Class 6", "Class 7", "Class 8", "Class 9", "Class 10",
                     "Class 11", "Class 12"

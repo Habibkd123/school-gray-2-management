@@ -30,7 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       class_id: test.class_id,
       status: "Active",
     })
-      .select("_id name roll_no admission_no")
+      .select("_id name roll_no admission_no photo_url")
       .sort({ roll_no: 1, name: 1 })
       .lean();
 
@@ -45,9 +45,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         name: s.name,
         roll_no: s.roll_no || "",
         admission_no: s.admission_no || "",
+        photo_url: (s as any).photo_url || "",
         marks_obtained: mark?.marks_obtained ?? null,
         is_pass: mark?.is_pass ?? null,
         remarks: mark?.remarks ?? "",
+        attendance_status: mark?.attendance_status || "Present",
         has_entry: !!mark,
       };
     });
@@ -60,6 +62,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           title: test.title,
           total_marks: test.total_marks,
           passing_marks: test.passing_marks,
+          is_published: test.is_published,
+          status: test.status,
+          class_id: test.class_id,
+          subject_id: test.subject_id,
         },
         rows,
       },
@@ -83,11 +89,36 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const test = await ClassTest.findOne({ _id: id, school_id: schoolId }).lean();
     if (!test) return NextResponse.json({ success: false, message: "Test not found" }, { status: 404 });
 
-    // Teacher can only enter marks for their own tests
+    // Published Lock check
+    if ((test.is_published || test.status === "published") && role === "teacher") {
+      return NextResponse.json({ success: false, message: "Marks are locked because this assessment has been published. Only Principal/Admin can modify published marks." }, { status: 403 });
+    }
+
+    // Teacher permissions check (creator or mapped assignment)
     if (role === "teacher") {
       const teacherDoc = await Teacher.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
-      if (!teacherDoc || String(test.teacher_id) !== String(teacherDoc._id)) {
-        return NextResponse.json({ success: false, message: "You can only enter marks for your own tests" }, { status: 403 });
+      if (!teacherDoc) {
+        return NextResponse.json({ success: false, message: "Teacher profile not found" }, { status: 403 });
+      }
+
+      const isCreator = String(test.teacher_id) === String(teacherDoc._id);
+      if (!isCreator) {
+        const hasAssignment = await mongoose.model("TeacherAssignment").findOne({
+          school_id: schoolId,
+          teacher_id: teacherDoc._id,
+          class_id: test.class_id,
+          $or: [
+            { subject_master_id: test.subject_id },
+            { assignment_type: "Class Teacher" },
+            { assignment_type: "Co-Class Teacher" }
+          ],
+          status: "Active",
+          is_deleted: { $ne: true }
+        }).lean();
+
+        if (!hasAssignment) {
+          return NextResponse.json({ success: false, message: "You are not authorized to enter marks for this class/subject." }, { status: 403 });
+        }
       }
     }
 
@@ -100,25 +131,34 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const errors: string[] = [];
 
     for (const entry of entries) {
-      const { student_id, marks_obtained, remarks } = entry;
+      const { student_id, marks_obtained, remarks, attendance_status } = entry;
 
       if (!student_id || !mongoose.Types.ObjectId.isValid(student_id)) {
         errors.push(`Invalid student_id: ${student_id}`);
         continue;
       }
-      if (marks_obtained === null || marks_obtained === undefined || marks_obtained === "") continue;
 
-      const mo = Number(marks_obtained);
-      if (isNaN(mo) || mo < 0) {
-        errors.push(`Invalid marks for student ${student_id}`);
-        continue;
+      const newAttendanceStatus = attendance_status || "Present";
+      let mo = Number(marks_obtained);
+      if (newAttendanceStatus === "Absent") {
+        mo = 0;
       }
-      if (mo > test.total_marks) {
-        errors.push(`Marks (${mo}) exceed total marks (${test.total_marks}) for student ${student_id}`);
-        continue;
+
+      if (newAttendanceStatus === "Present") {
+        if (marks_obtained === null || marks_obtained === undefined || marks_obtained === "") continue;
+        if (isNaN(mo) || mo < 0) {
+          errors.push(`Invalid marks for student ${student_id}`);
+          continue;
+        }
+        if (mo > test.total_marks) {
+          errors.push(`Marks (${mo}) exceed total marks (${test.total_marks}) for student ${student_id}`);
+          continue;
+        }
       }
 
       const is_pass = mo >= test.passing_marks;
+      
+      const previous = await ClassTestMark.findOne({ test_id: id, student_id }).lean();
 
       ops.push({
         updateOne: {
@@ -131,12 +171,52 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
               marks_obtained: mo,
               is_pass,
               remarks: remarks?.trim() || null,
+              attendance_status: newAttendanceStatus,
               entered_by: new mongoose.Types.ObjectId(userId!),
             },
           },
           upsert: true,
         },
       });
+
+      // Log Audit Trail entry
+      try {
+        if (previous) {
+          if (
+            previous.marks_obtained !== mo ||
+            previous.attendance_status !== newAttendanceStatus
+          ) {
+            await mongoose.model("ClassTestMarkAudit").create({
+              school_id: schoolId,
+              mark_id: previous._id,
+              test_id: id,
+              student_id,
+              previous_marks: previous.marks_obtained,
+              new_marks: mo,
+              previous_attendance_status: previous.attendance_status || "Present",
+              new_attendance_status: newAttendanceStatus,
+              action_type: "update",
+              reason: remarks || "Marks updated in Assessment Console",
+              changed_by: userId
+            });
+          }
+        } else {
+          await mongoose.model("ClassTestMarkAudit").create({
+            school_id: schoolId,
+            test_id: id,
+            student_id,
+            previous_marks: 0,
+            new_marks: mo,
+            previous_attendance_status: "Present",
+            new_attendance_status: newAttendanceStatus,
+            action_type: "create",
+            reason: remarks || "Initial assessment entry",
+            changed_by: userId
+          });
+        }
+      } catch (auditErr) {
+        console.error("ClassTestMark Audit Log Failed:", auditErr);
+      }
     }
 
     if (errors.length > 0 && ops.length === 0) {
@@ -146,7 +226,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     if (ops.length > 0) {
       await ClassTestMark.bulkWrite(ops);
 
-      // After saving marks, compute and update ranks
+      // Compute and update student rankings
       const allMarks = await ClassTestMark.find({ test_id: id })
         .sort({ marks_obtained: -1 })
         .lean();

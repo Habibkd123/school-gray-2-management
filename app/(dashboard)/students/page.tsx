@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { getAuthHeaders } from "@/lib/utils/session";
 import { useStudents, ApiStudent } from "@/app/hooks/useStudents";
 import { useClasses } from "@/app/hooks/useClasses";
 import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
@@ -44,10 +45,41 @@ import {
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
 import { PaginationBar } from "@/app/components/ui/pagination-bar";
 
+const StudentSkeletonCard = () => (
+  <div className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 animate-pulse space-y-4 text-left">
+    <div className="flex justify-between items-center">
+      <div className="h-4 w-20 bg-slate-200 dark:bg-slate-700 rounded" />
+      <div className="h-4 w-12 bg-slate-200 dark:bg-slate-700 rounded" />
+    </div>
+    <div className="flex items-center gap-3">
+      <div className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-slate-700" />
+      <div className="space-y-2 flex-1">
+        <div className="h-4 w-2/3 bg-slate-200 dark:bg-slate-700 rounded" />
+        <div className="h-3 w-1/3 bg-slate-200 dark:bg-slate-700 rounded" />
+      </div>
+    </div>
+    <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-700/50">
+      <div className="h-3 w-4/5 bg-slate-200 dark:bg-slate-700 rounded" />
+      <div className="h-3 w-3/4 bg-slate-200 dark:bg-slate-700 rounded" />
+      <div className="h-3 w-2/3 bg-slate-200 dark:bg-slate-700 rounded" />
+    </div>
+    <div className="h-8 w-24 bg-slate-200 dark:bg-slate-700 rounded mt-auto pt-2" />
+  </div>
+);
+
 export default function StudentsPage() {
   const { academicYear } = useAppState();
   const { enableSections } = useAcademicConfig();
   const { students, total, isLoading, error, createStudent, updateStudent: updateStudentApi, deleteStudent: deleteStudentApi, fetchStudents } = useStudents({ skip: true });
+
+  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
+
+  React.useEffect(() => {
+    if (!isLoading && isInitialLoad) {
+      setIsInitialLoad(false);
+    }
+  }, [isLoading, isInitialLoad]);
+
   const { classes } = useClasses({ filterByYear: true });
 
   const router = useRouter();
@@ -58,6 +90,27 @@ export default function StudentsPage() {
   const [classFilter, setClassFilter] = useState("all");
   const [genderFilter, setGenderFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+
+  const [filterMetadata, setFilterMetadata] = useState<{
+    academicYears: string[];
+    sections: string[];
+    houses: string[];
+    genders: string[];
+    statuses: string[];
+    admissionStatuses: string[];
+  }>({
+    academicYears: [],
+    sections: [],
+    houses: [],
+    genders: [],
+    statuses: [],
+    admissionStatuses: [],
+  });
+
+  const [academicYearFilter, setAcademicYearFilter] = useState("all");
+  const [sectionFilter, setSectionFilter] = useState("all");
+  const [houseFilter, setHouseFilter] = useState("all");
+  const [admissionStatusFilter, setAdmissionStatusFilter] = useState("all");
 
   const [selectedStudent, setSelectedStudent] = useState<ApiStudent | null>(null);
   const [formError, setFormError] = useState("");
@@ -94,6 +147,22 @@ export default function StudentsPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
+  // Load dynamic filter metadata
+  React.useEffect(() => {
+    async function loadFilters() {
+      try {
+        const res = await fetch("/api/students/filters", { headers: getAuthHeaders() });
+        const json = await res.json();
+        if (json.success) {
+          setFilterMetadata(json.data);
+        }
+      } catch (err) {
+        console.error("Failed to load filter metadata:", err);
+      }
+    }
+    loadFilters();
+  }, []);
+
   // Load paginated data when dependencies change
   React.useEffect(() => {
     fetchStudents({
@@ -105,9 +174,12 @@ export default function StudentsPage() {
       sort: selectedSort,
       page,
       limit: 12,
-      academic_year: academicYear,
+      academic_year: academicYearFilter === "all" ? academicYear : academicYearFilter,
+      section: sectionFilter,
+      house: houseFilter,
+      admissionStatus: admissionStatusFilter,
     });
-  }, [fetchStudents, debouncedSearch, classFilter, genderFilter, statusFilter, selectedDateRange, selectedSort, page, academicYear]);
+  }, [fetchStudents, debouncedSearch, classFilter, genderFilter, statusFilter, selectedDateRange, selectedSort, page, academicYear, academicYearFilter, sectionFilter, houseFilter, admissionStatusFilter]);
 
   const handleClassFilterChange = (val: string) => {
     setClassFilter(val);
@@ -412,7 +484,7 @@ export default function StudentsPage() {
     }
   ];
 
-  if (isLoading) {
+  if (isLoading && isInitialLoad) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex items-center gap-3 text-slate-500 dark:text-slate-400">
@@ -442,9 +514,9 @@ export default function StudentsPage() {
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6" onClick={() => setActiveDropdown(null)}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Students List</h1>
+          <h1 className="page-title">Students List</h1>
           <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
@@ -455,15 +527,29 @@ export default function StudentsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
-            <RefreshCcw className="w-4 h-4" />
-          </button>
-          <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm">
-            <Printer className="w-4 h-4" />
+          <button
+            onClick={() => fetchStudents({
+              search: debouncedSearch,
+              classId: classFilter,
+              gender: genderFilter,
+              status: statusFilter,
+              dateRange: selectedDateRange,
+              sort: selectedSort,
+              page,
+              limit: 12,
+              academic_year: academicYearFilter === "all" ? academicYear : academicYearFilter,
+              section: sectionFilter,
+              house: houseFilter,
+              admissionStatus: admissionStatusFilter,
+            })}
+            className="btn btn-outline p-2 w-9 h-9"
+            title="Refresh List"
+          >
+            <RefreshCcw className={`w-4 h-4 ${isLoading ? "animate-spin text-primary" : ""}`} />
           </button>
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm cursor-pointer"
+            className="btn btn-outline"
           >
             <Download className="w-4 h-4" />
             <span>Export</span>
@@ -472,14 +558,14 @@ export default function StudentsPage() {
             <>
               <Link
                 href="/students/import"
-                className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 border border-border hover:bg-slate-50 dark:hover:bg-slate-800/50 rounded-lg shadow-sm transition-colors cursor-pointer"
+                className="btn btn-outline"
               >
                 <Upload className="w-4 h-4" />
                 <span>Bulk Import</span>
               </Link>
               <Link
                 href="/students/add"
-                className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] rounded-lg shadow-sm transition-colors cursor-pointer"
+                className="btn btn-primary"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Student</span>
@@ -489,815 +575,912 @@ export default function StudentsPage() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow">
+
+      {/* Directory Table Card */}
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow text-left">
 
         {/* Filters Row */}
         <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Students List</h3>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative">
-              <button
-                onClick={() => setIsDateRangeOpen(!isDateRangeOpen)}
-                className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-              >
-                <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span className="whitespace-nowrap">{selectedDateRange}</span>
-              </button>
-              {isDateRangeOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsDateRangeOpen(false)} />
-                  <div className="absolute left-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
-                    {["All Time", "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year"].map((item) => (
-                      <button onClick={() => { handleDateRangeChange(item); setIsDateRangeOpen(false); }} key={item} className={`w-full px-4 py-2 text-[13px] text-left transition-colors ${item === selectedDateRange ? "bg-primary text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
-                        {item}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-            <div className="relative">
-              <div
-                className={`flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 cursor-pointer transition-colors ${isFilterOpen ? "bg-slate-100 dark:bg-slate-800 border-slate-300" : "hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-              >
-                <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span className="whitespace-nowrap">Filter</span>
-                <ChevronDown className="w-3.5 h-3.5" />
-              </div>
-
-              {/* Filter Dropdown Popover */}
-              {isFilterOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
-                  <div className="absolute right-0 top-11 w-full sm:w-[380px] bg-white dark:bg-slate-900 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border z-50 overflow-hidden">
-                    <div className="p-4 border-b border-border">
-                      <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Filter</h3>
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative">
+                <button
+                  onClick={() => setIsDateRangeOpen(!isDateRangeOpen)}
+                  className="btn btn-outline flex items-center gap-2"
+                >
+                  <Calendar className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                  <span className="whitespace-nowrap">{selectedDateRange}</span>
+                </button>
+                {isDateRangeOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsDateRangeOpen(false)} />
+                    <div className="absolute left-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
+                      {["All Time", "Today", "Yesterday", "Last 7 Days", "Last 30 Days", "This Year"].map((item) => (
+                        <button onClick={() => { handleDateRangeChange(item); setIsDateRangeOpen(false); }} key={item} className={`w-full px-4 py-2 text-[13px] text-left transition-colors ${item === selectedDateRange ? "bg-primary text-white font-semibold" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                          {item}
+                        </button>
+                      ))}
                     </div>
-                    <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5 text-left col-span-2">
-                        <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Class</label>
+                  </>
+                )}
+              </div>
+              <div className="relative">
+                <button
+                  className={`btn btn-outline flex items-center gap-2 ${isFilterOpen ? "bg-slate-100 dark:bg-slate-800 border-slate-300" : ""}`}
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                >
+                  <Filter className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                  <span className="whitespace-nowrap">Filter</span>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                </button>
+
+                {/* Filter Dropdown Popover */}
+                {isFilterOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
+                    <div className="absolute right-0 top-11 w-full sm:w-[380px] bg-white dark:bg-slate-900 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border z-50 overflow-hidden">
+                      <div className="p-4 border-b border-border">
+                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Filter</h3>
+                      </div>
+                      <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[380px] overflow-y-auto custom-scrollbar">
+                        <div className="w-full col-span-2 flex flex-row gap-2 justify-between">
+
+                          {/* Academic Year */}
+                          <div className="flex flex-col gap-1.5 text-left col-span-2 flex-1">
+                            <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Academic Year</label>
+                            <select
+                              value={academicYearFilter}
+                              onChange={(e) => { setAcademicYearFilter(e.target.value); setPage(1); }}
+                              className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none cursor-pointer bg-white dark:bg-slate-900"
+                            >
+                              <option value="all">All Years (Default)</option>
+                              {filterMetadata.academicYears.map((y) => (
+                                <option key={y} value={y}>{y}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Class */}
+                          <div className="flex flex-col gap-1.5 text-left flex-1">
+                            <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Class</label>
+                            <select
+                              value={classFilter}
+                              onChange={(e) => handleClassFilterChange(e.target.value)}
+                              className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none cursor-pointer bg-white dark:bg-slate-900"
+                            >
+                              <option value="all">All Classes</option>
+                              {classes.map((c) => (
+                                <option key={c._id} value={c._id}>
+                                  {c.name}{enableSections && c.section ? ` - ${c.section}` : ""}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Section */}
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Section</label>
+                          <select
+                            value={sectionFilter}
+                            onChange={(e) => { setSectionFilter(e.target.value); setPage(1); }}
+                            className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none cursor-pointer bg-white dark:bg-slate-900"
+                          >
+                            <option value="all">All Sections</option>
+                            {filterMetadata.sections.map((s) => (
+                              <option key={s} value={s}>Section {s}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* House */}
+                        {/* <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">House</label>
                         <select
-                          value={classFilter}
-                          onChange={(e) => handleClassFilterChange(e.target.value)}
+                          value={houseFilter}
+                          onChange={(e) => { setHouseFilter(e.target.value); setPage(1); }}
                           className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none cursor-pointer bg-white dark:bg-slate-900"
                         >
-                          <option value="all">All Classes</option>
-                          {classes.map((c) => (
-                            <option key={c._id} value={c._id}>
-                              {c.name}{enableSections && c.section ? ` - ${c.section}` : ""}
-                            </option>
+                          <option value="all">All Houses</option>
+                          {filterMetadata.houses.map((h) => (
+                            <option key={h} value={h}>{h}</option>
                           ))}
                         </select>
+                      </div> */}
+
+                        {/* Gender */}
+                        <div className="flex flex-col gap-1.5 text-left">
+                          <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Gender</label>
+                          <select
+                            value={genderFilter}
+                            onChange={(e) => handleGenderFilterChange(e.target.value)}
+                            className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none cursor-pointer bg-white dark:bg-slate-900"
+                          >
+                            <option value="all">All Genders</option>
+                            {filterMetadata.genders.map((g) => (
+                              <option key={g} value={g.toLowerCase()}>{g}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="w-full col-span-2 flex flex-row gap-2 justify-between">
+                          {/* Status */}
+                          <div className="flex flex-col gap-1.5 text-left flex-1">
+                            <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Status</label>
+                            <select
+                              value={statusFilter}
+                              onChange={(e) => handleStatusFilterChange(e.target.value)}
+                              className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none cursor-pointer bg-white dark:bg-slate-900"
+                            >
+                              <option value="all">All Statuses</option>
+                              {filterMetadata.statuses.map((s) => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                          </div>
+
+                          {/* Admission Status */}
+                          <div className="flex flex-col gap-1.5 text-left col-span-2">
+                            <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Admission Status</label>
+                            <select
+                              value={admissionStatusFilter}
+                              onChange={(e) => { setAdmissionStatusFilter(e.target.value); setPage(1); }}
+                              className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none cursor-pointer bg-white dark:bg-slate-900"
+                            >
+                              <option value="all">All Admission Statuses</option>
+                              {filterMetadata.admissionStatuses.map((as) => (
+                                <option key={as} value={as}>{as}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Gender</label>
-                        <select
-                          value={genderFilter}
-                          onChange={(e) => handleGenderFilterChange(e.target.value)}
-                          className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none cursor-pointer bg-white dark:bg-slate-900"
+                      <div className="p-4 border-t border-border flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-800/50">
+                        <button
+                          onClick={() => {
+                            setClassFilter("all");
+                            setGenderFilter("all");
+                            setStatusFilter("all");
+                            setAcademicYearFilter("all");
+                            setSectionFilter("all");
+                            setHouseFilter("all");
+                            setAdmissionStatusFilter("all");
+                            setPage(1);
+                            setIsFilterOpen(false);
+                          }}
+                          className="px-5 py-2 rounded-lg text-[13px] font-semibold text-slate-600 dark:text-slate-300 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                         >
-                          <option value="all">All Genders</option>
-                          <option value="male">Male</option>
-                          <option value="female">Female</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-                      <div className="flex flex-col gap-1.5 text-left">
-                        <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Status</label>
-                        <select
-                          value={statusFilter}
-                          onChange={(e) => handleStatusFilterChange(e.target.value)}
-                          className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none cursor-pointer bg-white dark:bg-slate-900"
-                        >
-                          <option value="all">All Statuses</option>
-                          <option value="Active">Active</option>
-                          <option value="Inactive">Inactive</option>
-                        </select>
+                          Reset
+                        </button>
+                        <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] transition-colors shadow-sm">
+                          Close
+                        </button>
                       </div>
                     </div>
-                    <div className="p-4 border-t border-border flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-800/50">
-                      <button
-                        onClick={() => {
-                          setClassFilter("all");
-                          setGenderFilter("all");
-                          setStatusFilter("all");
-                          setPage(1);
-                          setIsFilterOpen(false);
-                        }}
-                        className="px-5 py-2 rounded-lg text-[13px] font-semibold text-slate-600 dark:text-slate-300 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                      >
-                        Reset
-                      </button>
-                      <button onClick={() => setIsFilterOpen(false)} className="px-5 py-2 rounded-lg text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] transition-colors shadow-sm">
-                        Close
-                      </button>
+                  </>
+                )}
+              </div>
+
+              {/* Sort Popover */}
+              <div className="relative">
+                <button
+                  onClick={() => setIsSortOpen(!isSortOpen)}
+                  className="btn btn-outline flex items-center gap-2"
+                >
+                  <ArrowUpDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
+                  <span className="whitespace-nowrap">Sort by A-Z</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                </button>
+                {isSortOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
+                      {["Ascending", "Descending", "Recently Added"].map((item) => (
+                        <button onClick={() => { handleSortChange(item); setIsSortOpen(false); }} key={item} className={`w-full px-4 py-2.5 text-[14px] text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "bg-primary text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
+                          {item}
+                        </button>
+                      ))}
                     </div>
-                  </div>
-                </>
-              )}
-            </div>
+                  </>
+                )}
+              </div>
 
-            {/* Sort Popover */}
-            <div className="relative">
-              <button
-                onClick={() => setIsSortOpen(!isSortOpen)}
-                className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
-              >
-                <ArrowUpDown className="w-4 h-4 text-slate-400 dark:text-slate-500" />
-                <span className="whitespace-nowrap">Sort by A-Z</span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-              </button>
-              {isSortOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
-                    {["Ascending", "Descending", "Recently Added"].map((item) => (
-                      <button onClick={() => { handleSortChange(item); setIsSortOpen(false); }} key={item} className={`w-full px-4 py-2.5 text-[14px] text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "bg-primary text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}>
-                        {item}
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-
-            <button
+              {/* <button
               onClick={() => {
                 setBulkSelectMode(!bulkSelectMode);
                 setSelectedIds([]);
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm ${
-                bulkSelectMode
-                  ? "bg-primary border-primary text-white"
-                  : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50"
-              }`}
+              className={`flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm ${bulkSelectMode
+                ? "bg-primary border-primary text-white"
+                : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                }`}
             >
               <CheckSquare className="w-4 h-4" />
               <span>{bulkSelectMode ? "Cancel Select" : "Select"}</span>
-            </button>
+            </button> */}
 
-            <div className="flex items-center border border-border rounded-lg bg-white dark:bg-slate-900 p-1">
-              <button onClick={() => setViewMode("grid")} className={`p-1 rounded ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><LayoutGrid className="w-4 h-4" /></button>
-              <button onClick={() => setViewMode("list")} className={`p-1 rounded ${viewMode === 'list' ? 'bg-primary text-white' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><List className="w-4 h-4" /></button>
+              <div className="flex items-center border border-border rounded-lg bg-white dark:bg-slate-900 p-1">
+                <button onClick={() => setViewMode("grid")} className={`p-1 rounded ${viewMode === 'grid' ? 'bg-primary text-white' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><LayoutGrid className="w-4 h-4" /></button>
+                <button onClick={() => setViewMode("list")} className={`p-1 rounded ${viewMode === 'list' ? 'bg-primary text-white' : 'text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800'}`}><List className="w-4 h-4" /></button>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Search & Pagination Row */}
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-[13px] text-slate-500 dark:text-slate-400">
-          <div className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
-            Showing{" "}
-            <span className="font-bold text-slate-700 dark:text-slate-200">
-              {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)}` : "0"}
-            </span>{" "}of{" "}
-            <span className="font-bold text-slate-700 dark:text-slate-200">
-              {total}
-            </span>{" "}students
+          {/* Search Row */}
+          <div className="px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border">
+            <div className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
+              Showing{" "}
+              <span className="font-bold text-slate-700 dark:text-slate-200">
+                {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)}` : "0"}
+              </span>{" "}of{" "}
+              <span className="font-bold text-slate-700 dark:text-slate-200">{total}</span>{" "}students
+            </div>
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search name, ID, class..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-3.5 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900"
+              />
+            </div>
           </div>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search Name/Roll/Admission No"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full sm:w-[250px] pl-3 pr-4 py-2 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 transition-all"
-            />
-          </div>
-        </div>
 
-        {viewMode === "list" ? (
-          <>
-            <DataTable
-              columns={columns}
-              data={tableData}
-              noDataMessage="No students registered or matching filters."
-            />
-            <PaginationBar
-              currentPage={page}
-              totalPages={totalPages}
-              totalItems={total}
-              pageSize={PAGE_SIZE}
-              onPageChange={setPage}
-            />
-          </>
-        ) : (
-          <div className="p-6 bg-slate-50/50 dark:bg-slate-900/20 min-h-[400px]">
-            <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
-              {students.length === 0 ? (
-                <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400">
-                  No students registered or matching filters.
+          {viewMode === "list" ? (
+            <div className={`relative transition-opacity duration-200 ${isLoading && tableData.length > 0 ? "opacity-60 pointer-events-none" : ""}`}>
+              {isLoading && tableData.length > 0 && (
+                <div className="absolute top-2 right-4 z-10 flex items-center gap-2 text-[12px] font-medium text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 rounded-md border border-border shadow-sm">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                  <span>Syncing...</span>
                 </div>
-              ) : (
-                tableData.map((student) => (
-                  <div key={student._id} className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 relative group flex flex-col hover:border-primary/50 transition-colors">
-                    {/* Top Row */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex flex-wrap items-center gap-2">
-                        {bulkSelectMode && (
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.includes(student._id)}
-                            onChange={() => {
-                              setSelectedIds(prev =>
-                                prev.includes(student._id)
-                                  ? prev.filter(id => id !== student._id)
-                                  : [...prev, student._id]
-                              );
-                            }}
-                            className="rounded border-slate-300 w-3.5 h-3.5 accent-primary cursor-pointer"
-                          />
-                        )}
-                        <span className="text-[13px] font-bold text-primary">{student.displayId}</span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${student.is_active ? "bg-success/10 text-success dark:bg-[#1D7F2C]/20 dark:text-success" : "bg-danger/10 text-danger dark:bg-danger/20"}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${student.is_active ? "bg-success" : "bg-danger"}`} /> {student.is_active ? "Active" : "Inactive"}
-                        </span>
-                        <div className="relative">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === student._id ? null : student._id); }}
-                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </button>
-                          {activeDropdown === student._id && (
-                            <div className="absolute right-0 top-6 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-border py-2 z-50">
-                              <button onClick={() => { router.push(`/students/${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <FileText className="w-4 h-4 text-slate-400" /> View Student
-                              </button>
-                              <button onClick={() => { router.push(`/students/add?edit=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <Edit className="w-4 h-4 text-slate-400" /> Edit
-                              </button>
-                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setLoginModalTarget("student"); setIsLoginDetailsOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <User className="w-4 h-4 text-slate-400" /> Login Details
-                              </button>
-                              <button onClick={() => {
-                                const studentUser = student.user_id;
-                                const sUid = studentUser && typeof studentUser === "object" ? studentUser._id : undefined;
-                                const sEmail = studentUser && typeof studentUser === "object" ? studentUser.email : student.email || "";
-                                setResetPassTarget({ userId: sUid, name: student.name, email: sEmail });
-                                setIsResetPassModalOpen(true);
-                                setActiveDropdown(null);
-                              }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <Lock className="w-4 h-4 text-slate-400" /> Reset Password
-                              </button>
-                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDisableOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <XCircle className="w-4 h-4 text-slate-400" /> Disable
-                              </button>
-                              <button onClick={() => { router.push(`/students/student-promotion?studentId=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <GraduationCap className="w-4 h-4 text-slate-400" /> Promote Student
-                              </button>
-                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDeleteOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3">
-                                <Trash2 className="w-4 h-4 text-rose-400" /> Delete
-                              </button>
-                            </div>
+              )}
+              <div className="erp-table-wrap">
+                <DataTable
+                  columns={columns}
+                  data={tableData}
+                  // isLoading={isLoading}
+                  noDataMessage="No students registered or matching filters."
+                />
+              </div>
+              <PaginationBar
+                currentPage={page}
+                totalPages={totalPages}
+                totalItems={total}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+              />
+            </div>
+          ) : (
+            <div className={`p-6 bg-slate-50/50 dark:bg-slate-900/20 min-h-[400px] relative transition-opacity duration-200 ${isLoading && tableData.length > 0 ? "opacity-60 pointer-events-none" : ""}`}>
+              {isLoading && tableData.length > 0 && (
+                <div className="absolute top-2 right-4 z-10 flex items-center gap-2 text-[12px] font-medium text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 rounded-md border border-border shadow-sm">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                  <span>Syncing...</span>
+                </div>
+              )}
+              <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+                {isLoading && tableData.length === 0 ? (
+                  Array.from({ length: 6 }).map((_, idx) => (
+                    <StudentSkeletonCard key={`skeleton-${idx}`} />
+                  ))
+                ) : tableData.length === 0 ? (
+                  <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400 font-medium">
+                    No students registered or matching filters.
+                  </div>
+                ) : (
+                  tableData.map((student) => (
+                    <div key={student._id} className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 relative group flex flex-col hover:border-primary/50 transition-colors">
+                      {/* Top Row */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex flex-wrap items-center gap-2">
+                          {bulkSelectMode && (
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.includes(student._id)}
+                              onChange={() => {
+                                setSelectedIds(prev =>
+                                  prev.includes(student._id)
+                                    ? prev.filter(id => id !== student._id)
+                                    : [...prev, student._id]
+                                );
+                              }}
+                              className="rounded border-slate-300 w-3.5 h-3.5 accent-primary cursor-pointer"
+                            />
                           )}
+                          <span className="text-[13px] font-bold text-primary">{student.displayId}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${student.is_active ? "bg-success/10 text-success dark:bg-[#1D7F2C]/20 dark:text-success" : "bg-danger/10 text-danger dark:bg-danger/20"}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${student.is_active ? "bg-success" : "bg-danger"}`} /> {student.is_active ? "Active" : "Inactive"}
+                          </span>
+                          <div className="relative">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === student._id ? null : student._id); }}
+                              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
+                            {activeDropdown === student._id && (
+                              <div className="absolute right-0 top-6 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-border py-2 z-50">
+                                <button onClick={() => { router.push(`/students/${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                  <FileText className="w-4 h-4 text-slate-400" /> View Student
+                                </button>
+                                <button onClick={() => { router.push(`/students/add?edit=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                  <Edit className="w-4 h-4 text-slate-400" /> Edit
+                                </button>
+                                <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setLoginModalTarget("student"); setIsLoginDetailsOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                  <User className="w-4 h-4 text-slate-400" /> Login Details
+                                </button>
+                                <button onClick={() => {
+                                  const studentUser = student.user_id;
+                                  const sUid = studentUser && typeof studentUser === "object" ? studentUser._id : undefined;
+                                  const sEmail = studentUser && typeof studentUser === "object" ? studentUser.email : student.email || "";
+                                  setResetPassTarget({ userId: sUid, name: student.name, email: sEmail });
+                                  setIsResetPassModalOpen(true);
+                                  setActiveDropdown(null);
+                                }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                  <Lock className="w-4 h-4 text-slate-400" /> Reset Password
+                                </button>
+                                <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDisableOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                  <XCircle className="w-4 h-4 text-slate-400" /> Disable
+                                </button>
+                                <button onClick={() => { router.push(`/students/student-promotion?studentId=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                  <GraduationCap className="w-4 h-4 text-slate-400" /> Promote Student
+                                </button>
+                                <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDeleteOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3">
+                                  <Trash2 className="w-4 h-4 text-rose-400" /> Delete
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Profile info */}
-                    <div className="flex items-center gap-4 mb-5 cursor-pointer" onClick={() => router.push(`/students/${student._id}`)}>
-                      <img src={student.avatar} alt="Avatar" className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" />
-                      <div>
-                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{student.name}</h3>
-                        <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400">{student.classNameStr}</p>
+                      {/* Profile info */}
+                      <div className="flex items-center gap-4 mb-5 cursor-pointer" onClick={() => router.push(`/students/${student._id}`)}>
+                        <img src={student.avatar} alt="Avatar" className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" />
+                        <div>
+                          <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{student.name}</h3>
+                          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400">{student.classNameStr}</p>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Details grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-5 border-t border-b border-slate-100 dark:border-slate-700/50 py-4">
-                      <div>
-                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Roll No</p>
-                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.roll_no || "—"}</p>
+                      {/* Details grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-5 border-t border-b border-slate-100 dark:border-slate-700/50 py-4">
+                        <div>
+                          <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Roll No</p>
+                          <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.roll_no || "—"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Gender</p>
+                          <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.gender}</p>
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Joined On</p>
+                          <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.joinDateStr}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Gender</p>
-                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.gender}</p>
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Joined On</p>
-                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.joinDateStr}</p>
-                      </div>
-                    </div>
 
-                    {/* Footer buttons */}
-                    <div className="flex items-center justify-end mt-auto">
-                      {!HIDE_FEES_FEATURE && (
-                        <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsCollectFeesOpen(true); }} className="px-3 py-1.5 rounded bg-[#F1F5F9] dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
-                          Add Fees
-                        </button>
-                      )}
+                      {/* Footer buttons */}
+                      <div className="flex items-center justify-end mt-auto">
+                        {!HIDE_FEES_FEATURE && (
+                          <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsCollectFeesOpen(true); }} className="px-3 py-1.5 rounded bg-[#F1F5F9] dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                            Add Fees
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
-              )}
+                  ))
+                )}
+              </div>
+              <PaginationBar
+                currentPage={page}
+                totalPages={totalPages}
+                totalItems={total}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+                className="mt-4 border-t-0"
+              />
             </div>
-            <PaginationBar
-              currentPage={page}
-              totalPages={totalPages}
-              totalItems={total}
-              pageSize={PAGE_SIZE}
-              onPageChange={setPage}
-              className="mt-4 border-t-0"
-            />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      {/* ----------------------------------------------------
+        {/* ----------------------------------------------------
           REGISTER MODAL
           ---------------------------------------------------- */}
-      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Register Student">
-        <form onSubmit={handleAddSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Full Name</label>
-              <input
-                required
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Alex Rivera"
-                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-              />
+        <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Register Student">
+          <form onSubmit={handleAddSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Full Name</label>
+                <input
+                  required
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Alex Rivera"
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Email Address</label>
+                <input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="e.g. alex@gmail.com"
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                />
+              </div>
             </div>
-            <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Email Address</label>
-              <input
-                required
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="e.g. alex@gmail.com"
-                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Assign Class</label>
-              <select
-                value={classId}
-                onChange={(e) => setClassId(e.target.value)}
-                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Assign Class</label>
+                <select
+                  value={classId}
+                  onChange={(e) => setClassId(e.target.value)}
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
+                >
+                  {classes.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}{enableSections && c.section ? ` - ${c.section}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Roll Number</label>
+                <input
+                  required
+                  type="text"
+                  value={rollNo}
+                  onChange={(e) => setRollNo(e.target.value)}
+                  placeholder="e.g. 05"
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                />
+              </div>
+            </div>
+
+            <div className="w-full h-px bg-border my-2" />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent/Guardian Name</label>
+                <input
+                  required
+                  type="text"
+                  value={parentName}
+                  onChange={(e) => setParentName(e.target.value)}
+                  placeholder="e.g. Robert Watson"
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent Contact Info</label>
+                <input
+                  required
+                  type="text"
+                  value={parentContact}
+                  onChange={(e) => setParentContact(e.target.value)}
+                  placeholder="e.g. +1 (555) 123-4567"
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setIsAddOpen(false)}
+                className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
               >
-                {classes.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name}{enableSections && c.section ? ` - ${c.section}` : ""}
-                  </option>
-                ))}
-              </select>
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-primary hover:bg-primary/90 text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
+              >
+                Register Student
+              </button>
             </div>
-            <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Roll Number</label>
-              <input
-                required
-                type="text"
-                value={rollNo}
-                onChange={(e) => setRollNo(e.target.value)}
-                placeholder="e.g. 05"
-                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-              />
-            </div>
-          </div>
+          </form>
+        </Modal>
 
-          <div className="w-full h-px bg-border my-2" />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent/Guardian Name</label>
-              <input
-                required
-                type="text"
-                value={parentName}
-                onChange={(e) => setParentName(e.target.value)}
-                placeholder="e.g. Robert Watson"
-                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent Contact Info</label>
-              <input
-                required
-                type="text"
-                value={parentContact}
-                onChange={(e) => setParentContact(e.target.value)}
-                placeholder="e.g. +1 (555) 123-4567"
-                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={() => setIsAddOpen(false)}
-              className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary hover:bg-primary/90 text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
-            >
-              Register Student
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* ----------------------------------------------------
+        {/* ----------------------------------------------------
           EDIT MODAL
           ---------------------------------------------------- */}
-      <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Modify Student Info">
-        <form onSubmit={handleEditSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Full Name</label>
-              <input
-                required
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-              />
+        <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Modify Student Info">
+          <form onSubmit={handleEditSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Full Name</label>
+                <input
+                  required
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Email Address</label>
+                <input
+                  required
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                />
+              </div>
             </div>
-            <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Email Address</label>
-              <input
-                required
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Assign Class</label>
+                <select
+                  value={classId}
+                  onChange={(e) => setClassId(e.target.value)}
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
+                >
+                  {classes.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}{enableSections && c.section ? ` - ${c.section}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Roll Number</label>
+                <input
+                  required
+                  type="text"
+                  value={rollNo}
+                  onChange={(e) => setRollNo(e.target.value)}
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent/Guardian Name</label>
+                <input
+                  required
+                  type="text"
+                  value={parentName}
+                  onChange={(e) => setParentName(e.target.value)}
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 text-left">
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent Contact Info</label>
+                <input
+                  required
+                  type="text"
+                  value={parentContact}
+                  onChange={(e) => setParentContact(e.target.value)}
+                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+                />
+              </div>
+            </div>
+
             <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Assign Class</label>
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Enrollment Status</label>
               <select
-                value={classId}
-                onChange={(e) => setClassId(e.target.value)}
+                value={status}
+                onChange={(e) => setStatus(e.target.value as "Active" | "Inactive")}
                 className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
               >
-                {classes.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name}{enableSections && c.section ? ` - ${c.section}` : ""}
-                  </option>
-                ))}
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
               </select>
             </div>
-            <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Roll Number</label>
-              <input
-                required
-                type="text"
-                value={rollNo}
-                onChange={(e) => setRollNo(e.target.value)}
-                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-              />
+
+            <div className="flex justify-end gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setIsEditOpen(false)}
+                className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-primary hover:bg-primary/90 text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
+              >
+                Save Changes
+              </button>
             </div>
-          </div>
+          </form>
+        </Modal>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent/Guardian Name</label>
-              <input
-                required
-                type="text"
-                value={parentName}
-                onChange={(e) => setParentName(e.target.value)}
-                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-              />
-            </div>
-            <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent Contact Info</label>
-              <input
-                required
-                type="text"
-                value={parentContact}
-                onChange={(e) => setParentContact(e.target.value)}
-                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5 text-left">
-            <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Enrollment Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value as "Active" | "Inactive")}
-              className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
-            >
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <button
-              type="button"
-              onClick={() => setIsEditOpen(false)}
-              className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary hover:bg-primary/90 text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
-            >
-              Save Changes
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* ----------------------------------------------------
+        {/* ----------------------------------------------------
           STUDENT DETAIL TAB VIEW MODAL
           ---------------------------------------------------- */}
-      <Modal
-        isOpen={isViewOpen}
-        onClose={() => setIsViewOpen(false)}
-        title={selectedStudent ? `${selectedStudent.name}'s Profile` : "Student Profile"}
-        size="lg"
-      >
-        {selectedStudent && (
-          <div className="space-y-6">
-            {/* Header Tabs */}
-            <div className="flex border-b border-border">
-              <button
-                onClick={() => setActiveTab("profile")}
-                className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "profile"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
-                  }`}
-              >
-                Profile Details
-              </button>
-              <button
-                onClick={() => setActiveTab("academics")}
-                className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "academics"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
-                  }`}
-              >
-                Academics & Grades
-              </button>
-              {!HIDE_FEES_FEATURE && (
+        <Modal
+          isOpen={isViewOpen}
+          onClose={() => setIsViewOpen(false)}
+          title={selectedStudent ? `${selectedStudent.name}'s Profile` : "Student Profile"}
+          size="lg"
+        >
+          {selectedStudent && (
+            <div className="space-y-6">
+              {/* Header Tabs */}
+              <div className="flex border-b border-border">
                 <button
-                  onClick={() => setActiveTab("billing")}
-                  className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "billing"
+                  onClick={() => setActiveTab("profile")}
+                  className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "profile"
                     ? "border-primary text-primary"
                     : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
                     }`}
                 >
-                  Invoices & Billing
+                  Profile Details
                 </button>
+                <button
+                  onClick={() => setActiveTab("academics")}
+                  className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "academics"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
+                    }`}
+                >
+                  Academics & Grades
+                </button>
+                {!HIDE_FEES_FEATURE && (
+                  <button
+                    onClick={() => setActiveTab("billing")}
+                    className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "billing"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
+                      }`}
+                  >
+                    Invoices & Billing
+                  </button>
+                )}
+              </div>
+
+              {/* TAB: PROFILE */}
+              {activeTab === "profile" && (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                          <GraduationCap className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Class Cohort</p>
+                          <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
+                            {getClassName(selectedStudent)} (Roll #{selectedStudent.roll_no || "N/A"})
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                          <Mail className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Email Address</p>
+                          <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
+                            {selectedStudent.guardian_email || selectedStudent.phone || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                          <Calendar className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Enrollment Date</p>
+                          <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
+                            {formatDate(selectedStudent.admission_date || selectedStudent.createdAt || "")}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                          <User className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Parent/Guardian</p>
+                          <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
+                            {selectedStudent.guardian_name || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                          <Phone className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Emergency Contact</p>
+                          <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
+                            {selectedStudent.guardian_phone || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
+
+              {/* TAB: ACADEMICS */}
+              {activeTab === "academics" && (
+                <div className="space-y-4 text-left">
+                  <h4 className="text-[14px] font-semibold text-slate-900 dark:text-white">Report Card (Recent Term Results)</h4>
+                  <div className="border border-border rounded-xl overflow-hidden shadow-sm">
+                    <table className="w-full text-left text-[13px] border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                          <th className="px-5 py-3.5">Subject</th>
+                          <th className="px-5 py-3.5">Exam Term</th>
+                          <th className="px-5 py-3.5">Score Achieved</th>
+                          <th className="px-5 py-3.5">Grade Rating</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border bg-white dark:bg-slate-900">
+                        <tr>
+                          <td colSpan={4} className="px-5 py-8 text-center text-slate-500 dark:text-slate-400">
+                            No grade records posted for this student.
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: BILLING */}
+              {activeTab === "billing" && !HIDE_FEES_FEATURE && (
+                <div className="space-y-4 text-left">
+                  <h4 className="text-[14px] font-semibold text-slate-900 dark:text-white">Financial Invoices</h4>
+                  <div className="border border-border rounded-xl overflow-hidden shadow-sm">
+                    <table className="w-full text-left text-[13px] border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                          <th className="px-5 py-3.5">Invoice Description</th>
+                          <th className="px-5 py-3.5">Due Date</th>
+                          <th className="px-5 py-3.5">Amount Due</th>
+                          <th className="px-5 py-3.5">Payment Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border bg-white dark:bg-slate-900">
+                        <tr>
+                          <td colSpan={4} className="px-5 py-8 text-center text-slate-500 dark:text-slate-400">
+                            No billing invoice data exists.
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+
+
+              <div className="flex justify-end pt-4 border-t border-border">
+                <button
+                  type="button"
+                  onClick={() => setIsViewOpen(false)}
+                  className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
+                >
+                  Close Profile
+                </button>
+              </div>
             </div>
+          )}
+        </Modal>
 
-            {/* TAB: PROFILE */}
-            {activeTab === "profile" && (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                        <GraduationCap className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Class Cohort</p>
-                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
-                          {getClassName(selectedStudent)} (Roll #{selectedStudent.roll_no || "N/A"})
-                        </p>
-                      </div>
-                    </div>
+        <CollectFeesModal
+          isOpen={isCollectFeesOpen}
+          onClose={() => setIsCollectFeesOpen(false)}
+          student={selectedStudent as unknown as Parameters<typeof CollectFeesModal>[0]['student']}
+        />
 
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                        <Mail className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Email Address</p>
-                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
-                          {selectedStudent.guardian_email || selectedStudent.phone || "N/A"}
-                        </p>
-                      </div>
-                    </div>
+        <LoginDetailsModal
+          isOpen={isLoginDetailsOpen}
+          onClose={() => setIsLoginDetailsOpen(false)}
+          student={selectedStudent}
+          target={loginModalTarget}
+        />
 
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                        <Calendar className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Enrollment Date</p>
-                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
-                          {formatDate(selectedStudent.admission_date || selectedStudent.createdAt || "")}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+        <ResetPasswordModal
+          isOpen={isResetPassModalOpen}
+          onClose={() => setIsResetPassModalOpen(false)}
+          userId={resetPassTarget?.userId}
+          userName={resetPassTarget?.name || ""}
+          userEmail={resetPassTarget?.email || ""}
+          onSuccess={() => fetchStudents({ search: debouncedSearch, classId: classFilter, gender: genderFilter, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 12, academic_year: academicYear })}
+        />
 
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                        <User className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Parent/Guardian</p>
-                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
-                          {selectedStudent.guardian_name || "N/A"}
-                        </p>
-                      </div>
-                    </div>
+        <ConfirmModal
+          isOpen={isDisableOpen}
+          onClose={() => setIsDisableOpen(false)}
+          title="Disable Student"
+          message={`Are you sure you want to disable ${selectedStudent?.name}? They will no longer be able to log in.`}
+          confirmText="Disable Student"
+          onConfirm={async () => {
+            if (selectedStudent) {
+              await updateStudentApi(selectedStudent._id, { is_active: false });
+              setIsDisableOpen(false);
+            }
+          }}
+        />
 
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                        <Phone className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Emergency Contact</p>
-                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
-                          {selectedStudent.guardian_phone || "N/A"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+        <ConfirmModal
+          isOpen={isDeleteOpen}
+          onClose={() => setIsDeleteOpen(false)}
+          title="Delete Student"
+          message={`Are you sure you want to remove ${selectedStudent?.name}? They will be deactivated.`}
+          confirmText="Delete"
+          onConfirm={async () => {
+            if (selectedStudent) {
+              await deleteStudentApi(selectedStudent._id);
+              setIsDeleteOpen(false);
+            }
+          }}
+        />
+
+        {/* Floating Bulk Actions Bar */}
+        {
+          selectedIds.length > 0 && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-[60] backdrop-blur-md border border-slate-700/60 transition-all duration-300 animate-in slide-in-from-bottom-5">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-[14px] font-bold tracking-wide">{selectedIds.length} Selected</span>
               </div>
-            )}
 
-            {/* TAB: ACADEMICS */}
-            {activeTab === "academics" && (
-              <div className="space-y-4 text-left">
-                <h4 className="text-[14px] font-semibold text-slate-900 dark:text-white">Report Card (Recent Term Results)</h4>
-                <div className="border border-border rounded-xl overflow-hidden shadow-sm">
-                  <table className="w-full text-left text-[13px] border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
-                        <th className="px-5 py-3.5">Subject</th>
-                        <th className="px-5 py-3.5">Exam Term</th>
-                        <th className="px-5 py-3.5">Score Achieved</th>
-                        <th className="px-5 py-3.5">Grade Rating</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border bg-white dark:bg-slate-900">
-                      <tr>
-                        <td colSpan={4} className="px-5 py-8 text-center text-slate-500 dark:text-slate-400">
-                          No grade records posted for this student.
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+              <div className="h-4 w-px bg-slate-700" />
+
+              <div className="flex items-center gap-2.5">
+                <button
+                  onClick={handleExport}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Export CSV</span>
+                </button>
+                <button
+                  onClick={() => handleBulkStatusChange(true)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+                >
+                  <span>Activate</span>
+                </button>
+                <button
+                  onClick={() => handleBulkStatusChange(false)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+                >
+                  <span>Deactivate</span>
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete</span>
+                </button>
               </div>
-            )}
 
-            {/* TAB: BILLING */}
-            {activeTab === "billing" && !HIDE_FEES_FEATURE && (
-              <div className="space-y-4 text-left">
-                <h4 className="text-[14px] font-semibold text-slate-900 dark:text-white">Financial Invoices</h4>
-                <div className="border border-border rounded-xl overflow-hidden shadow-sm">
-                  <table className="w-full text-left text-[13px] border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
-                        <th className="px-5 py-3.5">Invoice Description</th>
-                        <th className="px-5 py-3.5">Due Date</th>
-                        <th className="px-5 py-3.5">Amount Due</th>
-                        <th className="px-5 py-3.5">Payment Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border bg-white dark:bg-slate-900">
-                      <tr>
-                        <td colSpan={4} className="px-5 py-8 text-center text-slate-500 dark:text-slate-400">
-                          No billing invoice data exists.
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+              <div className="h-4 w-px bg-slate-700" />
 
-
-
-            <div className="flex justify-end pt-4 border-t border-border">
               <button
-                type="button"
-                onClick={() => setIsViewOpen(false)}
-                className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
+                onClick={() => setSelectedIds([])}
+                className="text-[13px] text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
               >
-                Close Profile
+                Clear
               </button>
             </div>
-          </div>
-        )}
-      </Modal>
-
-      <CollectFeesModal
-        isOpen={isCollectFeesOpen}
-        onClose={() => setIsCollectFeesOpen(false)}
-        student={selectedStudent as unknown as Parameters<typeof CollectFeesModal>[0]['student']}
-      />
-
-      <LoginDetailsModal
-        isOpen={isLoginDetailsOpen}
-        onClose={() => setIsLoginDetailsOpen(false)}
-        student={selectedStudent}
-        target={loginModalTarget}
-      />
-
-      <ResetPasswordModal
-        isOpen={isResetPassModalOpen}
-        onClose={() => setIsResetPassModalOpen(false)}
-        userId={resetPassTarget?.userId}
-        userName={resetPassTarget?.name || ""}
-        userEmail={resetPassTarget?.email || ""}
-        onSuccess={() => fetchStudents({ search: debouncedSearch, classId: classFilter, gender: genderFilter, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 12, academic_year: academicYear })}
-      />
-
-      <ConfirmModal
-        isOpen={isDisableOpen}
-        onClose={() => setIsDisableOpen(false)}
-        title="Disable Student"
-        message={`Are you sure you want to disable ${selectedStudent?.name}? They will no longer be able to log in.`}
-        confirmText="Disable Student"
-        onConfirm={async () => {
-          if (selectedStudent) {
-            await updateStudentApi(selectedStudent._id, { is_active: false });
-            setIsDisableOpen(false);
-          }
-        }}
-      />
-
-      <ConfirmModal
-        isOpen={isDeleteOpen}
-        onClose={() => setIsDeleteOpen(false)}
-        title="Delete Student"
-        message={`Are you sure you want to remove ${selectedStudent?.name}? They will be deactivated.`}
-        confirmText="Delete"
-        onConfirm={async () => {
-          if (selectedStudent) {
-            await deleteStudentApi(selectedStudent._id);
-            setIsDeleteOpen(false);
-          }
-        }}
-      />
-
-      {/* Floating Bulk Actions Bar */}
-      {selectedIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-[60] backdrop-blur-md border border-slate-700/60 transition-all duration-300 animate-in slide-in-from-bottom-5">
-          <div className="flex items-center gap-2">
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-[14px] font-bold tracking-wide">{selectedIds.length} Selected</span>
-          </div>
-          
-          <div className="h-4 w-px bg-slate-700" />
-          
-          <div className="flex items-center gap-2.5">
-            <button
-              onClick={handleExport}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
-            </button>
-            <button
-              onClick={() => handleBulkStatusChange(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
-            >
-              <span>Activate</span>
-            </button>
-            <button
-              onClick={() => handleBulkStatusChange(false)}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
-            >
-              <span>Deactivate</span>
-            </button>
-            <button
-              onClick={handleBulkDelete}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete</span>
-            </button>
-          </div>
-          
-          <div className="h-4 w-px bg-slate-700" />
-          
-          <button
-            onClick={() => setSelectedIds([])}
-            className="text-[13px] text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
-          >
-            Clear
-          </button>
-        </div>
-      )}
-    </div>
+          )
+        }
+      </div >
+    </div >
   );
 }

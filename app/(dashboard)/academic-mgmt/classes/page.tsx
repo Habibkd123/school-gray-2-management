@@ -15,7 +15,7 @@ import { useAppState } from "@/app/context/store";
 import { useSections } from "@/app/hooks/useSections";
 import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { useStreams } from "@/app/hooks/useStreams";
-import { useAuthReady } from "@/lib/utils/session";
+import { useAuthReady, getAuthHeaders } from "@/lib/utils/session";
 
 const CLASS_OPTIONS = [
   "Nursery", "LKG", "UKG",
@@ -31,7 +31,7 @@ export default function AcademicClassesPage() {
   const { academicYear } = useAppState();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
   const { classes, isLoading, error, total, totalPages, currentPage, fetchClasses, createClass, updateClass, deleteClass } = useClasses({ skip: true });
-  const { teachers } = useTeachers();
+  const { teachers } = useTeachers({ limit: "all" });
   const { config } = useAcademicConfig();
   const { sections, createSection } = useSections();
   const enableSections = config.enable_sections;
@@ -103,6 +103,31 @@ export default function AcademicClassesPage() {
   const [formStreams, setFormStreams] = useState<string[]>([]);
   const [formStream, setFormStream] = useState("");
 
+  const [teacherSearchText, setTeacherSearchText] = useState("");
+  const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
+
+  // Dependency checking state variables for delete protection
+  const [checkingDependencies, setCheckingDependencies] = useState(false);
+  const [dependencyError, setDependencyError] = useState<string | null>(null);
+  const [dependencyReasons, setDependencyReasons] = useState<string[]>([]);
+  const [isDeletable, setIsDeletable] = useState(true);
+
+  const filteredTeachers = React.useMemo(() => {
+    if (!teacherSearchText) return teachers.filter(t => t.is_active);
+    const q = teacherSearchText.toLowerCase();
+    return teachers.filter(t => 
+      t.is_active &&
+      (t.name.toLowerCase().includes(q) ||
+      (t.employee_id && t.employee_id.toLowerCase().includes(q)) ||
+      (t.department && t.department.toLowerCase().includes(q)) ||
+      (t.designation && t.designation.toLowerCase().includes(q)))
+    );
+  }, [teachers, teacherSearchText]);
+
+  const selectedTeacherDetails = React.useMemo(() => {
+    return teachers.find(t => t._id === formTeacherId);
+  }, [teachers, formTeacherId]);
+
   const [quickSectionName, setQuickSectionName] = useState("");
   const [addingSection, setAddingSection] = useState(false);
 
@@ -124,6 +149,8 @@ export default function AcademicClassesPage() {
     setFormName(""); setFormClassCode(""); setFormSection(""); setFormSections([]); setFormAcademicYear(academicYear);
     setFormTeacherId(""); setFormCapacity("40"); setFormStatus("Active"); setFormError("");
     setQuickSectionName(""); setFormStreams([]); setFormStream("");
+    setTeacherSearchText(""); setIsTeacherDropdownOpen(false);
+    setDependencyError(null); setDependencyReasons([]); setIsDeletable(true);
   };
 
   const openEdit = (cls: ApiClass) => {
@@ -142,7 +169,10 @@ export default function AcademicClassesPage() {
     setFormClassCode((cls as any).class_code || "");
     setFormSection(cls.section || "");
     setFormAcademicYear(cls.academic_year);
-    setFormTeacherId(cls.class_teacher_id?._id || "");
+    const teacherId = cls.class_teacher_id
+      ? (typeof cls.class_teacher_id === 'object' ? cls.class_teacher_id._id : cls.class_teacher_id)
+      : "";
+    setFormTeacherId(teacherId);
     setFormCapacity(String(cls.capacity));
     setFormStatus((cls as any).status || "Active");
     setFormError("");
@@ -150,8 +180,28 @@ export default function AcademicClassesPage() {
     setActionMenuId(null);
   };
 
-  const openDelete = (cls: ApiClass) => {
-    setSelectedClass(cls); setIsDeleteOpen(true); setActionMenuId(null);
+  const openDelete = async (cls: ApiClass) => {
+    setSelectedClass(cls);
+    setIsDeleteOpen(true);
+    setActionMenuId(null);
+    setCheckingDependencies(true);
+    setDependencyError(null);
+    setDependencyReasons([]);
+    setIsDeletable(true);
+    try {
+      const res = await fetch(`/api/academic/dependency-check?type=class&id=${cls._id}`, { headers: getAuthHeaders() });
+      const data = await res.json();
+      if (data.success) {
+        setIsDeletable(data.data.deletable);
+        setDependencyReasons(data.data.reasons);
+      } else {
+        setDependencyError(data.message || "Failed to check dependencies");
+      }
+    } catch (err) {
+      setDependencyError("Failed to check references");
+    } finally {
+      setCheckingDependencies(false);
+    }
   };
 
   const handleAddSubmit = async (e: React.FormEvent) => {
@@ -244,30 +294,30 @@ export default function AcademicClassesPage() {
     </span>
   );
 
-  const columns: ColumnDef<ApiClass>[] = React.useMemo(() => {
-    const cols: ColumnDef<ApiClass>[] = [
+  const columns: ColumnDef<any>[] = React.useMemo(() => {
+    const cols: ColumnDef<any>[] = [
       { header: "#", accessorKey: "_id", render: (_c: ApiClass, i: number) => <span className="text-slate-500 font-medium text-[13px]">{i + 1}</span> },
-      { header: "Class Name", accessorKey: "name", render: (c) => <span className="font-semibold text-slate-800 dark:text-slate-200">{c.name}</span> },
+      { header: "Class", accessorKey: "name", render: (c) => <span className="font-semibold text-slate-800 dark:text-slate-200">{c.name}{c.section ? ` - ${c.section}` : ""}</span> },
     ];
 
     if (enableSections) {
       cols.push({
-        header: "Section",
-        accessorKey: "section",
-        render: (c) => <span className="font-semibold text-slate-700 dark:text-slate-300">{c.section || "—"}</span>,
+        header: "Section Count",
+        accessorKey: "sectionCount",
+        render: (c) => <span className="font-semibold text-slate-700 dark:text-slate-300">{(c as any).sectionCount ?? 0}</span>,
       });
     }
 
     cols.push(
-      { header: "Academic Year", accessorKey: "academic_year" },
+      { header: "Students", accessorKey: "studentCount", render: (c) => <span className="font-semibold text-slate-700 dark:text-slate-300">{(c as any).studentCount ?? 0}</span> },
       {
         header: "Class Teacher", accessorKey: "class_teacher_id", render: (c) => (
-          <span className="text-slate-600 dark:text-slate-300">
-            {c.class_teacher_id ? c.class_teacher_id.name : <span className="text-slate-400 italic">Not assigned</span>}
+          <span className="text-slate-600 dark:text-slate-300 font-medium">
+            {c.class_teacher_id ? (typeof c.class_teacher_id === 'object' ? c.class_teacher_id.name : c.class_teacher_id) : <span className="text-slate-400 italic">Not assigned</span>}
           </span>
         )
       },
-      { header: "Capacity", accessorKey: "capacity" },
+      { header: "Subjects", accessorKey: "subjectCount", render: (c) => <span className="font-semibold text-slate-700 dark:text-slate-300">{(c as any).subjectCount ?? 0}</span> },
       { header: "Status", accessorKey: "status", render: (c) => <StatusBadge status={(c as any).status} /> }
     );
 
@@ -302,27 +352,28 @@ export default function AcademicClassesPage() {
   }, [enableSections, isAdmin, actionMenuId]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+      <div className="page-header">
         <div>
-          <h1 className="text-[20px] leading-[24px] font-bold text-foreground dark:text-slate-100">Classes</h1>
-          <div className="flex items-center gap-2 text-[14px] text-[#68718a] mt-1 font-medium">
-            <span>Academic Management</span><span>/</span>
-            <span className="text-foreground dark:text-slate-100">Classes</span>
+          <h1 className="page-title">Classes</h1>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+            <span>Academic Management</span>
+            <span>/</span>
+            <span className="text-slate-900 dark:text-white font-medium">Classes</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => doFetch()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors dark:text-slate-400">
+          <button onClick={() => doFetch()} className="btn btn-outline p-2 w-9 h-9">
             <RefreshCcw className="w-4 h-4" />
           </button>
-          <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors dark:text-slate-400">
+          <button className="btn btn-outline p-2 w-9 h-9">
             <Printer className="w-4 h-4" />
           </button>
           <div className="relative">
             <button onClick={() => setIsExportOpen(!isExportOpen)}
-              className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors">
-              <Download className="w-4 h-4" /><span>Export</span><ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              className="btn btn-outline">
+              <Download className="w-4 h-4" /> Export <ChevronDown className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
             </button>
             {isExportOpen && (
               <>
@@ -340,8 +391,8 @@ export default function AcademicClassesPage() {
           </div>
           {isAdmin && (
             <button onClick={() => { resetForm(); setIsAddOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
-              <Plus className="w-4 h-4" /><span>Add Class</span>
+              className="btn btn-primary">
+              <Plus className="w-4 h-4" /> Add Class
             </button>
           )}
         </div>
@@ -568,18 +619,77 @@ export default function AcademicClassesPage() {
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
               </div>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
-              <div className="relative">
-                <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
-                  <option value="">Not assigned</option>
-                  {teachers.filter(t => t.is_active).map(t => (
-                    <option key={t._id} value={t._id}>{t.name}{t.employee_id ? ` (${t.employee_id})` : ""}</option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+            <div className="flex flex-col gap-1.5 relative">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100 font-medium">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
+              <div 
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground cursor-pointer flex items-center justify-between outline-none focus:border-primary/50 font-semibold"
+                onClick={() => setIsTeacherDropdownOpen(!isTeacherDropdownOpen)}
+              >
+                {selectedTeacherDetails ? (
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {selectedTeacherDetails.name} {selectedTeacherDetails.employee_id ? `(${selectedTeacherDetails.employee_id})` : ""}
+                  </span>
+                ) : (
+                  <span className="text-slate-400">Select Class Teacher</span>
+                )}
+                <ChevronDown className="w-4 h-4 text-slate-400" />
               </div>
+              {isTeacherDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-[60]" onClick={() => setIsTeacherDropdownOpen(false)} />
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
+                    <div className="relative">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        placeholder="Search Name/ID/Dept/Designation..."
+                        value={teacherSearchText}
+                        onChange={(e) => setTeacherSearchText(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-slate-50 dark:bg-slate-900 text-foreground font-semibold"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <div className="overflow-y-auto flex-1 divide-y divide-border/40 custom-scrollbar pr-1 max-h-[200px]">
+                      <div
+                        onClick={() => {
+                          setFormTeacherId("");
+                          setIsTeacherDropdownOpen(false);
+                          setTeacherSearchText("");
+                        }}
+                        className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors text-[13px] font-semibold ${
+                          !formTeacherId ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                        }`}
+                      >
+                        <span>Not assigned</span>
+                      </div>
+                      {filteredTeachers.length === 0 ? (
+                        <p className="text-slate-450 text-[13px] py-4 text-center">No active teachers found.</p>
+                      ) : (
+                        filteredTeachers.map(t => (
+                          <div
+                            key={t._id}
+                            onClick={() => {
+                              setFormTeacherId(t._id);
+                              setIsTeacherDropdownOpen(false);
+                              setTeacherSearchText("");
+                            }}
+                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
+                              formTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                            }`}
+                          >
+                            <div className="text-left">
+                              <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200">{t.name}</p>
+                              <p className="text-[11px] text-slate-400 font-semibold">
+                                {t.department || "Academic"} • {t.designation || "Teacher"} {t.employee_id ? `• ID: ${t.employee_id}` : ""}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -711,18 +821,77 @@ export default function AcademicClassesPage() {
               <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)} min={1} max={200}
                 className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
-              <div className="relative">
-                <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
-                  <option value="">Not assigned</option>
-                  {teachers.filter(t => t.is_active).map(t => (
-                    <option key={t._id} value={t._id}>{t.name}{t.employee_id ? ` (${t.employee_id})` : ""}</option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+            <div className="flex flex-col gap-1.5 relative">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100 font-medium">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
+              <div 
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground cursor-pointer flex items-center justify-between outline-none focus:border-primary/50 font-semibold"
+                onClick={() => setIsTeacherDropdownOpen(!isTeacherDropdownOpen)}
+              >
+                {selectedTeacherDetails ? (
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {selectedTeacherDetails.name} {selectedTeacherDetails.employee_id ? `(${selectedTeacherDetails.employee_id})` : ""}
+                  </span>
+                ) : (
+                  <span className="text-slate-400">Select Class Teacher</span>
+                )}
+                <ChevronDown className="w-4 h-4 text-slate-400" />
               </div>
+              {isTeacherDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-[60]" onClick={() => setIsTeacherDropdownOpen(false)} />
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
+                    <div className="relative">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        placeholder="Search Name/ID/Dept/Designation..."
+                        value={teacherSearchText}
+                        onChange={(e) => setTeacherSearchText(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-slate-50 dark:bg-slate-900 text-foreground font-semibold"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    <div className="overflow-y-auto flex-1 divide-y divide-border/40 custom-scrollbar pr-1 max-h-[200px]">
+                      <div
+                        onClick={() => {
+                          setFormTeacherId("");
+                          setIsTeacherDropdownOpen(false);
+                          setTeacherSearchText("");
+                        }}
+                        className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors text-[13px] font-semibold ${
+                          !formTeacherId ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                        }`}
+                      >
+                        <span>Not assigned</span>
+                      </div>
+                      {filteredTeachers.length === 0 ? (
+                        <p className="text-slate-450 text-[13px] py-4 text-center">No active teachers found.</p>
+                      ) : (
+                        filteredTeachers.map(t => (
+                          <div
+                            key={t._id}
+                            onClick={() => {
+                              setFormTeacherId(t._id);
+                              setIsTeacherDropdownOpen(false);
+                              setTeacherSearchText("");
+                            }}
+                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
+                              formTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                            }`}
+                          >
+                            <div className="text-left">
+                              <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200">{t.name}</p>
+                              <p className="text-[11px] text-slate-400 font-semibold">
+                                {t.department || "Academic"} • {t.designation || "Teacher"} {t.employee_id ? `• ID: ${t.employee_id}` : ""}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
@@ -739,15 +908,64 @@ export default function AcademicClassesPage() {
       </Modal>
       <Modal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="Delete Class">
         <div className="space-y-5 text-left">
-          <p className="text-[14px] text-slate-600 dark:text-slate-300">
-            Are you sure you want to delete <span className="font-bold text-foreground dark:text-white">{selectedClass?.name}{selectedClass?.section ? ` - ${selectedClass.section}` : ""}</span>? This action cannot be undone.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
-            <button onClick={handleDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Delete
-            </button>
-          </div>
+          {checkingDependencies ? (
+            <div className="flex items-center gap-2 py-4 justify-center text-slate-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-[13px] font-medium">Checking academic referential dependencies...</span>
+            </div>
+          ) : !isDeletable ? (
+            <div className="space-y-4">
+              <div className="flex items-start gap-2.5 p-3.5 rounded-lg bg-rose-50 dark:bg-rose-955/20 border border-rose-200/50 dark:border-rose-900/30 text-rose-700 dark:text-rose-450 text-[13px] font-medium leading-[20px]">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold mb-1">Cannot Delete Class</p>
+                  <p>This class contains active references in the school management database and cannot be deleted. Deleting it would create orphaned records.</p>
+                  <div className="mt-2.5 space-y-1">
+                    <p className="font-bold">Active Dependencies found:</p>
+                    <ul className="list-disc list-inside pl-1 text-[12px] font-semibold text-rose-600 dark:text-rose-455">
+                      {dependencyReasons.map((r, i) => <li key={i}>{r}</li>)}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[13px] text-slate-500">Would you like to archive or deactivate this class instead? Archived/Deactivated classes will be hidden from academic scheduling dropdowns.</p>
+              <div className="flex flex-wrap gap-2 justify-end pt-2 border-t border-border/50">
+                <button onClick={() => setIsDeleteOpen(false)} className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-foreground text-[13px] font-bold rounded-lg transition-colors">Cancel</button>
+                <button onClick={async () => {
+                  if (!selectedClass) return;
+                  setSubmitting(true);
+                  const result = await updateClass(selectedClass._id, { status: "Inactive" });
+                  setSubmitting(false);
+                  if (result.success) { setIsDeleteOpen(false); resetForm(); doFetch(); }
+                  else alert(result.message);
+                }} disabled={submitting} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[13px] font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                  Deactivate
+                </button>
+                <button onClick={async () => {
+                  if (!selectedClass) return;
+                  setSubmitting(true);
+                  const result = await updateClass(selectedClass._id, { status: "Archived" });
+                  setSubmitting(false);
+                  if (result.success) { setIsDeleteOpen(false); resetForm(); doFetch(); }
+                  else alert(result.message);
+                }} disabled={submitting} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-[13px] font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                  Archive Class
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-[14px] text-slate-600 dark:text-slate-300">
+                Are you sure you want to delete <span className="font-bold text-foreground dark:text-white">{selectedClass?.name}{selectedClass?.section ? ` - ${selectedClass.section}` : ""}</span>? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3 pt-2 border-t border-border/50">
+                <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
+                <button onClick={handleDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
+                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Delete
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </Modal>
     </div>

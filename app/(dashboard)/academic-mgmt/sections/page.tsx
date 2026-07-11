@@ -166,23 +166,24 @@ export default function SectionsPage() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
+      <div className="page-header">
         <div>
-          <h1 className="text-[20px] leading-[24px] font-bold text-foreground dark:text-slate-100">Sections</h1>
-          <div className="flex items-center gap-2 text-[14px] text-[#68718a] mt-1 font-medium">
-            <span>Academic Management</span><span>/</span>
-            <span className="text-foreground dark:text-slate-100">Sections</span>
+          <h1 className="page-title">Sections</h1>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+            <span>Academic Management</span>
+            <span>/</span>
+            <span className="text-slate-900 dark:text-white font-medium">Sections</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchSections({ limit: 100 })} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm dark:text-slate-400">
+          <button onClick={() => fetchSections({ limit: 100 })} className="btn btn-outline p-2 w-9 h-9">
             <RefreshCcw className="w-4 h-4" />
           </button>
           {isAdmin && (
             <button onClick={() => { resetForm(); setIsAddOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
-              <Plus className="w-4 h-4" /><span>Add Section</span>
+              className="btn btn-primary">
+              <Plus className="w-4 h-4" /> Add Section
             </button>
           )}
         </div>

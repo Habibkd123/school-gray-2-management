@@ -9,8 +9,14 @@ export interface PopulatedAssignment {
   academic_year: string;
   class_id?: { _id: string; name: string; class_code?: string; section?: string } | null;
   stream_id?: { _id: string; name: string } | null;
-  subject_master_id: { _id: string; name: string; subject_code?: string };
+  subject_master_id: { _id: string; name: string; subject_code?: string; description?: string };
+  teacher_id?: { _id: string; name: string; employee_id?: string } | null;
+  weekly_periods?: number;
+  description?: string;
+  status?: "Active" | "Inactive";
+  created_by?: { _id: string; name: string } | null;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export function useSubjectAssignment() {
@@ -25,6 +31,11 @@ export function useSubjectAssignment() {
     class_id?: string;
     stream_id?: string;
     academic_year?: string;
+    subject_id?: string;
+    teacher_id?: string;
+    status?: string;
+    search?: string;
+    sort?: string;
     page?: number;
     limit?: number;
   } = {}) => {
@@ -34,6 +45,11 @@ export function useSubjectAssignment() {
       if (params.class_id) qs.set("class_id", params.class_id);
       if (params.stream_id) qs.set("stream_id", params.stream_id);
       if (params.academic_year) qs.set("academic_year", params.academic_year);
+      if (params.subject_id) qs.set("subject_id", params.subject_id);
+      if (params.teacher_id) qs.set("teacher_id", params.teacher_id);
+      if (params.status) qs.set("status", params.status);
+      if (params.search) qs.set("search", params.search);
+      if (params.sort) qs.set("sort", params.sort);
       if (params.page) qs.set("page", String(params.page));
       if (params.limit) qs.set("limit", String(params.limit));
 
@@ -58,6 +74,10 @@ export function useSubjectAssignment() {
     stream_id?: string;
     subject_master_id?: string;
     subject_master_ids?: string[];
+    teacher_id?: string;
+    weekly_periods?: number;
+    description?: string;
+    status?: "Active" | "Inactive";
   }) => {
     try {
       const res = await fetch("/api/subject-assignment", {
@@ -76,6 +96,10 @@ export function useSubjectAssignment() {
     class_id?: string;
     stream_id?: string;
     subject_master_id?: string;
+    teacher_id?: string | null;
+    weekly_periods?: number;
+    description?: string;
+    status?: "Active" | "Inactive";
   }) => {
     try {
       const res = await fetch(`/api/subject-assignment/${id}`, {

@@ -4,6 +4,8 @@ import { SubjectMaster } from "@/lib/models/index";
 import Stream from "@/lib/models/Stream";
 import { requireAuth } from "@/lib/utils/auth";
 
+import { SubjectAssignment, TeacherAssignment } from "@/lib/models/index";
+
 // GET — list subject masters
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
@@ -15,7 +17,9 @@ export async function GET(req: NextRequest) {
     const search = url.searchParams.get("search") || "";
     const status = url.searchParams.get("status") || "";
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
-    const limit = Math.min(100, parseInt(url.searchParams.get("limit") || "50"));
+    const limitParam = url.searchParams.get("limit");
+    const isAll = limitParam === "all" || (limitParam && parseInt(limitParam) >= 1000);
+    const limit = isAll ? 100000 : parseInt(limitParam || "50");
 
     const query: any = { school_id: schoolId };
     if (search) {
@@ -24,18 +28,36 @@ export async function GET(req: NextRequest) {
         { subject_code: { $regex: search, $options: "i" } },
       ];
     }
-    if (status) query.status = status;
+    if (status && status !== "all") {
+      query.status = status;
+    } else if (status !== "all") {
+      query.status = { $ne: "Archived" };
+    }
 
     const total = await SubjectMaster.countDocuments(query);
     const subjects = await SubjectMaster.find(query)
       .sort({ name: 1 })
-      .skip((page - 1) * limit)
+      .skip(isAll ? 0 : (page - 1) * limit)
       .limit(limit)
       .lean();
 
+    const subjectsWithStats = await Promise.all(
+      subjects.map(async (s: any) => {
+        const [classCount, teacherCount] = await Promise.all([
+          SubjectAssignment.countDocuments({ school_id: schoolId, subject_master_id: s._id }),
+          TeacherAssignment.countDocuments({ school_id: schoolId, subject_master_id: s._id, is_deleted: false })
+        ]);
+        return {
+          ...s,
+          classesCount: classCount,
+          teachersCount: teacherCount
+        };
+      })
+    );
+
     return NextResponse.json({
       success: true,
-      data: { subjects, total, page, totalPages: Math.ceil(total / limit) },
+      data: { subjects: subjectsWithStats, total, page, totalPages: Math.ceil(total / limit) },
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

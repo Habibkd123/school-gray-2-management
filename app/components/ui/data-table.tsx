@@ -66,14 +66,14 @@ export function DataTable<T>({
 
   return (
     <div className="overflow-x-auto custom-scrollbar">
-      <table className="w-full text-left text-[13px]" style={{ minWidth }}>
-        <thead className="text-slate-900 dark:text-white font-semibold bg-white dark:bg-slate-900 border-b border-border">
+      <table className="erp-table" style={{ minWidth }}>
+        <thead>
           <tr>
-            {selectionHeader && <th className="px-4 py-4 w-12">{selectionHeader}</th>}
+            {selectionHeader && <th className="w-12 text-center">{selectionHeader}</th>}
             {columns.map((col, idx) => (
               <th 
                 key={idx} 
-                className={`px-4 py-4 whitespace-nowrap ${col.sortable !== false && col.accessorKey ? 'cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors' : ''} ${col.className || ''}`}
+                className={`${col.sortable !== false && col.accessorKey ? 'cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors' : ''} ${col.className || ''}`}
                 onClick={() => col.sortable !== false && col.accessorKey && handleSort(col.accessorKey)}
               >
                 <div className="flex items-center gap-1">
@@ -88,10 +88,10 @@ export function DataTable<T>({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-border text-slate-600 dark:text-slate-300 font-medium">
+        <tbody>
           {sortedData.length === 0 ? (
             <tr>
-              <td colSpan={columns.length + (selectionHeader ? 1 : 0)} className="px-4 py-12 text-center text-slate-500 dark:text-slate-400">
+              <td colSpan={columns.length + (selectionHeader ? 1 : 0)} className="table-empty">
                 {noDataMessage}
               </td>
             </tr>
@@ -99,16 +99,16 @@ export function DataTable<T>({
             sortedData.map((item, i) => (
               <tr 
                 key={i} 
-                className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors ${onRowClick ? 'cursor-pointer group' : ''}`}
+                className={`${onRowClick ? 'cursor-pointer group' : ''}`}
                 onClick={() => onRowClick?.(item)}
               >
                 {renderSelection && (
-                  <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                  <td className="text-center" onClick={(e) => e.stopPropagation()}>
                     {renderSelection(item)}
                   </td>
                 )}
                 {columns.map((col, idx) => (
-                  <td key={idx} className={`px-4 py-4 ${col.className || ''}`}>
+                  <td key={idx} className={col.className || ''}>
                     {col.render ? col.render(item, i) : (col.accessorKey ? (item[col.accessorKey] as React.ReactNode) : null)}
                   </td>
                 ))}

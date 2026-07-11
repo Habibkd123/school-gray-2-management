@@ -8,7 +8,7 @@ import User from "@/lib/models/User";
 
 // ─── GET /api/parents/[id] — Get a single parent ──────────────────────
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { schoolId, error } = requireAuth(request, ["school_admin", "super_admin", "teacher"]);
+  const { schoolId, role, userId, error } = requireAuth(request, ["school_admin", "super_admin", "teacher", "parent"]);
   if (error) return error;
 
   try {
@@ -25,6 +25,13 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     if (!parent) {
       return NextResponse.json({ success: false, message: "Parent not found" }, { status: 404 });
+    }
+
+    if (role === "parent") {
+      const parentUserId = parent.user_id && typeof parent.user_id === "object" ? parent.user_id._id : parent.user_id;
+      if (String(parentUserId) !== String(userId)) {
+        return NextResponse.json({ success: false, message: "Access denied: Unauthorized parent view" }, { status: 403 });
+      }
     }
 
     const children = await Student.find({ parent_id: parent._id, school_id: schoolId })

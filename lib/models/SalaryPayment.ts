@@ -3,23 +3,32 @@ import mongoose, { Document, Model, Schema } from "mongoose";
 export interface ISalaryPayment extends Document {
   school_id: mongoose.Types.ObjectId;
   teacher_id: mongoose.Types.ObjectId;
-  salary_period: string; // YYYY-MM or date range description
+  salary_period: string; // YYYY-MM
   start_date?: Date;
   end_date?: Date;
   monthly_salary: number;
   working_days: number;
   present_days: number;
   absent_days: number;
+  late_days?: number;
+  half_days?: number;
+  leave_days?: number;
+  unpaid_leaves?: number;
   suggested_deduction: number;
   payable_amount?: number;
   bonus?: number;
   deduction?: number;
+  overtime_amount?: number;
+  tax_deduction?: number;
   final_salary: number;
-  payment_date: Date;
+  payment_date?: Date;
+  payment_method?: "Cash" | "Bank Transfer" | "Cheque";
   receipt_number: string;
   remarks?: string;
-  status: "Paid";
+  status: "Draft" | "Approved" | "Paid";
   calculation_type: string; // "Monthly" or "Day Wise"
+  generated_by?: mongoose.Types.ObjectId;
+  approved_by?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,16 +44,25 @@ const salaryPaymentSchema = new Schema<ISalaryPayment>(
     working_days: { type: Number, required: true, min: 0 },
     present_days: { type: Number, required: true, min: 0 },
     absent_days: { type: Number, required: true, min: 0 },
+    late_days: { type: Number, default: 0 },
+    half_days: { type: Number, default: 0 },
+    leave_days: { type: Number, default: 0 },
+    unpaid_leaves: { type: Number, default: 0 },
     suggested_deduction: { type: Number, required: true, min: 0 },
     payable_amount: { type: Number, default: 0 },
     bonus: { type: Number, default: 0 },
     deduction: { type: Number, default: 0 },
+    overtime_amount: { type: Number, default: 0 },
+    tax_deduction: { type: Number, default: 0 },
     final_salary: { type: Number, required: true, min: 0 },
-    payment_date: { type: Date, required: true, default: Date.now },
+    payment_date: { type: Date },
+    payment_method: { type: String, enum: ["Cash", "Bank Transfer", "Cheque"], default: "Bank Transfer" },
     receipt_number: { type: String, required: true, unique: true },
     remarks: { type: String, trim: true },
-    status: { type: String, enum: ["Paid"], default: "Paid" },
-    calculation_type: { type: String, enum: ["Monthly", "Day Wise"], default: "Monthly" }
+    status: { type: String, enum: ["Draft", "Approved", "Paid"], default: "Draft" },
+    calculation_type: { type: String, enum: ["Monthly", "Day Wise"], default: "Monthly" },
+    generated_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
   },
   { timestamps: true }
 );

@@ -11,6 +11,7 @@ interface FileUploadFieldProps {
   accept?: string; // e.g. "image/*" or "application/pdf"
   placeholder?: string;
   hint?: string;
+  isPublic?: boolean;
 }
 
 export function FileUploadField({
@@ -20,6 +21,7 @@ export function FileUploadField({
   accept = "image/*",
   placeholder = "https://...",
   hint,
+  isPublic = false,
 }: FileUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -37,13 +39,18 @@ export function FileUploadField({
     setError(null);
 
     try {
-      const token = getAccessToken();
       const fd = new FormData();
       fd.append("file", file);
 
-      const res = await fetch("/api/upload", {
+      const headers: Record<string, string> = {};
+      if (!isPublic) {
+        const token = getAccessToken();
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      const res = await fetch(isPublic ? "/api/public/upload" : "/api/upload", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers,
         body: fd,
       });
 

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Modal } from "../../components/ui/modal";
 import { useClasses } from "@/app/hooks/useClasses";
+import { useTeachers } from "@/app/hooks/useTeachers";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 import {
@@ -20,11 +21,15 @@ import {
   X,
   History,
   Printer,
-  Edit2,
   Trash2,
-  ListCollapse,
   Eye,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Download,
+  Users,
+  Building2,
+  TrendingUp,
+  Activity,
+  Layers
 } from "lucide-react";
 import { PrintButton } from "@/app/components/ui/PrintButton";
 import Link from "next/link";
@@ -36,12 +41,19 @@ interface StudentFeeRow {
   admission_no: string;
   class_name: string;
   class_id: string;
+  section: string;
+  guardian_name: string;
+  guardian_phone: string;
+  guardian_relation: string;
+  fee_structure: string[];
   totalFees: number;
   totalPaid: number;
   balanceAmount: number;
   lastPaidAmount: number;
   lastPaymentDate: string | null;
   status: "Paid" | "Partial" | "Pending";
+  dueStatus: "No Due" | "Overdue" | "Due";
+  academic_year: string;
 }
 
 interface FeeTypeItem {
@@ -65,18 +77,42 @@ const DEFAULT_FEE_TYPES: FeeTypeItem[] = [
 
 export default function FeesPage() {
   const { classes, isLoading: isClassesLoading } = useClasses();
+  const { teachers, isLoading: isTeachersLoading } = useTeachers();
   const { academicYear } = useAppState();
 
+  const [activeTab, setActiveTab] = useState<"ledger" | "reports">("ledger");
   const [students, setStudents] = useState<StudentFeeRow[]>([]);
+  const [allStudentsForReports, setAllStudentsForReports] = useState<StudentFeeRow[]>([]);
+  const [allPaymentsForReports, setAllPaymentsForReports] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReportsLoading, setIsReportsLoading] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Filters and search states
   const [search, setSearch] = useState("");
+  const [academicYearFilter, setAcademicYearFilter] = useState(academicYear || "2026");
   const [classFilter, setClassFilter] = useState("");
+  const [sectionFilter, setSectionFilter] = useState("");
+  const [teacherFilter, setTeacherFilter] = useState("");
+  const [feeTypeFilter, setFeeTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [dueStatusFilter, setDueStatusFilter] = useState("");
+
+  // Teacher dropdown search popover states
+  const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
+  const [teacherSearchText, setTeacherSearchText] = useState("");
+
+  // Row selection checkbox states
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+
+  // Bulk Operations modals state
+  const [isBulkCollectOpen, setIsBulkCollectOpen] = useState(false);
+  const [bulkCollectMethod, setBulkCollectMethod] = useState<"Cash" | "Cheque" | "Bank Transfer" | "Online" | "UPI">("Cash");
+  const [bulkCollectRemarks, setBulkCollectRemarks] = useState("");
+  const [bulkCollectDate, setBulkCollectDate] = useState(new Date().toISOString().split("T")[0]);
+  const [isProcessingBulkCollect, setIsProcessingBulkCollect] = useState(false);
 
   // Setup Fee Structures Modal states
   const [isSetupOpen, setIsSetupOpen] = useState(false);
@@ -101,15 +137,45 @@ export default function FeesPage() {
   // Pay Fee modal state — CollectFeesModal manages its own internal state
   const [payStudent, setPayStudent] = useState<StudentFeeRow | null>(null);
 
-  // Printable Receipt Modal (for old-style direct pay flow, now unused but kept for receipt display)
-  const [printedReceipt, setPrintedReceipt] = useState<any | null>(null);
-
   // Student Payment History Modal
   const [historyStudent, setHistoryStudent] = useState<StudentFeeRow | null>(null);
   const [studentHistoryLogs, setStudentHistoryLogs] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Load students & totals
+  // Auto-extract distinct sections from classes list
+  const sectionsList = useMemo(() => {
+    return Array.from(new Set(classes.map((cls) => cls.section).filter(Boolean)));
+  }, [classes]);
+
+  // Enriched fee types names for the dropdown
+  const feeTypeNames = [
+    "Academic Fees",
+    "Tuition Fees",
+    "Transport Fees",
+    "Admission Fees",
+    "Exam Fees",
+    "Library Fees",
+    "Computer Fees",
+    "Other Fees"
+  ];
+
+  // Resolve selected teacher details object
+  const selectedTeacherDetails = useMemo(() => {
+    return teachers.find((t) => t._id === teacherFilter);
+  }, [teachers, teacherFilter]);
+
+  // Filtered teachers list inside dropdown
+  const filteredTeachersForDropdown = useMemo(() => {
+    return teachers.filter((t) => {
+      const query = teacherSearchText.toLowerCase();
+      return (
+        t.name.toLowerCase().includes(query) ||
+        (t.employee_id || "").toLowerCase().includes(query)
+      );
+    });
+  }, [teachers, teacherSearchText]);
+
+  // Load students & totals with pagination & filters
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -117,8 +183,13 @@ export default function FeesPage() {
         page: currentPage.toString(),
         limit: "10",
         search,
+        academic_year: academicYearFilter,
         class_id: classFilter,
-        status: statusFilter
+        section: sectionFilter,
+        teacher_id: teacherFilter,
+        fee_type: feeTypeFilter,
+        status: statusFilter,
+        due_status: dueStatusFilter
       });
       const res = await fetch(`/api/fees?${params.toString()}`, { headers: getAuthHeaders() });
       const data = await res.json();
@@ -132,11 +203,43 @@ export default function FeesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, search, classFilter, statusFilter]);
+  }, [currentPage, search, academicYearFilter, classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter]);
 
   useEffect(() => {
     fetchStudents();
   }, [fetchStudents]);
+
+  // Load all students and payments for reports tab
+  const fetchReportsData = async () => {
+    setIsReportsLoading(true);
+    try {
+      // Get all students for stats
+      const studentsRes = await fetch(`/api/fees?limit=100000&academic_year=${academicYearFilter}`, {
+        headers: getAuthHeaders()
+      });
+      const studentsData = await studentsRes.json();
+      if (studentsData.success) {
+        setAllStudentsForReports(studentsData.data.students);
+      }
+
+      // Get all payments for daily/monthly statistics
+      const paymentsRes = await fetch("/api/fees/payments", { headers: getAuthHeaders() });
+      const paymentsData = await paymentsRes.json();
+      if (paymentsData.success) {
+        setAllPaymentsForReports(paymentsData.data.payments);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsReportsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "reports") {
+      fetchReportsData();
+    }
+  }, [activeTab, academicYearFilter]);
 
   // Load configuration when selected class changes in Fee Setup
   useEffect(() => {
@@ -144,7 +247,7 @@ export default function FeesPage() {
 
     const loadClassFees = async () => {
       try {
-        const cRes = await fetch(`/api/fees?config_only=true&class_id=${setupClassId}&academic_year=${academicYear || "2026"}`, {
+        const cRes = await fetch(`/api/fees?config_only=true&class_id=${setupClassId}&academic_year=${academicYearFilter}`, {
           headers: getAuthHeaders()
         });
         const cData = await cRes.json();
@@ -163,7 +266,7 @@ export default function FeesPage() {
       }
     };
     loadClassFees();
-  }, [setupClassId, isSetupOpen, academicYear]);
+  }, [setupClassId, isSetupOpen, academicYearFilter]);
 
   // Load custom fee structure when student is selected for Custom Fee Assignment
   useEffect(() => {
@@ -174,7 +277,7 @@ export default function FeesPage() {
         const studentId = customSetupStudent._id;
         const classId = customSetupStudent.class_id;
         const res = await fetch(
-          `/api/fees?config_only=true&student_id=${studentId}&class_id=${classId}&academic_year=${academicYear || "2026"}`,
+          `/api/fees?config_only=true&student_id=${studentId}&class_id=${classId}&academic_year=${academicYearFilter}`,
           { headers: getAuthHeaders() }
         );
         const data = await res.json();
@@ -193,7 +296,7 @@ export default function FeesPage() {
       }
     };
     loadCustomStudentFees();
-  }, [customSetupStudent, isCustomSetupOpen, academicYear]);
+  }, [customSetupStudent, isCustomSetupOpen, academicYearFilter]);
 
   const handleToggleCustomFeeType = (index: number) => {
     setCustomFeeTypes((prev) =>
@@ -249,7 +352,7 @@ export default function FeesPage() {
         body: JSON.stringify({
           student_id: customSetupStudent._id,
           fee_types: customFeeTypes,
-          academic_year: academicYear || "2026",
+          academic_year: academicYearFilter,
         }),
       });
       const data = await res.json();
@@ -297,7 +400,6 @@ export default function FeesPage() {
   const handleOpenPay = (student: StudentFeeRow) => {
     setPayStudent(student);
   };
-
 
   const handleAddCustomFeeType = (e: React.FormEvent) => {
     e.preventDefault();
@@ -356,7 +458,7 @@ export default function FeesPage() {
         body: JSON.stringify({
           class_id: setupClassId,
           fee_types: feeTypes,
-          academic_year: academicYear || "2026"
+          academic_year: academicYearFilter
         })
       });
       const data = await res.json();
@@ -384,18 +486,239 @@ export default function FeesPage() {
     });
   };
 
+  // Row Checkbox Helpers
+  const handleSelectStudent = (id: string) => {
+    setSelectedStudentIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAllStudents = () => {
+    if (selectedStudentIds.length === students.length) {
+      setSelectedStudentIds([]);
+    } else {
+      setSelectedStudentIds(students.map(s => s._id));
+    }
+  };
+
+  // Bulk Operations Handlers
+  const handleBulkCollectSubmit = async () => {
+    if (selectedStudentIds.length === 0) return;
+    setIsProcessingBulkCollect(true);
+
+    try {
+      let successCount = 0;
+      for (const studentId of selectedStudentIds) {
+        // Find student details to calculate their current balance
+        const studentInfo = students.find(s => s._id === studentId);
+        if (!studentInfo || studentInfo.balanceAmount <= 0) continue;
+
+        // Auto-resolve billing periods from today back 30 days
+        const end = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - 30);
+
+        const res = await fetch("/api/fees/payments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+          body: JSON.stringify({
+            student_id: studentId,
+            amount_paid: studentInfo.balanceAmount,
+            payment_method: bulkCollectMethod,
+            remarks: `${bulkCollectRemarks || "Bulk Collection Dues Payment"}`,
+            payment_date: bulkCollectDate,
+            start_date: start.toISOString().split("T")[0],
+            end_date: end.toISOString().split("T")[0],
+            collection_type: "Monthly",
+            fee_breakdown: [{ name: "Tuition Fees", amount_paid: studentInfo.balanceAmount }]
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          successCount++;
+        }
+      }
+      alert(`Bulk Payment successful: recorded collections for ${successCount} student(s).`);
+      setIsBulkCollectOpen(false);
+      setSelectedStudentIds([]);
+      fetchStudents();
+    } catch (err) {
+      console.error(err);
+      alert("Error recording bulk payment transaction.");
+    } finally {
+      setIsProcessingBulkCollect(false);
+    }
+  };
+
+  const handleBulkPrint = () => {
+    alert("Bulk printable queue generated. Preparing PDF window...");
+    const printWin = window.open("", "_blank", "width=820,height=950");
+    if (!printWin) {
+      alert("Popup blocked! Please allow popups for this site.");
+      return;
+    }
+
+    let contents = `
+      <html>
+        <head>
+          <title>Bulk Fee Receipts</title>
+          <style>
+            @media print { .page-break { page-break-after: always; } }
+            body { font-family: sans-serif; padding: 20px; color: #333; }
+          </style>
+        </head>
+        <body>
+          <h2 style="text-align:center">Bulk Fees Receipt Documents Bundle</h2>
+    `;
+
+    selectedStudentIds.forEach(id => {
+      const s = students.find(item => item._id === id);
+      if (s) {
+        contents += `
+          <div style="border: 2px solid #333; padding: 30px; margin: 40px 0; border-radius: 12px;" class="page-break">
+            <h1 style="text-align:center; margin-bottom:5px">My School ERP Receipt</h1>
+            <p style="text-align:center; font-size:11px; margin-bottom:20px">Bulk Invoice Statement Verification</p>
+            <p><strong>Student Name:</strong> ${s.name}</p>
+            <p><strong>Admission Number:</strong> ${s.admission_no}</p>
+            <p><strong>Class Name:</strong> ${s.class_name}</p>
+            <p><strong>Total Session Fees:</strong> ${money(s.totalFees)}</p>
+            <p><strong>Total Paid Amount:</strong> ${money(s.totalPaid)}</p>
+            <p><strong>Outstanding Balance:</strong> ${money(s.balanceAmount)}</p>
+            <p><strong>Status:</strong> ${s.status}</p>
+          </div>
+        `;
+      }
+    });
+
+    contents += `</body></html>`;
+    printWin.document.write(contents);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(() => { printWin.print(); printWin.close(); }, 500);
+  };
+
+  const handleBulkExport = () => {
+    // Generate CSV string
+    let csv = "Student Name,Admission No,Class,Guardian Name,Guardian Phone,Total Fees,Total Paid,Balance,Status,Due Status\n";
+    selectedStudentIds.forEach(id => {
+      const s = students.find(item => item._id === id);
+      if (s) {
+        csv += `"${s.name}","${s.admission_no}","${s.class_name}","${s.guardian_name}","${s.guardian_phone}",${s.totalFees},${s.totalPaid},${s.balanceAmount},"${s.status}","${s.dueStatus}"\n`;
+      }
+    });
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `fees_export_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Reports calculations
+  const reportStats = useMemo(() => {
+    const totalInvoiced = allStudentsForReports.reduce((sum, s) => sum + s.totalFees, 0);
+    const totalPaid = allStudentsForReports.reduce((sum, s) => sum + s.totalPaid, 0);
+    const totalPending = allStudentsForReports.reduce((sum, s) => sum + s.balanceAmount, 0);
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    const dailyCollection = allPaymentsForReports
+      .filter((p) => new Date(p.payment_date).toISOString().split("T")[0] === todayStr)
+      .reduce((sum, p) => sum + p.amount_paid, 0);
+
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const monthlyCollection = allPaymentsForReports
+      .filter((p) => {
+        const d = new Date(p.payment_date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      })
+      .reduce((sum, p) => sum + p.amount_paid, 0);
+
+    return { totalInvoiced, totalPaid, totalPending, dailyCollection, monthlyCollection };
+  }, [allStudentsForReports, allPaymentsForReports]);
+
+  // Class-wise collections stats
+  const classWiseCollections = useMemo(() => {
+    const map = new Map<string, { className: string; teacherName: string; invoiced: number; paid: number; balance: number }>();
+
+    // Seed classes
+    classes.forEach(c => {
+      map.set(c._id, {
+        className: `${c.name} - ${c.section}`,
+        teacherName: c.class_teacher_id?.name || "Unassigned",
+        invoiced: 0,
+        paid: 0,
+        balance: 0
+      });
+    });
+
+    allStudentsForReports.forEach(s => {
+      const cid = s.class_id;
+      if (map.has(cid)) {
+        const item = map.get(cid)!;
+        item.invoiced += s.totalFees;
+        item.paid += s.totalPaid;
+        item.balance += s.balanceAmount;
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => a.className.localeCompare(b.className));
+  }, [classes, allStudentsForReports]);
+
+  // Teacher-wise collections stats
+  const teacherWiseCollections = useMemo(() => {
+    const map = new Map<string, { teacherName: string; className: string; invoiced: number; paid: number; balance: number }>();
+
+    classes.forEach(c => {
+      if (c.class_teacher_id) {
+        const tid = c.class_teacher_id._id;
+        const tname = c.class_teacher_id.name;
+        if (!map.has(tid)) {
+          map.set(tid, {
+            teacherName: tname,
+            className: `${c.name} - ${c.section}`,
+            invoiced: 0,
+            paid: 0,
+            balance: 0
+          });
+        }
+      }
+    });
+
+    allStudentsForReports.forEach(s => {
+      const cid = s.class_id;
+      const targetClass = classes.find(c => c._id === cid);
+      if (targetClass && targetClass.class_teacher_id) {
+        const tid = targetClass.class_teacher_id._id;
+        const item = map.get(tid)!;
+        item.invoiced += s.totalFees;
+        item.paid += s.totalPaid;
+        item.balance += s.balanceAmount;
+      }
+    });
+
+    return Array.from(map.values()).sort((a, b) => a.teacherName.localeCompare(b.teacherName));
+  }, [classes, allStudentsForReports]);
+
   // Setup total fees configuration sum
   const totalConfiguredFees = feeTypes.filter(f => f.is_enabled).reduce((sum, f) => sum + f.amount, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
       {/* Header Desk */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+      <div className="page-header">
         <div>
           <h1 className="page-title">Billing Ledger Desk</h1>
-          <p className="page-desc mt-1">
-            Track student fee payments, invoice balances, and record collections.
-          </p>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+            <span>Dashboard</span>
+            <span>/</span>
+            <span className="hover:text-primary">Finance</span>
+            <span>/</span>
+            <span className="text-slate-900 dark:text-white font-medium">Fees</span>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2.5">
@@ -404,7 +727,7 @@ export default function FeesPage() {
               setSetupClassId(classes[0]?._id || "");
               setIsSetupOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-slate-700 bg-white border border-border dark:bg-slate-900 dark:text-slate-350 hover:bg-slate-50 rounded-xl transition-all cursor-pointer shadow-sm"
+            className="btn btn-outline flex items-center gap-2"
           >
             <SlidersHorizontal className="w-4 h-4 text-slate-500" />
             <span>Class Fee Setup</span>
@@ -412,199 +735,659 @@ export default function FeesPage() {
         </div>
       </div>
 
-      {/* SEARCH AND FILTERS */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 flex flex-col md:flex-row items-center gap-4 text-left shadow-sm">
-        <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search by student name, admission no..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none"
-          />
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-          {/* Class Filter */}
-          <div className="relative w-full sm:w-44">
-            <select
-              value={classFilter}
-              onChange={(e) => {
-                setClassFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
-            >
-              <option value="">All Classes</option>
-              {classes.map((cls) => (
-                <option key={cls._id} value={cls._id}>
-                  {cls.name} - {cls.section}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
-          </div>
-
-          {/* Status Filter */}
-          <div className="relative w-full sm:w-44">
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
-            >
-              <option value="">All Statuses</option>
-              <option value="Paid">Paid</option>
-              <option value="Partial">Partial</option>
-              <option value="Pending">Pending</option>
-            </select>
-            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
-          </div>
-        </div>
+      {/* Tab Selectors */}
+      <div className="border-b border-border flex gap-6 text-xs font-bold text-slate-500 uppercase tracking-wider">
+        <button
+          onClick={() => setActiveTab("ledger")}
+          className={`pb-2.5 transition-colors border-b-2 outline-none ${activeTab === "ledger" ? "border-primary text-primary" : "border-transparent hover:text-slate-800"
+            }`}
+        >
+          Dues Ledger
+        </button>
+        <button
+          onClick={() => setActiveTab("reports")}
+          className={`pb-2.5 transition-colors border-b-2 outline-none ${activeTab === "reports" ? "border-primary text-primary" : "border-transparent hover:text-slate-800"
+            }`}
+        >
+          Finance Reports
+        </button>
       </div>
 
-      {/* STUDENT FEES LIST TABLE */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-850/50 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                <th className="px-6 py-4">Student Info</th>
-                <th className="px-6 py-4">Admission No</th>
-                <th className="px-6 py-4">Class</th>
-                <th className="px-6 py-4 text-right">Total Fees</th>
-                <th className="px-6 py-4 text-right">Total Paid</th>
-                <th className="px-6 py-4 text-right">Balance</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border text-xs">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-16 text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-                    <p className="text-slate-500 mt-3 font-bold">Loading student billing ledgers...</p>
-                  </td>
-                </tr>
-              ) : students.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="px-6 py-16 text-center text-slate-450 font-bold">
-                    No student dues records found matching these criteria.
-                  </td>
-                </tr>
-              ) : (
-                students.map((student) => (
-                  <tr key={student._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-900 dark:text-white">{student.name}</span>
-                        {student.lastPaymentDate && (
-                          <span className="text-[10px] text-slate-450 mt-0.5">
-                            Last Paid: {money(student.lastPaidAmount)} ({fmtDate(student.lastPaymentDate)})
-                          </span>
+      {activeTab === "ledger" && (
+        <>
+          {/* SEARCH AND FILTERS */}
+          <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 flex flex-col gap-4 text-left shadow-sm">
+
+            {/* Top row: search & academic session */}
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <div className="relative flex-1 w-full">
+                <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search student, adm no, guardian, receipt no..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none"
+                />
+              </div>
+
+              {/* Academic Year Filter */}
+              <div className="relative w-full md:w-44">
+                <select
+                  value={academicYearFilter}
+                  onChange={(e) => {
+                    setAcademicYearFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="2026">Session 2026</option>
+                  <option value="2027">Session 2027</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Bottom Row Filters */}
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+              {/* Class Filter */}
+              <div className="relative w-full">
+                <select
+                  value={classFilter}
+                  onChange={(e) => {
+                    setClassFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">All Classes</option>
+                  {classes.map((cls) => (
+                    <option key={cls._id} value={cls._id}>
+                      {cls.name} - {cls.section}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
+
+              {/* Section Filter */}
+              <div className="relative w-full">
+                <select
+                  value={sectionFilter}
+                  onChange={(e) => {
+                    setSectionFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">All Sections</option>
+                  {sectionsList.map((sec) => (
+                    <option key={sec} value={sec}>
+                      Section {sec}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
+
+              {/* Teacher Dropdown Custom filter select */}
+              <div className="relative w-full col-span-2 md:col-span-2">
+                <div
+                  onClick={() => setIsTeacherDropdownOpen(!isTeacherDropdownOpen)}
+                  className="w-full px-3 py-2 border border-border rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 cursor-pointer flex items-center justify-between outline-none"
+                >
+                  {selectedTeacherDetails ? (
+                    <span className="truncate">{selectedTeacherDetails.name} ({selectedTeacherDetails.employee_id || "No ID"})</span>
+                  ) : (
+                    <span className="text-slate-400 font-bold">Filter By Teacher</span>
+                  )}
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                </div>
+
+                {isTeacherDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsTeacherDropdownOpen(false)} />
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-50 p-2.5 max-h-[250px] flex flex-col gap-2">
+                      <div className="relative">
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                        <input
+                          type="text"
+                          placeholder="Search Teacher name/ID..."
+                          value={teacherSearchText}
+                          onChange={(e) => setTeacherSearchText(e.target.value)}
+                          className="w-full pl-8 pr-3 py-1.5 border border-border rounded-lg text-xs outline-none bg-slate-50 dark:bg-slate-900 text-foreground font-bold"
+                        />
+                      </div>
+                      <div className="overflow-y-auto flex-1 divide-y divide-border pr-1 max-h-[160px] text-xs">
+                        <div
+                          onClick={() => {
+                            setTeacherFilter("");
+                            setIsTeacherDropdownOpen(false);
+                            setTeacherSearchText("");
+                            setCurrentPage(1);
+                          }}
+                          className={`p-2 rounded-lg cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 font-bold text-slate-500`}
+                        >
+                          Clear Teacher Filter
+                        </div>
+                        {filteredTeachersForDropdown.length === 0 ? (
+                          <p className="text-slate-400 text-center py-4 font-bold">No active teachers found.</p>
+                        ) : (
+                          filteredTeachersForDropdown.map((t) => (
+                            <div
+                              key={t._id}
+                              onClick={() => {
+                                setTeacherFilter(t._id);
+                                setIsTeacherDropdownOpen(false);
+                                setTeacherSearchText("");
+                                setCurrentPage(1);
+                              }}
+                              className={`p-2 rounded-lg cursor-pointer transition-colors flex justify-between items-center ${teacherFilter === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                                }`}
+                            >
+                              <div className="text-left">
+                                <p className="font-extrabold text-slate-800 dark:text-slate-200">{t.name}</p>
+                                <p className="text-[10px] text-slate-450 mt-0.5">{t.employee_id || "No ID"} • {t.department || "No Dept"}</p>
+                              </div>
+                              <span className={`px-1.5 py-0.2 rounded text-[8px] font-black uppercase ${t.is_active ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-500"}`}>
+                                {t.is_active ? "Active" : "Inactive"}
+                              </span>
+                            </div>
+                          ))
                         )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 font-mono font-bold text-slate-700 dark:text-slate-300">
-                      {student.admission_no}
-                    </td>
-                    <td className="px-6 py-4 text-slate-655 font-bold">
-                      {student.class_name}
-                    </td>
-                    <td className="px-6 py-4 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {money(student.totalFees)}
-                    </td>
-                    <td className="px-6 py-4 text-right font-mono font-bold text-emerald-600">
-                      {money(student.totalPaid)}
-                    </td>
-                    <td className="px-6 py-4 text-right font-mono font-bold text-rose-500">
-                      {money(student.balanceAmount)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${student.status === "Paid"
-                        ? "bg-emerald-50 text-emerald-700 border border-emerald-250 dark:bg-emerald-500/10 dark:text-emerald-400"
-                        : student.status === "Partial"
-                          ? "bg-amber-50 text-amber-700 border border-amber-250 dark:bg-amber-500/10 dark:text-amber-400"
-                          : "bg-rose-50 text-rose-700 border border-rose-250 dark:bg-rose-500/10 dark:text-rose-400"
-                        }`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${student.status === "Paid" ? "bg-emerald-500" : student.status === "Partial" ? "bg-amber-500" : "bg-rose-500"
-                          }`} />
-                        {student.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-1.5">
-                        <button
-                          onClick={() => handleOpenPay(student)}
-                          disabled={student.totalFees === 0 || student.balanceAmount === 0}
-                          className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                        >
-                          <CreditCard className="w-3.5 h-3.5" /> Pay
-                        </button>
-                        <button
-                          onClick={() => handleOpenHistory(student)}
-                          className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-lg transition-all cursor-pointer"
-                          title="Payment History Logs"
-                        >
-                          <History className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setCustomSetupStudent(student);
-                            setIsCustomSetupOpen(true);
-                          }}
-                          className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-lg transition-all cursor-pointer flex items-center"
-                          title="Assign Custom Fees Override"
-                        >
-                          <SlidersHorizontal className="w-4 h-4" />
-                        </button>
-                        <Link
-                          href={`/fees/${student._id}`}
-                          className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-lg transition-all cursor-pointer flex items-center"
-                          title="Dedicated Payment Page"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  </>
+                )}
+              </div>
 
-        {/* Pagination Strip */}
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-border flex justify-between items-center text-xs font-semibold text-slate-500">
-            <span>Total Records: {totalItems}</span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setCurrentPage(c => Math.max(1, c - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 bg-white border border-border rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+              {/* Fee Type Filter */}
+              <div className="relative w-full">
+                <select
+                  value={feeTypeFilter}
+                  onChange={(e) => {
+                    setFeeTypeFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">All Fee Types</option>
+                  {feeTypeNames.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
+
+              {/* Status Filter */}
+              <div className="relative w-full">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Partial">Partial</option>
+                  <option value="Pending">Pending</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
+
+              {/* Due Status Filter */}
+              <div className="relative w-full">
+                <select
+                  value={dueStatusFilter}
+                  onChange={(e) => {
+                    setDueStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">All Dues Status</option>
+                  <option value="Overdue">Overdue Dues</option>
+                  <option value="Due">Due Dues</option>
+                  <option value="No Due">No Dues Outstanding</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
+          </div>
+
+          {/* STUDENT FEES LIST TABLE */}
+          <div className="erp-table-wrap text-left relative">
+            <div className="overflow-x-auto">
+              <table className="erp-table">
+                <thead>
+                  <tr>
+                    <th className="w-10 col-center">
+                      <input
+                        type="checkbox"
+                        checked={students.length > 0 && selectedStudentIds.length === students.length}
+                        onChange={handleSelectAllStudents}
+                        className="w-4 h-4 accent-primary cursor-pointer rounded"
+                      />
+                    </th>
+                    <th>Student</th>
+                    <th>Admission</th>
+                    <th>Class</th>
+                    {/* <th className="px-6 py-4">Guardian Details</th> */}
+                    <th>Fee Structure</th>
+                    <th className="col-right">Total Fees</th>
+                    <th className="col-right">Amount Paid</th>
+                    <th className="col-right">Balance</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th className="col-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <tr>
+                      <td colSpan={11} className="table-empty">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+                        <p className="text-slate-500 mt-3 font-bold">Loading student billing ledgers...</p>
+                      </td>
+                    </tr>
+                  ) : students.length === 0 ? (
+                    <tr>
+                      <td colSpan={11} className="table-empty">
+                        No student dues records found matching these criteria.
+                      </td>
+                    </tr>
+                  ) : (
+                    students.map((student) => {
+                      const isSelected = selectedStudentIds.includes(student._id);
+                      return (
+                        <tr key={student._id} className={isSelected ? "bg-primary/5 dark:bg-primary/10" : ""}>
+                          <td className="col-center">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => handleSelectStudent(student._id)}
+                              className="w-4 h-4 accent-primary cursor-pointer rounded"
+                            />
+                          </td>
+                          <td>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-900 dark:text-white">{student.name}</span>
+                              {student.lastPaymentDate && (
+                                <span className="text-[10px] text-slate-455 mt-0.5">
+                                  Last Paid: {money(student.lastPaidAmount)} ({fmtDate(student.lastPaymentDate)})
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="font-mono font-bold text-slate-700 dark:text-slate-350">
+                            {student.admission_no}
+                          </td>
+                          <td className="text-slate-655 font-bold">
+                            {student.class_name}
+                          </td>
+                          {/* <td className="px-6 py-4 text-slate-500">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-slate-800 dark:text-slate-300">{student.guardian_name} ({student.guardian_relation})</span>
+                              <span className="text-[10px] text-slate-455 mt-0.5">{student.guardian_phone}</span>
+                            </div>
+                          </td> */}
+                          <td className="max-w-[200px] truncate">
+                            <div className="flex flex-wrap gap-1">
+                              {student.fee_structure.slice(0, 3).map((item, idx) => (
+                                <span key={idx} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] rounded font-bold text-slate-600 dark:text-slate-300">
+                                  {item.split(" (")[0]}
+                                </span>
+                              ))}
+                              {student.fee_structure.length > 3 && (
+                                <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] rounded font-bold text-slate-455">
+                                  +{student.fee_structure.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="col-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                            {money(student.totalFees)}
+                          </td>
+                          <td className="col-right font-mono font-bold text-emerald-600">
+                            {money(student.totalPaid)}
+                          </td>
+                          <td className="col-right font-mono font-bold text-rose-500">
+                            {money(student.balanceAmount)}
+                          </td>
+                          <td>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${student.dueStatus === "No Due"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : student.dueStatus === "Overdue"
+                                ? "bg-rose-50 text-rose-700 border border-rose-250 dark:bg-rose-950/20"
+                                : "bg-amber-50 text-amber-700 border border-amber-250"
+                              }`}>
+                              {student.dueStatus}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${student.status === "Paid"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-255 dark:bg-emerald-500/10 dark:text-emerald-400"
+                              : student.status === "Partial"
+                                ? "bg-amber-50 text-amber-700 border border-amber-255 dark:bg-amber-500/10 dark:text-amber-400"
+                                : "bg-rose-50 text-rose-700 border border-rose-255 dark:bg-rose-500/10 dark:text-rose-400"
+                              }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${student.status === "Paid" ? "bg-emerald-500" : student.status === "Partial" ? "bg-amber-500" : "bg-rose-500"
+                                }`} />
+                              {student.status}
+                            </span>
+                          </td>
+                          <td className="col-right">
+                            <div className="flex justify-end gap-1.5">
+                              <button
+                                onClick={() => handleOpenPay(student)}
+                                disabled={student.totalFees === 0 || student.balanceAmount === 0}
+                                className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                              >
+                                <CreditCard className="w-3.5 h-3.5" /> Pay
+                              </button>
+                              <button
+                                onClick={() => handleOpenHistory(student)}
+                                className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-lg transition-all cursor-pointer"
+                                title="Payment History Logs"
+                              >
+                                <History className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setCustomSetupStudent(student);
+                                  setIsCustomSetupOpen(true);
+                                }}
+                                className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-lg transition-all cursor-pointer flex items-center"
+                                title="Assign Custom Fees Override"
+                              >
+                                <SlidersHorizontal className="w-4 h-4" />
+                              </button>
+                              <Link
+                                href={`/fees/${student._id}`}
+                                className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-lg transition-all cursor-pointer flex items-center"
+                                title="Dedicated Payment Page"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div></div>
+
+            {/* Pagination Strip */}
+            {totalPages > 1 && (
+              <div className="p-4 border-t border-border flex justify-between items-center text-xs font-semibold text-slate-500">
+                <span>Total Records: {totalItems}</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(c => Math.max(1, c - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 bg-white border border-border rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                  >
+                    Previous
+                  </button>
+                  <span className="px-3 py-1">Page {currentPage} of {totalPages}</span>
+                  <button
+                    onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 bg-white border border-border rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* FLOATING BULK ACTIONS BAR (PART 9) */}
+          {selectedStudentIds.length > 0 && (
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-800 text-white rounded-2xl px-6 py-4 shadow-2xl flex items-center gap-6 z-50 animate-bounce-short font-sans text-xs">
+              <div>
+                <span className="font-black text-emerald-400">{selectedStudentIds.length}</span> students selected
+              </div>
+              <div className="w-px h-6 bg-slate-700" />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setIsBulkCollectOpen(true)}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <CreditCard className="w-3.5 h-3.5" /> Bulk Collect
+                </button>
+                <button
+                  onClick={handleBulkPrint}
+                  className="px-3.5 py-2 bg-slate-850 hover:bg-slate-800 rounded-lg font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Bulk Print Receipts
+                </button>
+                <button
+                  onClick={handleBulkExport}
+                  className="px-3.5 py-2 bg-slate-850 hover:bg-slate-800 rounded-lg font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" /> Export CSV
+                </button>
+                <button
+                  onClick={() => setSelectedStudentIds([])}
+                  className="px-3 py-2 border border-slate-700 hover:border-slate-655 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {activeTab === "reports" && (
+        <div className="space-y-6">
+          {isReportsLoading ? (
+            <div className="h-60 flex flex-col items-center justify-center text-slate-400 gap-3">
+              <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <span className="text-xs font-bold">Compiling collection statistics...</span>
+            </div>
+          ) : (
+            <>
+              {/* Reports Stat Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-left">
+                <div className="bg-white border border-border p-4 rounded-xl flex items-center gap-3">
+                  <div className="p-3 bg-blue-50 text-blue-600 rounded-lg"><Activity className="w-5 h-5" /></div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Today Collection</span>
+                    <strong className="text-lg font-mono text-slate-800 mt-0.5 block">{money(reportStats.dailyCollection)}</strong>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-border p-4 rounded-xl flex items-center gap-3">
+                  <div className="p-3 bg-violet-50 text-violet-600 rounded-lg"><TrendingUp className="w-5 h-5" /></div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Month Collection</span>
+                    <strong className="text-lg font-mono text-slate-800 mt-0.5 block">{money(reportStats.monthlyCollection)}</strong>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-border p-4 rounded-xl flex items-center gap-3">
+                  <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg"><CheckCircle className="w-5 h-5" /></div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Total Received</span>
+                    <strong className="text-lg font-mono text-emerald-600 mt-0.5 block">{money(reportStats.totalPaid)}</strong>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-border p-4 rounded-xl flex items-center gap-3">
+                  <div className="p-3 bg-rose-50 text-rose-600 rounded-lg"><XCircle className="w-5 h-5" /></div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Total Outstanding</span>
+                    <strong className="text-lg font-mono text-rose-550 mt-0.5 block">{money(reportStats.totalPending)}</strong>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-border p-4 rounded-xl flex items-center gap-3">
+                  <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg"><Building2 className="w-5 h-5" /></div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Total Invoiced</span>
+                    <strong className="text-lg font-mono text-indigo-600 mt-0.5 block">{money(reportStats.totalInvoiced)}</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Class-wise Collections Table */}
+              <div className="erp-table-wrap text-left">
+                <div className="px-4 py-3 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
+                  <h3 className="font-bold text-slate-800 dark:text-white text-sm">Class-wise Collections Summary</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="erp-table">
+                    <thead>
+                      <tr>
+                        <th>Class Name</th>
+                        <th>Class Teacher</th>
+                        <th className="col-right">Invoiced Amount</th>
+                        <th className="col-right">Paid Amount</th>
+                        <th className="col-right">Outstanding Dues</th>
+                        <th className="col-center">Collection %</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {classWiseCollections.map((c, idx) => {
+                        const pct = c.invoiced > 0 ? ((c.paid / c.invoiced) * 100).toFixed(1) : "0.0";
+                        return (
+                          <tr key={idx}>
+                            <td className="font-bold text-slate-800 dark:text-slate-100">{c.className}</td>
+                            <td className="font-semibold text-slate-655">{c.teacherName}</td>
+                            <td className="col-right font-mono font-bold text-slate-700 dark:text-slate-300">{money(c.invoiced)}</td>
+                            <td className="col-right font-mono font-bold text-emerald-600">{money(c.paid)}</td>
+                            <td className="col-right font-mono font-bold text-rose-500">{money(c.balance)}</td>
+                            <td className="col-center">
+                              <span className="px-2 py-0.5 rounded bg-blue-50 text-[10px] font-black text-blue-700">
+                                {pct}%
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Teacher-wise Collections Table */}
+              <div className="erp-table-wrap text-left">
+                <div className="px-4 py-3 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
+                  <h3 className="font-bold text-slate-800 dark:text-white text-sm">Teacher-wise Collections Summary</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="erp-table">
+                    <thead>
+                      <tr>
+                        <th>Teacher Name</th>
+                        <th>Assigned Class</th>
+                        <th className="col-right">Total Invoiced</th>
+                        <th className="col-right">Total Paid</th>
+                        <th className="col-right">Outstanding Dues</th>
+                        <th className="col-center">Collection %</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {teacherWiseCollections.map((t, idx) => {
+                        const pct = t.invoiced > 0 ? ((t.paid / t.invoiced) * 100).toFixed(1) : "0.0";
+                        return (
+                          <tr key={idx}>
+                            <td className="font-bold text-slate-800 dark:text-slate-100">{t.teacherName}</td>
+                            <td className="font-semibold text-slate-655">{t.className}</td>
+                            <td className="col-right font-mono font-bold text-slate-700 dark:text-slate-300">{money(t.invoiced)}</td>
+                            <td className="col-right font-mono font-bold text-emerald-650">{money(t.paid)}</td>
+                            <td className="col-right font-mono font-bold text-rose-500">{money(t.balance)}</td>
+                            <td className="col-center">
+                              <span className="px-2 py-0.5 rounded bg-violet-50 text-[10px] font-black text-violet-700">
+                                {pct}%
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* MODAL: BULK RECORD PAYMENT COLLECTION */}
+      {isBulkCollectOpen && (
+        <Modal isOpen={isBulkCollectOpen} onClose={() => setIsBulkCollectOpen(false)} title="Record Bulk Payments Collection">
+          <div className="space-y-4 text-left text-xs font-sans">
+            <div className="p-3 bg-amber-50 border border-amber-250 text-amber-700 rounded-xl font-bold flex items-center gap-2">
+              <AlertCircle className="w-4.5 h-4.5 text-amber-600 shrink-0" />
+              <span>You are recording full outstanding dues collection for {selectedStudentIds.length} student(s).</span>
+            </div>
+
+            <div className="flex flex-col gap-1 text-left">
+              <label className="font-bold text-slate-500">Collection Date</label>
+              <input
+                type="date"
+                value={bulkCollectDate}
+                onChange={(e) => setBulkCollectDate(e.target.value)}
+                className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-white outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1 text-left">
+              <label className="font-bold text-slate-500">Payment Method</label>
+              <select
+                value={bulkCollectMethod}
+                onChange={(e) => setBulkCollectMethod(e.target.value as any)}
+                className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-white outline-none cursor-pointer"
               >
-                Previous
+                <option value="Cash">Cash</option>
+                <option value="Cheque">Cheque</option>
+                <option value="Bank Transfer">Bank Transfer</option>
+                <option value="UPI">UPI</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1 text-left">
+              <label className="font-bold text-slate-500">Remarks / Reference</label>
+              <textarea
+                value={bulkCollectRemarks}
+                onChange={(e) => setBulkCollectRemarks(e.target.value)}
+                placeholder="Remarks for this bulk transaction log..."
+                className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-white outline-none min-h-[60px]"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-border">
+              <button
+                type="button"
+                onClick={() => setIsBulkCollectOpen(false)}
+                className="px-4 py-2 border border-border text-xs font-bold rounded-lg bg-white hover:bg-slate-50 text-slate-700 transition-colors"
+              >
+                Cancel
               </button>
-              <span className="px-3 py-1">Page {currentPage} of {totalPages}</span>
               <button
-                onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 bg-white border border-border rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
+                type="button"
+                onClick={handleBulkCollectSubmit}
+                disabled={isProcessingBulkCollect}
+                className="px-4 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-60 flex items-center gap-1.5 shadow-sm"
               >
-                Next
+                {isProcessingBulkCollect && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                Confirm Collection
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </Modal>
+      )}
 
       {/* MODAL: CLASS FEE SETUP */}
       {isSetupOpen && (
@@ -634,7 +1417,7 @@ export default function FeesPage() {
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-450 mb-1.5">Academic Session</label>
                 <input
                   type="text"
-                  value={academicYear || "2026"}
+                  value={academicYearFilter}
                   disabled
                   className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-800/50 border border-border text-slate-500 text-xs font-bold rounded-xl outline-none"
                 />
@@ -729,7 +1512,7 @@ export default function FeesPage() {
                       <button
                         type="button"
                         onClick={() => handleRemoveFeeType(index)}
-                        className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded transition-colors shrink-0 cursor-pointer"
+                        className="p-1 text-rose-500 hover:bg-rose-550/10 rounded transition-colors shrink-0 cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -824,7 +1607,7 @@ export default function FeesPage() {
         >
           <div className="space-y-5 text-left">
             {/* Student context preview card */}
-            <div className="p-4 bg-slate-905 bg-slate-900 text-white rounded-xl flex items-center justify-between">
+            <div className="p-4 bg-slate-900 text-white rounded-xl flex items-center justify-between">
               <div>
                 <h4 className="text-[13px] font-extrabold leading-tight">{customSetupStudent.name}</h4>
                 <p className="text-[10px] text-slate-400 font-bold tracking-wide mt-0.5">
@@ -838,7 +1621,6 @@ export default function FeesPage() {
             </div>
 
             {/* Custom Fee Types Checklist Editor */}
-
             <div className="border border-border rounded-xl overflow-hidden bg-white dark:bg-slate-900 p-4 space-y-4">
               <div className="flex justify-between items-center border-b border-border pb-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-white">Configure Individual Fee Overrides</h3>
@@ -854,7 +1636,7 @@ export default function FeesPage() {
                   <button
                     type="button"
                     onClick={() => setCustomFeeTypes(customFeeTypes.map(f => ({ ...f, is_enabled: false })))}
-                    className="text-[10px] font-bold text-slate-450 hover:underline cursor-pointer"
+                    className="text-[10px] font-bold text-slate-455 hover:underline cursor-pointer"
                   >
                     Disable All
                   </button>
@@ -981,7 +1763,6 @@ export default function FeesPage() {
               </div>
             </div>
 
-
             {/* Total display summary card (premium gradient design) */}
             <div className="p-4 bg-gradient-to-r from-slate-900 to-indigo-950 text-white rounded-xl flex items-center justify-between shadow-sm">
               <div>
@@ -995,7 +1776,7 @@ export default function FeesPage() {
               <button
                 type="button"
                 onClick={() => { setIsCustomSetupOpen(false); setCustomSetupStudent(null); }}
-                className="px-4 py-2 border border-border text-xs font-bold rounded-lg bg-white hover:bg-slate-50 text-slate-750 transition-colors"
+                className="px-4 py-2 border border-border text-xs font-bold rounded-lg bg-white hover:bg-slate-50 text-slate-755 transition-colors"
               >
                 Cancel
               </button>
@@ -1012,6 +1793,7 @@ export default function FeesPage() {
           </div>
         </Modal>
       )}
+
       {/* MODAL: RECORD STUDENT PAYMENT */}
       <CollectFeesModal
         isOpen={!!payStudent}
@@ -1021,194 +1803,6 @@ export default function FeesPage() {
         }}
         student={payStudent}
       />
-
-      {/* MODAL: PRINTABLE TRANSACTION RECEIPT */}
-      {printedReceipt && (
-        <Modal isOpen={!!printedReceipt} onClose={() => setPrintedReceipt(null)} title="Payment Transaction Receipt">
-          <div className="space-y-4">
-            <div className="flex justify-end gap-2 print:hidden border-b border-border pb-2.5">
-              <PrintButton targetId="printable-receipt" label="Print / Save PDF" pageSize="A4" margin="8mm" />
-            </div>
-
-            {/* Receipt template container */}
-            <div className="p-8 border border-slate-200 rounded-2xl bg-white text-slate-800 text-left font-serif text-xs relative overflow-hidden" id="printable-receipt" data-print-zone="true">
-              {/* School branding header */}
-              <div className="text-center border-b-2 border-slate-800 pb-4 mb-5">
-                <h1 className="text-xl font-black uppercase tracking-wider text-slate-900 mb-0.5">My School Life</h1>
-                <p className="text-slate-500 text-[10px] tracking-wide font-sans">Professional ERP Student Invoice Ledger</p>
-                <div className="mt-3 inline-block bg-slate-900 text-white px-4 py-1 rounded-full font-bold text-[10px] uppercase tracking-widest font-sans">
-                  Fees Payment Receipt
-                </div>
-              </div>
-
-              {/* Student Metadata fields grid */}
-              <div className="grid grid-cols-2 gap-y-2.5 gap-x-8 mb-6 font-sans text-[11px]">
-                <div className="flex border-b border-dashed border-slate-200 pb-1">
-                  <span className="font-bold text-slate-400 w-28">Student Name:</span>
-                  <span className="font-bold text-slate-900">{printedReceipt.student_id?.name || "N/A"}</span>
-                </div>
-                <div className="flex border-b border-dashed border-slate-200 pb-1">
-                  <span className="font-bold text-slate-400 w-28">Admission No:</span>
-                  <span className="font-mono font-bold text-slate-900">{printedReceipt.student_id?.admission_no || "N/A"}</span>
-                </div>
-                <div className="flex border-b border-dashed border-slate-200 pb-1 col-span-2">
-                  <span className="font-bold text-slate-400 w-28">Class Assigned:</span>
-                  <span className="font-bold text-slate-900">
-                    {printedReceipt.student_id?.class_id?.name
-                      ? `${printedReceipt.student_id.class_id.name} - ${printedReceipt.student_id.class_id.section}`
-                      : "N/A"}
-                  </span>
-                </div>
-                <div className="flex border-b border-dashed border-slate-200 pb-1">
-                  <span className="font-bold text-slate-400 w-28">Receipt Number:</span>
-                  <span className="font-mono font-bold text-primary">{printedReceipt.receipt_number || printedReceipt.receipt_no}</span>
-                </div>
-                <div className="flex border-b border-dashed border-slate-200 pb-1">
-                  <span className="font-bold text-slate-400 w-28">Payment Date:</span>
-                  <span className="font-bold text-slate-900">{fmtDate(printedReceipt.payment_date)}</span>
-                </div>
-              </div>
-
-              {/* Enriched Ledger Breakdown Table */}
-              {(() => {
-                const receiptBreakdown = (printedReceipt.fee_breakdown || []).map((item: any) => {
-                  const config = (printedReceipt.feeTypesConfig || []).find((c: any) => c.name === item.name);
-                  
-                  // Calculate multiplier for the transaction billing range
-                  const start = new Date(printedReceipt.start_date);
-                  const end = new Date(printedReceipt.end_date);
-                  let mult = 1;
-                  if (config && !isNaN(start.getTime()) && !isNaN(end.getTime()) && end >= start) {
-                    if (config.frequency !== "One Time") {
-                      const monthsDiff = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
-                      switch (config.frequency) {
-                        case "Monthly":
-                          mult = Math.max(1, monthsDiff);
-                          break;
-                        case "Quarterly":
-                          mult = Math.max(1, Math.ceil(monthsDiff / 3));
-                          break;
-                        case "Half Yearly":
-                          mult = Math.max(1, Math.ceil(monthsDiff / 6));
-                          break;
-                        case "Yearly":
-                          mult = Math.max(1, Math.ceil(monthsDiff / 12));
-                          break;
-                      }
-                    }
-                  }
-
-                  const totalAmount = config ? (config.amount * mult) : item.amount_paid;
-
-                  // Calculate amount paid BEFORE this transaction
-                  let paidBefore = 0;
-                  if (printedReceipt.paymentsHistory) {
-                    printedReceipt.paymentsHistory.forEach((p: any) => {
-                      if (p._id !== printedReceipt._id) {
-                        const match = p.fee_breakdown?.find((f: any) => f.name === item.name);
-                        if (match) paidBefore += match.amount_paid;
-                      }
-                    });
-                  }
-
-                  const paidNow = item.amount_paid;
-                  const totalPaid = paidBefore + paidNow;
-                  const outstanding = Math.max(0, totalAmount - totalPaid);
-
-                  let status = "Pending";
-                  if (totalAmount > 0) {
-                    if (totalPaid >= totalAmount) status = "Paid";
-                    else if (totalPaid > 0) status = "Partial";
-                  }
-
-                  return {
-                    name: item.name,
-                    totalAmount,
-                    paidBefore,
-                    paidNow,
-                    totalPaid,
-                    outstanding,
-                    status
-                  };
-                });
-
-                return (
-                  <>
-                    <div className="mb-6 font-sans border border-slate-300 rounded-xl overflow-hidden">
-                      <table className="w-full text-[10px] border-collapse text-left">
-                        <thead>
-                          <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-extrabold uppercase text-[9px] tracking-wider">
-                            <th className="px-3 py-2">Fee Head</th>
-                            <th className="px-3 py-2 text-right">Total Fee</th>
-                            <th className="px-3 py-2 text-right">Paid Before</th>
-                            <th className="px-3 py-2 text-right text-primary">Paid Now</th>
-                            <th className="px-3 py-2 text-right">Total Paid</th>
-                            <th className="px-3 py-2 text-right text-rose-600">Outstanding</th>
-                            <th className="px-3 py-2 text-center">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-200">
-                          {receiptBreakdown.map((ft: any, i: number) => (
-                            <tr key={i} className="hover:bg-slate-50 transition-colors">
-                              <td className="px-3 py-2.5 font-bold text-slate-800">{ft.name}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-slate-700">{money(ft.totalAmount)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-slate-500">{money(ft.paidBefore)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono font-black text-primary bg-primary/5">{money(ft.paidNow)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-slate-800">{money(ft.totalPaid)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono font-bold text-rose-600 bg-rose-50/20">{money(ft.outstanding)}</td>
-                              <td className="px-3 py-2.5 text-center">
-                                <span className={`px-2 py-0.3 rounded text-[8px] font-black uppercase tracking-wider ${
-                                  ft.status === "Paid"
-                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                    : ft.status === "Partial"
-                                    ? "bg-amber-100 text-amber-800 border border-amber-200"
-                                    : "bg-rose-100 text-rose-800 border border-rose-200"
-                                }`}>
-                                  {ft.status}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Summary aggregate details */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-sans space-y-1.5 mb-6 text-[10px]">
-                      <div className="flex justify-between font-bold text-slate-850">
-                        <span>Total Amount Paid In This Transaction:</span>
-                        <span className="font-mono text-emerald-600 font-black text-sm">
-                          {money(printedReceipt.amount_paid || printedReceipt.total_amount)}
-                        </span>
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
-
-              {printedReceipt.remarks && (
-                <p className="italic text-[10px] text-slate-455 font-sans mb-8">Remarks: {printedReceipt.remarks}</p>
-              )}
-
-              {/* Signatures */}
-              <div className="flex justify-between items-end pt-6 font-sans text-[10px] font-bold text-slate-755">
-                <div className="text-center w-32 border-t border-slate-350 pt-1.5">Depositor Signature</div>
-                <div className="text-center w-32 border-t border-slate-350 pt-1.5">Authorized cashier</div>
-              </div>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={() => setPrintedReceipt(null)}
-                className="px-4 py-2 border border-border text-xs font-bold rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                Close Receipt
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
 
       {/* MODAL: STUDENT HISTORY LOGS QUICKVIEW */}
       {historyStudent && (
@@ -1223,76 +1817,27 @@ export default function FeesPage() {
                 No past transactions recorded for this student.
               </div>
             ) : (
-              <div className="overflow-x-auto border border-border rounded-xl">
-                <table className="w-full text-left text-xs">
+              <div className="erp-table-wrap overflow-x-auto">
+                <table className="erp-table">
                   <thead>
-                    <tr className="bg-slate-50 dark:bg-slate-955 border-b border-border text-slate-500 font-bold">
-                      <th className="px-4 py-3">Receipt No</th>
-                      <th className="px-4 py-3">Payment Date</th>
-                      <th className="px-4 py-3">Method</th>
-                      <th className="px-4 py-3 text-right">Amount</th>
-                      <th className="px-4 py-3 text-right">Actions</th>
+                    <tr>
+                      <th>Receipt No</th>
+                      <th>Payment Date</th>
+                      <th>Method</th>
+                      <th className="col-right">Amount</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody>
                     {studentHistoryLogs.map((log: any) => (
                       <tr key={log._id}>
-                        <td className="px-4 py-3 font-mono font-bold text-primary">{log.receipt_number || log.receipt_no}</td>
-                        <td className="px-4 py-3 font-semibold">{fmtDate(log.payment_date)}</td>
-                        <td className="px-4 py-3">
+                        <td className="font-mono font-bold text-primary">{log.receipt_number || log.receipt_no}</td>
+                        <td className="font-semibold">{fmtDate(log.payment_date)}</td>
+                        <td>
                           <span className="px-2 py-0.5 rounded bg-slate-100 text-[10px] font-bold">
                             {log.payment_method}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600">{money(log.amount_paid || log.total_amount)}</td>
-
-
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={async () => {
-                              try {
-                                const sId = historyStudent._id || (historyStudent as any).id;
-                                const classId = (historyStudent as any).class_id || "";
-                                const configRes = await fetch(
-                                  `/api/fees?config_only=true&student_id=${sId}&class_id=${classId}`,
-                                  { headers: getAuthHeaders() }
-                                );
-                                const configData = await configRes.json();
-                                const config = configData.success ? configData.data.fee_types : [];
-
-                                setPrintedReceipt({
-                                  ...log,
-                                  feeTypesConfig: config,
-                                  paymentsHistory: studentHistoryLogs,
-                                  student_id: {
-                                    name: historyStudent.name,
-                                    admission_no: historyStudent.admission_no,
-                                    class_id: {
-                                      name: historyStudent.class_name.split(" - ")[0],
-                                      section: historyStudent.class_name.split(" - ")[1] || ""
-                                    }
-                                  }
-                                });
-                              } catch (err) {
-                                console.error(err);
-                                setPrintedReceipt({
-                                  ...log,
-                                  student_id: {
-                                    name: historyStudent.name,
-                                    admission_no: historyStudent.admission_no,
-                                    class_id: {
-                                      name: historyStudent.class_name.split(" - ")[0],
-                                      section: historyStudent.class_name.split(" - ")[1] || ""
-                                    }
-                                  }
-                                });
-                              }
-                            }}
-                            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-[10px] transition-colors cursor-pointer"
-                          >
-                            Receipt
-                          </button>
-                        </td>
+                        <td className="col-right font-mono font-bold text-emerald-600">{money(log.amount_paid || log.total_amount)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1315,4 +1860,3 @@ export default function FeesPage() {
     </div>
   );
 }
-

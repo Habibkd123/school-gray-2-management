@@ -9,7 +9,7 @@ export interface ApiSubjectMaster {
   name: string;
   subject_code?: string;
   description?: string;
-  status: "Active" | "Inactive";
+  status: "Active" | "Inactive" | "Archived";
   allowed_streams?: string[];
   createdAt?: string;
 }
@@ -21,7 +21,7 @@ const _listeners = new Set<(s: ApiSubjectMaster[]) => void>();
 
 function invalidateCache() { _subjectsCache = null; _cacheTimestamp = 0; }
 
-export function useSubjectMaster(options?: { skip?: boolean }) {
+export function useSubjectMaster(options?: { skip?: boolean; limit?: number }) {
   const [subjects, setSubjects] = useState<ApiSubjectMaster[]>(_subjectsCache ?? []);
   const [isLoading, setIsLoading] = useState(_subjectsCache === null);
   const [error, setError] = useState<string | null>(null);
@@ -49,9 +49,13 @@ export function useSubjectMaster(options?: { skip?: boolean }) {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch subjects");
 
-      _subjectsCache = data.data.subjects;
-      _cacheTimestamp = Date.now();
-      _listeners.forEach(fn => fn(data.data.subjects));
+      const isFiltered = !!(params.search || params.page);
+      const isAll = (params.limit ?? 0) >= 100;
+      if (isAll && !isFiltered) {
+        _subjectsCache = data.data.subjects;
+        _cacheTimestamp = Date.now();
+        _listeners.forEach(fn => fn(data.data.subjects));
+      }
       setSubjects(data.data.subjects);
       setTotal(data.data.total ?? 0);
       setTotalPages(data.data.totalPages ?? 1);
@@ -65,8 +69,10 @@ export function useSubjectMaster(options?: { skip?: boolean }) {
 
   useEffect(() => {
     if (options?.skip || !authReady) return;
-    fetchSubjects({ limit: 100 });
-  }, [fetchSubjects, options?.skip, authReady]);
+    const isFresh = _subjectsCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
+    if (isFresh) return;
+    fetchSubjects({ limit: options?.limit ?? 1000 });
+  }, [fetchSubjects, options?.skip, options?.limit, authReady]);
 
   const createSubject = async (input: { name: string; subject_code?: string; description?: string; status?: string; allowed_streams?: string[] }) => {
     try {

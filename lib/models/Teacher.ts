@@ -23,6 +23,8 @@ export interface ITeacher extends Document {
   aadhaar_front_url?: string;
   aadhaar_back_url?: string;
   is_active: boolean;
+  designation?: string;
+  department?: string;
 
   // Family Info
   father_name?: string;
@@ -107,6 +109,8 @@ const teacherSchema = new Schema<ITeacher>(
     aadhaar_front_url: { type: String, trim: true },
     aadhaar_back_url: { type: String, trim: true },
     is_active: { type: Boolean, default: true },
+    designation: { type: String, trim: true, default: "Teacher" },
+    department: { type: String, trim: true, default: "Academic" },
 
     // Family Info
     father_name: { type: String, trim: true },

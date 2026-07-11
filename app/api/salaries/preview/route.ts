@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const teacherId = url.searchParams.get("teacher_id");
     const startDateParam = url.searchParams.get("start_date");
     const endDateParam = url.searchParams.get("end_date");
-    const period = url.searchParams.get("period"); // fallback format YYYY-MM
+    const period = url.searchParams.get("period"); // YYYY-MM format
 
     if (!teacherId) {
       return NextResponse.json(
@@ -51,11 +51,7 @@ export async function GET(req: NextRequest) {
     let endDate: Date;
     let periodLabel: string;
 
-    if (startDateParam && endDateParam) {
-      startDate = new Date(startDateParam + "T00:00:00.000Z");
-      endDate = new Date(endDateParam + "T23:59:59.999Z");
-      periodLabel = `${startDateParam} to ${endDateParam}`;
-    } else if (period) {
+    if (period) {
       const [yearStr, monthStr] = period.split("-");
       const year = parseInt(yearStr);
       const month = parseInt(monthStr) - 1; // 0-indexed month
@@ -68,14 +64,18 @@ export async function GET(req: NextRequest) {
       startDate = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
       endDate = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
       periodLabel = period;
+    } else if (startDateParam && endDateParam) {
+      startDate = new Date(startDateParam + "T00:00:00.000Z");
+      endDate = new Date(endDateParam + "T23:59:59.999Z");
+      periodLabel = `${startDateParam} to ${endDateParam}`;
     } else {
-      // Fallback to current month
+      // Fallback to current month YYYY-MM
       const now = new Date();
       const year = now.getFullYear();
       const month = now.getMonth();
       startDate = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
       endDate = new Date(Date.UTC(year, month + 1, 0, 23, 59, 59, 999));
-      periodLabel = `${startDate.toISOString().split("T")[0]} to ${endDate.toISOString().split("T")[0]}`;
+      periodLabel = `${year}-${String(month + 1).padStart(2, "0")}`;
     }
 
     // Query Attendance documents in range
@@ -85,44 +85,60 @@ export async function GET(req: NextRequest) {
       date: { $gte: startDate, $lte: endDate },
     });
 
-    let workingDays = 0;
+    let attendanceRecordsCount = 0;
     let presentDays = 0;
     let absentDays = 0;
+    let lateDays = 0;
+    let halfDays = 0;
+    let leaveDays = 0;
+    let holidayDays = 0;
 
     attendanceDocs.forEach((doc) => {
-      // Find the record for this teacher
       const record = doc.records.find(
         (r: any) => r.teacher_id && r.teacher_id.toString() === teacherId
       );
 
       if (record) {
-        workingDays++;
+        attendanceRecordsCount++;
         const status = record.status.toLowerCase();
-        if (status === "present" || status === "late" || status === "holiday" || status === "leave") {
+        if (status === "present") {
           presentDays++;
         } else if (status === "absent") {
           absentDays++;
+        } else if (status === "late") {
+          lateDays++;
+          presentDays++; // Counts as present
         } else if (status === "half_day") {
+          halfDays++;
           presentDays += 0.5;
           absentDays += 0.5;
+        } else if (status === "leave") {
+          leaveDays++;
+          presentDays++; // Counts as paid leave
+        } else if (status === "holiday") {
+          holidayDays++;
+          presentDays++; // Paid holiday
         }
       }
     });
 
-    const hasAttendance = workingDays > 0;
-
-    // Total Calendar Days in range
+    // Total Calendar Days in range (standard 30 or actual count)
     const diffTime = endDate.getTime() - startDate.getTime();
     const totalDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1);
 
-    // Daily Salary Calculation (Dividing by 30 days including Sundays)
-    const dailySalary = Math.round((monthlySalary / 30) * 100) / 100;
-    
-    // Payable days = total calendar range days minus absent days
-    const payableDays = Math.max(0, totalDays - absentDays);
+    // If no attendance marked, default to full working/present days so teacher gets full salary
+    const finalWorkingDays = attendanceRecordsCount > 0 ? attendanceRecordsCount : totalDays;
+    const finalPresentDays = attendanceRecordsCount > 0 ? presentDays : totalDays;
+    const finalAbsentDays = attendanceRecordsCount > 0 ? absentDays : 0;
 
-    // Total Payable Amount = Daily Salary * Payable Days
-    const totalPayableAmount = hasAttendance ? Math.round((dailySalary * payableDays) * 100) / 100 : 0;
+    // Daily Salary Rate (basic / 30)
+    const dailySalary = Math.round((monthlySalary / 30) * 100) / 100;
+
+    // Suggested Deduction based on absences and half days
+    const suggestedDeduction = Math.round((finalAbsentDays * dailySalary) * 100) / 100;
+
+    // Net payable
+    const totalPayableAmount = Math.max(0, Math.round((monthlySalary - suggestedDeduction) * 100) / 100);
 
     return NextResponse.json({
       success: true,
@@ -135,13 +151,17 @@ export async function GET(req: NextRequest) {
         startDate: startDate.toISOString().split("T")[0],
         endDate: endDate.toISOString().split("T")[0],
         totalDays,
-        workingDays,
-        presentDays,
-        absentDays,
+        workingDays: finalWorkingDays,
+        presentDays: finalPresentDays,
+        absentDays: finalAbsentDays,
+        lateDays,
+        halfDays,
+        leaveDays,
+        holidayDays,
         dailySalary,
-        payableDays,
+        suggestedDeduction,
         totalPayableAmount,
-        hasAttendance,
+        hasAttendance: attendanceRecordsCount > 0,
       },
     });
   } catch (err: any) {

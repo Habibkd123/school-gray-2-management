@@ -4,6 +4,7 @@ import Student from "@/lib/models/Student";
 import { Parent } from "@/lib/models";
 import User from "@/lib/models/User";
 import Class from "@/lib/models/Class";
+import Admission from "@/lib/models/Admission";
 import { requireAuth } from "@/lib/utils/auth";
 
 // ─── Helper: generate student login email ──────────────────────
@@ -38,8 +39,10 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search");
     const academic_year = searchParams.get("academic_year");
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "12");
-    const skip = (page - 1) * limit;
+    const limitParam = searchParams.get("limit");
+    const isAll = limitParam === "all";
+    const limit = isAll ? 100000 : parseInt(limitParam || "12");
+    const skip = isAll ? 0 : (page - 1) * limit;
 
     // Build filter
     const filter: Record<string, any> = { school_id: schoolId };
@@ -81,6 +84,34 @@ export async function GET(request: NextRequest) {
     const sectionId = searchParams.get("section_id");
     if (sectionId) {
       filter.section_id = sectionId;
+    }
+
+    const section = searchParams.get("section");
+    if (section && section !== "all") {
+      const classesWithSection = await Class.find({ section, school_id: schoolId }).select("_id").lean();
+      const classIds = classesWithSection.map(c => c._id);
+      if (filter.class_id) {
+        if (filter.class_id.$in) {
+          filter.class_id.$in = filter.class_id.$in.filter((id: any) => classIds.some(cid => cid.toString() === id.toString()));
+        } else {
+          const match = classIds.some(cid => cid.toString() === filter.class_id.toString());
+          filter.class_id = match ? filter.class_id : { $in: [] };
+        }
+      } else {
+        filter.class_id = { $in: classIds };
+      }
+    }
+
+    const house = searchParams.get("house");
+    if (house && house !== "all") {
+      filter.house = house;
+    }
+
+    const admissionStatus = searchParams.get("admission_status");
+    if (admissionStatus && admissionStatus !== "all") {
+      const admissions = await Admission.find({ status: admissionStatus as any, school_id: schoolId }).select("admission_no").lean() as any[];
+      const admissionNos = admissions.map(a => a.admission_no).filter(Boolean);
+      filter.admission_no = { $in: admissionNos };
     }
 
     const status = searchParams.get("status");
@@ -244,6 +275,19 @@ export async function POST(request: NextRequest) {
       );
     }
     const finalAdmissionNo = admission_no.trim();
+
+    if (phone?.trim()) {
+      const duplicatePhone = await Student.findOne({
+        school_id: schoolId,
+        phone: phone.trim()
+      });
+      if (duplicatePhone) {
+        return NextResponse.json(
+          { success: false, message: "Student mobile number already exists" },
+          { status: 409 }
+        );
+      }
+    }
 
     // Determine login email for student (always auto-generated in custom format)
     const studentLoginEmail = generateStudentLoginEmail(name.trim(), dob);

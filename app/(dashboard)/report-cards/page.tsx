@@ -35,25 +35,29 @@ export default function ReportCardsDashboard() {
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
+          <h1 className="page-title flex items-center gap-3">
             <span className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
               <BookOpen className="w-5 h-5 text-white" />
             </span>
             Report Cards
           </h1>
-          <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 ml-12">
-            Auto-generate report cards from exam data • No manual entry required
-          </p>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-normal">
+            <span>Dashboard</span>
+            <span>/</span>
+            <span className="text-slate-900 dark:text-white font-medium">Report Cards</span>
+          </div>
         </div>
-        <Link
-          href="/report-cards/generate"
-          className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[14px] font-semibold rounded-xl shadow-lg shadow-primary/25 transition-all hover:shadow-primary/40 hover:-translate-y-0.5"
-        >
-          <Plus className="w-4 h-4" />
-          Generate Report Cards
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/report-cards/generate"
+            className="btn btn-primary"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Generate Report Cards</span>
+          </Link>
+        </div>
       </div>
 
       {/* ── Stats ──────────────────────────────────────────────────────────── */}

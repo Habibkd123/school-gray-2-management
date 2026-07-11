@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { Subject, Timetable } from "@/lib/models/index";
+import { Subject, Timetable, ExamSchedule, Result, ClassTest, Homework } from "@/lib/models/index";
 import Class from "@/lib/models/Class";
 import Teacher from "@/lib/models/Teacher";
 import { requireAuth } from "@/lib/utils/auth";
@@ -144,8 +144,38 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       }
     }
 
+    const [
+      timetables,
+      examSchedules,
+      results,
+      classTests,
+      homeworks
+    ] = await Promise.all([
+      Timetable.countDocuments({ school_id: schoolId, subject_id: id }),
+      ExamSchedule.countDocuments({ school_id: schoolId, subject_id: id }),
+      Result.countDocuments({ school_id: schoolId, subject_id: id }),
+      ClassTest.countDocuments({ school_id: schoolId, subject_id: id }),
+      Homework.countDocuments({ school_id: schoolId, subject_id: id })
+    ]);
+
+    const reasons: string[] = [];
+    if (timetables > 0) reasons.push(`${timetables} Routine Periods (Timetable)`);
+    if (examSchedules > 0 || results > 0) reasons.push(`${examSchedules + results} Exam Entries/Schedules`);
+    if (classTests > 0) reasons.push(`${classTests} Assessments (Class Tests)`);
+    if (homeworks > 0) reasons.push(`${homeworks} Homework Entries`);
+
+    if (reasons.length > 0) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `This subject cannot be deleted because it is in use by: ${reasons.join(", ")}. Please deactivate or archive it instead.`
+        },
+        { status: 409 }
+      );
+    }
+
     await Subject.deleteOne({ _id: id });
-    return NextResponse.json({ success: true, message: "Subject deleted" });
+    return NextResponse.json({ success: true, message: "Subject deleted successfully" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

@@ -11,6 +11,7 @@ import { useSubjectMaster, ApiSubjectMaster } from "@/app/hooks/useSubjectMaster
 import { useStreams } from "@/app/hooks/useStreams";
 import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { useAuth } from "@/app/context/auth";
+import { getAuthHeaders } from "@/lib/utils/session";
 
 export default function SubjectMasterPage() {
   const { user } = useAuth();
@@ -30,11 +31,17 @@ export default function SubjectMasterPage() {
   const [formName, setFormName] = useState("");
   const [formCode, setFormCode] = useState("");
   const [formDesc, setFormDesc] = useState("");
-  const [formStatus, setFormStatus] = useState<"Active" | "Inactive">("Active");
+  const [formStatus, setFormStatus] = useState<"Active" | "Inactive" | "Archived">("Active");
   const [formAllowedStreams, setFormAllowedStreams] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
+
+  // Dependency checking states
+  const [checkingDependencies, setCheckingDependencies] = useState(false);
+  const [dependencyError, setDependencyError] = useState<string | null>(null);
+  const [dependencyReasons, setDependencyReasons] = useState<string[]>([]);
+  const [isDeletable, setIsDeletable] = useState(true);
 
   const searchRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -52,16 +59,51 @@ export default function SubjectMasterPage() {
 
   const handlePageChange = (p: number) => { setPage(p); fetchSubjects({ search: searchQuery, page: p, limit: PAGE_SIZE }); };
 
-  const resetForm = () => { setFormName(""); setFormCode(""); setFormDesc(""); setFormStatus("Active"); setFormAllowedStreams([]); setFormError(""); };
+  const resetForm = () => {
+    setFormName("");
+    setFormCode("");
+    setFormDesc("");
+    setFormStatus("Active");
+    setFormAllowedStreams([]);
+    setFormError("");
+    setDependencyError(null);
+    setDependencyReasons([]);
+    setIsDeletable(true);
+  };
 
   const openEdit = (s: ApiSubjectMaster) => {
     setSelected(s); setFormName(s.name); setFormCode(s.subject_code || "");
-    setFormDesc(s.description || ""); setFormStatus(s.status);
+    setFormDesc(s.description || ""); setFormStatus(s.status as any);
     setFormAllowedStreams(s.allowed_streams || []);
     setFormError("");
     setIsEditOpen(true); setActionMenuId(null);
   };
-  const openDelete = (s: ApiSubjectMaster) => { setSelected(s); setIsDeleteOpen(true); setActionMenuId(null); };
+
+  const openDelete = async (s: ApiSubjectMaster) => {
+    setSelected(s);
+    setIsDeleteOpen(true);
+    setActionMenuId(null);
+    setCheckingDependencies(true);
+    setDependencyError(null);
+    setDependencyReasons([]);
+    setIsDeletable(true);
+    try {
+      const res = await fetch(`/api/academic/dependency-check?type=subject_master&id=${s._id}`, {
+        headers: getAuthHeaders()
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsDeletable(data.data.deletable);
+        setDependencyReasons(data.data.reasons);
+      } else {
+        setDependencyError(data.message || "Failed to check dependencies.");
+      }
+    } catch {
+      setDependencyError("Failed to check references.");
+    } finally {
+      setCheckingDependencies(false);
+    }
+  };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,37 +145,21 @@ export default function SubjectMasterPage() {
   };
 
   const StatusBadge = ({ status }: { status: string }) => (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${status === "Inactive" ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400" : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"}`}>
-      {status}
-    </span>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+      status === "Inactive"
+        ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+        : status === "Archived"
+        ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
+        : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+    }`}>{status}</span>
   );
 
-  const columns: ColumnDef<ApiSubjectMaster>[] = [
+  const columns: ColumnDef<any>[] = [
     { header: "#", accessorKey: "_id", render: (_s: ApiSubjectMaster, i: number) => <span className="text-slate-500 font-medium text-[13px]">{i + 1}</span> },
     { header: "Subject Name", accessorKey: "name", render: (s) => <span className="font-semibold text-slate-800 dark:text-slate-200">{s.name}</span> },
     { header: "Subject Code", accessorKey: "subject_code", render: (s) => <span className="font-mono text-[12px] text-slate-500 dark:text-slate-400">{s.subject_code || "—"}</span> },
-    { header: "Description", accessorKey: "description", render: (s) => <span className="text-[13px] text-slate-500 dark:text-slate-400 max-w-[200px] truncate block">{s.description || "—"}</span> },
-    ...(enableStreams ? [{
-      header: "Allowed Streams",
-      accessorKey: "allowed_streams",
-      render: (s: ApiSubjectMaster) => {
-        if (!s.allowed_streams || s.allowed_streams.length === 0) {
-          return <span className="text-[12px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400 italic">All Streams (Common)</span>;
-        }
-        return (
-          <div className="flex flex-wrap gap-1">
-            {s.allowed_streams.map(id => {
-              const streamName = streams.find(str => str._id === id)?.name || id;
-              return (
-                <span key={id} className="text-[11px] font-semibold bg-purple-50 dark:bg-purple-900/20 border border-purple-200/50 dark:border-purple-800/30 text-purple-700 dark:text-purple-300 px-1.5 py-0.5 rounded">
-                  {streamName}
-                </span>
-              );
-            })}
-          </div>
-        );
-      }
-    } as ColumnDef<ApiSubjectMaster>] : []),
+    { header: "Classes", accessorKey: "classesCount", render: (s) => <span className="font-semibold text-slate-700 dark:text-slate-350">{(s as any).classesCount ?? 0}</span> },
+    { header: "Teachers", accessorKey: "teachersCount", render: (s) => <span className="font-semibold text-slate-700 dark:text-slate-355">{(s as any).teachersCount ?? 0}</span> },
     { header: "Status", accessorKey: "status", render: (s) => <StatusBadge status={s.status} /> },
     ...(isAdmin ? [{
       header: "Action", sortable: false,
@@ -161,23 +187,24 @@ export default function SubjectMasterPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
+      <div className="page-header">
         <div>
-          <h1 className="text-[20px] leading-[24px] font-bold text-foreground dark:text-slate-100">Subject Master</h1>
-          <div className="flex items-center gap-2 text-[14px] text-[#68718a] mt-1 font-medium">
-            <span>Academic Management</span><span>/</span>
-            <span className="text-foreground dark:text-slate-100">Subjects</span>
+          <h1 className="page-title">Subject Master</h1>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+            <span>Academic Management</span>
+            <span>/</span>
+            <span className="text-slate-900 dark:text-white font-medium">Subjects</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => doFetch()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm dark:text-slate-400">
+          <button onClick={() => doFetch()} className="btn btn-outline p-2 w-9 h-9">
             <RefreshCcw className="w-4 h-4" />
           </button>
           {isAdmin && (
             <button onClick={() => { resetForm(); setIsAddOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors">
-              <Plus className="w-4 h-4" /><span>Add Subject</span>
+              className="btn btn-primary">
+              <Plus className="w-4 h-4" /> Add Subject
             </button>
           )}
         </div>
@@ -409,15 +436,64 @@ export default function SubjectMasterPage() {
       </Modal>
       <Modal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="Delete Subject">
         <div className="space-y-5 text-left">
-          <p className="text-[14px] text-slate-600 dark:text-slate-300">
-            Are you sure you want to delete <span className="font-bold text-foreground dark:text-white">{selected?.name}</span>?
-          </p>
-          <div className="flex justify-end gap-3">
-            <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg">Cancel</button>
-            <button onClick={handleDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm disabled:opacity-60 flex items-center gap-2">
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Delete
-            </button>
-          </div>
+          {checkingDependencies ? (
+            <div className="flex items-center gap-2 py-4 justify-center text-slate-400">
+              <Loader2 className="w-5 h-5 animate-spin" />
+              <span className="text-[13px] font-medium">Checking academic referential dependencies...</span>
+            </div>
+          ) : !isDeletable ? (
+            <div className="space-y-4">
+              <div className="flex items-start gap-2.5 p-3.5 rounded-lg bg-rose-50 dark:bg-rose-955/20 border border-rose-200/50 dark:border-rose-900/30 text-rose-700 dark:text-rose-455 text-[13px] font-medium leading-[20px]">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold mb-1">Cannot Delete Subject</p>
+                  <p>This subject catalog master entry is assigned to classes or teachers. Deleting it would break historical records.</p>
+                  <div className="mt-2.5 space-y-1">
+                    <p className="font-bold">Active Dependencies found:</p>
+                    <ul className="list-disc list-inside pl-1 text-[12px] font-semibold text-rose-600 dark:text-rose-455">
+                      {dependencyReasons.map((r, i) => <li key={i}>{r}</li>)}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <p className="text-[13px] text-slate-500">Would you like to archive or deactivate this subject instead? Archived subjects are hidden from standard dropdowns across the ERP.</p>
+              <div className="flex flex-wrap gap-2 justify-end pt-2 border-t border-border/50">
+                <button onClick={() => setIsDeleteOpen(false)} className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-foreground text-[13px] font-bold rounded-lg transition-colors">Cancel</button>
+                <button onClick={async () => {
+                  if (!selected) return;
+                  setSubmitting(true);
+                  const result = await updateSubject(selected._id, { status: "Inactive" });
+                  setSubmitting(false);
+                  if (result.success) { setIsDeleteOpen(false); resetForm(); doFetch(); }
+                  else alert(result.message);
+                }} disabled={submitting} className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-[13px] font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                  Deactivate
+                </button>
+                <button onClick={async () => {
+                  if (!selected) return;
+                  setSubmitting(true);
+                  const result = await updateSubject(selected._id, { status: "Archived" });
+                  setSubmitting(false);
+                  if (result.success) { setIsDeleteOpen(false); resetForm(); doFetch(); }
+                  else alert(result.message);
+                }} disabled={submitting} className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-[13px] font-bold rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                  Archive Subject
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-[14px] text-slate-600 dark:text-slate-300">
+                Are you sure you want to delete subject <span className="font-bold text-foreground dark:text-white">{selected?.name}</span>? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-3 pt-2 border-t border-border/50">
+                <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg transition-colors">Cancel</button>
+                <button onClick={handleDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2">
+                  {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Delete
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </Modal>
     </div>

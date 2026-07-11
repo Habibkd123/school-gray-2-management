@@ -138,22 +138,27 @@ export default function BusDetailsPage() {
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6" onClick={() => setActiveDropdown(null)}>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Transport Management</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="page-title">Transport Management</h1>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span><span>/</span><span>Transport</span><span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Bus Details</span>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchBuses()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm dark:text-slate-400"><RefreshCw className="w-4 h-4" /></button>
-          <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm dark:text-slate-400"><Printer className="w-4 h-4" /></button>
-          <button className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 shadow-sm">
+          <button onClick={() => fetchBuses()} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
+            <RefreshCw className="w-4 h-4" />
+          </button>
+          <button className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
+            <Printer className="w-4 h-4" />
+          </button>
+          <button className="btn btn-outline flex items-center gap-2">
             <Download className="w-4 h-4" /> Export <ChevronDown className="w-3.5 h-3.5" />
           </button>
           <button onClick={() => { setForm(buildEmptyBus() as any); setIsAddOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg shadow-sm transition-colors">
+            className="btn btn-primary flex items-center gap-2"
+          >
             <Plus className="w-4 h-4" /> Add Bus
           </button>
         </div>
@@ -183,7 +188,7 @@ export default function BusDetailsPage() {
       </div>
 
       {/* Table Card */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden">
         {/* Toolbar */}
         <div className="p-4 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Bus List
@@ -264,31 +269,35 @@ export default function BusDetailsPage() {
         </div>
 
         {/* Table */}
-        <div className={`overflow-x-auto ${activeDropdown ? "pb-28" : ""}`}>
-          <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
+        <div className={`erp-table-wrap overflow-x-auto ${activeDropdown ? "pb-28" : ""}`}>
+          <table className="erp-table whitespace-nowrap">
+            <thead>
               <tr>
-                <th className="px-4 py-4 text-left w-10"><input type="checkbox" className="rounded w-4 h-4 accent-primary" /></th>
+                <th className="w-10 col-center"><input type="checkbox" className="rounded w-4 h-4 accent-primary cursor-pointer" /></th>
                 {["Bus Number", "Driver", "Phone", "Capacity", "Assigned Route", "Status", "Action"].map(h => (
-                  <th key={h} className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">{h}</th>
+                  <th key={h} className={h === "Action" ? "col-center w-16" : ""}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
-                <tr><td colSpan={8} className="px-6 py-16 text-center text-slate-400">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
-                  <p>Loading buses...</p>
-                </td></tr>
+                <tr>
+                  <td colSpan={8} className="table-loading">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3 text-primary" />
+                    <p>Loading buses...</p>
+                  </td>
+                </tr>
               ) : filtered.length === 0 ? (
-                <tr><td colSpan={8} className="px-6 py-16 text-center text-slate-400">
-                  <Bus className="w-10 h-10 mx-auto mb-3 opacity-30" />
-                  <p>No buses found.</p>
-                </td></tr>
+                <tr>
+                  <td colSpan={8} className="table-empty">
+                    <Bus className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                    <p>No buses found.</p>
+                  </td>
+                </tr>
               ) : filtered.map((bus, idx) => (
-                <tr key={bus.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                  <td className="px-4 py-4"><input type="checkbox" className="rounded w-4 h-4 accent-primary" /></td>
-                  <td className="px-4 py-4">
+                <tr key={bus.id}>
+                  <td className="col-center"><input type="checkbox" className="rounded w-4 h-4 accent-primary cursor-pointer" /></td>
+                  <td>
                     <div className="flex items-center gap-2 cursor-pointer" onClick={e => { e.stopPropagation(); setViewBus(bus); }}>
                       <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
                         <Bus className="w-4 h-4 text-primary" />
@@ -299,27 +308,30 @@ export default function BusDetailsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-4">
+                  <td>
                     <div className="font-medium text-slate-900 dark:text-white">{bus.driverName}</div>
                   </td>
-                  <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{bus.driverPhone}</td>
-                  <td className="px-4 py-4">
+                  <td className="text-slate-655">{bus.driverPhone}</td>
+                  <td>
                     <div className="flex items-center gap-1.5">
                       <Users className="w-3.5 h-3.5 text-slate-400" />
                       <span className="font-semibold text-slate-700 dark:text-slate-200">{bus.capacity}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-slate-600 dark:text-slate-300 max-w-full sm:w-[160px] truncate">{bus.assignedRoute}</td>
-                  <td className="px-4 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-bold ${bus.status === "Active" ? "bg-success/10 text-success" : "bg-danger/10 text-danger"}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${bus.status === "Active" ? "bg-success" : "bg-danger"}`} />
+                  <td className="text-slate-655 max-w-full sm:w-[160px] truncate">{bus.assignedRoute}</td>
+                  <td>
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
+                      bus.status === "Active" 
+                        ? "bg-emerald-50 text-emerald-755 border-emerald-205" 
+                        : "bg-rose-50 text-rose-755 border-rose-205"
+                    }`}>
                       {bus.status}
                     </span>
                   </td>
-                  <td className="px-4 py-4">
+                  <td className="col-center">
                     <div className="relative" onClick={e => e.stopPropagation()}>
                       <button onClick={() => setActiveDropdown(activeDropdown === bus.id ? null : bus.id)}
-                        className="w-8 h-8 rounded-full flex items-center justify-center bg-primary hover:bg-[var(--primary-hover)] text-white transition-colors">
+                        className="w-8 h-8 rounded-full flex items-center justify-center bg-primary hover:bg-[var(--primary-hover)] text-white transition-colors cursor-pointer">
                         <MoreVertical className="w-4 h-4" />
                       </button>
                       {activeDropdown === bus.id && (

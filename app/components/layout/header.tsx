@@ -7,6 +7,7 @@ import { useAppState } from "../../context/store";
 import { useAuth } from "../../context/auth";
 import { Bell, Sun, Moon, Calendar, ChevronDown, LogOut, User, Settings, Shield, Menu } from "lucide-react";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { ClassService } from "@/app/services/ClassService";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -35,11 +36,10 @@ export function Header({ onMenuClick }: HeaderProps) {
       // Always include fallback years so 2026-2027 is selectable even before DB has data
       const fallbackYears = ["2026-2027"];
       try {
-        const res = await fetch("/api/classes?limit=50", { headers: getAuthHeaders() });
-        const data = await res.json();
-        if (res.ok && data.success && data.data?.classes?.length > 0) {
+        const classes = await ClassService.getAllClasses();
+        if (classes.length > 0) {
           const dbYears: string[] = Array.from(
-            new Set<string>(data.data.classes.map((c: { academic_year: string }) => c.academic_year))
+            new Set<string>(classes.map((c) => c.academic_year))
           );
           // Merge DB years with fallback years and filter to only allow 2026-2027
           const merged = Array.from(new Set([...dbYears, ...fallbackYears]))

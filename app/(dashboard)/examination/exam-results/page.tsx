@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
@@ -213,10 +213,10 @@ export default function ExamResultsPage() {
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Exam Result</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="page-title">Exam Result</h1>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/examination" className="hover:text-primary">Examination</Link>
@@ -226,17 +226,17 @@ export default function ExamResultsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => fetchResults()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
+          <button onClick={() => fetchResults()} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
+          <button className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <Printer className="w-4 h-4" />
           </button>
 
           <div className="relative">
             <button
               onClick={() => setIsExportOpen(!isExportOpen)}
-              className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
+              className="btn btn-outline flex items-center gap-2"
             >
               <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
             </button>
@@ -379,35 +379,35 @@ export default function ExamResultsPage() {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-[13px] whitespace-nowrap">
-            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
+        <div className="erp-table-wrap overflow-x-auto">
+          <table className="erp-table whitespace-nowrap">
+            <thead>
               <tr>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">
+                <th className="w-12 col-center">
                   <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                 </th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Student Name</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Roll No</th>
+                <th>Student Name</th>
+                <th>Roll No</th>
                 {subjectNames.map((sub) => (
-                  <th key={sub} className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">{sub}</th>
+                  <th key={sub}>{sub}</th>
                 ))}
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Total</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Percent(%)</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Grade</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Result</th>
-                <th className="px-6 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Action</th>
+                <th>Total</th>
+                <th>Percent(%)</th>
+                <th>Grade</th>
+                <th>Result</th>
+                <th className="w-20 col-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8 + subjectNames.length} className="px-6 py-10 text-center text-slate-400">
+                  <td colSpan={8 + subjectNames.length} className="table-loading">
                     <Loader2 className="w-5 h-5 animate-spin inline" />
                   </td>
                 </tr>
               ) : sortedData.length === 0 ? (
                 <tr>
-                  <td colSpan={8 + subjectNames.length} className="px-6 py-10 text-center text-slate-400">
+                  <td colSpan={8 + subjectNames.length} className="table-empty">
                     {selectedExamId ? "No results for this exam." : "No results found. Select an exam or add results."}
                   </td>
                 </tr>
@@ -419,42 +419,42 @@ export default function ExamResultsPage() {
                 const failed = row.subjects.some((s) => !s.pass);
 
                 return (
-                  <tr key={row.studentId} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-4">
+                  <tr key={row.studentId}>
+                    <td className="col-center">
                       <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary cursor-pointer" />
                     </td>
-                    <td className="px-6 py-4">
+                    <td>
                       <Link href={`/students/${row.studentId}`} className="font-semibold text-primary hover:text-[var(--primary-hover)] transition-colors cursor-pointer">
                         {row.studentName}
                       </Link>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400">{row.rollNo || "—"}</td>
+                    <td className="text-slate-500 dark:text-slate-400 font-mono font-bold">{row.rollNo || "—"}</td>
                     {subjectNames.map((sub) => {
                       const subData = row.subjects.find((s) => s.name === sub);
                       return (
-                        <td key={sub} className={`px-6 py-4 font-medium ${subData && !subData.pass ? "text-rose-500" : "text-slate-600 dark:text-slate-300"}`}>
+                        <td key={sub} className={`font-semibold ${subData && !subData.pass ? "text-rose-500" : "text-slate-600 dark:text-slate-300"}`}>
                           {subData ? subData.marks : "—"}
                         </td>
                       );
                     })}
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">{totalObtained}/{totalMax}</td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">{percent}%</td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium">{grade}</td>
-                    <td className="px-6 py-4">
+                    <td className="text-slate-600 dark:text-slate-300 font-medium">{totalObtained}/{totalMax}</td>
+                    <td className="text-slate-600 dark:text-slate-300 font-medium">{percent}%</td>
+                    <td className="text-slate-600 dark:text-slate-300 font-medium">{grade}</td>
+                    <td>
                       {failed ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-rose-50 text-rose-600 border border-rose-100">
-                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Fail
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border bg-rose-50 text-rose-700 border-rose-200">
+                          Fail
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-emerald-50 text-emerald-600 border border-emerald-100">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Pass
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border bg-emerald-50 text-emerald-700 border-emerald-200">
+                          Pass
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="col-center">
                       <button 
                         onClick={() => setReportCardData({ ...row, percent, grade, failed, totalObtained, totalMax })}
-                        className="p-1.5 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                        className="p-1.5 rounded-lg bg-indigo-50 text-indigo-650 hover:bg-indigo-100 transition-colors cursor-pointer"
                         title="Print Report Card"
                       >
                         <Printer className="w-4 h-4" />

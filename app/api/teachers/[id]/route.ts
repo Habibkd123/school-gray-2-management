@@ -77,6 +77,14 @@ export async function PUT(
 
     const body = await req.json();
 
+    if (body.phone?.trim()) {
+      const normalizedPhone = body.phone.trim();
+      const existingPhone = await Teacher.findOne({ phone: normalizedPhone, school_id: schoolId, _id: { $ne: id } });
+      if (existingPhone) {
+        return NextResponse.json({ success: false, message: "A teacher with this mobile number already exists in this school" }, { status: 409 });
+      }
+    }
+
     // Check if updating password
     if (body.password) {
       const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { Attendance } from "@/lib/models/index";
+import Teacher from "@/lib/models/Teacher";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
@@ -34,11 +35,48 @@ export async function GET(req: NextRequest) {
       type: "teacher",
     };
 
-    const attendanceRecord = await Attendance.findOne(query).populate("records.teacher_id", "name employee_id _id");
+    const [attendanceRecord, activeTeachers] = await Promise.all([
+      Attendance.findOne(query).populate("records.teacher_id", "name employee_id photo_url designation department is_active"),
+      Teacher.find({ school_id: schoolId, is_active: true }).lean()
+    ]);
+
+    const recordsMap = new Map();
+    if (attendanceRecord && attendanceRecord.records) {
+      attendanceRecord.records.forEach((r: any) => {
+        const tId = r.teacher_id?._id?.toString() || r.teacher_id?.toString();
+        if (tId) {
+          recordsMap.set(tId, r);
+        }
+      });
+    }
+
+    const mergedRecords = activeTeachers.map((t: any) => {
+      const saved = recordsMap.get(t._id.toString());
+      return {
+        teacher_id: {
+          _id: t._id,
+          name: t.name,
+          employee_id: t.employee_id,
+          photo_url: t.photo_url,
+          designation: t.designation || "Teacher",
+          department: t.department || "Academic"
+        },
+        status: saved ? saved.status : "present",
+        note: saved ? saved.note : "",
+        check_in: saved ? saved.check_in : null,
+        check_out: saved ? saved.check_out : null,
+        working_hours: saved ? saved.working_hours : null,
+        late_minutes: saved ? saved.late_minutes : null,
+      };
+    });
 
     return NextResponse.json({
       success: true,
-      data: attendanceRecord || null,
+      data: {
+        _id: attendanceRecord?._id || null,
+        date: startOfDay,
+        records: mergedRecords,
+      },
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Internal server error" }, { status: 500 });
@@ -78,6 +116,10 @@ export async function POST(req: NextRequest) {
       teacher_id: new mongoose.Types.ObjectId(r.teacher_id),
       status: r.status.toLowerCase(),
       note: r.note || null,
+      check_in: r.check_in || null,
+      check_out: r.check_out || null,
+      working_hours: r.working_hours !== undefined && r.working_hours !== null ? Number(r.working_hours) : null,
+      late_minutes: r.late_minutes !== undefined && r.late_minutes !== null ? Number(r.late_minutes) : null,
     }));
 
     const update: any = {

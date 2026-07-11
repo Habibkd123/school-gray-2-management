@@ -16,12 +16,10 @@ export async function GET(req: NextRequest) {
       .sort({ name: 1, section: 1 })
       .lean();
 
-    // ── Sheet 1: Import Template ──────────────────────────────────────
     const headers = [
       "Admission No",
       "Roll No",
-      "First Name",
-      "Last Name",
+      "Student Name",
       "Class",
       "Section",
       "Gender",
@@ -42,13 +40,13 @@ export async function GET(req: NextRequest) {
     if (allClasses.length > 0) {
       const cls1 = allClasses[0];
       sampleRows.push([
-        "ADM001", "1", "Sample", "Student", cls1.name, cls1.section || "",
+        "ADM001", "1", "Sample Student", cls1.name, cls1.section || "",
         "Male", "2010-05-15", "9876543210", "", "123 Main Street",
         "Guardian Name", "9876543211", "", "Father", "2026-2027", "",
       ]);
       const cls2 = allClasses[1] || allClasses[0];
       sampleRows.push([
-        "ADM002", "2", "Sample", "Student 2", cls2.name, cls2.section || "",
+        "ADM002", "2", "Sample Student 2", cls2.name, cls2.section || "",
         "Female", "2010-08-22", "9876543220", "", "456 Oak Road",
         "Guardian Name 2", "9876543221", "", "Mother", "2026-2027", "",
       ]);

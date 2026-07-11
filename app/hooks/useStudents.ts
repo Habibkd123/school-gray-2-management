@@ -142,6 +142,9 @@ export function useStudents(options?: { skip?: boolean }) {
       page?: number;
       limit?: number;
       academic_year?: string;
+      section?: string;
+      house?: string;
+      admissionStatus?: string;
     },
     arg2?: string
   ) => {
@@ -156,11 +159,14 @@ export function useStudents(options?: { skip?: boolean }) {
     let page = 1;
     let limit = 12;
     let academic_year = "";
+    let section = "";
+    let house = "";
+    let admissionStatus = "";
 
     const isObject = arg1 && typeof arg1 === "object";
+    const p = (isObject ? arg1 : {}) as any;
 
     if (isObject) {
-      const p = arg1 as any;
       search = p.search ?? "";
       classId = p.classId ?? "";
       streamId = p.streamId ?? "";
@@ -170,15 +176,18 @@ export function useStudents(options?: { skip?: boolean }) {
       dateRange = p.dateRange ?? "";
       sort = p.sort ?? "";
       page = p.page ?? 1;
-      limit = p.limit ?? 10; // Object-path default; explicit callers pass their own limit
+      limit = p.limit ?? (p.page ? 10 : 100000);
       academic_year = p.academic_year ?? "";
+      section = p.section ?? "";
+      house = p.house ?? "";
+      admissionStatus = p.admissionStatus ?? "";
     } else {
       search = (arg1 as string) ?? "";
       classId = arg2 ?? "";
-      limit = 500; // Legacy pages fetch 500 records by default
+      limit = 100000; // Default to all for legacy calls
     }
 
-    const isFiltered = !!(search || classId || gender || status || dateRange || sort || isObject);
+    const isFiltered = !!(search || classId || (gender && gender !== "all") || (status && status !== "all") || (dateRange && dateRange !== "All Time") || sort || (section && section !== "all") || (house && house !== "all") || (admissionStatus && admissionStatus !== "all") || (isObject && (p.page || p.search || p.classId || p.streamId || p.sectionId || p.gender || p.status || p.section || p.house || p.admissionStatus)));
     const isFresh = _studentsCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
 
     // Use cache only for unfiltered legacy fetch
@@ -208,6 +217,9 @@ export function useStudents(options?: { skip?: boolean }) {
       if (dateRange && dateRange !== "All Time") params.set("dateRange", dateRange);
       if (sort) params.set("sort", sort);
       if (academic_year) params.set("academic_year", academic_year);
+      if (section && section !== "all") params.set("section", section);
+      if (house && house !== "all") params.set("house", house);
+      if (admissionStatus && admissionStatus !== "all") params.set("admission_status", admissionStatus);
       params.set("page", page.toString());
       params.set("limit", limit.toString());
 
@@ -255,7 +267,7 @@ export function useStudents(options?: { skip?: boolean }) {
     if (!authReady) return; // Wait until the JWT token is in localStorage
     // Default to 25 for contexts that only need summary data (e.g. dashboard).
     // Pages that need all students call fetchStudents({ limit: <n> }) explicitly.
-    fetchStudents({ academic_year: academicYear, limit: 25 });
+    fetchStudents({ academic_year: academicYear, limit: 100000 });
   }, [fetchStudents, options?.skip, academicYear, authReady, mutationVersion]);
 
   // ─── Create student ─────────────────────────────────────────────

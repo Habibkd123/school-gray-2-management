@@ -11,12 +11,19 @@ export interface IStudentFeePayment extends Document {
   receipt_number: string;
   amount_paid: number;
   payment_date: Date;
-  payment_method: "Cash" | "Cheque" | "Bank Transfer" | "Online";
+  payment_method: "Cash" | "Cheque" | "Bank Transfer" | "Online" | "UPI";
   remarks?: string;
   start_date: Date;
   end_date: Date;
   collection_type: "Monthly" | "Day Wise";
   fee_breakdown?: IFeeBreakdownItem[];
+  discount?: number;
+  fine?: number;
+  scholarship?: number;
+  waiver?: number;
+  adjustment?: number;
+  round_off?: number;
+  collected_by?: mongoose.Types.ObjectId | string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,7 +47,14 @@ const studentFeePaymentSchema = new Schema<IStudentFeePayment>(
         name: { type: String, required: true },
         amount_paid: { type: Number, required: true }
       }
-    ]
+    ],
+    discount: { type: Number, default: 0 },
+    fine: { type: Number, default: 0 },
+    scholarship: { type: Number, default: 0 },
+    waiver: { type: Number, default: 0 },
+    adjustment: { type: Number, default: 0 },
+    round_off: { type: Number, default: 0 },
+    collected_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
   },
   { timestamps: true }
 );

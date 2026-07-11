@@ -131,25 +131,27 @@ export default function TestDetailsPage() {
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <button onClick={() => router.push(`/assessments/${classId}`)}
-          className="p-2 flex-shrink-0 rounded-xl border border-border text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-          <ArrowLeft className="w-4 h-4" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/assessments" className="hover:text-primary transition-colors">Assessments</Link>
-            <span>/</span>
-            <Link href={`/assessments/${classId}`} className="hover:text-primary transition-colors">Class Details</Link>
-            <span>/</span>
-            <span className="text-slate-900 dark:text-white font-medium truncate">Assessment Details</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-[20px] font-bold text-slate-900 dark:text-slate-100 truncate">{test.title}</h1>
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot}`} />
-              {statusStyle.label}
-            </span>
+      <div className="page-header items-start sm:items-center">
+        <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
+          <button onClick={() => router.push(`/assessments/${classId}`)}
+            className="p-2 flex-shrink-0 rounded-xl border border-border text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <div className="flex-1 min-w-0 text-left">
+            <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mb-1 font-normal">
+              <Link href="/assessments" className="hover:text-primary transition-colors">Assessments</Link>
+              <span>/</span>
+              <Link href={`/assessments/${classId}`} className="hover:text-primary transition-colors">Class Details</Link>
+              <span>/</span>
+              <span className="text-slate-900 dark:text-white font-medium truncate">Assessment Details</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="page-title truncate">{test.title}</h1>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot}`} />
+                {statusStyle.label}
+              </span>
+            </div>
           </div>
         </div>
 

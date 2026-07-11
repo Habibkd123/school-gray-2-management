@@ -93,8 +93,10 @@ export async function GET(req: NextRequest) {
   }
 }
 
+import mongoose from "mongoose";
+
 export async function POST(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
+  const { schoolId, role, userId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
 
   try {
@@ -104,27 +106,119 @@ export async function POST(req: NextRequest) {
     // Support bulk entry: array or single object
     const entries = Array.isArray(body) ? body : [body];
 
-    const results = await Promise.all(entries.map(async (entry) => {
-      const { exam_id, student_id, subject_id, marks_obtained, total_marks, passing_marks, grade, remarks, status } = entry;
-      const is_pass = passing_marks ? Number(marks_obtained) >= Number(passing_marks) : undefined;
+    if (entries.length > 0) {
+      const firstExamId = entries[0].exam_id;
+      const exam = await Exam.findById(firstExamId).lean() as any;
+      
+      if (exam?.is_published && role === "teacher") {
+        return NextResponse.json({ success: false, message: "Marks are locked because the exam results have been published. Only Principal/Admin can modify published marks." }, { status: 403 });
+      }
 
-      return Result.findOneAndUpdate(
+      if (role === "teacher") {
+        const teacherRecord = await mongoose.model("Teacher").findOne({ user_id: userId, school_id: schoolId }).select("_id").lean() as any;
+        if (!teacherRecord) {
+          return NextResponse.json({ success: false, message: "Teacher profile not found." }, { status: 403 });
+        }
+
+        const classId = exam?.class_id;
+        const subjectId = entries[0].subject_id;
+
+        const hasAssignment = await mongoose.model("TeacherAssignment").findOne({
+          school_id: schoolId,
+          teacher_id: teacherRecord._id,
+          class_id: classId,
+          $or: [
+            { subject_master_id: subjectId },
+            { assignment_type: "Class Teacher" },
+            { assignment_type: "Co-Class Teacher" }
+          ],
+          status: "Active",
+          is_deleted: { $ne: true }
+        }).lean();
+
+        if (!hasAssignment) {
+          return NextResponse.json({ success: false, message: "You are not authorized to enter marks for this class/subject." }, { status: 403 });
+        }
+      }
+    }
+
+    const results = await Promise.all(entries.map(async (entry) => {
+      const { exam_id, student_id, subject_id, marks_obtained, total_marks, passing_marks, grade, remarks, status, attendance_status } = entry;
+      const is_pass = passing_marks ? Number(marks_obtained) >= Number(passing_marks) : undefined;
+      
+      const previous = await Result.findOne({ school_id: schoolId, exam_id, student_id, subject_id }).lean();
+      const newObtained = Number(marks_obtained || 0);
+      const newAttendanceStatus = attendance_status || "Present";
+      const newStatusVal = status || "final";
+
+      const savedResult = await Result.findOneAndUpdate(
         { school_id: schoolId, exam_id, student_id, subject_id },
         {
           $set: {
             school_id: schoolId,
             exam_id, student_id, subject_id,
-            marks_obtained: Number(marks_obtained),
+            marks_obtained: newObtained,
             total_marks: Number(total_marks),
             passing_marks: passing_marks ? Number(passing_marks) : undefined,
             grade: grade?.trim(),
             is_pass,
             remarks: remarks?.trim(),
-            status: status || "final"
+            status: newStatusVal,
+            attendance_status: newAttendanceStatus,
+            entered_by: role === "teacher" ? userId : undefined
           }
         },
         { upsert: true, new: true }
       );
+
+      // Log Audit History
+      try {
+        if (previous) {
+          if (
+            previous.marks_obtained !== newObtained ||
+            previous.attendance_status !== newAttendanceStatus ||
+            previous.status !== newStatusVal
+          ) {
+            await mongoose.model("ResultAudit").create({
+              school_id: schoolId,
+              result_id: previous._id,
+              exam_id,
+              student_id,
+              subject_id,
+              previous_marks: previous.marks_obtained,
+              new_marks: newObtained,
+              previous_status: previous.status,
+              new_status: newStatusVal,
+              previous_attendance_status: previous.attendance_status || "Present",
+              new_attendance_status: newAttendanceStatus,
+              action_type: "update",
+              reason: remarks || "Marks updated in Entry Portal",
+              changed_by: userId
+            });
+          }
+        } else {
+          await mongoose.model("ResultAudit").create({
+            school_id: schoolId,
+            result_id: savedResult._id,
+            exam_id,
+            student_id,
+            subject_id,
+            previous_marks: 0,
+            new_marks: newObtained,
+            previous_status: "draft",
+            new_status: newStatusVal,
+            previous_attendance_status: "Present",
+            new_attendance_status: newAttendanceStatus,
+            action_type: "create",
+            reason: remarks || "Initial marks entry",
+            changed_by: userId
+          });
+        }
+      } catch (auditErr) {
+        console.error("Result Audit Log Failed:", auditErr);
+      }
+
+      return savedResult;
     }));
 
     return NextResponse.json({ success: true, data: { results } }, { status: 201 });

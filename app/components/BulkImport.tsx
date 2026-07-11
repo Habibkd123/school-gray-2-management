@@ -222,6 +222,7 @@ export default function BulkImport({
 
         const ALIAS_MAP: Record<string, string[]> = {
           "admission no": ["admission no", "admission number", "admission_no", "adm no", "adm_no"],
+          "student name": ["student name", "student_name", "name", "full name", "fullname"],
           "first name": ["first name", "firstname", "first_name"],
           "last name": ["last name", "lastname", "last_name"],
           "class": ["class", "grade", "class_name", "class name"],

@@ -97,7 +97,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     const allowedFields = [
       "title", "description", "class_id", "subject_id", "test_date",
       "start_time", "end_time", "total_marks", "passing_marks", "chapter",
-      "academic_year", "status",
+      "academic_year", "status", "assessment_type"
     ];
 
     for (const field of allowedFields) {

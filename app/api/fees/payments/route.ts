@@ -77,6 +77,7 @@ export async function GET(req: NextRequest) {
         select: "name admission_no roll_no class_id",
         populate: { path: "class_id", select: "name section" }
       })
+      .populate("collected_by", "name username")
       .sort({ payment_date: -1 })
       .lean();
 
@@ -88,11 +89,27 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin", "accountant"]);
+    const { schoolId, userId, error } = requireAuth(req, ["school_admin", "super_admin", "accountant"]);
     if (error) return error;
 
     const body = await req.json();
-    const { student_id, amount_paid, payment_method, remarks, payment_date, start_date, end_date, collection_type, fee_breakdown } = body;
+    const {
+      student_id,
+      amount_paid,
+      payment_method,
+      remarks,
+      payment_date,
+      start_date,
+      end_date,
+      collection_type,
+      fee_breakdown,
+      discount,
+      fine,
+      scholarship,
+      waiver,
+      adjustment,
+      round_off
+    } = body;
 
     // ── Validation ────────────────────────────────────────────────────────────
     if (!student_id || !payment_method || !start_date || !end_date) {
@@ -181,6 +198,13 @@ export async function POST(req: NextRequest) {
               end_date: edDate,
               collection_type: collection_type || "Monthly",
               fee_breakdown: fee_breakdown || [],
+              discount: Number(discount || 0),
+              fine: Number(fine || 0),
+              scholarship: Number(scholarship || 0),
+              waiver: Number(waiver || 0),
+              adjustment: Number(adjustment || 0),
+              round_off: Number(round_off || 0),
+              collected_by: userId ? new mongoose.Types.ObjectId(userId as string) : null
             },
           ],
           { session }
@@ -194,6 +218,7 @@ export async function POST(req: NextRequest) {
     // Populate for the response (outside transaction — read-only)
     const populatedPayment = await StudentFeePayment.findById(payment._id)
       .populate("student_id", "name admission_no class_id")
+      .populate("collected_by", "name username")
       .lean();
 
     return NextResponse.json(

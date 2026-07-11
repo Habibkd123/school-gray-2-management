@@ -442,14 +442,14 @@ export default function AssessmentsPage() {
       )}
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">
+          <h1 className="page-title">
             {classes.find(c => c._id === routeClassId) ? (
               `${classes.find(c => c._id === routeClassId)?.name} ${classes.find(c => c._id === routeClassId)?.section ? `- ${classes.find(c => c._id === routeClassId)?.section}` : ""}`
             ) : "Class Assessments"}
           </h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <Link href="/assessments" className="hover:text-primary transition-colors">Assessments</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Class Details</span>

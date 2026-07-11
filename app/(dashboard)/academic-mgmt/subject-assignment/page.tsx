@@ -3,1077 +3,1181 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Plus, Search, RefreshCcw, Trash2, Loader2, AlertCircle,
-  Link2, ChevronDown, Filter, BookOpen, Layers, GraduationCap, Edit2,
-  Grid, List, ChevronRight, MoreVertical
+  Plus, Search, RefreshCw, Trash2, Loader2, AlertCircle,
+  ChevronDown, Filter, BookOpen, GraduationCap, Edit,
+  MoreVertical, AlignLeft, CheckSquare, Download, FileText,
+  Copy, Eye, Check
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { useSubjectAssignment, PopulatedAssignment } from "@/app/hooks/useSubjectAssignment";
 import { useSubjectMaster } from "@/app/hooks/useSubjectMaster";
-import { useStreams } from "@/app/hooks/useStreams";
 import { useClasses } from "@/app/hooks/useClasses";
-import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
-import { useAuth } from "@/app/context/auth";
+import { useTeachers } from "@/app/hooks/useTeachers";
 import { useAppState } from "@/app/context/store";
+import { useAuth } from "@/app/context/auth";
+import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
+import { PaginationBar } from "@/app/components/ui/pagination-bar";
 
-const ACADEMIC_YEARS = ["2026-2027"];
+const ACADEMIC_YEARS = ["2025-2026", "2026-2027", "2027-2028"];
 
 export default function SubjectAssignmentPage() {
   const router = useRouter();
   const { user } = useAuth();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
   const { academicYear } = useAppState();
-  const { enableStreams } = useAcademicConfig();
 
-  const { assignments, isLoading, error, fetchAssignments, createAssignment, updateAssignment, deleteAssignment } = useSubjectAssignment();
-  const [activeDropdownCardKey, setActiveDropdownCardKey] = useState<string | null>(null);
-  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
-  const [groupToDelete, setGroupToDelete] = useState<any>(null);
-  const [isEditingGroup, setIsEditingGroup] = useState(false);
-  const [initialSelectedSubjectIds, setInitialSelectedSubjectIds] = useState<string[]>([]);
-  const [editingGroup, setEditingGroup] = useState<any>(null);
+  const {
+    assignments,
+    total,
+    isLoading,
+    error,
+    fetchAssignments,
+    createAssignment,
+    updateAssignment,
+    deleteAssignment
+  } = useSubjectAssignment();
 
-  const handleBulkDelete = async () => {
-    if (!groupToDelete) return;
-    setSubmitting(true);
-    try {
-      await Promise.all(
-        groupToDelete.subjects.map((sub: any) => deleteAssignment(sub.assignmentId))
-      );
-    } catch (e) {
-      console.error(e);
-    }
-    setSubmitting(false);
-    setIsBulkDeleteOpen(false);
-    setGroupToDelete(null);
-    doFetch();
-  };
-  const { subjects: subjectList } = useSubjectMaster();
-  const { streams } = useStreams({ skip: !enableStreams });
-  const { classes } = useClasses({ filterByYear: true });
+  const { subjects: subjectList } = useSubjectMaster({ limit: 1000 });
+  const { classes } = useClasses({ filterByYear: false });
+  const { teachers } = useTeachers({ limit: "all" });
 
-  // Filter state
+  // Filtering & Sorting State
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [filterClassId, setFilterClassId] = useState("");
-  const [filterStreamId, setFilterStreamId] = useState("");
+  const [filterSubjectId, setFilterSubjectId] = useState("");
+  const [filterTeacherId, setFilterTeacherId] = useState("");
   const [filterYear, setFilterYear] = useState(academicYear);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [expandedClassKey, setExpandedClassKey] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedSort, setSelectedSort] = useState("CreatedDateDesc");
+  const [page, setPage] = useState(1);
 
-  // Modals state
+  // Popover States
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+
+  // Modal States
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const [selected, setSelected] = useState<PopulatedAssignment | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<PopulatedAssignment | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
-  // Add Form state
+  // Add Form State
   const [formYear, setFormYear] = useState(academicYear);
-  const [formClassId, setFormClassId] = useState("");
-  const [formStreamId, setFormStreamId] = useState("");
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
-  const [subjectSearch, setSubjectSearch] = useState("");
+  const [formClassName, setFormClassName] = useState("");
+  const [formSection, setFormSection] = useState("");
+  const [formSubjectId, setFormSubjectId] = useState("");
+  const [formTeacherId, setFormTeacherId] = useState("");
+  const [formWeeklyPeriods, setFormWeeklyPeriods] = useState("0");
+  const [formDescription, setFormDescription] = useState("");
+  const [formStatus, setFormStatus] = useState<"Active" | "Inactive">("Active");
 
-  // Edit Form state
+  // Edit Form State
   const [editYear, setEditYear] = useState("");
   const [editClassId, setEditClassId] = useState("");
-  const [editStreamId, setEditStreamId] = useState("");
   const [editSubjectId, setEditSubjectId] = useState("");
+  const [editTeacherId, setEditTeacherId] = useState("");
+  const [editWeeklyPeriods, setEditWeeklyPeriods] = useState("0");
+  const [editDescription, setEditDescription] = useState("");
+  const [editStatus, setEditStatus] = useState<"Active" | "Inactive">("Active");
 
+  // Search/Dropdown States for Combobox
+  const [teacherSearchText, setTeacherSearchText] = useState("");
+  const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
+  const [editTeacherSearchText, setEditTeacherSearchText] = useState("");
+  const [isEditTeacherDropdownOpen, setIsEditTeacherDropdownOpen] = useState(false);
+
+  // Debounce search input to limit API calls
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [search]);
+
+  // Load assignments when dependencies change
   const doFetch = useCallback(() => {
     fetchAssignments({
+      search: debouncedSearch,
       class_id: filterClassId || undefined,
-      stream_id: filterStreamId || undefined,
+      subject_id: filterSubjectId || undefined,
+      teacher_id: filterTeacherId || undefined,
       academic_year: filterYear || undefined,
-      limit: 500,
+      status: statusFilter,
+      sort: selectedSort,
+      page,
+      limit: 10
     });
-  }, [fetchAssignments, filterClassId, filterStreamId, filterYear]);
+  }, [fetchAssignments, debouncedSearch, filterClassId, filterSubjectId, filterTeacherId, filterYear, statusFilter, selectedSort, page]);
 
-  useEffect(() => { doFetch(); }, [doFetch]);
-
-  // Sync edit form fields when selection changes
   useEffect(() => {
-    if (selected) {
-      setEditYear(selected.academic_year);
-      setEditClassId(selected.class_id ? (typeof selected.class_id === "object" ? selected.class_id._id : selected.class_id) : "");
-      setEditStreamId(selected.stream_id ? (typeof selected.stream_id === "object" ? selected.stream_id._id : selected.stream_id) : "");
-      setEditSubjectId(typeof selected.subject_master_id === "object" ? selected.subject_master_id._id : selected.subject_master_id);
-    }
-  }, [selected]);
+    doFetch();
+  }, [doFetch]);
 
-  // Auto stream selection on class select (for Add Modal)
-  useEffect(() => {
-    if (!formClassId || !enableStreams) {
-      setFormStreamId("");
-      return;
-    }
-    const selectedClass = classes.find(c => c._id === formClassId);
-    if (!selectedClass) {
-      setFormStreamId("");
-      return;
-    }
+  // Unique Class Names for Dropdowns
+  const uniqueClassNames = useMemo(() => {
+    const names = new Set(classes.map(c => c.name));
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  }, [classes]);
 
-    const isHigherClass = selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12");
-    if (!isHigherClass) {
-      setFormStreamId("");
-      return;
-    }
+  // Dynamic Sections matching selected class name
+  const availableSections = useMemo(() => {
+    if (!formClassName) return [];
+    return classes
+      .filter(c => c.name === formClassName)
+      .map(c => c.section || "No Section")
+      .filter((val, idx, self) => self.indexOf(val) === idx);
+  }, [classes, formClassName]);
 
-    const activeStreams = streams.filter(s => s.status === "Active");
-    let foundStreamId = "";
-    for (const stream of activeStreams) {
-      const escapedStreamName = stream.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const regex = new RegExp(`\\b${escapedStreamName}\\b`, 'i');
-      if (regex.test(selectedClass.name)) {
-        foundStreamId = stream._id;
-        break;
-      }
-    }
-    setFormStreamId(foundStreamId);
-  }, [formClassId, classes, streams, enableStreams]);
+  // Resolve Class ID from Class Name + Section Selection
+  const resolvedClass = useMemo(() => {
+    if (!formClassName) return null;
+    const targetSection = formSection === "No Section" ? "" : formSection;
+    return classes.find(c => c.name === formClassName && (c.section || "") === targetSection);
+  }, [classes, formClassName, formSection]);
+  const filteredTeachers = useMemo(() => {
+    if (!teacherSearchText) return teachers;
+    const q = teacherSearchText.toLowerCase();
+    return teachers.filter(t => 
+      t.name.toLowerCase().includes(q) ||
+      (t.employee_id && t.employee_id.toLowerCase().includes(q)) ||
+      (t.phone && t.phone.toLowerCase().includes(q)) ||
+      (t.email && t.email.toLowerCase().includes(q))
+    );
+  }, [teachers, teacherSearchText]);
 
-  const filteredStreams = useMemo(() => {
-    if (!enableStreams || !formClassId) return [];
-    const selectedClass = classes.find(c => c._id === formClassId);
-    if (!selectedClass) return [];
+  const selectedTeacherDetails = useMemo(() => {
+    return teachers.find(t => t._id === formTeacherId);
+  }, [teachers, formTeacherId]);
 
-    const isHigherClass = selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12");
-    if (!isHigherClass) return [];
+  const filteredEditTeachers = useMemo(() => {
+    if (!editTeacherSearchText) return teachers;
+    const q = editTeacherSearchText.toLowerCase();
+    return teachers.filter(t => 
+      t.name.toLowerCase().includes(q) ||
+      (t.employee_id && t.employee_id.toLowerCase().includes(q)) ||
+      (t.phone && t.phone.toLowerCase().includes(q)) ||
+      (t.email && t.email.toLowerCase().includes(q))
+    );
+  }, [teachers, editTeacherSearchText]);
 
-    const activeStreams = streams.filter(s => s.status === "Active");
-    const matchedStreams = activeStreams.filter(stream => {
-      const escapedStreamName = stream.name.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-      const regex = new RegExp(`\\b${escapedStreamName}\\b`, 'i');
-      return regex.test(selectedClass.name);
-    });
-
-    return matchedStreams.length > 0 ? matchedStreams : activeStreams;
-  }, [formClassId, classes, streams, enableStreams]);
-
-  const filteredSubjectList = useMemo(() => {
-    const selectedClass = classes.find(c => c._id === formClassId);
-    const isHigherClass = selectedClass ? (selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12")) : false;
-
-    const list = subjectList.filter(s => s.status === "Active");
-    if (!enableStreams || !formStreamId || !isHigherClass) return list;
-
-    return list.filter(s => {
-      if (!s.allowed_streams || s.allowed_streams.length === 0) return true;
-      return s.allowed_streams.includes(formStreamId);
-    });
-  }, [subjectList, formStreamId, enableStreams, formClassId, classes]);
-
+  const selectedEditTeacherDetails = useMemo(() => {
+    return teachers.find(t => t._id === editTeacherId);
+  }, [teachers, editTeacherId]);
   const resetForm = () => {
     setFormYear(academicYear);
-    setFormClassId("");
-    setFormStreamId("");
-    setSelectedSubjectIds([]);
-    setSubjectSearch("");
+    setFormClassName("");
+    setFormSection("");
+    setFormSubjectId("");
+    setFormTeacherId("");
+    setTeacherSearchText("");
+    setFormWeeklyPeriods("0");
+    setFormDescription("");
+    setFormStatus("Active");
     setFormError("");
-    setIsEditingGroup(false);
-    setInitialSelectedSubjectIds([]);
-    setEditingGroup(null);
   };
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formYear || !formClassId) {
-      setFormError("Academic year and class are required.");
-      return;
-    }
-    if (selectedSubjectIds.length === 0) {
-      setFormError("Select at least one subject to assign.");
+    if (!formYear || !formClassName || !formSection || !formSubjectId) {
+      setFormError("Class, Section, Subject, and Academic Year are required.");
       return;
     }
 
-    const selectedClass = classes.find(c => c._id === formClassId);
-    const isHigherClass = selectedClass ? (selectedClass.name.startsWith("Class 11") || selectedClass.name.startsWith("Class 12")) : false;
+    if (!resolvedClass) {
+      setFormError("The selected class and section combination does not exist.");
+      return;
+    }
 
-    if (isEditingGroup) {
-      const subjectsToDelete = initialSelectedSubjectIds.filter(id => !selectedSubjectIds.includes(id));
-      const subjectsToAdd = selectedSubjectIds.filter(id => !initialSelectedSubjectIds.includes(id));
-      const assignmentsToDelete = subjectsToDelete.map(subjId => {
-        const sub = editingGroup?.subjects?.find((s: any) => s.subjectId === subjId);
-        return sub?.assignmentId;
-      }).filter(Boolean);
+    setSubmitting(true);
+    setFormError("");
 
-      setSubmitting(true);
-      setFormError("");
-      try {
-        if (assignmentsToDelete.length > 0) {
-          await Promise.all(assignmentsToDelete.map(id => deleteAssignment(id)));
-        }
-        if (subjectsToAdd.length > 0) {
-          const res = await createAssignment({
-            academic_year: formYear,
-            class_id: formClassId,
-            stream_id: enableStreams && isHigherClass && formStreamId ? formStreamId : undefined,
-            subject_master_ids: subjectsToAdd,
-          });
-          if (!res.success) {
-            setFormError(res.message);
-            setSubmitting(false);
-            return;
-          }
-        }
-        setIsAddOpen(false);
-        resetForm();
-        doFetch();
-      } catch (err: any) {
-        setFormError(err.message || "Failed to update assignments");
-      } finally {
-        setSubmitting(false);
-      }
+    const res = await createAssignment({
+      academic_year: formYear,
+      class_id: resolvedClass._id,
+      subject_master_id: formSubjectId,
+      teacher_id: formTeacherId || undefined,
+      weekly_periods: formWeeklyPeriods ? parseInt(formWeeklyPeriods, 10) : 0,
+      description: formDescription,
+      status: formStatus
+    });
+
+    setSubmitting(false);
+    if (res.success) {
+      setIsAddOpen(false);
+      resetForm();
+      doFetch();
     } else {
-      setSubmitting(true);
-      setFormError("");
-      const res = await createAssignment({
-        academic_year: formYear,
-        class_id: formClassId,
-        stream_id: enableStreams && isHigherClass && formStreamId ? formStreamId : undefined,
-        subject_master_ids: selectedSubjectIds,
-      });
-      setSubmitting(false);
-
-      if (res.success) {
-        setIsAddOpen(false);
-        resetForm();
-        doFetch();
-      } else {
-        setFormError(res.message);
-      }
+      setFormError(res.message || "Failed to assign subject");
     }
   };
 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selected) return;
+    if (!selectedAssignment) return;
 
     if (!editYear || !editClassId || !editSubjectId) {
-      setFormError("Year, class, and subject are required.");
+      setFormError("Class, Subject, and Academic Year are required.");
       return;
     }
 
     setSubmitting(true);
     setFormError("");
-    const res = await updateAssignment(selected._id, {
+
+    const res = await updateAssignment(selectedAssignment._id, {
       academic_year: editYear,
       class_id: editClassId,
-      stream_id: editStreamId || undefined,
       subject_master_id: editSubjectId,
+      teacher_id: editTeacherId || null,
+      weekly_periods: editWeeklyPeriods ? parseInt(editWeeklyPeriods, 10) : 0,
+      description: editDescription,
+      status: editStatus
     });
-    setSubmitting(false);
 
+    setSubmitting(false);
     if (res.success) {
       setIsEditOpen(false);
-      setSelected(null);
+      setSelectedAssignment(null);
       doFetch();
     } else {
-      setFormError(res.message);
+      setFormError(res.message || "Failed to update assignment");
     }
   };
 
   const handleDelete = async () => {
-    if (!selected) return;
+    if (!selectedAssignment) return;
     setSubmitting(true);
-    await deleteAssignment(selected._id);
+    const res = await deleteAssignment(selectedAssignment._id);
     setSubmitting(false);
-    setIsDeleteOpen(false);
-    setSelected(null);
-    doFetch();
+    if (res.success) {
+      setIsDeleteOpen(false);
+      setSelectedAssignment(null);
+      doFetch();
+    } else {
+      alert(res.message || "Failed to delete assignment");
+    }
   };
 
-  const toggleSubjectSelection = (subjectId: string) => {
-    setSelectedSubjectIds(prev =>
-      prev.includes(subjectId) ? prev.filter(id => id !== subjectId) : [...prev, subjectId]
-    );
+  // Populate Edit Fields
+  const startEdit = (item: PopulatedAssignment) => {
+    setSelectedAssignment(item);
+    setEditYear(item.academic_year);
+    setEditClassId(item.class_id?._id || "");
+    setEditSubjectId(item.subject_master_id?._id || "");
+    setEditTeacherId(item.teacher_id?._id || "");
+    setEditWeeklyPeriods(String(item.weekly_periods || 0));
+    setEditDescription(item.description || "");
+    setEditStatus(item.status || "Active");
+    setFormError("");
+    setIsEditOpen(true);
   };
 
-  // Group-by Class/Stream/Group calculation
-  const groupedAssignments = useMemo(() => {
-    const groups: Record<string, {
-      isGroup: boolean;
-      class_id?: string;
-      className: string;
-      section?: string;
-      streamName?: string;
-      stream_id?: string;
-      academic_year: string;
-      subjects: {
-        assignmentId: string;
-        subjectId: string;
-        name: string;
-        code?: string;
-        originalRecord: PopulatedAssignment;
-      }[];
-    }> = {};
+  // Populate Duplicate Fields
+  const startDuplicate = (item: PopulatedAssignment) => {
+    setFormYear(item.academic_year);
+    setFormClassName(item.class_id?.name || "");
+    setFormSection(item.class_id?.section || "No Section");
+    setFormSubjectId(item.subject_master_id?._id || "");
+    setFormTeacherId(item.teacher_id?._id || "");
+    setFormWeeklyPeriods(String(item.weekly_periods || 0));
+    setFormDescription(item.description || "");
+    setFormStatus(item.status || "Active");
+    setFormError("");
+    setIsAddOpen(true);
+  };
 
-    assignments.forEach(a => {
-      let key = "";
-      let groupDetails: any = {};
+  const handleExport = () => {
+    if (assignments.length === 0) {
+      alert("No subject assignment records available to export.");
+      return;
+    }
 
-      const classId = typeof a.class_id === "object" ? a.class_id?._id : a.class_id;
-      const className = typeof a.class_id === "object" ? a.class_id?.name : "Class";
-      const section = typeof a.class_id === "object" ? a.class_id?.section : "";
-      const streamId = a.stream_id ? (typeof a.stream_id === "object" ? a.stream_id._id : a.stream_id) : "";
-      const streamName = a.stream_id ? (typeof a.stream_id === "object" ? a.stream_id.name : "Stream") : "";
-      key = `${classId}-${streamId}-${a.academic_year}`;
-      groupDetails = {
-        isGroup: false,
-        class_id: classId,
-        className,
-        section,
-        stream_id: streamId || undefined,
-        streamName: streamName || undefined,
-        academic_year: a.academic_year,
-        subjects: [],
-      };
+    const headers = ["Subject", "Subject Code", "Class", "Section", "Assigned Teacher", "Weekly Periods", "Academic Year", "Status"];
+    const rows = assignments.map(a => [
+      a.subject_master_id?.name || "",
+      a.subject_master_id?.subject_code || "",
+      a.class_id?.name || "",
+      a.class_id?.section || "",
+      a.teacher_id?.name || "Not Assigned",
+      String(a.weekly_periods || 0),
+      a.academic_year,
+      a.status || "Active"
+    ]);
 
-      const matchesSearch = !searchQuery || 
-        (typeof a.subject_master_id === "object" && a.subject_master_id?.name?.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        groupDetails.className.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (groupDetails.streamName && groupDetails.streamName.toLowerCase().includes(searchQuery.toLowerCase()));
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + [headers.join(","), ...rows.map(e => e.map(val => `"${val.replace(/"/g, '""')}"`).join(","))].join("\n");
 
-      if (!matchesSearch) return;
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `subject_assignments_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setIsExportOpen(false);
+  };
 
-      if (!groups[key]) {
-        groups[key] = groupDetails;
-      }
-      groups[key].subjects.push({
-        assignmentId: a._id,
-        subjectId: typeof a.subject_master_id === "object" ? a.subject_master_id._id : a.subject_master_id,
-        name: typeof a.subject_master_id === "object" ? a.subject_master_id.name : "Subject",
-        code: typeof a.subject_master_id === "object" ? a.subject_master_id.subject_code : undefined,
-        originalRecord: a,
-      });
-    });
+  const PAGE_SIZE = 10;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
-    return Object.values(groups);
-  }, [assignments, searchQuery]);
+  const columns: ColumnDef<PopulatedAssignment>[] = [
+    {
+      header: "Subject",
+      accessorKey: "subject_master_id" as any,
+      render: (item) => (
+        <div>
+          <span className="font-bold text-slate-900 dark:text-white block">
+            {item.subject_master_id?.name || "—"}
+          </span>
+          {item.description && (
+            <span className="text-[11px] text-slate-400 block max-w-xs truncate">{item.description}</span>
+          )}
+        </div>
+      )
+    },
+    {
+      header: "Subject Code",
+      accessorKey: "subject_master_id" as any,
+      render: (item) => (
+        item.subject_master_id?.subject_code ? (
+          <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400 font-semibold">
+            {item.subject_master_id.subject_code}
+          </span>
+        ) : "—"
+      )
+    },
+    {
+      header: "Class",
+      accessorKey: "class_id" as any,
+      render: (item) => <span className="font-semibold text-slate-800 dark:text-slate-200">{item.class_id?.name || "—"}</span>
+    },
+    {
+      header: "Section",
+      accessorKey: "class_id" as any,
+      render: (item) => <span className="font-semibold text-slate-800 dark:text-slate-200">{item.class_id?.section || "—"}</span>
+    },
+    {
+      header: "Assigned Teacher",
+      accessorKey: "teacher_id" as any,
+      render: (item) => (
+        item.teacher_id?.name ? (
+          <span className="font-bold text-primary">{item.teacher_id.name}</span>
+        ) : (
+          <span className="text-slate-400 dark:text-slate-550 italic">Not Assigned</span>
+        )
+      )
+    },
+    {
+      header: "Weekly Periods",
+      accessorKey: "weekly_periods" as any,
+      render: (item) => <span className="font-semibold text-slate-700 dark:text-slate-350">{item.weekly_periods || 0}</span>
+    },
+    {
+      header: "Academic Year",
+      accessorKey: "academic_year",
+      render: (item) => <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{item.academic_year}</span>
+    },
+    {
+      header: "Status",
+      accessorKey: "status",
+      render: (item) => (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${item.status === "Active" ? "bg-success/10 text-success" : "bg-[#FFEBEB] text-[#E02424]"}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${item.status === "Active" ? "bg-success" : "bg-[#E02424]"}`} />
+          {item.status || "Active"}
+        </span>
+      )
+    },
+    {
+      header: "Created By",
+      accessorKey: "created_by" as any,
+      render: (item) => <span className="text-slate-500 dark:text-slate-450">{item.created_by?.name || "Administrator"}</span>
+    },
+    {
+      header: "Created Date",
+      accessorKey: "createdAt" as any,
+      render: (item) => (
+        item.createdAt ? (
+          <span className="text-slate-500 dark:text-slate-450 font-medium">
+            {new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+          </span>
+        ) : "—"
+      )
+    },
+    {
+      header: "Action",
+      sortable: false,
+      className: "text-center relative",
+      render: (item) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-center">
+            <button
+              onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
+              className={`p-1.5 rounded-lg transition-colors ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+          </div>
+          {actionMenuId === item._id && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setActionMenuId(null)} />
+              <div className="absolute right-12 top-0 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
+                <button
+                  onClick={() => {
+                    router.push(`/academic-mgmt/subject-assignment/details?classId=${item.class_id?._id}&year=${item.academic_year}`);
+                    setActionMenuId(null);
+                  }}
+                  className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors"
+                >
+                  <Eye className="w-4 h-4 text-slate-500" /> View Details
+                </button>
+                {isAdmin && (
+                  <>
+                    <button
+                      onClick={() => {
+                        startEdit(item);
+                        setActionMenuId(null);
+                      }}
+                      className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors"
+                    >
+                      <Edit className="w-4 h-4 text-slate-500" /> Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        startDuplicate(item);
+                        setActionMenuId(null);
+                      }}
+                      className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors"
+                    >
+                      <Copy className="w-4 h-4 text-slate-500" /> Duplicate
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedAssignment(item);
+                        setIsDeleteOpen(true);
+                        setActionMenuId(null);
+                      }}
+                      className="w-full px-4 py-2.5 text-[14px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-550/10 flex items-center gap-3 font-medium transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 text-rose-450" /> Delete
+                    </button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )
+    }
+  ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 -m-6 p-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
-          <h1 className="text-[20px] leading-[24px] font-bold text-slate-900 dark:text-slate-100">Subject Assignment</h1>
-          <div className="flex items-center gap-2 text-[14px] text-slate-500 mt-1 font-medium dark:text-slate-400">
-            <span>Academic Management</span><span>/</span>
-            <span className="text-slate-900 dark:text-slate-200">Subject Assignment</span>
+          <h1 className="page-title text-xl font-bold text-slate-900 dark:text-white">Subject Assignment</h1>
+          <div className="flex items-center gap-2 text-[14px] leading-[21px] text-[#68718a] mt-1 font-normal">
+            <span>Dashboard</span>
+            <span>/</span>
+            <span>Academic Management</span>
+            <span>/</span>
+            <span className="text-foreground dark:text-slate-100">Subject Assignment</span>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {/* View Toggle */}
-          <div className="flex items-center border border-border rounded-lg p-0.5 bg-slate-100/50 dark:bg-slate-800/50 shadow-sm">
-            <button
-              type="button"
-              onClick={() => setViewMode("grid")}
-              className={`p-1.5 rounded-md transition-all ${
-                viewMode === "grid"
-                  ? "bg-white dark:bg-slate-900 text-primary shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
-              title="Grid View"
-            >
-              <Grid className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("list")}
-              className={`p-1.5 rounded-md transition-all ${
-                viewMode === "list"
-                  ? "bg-white dark:bg-slate-900 text-primary shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
-              }`}
-              title="Accordion List View"
-            >
-              <List className="w-4 h-4" />
-            </button>
-          </div>
 
-          <button onClick={doFetch} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm cursor-pointer dark:text-slate-400">
-            <RefreshCcw className="w-4 h-4" />
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={doFetch} className="p-2 border border-border bg-white dark:bg-slate-900 rounded-lg text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors cursor-pointer">
+            <RefreshCw className="w-4 h-4" />
           </button>
-          {isAdmin && (
-            <button onClick={() => { resetForm(); setIsAddOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[#d68600] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer">
-              <Plus className="w-4 h-4" /><span>Assign Subjects (Bulk)</span>
+          <div className="relative">
+            <button
+              onClick={() => setIsExportOpen(!isExportOpen)}
+              className="flex items-center gap-2 px-3 py-2 border border-border bg-white dark:bg-slate-900 rounded-lg text-slate-600 dark:text-slate-300 text-[13px] font-semibold hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors cursor-pointer"
+            >
+              <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400" />
             </button>
-          )}
-        </div>
-      </div>
-
-      {/* Filter & Search Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 card-shadow">
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="flex flex-col gap-1.5 min-w-[140px] text-left">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Academic Year</label>
-            <div className="relative">
-              <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
-                <option value="">All Years</option>
-                {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3 pointer-events-none" />
-            </div>
-          </div>
-          <div className="flex flex-col gap-1.5 min-w-[150px] text-left">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Class</label>
-            <div className="relative">
-              <select value={filterClassId} onChange={(e) => setFilterClassId(e.target.value)}
-                className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
-                <option value="">All Classes</option>
-                {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3 pointer-events-none" />
-            </div>
-          </div>
-          {enableStreams && (
-            <div className="flex flex-col gap-1.5 min-w-[140px] text-left">
-              <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Stream</label>
-              <div className="relative">
-                <select value={filterStreamId} onChange={(e) => setFilterStreamId(e.target.value)}
-                  className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
-                  <option value="">All Streams</option>
-                  {streams.filter(s => s.status === "Active").map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
-                </select>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-3 top-3 pointer-events-none" />
-              </div>
-            </div>
-          )}
-          <div className="flex flex-col gap-1.5 flex-1 min-w-[160px] text-left">
-            <label className="text-[12px] font-semibold text-slate-500 uppercase tracking-wide dark:text-slate-400">Search</label>
-            <div className="relative">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-              <input type="text" placeholder="Search assigned subjects or classes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none w-full focus:border-[#10B981]/50 transition-colors bg-[#F8FAFC] dark:bg-slate-800" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Grouped Grid View */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20 gap-3 text-slate-400">
-          <Loader2 className="w-5 h-5 animate-spin" /><span className="text-[14px] font-medium">Loading assignments...</span>
-        </div>
-      ) : error ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 text-red-500 bg-white dark:bg-slate-900 border border-border rounded-xl">
-          <AlertCircle className="w-6 h-6" /><p className="text-[14px] font-medium">{error}</p>
-        </div>
-      ) : groupedAssignments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400 bg-white dark:bg-slate-900 border border-border rounded-xl">
-          <Link2 className="w-10 h-10 opacity-30" />
-          <p className="text-[14px] font-medium">No subject assignments found</p>
-          {isAdmin && (
-            <button onClick={() => { resetForm(); setIsAddOpen(true); }} className="px-4 py-2 text-[13px] font-bold bg-primary hover:bg-[#d68600] text-white rounded-lg cursor-pointer">
-              Assign First Subject
-            </button>
-          )}
-        </div>
-      ) : viewMode === "grid" ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-          {groupedAssignments.map((group, idx) => (
-            <div key={idx} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden text-left hover:shadow-md transition-shadow h-fit">
-              <div>
-                {/* Header of group */}
-                <div className="p-4 border-b border-border bg-[#F8FAFC] dark:bg-slate-800/40 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 bg-blue-500/10 rounded-lg flex items-center justify-center shrink-0">
-                      <GraduationCap className="w-4 h-4 text-blue-500" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h4 className="font-bold text-[14px] text-slate-900 dark:text-white leading-tight">
-                          {group.className}{group.section ? ` - ${group.section}` : ""}
-                        </h4>
-                      </div>
-                      {group.streamName && (
-                        <p className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 mt-0.5 flex items-center gap-1">
-                          <Layers className="w-3 h-3" /> {group.streamName}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 relative">
-                    <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-bold text-slate-600 dark:text-slate-300">
-                      {group.academic_year}
-                    </span>
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const cardKey = `${group.class_id}-${group.stream_id || ""}-${group.academic_year}`;
-                          setActiveDropdownCardKey(activeDropdownCardKey === cardKey ? null : cardKey);
-                        }}
-                        className="p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-
-                      {activeDropdownCardKey === `${group.class_id}-${group.stream_id || ""}-${group.academic_year}` && (
-                        <>
-                          <div className="fixed inset-0 z-45" onClick={(e) => { e.stopPropagation(); setActiveDropdownCardKey(null); }} />
-                          <div className="absolute right-0 top-7 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left font-medium">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                router.push(`/academic-mgmt/subject-assignment/details?classId=${group.class_id}&streamId=${group.stream_id || ""}&year=${group.academic_year}`);
-                                setActiveDropdownCardKey(null);
-                              }}
-                              className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
-                            >
-                              👁 View Details
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setFormClassId(group.class_id || "");
-                                setFormYear(group.academic_year);
-                                setFormStreamId(group.stream_id || "");
-                                const currentSubIds = group.subjects.map((s: any) => s.subjectId);
-                                setSelectedSubjectIds(currentSubIds);
-                                setInitialSelectedSubjectIds(currentSubIds);
-                                setEditingGroup(group);
-                                setIsEditingGroup(true);
-                                setIsAddOpen(true);
-                                setActiveDropdownCardKey(null);
-                              }}
-                              className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
-                            >
-                              ✏ Edit
-                            </button>
-                            {isAdmin && (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setGroupToDelete(group);
-                                  setIsBulkDeleteOpen(true);
-                                  setActiveDropdownCardKey(null);
-                                }}
-                                className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 transition-colors cursor-pointer"
-                              >
-                                🗑 Delete
-                              </button>
-                            )}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
+            {isExportOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsExportOpen(false)} />
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-2 text-left">
+                  <button onClick={handleExport} className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors">
+                    <FileText className="w-4 h-4 text-slate-500" /> Export as CSV
+                  </button>
                 </div>
+              </>
+            )}
+          </div>
+          {isAdmin && (
+            <button
+              onClick={() => { resetForm(); setIsAddOpen(true); }}
+              className="flex items-center gap-2 px-4 py-2 text-[13px] font-semibold text-white bg-primary hover:bg-[var(--primary-hover)] rounded-lg shadow-sm transition-colors cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Assign Subject</span>
+            </button>
+          )}
+        </div>
+      </div>
 
-                {/* Assigned subjects checklist */}
-                <div className="p-4 space-y-3">
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Assigned Subjects ({group.subjects.length})</p>
-                  <div className="flex flex-col gap-2">
-                    {group.subjects.map((sub, sIdx) => (
-                      <div key={sIdx} className="group flex items-center justify-between p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 bg-[#FAFBFD] dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate">{sub.name}</p>
-                            {sub.code && <p className="text-[10px] font-mono text-slate-400">Code: {sub.code}</p>}
-                          </div>
-                        </div>
-
-                        {isAdmin && (
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => { setSelected(sub.originalRecord); setIsEditOpen(true); }}
-                              className="p-1 text-slate-400 hover:text-primary rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                              title="Edit"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => { setSelected(sub.originalRecord); setIsDeleteOpen(true); }}
-                              className="p-1 text-slate-400 hover:text-red-500 rounded hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                              title="Delete"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        )}
+      {/* Main Listing Panel */}
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow text-left p-5">
+        {/* Filters Top Row */}
+        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-5">
+          <h2 className="text-[16px] font-semibold text-foreground dark:text-slate-100">Subject Assignments</h2>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Filter Toggle */}
+            <div className="relative">
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors bg-white dark:bg-slate-900 shadow-sm cursor-pointer"
+              >
+                <Filter className="w-4 h-4 text-slate-400" />
+                Filter <ChevronDown className="w-3 h-3 text-slate-400" />
+              </button>
+              {isFilterOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-2xl z-50 text-left p-4 space-y-4">
+                    <div className="border-b border-border pb-2">
+                      <h3 className="text-[14px] font-bold text-foreground dark:text-slate-100">Filter Assignments</h3>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="space-y-1.5">
+                        <label className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">Class</label>
+                        <select
+                          value={filterClassId}
+                          onChange={(e) => { setFilterClassId(e.target.value); setPage(1); }}
+                          className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none"
+                        >
+                          <option value="">All Classes</option>
+                          {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
+                        </select>
                       </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">Subject</label>
+                        <select
+                          value={filterSubjectId}
+                          onChange={(e) => { setFilterSubjectId(e.target.value); setPage(1); }}
+                          className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none"
+                        >
+                          <option value="">All Subjects</option>
+                          {subjectList.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">Teacher</label>
+                        <select
+                          value={filterTeacherId}
+                          onChange={(e) => { setFilterTeacherId(e.target.value); setPage(1); }}
+                          className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none"
+                        >
+                          <option value="">All Teachers</option>
+                          {teachers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">Status</label>
+                        <select
+                          value={statusFilter}
+                          onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+                          className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none"
+                        >
+                          <option value="all">All Statuses</option>
+                          <option value="Active">Active</option>
+                          <option value="Inactive">Inactive</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-[12px] font-semibold text-slate-500 dark:text-slate-400">Academic Year</label>
+                        <select
+                          value={filterYear}
+                          onChange={(e) => { setFilterYear(e.target.value); setPage(1); }}
+                          className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none font-mono"
+                        >
+                          {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                      <button
+                        onClick={() => {
+                          setFilterClassId("");
+                          setFilterSubjectId("");
+                          setFilterTeacherId("");
+                          setStatusFilter("all");
+                          setFilterYear(academicYear);
+                          setPage(1);
+                          setIsFilterOpen(false);
+                        }}
+                        className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-lg cursor-pointer"
+                      >
+                        Reset
+                      </button>
+                      <button
+                        onClick={() => setIsFilterOpen(false)}
+                        className="px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg cursor-pointer"
+                      >
+                        Apply Filters
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Sort Toggle */}
+            <div className="relative">
+              <button
+                onClick={() => setIsSortOpen(!isSortOpen)}
+                className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-[13px] text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors bg-white dark:bg-slate-900 shadow-sm cursor-pointer"
+              >
+                Sort: {selectedSort.replace("Asc", " (A-Z)").replace("Desc", " (Z-A)")} <ChevronDown className="w-3 h-3 text-slate-400" />
+              </button>
+              {isSortOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1 text-left">
+                    {[
+                      { label: "Subject Name (A-Z)", val: "SubjectAsc" },
+                      { label: "Subject Name (Z-A)", val: "SubjectDesc" },
+                      { label: "Teacher Name (A-Z)", val: "TeacherAsc" },
+                      { label: "Teacher Name (Z-A)", val: "TeacherDesc" },
+                      { label: "Class Weight (Low-High)", val: "ClassAsc" },
+                      { label: "Class Weight (High-Low)", val: "ClassDesc" },
+                      { label: "Recently Assigned", val: "CreatedDateDesc" },
+                      { label: "Oldest Assigned", val: "CreatedDateAsc" },
+                      { label: "Status (Active First)", val: "StatusAsc" },
+                      { label: "Status (Inactive First)", val: "StatusDesc" }
+                    ].map((item) => (
+                      <button
+                        key={item.val}
+                        onClick={() => { setSelectedSort(item.val); setPage(1); setIsSortOpen(false); }}
+                        className={`w-full px-4 py-2.5 text-[13px] text-left transition-colors font-semibold cursor-pointer ${item.val === selectedSort ? "bg-primary text-white" : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
+                      >
+                        {item.label}
+                      </button>
                     ))}
                   </div>
-                </div>
-              </div>
+                </>
+              )}
             </div>
-          ))}
+          </div>
         </div>
-      ) : (
-        <div className="space-y-3">
-          {groupedAssignments.map((group, idx) => {
-            const groupKey = `${group.class_id || ""}-${group.stream_id || ""}-${group.academic_year}`;
-            const isExpanded = expandedClassKey === groupKey;
-            return (
-              <div key={idx} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden text-left hover:shadow-md transition-shadow duration-300">
-                <button
-                  type="button"
-                  onClick={() => setExpandedClassKey(isExpanded ? null : groupKey)}
-                  className="w-full px-5 py-4 flex items-center justify-between text-left hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors focus:outline-none"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center shrink-0">
-                      <GraduationCap className="w-4.5 h-4.5 text-blue-500" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-[14px] text-slate-900 dark:text-white leading-tight flex items-center gap-2">
-                        {group.className}{group.section ? ` - ${group.section}` : ""}
-                        {group.streamName && (
-                          <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/25 px-2 py-0.5 rounded flex items-center gap-1">
-                            <Layers className="w-3 h-3" /> {group.streamName}
-                          </span>
-                        )}
-                      </h4>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-850 px-2.5 py-0.5 rounded">
-                      {group.subjects.length} Subjects
-                    </span>
-                    <div className="flex items-center gap-2 relative">
-                      <span className="font-mono text-[10px] bg-slate-200 dark:bg-slate-700 px-2 py-0.5 rounded font-bold text-slate-600 dark:text-slate-300">
-                        {group.academic_year}
-                      </span>
-                      <div className="relative">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            const cardKey = `list-${group.class_id}-${group.stream_id || ""}-${group.academic_year}`;
-                            setActiveDropdownCardKey(activeDropdownCardKey === cardKey ? null : cardKey);
-                          }}
-                          className="p-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </button>
 
-                        {activeDropdownCardKey === `list-${group.class_id}-${group.stream_id || ""}-${group.academic_year}` && (
-                          <>
-                            <div className="fixed inset-0 z-45" onClick={(e) => { e.stopPropagation(); setActiveDropdownCardKey(null); }} />
-                            <div className="absolute right-0 top-7 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left font-medium">
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  router.push(`/academic-mgmt/subject-assignment/details?classId=${group.class_id}&streamId=${group.stream_id || ""}&year=${group.academic_year}`);
-                                  setActiveDropdownCardKey(null);
-                                }}
-                                className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
-                              >
-                                👁 View Details
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setFormClassId(group.class_id || "");
-                                  setFormYear(group.academic_year);
-                                  setFormStreamId(group.stream_id || "");
-                                  const currentSubIds = group.subjects.map((s: any) => s.subjectId);
-                                  setSelectedSubjectIds(currentSubIds);
-                                  setInitialSelectedSubjectIds(currentSubIds);
-                                  setEditingGroup(group);
-                                  setIsEditingGroup(true);
-                                  setIsAddOpen(true);
-                                  setActiveDropdownCardKey(null);
-                                }}
-                                className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer"
-                              >
-                                ✏ Edit
-                              </button>
-                              {isAdmin && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setGroupToDelete(group);
-                                    setIsBulkDeleteOpen(true);
-                                    setActiveDropdownCardKey(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 transition-colors cursor-pointer"
-                                >
-                                  🗑 Delete
-                                </button>
-                              )}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <ChevronRight className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`} />
-                  </div>
-                </button>
-                <div
-                  className={`transition-all duration-300 ease-in-out ${
-                    isExpanded ? "max-h-[1000px] border-t border-border opacity-100" : "max-h-0 opacity-0 overflow-hidden"
-                  }`}
-                >
-                  <div className="p-5 bg-slate-50/50 dark:bg-slate-950/20">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {group.subjects.map((sub, sIdx) => (
-                        <div key={sIdx} className="group flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:shadow-sm transition-all duration-200">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="w-8 h-8 bg-slate-100 dark:bg-slate-850 rounded-lg flex items-center justify-center shrink-0">
-                              <BookOpen className="w-4 h-4 text-slate-400" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200 truncate">{sub.name}</p>
-                              {sub.code && <p className="text-[10px] font-mono text-slate-400">Code: {sub.code}</p>}
-                            </div>
-                          </div>
-
-                          {isAdmin && (
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setSelected(sub.originalRecord); setIsEditOpen(true); }}
-                                className="p-1 text-slate-400 hover:text-primary rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                                title="Edit"
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setSelected(sub.originalRecord); setIsDeleteOpen(true); }}
-                                className="p-1 text-slate-400 hover:text-red-500 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+        {/* Count & Global Search */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 border-b border-border pb-5">
+          <div className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
+            Showing{" "}
+            <span className="font-bold text-slate-700 dark:text-slate-250">
+              {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)}` : "0"}
+            </span>{" "}of{" "}
+            <span className="font-bold text-slate-700 dark:text-slate-250">
+              {total}
+            </span>{" "}assignments
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search Subject/Teacher/Class/Code"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-205 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900"
+            />
+          </div>
         </div>
-      )}
 
-      {/* Add Bulk Assignment Modal */}
-      <Modal isOpen={isAddOpen} onClose={() => { setIsAddOpen(false); resetForm(); }} title={isEditingGroup ? "Edit Assigned Subjects" : "Assign Subjects (Bulk)"}>
-        <form onSubmit={handleAdd} className="space-y-5 text-left">
+        {/* Loading / Error / Data State */}
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-slate-500 text-sm">Loading assignments...</p>
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center py-16 gap-3 text-center">
+            <AlertCircle className="w-10 h-10 text-rose-500" />
+            <h3 className="font-semibold text-slate-800 dark:text-slate-100">Failed to Load Assignments</h3>
+            <p className="text-slate-500 text-sm max-w-md">{error}</p>
+            <button onClick={doFetch} className="mt-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold cursor-pointer">
+              Retry
+            </button>
+          </div>
+        ) : (
+          <>
+            <DataTable
+              columns={columns}
+              data={assignments}
+              noDataMessage="No subject assignments matching criteria."
+              minWidth="1200px"
+            />
+            <PaginationBar
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={total}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+              className="mt-4 border-t-0"
+            />
+          </>
+        )}
+      </div>
+
+      {/* Add Modal */}
+      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Assign Subject to Class">
+        <form onSubmit={handleAdd} className="space-y-4 text-left">
           {formError && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[13px] font-medium">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-450 text-[13px] font-semibold border border-rose-200/50">
               <AlertCircle className="w-4 h-4 shrink-0" /> {formError}
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Academic Year <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Class <span className="text-red-500">*</span></label>
               <div className="relative">
-                <select value={formYear} onChange={(e) => setFormYear(e.target.value)} disabled={isEditingGroup}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500">
-                  <option value="">Select Year</option>
-                  {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                <select
+                  required
+                  value={formClassName}
+                  onChange={(e) => { setFormClassName(e.target.value); setFormSection(""); }}
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+                >
+                  <option value="">Select Class</option>
+                  {uniqueClassNames.map(cName => <option key={cName} value={cName}>{cName}</option>)}
                 </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Class <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Section <span className="text-red-500">*</span></label>
               <div className="relative">
-                <select value={formClassId} onChange={(e) => setFormClassId(e.target.value)} disabled={isEditingGroup}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500">
-                  <option value="">Select Class</option>
-                  {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
+                <select
+                  required
+                  value={formSection}
+                  onChange={(e) => setFormSection(e.target.value)}
+                  disabled={!formClassName}
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400"
+                >
+                  <option value="">Select Section</option>
+                  {availableSections.map(sec => <option key={sec} value={sec}>{sec}</option>)}
                 </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
               </div>
             </div>
           </div>
 
-          {enableStreams && filteredStreams.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">
-                Stream <span className="text-slate-400 text-[11px]">(optional — leave blank for all streams)</span>
-              </label>
-              <div className="relative">
-                <select value={formStreamId} onChange={(e) => setFormStreamId(e.target.value)} disabled={isEditingGroup}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500">
-                  <option value="">No specific stream</option>
-                  {filteredStreams.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
-              </div>
-            </div>
-          )}
-
-          {/* Bulk checklist selection of subjects */}
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Select Subjects to Assign <span className="text-red-500">*</span></label>
-              {selectedSubjectIds.length > 0 && (
-                <span className="text-[11px] font-semibold bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                  {selectedSubjectIds.length} selected
-                </span>
-              )}
-            </div>
-
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Subject <span className="text-red-500">*</span></label>
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              <select
+                required
+                value={formSubjectId}
+                onChange={(e) => setFormSubjectId(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+              >
+                <option value="">Select Subject</option>
+                {subjectList.filter(s => s.status === "Active").map(s => (
+                  <option key={s._id} value={s._id}>
+                    {s.name} {s.subject_code ? `(${s.subject_code})` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Custom Searchable Faculty Selection */}
+          <div className="flex flex-col gap-1.5 relative text-left">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Teacher</label>
+            
+            {/* Input Selection Trigger */}
+            <div 
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground cursor-pointer flex items-center justify-between outline-none focus:border-primary/50"
+              onClick={() => setIsTeacherDropdownOpen(!isTeacherDropdownOpen)}
+            >
+              {selectedTeacherDetails ? (
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={selectedTeacherDetails.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedTeacherDetails.name)}&background=d68600&color=fff&bold=true`}
+                    className="w-5 h-5 rounded-full object-cover"
+                    alt={selectedTeacherDetails.name}
+                  />
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{selectedTeacherDetails.name} ({selectedTeacherDetails.employee_id || "No ID"})</span>
+                </div>
+              ) : (
+                <span className="text-slate-400">Select Teacher (Optional)</span>
+              )}
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            </div>
+
+            {/* Custom Search list popover */}
+            {isTeacherDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-[60]" onClick={() => setIsTeacherDropdownOpen(false)} />
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="Search Name/Employee ID/Phone/Email..."
+                      value={teacherSearchText}
+                      onChange={(e) => setTeacherSearchText(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-slate-50 dark:bg-slate-900 text-foreground"
+                    />
+                  </div>
+
+                  <div className="overflow-y-auto flex-1 divide-y divide-border/40 custom-scrollbar pr-1 max-h-[200px]">
+                    <div
+                      onClick={() => {
+                        setFormTeacherId("");
+                        setIsTeacherDropdownOpen(false);
+                        setTeacherSearchText("");
+                      }}
+                      className={`p-2.5 rounded-lg cursor-pointer transition-colors text-[13px] font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 ${
+                        !formTeacherId ? "bg-primary/10 text-primary" : ""
+                      }`}
+                    >
+                      Not Assigned (Optional)
+                    </div>
+                    {filteredTeachers.length === 0 ? (
+                      <p className="text-slate-455 text-[13px] py-4 text-center">No matching active teachers found.</p>
+                    ) : (
+                      filteredTeachers.map(t => (
+                        <div
+                          key={t._id}
+                          onClick={() => {
+                            setFormTeacherId(t._id);
+                            setIsTeacherDropdownOpen(false);
+                            setTeacherSearchText("");
+                          }}
+                          className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${
+                            formTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <img 
+                              src={t.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=d68600&color=fff&bold=true`}
+                              className="w-8 h-8 rounded-full object-cover"
+                              alt={t.name}
+                            />
+                            <div className="text-left space-y-0.5">
+                              <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                                {t.name}
+                                <span className={`text-[9px] px-1.5 py-0.25 rounded font-bold ${t.is_active ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400" : "bg-rose-50 text-rose-600 dark:bg-rose-955/30 dark:text-rose-455"}`}>
+                                  {t.is_active ? "Active" : "Inactive"}
+                                </span>
+                              </p>
+                              <p className="text-[11px] text-slate-400 font-semibold">
+                                {t.designation || "Teacher"} • {t.department || "Faculty"} • ID: {t.employee_id || "—"}
+                              </p>
+                            </div>
+                          </div>
+                          {formTeacherId === t._id && <Check className="w-4 h-4 text-primary shrink-0" />}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Weekly Periods</label>
               <input
-                type="text"
-                placeholder="Search subjects..."
-                value={subjectSearch}
-                onChange={(e) => setSubjectSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-[#F8FAFC] dark:bg-slate-800 focus:border-primary/50 transition-colors"
+                type="number"
+                min="0"
+                max="50"
+                value={formWeeklyPeriods}
+                onChange={(e) => setFormWeeklyPeriods(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
               />
             </div>
 
-            {(() => {
-              // Already assigned subject IDs for the selected class (from existing data)
-              const alreadyAssignedIds = isEditingGroup ? new Set() : new Set(
-                assignments
-                  .filter(a => {
-                    const aClassId = typeof a.class_id === "object" ? a.class_id?._id : a.class_id;
-                    return aClassId === formClassId;
-                  })
-                  .map(a => typeof a.subject_master_id === "object" ? a.subject_master_id._id : a.subject_master_id)
-              );
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Academic Year <span className="text-red-500">*</span></label>
+              <select
+                required
+                value={formYear}
+                onChange={(e) => setFormYear(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 font-mono"
+              >
+                {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          </div>
 
-              const displayList = filteredSubjectList.filter(s =>
-                !subjectSearch || s.name.toLowerCase().includes(subjectSearch.toLowerCase())
-              );
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Status</label>
+            <select
+              value={formStatus}
+              onChange={(e) => setFormStatus(e.target.value as any)}
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
 
-              const availableSubjects = displayList.filter(s => !alreadyAssignedIds.has(s._id));
-              const alreadyAssignedSubjects = displayList.filter(s => alreadyAssignedIds.has(s._id));
-
-              return (
-                <div className="border border-border rounded-xl overflow-hidden bg-white dark:bg-slate-900">
-                  {availableSubjects.length === 0 && alreadyAssignedSubjects.length === 0 && (
-                    <p className="text-[13px] text-slate-400 text-center py-6 font-medium">No active subjects available</p>
-                  )}
-                  {availableSubjects.length === 0 && alreadyAssignedSubjects.length > 0 && (
-                    <p className="text-[13px] text-slate-400 text-center py-4 font-medium">All subjects are already assigned to this class</p>
-                  )}
-                  {availableSubjects.length > 0 && (
-                    <div className="max-h-[200px] overflow-y-auto">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2 bg-[#F8FAFC] dark:bg-slate-800/50 border-b border-border">{isEditingGroup ? "Assigned & Available Subjects" : "Available to assign"}</p>
-                      {availableSubjects.map(sub => {
-                        const isChecked = selectedSubjectIds.includes(sub._id);
-                        return (
-                          <label key={sub._id} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors border-b border-border/50 last:border-0 ${
-                            isChecked ? "bg-primary/5 dark:bg-primary/10" : "hover:bg-slate-50 dark:hover:bg-slate-800"
-                          }`}>
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => toggleSubjectSelection(sub._id)}
-                              className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer shrink-0"
-                            />
-                            <div className="flex items-center justify-between flex-1 min-w-0">
-                              <span className={`text-[13px] font-medium truncate ${
-                                isChecked ? "text-primary font-semibold" : "text-slate-700 dark:text-slate-200"
-                              }`}>{sub.name}</span>
-                              {sub.subject_code && (
-                                <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-2 shrink-0">{sub.subject_code}</span>
-                              )}
-                            </div>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  )}
-                  {alreadyAssignedSubjects.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2 bg-[#F8FAFC] dark:bg-slate-800/50 border-t border-b border-border">Already assigned</p>
-                      {alreadyAssignedSubjects.map(sub => (
-                        <div key={sub._id} className="flex items-center gap-3 px-4 py-2.5 opacity-50 cursor-not-allowed border-b border-border/50 last:border-0">
-                          <input type="checkbox" checked disabled className="rounded border-slate-300 w-4 h-4 cursor-not-allowed shrink-0" />
-                          <div className="flex items-center justify-between flex-1 min-w-0">
-                            <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 truncate">{sub.name}</span>
-                            {sub.subject_code && (
-                                <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-2 shrink-0">{sub.subject_code}</span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Description</label>
+            <textarea
+              rows={2}
+              value={formDescription}
+              onChange={(e) => setFormDescription(e.target.value)}
+              placeholder="Provide a brief description of this assignment..."
+              className="w-full px-3.5 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
-            <button type="button" onClick={() => { setIsAddOpen(false); resetForm(); }}
-              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg cursor-pointer">Cancel</button>
-            <button type="submit" disabled={submitting}
-              className="px-5 py-2.5 bg-primary hover:bg-[#d68600] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2 cursor-pointer">
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />} {isEditingGroup ? "Save Changes" : "Bulk Assign"}
+            <button
+              type="button"
+              onClick={() => setIsAddOpen(false)}
+              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-[13px] font-bold rounded-lg cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-bold rounded-lg text-white shadow-sm disabled:opacity-60 flex items-center gap-2 cursor-pointer"
+            >
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              <span>Save Assignment</span>
             </button>
           </div>
         </form>
       </Modal>
 
       {/* Edit Modal */}
-      <Modal isOpen={isEditOpen} onClose={() => { setIsEditOpen(false); setSelected(null); }} title="Edit Subject Assignment">
-        <form onSubmit={handleEdit} className="space-y-5 text-left">
+      <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Edit Subject Assignment">
+        <form onSubmit={handleEdit} className="space-y-4 text-left">
           {formError && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[13px] font-medium">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-455 text-[13px] font-semibold border border-rose-200/50">
               <AlertCircle className="w-4 h-4 shrink-0" /> {formError}
             </div>
           )}
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Academic Year <span className="text-red-500">*</span></label>
-            <div className="relative">
-              <select value={editYear} onChange={(e) => setEditYear(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Class <span className="text-red-500">*</span></label>
+            <select
+              required
+              value={editClassId}
+              onChange={(e) => setEditClassId(e.target.value)}
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+            >
+              {classes.map(c => <option key={c._id} value={c._id}>{c.name} {c.section ? ` - ${c.section}` : ""}</option>)}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Subject <span className="text-red-500">*</span></label>
+            <select
+              required
+              value={editSubjectId}
+              onChange={(e) => setEditSubjectId(e.target.value)}
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+            >
+              {subjectList.map(s => <option key={s._id} value={s._id}>{s.name} {s.subject_code ? `(${s.subject_code})` : ""}</option>)}
+            </select>
+          </div>
+
+          {/* Custom Searchable Faculty Selection for Edit */}
+          <div className="flex flex-col gap-1.5 relative text-left">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Teacher</label>
+            
+            {/* Input Selection Trigger */}
+            <div 
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground cursor-pointer flex items-center justify-between outline-none focus:border-primary/50"
+              onClick={() => setIsEditTeacherDropdownOpen(!isEditTeacherDropdownOpen)}
+            >
+              {selectedEditTeacherDetails ? (
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={selectedEditTeacherDetails.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedEditTeacherDetails.name)}&background=d68600&color=fff&bold=true`}
+                    className="w-5 h-5 rounded-full object-cover"
+                    alt={selectedEditTeacherDetails.name}
+                  />
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{selectedEditTeacherDetails.name} ({selectedEditTeacherDetails.employee_id || "No ID"})</span>
+                </div>
+              ) : (
+                <span className="text-slate-400">Select Teacher (Optional)</span>
+              )}
+              <ChevronDown className="w-4 h-4 text-slate-400" />
+            </div>
+
+            {/* Custom Search list popover */}
+            {isEditTeacherDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-[60]" onClick={() => setIsEditTeacherDropdownOpen(false)} />
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-955 border border-border rounded-xl shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                    <input
+                      type="text"
+                      placeholder="Search Name/Employee ID/Phone/Email..."
+                      value={editTeacherSearchText}
+                      onChange={(e) => setEditTeacherSearchText(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-slate-50 dark:bg-slate-900 text-foreground"
+                    />
+                  </div>
+
+                  <div className="overflow-y-auto flex-1 divide-y divide-border/40 custom-scrollbar pr-1 max-h-[200px]">
+                    <div
+                      onClick={() => {
+                        setEditTeacherId("");
+                        setIsEditTeacherDropdownOpen(false);
+                        setEditTeacherSearchText("");
+                      }}
+                      className={`p-2.5 rounded-lg cursor-pointer transition-colors text-[13px] font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 ${
+                        !editTeacherId ? "bg-primary/10 text-primary" : ""
+                      }`}
+                    >
+                      Not Assigned (Optional)
+                    </div>
+                    {filteredEditTeachers.length === 0 ? (
+                      <p className="text-slate-455 text-[13px] py-4 text-center">No matching active teachers found.</p>
+                    ) : (
+                      filteredEditTeachers.map(t => (
+                        <div
+                          key={t._id}
+                          onClick={() => {
+                            setEditTeacherId(t._id);
+                            setIsEditTeacherDropdownOpen(false);
+                            setEditTeacherSearchText("");
+                          }}
+                          className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${
+                            editTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <img 
+                              src={t.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=d68600&color=fff&bold=true`}
+                              className="w-8 h-8 rounded-full object-cover"
+                              alt={t.name}
+                            />
+                            <div className="text-left space-y-0.5">
+                              <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                                {t.name}
+                                <span className={`text-[9px] px-1.5 py-0.25 rounded font-bold ${t.is_active ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400" : "bg-rose-50 text-rose-600 dark:bg-rose-955/30 dark:text-rose-455"}`}>
+                                  {t.is_active ? "Active" : "Inactive"}
+                                </span>
+                              </p>
+                              <p className="text-[11px] text-slate-400 font-semibold">
+                                {t.designation || "Teacher"} • {t.department || "Faculty"} • ID: {t.employee_id || "—"}
+                              </p>
+                            </div>
+                          </div>
+                          {editTeacherId === t._id && <Check className="w-4 h-4 text-primary shrink-0" />}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Weekly Periods</label>
+              <input
+                type="number"
+                min="0"
+                max="50"
+                value={editWeeklyPeriods}
+                onChange={(e) => setEditWeeklyPeriods(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Academic Year <span className="text-red-500">*</span></label>
+              <select
+                required
+                value={editYear}
+                onChange={(e) => setEditYear(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 font-mono"
+              >
                 {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Class <span className="text-red-500">*</span></label>
-            <div className="relative">
-              <select value={editClassId} onChange={(e) => setEditClassId(e.target.value)} required
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
-                {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
-            </div>
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Status</label>
+            <select
+              value={editStatus}
+              onChange={(e) => setEditStatus(e.target.value as any)}
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
           </div>
 
-          {enableStreams && streams.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Stream</label>
-              <div className="relative">
-                <select value={editStreamId} onChange={(e) => setEditStreamId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-[#10B981]/50 appearance-none bg-white dark:bg-slate-900 font-medium">
-                  <option value="">No specific stream</option>
-                  {streams.filter(s => s.status === "Active").map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3.5 pointer-events-none" />
-              </div>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-2">
-            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Subject <span className="text-red-500">*</span></label>
-            <div className="border border-border rounded-xl overflow-hidden bg-white dark:bg-slate-900">
-              {(() => {
-                // All subjects assigned to this class EXCEPT the current one being edited
-                const currentSubjectId = typeof selected?.subject_master_id === "object" ? selected.subject_master_id._id : selected?.subject_master_id;
-                const alreadyAssignedIds = new Set(
-                  assignments
-                    .filter(a => {
-                      const aClassId = typeof a.class_id === "object" ? a.class_id?._id : a.class_id;
-                      return aClassId === editClassId && (typeof a.subject_master_id === "object" ? a.subject_master_id._id : a.subject_master_id) !== currentSubjectId;
-                    })
-                    .map(a => typeof a.subject_master_id === "object" ? a.subject_master_id._id : a.subject_master_id)
-                );
-                const activeSubjects = subjectList.filter(s => s.status === "Active");
-                const available = activeSubjects.filter(s => !alreadyAssignedIds.has(s._id));
-                const blocked = activeSubjects.filter(s => alreadyAssignedIds.has(s._id));
-                return (
-                  <div className="max-h-[220px] overflow-y-auto">
-                    {available.length > 0 && (
-                      <>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2 bg-[#F8FAFC] dark:bg-slate-800/50 border-b border-border sticky top-0">Available</p>
-                        {available.map(s => (
-                          <label key={s._id} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer border-b border-border/50 last:border-0 transition-colors ${
-                            editSubjectId === s._id ? "bg-primary/5 dark:bg-primary/10" : "hover:bg-slate-50 dark:hover:bg-slate-800"
-                          }`}>
-                            <input
-                              type="radio"
-                              name="editSubject"
-                              checked={editSubjectId === s._id}
-                              onChange={() => setEditSubjectId(s._id)}
-                              className="text-primary focus:ring-primary w-4 h-4 cursor-pointer shrink-0"
-                            />
-                            <div className="flex items-center justify-between flex-1 min-w-0">
-                              <span className={`text-[13px] font-medium truncate ${
-                                editSubjectId === s._id ? "text-primary font-semibold" : "text-slate-700 dark:text-slate-200"
-                              }`}>{s.name}</span>
-                              {s.subject_code && (
-                                <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-2 shrink-0">{s.subject_code}</span>
-                              )}
-                            </div>
-                          </label>
-                        ))}
-                      </>
-                    )}
-                    {blocked.length > 0 && (
-                      <>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 py-2 bg-[#F8FAFC] dark:bg-slate-800/50 border-t border-b border-border sticky top-0">Already assigned (unavailable)</p>
-                        {blocked.map(s => (
-                          <div key={s._id} className="flex items-center gap-3 px-4 py-2.5 opacity-40 cursor-not-allowed border-b border-border/50 last:border-0">
-                            <input type="radio" disabled className="w-4 h-4 shrink-0 cursor-not-allowed" />
-                            <div className="flex items-center justify-between flex-1 min-w-0">
-                              <span className="text-[13px] font-medium text-slate-500 truncate">{s.name}</span>
-                              {s.subject_code && (
-                                <span className="text-[10px] font-mono text-slate-400 bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded ml-2 shrink-0">{s.subject_code}</span>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </>
-                    )}
-                    {activeSubjects.length === 0 && (
-                      <p className="text-[13px] text-slate-400 text-center py-6 font-medium">No active subjects found</p>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Description</label>
+            <textarea
+              rows={2}
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              className="w-full px-3.5 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+            />
           </div>
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
-            <button type="button" onClick={() => { setIsEditOpen(false); setSelected(null); }}
-              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg cursor-pointer">Cancel</button>
-            <button type="submit" disabled={submitting}
-              className="px-5 py-2.5 bg-primary hover:bg-[#d68600] text-[14px] font-bold rounded-lg text-white shadow-sm transition-colors disabled:opacity-60 flex items-center gap-2 cursor-pointer">
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Update Assignment
+            <button
+              type="button"
+              onClick={() => setIsEditOpen(false)}
+              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-[13px] font-bold rounded-lg cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-bold rounded-lg text-white shadow-sm disabled:opacity-60 flex items-center gap-2 cursor-pointer"
+            >
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              <span>Update Assignment</span>
             </button>
           </div>
         </form>
       </Modal>
 
-      {/* Delete Modal */}
-      <Modal isOpen={isDeleteOpen} onClose={() => { setIsDeleteOpen(false); setSelected(null); }} title="Remove Assignment">
-        <div className="space-y-5 text-left">
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="Remove Subject Assignment">
+        <div className="space-y-4 text-left">
           <p className="text-[14px] text-slate-600 dark:text-slate-300">
             Are you sure you want to remove this subject assignment?
+            <br />
+            This will delete the assignment for <span className="font-bold text-foreground dark:text-white">{selectedAssignment?.subject_master_id?.name}</span> assigned to <span className="font-bold text-foreground dark:text-white">{selectedAssignment?.class_id?.name}{selectedAssignment?.class_id?.section ? ` - ${selectedAssignment.class_id.section}` : ""}</span>.
           </p>
-          <div className="flex justify-end gap-3">
-            <button onClick={() => setIsDeleteOpen(false)} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[14px] font-bold rounded-lg cursor-pointer">Cancel</button>
-            <button onClick={handleDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm disabled:opacity-60 flex items-center gap-2 cursor-pointer">
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Remove
-            </button>
-          </div>
-        </div>
-      </Modal>
 
-      {/* Bulk Delete Modal */}
-      <Modal isOpen={isBulkDeleteOpen} onClose={() => { setIsBulkDeleteOpen(false); setGroupToDelete(null); }} title="Remove Class Subject Assignments">
-        <div className="space-y-5 text-left">
-          <p className="text-[14px] text-slate-600 dark:text-slate-300">
-            Are you sure you want to remove all assigned subjects from{" "}
-            <span className="font-bold text-foreground dark:text-white">
-              {groupToDelete?.className}{groupToDelete?.section ? ` - ${groupToDelete.section}` : ""}
-            </span> for the academic year <span className="font-bold text-primary">{groupToDelete?.academic_year}</span>?
-            <br /><br />
-            This will delete all {groupToDelete?.subjects?.length} subject assignment records.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button onClick={() => { setIsBulkDeleteOpen(false); setGroupToDelete(null); }} className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-900 dark:text-white font-medium text-[14px] font-bold rounded-lg cursor-pointer">Cancel</button>
-            <button onClick={handleBulkDelete} disabled={submitting} className="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-[14px] font-bold rounded-lg shadow-sm disabled:opacity-60 flex items-center gap-2 cursor-pointer">
-              {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Remove All
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              onClick={() => setIsDeleteOpen(false)}
+              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-850 dark:text-slate-100 text-[13px] font-bold rounded-lg cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={submitting}
+              className="px-5 py-2.5 bg-rose-500 hover:bg-rose-600 text-[13px] font-bold rounded-lg text-white shadow-sm disabled:opacity-60 flex items-center gap-2 cursor-pointer"
+            >
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              <span>Remove Assignment</span>
             </button>
           </div>
         </div>

@@ -36,11 +36,11 @@ export default function DashboardPage() {
   const role = user?.role ?? "school_admin";
 
   return (
-    <div className="space-y-6 max-w-full sm:w-[1600px] mx-auto">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
       {/* Global Page Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="text-left">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">
             {role === "super_admin"
               ? "Super Admin Console"
               : role === "school_admin" || role === "accountant"
@@ -51,10 +51,10 @@ export default function DashboardPage() {
                     ? "Parent Portal"
                     : "Student Dashboard"}
           </h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
-            <span className="text-slate-700 dark:text-slate-200">
+            <span className="text-slate-900 dark:text-white font-medium">
               Overview
             </span>
           </div>

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/context/auth";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { ClassService } from "@/app/services/ClassService";
 import {
   ArrowLeft, Save, ClipboardList, Loader2, AlertCircle, CheckCircle,
 } from "lucide-react";
@@ -12,6 +13,22 @@ import { validateSequential } from "@/lib/utils/formValidation";
 const TITLE_PRESETS = [
   "Chapter 1 Test", "Chapter 2 Test", "Chapter 3 Test", "Weekly Test",
   "Monthly Test", "Revision Test", "Surprise Test", "Unit Test",
+];
+
+const ASSESSMENT_TYPES = [
+  "Class Test",
+  "Assignment",
+  "Project",
+  "Practical",
+  "Lab",
+  "Notebook",
+  "Oral Test",
+  "Viva",
+  "Activity",
+  "Presentation",
+  "Homework",
+  "Worksheet",
+  "Observation"
 ];
 
 interface ClassOption { _id: string; name: string; section: string }
@@ -39,6 +56,7 @@ export default function CreateTestPage() {
   const [chapter, setChapter] = useState("");
   const [academicYear, setAcademicYear] = useState("");
   const [status, setStatus] = useState("scheduled");
+  const [assessmentType, setAssessmentType] = useState("Class Test");
 
   // Data
   const [classes, setClasses] = useState<ClassOption[]>([]);
@@ -56,9 +74,8 @@ export default function CreateTestPage() {
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const res = await fetch("/api/classes?status=Active&limit=100", { headers: getAuthHeaders() });
-        const data = await res.json();
-        if (data.success) setClasses(data.data.classes || []);
+        const data = await ClassService.getAllClasses({ status: "Active" });
+        setClasses(data);
       } finally {
         setIsLoadingClasses(false);
       }
@@ -133,6 +150,7 @@ export default function CreateTestPage() {
           setChapter(t.chapter || "");
           setAcademicYear(t.academic_year || "");
           setStatus(t.status || "scheduled");
+          setAssessmentType(t.assessment_type || "Class Test");
         }
       } catch { /* silent */ }
     };
@@ -186,6 +204,7 @@ export default function CreateTestPage() {
         chapter: chapter.trim() || undefined,
         academic_year: academicYear,
         status: saveStatus || status,
+        assessment_type: assessmentType
       };
 
       const url = isEditing ? `/api/assessments/${editId}` : "/api/assessments";
@@ -254,6 +273,24 @@ export default function CreateTestPage() {
           <h2 className="text-[14px] font-bold text-slate-800 dark:text-slate-200 border-b border-border pb-3">
             Test Information
           </h2>
+
+          {/* Assessment Type */}
+          <div>
+            <label className={labelClass}>Assessment Type <span className="text-rose-500">*</span></label>
+            <div className="relative">
+              <select
+                value={assessmentType}
+                onChange={(e) => setAssessmentType(e.target.value)}
+                className={fieldClass}
+              >
+                {ASSESSMENT_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
 
           {/* Title with presets */}
           <div>

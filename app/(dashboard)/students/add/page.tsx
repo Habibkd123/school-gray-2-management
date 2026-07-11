@@ -162,8 +162,7 @@ function AddStudentContent() {
 
   // ── Personal Info ──────────────────────────────────────────────
   const [photoPreview, setPhotoPreview] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [name, setName] = useState("");
   const [classId, setClassId] = useState("");
   const [rollNo, setRollNo] = useState("");
   const [email, setEmail] = useState("");
@@ -213,9 +212,7 @@ function AddStudentContent() {
       if (editId) {
         const student = await getStudent(editId);
         if (student) {
-          const [first, ...last] = student.name.split(" ");
-          setFirstName(first || "");
-          setLastName(last.join(" ") || "");
+          setName(student.name || "");
           setClassId(typeof student.class_id === "object" ? student.class_id._id : student.class_id || "");
           setRollNo(student.roll_no || "");
           setEmail(student.email || "");
@@ -347,12 +344,25 @@ function AddStudentContent() {
           return true;
         }
       },
-      { id: "firstName", value: firstName, label: "First Name" },
+      { id: "name", value: name, label: "Student Name" },
       {
         id: "gender",
         value: gender,
         label: "Gender",
         customValidate: (val: any) => (!val || val === "Select" ? "Gender selection is mandatory." : true)
+      },
+      {
+        id: "primaryPhone",
+        value: primaryPhone,
+        label: "Mobile Number",
+        customValidate: (val: any) => {
+          if (!val) return true;
+          const clean = String(val).trim();
+          if (clean === "") return true;
+          if (!/^\d+$/.test(clean)) return "Mobile Number must contain only digits.";
+          if (clean.length !== 10) return "Mobile Number must be exactly 10 digits.";
+          return true;
+        }
       },
       { id: "guardianName", value: guardianName, label: "Guardian Name" },
       {
@@ -361,7 +371,31 @@ function AddStudentContent() {
         label: "Guardian Relation",
         customValidate: (val: any) => (!val || val === "Select" ? "Guardian Relation selection is mandatory." : true)
       },
-      { id: "guardianPhone", value: guardianPhone, label: "Guardian Phone Number" }
+      {
+        id: "guardianPhone",
+        value: guardianPhone,
+        label: "Guardian Phone Number",
+        customValidate: (val: any) => {
+          if (!val || String(val).trim() === "") return "Guardian Phone Number is required.";
+          const clean = String(val).trim();
+          if (!/^\d+$/.test(clean)) return "Guardian Phone Number must contain only digits.";
+          if (clean.length !== 10) return "Guardian Phone Number must be exactly 10 digits.";
+          return true;
+        }
+      },
+      {
+        id: "fatherPhone",
+        value: fatherPhone,
+        label: "Father Phone Number",
+        customValidate: (val: any) => {
+          if (!val) return true;
+          const clean = String(val).trim();
+          if (clean === "") return true;
+          if (!/^\d+$/.test(clean)) return "Father Phone Number must contain only digits.";
+          if (clean.length !== 10) return "Father Phone Number must be exactly 10 digits.";
+          return true;
+        }
+      }
     ];
 
     const valResult = validateSequential(fieldsToValidate);
@@ -377,7 +411,7 @@ function AddStudentContent() {
     setIsSubmitting(true);
 
     try {
-      const studentName = `${firstName} ${lastName}`.trim() || "New Student";
+      const studentName = name.trim() || "New Student";
       const payload = {
         name: studentName,
         email: email || undefined,
@@ -498,12 +532,11 @@ function AddStudentContent() {
                 </div>
 
                 <InputGroup label="Roll Number" value={rollNo} onChange={e => setRollNo(e.target.value)} />
-                <InputGroup label="First Name" value={firstName} onChange={e => setFirstName(e.target.value)} required error={valErrors.firstName} id="firstName" />
-                <InputGroup label="Last Name" value={lastName} onChange={e => setLastName(e.target.value)} />
+                <InputGroup label="Student Name" value={name} onChange={e => setName(e.target.value)} required error={valErrors.name} id="name" />
 
                 <InputGroup label="Gender" type="select" value={gender} onChange={e => setGender(e.target.value)} options={["Select", "Male", "Female", "Other"]} required error={valErrors.gender} id="gender" />
                 <InputGroup label="Date of Birth" type="date" value={dob} onChange={e => setDob(e.target.value)} />
-                <InputGroup label="Mobile Number" value={primaryPhone} onChange={e => setPrimaryPhone(e.target.value)} />
+                <InputGroup label="Mobile Number" value={primaryPhone} onChange={e => setPrimaryPhone(e.target.value)} error={valErrors.primaryPhone} id="primaryPhone" />
                 <InputGroup label="Email Address (Optional)" type="email" value={email} onChange={e => setEmail(e.target.value)} />
 
                 <InputGroup label="Aadhaar Number (Optional)" value={aadhaarNo} onChange={e => setAadhaarNo(e.target.value)} />
@@ -534,7 +567,7 @@ function AddStudentContent() {
               <h3 className="text-[13px] font-bold text-slate-800 dark:text-slate-100 mb-4 border-b border-border pb-2 text-left">Father Info</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 text-left">
                 <InputGroup label="Father Name" value={fatherName} onChange={e => setFatherName(e.target.value)} />
-                <InputGroup label="Phone Number" value={fatherPhone} onChange={e => setFatherPhone(e.target.value)} />
+                <InputGroup label="Phone Number" value={fatherPhone} onChange={e => setFatherPhone(e.target.value)} error={valErrors.fatherPhone} id="fatherPhone" />
                 <InputGroup label="Email Address" type="email" value={fatherEmail} onChange={e => setFatherEmail(e.target.value)} />
                 <InputGroup label="Occupation" value={fatherOccupation} onChange={e => setFatherOccupation(e.target.value)} />
               </div>

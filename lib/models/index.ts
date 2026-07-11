@@ -10,8 +10,9 @@ import Section from "./Section";
 import Teacher from "./Teacher";
 import LandingContent from "./LandingContent";
 import GeneratedDocument from "./GeneratedDocument";
+import Admission from "./Admission";
 
-export { Class, Student, School, User, Stream, Section, Teacher, LandingContent, GeneratedDocument };
+export { Class, Student, School, User, Stream, Section, Teacher, LandingContent, GeneratedDocument, Admission };
 
 // ─── Subject ──────────────────────────────────────────────────────
 export interface ISubject extends Document {
@@ -84,7 +85,23 @@ export interface ITeacherAssignment extends Document {
   class_group_id?: mongoose.Types.ObjectId;
   stream_id?: mongoose.Types.ObjectId;
   section_id?: mongoose.Types.ObjectId;
-  subject_master_id: mongoose.Types.ObjectId;
+  subject_master_id?: mongoose.Types.ObjectId | null;
+  assignment_type: "Class Teacher" | "Subject Teacher" | "Co-Class Teacher" | "Temporary Teacher" | "Substitute Teacher";
+  effective_date?: Date;
+  status: "Active" | "Inactive";
+  remarks?: string;
+  is_deleted?: boolean;
+  deleted_at?: Date | null;
+  deleted_by?: mongoose.Types.ObjectId | null;
+  created_by?: mongoose.Types.ObjectId | null;
+  updated_by?: mongoose.Types.ObjectId | null;
+  history?: Array<{
+    action: string;
+    changes?: string;
+    updated_by: mongoose.Types.ObjectId;
+    date: Date;
+    remarks?: string;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -98,60 +115,188 @@ const teacherAssignmentSchema = new Schema<ITeacherAssignment>(
     class_group_id: { type: mongoose.Schema.Types.ObjectId, ref: "ClassGroup", default: null },
     stream_id: { type: mongoose.Schema.Types.ObjectId, ref: "Stream", default: null },
     section_id: { type: mongoose.Schema.Types.ObjectId, ref: "Section", default: null },
-    subject_master_id: { type: mongoose.Schema.Types.ObjectId, ref: "SubjectMaster", required: true },
+    subject_master_id: { type: mongoose.Schema.Types.ObjectId, ref: "SubjectMaster", required: false, default: null },
+    assignment_type: { 
+      type: String, 
+      enum: ["Class Teacher", "Subject Teacher", "Co-Class Teacher", "Temporary Teacher", "Substitute Teacher"], 
+      required: true, 
+      default: "Subject Teacher" 
+    },
+    effective_date: { type: Date, default: Date.now },
+    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    remarks: { type: String, default: "" },
+    is_deleted: { type: Boolean, default: false },
+    deleted_at: { type: Date, default: null },
+    deleted_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    history: [
+      {
+        action: { type: String, required: true },
+        changes: { type: String, default: "" },
+        updated_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        date: { type: Date, default: Date.now },
+        remarks: { type: String, default: "" }
+      }
+    ]
   },
   { timestamps: true }
 );
 
 teacherAssignmentSchema.index(
-  { school_id: 1, academic_year: 1, class_id: 1, stream_id: 1, section_id: 1, subject_master_id: 1 },
-  { unique: true }
+  { school_id: 1, academic_year: 1, class_id: 1, stream_id: 1, section_id: 1, subject_master_id: 1, teacher_id: 1, assignment_type: 1 },
+  { unique: true, partialFilterExpression: { is_deleted: false }, name: "teacher_assignment_unique_v3" }
 );
 
 teacherAssignmentSchema.index(
   { school_id: 1, academic_year: 1, class_group_id: 1, subject_master_id: 1 },
-  { unique: true, partialFilterExpression: { class_group_id: { $gt: null } } }
+  { unique: true, partialFilterExpression: { class_group_id: { $gt: null }, is_deleted: false } }
 );
 
 
 // ─── Syllabus ──────────────────────────────────────────────────────
-export interface ISyllabusChapter {
-  chapter_no: number;
-  chapter_name: string;
+export interface ISyllabusResource {
+  title: string;
+  type: "file" | "youtube" | "drive" | "link";
+  url: string;
+}
+
+export interface ISyllabusAttachment {
+  filename: string;
+  file_url: string;
+  file_size?: number;
+  mime_type?: string;
+}
+
+export interface ISyllabusNode {
+  id: string;
+  title: string;
   description?: string;
-  start_date?: Date;
-  target_date?: Date;
-  status: "Not Started" | "In Progress" | "Completed";
+  type: "unit" | "chapter" | "topic" | "sub_topic" | "learning_outcome" | "resource" | "other";
+  children?: ISyllabusNode[];
+  resources?: ISyllabusResource[];
+}
+
+export interface ISyllabusHistoryEntry {
+  version: number;
+  title: string;
+  description?: string;
+  status: "Draft" | "Published" | "Archived";
+  nodes: ISyllabusNode[];
+  attachments: ISyllabusAttachment[];
+  reference_links: string[];
+  updated_by?: mongoose.Types.ObjectId | null;
+  updated_at: Date;
+  remarks?: string;
 }
 
 export interface ISyllabus extends Document {
   school_id: mongoose.Types.ObjectId;
-  teacher_assignment_id: mongoose.Types.ObjectId;
-  chapters: ISyllabusChapter[];
+  academic_year: string;
+  class_id: mongoose.Types.ObjectId;
+  section_id?: mongoose.Types.ObjectId | null;
+  stream_id?: mongoose.Types.ObjectId | null;
+  subject_master_id: mongoose.Types.ObjectId;
+  teacher_id?: mongoose.Types.ObjectId | null;
+  
+  title: string;
+  description?: string;
+  version: number;
+  status: "Draft" | "Published" | "Archived";
+  publish_date?: Date | null;
+  visibility: "Public" | "Internal" | "Restricted";
+  
+  attachments: ISyllabusAttachment[];
+  reference_links: string[];
+  nodes: ISyllabusNode[];
+  
+  history: ISyllabusHistoryEntry[];
+  
+  created_by?: mongoose.Types.ObjectId | null;
+  updated_by?: mongoose.Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const syllabusChapterSchema = new Schema(
+const syllabusResourceSchema = new Schema(
   {
-    chapter_no: { type: Number, required: true },
-    chapter_name: { type: String, required: true, trim: true },
-    description: { type: String, trim: true },
-    start_date: { type: Date },
-    target_date: { type: Date },
-    status: { type: String, enum: ["Not Started", "In Progress", "Completed"], default: "Not Started" },
+    title: { type: String, required: true, trim: true },
+    type: { type: String, enum: ["file", "youtube", "drive", "link"], required: true },
+    url: { type: String, required: true }
   },
-  { _id: true }
+  { _id: false }
+);
+
+const syllabusAttachmentSchema = new Schema(
+  {
+    filename: { type: String, required: true },
+    file_url: { type: String, required: true },
+    file_size: { type: Number },
+    mime_type: { type: String }
+  },
+  { _id: false }
+);
+
+const syllabusNodeSchema = new Schema(
+  {
+    id: { type: String, required: true },
+    title: { type: String, required: true, trim: true },
+    description: { type: String, trim: true },
+    type: { type: String, enum: ["unit", "chapter", "topic", "sub_topic", "learning_outcome", "resource", "other"], required: true },
+    resources: [syllabusResourceSchema]
+  },
+  { _id: false }
+);
+syllabusNodeSchema.add({
+  children: [syllabusNodeSchema]
+});
+
+const syllabusHistorySchema = new Schema(
+  {
+    version: { type: Number, required: true },
+    title: { type: String, required: true, trim: true },
+    description: { type: String, trim: true },
+    status: { type: String, enum: ["Draft", "Published", "Archived"], default: "Draft" },
+    nodes: [syllabusNodeSchema],
+    attachments: [syllabusAttachmentSchema],
+    reference_links: [{ type: String }],
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    updated_at: { type: Date, default: Date.now },
+    remarks: { type: String }
+  },
+  { _id: false }
 );
 
 const syllabusSchema = new Schema<ISyllabus>(
   {
     school_id: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true, index: true },
-    teacher_assignment_id: { type: mongoose.Schema.Types.ObjectId, ref: "TeacherAssignment", required: true, unique: true },
-    chapters: [syllabusChapterSchema],
+    academic_year: { type: String, required: true, index: true },
+    class_id: { type: mongoose.Schema.Types.ObjectId, ref: "Class", required: true, index: true },
+    section_id: { type: mongoose.Schema.Types.ObjectId, ref: "Section", default: null, index: true },
+    stream_id: { type: mongoose.Schema.Types.ObjectId, ref: "Stream", default: null, index: true },
+    subject_master_id: { type: mongoose.Schema.Types.ObjectId, ref: "SubjectMaster", required: true, index: true },
+    teacher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher", default: null, index: true },
+    
+    title: { type: String, required: true, trim: true },
+    description: { type: String, trim: true },
+    version: { type: Number, default: 1 },
+    status: { type: String, enum: ["Draft", "Published", "Archived"], default: "Draft", index: true },
+    publish_date: { type: Date, default: null },
+    visibility: { type: String, enum: ["Public", "Internal", "Restricted"], default: "Public" },
+    
+    attachments: [syllabusAttachmentSchema],
+    reference_links: [{ type: String }],
+    nodes: [syllabusNodeSchema],
+    
+    history: [syllabusHistorySchema],
+    
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    updated_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
   },
   { timestamps: true }
 );
+
+syllabusSchema.index({ school_id: 1, academic_year: 1, class_id: 1, section_id: 1, subject_master_id: 1 }, { name: "syllabus_unique_lookup" });
 
 // ─── Timetable ────────────────────────────────────────────────────
 export interface ITimetable extends Document {
@@ -165,6 +310,7 @@ export interface ITimetable extends Document {
   period_no?: number;
   room?: string;
   academic_year?: string;
+  status?: string;
 }
 
 const timetableSchema = new Schema<ITimetable>(
@@ -183,13 +329,21 @@ const timetableSchema = new Schema<ITimetable>(
   { timestamps: true }
 );
 
+timetableSchema.index({ school_id: 1, class_id: 1, day: 1, start_time: 1, end_time: 1 }, { name: "timetable_conflict_check" });
+timetableSchema.index({ school_id: 1, teacher_id: 1, day: 1, start_time: 1, end_time: 1 }, { name: "teacher_conflict_check" });
+timetableSchema.index({ school_id: 1, room: 1, day: 1, start_time: 1, end_time: 1 }, { name: "room_conflict_check" });
+
 // ─── Attendance ───────────────────────────────────────────────────
 const attendanceRecordSchema = new Schema(
   {
     student_id: { type: mongoose.Schema.Types.ObjectId, ref: "Student" },
     teacher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },
-    status: { type: String, enum: ["present", "absent", "leave", "late", "half_day", "holiday"], required: true },
+    status: { type: String, enum: ["present", "absent", "leave", "late", "half_day", "holiday", "medical_leave", "official_duty"], required: true },
     note: { type: String, trim: true, default: null },
+    check_in: { type: String, default: null },
+    check_out: { type: String, default: null },
+    working_hours: { type: Number, default: null },
+    late_minutes: { type: Number, default: null },
   },
   { _id: false }
 );
@@ -220,7 +374,16 @@ export interface IAttendance extends Document {
   marked_by: mongoose.Types.ObjectId;
   date: Date;
   type: "student" | "teacher";
-  records: Array<{ student_id?: mongoose.Types.ObjectId; teacher_id?: mongoose.Types.ObjectId; status: string; note?: string }>;
+  records: Array<{
+    student_id?: mongoose.Types.ObjectId;
+    teacher_id?: mongoose.Types.ObjectId;
+    status: string;
+    note?: string;
+    check_in?: string;
+    check_out?: string;
+    working_hours?: number;
+    late_minutes?: number;
+  }>;
   edit_history?: IAttendanceHistoryEntry[];
   createdAt: Date;
   updatedAt: Date;
@@ -510,6 +673,7 @@ export interface IResult extends Document {
   grade?: string;
   is_pass?: boolean;
   remarks?: string;
+  attendance_status?: "Present" | "Absent" | "Medical" | "Exempted";
   status: "draft" | "final";
   entered_by?: mongoose.Types.ObjectId;
 }
@@ -526,6 +690,7 @@ const resultSchema = new Schema<IResult>(
     grade: { type: String, trim: true },
     is_pass: { type: Boolean },
     remarks: { type: String, trim: true },
+    attendance_status: { type: String, enum: ["Present", "Absent", "Medical", "Exempted"], default: "Present" },
     status: { type: String, enum: ["draft", "final"], default: "final" },
     entered_by: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },
   },
@@ -535,6 +700,48 @@ const resultSchema = new Schema<IResult>(
 resultSchema.index({ school_id: 1, exam_id: 1, student_id: 1, subject_id: 1 }, { unique: true });
 // Report card query: "get all results for student X across all exams in this year"
 resultSchema.index({ school_id: 1, student_id: 1, exam_id: 1 });
+
+// ─── Result Audit ──────────────────────────────────────────────────
+export interface IResultAudit extends Document {
+  school_id: mongoose.Types.ObjectId;
+  result_id?: mongoose.Types.ObjectId;
+  exam_id: mongoose.Types.ObjectId;
+  student_id: mongoose.Types.ObjectId;
+  subject_id: mongoose.Types.ObjectId;
+  previous_marks?: number;
+  new_marks?: number;
+  previous_status?: string;
+  new_status?: string;
+  previous_attendance_status?: string;
+  new_attendance_status?: string;
+  action_type: "create" | "update" | "delete";
+  reason?: string;
+  changed_by: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const resultAuditSchema = new Schema<IResultAudit>(
+  {
+    school_id: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true, index: true },
+    result_id: { type: mongoose.Schema.Types.ObjectId, ref: "Result", default: null },
+    exam_id: { type: mongoose.Schema.Types.ObjectId, ref: "Exam", required: true },
+    student_id: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true },
+    subject_id: { type: mongoose.Schema.Types.ObjectId, ref: "Subject", required: true },
+    previous_marks: { type: Number, default: 0 },
+    new_marks: { type: Number, default: 0 },
+    previous_status: { type: String, default: "draft" },
+    new_status: { type: String, default: "final" },
+    previous_attendance_status: { type: String, default: "Present" },
+    new_attendance_status: { type: String, default: "Present" },
+    action_type: { type: String, enum: ["create", "update", "delete"], required: true },
+    reason: { type: String, default: "" },
+    changed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true }
+  },
+  { timestamps: true }
+);
+
+resultAuditSchema.index({ school_id: 1, exam_id: 1, student_id: 1, subject_id: 1 });
 
 // ─── Leave Request ────────────────────────────────────────────────
 export interface ILeaveRequest extends Document {
@@ -594,12 +801,24 @@ roomSchema.index({ school_id: 1, room_no: 1 }, { unique: true });
 // ─── Export all models (with cache check for Next.js hot reload) ──
 export const Subject: Model<ISubject> = mongoose.models.Subject || mongoose.model("Subject", subjectSchema);
 export const ClassGroup: Model<IClassGroup> = mongoose.models.ClassGroup || mongoose.model("ClassGroup", classGroupSchema);
-export const TeacherAssignment: Model<ITeacherAssignment> = mongoose.models.TeacherAssignment || mongoose.model("TeacherAssignment", teacherAssignmentSchema);
+export const TeacherAssignment: Model<ITeacherAssignment> =
+  mongoose.models.TeacherAssignment && mongoose.models.TeacherAssignment.schema.indexes().some((idx: any) => idx[1]?.name === "teacher_assignment_unique_v3")
+    ? (mongoose.models.TeacherAssignment as Model<ITeacherAssignment>)
+    : (() => {
+        delete mongoose.models.TeacherAssignment;
+        if (mongoose.connection && (mongoose.connection as any).models && (mongoose.connection as any).models.TeacherAssignment) {
+          delete (mongoose.connection as any).models.TeacherAssignment;
+        }
+        return mongoose.model<ITeacherAssignment>("TeacherAssignment", teacherAssignmentSchema);
+      })();
 export const Syllabus: Model<ISyllabus> =
-  mongoose.models.Syllabus && Object.keys(mongoose.models.Syllabus.schema.paths).includes("teacher_assignment_id")
+  mongoose.models.Syllabus && Object.keys(mongoose.models.Syllabus.schema.paths).includes("nodes")
     ? (mongoose.models.Syllabus as Model<ISyllabus>)
     : (() => {
         delete mongoose.models.Syllabus;
+        if (mongoose.connection && (mongoose.connection as any).models && (mongoose.connection as any).models.Syllabus) {
+          delete (mongoose.connection as any).models.Syllabus;
+        }
         return mongoose.model<ISyllabus>("Syllabus", syllabusSchema);
       })();
 export const Timetable: Model<ITimetable> = mongoose.models.Timetable || mongoose.model("Timetable", timetableSchema);
@@ -609,7 +828,14 @@ export const Notice: Model<INotice> = mongoose.models.Notice || mongoose.model("
 export const FeesStructure: Model<IFeesStructure> = mongoose.models.FeesStructure || mongoose.model("FeesStructure", feesStructureSchema);
 
 export const Exam: Model<IExam> = mongoose.models.Exam || mongoose.model("Exam", examSchema);
-export const Result: Model<IResult> = mongoose.models.Result || mongoose.model("Result", resultSchema);
+export const Result: Model<IResult> =
+  mongoose.models.Result && Object.keys(mongoose.models.Result.schema.paths).includes("attendance_status")
+    ? (mongoose.models.Result as Model<IResult>)
+    : (() => {
+        delete mongoose.models.Result;
+        return mongoose.model<IResult>("Result", resultSchema);
+      })();
+export const ResultAudit: Model<IResultAudit> = mongoose.models.ResultAudit || mongoose.model("ResultAudit", resultAuditSchema);
 export const LeaveRequest: Model<ILeaveRequest> = mongoose.models.LeaveRequest || mongoose.model("LeaveRequest", leaveRequestSchema);
 export const Room: Model<IRoom> = mongoose.models.Room || mongoose.model("Room", roomSchema);
 export const Grade: Model<IGrade> = mongoose.models.Grade || mongoose.model("Grade", gradeSchema);
@@ -635,7 +861,7 @@ const subjectMasterSchema = new Schema<ISubjectMaster>(
     name: { type: String, required: true, trim: true },
     subject_code: { type: String, trim: true, uppercase: true },
     description: { type: String, trim: true },
-    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    status: { type: String, enum: ["Active", "Inactive", "Archived"], default: "Active" },
     allowed_streams: [{ type: mongoose.Schema.Types.ObjectId, ref: "Stream", default: [] }],
   },
   { timestamps: true }
@@ -644,7 +870,15 @@ const subjectMasterSchema = new Schema<ISubjectMaster>(
 subjectMasterSchema.index({ school_id: 1, name: 1 }, { unique: true });
 
 export const SubjectMaster: Model<ISubjectMaster> =
-  mongoose.models.SubjectMaster || mongoose.model<ISubjectMaster>("SubjectMaster", subjectMasterSchema);
+  mongoose.models.SubjectMaster && mongoose.models.SubjectMaster.schema.paths.status?.options?.enum?.includes("Archived")
+    ? (mongoose.models.SubjectMaster as Model<ISubjectMaster>)
+    : (() => {
+        delete mongoose.models.SubjectMaster;
+        if (mongoose.connection && (mongoose.connection as any).models && (mongoose.connection as any).models.SubjectMaster) {
+          delete (mongoose.connection as any).models.SubjectMaster;
+        }
+        return mongoose.model<ISubjectMaster>("SubjectMaster", subjectMasterSchema);
+      })();
 
 // ─── Subject Assignment (Class + optional Stream → Subject) ────────
 export interface ISubjectAssignment extends Document {
@@ -654,6 +888,11 @@ export interface ISubjectAssignment extends Document {
   class_group_id?: mongoose.Types.ObjectId;
   stream_id?: mongoose.Types.ObjectId;
   subject_master_id: mongoose.Types.ObjectId;
+  teacher_id?: mongoose.Types.ObjectId | null;
+  weekly_periods?: number;
+  description?: string;
+  status: "Active" | "Inactive";
+  created_by?: mongoose.Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -666,6 +905,11 @@ const subjectAssignmentSchema = new Schema<ISubjectAssignment>(
     class_group_id: { type: mongoose.Schema.Types.ObjectId, ref: "ClassGroup", default: null },
     stream_id: { type: mongoose.Schema.Types.ObjectId, ref: "Stream", default: null },
     subject_master_id: { type: mongoose.Schema.Types.ObjectId, ref: "SubjectMaster", required: true },
+    teacher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher", default: null },
+    weekly_periods: { type: Number, default: 0 },
+    description: { type: String, default: "" },
+    status: { type: String, enum: ["Active", "Inactive"], default: "Active" },
+    created_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );
@@ -890,6 +1134,7 @@ export interface IClassTest extends Document {
   academic_year: string;
   status: ClassTestStatus;
   is_published: boolean;
+  assessment_type?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -915,6 +1160,7 @@ const classTestSchema = new Schema<IClassTest>(
       default: "scheduled",
     },
     is_published: { type: Boolean, default: false },
+    assessment_type: { type: String, default: "Class Test" },
   },
   { timestamps: true }
 );
@@ -923,7 +1169,12 @@ classTestSchema.index({ school_id: 1, class_id: 1, test_date: 1 });
 classTestSchema.index({ school_id: 1, teacher_id: 1 });
 
 export const ClassTest: Model<IClassTest> =
-  mongoose.models.ClassTest || mongoose.model<IClassTest>("ClassTest", classTestSchema);
+  mongoose.models.ClassTest && Object.keys(mongoose.models.ClassTest.schema.paths).includes("assessment_type")
+    ? (mongoose.models.ClassTest as Model<IClassTest>)
+    : (() => {
+        delete mongoose.models.ClassTest;
+        return mongoose.model<IClassTest>("ClassTest", classTestSchema);
+      })();
 
 // ─── Class Test Mark (per-student marks entry) ───────────────────────────────
 
@@ -935,6 +1186,7 @@ export interface IClassTestMark extends Document {
   is_pass: boolean;
   rank?: number;
   remarks?: string;
+  attendance_status?: "Present" | "Absent" | "Medical" | "Exempted";
   entered_by: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -949,6 +1201,7 @@ const classTestMarkSchema = new Schema<IClassTestMark>(
     is_pass: { type: Boolean, required: true },
     rank: { type: Number, default: null },
     remarks: { type: String, trim: true, default: null },
+    attendance_status: { type: String, enum: ["Present", "Absent", "Medical", "Exempted"], default: "Present" },
     entered_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   },
   { timestamps: true }
@@ -957,7 +1210,52 @@ const classTestMarkSchema = new Schema<IClassTestMark>(
 classTestMarkSchema.index({ test_id: 1, student_id: 1 }, { unique: true });
 
 export const ClassTestMark: Model<IClassTestMark> =
-  mongoose.models.ClassTestMark || mongoose.model<IClassTestMark>("ClassTestMark", classTestMarkSchema);
+  mongoose.models.ClassTestMark && Object.keys(mongoose.models.ClassTestMark.schema.paths).includes("attendance_status")
+    ? (mongoose.models.ClassTestMark as Model<IClassTestMark>)
+    : (() => {
+        delete mongoose.models.ClassTestMark;
+        return mongoose.model<IClassTestMark>("ClassTestMark", classTestMarkSchema);
+      })();
+
+// ─── Class Test Mark Audit (auditing assessment modifications) ───────────────
+
+export interface IClassTestMarkAudit extends Document {
+  school_id: mongoose.Types.ObjectId;
+  mark_id?: mongoose.Types.ObjectId;
+  test_id: mongoose.Types.ObjectId;
+  student_id: mongoose.Types.ObjectId;
+  previous_marks?: number;
+  new_marks?: number;
+  previous_attendance_status?: string;
+  new_attendance_status?: string;
+  action_type: "create" | "update" | "delete";
+  reason?: string;
+  changed_by: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const classTestMarkAuditSchema = new Schema<IClassTestMarkAudit>(
+  {
+    school_id: { type: mongoose.Schema.Types.ObjectId, ref: "School", required: true, index: true },
+    mark_id: { type: mongoose.Schema.Types.ObjectId, ref: "ClassTestMark", default: null },
+    test_id: { type: mongoose.Schema.Types.ObjectId, ref: "ClassTest", required: true },
+    student_id: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true },
+    previous_marks: { type: Number, default: 0 },
+    new_marks: { type: Number, default: 0 },
+    previous_attendance_status: { type: String, default: "Present" },
+    new_attendance_status: { type: String, default: "Present" },
+    action_type: { type: String, enum: ["create", "update", "delete"], required: true },
+    reason: { type: String, default: "" },
+    changed_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  },
+  { timestamps: true }
+);
+
+classTestMarkAuditSchema.index({ school_id: 1, test_id: 1, student_id: 1 });
+
+export const ClassTestMarkAudit: Model<IClassTestMarkAudit> =
+  mongoose.models.ClassTestMarkAudit || mongoose.model<IClassTestMarkAudit>("ClassTestMarkAudit", classTestMarkAuditSchema);
 
 import SalaryPayment from "./SalaryPayment";
 import ClassFee from "./ClassFee";

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useTeachers, ApiTeacher } from "../../../hooks/useTeachers";
@@ -9,13 +9,13 @@ import { useLeave } from "../../../hooks/useLeave";
 import { useSchedules } from "../../../hooks/useSchedules";
 import { useAttendanceSummary } from "../../../hooks/useAttendanceSummary";
 import { Modal } from "../../../components/ui/modal";
-import { Loader2 } from "lucide-react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { Loader2, AlertCircle } from "lucide-react";
+import { getAuthHeaders, getStoredUser } from "@/lib/utils/session";
 import { LoginDetailsModal } from "../../../components/modals/LoginDetailsModal";
 import { ResetPasswordModal } from "../../../components/modals/ResetPasswordModal";
 import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
 import {
-  User, Phone, Mail, FileText, Calendar, Droplet, Users, BookOpen, Clock, Settings, Building2, MapPin, Bus, Lock, Edit, ChevronDown, CheckCircle, RefreshCcw, Check, X, Download, Paperclip, Briefcase, Copy, Plus
+  User, Phone, Mail, FileText, Calendar, Clock, Edit, ChevronDown, CheckCircle, RefreshCcw, Check, X, Download, Briefcase, Copy, Plus, AlertTriangle, Lock
 } from "lucide-react";
 
 export default function TeacherDetailsPage() {
@@ -27,7 +27,6 @@ export default function TeacherDetailsPage() {
 
   const [teacher, setTeacher] = useState<ApiTeacher | null>(null);
   const [loading, setLoading] = useState(true);
-  const [bottomTab, setBottomTab] = useState<"Hostel" | "Transportation">("Hostel");
 
   // Tab states
   const [activeMainTab, setActiveMainTab] = useState<string>("Teacher Details");
@@ -39,12 +38,16 @@ export default function TeacherDetailsPage() {
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
 
+  // Live assignments state
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
+
   // Dynamic schedules & leaves
   const { schedules, isLoading: schedulesLoading } = useSchedules(undefined, teacherId);
 
   const teacherUserId = teacher
     ? (teacher.user_id && typeof teacher.user_id === "object"
-      ? teacher.user_id._id
+      ? (teacher.user_id as any)._id
       : (typeof teacher.user_id === "string" ? teacher.user_id : undefined))
     : undefined;
   const { leaveRequests, submitLeave, loading: leavesLoading } = useLeave(undefined, teacherUserId);
@@ -60,17 +63,34 @@ export default function TeacherDetailsPage() {
   const [leaveType, setLeaveType] = useState("casual");
   const [leaveFromDate, setLeaveFromDate] = useState("");
   const [leaveToDate, setLeaveToDate] = useState("");
-  const [leaveDaysChoice, setLeaveDaysChoice] = useState("Full Day");
   const [leaveDaysNum, setLeaveDaysNum] = useState("1");
   const [leaveReason, setLeaveReason] = useState("");
   const [isSubmittingLeave, setIsSubmittingLeave] = useState(false);
 
+  // Fetch teacher details
   useEffect(() => {
     if (!teacherId) return;
     getTeacher(teacherId).then(t => {
       setTeacher(t);
       setLoading(false);
     });
+  }, [teacherId, getTeacher]);
+
+  // Fetch live assignments
+  useEffect(() => {
+    if (!teacherId) return;
+    setAssignmentsLoading(true);
+    fetch(`/api/teacher-assignment?teacher_id=${teacherId}&limit=all`, {
+      headers: getAuthHeaders()
+    })
+      .then(res => res.json())
+      .then(res => {
+        if (res.success && res.data) {
+          setAssignments(res.data.assignments || []);
+        }
+      })
+      .catch(err => console.error("Error fetching assignments:", err))
+      .finally(() => setAssignmentsLoading(false));
   }, [teacherId]);
 
   // Sync leave duration calculation
@@ -120,8 +140,56 @@ export default function TeacherDetailsPage() {
     loadAttendance();
   }, [teacher, selectedYear, fetchSummary, fetchDetail]);
 
+  // Security Check (Part 12)
+  const loggedInUser = getStoredUser();
+  const isTeacherSelf = loggedInUser?.role === "teacher" && teacher && String(teacherUserId) === String(loggedInUser.id);
+  const isAuthorized = loggedInUser?.role !== "teacher" || isTeacherSelf;
+
+  // Derivations from live assignments
+  const assignedClasses = useMemo(() => {
+    const list: string[] = [];
+    assignments.forEach(a => {
+      if (a.class_id) {
+        const clsName = a.class_id.section ? `${a.class_id.name} - ${a.class_id.section}` : a.class_id.name;
+        if (!list.includes(clsName)) list.push(clsName);
+      }
+    });
+    return list;
+  }, [assignments]);
+
+  const assignedSubjects = useMemo(() => {
+    const list: string[] = [];
+    assignments.forEach(a => {
+      if (a.subject_master_id) {
+        const subName = a.subject_master_id.name;
+        if (!list.includes(subName)) list.push(subName);
+      }
+    });
+    return list;
+  }, [assignments]);
+
+  const currentWorkload = useMemo(() => {
+    return assignments.reduce((acc, a) => acc + (Number(a.weekly_periods) || 0), 0);
+  }, [assignments]);
+
   if (loading) return <div className="p-10 flex items-center gap-3"><Loader2 className="w-5 h-5 animate-spin text-primary" /><span>Loading teacher...</span></div>;
   if (!teacher) return <div className="p-10 text-slate-500 dark:text-slate-400">Teacher not found.</div>;
+
+  if (!isAuthorized) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3 text-center px-4">
+        <AlertTriangle className="w-12 h-12 text-rose-500" />
+        <h3 className="font-bold text-slate-800 dark:text-slate-100 text-lg">Access Denied</h3>
+        <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md">You do not have permission to view this teacher's personal information.</p>
+        <button onClick={() => router.push("/teachers")} className="mt-2 px-5 py-2 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-850 transition-colors">
+          Go Back
+        </button>
+      </div>
+    );
+  }
+
+  const canManage = loggedInUser?.role !== "teacher";
+  const canEdit = loggedInUser?.role !== "teacher" || isTeacherSelf;
 
   const getClassName = (cid: any) => {
     if (!cid) return "Not Assigned";
@@ -136,9 +204,9 @@ export default function TeacherDetailsPage() {
   };
 
   const InfoRow = ({ label, value }: { label: string; value: string }) => (
-    <div className="flex justify-between py-1">
-      <span className="text-[14px] leading-[21px] font-medium text-foreground dark:text-slate-100">{label}</span>
-      <span className="text-[14px] leading-[21px] text-[#68718a] text-right font-normal">{value}</span>
+    <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/30">
+      <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">{label}</span>
+      <span className="text-[13px] text-slate-500 dark:text-slate-400 text-right">{value}</span>
     </div>
   );
 
@@ -315,34 +383,40 @@ export default function TeacherDetailsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setIsLoginDetailsOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[12px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors"
-          >
-            <Lock className="w-3.5 h-3.5" />
-            <span>Login Details</span>
-          </button>
-          <button
-            onClick={() => setIsGenerateOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 border border-indigo-200 dark:border-indigo-700/50 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-[12px] font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 shadow-sm transition-colors"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Generate Document</span>
-          </button>
-          <button
-            onClick={() => setIsResetPasswordOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-[#EF4444] hover:bg-[#DC2626] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors"
-          >
-            <Lock className="w-3.5 h-3.5" />
-            <span>Reset Password</span>
-          </button>
-          <button
-            onClick={() => router.push(`/teachers/${teacher._id}/edit`)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors"
-          >
-            <Edit className="w-3.5 h-3.5" />
-            <span>Edit Teacher</span>
-          </button>
+          {canManage && (
+            <>
+              <button
+                onClick={() => setIsLoginDetailsOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[12px] font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm transition-colors cursor-pointer"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Login Details</span>
+              </button>
+              <button
+                onClick={() => setIsGenerateOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 border border-indigo-200 dark:border-indigo-700/50 rounded-lg bg-indigo-50 dark:bg-indigo-950/30 text-[12px] font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 shadow-sm transition-colors cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Generate Document</span>
+              </button>
+              <button
+                onClick={() => setIsResetPasswordOpen(true)}
+                className="flex items-center gap-2 px-3 py-1.5 bg-[#EF4444] hover:bg-[#DC2626] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+              >
+                <Lock className="w-3.5 h-3.5" />
+                <span>Reset Password</span>
+              </button>
+            </>
+          )}
+          {canEdit && (
+            <button
+              onClick={() => router.push(`/teachers/${teacher._id}/edit`)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
+            >
+              <Edit className="w-3.5 h-3.5" />
+              <span>Edit Profile</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -353,7 +427,7 @@ export default function TeacherDetailsPage() {
           {/* Profile Card */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 card-shadow text-left relative overflow-hidden">
             <div className="flex items-center gap-4">
-              <img src={teacher.photo_url || "/asset 7.webp"} className="w-full sm:w-[60px] h-[60px] rounded-xl object-cover border border-slate-200 dark:border-slate-800" alt="Avatar" />
+              <img src={teacher.photo_url || "/asset 7.webp"} className="w-[60px] h-[60px] rounded-xl object-cover border border-slate-200 dark:border-slate-800" alt="Avatar" />
               <div>
                 <h2 className="text-[16px] leading-[19.2px] font-medium text-foreground dark:text-slate-100">{teacher.name}</h2>
                 <p className="text-[12px] text-primary font-bold mt-0.5">{teacher.employee_id || "No ID"}</p>
@@ -362,35 +436,26 @@ export default function TeacherDetailsPage() {
             </div>
           </div>
 
-          {/* Basic Information */}
+          {/* Basic Information (Dynamic Assigned Details) */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl overflow-hidden card-shadow text-left">
             <div className="p-4 text-[12px]">
-              <h3 className="text-[14px] leading-[19.2px] font-medium text-foreground dark:text-slate-100 mb-4">Basic Information</h3>
+              <h3 className="text-[14px] leading-[19.2px] font-medium text-slate-800 dark:text-slate-100 mb-3.5">Basic Information</h3>
               <div className="space-y-3.5">
-                <InfoRow label="Class & Section" value={getClassName(teacher.classId || teacher.class_id || "")} />
-                <InfoRow label="Subject" value={teacher.subject || teacher.subject_specialization || "Not Specified"} />
+                <InfoRow label="Department" value={teacher.department || "Academic"} />
+                <InfoRow label="Designation" value={teacher.designation || "Teacher"} />
+                <InfoRow label="Class Teacher Of" value={getClassName(teacher.classId || teacher.class_id || "")} />
+                <InfoRow label="Assigned Classes" value={assignedClasses.join(", ") || "None"} />
+                <InfoRow label="Assigned Subjects" value={assignedSubjects.join(", ") || "None"} />
+                <InfoRow label="Current Workload" value={`${currentWorkload} periods/week`} />
                 <InfoRow label="Gender" value={teacher.gender ? teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1) : "Not Specified"} />
-                <InfoRow label="Blood Group" value={teacher.blood_group || "Not Specified"} />
-                <div className="flex justify-between py-1 items-center">
-                  <span className="text-[14px] leading-[21px] font-medium text-foreground dark:text-slate-100">Language</span>
-                  <div className="flex gap-1.5 flex-wrap justify-end">
-                    {teacher.languages && teacher.languages.length > 0 ? (
-                      teacher.languages.map((l, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md text-[10px] font-bold text-slate-700 dark:text-slate-200">{l}</span>
-                      ))
-                    ) : (
-                      <span className="text-slate-500 font-medium dark:text-slate-400">None</span>
-                    )}
-                  </div>
-                </div>
               </div>
             </div>
           </div>
 
-          {/* Primary Contact Info */}
+          {/* Contact Info */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl overflow-hidden card-shadow text-left">
             <div className="p-4 space-y-4">
-              <h3 className="text-[14px] font-bold text-slate-900 dark:text-white mb-2">Primary Contact Info</h3>
+              <h3 className="text-[14px] font-bold text-slate-900 dark:text-white mb-2">Contact Information</h3>
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center border border-slate-100 dark:border-slate-800/50 flex-shrink-0">
                   <Phone className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
@@ -411,71 +476,6 @@ export default function TeacherDetailsPage() {
               </div>
             </div>
           </div>
-
-          {/* PAN Number */}
-          <div className="bg-white dark:bg-slate-900 border border-border rounded-xl overflow-hidden card-shadow text-left p-4">
-            <h3 className="text-[14px] font-bold text-slate-900 dark:text-white mb-3">Employee ID / ID Number</h3>
-            <div className="flex items-center justify-between">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center border border-slate-100 dark:border-slate-800/50 flex-shrink-0">
-                  <FileText className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                </div>
-                <span className="text-[13px] font-semibold text-slate-900 dark:text-white">{teacher.employee_id || "No ID"}</span>
-              </div>
-              <button
-                onClick={() => {
-                  if (teacher.employee_id) {
-                    navigator.clipboard.writeText(teacher.employee_id);
-                    alert("ID copied to clipboard!");
-                  }
-                }}
-                className="p-1.5 rounded bg-primary text-white hover:bg-[var(--primary-hover)] transition-colors shadow-sm"
-              >
-                <Copy className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Bottom Tabs (Hostel/Transport) */}
-          {/* <div className="bg-white dark:bg-slate-900 border border-border rounded-xl overflow-hidden card-shadow text-left">
-            <div className="flex border-b border-border">
-              <button
-                onClick={() => setBottomTab("Hostel")}
-                className={`flex-1 py-2.5 text-[12px] font-bold transition-colors ${bottomTab === "Hostel" ? "text-primary border-b-2 border-primary" : "text-slate-500 dark:text-slate-400"}`}
-              >
-                Hostel
-              </button>
-              <button
-                onClick={() => setBottomTab("Transportation")}
-                className={`flex-1 py-2.5 text-[12px] font-bold transition-colors ${bottomTab === "Transportation" ? "text-primary border-b-2 border-primary" : "text-slate-500 dark:text-slate-400"}`}
-              >
-                Transportation
-              </button>
-            </div>
-            <div className="p-4">
-              {bottomTab === "Hostel" ? (
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center border border-slate-100 dark:border-slate-800/50 flex-shrink-0">
-                    <Building2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-bold text-slate-900 dark:text-white">HI-Hostel, Floor</p>
-                    <p className="text-[11px] text-primary font-bold mt-0.5">Room No : 25</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center border border-slate-100 dark:border-slate-800/50 flex-shrink-0">
-                    <Bus className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-bold text-slate-900 dark:text-white">Bus Route 42</p>
-                    <p className="text-[11px] text-primary font-bold mt-0.5">Pickup : 07:30 AM</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div> */}
 
         </div>
 
@@ -500,20 +500,16 @@ export default function TeacherDetailsPage() {
                 </div>
                 <div className="p-5 grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Father's Name</p>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.father_name || "Not Specified"}</p>
+                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Teacher Name</p>
+                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.name}</p>
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Mother Name</p>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.mother_name || "Not Specified"}</p>
+                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Employee ID</p>
+                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.employee_id || "No ID"}</p>
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">DOB</p>
                     <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{formatDate(teacher.dob)}</p>
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Martial Status</p>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.marital_status || "Not Specified"}</p>
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Qualification</p>
@@ -522,6 +518,10 @@ export default function TeacherDetailsPage() {
                   <div>
                     <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Experience</p>
                     <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.experience_years} Years</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Joining Date</p>
+                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{formatDate(teacher.join_date)}</p>
                   </div>
                 </div>
               </div>
@@ -553,80 +553,11 @@ export default function TeacherDetailsPage() {
                     <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Address</h3>
                   </div>
                   <div className="p-5 space-y-5">
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center flex-shrink-0 border border-slate-100 dark:border-slate-800/50">
-                        <MapPin className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                      </div>
-                      <div>
-                        <p className="text-[12px] font-bold text-slate-900 dark:text-white mb-1">Current Address</p>
-                        <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.address || "Not Specified"}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center flex-shrink-0 border border-slate-100 dark:border-slate-800/50">
-                        <MapPin className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
-                      </div>
-                      <div>
-                        <p className="text-[12px] font-bold text-slate-900 dark:text-white mb-1">Permanent Address</p>
-                        <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.permanent_address || teacher.address || "Not Specified"}</p>
-                      </div>
+                    <div>
+                      <p className="text-[12px] font-bold text-slate-900 dark:text-white mb-1">Address</p>
+                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.address || "Not Specified"}</p>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Previous School Details, Bank Details, Work Details hidden as per requirements */}
-
-              {/* Social Media */}
-              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
-                <div className="p-4 border-b border-border">
-                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Social Media</h3>
-                </div>
-                <div className="p-5 grid grid-cols-1 md:grid-cols-2 sm:grid-cols-4 gap-6">
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Facebook</p>
-                    {teacher.facebook_url ? (
-                      <a href={teacher.facebook_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary hover:underline font-medium break-all">{teacher.facebook_url}</a>
-                    ) : (
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Not Specified</p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Twitter</p>
-                    {teacher.twitter_url ? (
-                      <a href={teacher.twitter_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary hover:underline font-medium break-all">{teacher.twitter_url}</a>
-                    ) : (
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Not Specified</p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Linkedin</p>
-                    {teacher.linkedin_url ? (
-                      <a href={teacher.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary hover:underline font-medium break-all">{teacher.linkedin_url}</a>
-                    ) : (
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Not Specified</p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Youtube</p>
-                    {teacher.youtube_url ? (
-                      <a href={teacher.youtube_url} target="_blank" rel="noopener noreferrer" className="text-[12px] text-primary hover:underline font-medium break-all">{teacher.youtube_url}</a>
-                    ) : (
-                      <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Not Specified</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Other Info */}
-              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden">
-                <div className="p-4 border-b border-border">
-                  <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Other Info</h3>
-                </div>
-                <div className="p-5">
-                  <p className="text-[12px] text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                    {teacher.notes || "Depending on the specific needs of your organization or system, additional information may be collected or tracked. It's important to ensure that any data collected complies with privacy regulations and policies to protect teachers' sensitive information."}
-                  </p>
                 </div>
               </div>
             </div>
@@ -680,28 +611,6 @@ export default function TeacherDetailsPage() {
                           ))}
                         </div>
                       ))}
-                    </div>
-
-                    {/* Break sections below table */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                      <div className="bg-[#EEF2FF] rounded-xl p-4 flex flex-col justify-center">
-                        <span className="inline-block px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded mb-2 self-start">Morning Break</span>
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1">
-                          <Clock className="w-3.5 h-3.5" /> 10:30 to 10:45 AM
-                        </div>
-                      </div>
-                      <div className="bg-[#FFF8E6] rounded-xl p-4 flex flex-col justify-center">
-                        <span className="inline-block px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded mb-2 self-start">Lunch</span>
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1">
-                          <Clock className="w-3.5 h-3.5" /> 12:15 to 01:30 PM
-                        </div>
-                      </div>
-                      <div className="bg-[#E6F4FE] rounded-xl p-4 flex flex-col justify-center">
-                        <span className="inline-block px-2 py-0.5 bg-primary text-white text-[10px] font-bold rounded mb-2 self-start">Evening Break</span>
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1">
-                          <Clock className="w-3.5 h-3.5" /> 03:00 PM to 03:15 PM
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -757,7 +666,7 @@ export default function TeacherDetailsPage() {
                       <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Leaves Request History</h3>
                       <button
                         onClick={() => setIsApplyLeaveOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-[12px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white text-[12px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer"
                       >
                         <Plus className="w-3.5 h-3.5" /> Apply Leave
                       </button>
@@ -783,20 +692,21 @@ export default function TeacherDetailsPage() {
                               <th className="px-5 py-3 font-semibold">Status</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-border text-slate-600 dark:text-slate-300 font-medium">
-                            {leaveRequests.map((l, i) => (
-                              <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                <td className="px-5 py-3 capitalize">{l.leave_type} Leave</td>
-                                <td className="px-5 py-3">{formatDate(l.from_date)} - {formatDate(l.to_date)}</td>
-                                <td className="px-5 py-3">{l.total_days}</td>
+                          <tbody className="divide-y divide-border text-slate-600 dark:text-slate-350">
+                            {leaveRequests.map((l) => (
+                              <tr key={l._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/10">
+                                <td className="px-5 py-3 font-bold capitalize">{l.leave_type} Leave</td>
+                                <td className="px-5 py-3 font-medium">{formatDate(l.from_date)} - {formatDate(l.to_date)}</td>
+                                <td className="px-5 py-3 font-bold">{l.total_days || 0} Days</td>
                                 <td className="px-5 py-3">{formatDate(l.createdAt)}</td>
-                                <td className="px-5 py-3 truncate max-w-full sm:w-[200px]" title={l.reason}>{l.reason || "-"}</td>
+                                <td className="px-5 py-3">{l.reason}</td>
                                 <td className="px-5 py-3">
-                                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold
-                                    ${l.status === "approved" ? "bg-success/10 text-success" : l.status === "rejected" ? "bg-[#FFEBEB] text-[#E02424]" : "bg-[#FFF8E6] text-primary"}
+                                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-[11px] font-bold
+                                    ${l.status === "approved" ? "bg-success/10 text-success" : ""}
+                                    ${l.status === "pending" ? "bg-[#FFF8E6] text-primary" : ""}
+                                    ${l.status === "rejected" ? "bg-[#FFEBEB] text-[#E02424]" : ""}
                                   `}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${l.status === "approved" ? "bg-success" : l.status === "rejected" ? "bg-[#E02424]" : "bg-primary"}`} />
-                                    {l.status.charAt(0).toUpperCase() + l.status.slice(1)}
+                                    {l.status}
                                   </span>
                                 </td>
                               </tr>
@@ -811,24 +721,17 @@ export default function TeacherDetailsPage() {
 
               {attendanceSubTab === "Attendance" && (
                 <div className="space-y-5 animate-in fade-in zoom-in-95 duration-200">
-                  {/* Title & Top Controls */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <h2 className="text-[16px] font-bold text-slate-900 dark:text-white">Attendance Detail</h2>
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="flex items-center gap-2 text-[12px] font-medium text-slate-600 dark:text-slate-300">
-                        <span>Last Updated on: Today</span>
-                      </div>
-                      <select
-                        value={selectedYear}
-                        onChange={(e) => setSelectedYear(e.target.value)}
-                        className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-[12px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 shadow-sm outline-none cursor-pointer"
-                      >
-                        <option value="2026-2027">Year : 2026 / 2027</option>
-                      </select>
-                    </div>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
+                      className="flex items-center gap-2 px-3 py-1.5 border border-border rounded-lg text-[12px] font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 shadow-sm outline-none cursor-pointer"
+                    >
+                      <option value="2026-2027">Year : 2026 / 2027</option>
+                    </select>
                   </div>
 
-                  {/* Summary Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
                     <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 card-shadow flex items-center gap-4">
                       <div className="w-12 h-12 rounded-lg bg-success/10 text-success flex items-center justify-center flex-shrink-0">
@@ -868,13 +771,9 @@ export default function TeacherDetailsPage() {
                     </div>
                   </div>
 
-                  {/* Matrix Table Block */}
                   <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden p-5 space-y-5">
-                    <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-                      <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Attendance Matrix Grid</h3>
-                    </div>
+                    <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Attendance Matrix Grid</h3>
 
-                    {/* Legend */}
                     <div className="flex flex-wrap gap-3">
                       <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-success/10 text-success border border-[#1D7F2C]/20 text-[11px] font-bold">
                         <CheckCircle className="w-3.5 h-3.5" /> Present
@@ -893,7 +792,6 @@ export default function TeacherDetailsPage() {
                       </div>
                     </div>
 
-                    {/* Grid Matrix Table */}
                     {attendanceLoading ? (
                       <div className="p-10 flex items-center justify-center gap-3">
                         <Loader2 className="w-5 h-5 animate-spin text-primary" />
@@ -948,7 +846,6 @@ export default function TeacherDetailsPage() {
                 const deductions = Math.round(basic * 0.05);
                 const net = basic + allowances - deductions;
 
-                // Past 6 months dynamic history
                 const months = ["May", "Apr", "Mar", "Feb", "Jan", "Dec"];
                 const years = [2026, 2026, 2026, 2026, 2026, 2025];
                 const history = months.map((m, idx) => {
@@ -995,7 +892,6 @@ export default function TeacherDetailsPage() {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                      {/* Salary Structure Info */}
                       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow text-left h-fit space-y-4">
                         <h3 className="text-[14px] font-bold text-slate-900 dark:text-white border-b border-border pb-2">Salary Structure</h3>
                         <div className="space-y-3 text-[13px]">
@@ -1019,7 +915,6 @@ export default function TeacherDetailsPage() {
                         </div>
                       </div>
 
-                      {/* Salary History */}
                       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden lg:col-span-2">
                         <div className="p-4 border-b border-border">
                           <h3 className="text-[14px] font-bold text-slate-900 dark:text-white">Monthly Salary Records</h3>
@@ -1063,13 +958,9 @@ export default function TeacherDetailsPage() {
             </div>
           )}
 
-
         </div>
       </div>
 
-      {/* ----------------------------------------------------
-          APPLY LEAVE MODAL
-          ---------------------------------------------------- */}
       <Modal isOpen={isApplyLeaveOpen} onClose={() => setIsApplyLeaveOpen(false)} title="Apply Leave">
         <form onSubmit={handleApplyLeaveSubmit} className="space-y-4 text-left">
           <div className="flex flex-col gap-1.5">
@@ -1131,14 +1022,14 @@ export default function TeacherDetailsPage() {
             <button
               type="button"
               onClick={() => setIsApplyLeaveOpen(false)}
-              className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-foreground dark:text-slate-100 text-[13px] font-semibold rounded-lg transition-colors"
+              className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-foreground dark:text-slate-100 text-[13px] font-semibold rounded-lg transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmittingLeave}
-              className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
             >
               {isSubmittingLeave && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
               <span>Apply Leave</span>

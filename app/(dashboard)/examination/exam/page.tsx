@@ -276,29 +276,27 @@ export default function ExamListPage() {
   const pag = usePagination(filteredData, 10);
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="page-header">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-white">Exam List</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="page-title">Exam List</h1>
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/examination" className="hover:text-primary">Examination</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Exam</span>
           </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => window.location.reload()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
+        </div>        <div className="flex flex-wrap items-center gap-3">
+          <button onClick={() => window.location.reload()} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
           
           <div className="relative">
             <button 
               onClick={() => setIsExportOpen(!isExportOpen)}
-              className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
+              className="btn btn-outline flex items-center gap-2"
             >
               <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
             </button>
@@ -310,7 +308,7 @@ export default function ExamListPage() {
                     <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as PDF
                   </button>
                   <button className="w-full px-4 py-2.5 text-[14px] font-medium text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer">
-                    <FileText className="w-4 h-4 text-slate-500 dark:text-slate-400" /> Export as Excel
+                    <FileText className="w-4 h-4 text-slate-550 dark:text-slate-400" /> Export as Excel
                   </button>
                 </div>
               </>
@@ -319,7 +317,7 @@ export default function ExamListPage() {
 
           <button 
             onClick={openAddModal}
-            className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+            className="btn btn-primary flex items-center gap-2"
           >
             <Plus className="w-4 h-4" /> Add Exam
           </button>
@@ -327,7 +325,7 @@ export default function ExamListPage() {
           {/* Generate Report Cards button */}
           <button
             onClick={() => { setGenerateExamId(null); setGenerateExamLabel(""); setIsGenerateOpen(true); }}
-            className="px-4 py-2 text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
+            className="btn flex items-center gap-2 text-white"
             style={{ background: "linear-gradient(90deg, #4338ca, #7c3aed)" }}
           >
             <FileText className="w-4 h-4" /> Generate Report Cards
@@ -420,52 +418,52 @@ export default function ExamListPage() {
         </div>
 
         {/* Table */}
-        <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
-          <table className="w-full text-[13px]">
-            <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
+        <div className={`erp-table-wrap overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
+          <table className="erp-table">
+            <thead>
               <tr>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Exam Name</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Type</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Academic Year</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Start Date</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">End Date</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Status</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-20">Actions</th>
+                <th>Exam Name</th>
+                <th>Type</th>
+                <th>Academic Year</th>
+                <th>Class</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Status</th>
+                <th className="w-20 col-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-16 text-center">
+                  <td colSpan={8} className="table-loading">
                     <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
                     <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading exams...</p>
                   </td>
                 </tr>
               ) : pag.paged.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-16 text-center text-slate-500 dark:text-slate-400 text-[13px]">
+                  <td colSpan={8} className="table-empty">
                     No exams found. Click &quot;Add Exam&quot; to create one.
                   </td>
                 </tr>
               ) : pag.paged.map((item) => {
                 const currentStatus = calculateStatus(item);
                 return (
-                  <tr key={item._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-slate-800 dark:text-slate-100">{item.name}</td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-medium capitalize">
+                  <tr key={item._id}>
+                    <td className="font-semibold text-slate-800 dark:text-slate-100">{item.name}</td>
+                    <td className="text-slate-605 dark:text-slate-300 font-medium capitalize">
                       {item.type.replace("_", " ")}
                     </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{item.academic_year}</td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                    <td className="text-slate-600 dark:text-slate-300">{item.academic_year}</td>
+                    <td className="text-slate-600 dark:text-slate-300">
                       {typeof item.class_id === "object"
                         ? `${item.class_id?.name || ""} - ${item.class_id?.section || ""}`
                         : "—"}
                     </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{formatDate(item.start_date)}</td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{formatDate(item.end_date)}</td>
-                    <td className="px-6 py-4">{getStatusBadge(currentStatus)}</td>
-                    <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
+                    <td className="text-slate-600 dark:text-slate-300">{formatDate(item.start_date)}</td>
+                    <td className="text-slate-600 dark:text-slate-300">{formatDate(item.end_date)}</td>
+                    <td>{getStatusBadge(currentStatus)}</td>
+                    <td className="col-center relative" onClick={(e) => e.stopPropagation()}>
                       <button 
                         onClick={(e) => handleTriggerClick(e, item)}
                         className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
