@@ -147,11 +147,11 @@ export default function ParentAttendancePage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-xl border border-border card-shadow">
         <div>
-          <h1 className="section-title tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <Clock className="w-6 h-6 text-emerald-500" />
             Attendance Tracker
           </h1>
-          <p className="card-subtitle mt-1">Monitor your child's daily presence</p>
+          <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Monitor your child's daily presence</p>
         </div>
         <div className="w-full sm:w-[250px]">
           <ChildSelector
@@ -212,7 +212,7 @@ export default function ParentAttendancePage() {
                 <TrendingUp className="w-4 h-4 text-white/80" />
                 <p className="text-xs font-bold uppercase tracking-wider text-white/80">Current Streak</p>
               </div>
-              <p className="text-4xl font-black">{streak} <span className="card-title /70">days</span></p>
+              <p className="text-4xl font-black">{streak} <span className="text-lg font-semibold text-white/70">days</span></p>
               <p className="text-[12px] text-white/60 mt-1">Consecutive attendance</p>
             </div>
 

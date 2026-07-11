@@ -374,7 +374,7 @@ export default function ProfilePage() {
             <h1 className="page-title">
               {activeTab === "profile" ? "Profile" : (activeTab === "academic" ? "Academic Settings" : "Login Settings")}
             </h1>
-            <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+            <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
               <span>Dashboard</span>
               <span>/</span>
               <span>Settings</span>
@@ -449,7 +449,7 @@ export default function ProfilePage() {
                   {feature.name}
                 </h3>
                 
-                <p className="card-subtitle text-[13px] flex-1 leading-relaxed">
+                <p className="text-[13px] text-slate-500 dark:text-slate-400 flex-1 leading-relaxed">
                   {feature.description}
                 </p>
               </div>
@@ -679,7 +679,7 @@ export default function ProfilePage() {
                       onChange={e => setName(e.target.value)}
                       disabled={!editMode}
                       placeholder="Full name"
-                      className="card-subtitle px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled: disabled:cursor-default"
+                      className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
                     />
                   </div>
 
@@ -692,7 +692,7 @@ export default function ProfilePage() {
                       onChange={e => setEmail(e.target.value)}
                       disabled={!editMode}
                       placeholder="Email"
-                      className="card-subtitle px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled: disabled:cursor-default"
+                      className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
                     />
                   </div>
 
@@ -705,7 +705,7 @@ export default function ProfilePage() {
                       onChange={e => setPhone(e.target.value)}
                       disabled={!editMode}
                       placeholder="Phone"
-                      className="card-subtitle px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled: disabled:cursor-default"
+                      className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
                     />
                   </div>
 
@@ -719,7 +719,7 @@ export default function ProfilePage() {
                         onChange={e => setOccupation(e.target.value)}
                         disabled={!editMode}
                         placeholder="e.g. Engineer, Teacher..."
-                        className="card-subtitle px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled: disabled:cursor-default"
+                        className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
                       />
                     </div>
                   )}
@@ -731,7 +731,7 @@ export default function ProfilePage() {
                       type="text"
                       value={user?.role?.replace("_", " ") || ""}
                       disabled
-                      className="card-subtitle px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border border-border rounded-lg text-[13px] cursor-default w-full capitalize"
+                      className="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 border border-border rounded-lg text-[13px] text-slate-500 dark:text-slate-400 cursor-default w-full capitalize"
                     />
                   </div>
                 </div>
@@ -753,7 +753,7 @@ export default function ProfilePage() {
                     disabled={!editMode}
                     rows={3}
                     placeholder="Enter your address"
-                    className="card-subtitle px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full resize-none disabled:text-slate-400 dark:disabled: disabled:cursor-default"
+                    className="px-4 py-2.5 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors w-full resize-none disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-default"
                   />
                 </div>
               </div>

@@ -127,7 +127,7 @@ export default function TwoStepVerificationPage() {
             
             <div className="mb-8">
               <h1 className="text-[22px] font-bold text-[#202c4b] dark:text-slate-100 mb-2">Login with your Email Address</h1>
-              <p className="card-subtitle text-[13px] leading-relaxed">
+              <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed">
                 We sent a verification code to your email. Enter the code from the email in the field below
               </p>
             </div>

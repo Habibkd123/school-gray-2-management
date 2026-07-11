@@ -101,7 +101,7 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="page-title md:text-5xl mb-4"
+            className="text-4xl md:text-5xl font-bold text-foreground mb-4"
           >
             {tagline}
           </motion.h2>
@@ -152,7 +152,7 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
                         </span>
                       )}
                       
-                      <h3 className="section-title mb-3">{item.title}</h3>
+                      <h3 className="text-2xl font-bold text-foreground mb-3">{item.title}</h3>
                       
                       {item.description && (
                         <p className="text-muted-text leading-relaxed whitespace-pre-line text-sm md:text-base">

@@ -413,13 +413,13 @@ export default function GenerateReportCardsPage() {
 
       {/* Header */}
       <div>
-        <h1 className="section-title flex items-center gap-3">
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
           <span className="w-9 h-9 rounded-xl bg-amber-600 flex items-center justify-center">
             <BookOpen className="w-5 h-5 text-white" />
           </span>
           Generate Report Cards
         </h1>
-        <p className="card-subtitle text-[13px] mt-1 ml-12">
+        <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 ml-12">
           All data is automatically pulled from the Exam Module — no manual entry required
         </p>
       </div>
@@ -656,7 +656,7 @@ export default function GenerateReportCardsPage() {
         {step === 6 && (
           <div className="space-y-4">
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2"><LayoutTemplate className="w-5 h-5 text-amber-500" /> Choose Report Card Template</h2>
-            <p className="card-subtitle text-[13px]">Select a template — it will be opened in the Document Builder with all data pre-filled.</p>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400">Select a template — it will be opened in the Document Builder with all data pre-filled.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
               {RC_TEMPLATES.map((t) => (
                 <button

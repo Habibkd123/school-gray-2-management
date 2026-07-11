@@ -226,7 +226,7 @@ export default function SchoolsPage() {
           <h1 className="text-[22px] font-bold text-slate-900 dark:text-white">
             Schools Management
           </h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
             <span>Super Admin</span>
             <span>/</span>
             <span className="text-slate-700 dark:text-slate-200">Schools</span>
@@ -261,8 +261,8 @@ export default function SchoolsPage() {
             <Building2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title">{schools.length}</h3>
-            <p className="card-subtitle text-[13px] mt-0.5">Total Registered Schools</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{schools.length}</h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">Total Registered Schools</p>
           </div>
         </div>
 
@@ -271,8 +271,8 @@ export default function SchoolsPage() {
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title">{activeSchools}</h3>
-            <p className="card-subtitle text-[13px] mt-0.5">Active Schools</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{activeSchools}</h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">Active Schools</p>
           </div>
         </div>
 
@@ -281,8 +281,8 @@ export default function SchoolsPage() {
             <XCircle className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title">{inactiveSchools}</h3>
-            <p className="card-subtitle text-[13px] mt-0.5">Inactive Schools</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{inactiveSchools}</h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">Inactive Schools</p>
           </div>
         </div>
       </div>
@@ -316,7 +316,7 @@ export default function SchoolsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="erp-table">
+            <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
                   <th className="px-6 py-4 text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">School Details</th>

@@ -95,7 +95,7 @@ export default function MyAttendancePage() {
         <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-8 card-shadow text-center max-w-md mx-auto mt-8">
           <ShieldAlert className="w-12 h-12 text-amber-500 mx-auto mb-4" />
           <h3 className="text-[16px] font-bold text-slate-900 dark:text-white mb-2">Roster Not Tracked</h3>
-          <p className="card-subtitle text-[13px] leading-relaxed">
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed">
             Attendance tracking is only configured for **Student** and **Teacher** roles. Your account role ({user?.role?.replace("_", " ")}) does not have an attendance schedule.
           </p>
         </div>
@@ -207,7 +207,7 @@ export default function MyAttendancePage() {
                 <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Present</span>
                 <CheckCircle2 className="w-4 h-4 text-emerald-500" />
               </div>
-              <span className="section-title text-emerald-600 block mt-1">
+              <span className="text-2xl font-bold text-emerald-600 block mt-1">
                 {presentCount}
               </span>
             </div>
@@ -217,7 +217,7 @@ export default function MyAttendancePage() {
                 <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Absent</span>
                 <ShieldAlert className="w-4 h-4 text-rose-500" />
               </div>
-              <span className="section-title text-rose-600 block mt-1">
+              <span className="text-2xl font-bold text-rose-600 block mt-1">
                 {absentCount}
               </span>
             </div>
@@ -227,7 +227,7 @@ export default function MyAttendancePage() {
                 <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Leave</span>
                 <Clock className="w-4 h-4 text-violet-500" />
               </div>
-              <span className="section-title text-violet-600 block mt-1">
+              <span className="text-2xl font-bold text-violet-600 block mt-1">
                 {leaveCount}
               </span>
             </div>
@@ -237,7 +237,7 @@ export default function MyAttendancePage() {
                 <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Monthly Percentage</span>
                 <CalendarIcon className="w-4 h-4 text-slate-400 dark:text-slate-500" />
               </div>
-              <span className="section-title block mt-1">
+              <span className="text-2xl font-bold text-slate-900 dark:text-white block mt-1">
                 {attendanceRate}%
               </span>
             </div>
@@ -259,7 +259,7 @@ export default function MyAttendancePage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="erp-table text-[13px]">
+                <table className="w-full text-[13px] border-collapse text-left">
                   <thead>
                     <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400">
                       <th className="px-6 py-3.5">Date</th>

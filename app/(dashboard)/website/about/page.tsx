@@ -311,7 +311,7 @@ export default function AboutPage() {
         </div>
 
         {data.management_team.length === 0 ? (
-          <div className="card-subtitle text-center py-8 text-slate-600 dark: text-[13px] dark:text-slate-600 dark:">
+          <div className="text-center py-8 text-slate-600 dark:text-slate-500 text-[13px] dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">
             No team members yet. Click "Add Member" to get started.
           </div>
         ) : (

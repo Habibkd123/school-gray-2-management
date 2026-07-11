@@ -44,7 +44,7 @@ export default async function StudentLifeCulturalPage() {
                 </div>
                 <div>
                   <h2 className="text-[12px] font-bold text-purple-500 uppercase tracking-wider">Arts & Performance</h2>
-                  <h3 className="section-title font-serif">Nurturing Creative Talents</h3>
+                  <h3 className="text-2xl font-serif font-bold text-foreground">Nurturing Creative Talents</h3>
                 </div>
               </div>
 

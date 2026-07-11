@@ -24,7 +24,7 @@ export default function NotFound() {
           Oops, something went wrong
         </h1>
         
-        <p className="card-subtitle text-[13px] mb-8 leading-relaxed max-w-full sm:w-[300px]">
+        <p className="text-[13px] text-gray-500 mb-8 leading-relaxed max-w-full sm:w-[300px]">
           Error 404 Page not found. Sorry the page you looking for doesn't exist or has been moved
         </p>
 

@@ -279,7 +279,7 @@ export default function SchedulePage() {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-border shadow-sm">
         <div className="text-left">
-          <h1 className="section-title flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <Layout className="w-6 h-6 text-primary" />
             My Routines
           </h1>

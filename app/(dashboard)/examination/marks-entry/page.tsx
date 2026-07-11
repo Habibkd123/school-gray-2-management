@@ -652,7 +652,7 @@ export default function MarksEntryPage() {
 
         {/* Dynamic marks entry table layout */}
         <div className="overflow-x-auto relative">
-          <table className="erp-table text-xs">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-950/10 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
                 <th className="px-6 py-4 w-20">Roll No</th>

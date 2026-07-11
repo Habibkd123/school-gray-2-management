@@ -67,7 +67,7 @@ export function Achievements({ data }: { data?: StudentLifeData | null }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="page-title md:text-5xl mb-6 leading-tight"
+            className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight"
           >
             Student Achievements
           </motion.h3>
@@ -104,7 +104,7 @@ export function Achievements({ data }: { data?: StudentLifeData | null }) {
                     <div className="w-20 h-20 mx-auto rounded-lg bg-primary/10 dark:bg-white/5 text-primary dark:text-[color-mix(in_srgb,var(--primary)_40%,white)] flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-300 shadow-sm border border-primary/20 dark:border-white/10">
                       <IconComp className="w-10 h-10" />
                     </div>
-                    <h4 className="section-title mb-2">{item.year}</h4>
+                    <h4 className="text-2xl font-bold text-foreground mb-2">{item.year}</h4>
                     <h5 className="font-bold text-primary dark:text-[color-mix(in_srgb,var(--primary)_40%,white)] text-lg mb-3">{item.title}</h5>
                     {item.description && (
                       <p className="text-muted-text text-sm leading-relaxed">
@@ -133,7 +133,7 @@ export function Achievements({ data }: { data?: StudentLifeData | null }) {
                 <div className="w-20 h-20 mx-auto rounded-lg bg-primary/10 dark:bg-white/5 text-primary dark:text-[color-mix(in_srgb,var(--primary)_40%,white)] flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-primary group-hover:text-white transition-all duration-300 border border-primary/20 dark:border-white/10">
                   <item.icon className="w-10 h-10" />
                 </div>
-                <h4 className="page-title mb-2">{item.number}</h4>
+                <h4 className="text-3xl font-bold text-foreground mb-2">{item.number}</h4>
                 <p className="text-muted-text font-bold text-xs uppercase tracking-widest">{item.label}</p>
               </motion.div>
             ))}

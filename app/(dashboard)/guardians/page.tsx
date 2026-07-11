@@ -312,7 +312,7 @@ export default function GuardiansPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Guardians & Parents</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Parents</span>
@@ -494,7 +494,7 @@ export default function GuardiansPage() {
         </div>
 
         {/* Rows per page */}
-        <div className="card-subtitle px-4 py-3 bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800/50 flex flex-wrap items-center justify-between gap-4 text-[13px]">
+        <div className="px-4 py-3 bg-slate-50/50 dark:bg-slate-800/20 border-b border-slate-100 dark:border-slate-800/50 flex flex-wrap items-center justify-between gap-4 text-[13px] text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
             <span>Show</span>
             <select

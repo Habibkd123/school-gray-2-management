@@ -39,7 +39,7 @@ export default function StudentPortalLayout({
           >
             <Loader2 className="w-6 h-6 text-white animate-spin" />
           </div>
-          <p className="card-subtitle text-[13px]">
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
             Loading Student Portal...
           </p>
         </div>

@@ -108,19 +108,19 @@ export default function AdmissionsReportsPage() {
             <div className="space-y-4">
               <div className="p-4 bg-slate-50 dark:bg-slate-850 border border-border rounded-xl">
                 <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Total Submissions</span>
-                <span className="section-title block mt-1">{totalApps}</span>
+                <span className="text-2xl font-bold text-slate-900 dark:text-white block mt-1">{totalApps}</span>
               </div>
 
               <div className="p-4 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
                 <span className="text-[11px] font-bold text-emerald-600/70 dark:text-emerald-500 uppercase tracking-wide">Approved Enrollments</span>
-                <span className="section-title text-emerald-500 block mt-1">
+                <span className="text-2xl font-bold text-emerald-500 block mt-1">
                   {(statusCounts["Approved"] || 0) + (statusCounts["Admission Completed"] || 0)}
                 </span>
               </div>
 
               <div className="p-4 bg-indigo-500/5 border border-indigo-500/10 rounded-xl">
                 <span className="text-[11px] font-bold text-indigo-500/70 uppercase tracking-wide">Conversion Rate</span>
-                <span className="section-title text-indigo-500 block mt-1 flex items-center gap-2">
+                <span className="text-2xl font-bold text-indigo-500 block mt-1 flex items-center gap-2">
                   <TrendingUp className="w-6 h-6" /> {conversionRate}%
                 </span>
               </div>
@@ -149,7 +149,7 @@ export default function AdmissionsReportsPage() {
               <div className="py-16 text-center text-slate-400">No data found.</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="erp-table">
+                <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-border text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                       <th className="py-3 px-2">Class Name</th>

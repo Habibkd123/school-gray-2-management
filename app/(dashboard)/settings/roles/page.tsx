@@ -406,11 +406,11 @@ export default function RolesPermissionsPage() {
       {/* ── Page Header ─────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="section-title tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
             <Shield className="w-6 h-6 text-amber-500" />
             Roles & Permissions
           </h1>
-          <p className="card-subtitle mt-1">
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
             Configure or view access levels for each role in your school management system.
           </p>
         </div>

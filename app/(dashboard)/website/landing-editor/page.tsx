@@ -395,7 +395,7 @@ export default function LandingEditorPage() {
               </button>
             </div>
             {data.hero_stats.length === 0 ? (
-              <div className="card-subtitle text-center py-8 text-slate-600 dark: text-[13px] border border-dashed border-slate-700/40 rounded-xl dark:text-slate-600 dark:">
+              <div className="text-center py-8 text-slate-600 dark:text-slate-500 text-[13px] border border-dashed border-slate-700/40 rounded-xl dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">
                 No stats added — hero stats section will be hidden on landing page.
               </div>
             ) : (
@@ -440,7 +440,7 @@ export default function LandingEditorPage() {
             </button>
           </div>
           {data.highlights.length === 0 ? (
-            <div className="card-subtitle text-center py-10 text-slate-600 dark: text-[13px] dark:text-slate-600 dark:">No highlights defined yet. Click "Add Stat" to create one.</div>
+            <div className="text-center py-10 text-slate-600 dark:text-slate-500 text-[13px] dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">No highlights defined yet. Click "Add Stat" to create one.</div>
           ) : (
             <div className="space-y-4">
               {data.highlights.map((h, i) => (
@@ -483,7 +483,7 @@ export default function LandingEditorPage() {
             </button>
           </div>
           {data.why_choose_us.length === 0 ? (
-            <div className="card-subtitle text-center py-10 text-slate-600 dark: text-[13px] dark:text-slate-600 dark:">No features defined yet.</div>
+            <div className="text-center py-10 text-slate-600 dark:text-slate-500 text-[13px] dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">No features defined yet.</div>
           ) : (
             <div className="space-y-4">
               {data.why_choose_us.map((f, i) => (
@@ -533,7 +533,7 @@ export default function LandingEditorPage() {
             </button>
           </div>
           {data.facilities.length === 0 ? (
-            <div className="card-subtitle text-center py-10 text-slate-600 dark: text-[13px] dark:text-slate-600 dark:">No facilities defined yet.</div>
+            <div className="text-center py-10 text-slate-600 dark:text-slate-500 text-[13px] dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">No facilities defined yet.</div>
           ) : (
             <div className="grid md:grid-cols-2 gap-4">
               {data.facilities.map((f, i) => (
@@ -567,7 +567,7 @@ export default function LandingEditorPage() {
             </button>
           </div>
           {data.testimonials.length === 0 ? (
-            <div className="card-subtitle text-center py-10 text-slate-600 dark: text-[13px] dark:text-slate-600 dark:">No testimonials added.</div>
+            <div className="text-center py-10 text-slate-600 dark:text-slate-500 text-[13px] dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">No testimonials added.</div>
           ) : (
             <div className="space-y-4">
               {data.testimonials.map((t, i) => (
@@ -624,7 +624,7 @@ export default function LandingEditorPage() {
             </button>
           </div>
           {data.faqs.length === 0 ? (
-            <div className="card-subtitle text-center py-10 text-slate-600 dark: text-[13px] dark:text-slate-600 dark:">No FAQs created.</div>
+            <div className="text-center py-10 text-slate-600 dark:text-slate-500 text-[13px] dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">No FAQs created.</div>
           ) : (
             <div className="space-y-4">
               {data.faqs.map((faq, i) => (

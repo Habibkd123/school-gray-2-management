@@ -34,7 +34,6 @@ import {
 import { PrintButton } from "@/app/components/ui/PrintButton";
 import Link from "next/link";
 import { CollectFeesModal } from "../../components/modals/CollectFeesModal";
-import { SearchToolbar, ColumnSetting } from "@/app/components/ui/SearchToolbar";
 
 interface StudentFeeRow {
   _id: string;
@@ -100,60 +99,9 @@ export default function FeesPage() {
   const [feeTypeFilter, setFeeTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [dueStatusFilter, setDueStatusFilter] = useState("");
-  const [dateFromFilter, setDateFromFilter] = useState("");
-  const [dateToFilter, setDateToFilter] = useState("");
-
-  // Column preferences
-  const DEFAULT_COLUMNS = useMemo(() => [
-    { id: "student", label: "Student Name", visible: true, mandatory: true },
-    { id: "admission_no", label: "Admission No", visible: true },
-    { id: "class", label: "Class", visible: true },
-    { id: "section", label: "Section", visible: true },
-    { id: "guardian", label: "Guardian", visible: false },
-    { id: "fee_structure", label: "Fee Structure", visible: true },
-    { id: "total_fees", label: "Total Fees", visible: true },
-    { id: "total_paid", label: "Total Paid", visible: true },
-    { id: "balance", label: "Balance", visible: true },
-    { id: "due_status", label: "Due Status", visible: true },
-    { id: "payment_status", label: "Payment Status", visible: true },
-    { id: "last_payment", label: "Last Payment", visible: true },
-    { id: "actions", label: "Actions", visible: true, mandatory: true }
-  ], []);
-
-  const [columnSettings, setColumnSettings] = useState<ColumnSetting[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("fees_column_settings");
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {
-          // ignore
-        }
-      }
-    }
-    return [
-      { id: "student", label: "Student Name", visible: true, mandatory: true },
-      { id: "admission_no", label: "Admission No", visible: true },
-      { id: "class", label: "Class", visible: true },
-      { id: "section", label: "Section", visible: true },
-      { id: "guardian", label: "Guardian", visible: false },
-      { id: "fee_structure", label: "Fee Structure", visible: true },
-      { id: "total_fees", label: "Total Fees", visible: true },
-      { id: "total_paid", label: "Total Paid", visible: true },
-      { id: "balance", label: "Balance", visible: true },
-      { id: "due_status", label: "Due Status", visible: true },
-      { id: "payment_status", label: "Payment Status", visible: true },
-      { id: "last_payment", label: "Last Payment", visible: true },
-      { id: "actions", label: "Actions", visible: true, mandatory: true }
-    ];
-  });
-
-  const saveColumns = (newCols: ColumnSetting[]) => {
-    setColumnSettings(newCols);
-    localStorage.setItem("fees_column_settings", JSON.stringify(newCols));
-  };
 
   // Teacher dropdown search popover states
+  const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
   const [teacherSearchText, setTeacherSearchText] = useState("");
 
   // Row selection checkbox states
@@ -227,433 +175,6 @@ export default function FeesPage() {
     });
   }, [teachers, teacherSearchText]);
 
-  // Active filters count
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (classFilter) count++;
-    if (sectionFilter) count++;
-    if (teacherFilter) count++;
-    if (feeTypeFilter) count++;
-    if (statusFilter) count++;
-    if (dueStatusFilter) count++;
-    if (dateFromFilter) count++;
-    if (dateToFilter) count++;
-    return count;
-  }, [classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter, dateFromFilter, dateToFilter]);
-
-  // Reset all active filters
-  const handleResetFilters = useCallback(() => {
-    setClassFilter("");
-    setSectionFilter("");
-    setTeacherFilter("");
-    setFeeTypeFilter("");
-    setStatusFilter("");
-    setDueStatusFilter("");
-    setDateFromFilter("");
-    setDateToFilter("");
-    setCurrentPage(1);
-  }, []);
-
-  // Filter configuration mapping for SearchToolbar
-  const filterConfig = useMemo(() => [
-    {
-      id: "academic_year",
-      label: "Session",
-      type: "select" as const,
-      value: academicYearFilter,
-      onChange: (val: string) => {
-        setAcademicYearFilter(val);
-        setCurrentPage(1);
-      },
-      options: [
-        { label: "Session 2026", value: "2026" },
-        { label: "Session 2027", value: "2027" }
-      ]
-    },
-    {
-      id: "class_id",
-      label: "Class",
-      type: "select" as const,
-      value: classFilter,
-      onChange: (val: string) => {
-        setClassFilter(val);
-        setCurrentPage(1);
-      },
-      options: classes.map(c => ({ label: `${c.name} - ${c.section}`, value: c._id }))
-    },
-    {
-      id: "section",
-      label: "Section",
-      type: "select" as const,
-      value: sectionFilter,
-      onChange: (val: string) => {
-        setSectionFilter(val);
-        setCurrentPage(1);
-      },
-      options: sectionsList.map(s => ({ label: `Section ${s}`, value: s }))
-    },
-    {
-      id: "teacher_id",
-      label: "Teacher",
-      type: "autocomplete" as const,
-      value: teacherFilter,
-      onChange: (val: string) => {
-        setTeacherFilter(val);
-        setCurrentPage(1);
-      },
-      onSearch: (q: string) => {
-        setTeacherSearchText(q);
-      },
-      filteredOptions: filteredTeachersForDropdown.map(t => ({
-        label: t.name,
-        value: t._id,
-        description: `${t.employee_id || "No ID"} • ${t.department || "No Dept"}`,
-        badge: t.is_active ? "Active" : "Inactive"
-      }))
-    },
-    {
-      id: "fee_type",
-      label: "Fee Type",
-      type: "select" as const,
-      value: feeTypeFilter,
-      onChange: (val: string) => {
-        setFeeTypeFilter(val);
-        setCurrentPage(1);
-      },
-      options: feeTypeNames.map(name => ({ label: name, value: name }))
-    },
-    {
-      id: "status",
-      label: "Payment Status",
-      type: "select" as const,
-      value: statusFilter,
-      onChange: (val: string) => {
-        setStatusFilter(val);
-        setCurrentPage(1);
-      },
-      options: [
-        { label: "Paid", value: "Paid" },
-        { label: "Partial", value: "Partial" },
-        { label: "Pending", value: "Pending" }
-      ]
-    },
-    {
-      id: "due_status",
-      label: "Due Status",
-      type: "select" as const,
-      value: dueStatusFilter,
-      onChange: (val: string) => {
-        setDueStatusFilter(val);
-        setCurrentPage(1);
-      },
-      options: [
-        { label: "Overdue Dues", value: "Overdue" },
-        { label: "Due Dues", value: "Due" },
-        { label: "No Dues Outstanding", value: "No Due" }
-      ]
-    },
-    {
-      id: "date_from",
-      label: "Date From",
-      type: "date" as const,
-      value: dateFromFilter,
-      onChange: (val: string) => {
-        setDateFromFilter(val);
-        setCurrentPage(1);
-      }
-    },
-    {
-      id: "date_to",
-      label: "Date To",
-      type: "date" as const,
-      value: dateToFilter,
-      onChange: (val: string) => {
-        setDateToFilter(val);
-        setCurrentPage(1);
-      }
-    }
-  ], [academicYearFilter, classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter, dateFromFilter, dateToFilter, classes, sectionsList, filteredTeachersForDropdown]);
-
-  // Columns visibility visibility lookup helper
-  const isColVisible = useCallback((id: string) => {
-    return columnSettings.find(c => c.id === id)?.visible ?? false;
-  }, [columnSettings]);
-
-  // Column preferences handlers
-  const handleColumnToggle = useCallback((columnId: string) => {
-    const updated = columnSettings.map(c => c.id === columnId ? { ...c, visible: !c.visible } : c);
-    saveColumns(updated);
-  }, [columnSettings]);
-
-  const handleResetColumns = useCallback(() => {
-    saveColumns(DEFAULT_COLUMNS);
-  }, [DEFAULT_COLUMNS]);
-
-  const handleSelectAllColumns = useCallback(() => {
-    const updated = columnSettings.map(c => ({ ...c, visible: true }));
-    saveColumns(updated);
-  }, [columnSettings]);
-
-  const handleClearAllColumns = useCallback(() => {
-    const updated = columnSettings.map(c => c.mandatory ? c : { ...c, visible: false });
-    saveColumns(updated);
-  }, [columnSettings]);
-
-  // Export Action Handlers (CSV / Excel / PDF)
-  const handleExport = useCallback(async (format: "csv" | "excel" | "pdf") => {
-    try {
-      const params = new URLSearchParams({
-        limit: "100000",
-        search,
-        academic_year: academicYearFilter,
-        class_id: classFilter,
-        section: sectionFilter,
-        teacher_id: teacherFilter,
-        fee_type: feeTypeFilter,
-        status: statusFilter,
-        due_status: dueStatusFilter,
-        date_from: dateFromFilter,
-        date_to: dateToFilter
-      });
-      const res = await fetch(`/api/fees?${params.toString()}`, { headers: getAuthHeaders() });
-      const data = await res.json();
-      if (!data.success || !data.data?.students) {
-        alert("Failed to fetch data for export.");
-        return;
-      }
-
-      const records = data.data.students;
-
-      if (format === "csv") {
-        let csv = "Student Name,Admission No,Class,Guardian Name,Guardian Phone,Total Fees,Total Paid,Balance,Status,Due Status\n";
-        records.forEach((s: any) => {
-          csv += `"${s.name}","${s.admission_no}","${s.class_name}","${s.guardian_name}","${s.guardian_phone}",${s.totalFees},${s.totalPaid},${s.balanceAmount},"${s.status}","${s.dueStatus}"\n`;
-        });
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `fees_export_${new Date().toISOString().split("T")[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else if (format === "excel") {
-        const rows = records.map((s: any) => ({
-          "Student Name": s.name,
-          "Admission No": s.admission_no,
-          "Class": s.class_name,
-          "Guardian": `${s.guardian_name} (${s.guardian_relation})`,
-          "Guardian Phone": s.guardian_phone,
-          "Total Fees": s.totalFees,
-          "Total Paid": s.totalPaid,
-          "Balance": s.balanceAmount,
-          "Payment Status": s.status,
-          "Due Status": s.dueStatus
-        }));
-        const XLSX = await import("xlsx");
-        const worksheet = XLSX.utils.json_to_sheet(rows);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Fees Ledger");
-        XLSX.writeFile(workbook, `fees_export_${new Date().toISOString().split("T")[0]}.xlsx`);
-      } else if (format === "pdf") {
-        const printWin = window.open("", "_blank");
-        if (!printWin) {
-          alert("Popup blocked! Please allow popups for exporting PDF.");
-          return;
-        }
-        let rowsHtml = "";
-        records.forEach((s: any) => {
-          rowsHtml += `
-            <tr>
-              <td>${s.name}</td>
-              <td>${s.admission_no}</td>
-              <td>${s.class_name}</td>
-              <td>${s.guardian_name}</td>
-              <td>₹${s.totalFees.toLocaleString("en-IN")}</td>
-              <td style="color: #059669">₹${s.totalPaid.toLocaleString("en-IN")}</td>
-              <td style="color: #e11d48">₹${s.balanceAmount.toLocaleString("en-IN")}</td>
-              <td>${s.status}</td>
-              <td>${s.dueStatus}</td>
-            </tr>
-          `;
-        });
-
-        printWin.document.write(`
-          <html>
-            <head>
-              <title>Fees Ledger Report</title>
-              <style>
-                body { font-family: system-ui, sans-serif; color: #1e293b; padding: 24px; }
-                h1 { text-align: center; font-size: 20px; font-weight: 800; margin-bottom: 24px; text-transform: uppercase; }
-                table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 11px; }
-                th, td { border: 1px solid #e2e8f0; padding: 8px 12px; text-align: left; }
-                th { background-color: #f1f5f9; font-weight: 700; }
-                @media print {
-                  @page { size: A4 landscape; margin: 10mm; }
-                }
-              </style>
-            </head>
-            <body>
-              <h1>Student Fees Ledger Statement</h1>
-              <p>Generated on: ${new Date().toLocaleDateString("en-IN")}</p>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Student Name</th>
-                    <th>Admission No</th>
-                    <th>Class</th>
-                    <th>Guardian</th>
-                    <th>Total Fees</th>
-                    <th>Total Paid</th>
-                    <th>Balance</th>
-                    <th>Payment Status</th>
-                    <th>Due Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${rowsHtml}
-                </tbody>
-              </table>
-              <script>
-                window.onload = function() {
-                  window.print();
-                  setTimeout(function() { window.close(); }, 500);
-                }
-              </script>
-            </body>
-          </html>
-        `);
-        printWin.document.close();
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error exporting data.");
-    }
-  }, [search, academicYearFilter, classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter, dateFromFilter, dateToFilter]);
-
-  // Print Visibility Columns Handler
-  const handlePrint = useCallback(() => {
-    const printWin = window.open("", "_blank");
-    if (!printWin) {
-      alert("Popup blocked! Please allow popups for printing.");
-      return;
-    }
-
-    let headersHtml = "";
-    columnSettings.forEach(col => {
-      if (col.visible && col.id !== "actions") {
-        headersHtml += `<th style="text-align: ${col.id.includes("fees") || col.id.includes("paid") || col.id === "balance" ? "right" : "left"};">${col.label}</th>`;
-      }
-    });
-
-    let rowsHtml = "";
-    students.forEach(student => {
-      let rowCellsHtml = "";
-      columnSettings.forEach(col => {
-        if (col.visible && col.id !== "actions") {
-          let cellVal = "";
-          let alignStyle = `text-align: left;`;
-          let colorStyle = "";
-
-          if (col.id === "student") {
-            cellVal = student.name;
-          } else if (col.id === "admission_no") {
-            cellVal = student.admission_no;
-          } else if (col.id === "class") {
-            cellVal = student.class_name.split(" - ")[0];
-          } else if (col.id === "section") {
-            cellVal = student.section;
-          } else if (col.id === "guardian") {
-            cellVal = `${student.guardian_name} (${student.guardian_relation})`;
-          } else if (col.id === "fee_structure") {
-            cellVal = student.fee_structure.join(", ");
-          } else if (col.id === "total_fees") {
-            cellVal = money(student.totalFees);
-            alignStyle = `text-align: right;`;
-          } else if (col.id === "total_paid") {
-            cellVal = money(student.totalPaid);
-            alignStyle = `text-align: right;`;
-            colorStyle = `color: #059669; font-weight: bold;`;
-          } else if (col.id === "balance") {
-            cellVal = money(student.balanceAmount);
-            alignStyle = `text-align: right;`;
-            colorStyle = `color: #e11d48; font-weight: bold;`;
-          } else if (col.id === "due_status") {
-            cellVal = student.dueStatus;
-          } else if (col.id === "payment_status") {
-            cellVal = student.status;
-          } else if (col.id === "last_payment") {
-            cellVal = student.lastPaymentDate ? `${money(student.lastPaidAmount)} (${fmtDate(student.lastPaymentDate)})` : "—";
-          }
-
-          rowCellsHtml += `<td style="${alignStyle} ${colorStyle}">${cellVal}</td>`;
-        }
-      });
-      rowsHtml += `<tr>${rowCellsHtml}</tr>`;
-    });
-
-    const activeFiltersList: string[] = [];
-    if (classFilter) {
-      const cls = classes.find(c => c._id === classFilter);
-      if (cls) activeFiltersList.push(`Class: ${cls.name} - ${cls.section}`);
-    }
-    if (sectionFilter) activeFiltersList.push(`Section: ${sectionFilter}`);
-    if (teacherFilter) {
-      const t = teachers.find(item => item._id === teacherFilter);
-      if (t) activeFiltersList.push(`Teacher: ${t.name}`);
-    }
-    if (feeTypeFilter) activeFiltersList.push(`Fee Type: ${feeTypeFilter}`);
-    if (statusFilter) activeFiltersList.push(`Payment: ${statusFilter}`);
-    if (dueStatusFilter) activeFiltersList.push(`Due Status: ${dueStatusFilter}`);
-    if (dateFromFilter) activeFiltersList.push(`From: ${dateFromFilter}`);
-    if (dateToFilter) activeFiltersList.push(`To: ${dateToFilter}`);
-
-    const filterString = activeFiltersList.length > 0 ? activeFiltersList.join(" | ") : "None";
-
-    printWin.document.write(`
-      <html>
-        <head>
-          <title>Dues Ledger Print - Current Page</title>
-          <style>
-            body { font-family: system-ui, sans-serif; color: #1e293b; padding: 24px; }
-            h1 { font-size: 18px; font-weight: 800; margin: 0 0 4px 0; text-transform: uppercase; }
-            .meta-info { font-size: 11px; color: #64748b; margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; }
-            table { width: 100%; border-collapse: collapse; font-size: 11px; }
-            th, td { border: 1px solid #e2e8f0; padding: 8px 12px; }
-            th { background-color: #f8fafc; font-weight: 700; color: #475569; }
-            @media print {
-              @page { size: A4; margin: 8mm; }
-            }
-          </style>
-        </head>
-        <body>
-          <h1>Student Fees Ledger Statement</h1>
-          <div class="meta-info">
-            <strong>Active Filters:</strong> ${filterString} <br/>
-            <strong>Printed on:</strong> ${new Date().toLocaleString("en-IN")}
-          </div>
-          <table>
-            <thead>
-              <tr>
-                ${headersHtml}
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHtml}
-            </tbody>
-          </table>
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWin.document.close();
-  }, [columnSettings, students, classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter, dateFromFilter, dateToFilter, classes, teachers]);
-
   // Load students & totals with pagination & filters
   const fetchStudents = useCallback(async () => {
     setIsLoading(true);
@@ -668,9 +189,7 @@ export default function FeesPage() {
         teacher_id: teacherFilter,
         fee_type: feeTypeFilter,
         status: statusFilter,
-        due_status: dueStatusFilter,
-        date_from: dateFromFilter,
-        date_to: dateToFilter
+        due_status: dueStatusFilter
       });
       const res = await fetch(`/api/fees?${params.toString()}`, { headers: getAuthHeaders() });
       const data = await res.json();
@@ -684,7 +203,7 @@ export default function FeesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, search, academicYearFilter, classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter, dateFromFilter, dateToFilter]);
+  }, [currentPage, search, academicYearFilter, classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter]);
 
   useEffect(() => {
     fetchStudents();
@@ -1190,10 +709,10 @@ export default function FeesPage() {
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
       {/* Header Desk */}
-      <div className="page-header flex justify-between items-center">
+      <div className="page-header">
         <div>
           <h1 className="page-title">Billing Ledger Desk</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <span className="hover:text-primary">Finance</span>
@@ -1236,32 +755,219 @@ export default function FeesPage() {
 
       {activeTab === "ledger" && (
         <>
-          <SearchToolbar
-            searchQuery={search}
-            onSearchChange={(val) => {
-              setSearch(val);
-              setCurrentPage(1);
-            }}
-            searchPlaceholder="Search student name, admission no, guardian..."
-            filters={filterConfig}
-            activeFiltersCount={activeFiltersCount}
-            onResetFilters={handleResetFilters}
-            columns={columnSettings}
-            onColumnToggle={handleColumnToggle}
-            onResetColumns={handleResetColumns}
-            onSelectAllColumns={handleSelectAllColumns}
-            onClearAllColumns={handleClearAllColumns}
-            onExport={handleExport}
-            onPrint={handlePrint}
-          />
+          {/* SEARCH AND FILTERS */}
+          <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 flex flex-col gap-4 text-left shadow-sm">
+
+            {/* Top row: search & academic session */}
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <div className="relative flex-1 w-full">
+                <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  placeholder="Search student, adm no, guardian, receipt no..."
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none"
+                />
+              </div>
+
+              {/* Academic Year Filter */}
+              <div className="relative w-full md:w-44">
+                <select
+                  value={academicYearFilter}
+                  onChange={(e) => {
+                    setAcademicYearFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="2026">Session 2026</option>
+                  <option value="2027">Session 2027</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Bottom Row Filters */}
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+              {/* Class Filter */}
+              <div className="relative w-full">
+                <select
+                  value={classFilter}
+                  onChange={(e) => {
+                    setClassFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">All Classes</option>
+                  {classes.map((cls) => (
+                    <option key={cls._id} value={cls._id}>
+                      {cls.name} - {cls.section}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
+
+              {/* Section Filter */}
+              <div className="relative w-full">
+                <select
+                  value={sectionFilter}
+                  onChange={(e) => {
+                    setSectionFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">All Sections</option>
+                  {sectionsList.map((sec) => (
+                    <option key={sec} value={sec}>
+                      Section {sec}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
+
+              {/* Teacher Dropdown Custom filter select */}
+              <div className="relative w-full col-span-2 md:col-span-2">
+                <div
+                  onClick={() => setIsTeacherDropdownOpen(!isTeacherDropdownOpen)}
+                  className="w-full px-3 py-2 border border-border rounded-xl text-xs font-bold bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 cursor-pointer flex items-center justify-between outline-none"
+                >
+                  {selectedTeacherDetails ? (
+                    <span className="truncate">{selectedTeacherDetails.name} ({selectedTeacherDetails.employee_id || "No ID"})</span>
+                  ) : (
+                    <span className="text-slate-400 font-bold">Filter By Teacher</span>
+                  )}
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                </div>
+
+                {isTeacherDropdownOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsTeacherDropdownOpen(false)} />
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-50 p-2.5 max-h-[250px] flex flex-col gap-2">
+                      <div className="relative">
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
+                        <input
+                          type="text"
+                          placeholder="Search Teacher name/ID..."
+                          value={teacherSearchText}
+                          onChange={(e) => setTeacherSearchText(e.target.value)}
+                          className="w-full pl-8 pr-3 py-1.5 border border-border rounded-lg text-xs outline-none bg-slate-50 dark:bg-slate-900 text-foreground font-bold"
+                        />
+                      </div>
+                      <div className="overflow-y-auto flex-1 divide-y divide-border pr-1 max-h-[160px] text-xs">
+                        <div
+                          onClick={() => {
+                            setTeacherFilter("");
+                            setIsTeacherDropdownOpen(false);
+                            setTeacherSearchText("");
+                            setCurrentPage(1);
+                          }}
+                          className={`p-2 rounded-lg cursor-pointer transition-colors hover:bg-slate-50 dark:hover:bg-slate-900 font-bold text-slate-500`}
+                        >
+                          Clear Teacher Filter
+                        </div>
+                        {filteredTeachersForDropdown.length === 0 ? (
+                          <p className="text-slate-400 text-center py-4 font-bold">No active teachers found.</p>
+                        ) : (
+                          filteredTeachersForDropdown.map((t) => (
+                            <div
+                              key={t._id}
+                              onClick={() => {
+                                setTeacherFilter(t._id);
+                                setIsTeacherDropdownOpen(false);
+                                setTeacherSearchText("");
+                                setCurrentPage(1);
+                              }}
+                              className={`p-2 rounded-lg cursor-pointer transition-colors flex justify-between items-center ${teacherFilter === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                                }`}
+                            >
+                              <div className="text-left">
+                                <p className="font-extrabold text-slate-800 dark:text-slate-200">{t.name}</p>
+                                <p className="text-[10px] text-slate-450 mt-0.5">{t.employee_id || "No ID"} • {t.department || "No Dept"}</p>
+                              </div>
+                              <span className={`px-1.5 py-0.2 rounded text-[8px] font-black uppercase ${t.is_active ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-500"}`}>
+                                {t.is_active ? "Active" : "Inactive"}
+                              </span>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Fee Type Filter */}
+              <div className="relative w-full">
+                <select
+                  value={feeTypeFilter}
+                  onChange={(e) => {
+                    setFeeTypeFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">All Fee Types</option>
+                  {feeTypeNames.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
+
+              {/* Status Filter */}
+              <div className="relative w-full">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Partial">Partial</option>
+                  <option value="Pending">Pending</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
+
+              {/* Due Status Filter */}
+              <div className="relative w-full">
+                <select
+                  value={dueStatusFilter}
+                  onChange={(e) => {
+                    setDueStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">All Dues Status</option>
+                  <option value="Overdue">Overdue Dues</option>
+                  <option value="Due">Due Dues</option>
+                  <option value="No Due">No Dues Outstanding</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
+          </div>
 
           {/* STUDENT FEES LIST TABLE */}
-          <div className="erp-table-wrap text-left relative bg-white dark:bg-slate-900 border border-border rounded-2xl shadow-sm overflow-hidden">
+          <div className="erp-table-wrap text-left relative">
             <div className="overflow-x-auto">
-              <table className="erp-table w-full border-collapse">
+              <table className="erp-table">
                 <thead>
-                  <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-800/20">
-                    <th className="w-10 col-center p-3">
+                  <tr>
+                    <th className="w-10 col-center">
                       <input
                         type="checkbox"
                         checked={students.length > 0 && selectedStudentIds.length === students.length}
@@ -1269,42 +975,30 @@ export default function FeesPage() {
                         className="w-4 h-4 accent-primary cursor-pointer rounded"
                       />
                     </th>
-                    {isColVisible("student") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-550 uppercase tracking-wider">Student Name</th>}
-                    {isColVisible("admission_no") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Admission No</th>}
-                    {isColVisible("class") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Class</th>}
-                    {isColVisible("section") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Section</th>}
-                    {isColVisible("guardian") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Guardian</th>}
-                    {isColVisible("fee_structure") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Fee Structure</th>}
-                    {isColVisible("total_fees") && <th className="p-3 text-right font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Total Fees</th>}
-                    {isColVisible("total_paid") && <th className="p-3 text-right font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Amount Paid</th>}
-                    {isColVisible("balance") && <th className="p-3 text-right font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Balance</th>}
-                    {isColVisible("due_status") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Due Status</th>}
-                    {isColVisible("payment_status") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Payment Status</th>}
-                    {isColVisible("last_payment") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Last Payment</th>}
-                    {isColVisible("actions") && <th className="p-3 text-right font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Actions</th>}
+                    <th>Student</th>
+                    <th>Admission</th>
+                    <th>Class</th>
+                    {/* <th className="px-6 py-4">Guardian Details</th> */}
+                    <th>Fee Structure</th>
+                    <th className="col-right">Total Fees</th>
+                    <th className="col-right">Amount Paid</th>
+                    <th className="col-right">Balance</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th className="col-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody>
                   {isLoading ? (
-                    Array.from({ length: 5 }).map((_, idx) => (
-                      <tr key={idx} className="animate-pulse border-b border-border">
-                        <td className="col-center p-3">
-                          <div className="w-4 h-4 bg-slate-100 dark:bg-slate-800 rounded" />
-                        </td>
-                        {columnSettings.map((col) => {
-                          if (!col.visible) return null;
-                          return (
-                            <td key={col.id} className="p-3">
-                              <div className={`h-4 bg-slate-100 dark:bg-slate-800 rounded ${col.id.includes("fees") || col.id.includes("paid") || col.id === "balance" ? "w-16 ml-auto" : "w-24"
-                                }`} />
-                            </td>
-                          );
-                        })}
-                      </tr>
-                    ))
+                    <tr>
+                      <td colSpan={11} className="table-empty">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+                        <p className="text-slate-500 mt-3 font-bold">Loading student billing ledgers...</p>
+                      </td>
+                    </tr>
                   ) : students.length === 0 ? (
                     <tr>
-                      <td colSpan={columnSettings.filter(c => c.visible).length + 1} className="p-8 text-center text-slate-400 dark:text-slate-500 font-bold text-xs">
+                      <td colSpan={11} className="table-empty">
                         No student dues records found matching these criteria.
                       </td>
                     </tr>
@@ -1312,12 +1006,8 @@ export default function FeesPage() {
                     students.map((student) => {
                       const isSelected = selectedStudentIds.includes(student._id);
                       return (
-                        <tr
-                          key={student._id}
-                          className={`${isSelected ? "bg-primary/5 dark:bg-primary/10" : ""
-                            } hover:bg-slate-50/50 dark:hover:bg-slate-805/30 transition-all duration-150 border-b border-border`}
-                        >
-                          <td className="col-center p-3">
+                        <tr key={student._id} className={isSelected ? "bg-primary/5 dark:bg-primary/10" : ""}>
+                          <td className="col-center">
                             <input
                               type="checkbox"
                               checked={isSelected}
@@ -1325,147 +1015,115 @@ export default function FeesPage() {
                               className="w-4 h-4 accent-primary cursor-pointer rounded"
                             />
                           </td>
-                          {isColVisible("student") && (
-                            <td className="p-3">
-                              <span className="font-extrabold text-slate-850 dark:text-slate-100">{student.name}</span>
-                            </td>
-                          )}
-                          {isColVisible("admission_no") && (
-                            <td className="p-3 font-mono font-bold text-slate-700 dark:text-slate-350">
-                              {student.admission_no}
-                            </td>
-                          )}
-                          {isColVisible("class") && (
-                            <td className="p-3 text-slate-655 font-bold">
-                              {student.class_name.split(" - ")[0]}
-                            </td>
-                          )}
-                          {isColVisible("section") && (
-                            <td className="p-3 text-slate-600 dark:text-slate-400 font-bold">
-                              {student.section}
-                            </td>
-                          )}
-                          {isColVisible("guardian") && (
-                            <td className="p-3">
-                              <div className="flex flex-col">
-                                <span className="font-extrabold text-slate-800 dark:text-slate-205">{student.guardian_name} ({student.guardian_relation})</span>
-                                <span className="text-[10px] text-slate-455 mt-0.5">{student.guardian_phone}</span>
-                              </div>
-                            </td>
-                          )}
-                          {isColVisible("fee_structure") && (
-                            <td className="p-3 max-w-[200px] truncate">
-                              <div className="flex flex-wrap gap-1">
-                                {student.fee_structure.slice(0, 3).map((item, idx) => (
-                                  <span key={idx} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] rounded font-bold text-slate-600 dark:text-slate-300">
-                                    {item.split(" (")[0]}
-                                  </span>
-                                ))}
-                                {student.fee_structure.length > 3 && (
-                                  <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] rounded font-bold text-slate-455">
-                                    +{student.fee_structure.length - 3} more
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                          )}
-                          {isColVisible("total_fees") && (
-                            <td className="p-3 col-right font-mono font-bold text-slate-800 dark:text-slate-205">
-                              {money(student.totalFees)}
-                            </td>
-                          )}
-                          {isColVisible("total_paid") && (
-                            <td className="p-3 col-right font-mono font-bold text-emerald-600">
-                              {money(student.totalPaid)}
-                            </td>
-                          )}
-                          {isColVisible("balance") && (
-                            <td className="p-3 col-right font-mono font-bold text-rose-500">
-                              {money(student.balanceAmount)}
-                            </td>
-                          )}
-                          {isColVisible("due_status") && (
-                            <td className="p-3">
-                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${student.dueStatus === "No Due"
-                                  ? "bg-emerald-50 text-emerald-705 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-500/30"
-                                  : student.dueStatus === "Overdue"
-                                    ? "bg-rose-50 text-rose-750 border border-rose-250 dark:bg-rose-955/20 dark:text-rose-450 dark:border-rose-500/30"
-                                    : "bg-amber-50 text-amber-700 border border-amber-250 dark:bg-amber-500/10 dark:text-amber-450 dark:border-amber-500/30"
-                                }`}>
-                                {student.dueStatus}
-                              </span>
-                            </td>
-                          )}
-                          {isColVisible("payment_status") && (
-                            <td className="p-3">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${student.status === "Paid"
-                                  ? "bg-emerald-50 text-emerald-705 border border-emerald-255 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30"
-                                  : student.status === "Partial"
-                                    ? "bg-amber-50 text-amber-705 border border-amber-255 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30"
-                                    : "bg-rose-50 text-rose-755 border border-rose-255 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30"
-                                }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${student.status === "Paid" ? "bg-emerald-500" : student.status === "Partial" ? "bg-amber-500" : "bg-rose-500"
-                                  }`} />
-                                {student.status}
-                              </span>
-                            </td>
-                          )}
-                          {isColVisible("last_payment") && (
-                            <td className="p-3">
-                              {student.lastPaymentDate ? (
-                                <div className="flex flex-col text-[11px]">
-                                  <span className="font-mono font-bold text-slate-800 dark:text-slate-205">{money(student.lastPaidAmount)}</span>
-                                  <span className="text-[10px] text-slate-400 mt-0.5">{fmtDate(student.lastPaymentDate)}</span>
-                                </div>
-                              ) : (
-                                <span className="text-slate-400 font-bold">—</span>
+                          <td>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-900 dark:text-white">{student.name}</span>
+                              {student.lastPaymentDate && (
+                                <span className="text-[10px] text-slate-455 mt-0.5">
+                                  Last Paid: {money(student.lastPaidAmount)} ({fmtDate(student.lastPaymentDate)})
+                                </span>
                               )}
-                            </td>
-                          )}
-                          {isColVisible("actions") && (
-                            <td className="p-3 col-right">
-                              <div className="flex justify-end gap-1.5">
-                                <button
-                                  onClick={() => handleOpenPay(student)}
-                                  disabled={student.totalFees === 0 || student.balanceAmount === 0}
-                                  className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                >
-                                  <CreditCard className="w-3.5 h-3.5" /> Pay
-                                </button>
-                                <button
-                                  onClick={() => handleOpenHistory(student)}
-                                  className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer"
-                                  title="Payment History Logs"
-                                >
-                                  <History className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setCustomSetupStudent(student);
-                                    setIsCustomSetupOpen(true);
-                                  }}
-                                  className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer flex items-center"
-                                  title="Assign Custom Fees Override"
-                                >
-                                  <SlidersHorizontal className="w-4 h-4" />
-                                </button>
-                                <Link
-                                  href={`/fees/${student._id}`}
-                                  className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer flex items-center"
-                                  title="Dedicated Payment Page"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Link>
-                              </div>
-                            </td>
-                          )}
+                            </div>
+                          </td>
+                          <td className="font-mono font-bold text-slate-700 dark:text-slate-350">
+                            {student.admission_no}
+                          </td>
+                          <td className="text-slate-655 font-bold">
+                            {student.class_name}
+                          </td>
+                          {/* <td className="px-6 py-4 text-slate-500">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-slate-800 dark:text-slate-300">{student.guardian_name} ({student.guardian_relation})</span>
+                              <span className="text-[10px] text-slate-455 mt-0.5">{student.guardian_phone}</span>
+                            </div>
+                          </td> */}
+                          <td className="max-w-[200px] truncate">
+                            <div className="flex flex-wrap gap-1">
+                              {student.fee_structure.slice(0, 3).map((item, idx) => (
+                                <span key={idx} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] rounded font-bold text-slate-600 dark:text-slate-300">
+                                  {item.split(" (")[0]}
+                                </span>
+                              ))}
+                              {student.fee_structure.length > 3 && (
+                                <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-[10px] rounded font-bold text-slate-455">
+                                  +{student.fee_structure.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="col-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                            {money(student.totalFees)}
+                          </td>
+                          <td className="col-right font-mono font-bold text-emerald-600">
+                            {money(student.totalPaid)}
+                          </td>
+                          <td className="col-right font-mono font-bold text-rose-500">
+                            {money(student.balanceAmount)}
+                          </td>
+                          <td>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${student.dueStatus === "No Due"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : student.dueStatus === "Overdue"
+                                ? "bg-rose-50 text-rose-700 border border-rose-250 dark:bg-rose-950/20"
+                                : "bg-amber-50 text-amber-700 border border-amber-250"
+                              }`}>
+                              {student.dueStatus}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${student.status === "Paid"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-255 dark:bg-emerald-500/10 dark:text-emerald-400"
+                              : student.status === "Partial"
+                                ? "bg-amber-50 text-amber-700 border border-amber-255 dark:bg-amber-500/10 dark:text-amber-400"
+                                : "bg-rose-50 text-rose-700 border border-rose-255 dark:bg-rose-500/10 dark:text-rose-400"
+                              }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${student.status === "Paid" ? "bg-emerald-500" : student.status === "Partial" ? "bg-amber-500" : "bg-rose-500"
+                                }`} />
+                              {student.status}
+                            </span>
+                          </td>
+                          <td className="col-right">
+                            <div className="flex justify-end gap-1.5">
+                              <button
+                                onClick={() => handleOpenPay(student)}
+                                disabled={student.totalFees === 0 || student.balanceAmount === 0}
+                                className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                              >
+                                <CreditCard className="w-3.5 h-3.5" /> Pay
+                              </button>
+                              <button
+                                onClick={() => handleOpenHistory(student)}
+                                className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-lg transition-all cursor-pointer"
+                                title="Payment History Logs"
+                              >
+                                <History className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setCustomSetupStudent(student);
+                                  setIsCustomSetupOpen(true);
+                                }}
+                                className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-lg transition-all cursor-pointer flex items-center"
+                                title="Assign Custom Fees Override"
+                              >
+                                <SlidersHorizontal className="w-4 h-4" />
+                              </button>
+                              <Link
+                                href={`/fees/${student._id}`}
+                                className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 rounded-lg transition-all cursor-pointer flex items-center"
+                                title="Dedicated Payment Page"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Link>
+                            </div>
+                          </td>
                         </tr>
                       );
                     })
                   )}
                 </tbody>
               </table>
-            </div>
+            </div></div>
 
             {/* Pagination Strip */}
             {totalPages > 1 && (
@@ -1475,7 +1133,7 @@ export default function FeesPage() {
                   <button
                     onClick={() => setCurrentPage(c => Math.max(1, c - 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 bg-white border border-border rounded-lg hover:bg-slate-55 disabled:opacity-50 cursor-pointer"
+                    className="px-3 py-1 bg-white border border-border rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                   >
                     Previous
                   </button>
@@ -1483,7 +1141,7 @@ export default function FeesPage() {
                   <button
                     onClick={() => setCurrentPage(c => Math.min(totalPages, c + 1))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 bg-white border border-border rounded-lg hover:bg-slate-55 disabled:opacity-50 cursor-pointer"
+                    className="px-3 py-1 bg-white border border-border rounded-lg hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
                   >
                     Next
                   </button>

@@ -145,7 +145,7 @@ export default function ApplicationsListPage() {
               <Trash2 className="w-8 h-8" />
             </div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Delete Admission Application?</h2>
-            <p className="card-subtitle text-[13px] mb-6">This will delete all application notes and uploaded document records.</p>
+            <p className="text-[13px] text-slate-500 mb-6">This will delete all application notes and uploaded document records.</p>
             <div className="flex justify-center gap-3">
               <button onClick={() => setDeleteId(null)} className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-lg cursor-pointer">Cancel</button>
               <button onClick={handleDelete} disabled={deleting} className="px-5 py-2.5 bg-rose-500 text-white text-xs font-bold rounded-lg cursor-pointer flex items-center gap-2">
@@ -245,7 +245,7 @@ export default function ApplicationsListPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-            <table className="erp-table">
+            <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-800/40 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                   <th className="px-5 py-3.5">App Number</th>

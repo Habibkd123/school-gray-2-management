@@ -15,7 +15,7 @@ export default async function ResultsPage() {
   const items = await getNews();
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
-      <h1 className="page-title font-serif mb-3">Results</h1>
+      <h1 className="text-4xl font-serif font-bold text-foreground mb-3">Results</h1>
       <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-12">Examination Results & Merit Lists</p>
       {items.length > 0 ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

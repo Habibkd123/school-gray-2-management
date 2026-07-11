@@ -50,11 +50,11 @@ export default function ParentFeesPage() {
       {/* Header & Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-xl border border-border card-shadow">
         <div>
-          <h1 className="section-title tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <DollarSign className="w-6 h-6 text-amber-500" />
             Fees Status
           </h1>
-          <p className="card-subtitle mt-1">View pending dues and payment history</p>
+          <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">View pending dues and payment history</p>
         </div>
         <div className="w-full sm:w-[250px]">
           <ChildSelector 
@@ -141,9 +141,9 @@ export default function ParentFeesPage() {
             
             {/* Fee Allocations */}
             <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow">
-              <h3 className="card-title mb-4">Assigned Fees</h3>
+              <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-4">Assigned Fees</h3>
               <div className="overflow-x-auto">
-                <table className="erp-table card-subtitle">
+                <table className="w-full text-left text-sm text-slate-500 dark:text-slate-400">
                   <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-800/50 dark:text-slate-300">
                     <tr>
                       <th className="px-4 py-3 rounded-l-lg">Fee Type</th>
@@ -186,9 +186,9 @@ export default function ParentFeesPage() {
 
             {/* Payment History */}
             <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow">
-              <h3 className="card-title mb-4">Payment History</h3>
+              <h3 className="font-semibold text-lg text-slate-900 dark:text-white mb-4">Payment History</h3>
               <div className="overflow-x-auto">
-                <table className="erp-table card-subtitle">
+                <table className="w-full text-left text-sm text-slate-500 dark:text-slate-400">
                   <thead className="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-800/50 dark:text-slate-300">
                     <tr>
                       <th className="px-4 py-3 rounded-l-lg">Date</th>

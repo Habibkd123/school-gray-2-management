@@ -257,7 +257,7 @@ export default function ClassHomeWorkPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Class Home Work</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/academic" className="hover:text-primary">Academic</Link>
@@ -345,7 +345,7 @@ export default function ClassHomeWorkPage() {
 
         {/* Controls Section */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="card-subtitle flex items-center gap-2 text-[13px]">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
             <span>Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredData.length}</span> items</span>
           </div>
 
@@ -363,7 +363,7 @@ export default function ClassHomeWorkPage() {
 
         {/* Table */}
         <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
-          <table className="erp-table text-[13px] whitespace-nowrap">
+          <table className="w-full text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Title</th>
@@ -543,7 +543,7 @@ export default function ClassHomeWorkPage() {
                   ))}
                 </select>
               ) : (
-                <div className="card-subtitle w-full px-4 py-2.5 text-[13px] bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-slate-400 dark: italic">
+                <div className="w-full px-4 py-2.5 text-[13px] bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-slate-400 dark:text-slate-500 italic">
                   {!formSubject
                     ? "Select a subject to load chapters"
                     : syllabusLoading
@@ -771,7 +771,7 @@ export default function ClassHomeWorkPage() {
             </div>
           )}
 
-          <table className="erp-table text-[13px] whitespace-nowrap">
+          <table className="w-full text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-b border-border sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-3 text-left font-bold text-slate-700 dark:text-slate-200">Student Name</th>

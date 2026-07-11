@@ -233,7 +233,7 @@ export default function TeacherAssignmentDetailsPage() {
             <h1 className="text-xl font-bold text-slate-900 dark:text-white">
               Faculty Assignment & Workload
             </h1>
-            <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1.5">
+            <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">
               <Link href="/academic" className="hover:text-primary transition-colors">
                 Academic
               </Link>
@@ -345,7 +345,7 @@ export default function TeacherAssignmentDetailsPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="erp-table text-[13px]">
+              <table className="w-full border-collapse text-left text-[13px]">
                 <thead>
                   <tr className="border-b border-border bg-[#FAFBFD] dark:bg-slate-900/50 text-slate-450 dark:text-slate-500 font-bold uppercase tracking-wider">
                     <th className="px-5 py-3.5">Class & Section</th>

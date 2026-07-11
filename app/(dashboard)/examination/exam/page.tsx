@@ -281,7 +281,7 @@ export default function ExamListPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Exam List</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/examination" className="hover:text-primary">Examination</Link>
@@ -399,7 +399,7 @@ export default function ExamListPage() {
 
         {/* Search and Counts Section */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="card-subtitle flex items-center gap-2 text-[13px]">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
             <span>Total</span>
             <span className="font-bold text-slate-700 dark:text-slate-200">{filteredData.length}</span>
             <span>Exams</span>

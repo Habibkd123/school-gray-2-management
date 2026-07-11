@@ -63,7 +63,7 @@ export default async function AboutPage() {
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div>
                 <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Our Story</h2>
-                <h3 className="page-title font-serif mb-6">Our History</h3>
+                <h3 className="text-4xl font-serif font-bold text-foreground mb-6">Our History</h3>
                 <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{history}</p>
               </div>
               <div className="relative">
@@ -90,7 +90,7 @@ export default async function AboutPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-14">
               <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Our Purpose</h2>
-              <h3 className="page-title font-serif">Vision & Mission</h3>
+              <h3 className="text-4xl font-serif font-bold text-foreground">Vision & Mission</h3>
             </div>
             <div className="grid md:grid-cols-2 gap-10">
               {vision && (
@@ -98,7 +98,7 @@ export default async function AboutPage() {
                   <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                     <Eye className="w-7 h-7 text-primary" />
                   </div>
-                  <h4 className="section-title font-serif mb-4">Our Vision</h4>
+                  <h4 className="text-2xl font-serif font-bold text-foreground mb-4">Our Vision</h4>
                   <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{vision}</p>
                 </div>
               )}
@@ -107,7 +107,7 @@ export default async function AboutPage() {
                   <div className="w-14 h-14 bg-[var(--sidebar-bg)]/10 rounded-full flex items-center justify-center mb-6">
                     <Target className="w-7 h-7 text-foreground" />
                   </div>
-                  <h4 className="section-title font-serif mb-4">Our Mission</h4>
+                  <h4 className="text-2xl font-serif font-bold text-foreground mb-4">Our Mission</h4>
                   <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{mission}</p>
                 </div>
               )}
@@ -130,7 +130,7 @@ export default async function AboutPage() {
               </div>
               <div className="order-1 lg:order-2">
                 <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Our Campus</h2>
-                <h3 className="page-title font-serif mb-6">Infrastructure</h3>
+                <h3 className="text-4xl font-serif font-bold text-foreground mb-6">Infrastructure</h3>
                 <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{infrastructure}</p>
               </div>
             </div>
@@ -144,7 +144,7 @@ export default async function AboutPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-14">
               <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Leadership</h2>
-              <h3 className="page-title font-serif">Management Team</h3>
+              <h3 className="text-4xl font-serif font-bold text-foreground">Management Team</h3>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {team.map((member: any, idx: number) => (
@@ -184,7 +184,7 @@ export default async function AboutPage() {
             <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6 dark:bg-slate-800">
               <CheckCircle2 className="w-10 h-10 text-slate-300" />
             </div>
-            <h2 className="section-title mb-3">Content Coming Soon</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-3">Content Coming Soon</h2>
             <p className="text-slate-500 dark:text-slate-400">
               About content is being updated. Please visit the admin panel under{" "}
               <strong>Website → About</strong> to add your school details.

@@ -63,8 +63,6 @@ export async function GET(req: NextRequest) {
     const statusFilter = url.searchParams.get("status"); // Paid / Partial / Pending
     const dueStatusFilter = url.searchParams.get("due_status"); // Overdue / Due / No Due
     const feeTypeFilterName = url.searchParams.get("fee_type"); // e.g. "Tuition Fees"
-    const dateFrom = url.searchParams.get("date_from");
-    const dateTo = url.searchParams.get("date_to");
     const search = url.searchParams.get("search") || "";
     const page = parseInt(url.searchParams.get("page") || "1");
     const limit = parseInt(url.searchParams.get("limit") || "10");
@@ -346,23 +344,13 @@ export async function GET(req: NextRequest) {
       };
     }).filter(Boolean); // Clean filter nulls
 
-    // 5. Apply status, due status and date range filters
+    // 5. Apply status and due status filter
     let filteredList = statusFilter
       ? computedList.filter((item: any) => item.status.toLowerCase() === statusFilter.toLowerCase())
       : computedList;
 
     if (dueStatusFilter) {
       filteredList = filteredList.filter((item: any) => item.dueStatus.toLowerCase() === dueStatusFilter.toLowerCase());
-    }
-
-    if (dateFrom) {
-      filteredList = filteredList.filter((item: any) => item.lastPaymentDate && new Date(item.lastPaymentDate) >= new Date(dateFrom));
-    }
-
-    if (dateTo) {
-      const endOfDay = new Date(dateTo);
-      endOfDay.setHours(23, 59, 59, 999);
-      filteredList = filteredList.filter((item: any) => item.lastPaymentDate && new Date(item.lastPaymentDate) <= endOfDay);
     }
 
     // 6. Apply pagination slicing

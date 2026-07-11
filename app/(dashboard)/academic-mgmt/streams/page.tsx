@@ -167,7 +167,7 @@ export default function StreamsPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Streams</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Academic Management</span>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Streams</span>
@@ -348,7 +348,7 @@ export default function StreamsPage() {
                   </div>
                 </div>
               </div>
-              <p className="card-subtitle text-[13px]">Would you like to archive or deactivate this stream instead? Archived streams are hidden from standard dropdowns across the ERP.</p>
+              <p className="text-[13px] text-slate-500">Would you like to archive or deactivate this stream instead? Archived streams are hidden from standard dropdowns across the ERP.</p>
               <div className="flex flex-wrap gap-2 justify-end pt-2 border-t border-border/50">
                 <button onClick={() => setIsDeleteOpen(false)} className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-foreground text-[13px] font-bold rounded-lg transition-colors">Cancel</button>
                 <button onClick={async () => {

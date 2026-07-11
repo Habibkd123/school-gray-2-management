@@ -7,8 +7,8 @@ import Student from "@/lib/models/Student";
 import { requireAuth } from "@/lib/utils/auth";
 
 export async function GET(request: NextRequest) {
-  const { schoolId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin",]);
-  // if (error) return error;
+  const { schoolId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin"]);
+  if (error) return error;
 
   try {
     await connectDB();

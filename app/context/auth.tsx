@@ -219,6 +219,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.push("/");
   }, [router]);
 
+  // ─── Global Fetch Interceptor ─────────────────────────────────
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const originalFetch = window.fetch;
+    window.fetch = async (input, init) => {
+      const response = await originalFetch(input, init);
+      if (response.status === 401 || response.status === 403) {
+        const urlStr = typeof input === "string" ? input : (input as Request).url;
+        // Don't intercept credentials or login validation/config requests
+        const isAuthApi =
+          urlStr.includes("/api/auth/login") ||
+          urlStr.includes("/api/auth/refresh") ||
+          urlStr.includes("/api/school/login-config");
+
+        if (!isAuthApi) {
+          clearSession();
+          setUser(null);
+          setMustChangePassword(false);
+          setSessionExpiredToast(true);
+          setTimeout(() => setSessionExpiredToast(false), 5000);
+          router.push("/");
+        }
+      }
+      return response;
+    };
+
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, [router]);
+
+  // ─── Clear mustChangePassword after forced change ───────────────
+  const clearMustChangePasswordFlag = useCallback(() => {
+    clearMustChangePassword(); // update localStorage
+    setMustChangePassword(false);
+  }, []);
+
   // ─── Token Refresh ────────────────────────────────────────────
   const tryRefreshToken = useCallback(async (): Promise<boolean> => {
     try {
@@ -244,73 +282,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       return false;
     }
-  }, []);
-
-  // ─── Global Fetch Interceptor ─────────────────────────────────
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const originalFetch = window.fetch;
-    window.fetch = async (input, init) => {
-      const response = await originalFetch(input, init);
-      if (response.status === 401) {
-        const urlStr = typeof input === "string" ? input : (input as Request).url;
-        // Don't intercept credentials or login validation/config requests
-        const isAuthApi =
-          urlStr.includes("/api/auth/login") ||
-          urlStr.includes("/api/auth/refresh") ||
-          urlStr.includes("/api/school/login-config");
-
-        if (!isAuthApi) {
-          const refreshSuccess = await tryRefreshToken();
-          if (refreshSuccess) {
-            const newAccessToken = getAccessToken();
-            const newHeaders = new Headers((init?.headers || {}) as HeadersInit);
-            newHeaders.set("Authorization", `Bearer ${newAccessToken}`);
-
-            const newInit = {
-              ...(init || {}),
-              headers: newHeaders,
-            };
-
-            return originalFetch(input, newInit);
-          } else {
-            clearSession();
-            setUser(null);
-            setMustChangePassword(false);
-            setSessionExpiredToast(true);
-            setTimeout(() => setSessionExpiredToast(false), 5000);
-            router.push("/");
-          }
-        }
-      } else if (response.status === 403) {
-        const urlStr = typeof input === "string" ? input : (input as Request).url;
-        const isAuthApi =
-          urlStr.includes("/api/auth/login") ||
-          urlStr.includes("/api/auth/refresh") ||
-          urlStr.includes("/api/school/login-config");
-
-        if (!isAuthApi) {
-          clearSession();
-          setUser(null);
-          setMustChangePassword(false);
-          setSessionExpiredToast(true);
-          setTimeout(() => setSessionExpiredToast(false), 5000);
-          router.push("/");
-        }
-      }
-      return response;
-    };
-
-    return () => {
-      window.fetch = originalFetch;
-    };
-  }, [router, tryRefreshToken]);
-
-  // ─── Clear mustChangePassword after forced change ───────────────
-  const clearMustChangePasswordFlag = useCallback(() => {
-    clearMustChangePassword(); // update localStorage
-    setMustChangePassword(false);
   }, []);
 
   // ─── Refresh user data from /me ──────────────────────────────

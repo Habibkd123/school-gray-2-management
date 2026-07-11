@@ -165,7 +165,7 @@ export default function StudentAttendancePage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">My Attendance</h1>
-          <p className="card-subtitle text-[13px] mt-1">
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
             Track your daily attendance status and view monthly reports
           </p>
         </div>
@@ -203,7 +203,7 @@ export default function StudentAttendancePage() {
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Present</span>
           </div>
-          <p className="section-title">{presentCount}</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{presentCount}</p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Days present</p>
         </div>
 
@@ -215,7 +215,7 @@ export default function StudentAttendancePage() {
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Absent</span>
           </div>
-          <p className="section-title">{absentCount}</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{absentCount}</p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Days absent</p>
         </div>
 
@@ -227,7 +227,7 @@ export default function StudentAttendancePage() {
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Leave</span>
           </div>
-          <p className="section-title">{leaveCount}</p>
+          <p className="text-2xl font-bold text-slate-900 dark:text-white">{leaveCount}</p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Days on leave</p>
         </div>
 
@@ -240,7 +240,7 @@ export default function StudentAttendancePage() {
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Monthly Percentage</span>
           </div>
-          <p className="section-title">{presentRate}%</p>
+          <p className="text-2xl font-extrabold text-slate-900 dark:text-white">{presentRate}%</p>
           <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
             Based on {activeDays} class days
           </p>

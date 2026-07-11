@@ -72,7 +72,7 @@ export function VirtualCampusTour({ data }: { data?: GalleryData | null }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="page-title md:text-5xl mb-6 leading-tight"
+            className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight"
           >
             Virtual Campus Tour
           </motion.h3>
@@ -115,7 +115,7 @@ export function VirtualCampusTour({ data }: { data?: GalleryData | null }) {
             ) : (
               <div className="w-full h-full flex flex-col items-center justify-center text-slate-400">
                 <Play className="w-16 h-16 mb-4 opacity-50" />
-                <p className="card-title">No video available</p>
+                <p className="text-lg font-medium">No video available</p>
               </div>
             )}
           </div>

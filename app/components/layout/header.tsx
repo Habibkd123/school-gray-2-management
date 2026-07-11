@@ -166,7 +166,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                       <p className="text-[14px] text-slate-700 dark:text-slate-300">
                         <span className="font-bold text-slate-900 dark:text-white">Shawn</span> performance in Math is below the threshold.
                       </p>
-                      <span className="card-subtitle text-[13px] mt-1 block">Just Now</span>
+                      <span className="text-[13px] text-slate-500 mt-1 block dark:text-slate-400">Just Now</span>
                     </div>
                   </div>
 
@@ -177,7 +177,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                       <p className="text-[14px] text-slate-700 dark:text-slate-300">
                         <span className="font-bold text-slate-900 dark:text-white">Sylvia</span> added appointment on 02:00 PM
                       </p>
-                      <span className="card-subtitle text-[13px] mt-1 block">10 mins ago</span>
+                      <span className="text-[13px] text-slate-500 mt-1 block dark:text-slate-400">10 mins ago</span>
                       <div className="flex gap-2 mt-2.5">
                         <button className="px-3 py-1.5 bg-[#F1F5F9] dark:bg-slate-800 text-[13px] font-medium text-slate-700 dark:text-slate-300 rounded hover:bg-[#E2E8F0] dark:hover:bg-slate-700 transition-colors">Deny</button>
                         <button className="px-3 py-1.5 bg-primary text-[13px] font-medium text-white rounded hover:bg-[var(--primary-hover)] transition-colors">Approve</button>
@@ -192,7 +192,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                       <p className="text-[14px] text-slate-700 dark:text-slate-300">
                         New student record <span className="font-bold text-slate-900 dark:text-white">George</span> is created by <span className="font-bold text-slate-900 dark:text-white">Teressa</span>
                       </p>
-                      <span className="card-subtitle text-[13px] mt-1 block">2 hrs ago</span>
+                      <span className="text-[13px] text-slate-500 mt-1 block dark:text-slate-400">2 hrs ago</span>
                     </div>
                   </div>
                 </div>

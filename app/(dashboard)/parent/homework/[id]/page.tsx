@@ -88,7 +88,7 @@ export default function ParentHomeworkDetailPage() {
   return (
     <div className="max-w-full sm:w-[860px] mx-auto space-y-6">
       {/* Back nav */}
-      <div className="card-subtitle flex items-center gap-2">
+      <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
         <Link href="/parent/homework" className="flex items-center gap-1 hover:text-primary transition-colors font-medium">
           <ArrowLeft className="w-4 h-4" /> Homework
         </Link>
@@ -124,7 +124,7 @@ export default function ParentHomeworkDetailPage() {
             <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{hw.title}</h1>
 
             {/* Meta info */}
-            <div className="card-subtitle flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1.5">
                 <User className="w-4 h-4 text-blue-400" />
                 <span className="font-medium">{teacherName}</span>
@@ -212,7 +212,7 @@ export default function ParentHomeworkDetailPage() {
             {submission?.grade && (
               <div className="bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800/40 rounded-xl p-4">
                 <p className="text-[11px] font-bold text-blue-400 uppercase mb-1">Grade</p>
-                <p className="section-title text-blue-700 dark:text-blue-300">{submission.grade}</p>
+                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{submission.grade}</p>
                 {submission.feedback && (
                   <>
                     <p className="text-[11px] font-bold text-blue-400 uppercase mt-3 mb-1">Teacher Feedback</p>

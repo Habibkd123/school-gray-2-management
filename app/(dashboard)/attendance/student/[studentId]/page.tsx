@@ -163,7 +163,7 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
           </button>
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white">Student Attendance Details</h1>
-            <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+            <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
               <span>Attendance</span><span>/</span>
               <span className="text-slate-900 dark:text-white font-medium">{data?.student?.name || "Student"}</span>
             </div>
@@ -204,23 +204,23 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
               <h2 className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-4 border-b border-border pb-2">Attendance Statistics ({monthNames[parseInt(filterMonth) - 1]})</h2>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-border">
-                  <div className="section-title text-slate-800 dark:text-slate-200">{data?.stats?.totalWorkingDays}</div>
+                  <div className="text-2xl font-bold text-slate-800 dark:text-slate-200">{data?.stats?.totalWorkingDays}</div>
                   <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wide mt-1">Working Days</div>
                 </div>
                 <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900/50">
-                  <div className="section-title text-emerald-700 dark:text-emerald-400">{data?.stats?.totalPresent}</div>
+                  <div className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{data?.stats?.totalPresent}</div>
                   <div className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-500 uppercase tracking-wide mt-1">Present</div>
                 </div>
                 <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-900/10 border border-rose-100 dark:border-rose-900/50">
-                  <div className="section-title text-rose-700 dark:text-rose-400">{data?.stats?.totalAbsent}</div>
+                  <div className="text-2xl font-bold text-rose-700 dark:text-rose-400">{data?.stats?.totalAbsent}</div>
                   <div className="text-[11px] font-semibold text-rose-600 dark:text-rose-500 uppercase tracking-wide mt-1">Absent</div>
                 </div>
                 <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/50">
-                  <div className="section-title text-amber-700 dark:text-amber-400">{data?.stats?.totalLeave}</div>
+                  <div className="text-2xl font-bold text-amber-700 dark:text-amber-400">{data?.stats?.totalLeave}</div>
                   <div className="text-[11px] font-semibold text-amber-600 dark:text-amber-500 uppercase tracking-wide mt-1">Leave</div>
                 </div>
                 <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/50">
-                  <div className="section-title text-indigo-700 dark:text-indigo-400">{data?.stats?.attendancePercentage}%</div>
+                  <div className="text-2xl font-bold text-indigo-700 dark:text-indigo-400">{data?.stats?.attendancePercentage}%</div>
                   <div className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-500 uppercase tracking-wide mt-1">Percentage</div>
                 </div>
               </div>
@@ -296,7 +296,7 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
                 </h2>
               </div>
               <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
-                <table className="erp-table text-[13px]">
+                <table className="w-full text-left text-[13px]">
                   <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 border-b border-border sticky top-0">
                     <tr>
                       <th className="px-4 py-3 font-semibold">Date</th>
@@ -356,7 +356,7 @@ export default function IndividualStudentAttendancePage({ params }: { params: Pr
             <div className="p-5 border-b border-border flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">Edit Attendance</h3>
-                <p className="card-subtitle text-[13px] mt-0.5">
+                <p className="text-[13px] font-medium text-slate-500 mt-0.5">
                   {new Date(selectedRecord.date).toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
                 </p>
               </div>

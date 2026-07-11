@@ -530,7 +530,7 @@ export default function MarksEntryPage({ params }: { params: Promise<{ classId: 
         </div>
 
         <div className="overflow-x-auto">
-          <table className="erp-table text-xs">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-border bg-slate-50/20 dark:bg-slate-950/20 text-[10px] uppercase font-bold tracking-wider text-slate-500">
                 <th className="px-6 py-4 w-20">Roll No</th>

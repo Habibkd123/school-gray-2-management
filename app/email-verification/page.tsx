@@ -87,7 +87,7 @@ export default function EmailVerificationPage() {
             
             <h1 className="text-[22px] font-bold text-[#202c4b] dark:text-slate-100 mb-3">Verify your Email</h1>
             
-            <p className="card-subtitle text-[13px] leading-relaxed max-w-full sm:w-[400px] mx-auto mb-6">
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-full sm:w-[400px] mx-auto mb-6">
               We've sent a link to your email test@example.com. Please follow the link inside to continue
             </p>
 

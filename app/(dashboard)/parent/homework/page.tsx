@@ -73,11 +73,11 @@ export default function ParentHomeworkPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-xl border border-border card-shadow">
         <div>
-          <h1 className="section-title tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-purple-500" />
             Homework
           </h1>
-          <p className="card-subtitle mt-1">Track assignments and submission status</p>
+          <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Track assignments and submission status</p>
         </div>
         <div className="w-full sm:w-[250px]">
           <ChildSelector
@@ -144,7 +144,7 @@ export default function ParentHomeworkPage() {
           {filteredHomework.length === 0 ? (
             <div className="bg-white dark:bg-slate-900 p-8 rounded-xl border border-border text-center flex flex-col items-center">
               <CheckCircle2 className="w-12 h-12 text-emerald-300 mb-3" />
-              <h3 className="card-title text-slate-700 dark:text-slate-300">All Caught Up!</h3>
+              <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">All Caught Up!</h3>
               <p className="text-slate-500 dark:text-slate-400">No homework found for the selected filter.</p>
             </div>
           ) : (
@@ -194,7 +194,7 @@ export default function ParentHomeworkPage() {
 
                     {/* Description */}
                     {hw.description && (
-                      <p className="card-subtitle line-clamp-2 mb-4 flex-grow">
+                      <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 flex-grow">
                         {hw.description}
                       </p>
                     )}

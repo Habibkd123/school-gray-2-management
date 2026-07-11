@@ -149,7 +149,7 @@ export function Hero({ data }: { data?: HeroData | null }) {
                 <div className="flex justify-center mb-3 text-[color-mix(in_srgb,var(--primary)_40%,white)]">
                   {renderStatIcon(s.icon)}
                 </div>
-                <div className="page-title mb-1">{s.value}</div>
+                <div className="text-3xl font-bold text-white mb-1">{s.value}</div>
                 <div className="text-xs font-semibold text-white/70 uppercase tracking-wider text-center">{s.label}</div>
               </div>
             ))}

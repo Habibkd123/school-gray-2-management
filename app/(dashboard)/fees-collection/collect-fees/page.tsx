@@ -158,7 +158,7 @@ export default function CollectFeesPage() {
       <div className="page-header print:hidden">
         <div>
           <h1 className="page-title">Collect Fees</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/fees-collection" className="hover:text-primary">Fees Collection</Link>
@@ -208,7 +208,7 @@ export default function CollectFeesPage() {
                 <User className="w-8 h-8 text-slate-400" />
               </div>
               <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{selectedStudent.name}</h2>
-              <div className="card-subtitle text-[13px] mt-1 flex flex-col gap-1">
+              <div className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 flex flex-col gap-1">
                 <span>Admission No: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedStudent.admission_no}</span></span>
                 <span>Roll No: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedStudent.roll_no || "-"}</span></span>
               </div>
@@ -415,7 +415,7 @@ export default function CollectFeesPage() {
 
               {/* Breakdown Table */}
               <div className="mb-6">
-                <table className="erp-table">
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
                       <th className="py-2 text-left font-bold text-slate-700 dark:text-slate-300">Fee Particulars</th>
@@ -443,7 +443,7 @@ export default function CollectFeesPage() {
                 </span>
               </div>
 
-              <div className="card-subtitle mt-8 pt-8 border-t border-border flex justify-between items-end">
+              <div className="mt-8 pt-8 border-t border-border flex justify-between items-end text-sm text-slate-500 dark:text-slate-400">
                 <div className="text-center">
                   <div className="w-32 border-b border-slate-300 mb-1"></div>
                   Accountant Signature

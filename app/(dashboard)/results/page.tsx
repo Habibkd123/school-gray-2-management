@@ -115,7 +115,7 @@ export default function ResultsPage() {
           </div>
           <div>
             <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Total Entries</span>
-            <span className="section-title block mt-0.5">{results.length}</span>
+            <span className="text-2xl font-bold block text-slate-900 dark:text-white mt-0.5">{results.length}</span>
           </div>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow text-left flex items-center gap-4">
@@ -124,7 +124,7 @@ export default function ResultsPage() {
           </div>
           <div>
             <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Average Score</span>
-            <span className="section-title block mt-0.5">{avgPercent}%</span>
+            <span className="text-2xl font-bold block text-slate-900 dark:text-white mt-0.5">{avgPercent}%</span>
           </div>
         </div>
         <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow text-left flex items-center gap-4">
@@ -133,7 +133,7 @@ export default function ResultsPage() {
           </div>
           <div>
             <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Passed</span>
-            <span className="section-title block mt-0.5">{passCount} / {results.length}</span>
+            <span className="text-2xl font-bold block text-slate-900 dark:text-white mt-0.5">{passCount} / {results.length}</span>
           </div>
         </div>
       </div>
@@ -150,7 +150,7 @@ export default function ResultsPage() {
           </div>
         ) : (
           <div className="overflow-x-auto bg-white dark:bg-slate-900">
-            <table className="erp-table">
+            <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-border bg-white dark:bg-slate-900 text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                   <th className="px-6 py-4 text-left">Student</th>

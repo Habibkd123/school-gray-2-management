@@ -565,7 +565,7 @@ export default function ClassTeacherAssignmentPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="erp-table text-xs">
+              <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-950/10 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
                     <th className="px-6 py-4">Assigned Class</th>
@@ -682,7 +682,7 @@ export default function ClassTeacherAssignmentPage() {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="erp-table text-xs">
+            <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-950/10 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
                   <th className="px-6 py-4">Emp ID</th>
@@ -736,7 +736,7 @@ export default function ClassTeacherAssignmentPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="erp-table text-xs">
+              <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-955/10 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
                     <th className="px-6 py-4">Class Code</th>

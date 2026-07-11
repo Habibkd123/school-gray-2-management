@@ -173,7 +173,7 @@ export default function AcademicsPage() {
           </button>
         </div>
         {data.programs.length === 0 ? (
-          <div className="card-subtitle text-center py-8 text-slate-600 dark: text-[13px] dark:text-slate-600 dark:">No programs defined. Click "Add Program" to get started.</div>
+          <div className="text-center py-8 text-slate-600 dark:text-slate-500 text-[13px] dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">No programs defined. Click "Add Program" to get started.</div>
         ) : (
           <div className="space-y-4">
             {data.programs.map((program, idx) => (
@@ -218,7 +218,7 @@ export default function AcademicsPage() {
           </button>
         </div>
         {data.faculty.length === 0 ? (
-          <div className="card-subtitle text-center py-8 text-slate-600 dark: text-[13px] dark:text-slate-600 dark:">No faculty members yet. Click "Add Faculty" to get started.</div>
+          <div className="text-center py-8 text-slate-600 dark:text-slate-500 text-[13px] dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">No faculty members yet. Click "Add Faculty" to get started.</div>
         ) : (
           <div className="space-y-4">
             {data.faculty.map((member, idx) => (

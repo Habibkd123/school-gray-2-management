@@ -212,7 +212,7 @@ export default function HomeworkPage() {
           <h1 className="page-title">
             {activeRole === "student" ? "My Homework Assignments" : "Homework Manager"}
           </h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <span>Academic</span>
@@ -292,7 +292,7 @@ export default function HomeworkPage() {
                           <h3 className="font-semibold text-[15px] text-slate-900 dark:text-white leading-tight">
                             {hw.title}
                           </h3>
-                          <p className="card-subtitle text-[13px] line-clamp-3">
+                          <p className="text-[13px] text-slate-500 dark:text-slate-400 line-clamp-3">
                             {hw.description}
                           </p>
                         </div>
@@ -564,7 +564,7 @@ export default function HomeworkPage() {
           </div>
 
           <div className="border border-border rounded-xl overflow-hidden text-left card-shadow">
-            <table className="erp-table text-[13px]">
+            <table className="w-full text-[13px] border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400">
                   <th className="px-5 py-3.5">Student</th>

@@ -85,11 +85,11 @@ export default function ParentResultsPage() {
       {/* ── Top Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-xl border border-border card-shadow">
         <div>
-          <h1 className="section-title tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <ClipboardList className="w-6 h-6 text-blue-500" />
             Exam Results
           </h1>
-          <p className="card-subtitle mt-1">Academic performance and grade report</p>
+          <p className="text-sm text-slate-500 mt-1 dark:text-slate-400">Academic performance and grade report</p>
         </div>
         <div className="w-full sm:w-[250px]">
           <ChildSelector
@@ -162,7 +162,7 @@ export default function ParentResultsPage() {
       ) : results.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 p-10 rounded-xl border border-border text-center flex flex-col items-center">
           <Trophy className="w-12 h-12 text-slate-300 mb-3" />
-          <h3 className="card-title text-slate-700 dark:text-slate-300">No Results Yet</h3>
+          <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">No Results Yet</h3>
           <p className="text-slate-500 text-sm mt-1 dark:text-slate-400">
             No exam results found for <strong>{selectedChild?.name}</strong>. Exams might not have been graded yet.
           </p>
@@ -180,7 +180,7 @@ export default function ParentResultsPage() {
                   </p>
                   <div className="flex items-end gap-3">
                     <span className="text-5xl font-black">{overallStats.pct.toFixed(1)}%</span>
-                    <span className="section-title /80 mb-1">
+                    <span className="text-2xl font-bold text-white/80 mb-1">
                       {overallStats.totalObtained}/{overallStats.totalMax}
                     </span>
                   </div>
@@ -310,7 +310,7 @@ export default function ParentResultsPage() {
 
                 {/* Table */}
                 <div className="overflow-x-auto mt-2">
-                  <table className="erp-table text-[13px] text-slate-600 dark:text-slate-300">
+                  <table className="w-full text-left text-[13px] text-slate-600 dark:text-slate-300">
                     <thead className="bg-slate-50 dark:bg-slate-800/60 border-y border-border">
                       <tr>
                         <th className="px-5 py-3 font-bold text-slate-700 dark:text-slate-300">Subject</th>

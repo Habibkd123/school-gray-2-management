@@ -758,7 +758,7 @@ export function GenerateDocumentWizard({
               {resolveLoading && (
                 <div className="flex items-center justify-center py-10 gap-3">
                   <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                  <span className="card-subtitle text-[13px]">Resolving variables…</span>
+                  <span className="text-[13px] text-slate-500 dark:text-slate-400">Resolving variables…</span>
                 </div>
               )}
 
@@ -771,7 +771,7 @@ export function GenerateDocumentWizard({
 
               {!resolveLoading && Object.keys(resolvedVars).length > 0 && (
                 <div className="border border-border rounded-xl overflow-hidden">
-                  <table className="erp-table text-[12px]">
+                  <table className="w-full text-[12px]">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-border">
                         <th className="px-4 py-2.5 text-left font-bold text-slate-600 dark:text-slate-300 w-2/5">Variable</th>
@@ -808,7 +808,7 @@ export function GenerateDocumentWizard({
                 <>
                   <Loader2 className="w-10 h-10 animate-spin text-primary" />
                   <p className="text-[15px] font-bold text-slate-800 dark:text-slate-100">Preparing document…</p>
-                  <p className="card-subtitle text-[13px]">Encoding variables and loading builder.</p>
+                  <p className="text-[13px] text-slate-500 dark:text-slate-400">Encoding variables and loading builder.</p>
                 </>
               )}
 
@@ -819,7 +819,7 @@ export function GenerateDocumentWizard({
                   </div>
                   <div>
                     <p className="text-[16px] font-bold text-slate-900 dark:text-white">Document Ready!</p>
-                    <p className="card-subtitle text-[13px] mt-1">
+                    <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
                       Template: <strong className="text-slate-700 dark:text-slate-200">{selectedTemplate?.name}</strong>
                       <br />Record: <strong className="text-slate-700 dark:text-slate-200">{selectedRecord?.name}</strong>
                     </p>

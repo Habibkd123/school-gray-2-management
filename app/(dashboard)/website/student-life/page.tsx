@@ -153,7 +153,7 @@ export default function StudentLifePage() {
           </button>
         </div>
         {data.achievements.length === 0 ? (
-          <p className="card-subtitle text-slate-600 dark: text-[13px] text-center py-4 dark:text-slate-600 dark:">No achievements yet. Click "Add Achievement" to highlight school accomplishments.</p>
+          <p className="text-slate-600 dark:text-slate-500 text-[13px] text-center py-4 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">No achievements yet. Click "Add Achievement" to highlight school accomplishments.</p>
         ) : (
           <div className="space-y-4">
             {data.achievements.map((a, idx) => (

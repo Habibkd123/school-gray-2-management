@@ -562,7 +562,7 @@ export default function SalaryDashboardPage() {
           <h1 className="page-title flex items-center gap-2">
             <DollarSign className="w-6 h-6 text-primary" /> Subject Syllabus & Payroll Hub
           </h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <span>Finance</span>

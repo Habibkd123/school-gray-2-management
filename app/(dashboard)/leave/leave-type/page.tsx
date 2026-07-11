@@ -210,7 +210,7 @@ export default function LeaveTypePage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Leave Type</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/leave" className="hover:text-primary">HRM</Link>
@@ -408,7 +408,7 @@ export default function LeaveTypePage() {
 
         {/* Controls Section */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="card-subtitle flex items-center gap-2 text-[13px]">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
             <span>Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{pag.paged.length}</span> of <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredData.length}</span> items</span>
           </div>
 
@@ -426,7 +426,7 @@ export default function LeaveTypePage() {
 
         {/* Table */}
         <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
-          <table className="erp-table text-[13px] whitespace-nowrap">
+          <table className="w-full text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">
@@ -531,7 +531,7 @@ export default function LeaveTypePage() {
           <div className="flex items-center justify-between pt-2">
             <div>
               <label className="text-[14px] font-bold text-foreground dark:text-slate-100 block">Status</label>
-              <span className="card-subtitle text-[13px]">Change the Status by toggle</span>
+              <span className="text-[13px] text-slate-500 dark:text-slate-400">Change the Status by toggle</span>
             </div>
             <button 
               type="button"

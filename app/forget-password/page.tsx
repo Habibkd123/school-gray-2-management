@@ -118,7 +118,7 @@ export default function ForgetPasswordPage() {
                   <CheckCircle2 className="w-8 h-8 text-emerald-500" />
                 </div>
                 <h1 className="text-[22px] font-bold text-slate-900 dark:text-slate-100 mb-2">Check your email</h1>
-                <p className="card-subtitle text-[13px] leading-relaxed mb-6">
+                <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
                   If <strong className="text-slate-700 dark:text-slate-200">{email}</strong> is registered, we&apos;ve sent password reset instructions.
                 </p>
 
@@ -150,7 +150,7 @@ export default function ForgetPasswordPage() {
               <>
                 <div className="mb-6">
                   <h1 className="text-[22px] font-bold text-slate-900 dark:text-slate-100 mb-1">Forgot Password?</h1>
-                  <p className="card-subtitle text-[13px] leading-relaxed">
+                  <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed">
                     Enter your email address and we&apos;ll send you a link to reset your password.
                   </p>
                 </div>

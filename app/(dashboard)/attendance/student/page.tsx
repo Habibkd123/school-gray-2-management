@@ -438,7 +438,7 @@ export default function StudentAttendancePage() {
             )}
             Student Attendance Desk
           </h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <span className="hover:text-primary cursor-pointer" onClick={() => setFilterClassId("")}>Attendance</span>
@@ -1127,7 +1127,7 @@ export default function StudentAttendancePage() {
                       </div>
 
                       <div className="overflow-x-auto border border-border/60 rounded-lg">
-                        <table className="erp-table text-xs">
+                        <table className="w-full text-xs">
                           <thead className="bg-[#F8FAFC] dark:bg-slate-950/20 text-slate-500 border-b border-border/60 font-bold">
                             <tr>
                               <th className="px-3 py-2 w-1/3">Student Name</th>

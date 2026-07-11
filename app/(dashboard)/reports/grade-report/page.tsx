@@ -63,7 +63,7 @@ export default function GradeReportPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Grade Report</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span><span>/</span>
             <span className="hover:text-primary cursor-pointer">Reports</span><span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Grade Report</span>
@@ -105,7 +105,7 @@ export default function GradeReportPage() {
         </div>
 
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <span className="card-subtitle text-[13px]">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredResults.length}</span> results</span>
+          <span className="text-[13px] text-slate-500 dark:text-slate-400">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredResults.length}</span> results</span>
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input type="text" placeholder="Search student…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors" />
@@ -113,7 +113,7 @@ export default function GradeReportPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="erp-table text-[13px] whitespace-nowrap">
+          <table className="w-full text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Student</th>

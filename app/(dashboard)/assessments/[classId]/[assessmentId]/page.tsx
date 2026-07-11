@@ -138,7 +138,7 @@ export default function TestDetailsPage() {
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div className="flex-1 min-w-0 text-left">
-            <div className="card-subtitle flex items-center gap-2 text-[13px] mb-1 font-normal">
+            <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mb-1 font-normal">
               <Link href="/assessments" className="hover:text-primary transition-colors">Assessments</Link>
               <span>/</span>
               <Link href={`/assessments/${classId}`} className="hover:text-primary transition-colors">Class Details</Link>
@@ -256,7 +256,7 @@ export default function TestDetailsPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="erp-table">
+              <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="px-5 py-3 text-[11px] font-semibold text-slate-500 uppercase tracking-wider w-20">Roll No</th>
@@ -276,7 +276,7 @@ export default function TestDetailsPage() {
                   ) : (
                     rows.map((row) => (
                       <tr key={row.student_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                        <td className="card-subtitle px-5 py-3.5 text-[13px]">
+                        <td className="px-5 py-3.5 text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                           {row.roll_no || "—"}
                         </td>
                         <td className="px-5 py-3.5">

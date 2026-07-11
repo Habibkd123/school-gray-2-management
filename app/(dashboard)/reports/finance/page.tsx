@@ -258,7 +258,7 @@ export default function FinanceReportPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left print:hidden">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Finance Report</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <span>Reports</span>
@@ -476,7 +476,7 @@ export default function FinanceReportPage() {
                   Class-wise Fee Collection Summary
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="erp-table text-xs">
+                  <table className="w-full text-xs">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-slate-950 border-b border-border text-slate-500 font-bold">
                         <th className="px-6 py-3.5">Class / Grade Name</th>
@@ -558,7 +558,7 @@ export default function FinanceReportPage() {
                   Salary Disbursement Transaction Logs
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="erp-table text-xs">
+                  <table className="w-full text-xs">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-slate-950 border-b border-border text-slate-500 font-bold">
                         <th className="px-6 py-3.5">Teacher Name</th>

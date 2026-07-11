@@ -605,7 +605,7 @@ export default function TeachersPage() {
 
         {/* Rows and Search */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 border-b border-border pb-5">
-          <div className="card-subtitle flex items-center gap-2 text-[13px] text-left">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 font-medium text-left">
             Showing{" "}
             <span className="font-bold text-slate-700 dark:text-slate-200">
               {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)}` : "0"}

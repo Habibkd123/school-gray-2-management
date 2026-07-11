@@ -449,7 +449,7 @@ export default function AssessmentsPage() {
               `${classes.find(c => c._id === routeClassId)?.name} ${classes.find(c => c._id === routeClassId)?.section ? `- ${classes.find(c => c._id === routeClassId)?.section}` : ""}`
             ) : "Class Assessments"}
           </h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <Link href="/assessments" className="hover:text-primary transition-colors">Assessments</Link>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Class Details</span>
@@ -504,8 +504,8 @@ export default function AssessmentsPage() {
             <ClipboardList className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title leading-none">{stats.total}</h3>
-            <p className="card-subtitle text-[13px] mt-1.5">Total Assessments</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats.total}</h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Total Assessments</p>
           </div>
         </div>
 
@@ -514,8 +514,8 @@ export default function AssessmentsPage() {
             <Calendar className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title leading-none">{stats.scheduled}</h3>
-            <p className="card-subtitle text-[13px] mt-1.5">Scheduled</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats.scheduled}</h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Scheduled</p>
           </div>
         </div>
 
@@ -524,8 +524,8 @@ export default function AssessmentsPage() {
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title leading-none">{stats.completed}</h3>
-            <p className="card-subtitle text-[13px] mt-1.5">Completed</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats.completed}</h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Completed</p>
           </div>
         </div>
 
@@ -534,8 +534,8 @@ export default function AssessmentsPage() {
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title leading-none">{stats.draft}</h3>
-            <p className="card-subtitle text-[13px] mt-1.5">Draft</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats.draft}</h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Draft</p>
           </div>
         </div>
       </div>
@@ -778,7 +778,7 @@ export default function AssessmentsPage() {
 
         {/* Filter / Search Info bar */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50 border-b border-border">
-          <div className="card-subtitle flex items-center gap-2 text-[13px]">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
             <span>Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredTests.length}</span> assessments</span>
           </div>
 
@@ -822,7 +822,7 @@ export default function AssessmentsPage() {
             </div>
           ) : viewMode === "table" ? (
             <div className="overflow-x-auto border border-border rounded-xl">
-              <table className="erp-table">
+              <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-800/40 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                     <th className="px-5 py-3.5 w-12 text-center">#</th>

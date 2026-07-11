@@ -70,7 +70,7 @@ export default function LeaveReportPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Leave Report</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span><span>/</span>
             <span className="hover:text-primary cursor-pointer">Reports</span><span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Leave Report</span>
@@ -106,7 +106,7 @@ export default function LeaveReportPage() {
         ].map(card => (
           <div key={card.label} className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm">
             <p className={`text-xl font-bold border rounded-lg px-3 py-1.5 inline-block mb-2 ${card.color}`}>{card.value}</p>
-            <p className="card-subtitle text-[13px] font-semibold">{card.label}</p>
+            <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400">{card.label}</p>
           </div>
         ))}
       </div>
@@ -174,7 +174,7 @@ export default function LeaveReportPage() {
         </div>
 
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <span className="card-subtitle text-[13px]">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredLeaves.length}</span> requests</span>
+          <span className="text-[13px] text-slate-500 dark:text-slate-400">Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredLeaves.length}</span> requests</span>
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input type="text" placeholder="Search applicant…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors" />
@@ -182,7 +182,7 @@ export default function LeaveReportPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="erp-table text-[13px] whitespace-nowrap">
+          <table className="w-full text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Applicant</th>
@@ -232,9 +232,9 @@ export default function LeaveReportPage() {
           </table>
         </div>
         <div className="p-5 border-t border-border flex items-center justify-end gap-2">
-          <button className="card-subtitle px-3 py-1.5 text-[13px] hover:text-slate-700 transition-colors">Prev</button>
+          <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 transition-colors">Prev</button>
           <button className="w-7 h-7 rounded-lg bg-primary text-white text-[13px] font-medium flex items-center justify-center">1</button>
-          <button className="card-subtitle px-3 py-1.5 text-[13px] hover:text-slate-700 transition-colors">Next</button>
+          <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 transition-colors">Next</button>
         </div>
       </div>
     </div>

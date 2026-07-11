@@ -129,13 +129,13 @@ export default function GeneratedReportCardsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="section-title flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
             <span className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
               <FileText className="w-5 h-5 text-white" />
             </span>
             Generated Report Cards
           </h1>
-          <p className="card-subtitle text-[13px] mt-1 ml-12">{batches.length} batch{batches.length !== 1 ? "es" : ""} · {batches.reduce((a, b) => a + b.studentIds.length, 0)} report cards total</p>
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 ml-12">{batches.length} batch{batches.length !== 1 ? "es" : ""} · {batches.reduce((a, b) => a + b.studentIds.length, 0)} report cards total</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={refresh} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer shadow-sm">
@@ -313,7 +313,7 @@ export default function GeneratedReportCardsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 max-w-md w-full border border-border">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Delete Batch?</h3>
-            <p className="card-subtitle text-[13px] mb-5">
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-5">
               This will permanently delete the batch and all {batches.find((b) => b.id === confirmDelete)?.studentIds.length} generated report cards. This action cannot be undone.
             </p>
             <div className="flex gap-3">

@@ -98,7 +98,7 @@ export default function DashboardLayout({
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 text-primary animate-spin" />
-          <p className="card-subtitle text-[13px]">Loading...</p>
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">Loading...</p>
         </div>
       </div>
     );

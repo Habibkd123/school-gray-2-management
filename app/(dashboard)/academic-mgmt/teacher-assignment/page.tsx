@@ -784,7 +784,7 @@ export default function TeacherAssignmentPage() {
 
         {/* Count & Global Search */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 border-b border-border pb-5">
-          <div className="card-subtitle text-[13px]">
+          <div className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
             Showing{" "}
             <span className="font-bold text-slate-700 dark:text-slate-250">
               {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)}` : "0"}

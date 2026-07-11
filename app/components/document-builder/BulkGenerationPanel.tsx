@@ -293,7 +293,7 @@ export function BulkGenerationPanel() {
           {studentsLoading ? (
             <div className="flex items-center justify-center p-8 gap-2">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
-              <span className="card-subtitle text-[13px]">Loading students…</span>
+              <span className="text-[13px] text-slate-500">Loading students…</span>
             </div>
           ) : (
             <div className="max-h-52 overflow-y-auto divide-y divide-border/50">

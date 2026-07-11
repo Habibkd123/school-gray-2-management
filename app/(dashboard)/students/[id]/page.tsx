@@ -806,7 +806,7 @@ function StudentViewContent() {
                 </div>
 
                 <div className="overflow-x-auto custom-scrollbar">
-                  <table className="erp-table text-[12px] min- sm:w-[900px]">
+                  <table className="w-full text-left text-[12px] min-w-full sm:w-[900px]">
                     <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border font-bold">
                       <tr>
                         <th className="px-5 py-3 whitespace-nowrap">Fees Group</th>
@@ -973,7 +973,7 @@ function StudentViewContent() {
 
                       {/* Subjects Table */}
                       <div className="overflow-x-auto">
-                        <table className="erp-table text-[13px]">
+                        <table className="w-full text-left text-[13px] border-collapse">
                           <thead>
                             <tr className="border-b border-border bg-slate-50/20 dark:bg-slate-800/20 text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                               <th className="px-6 py-3.5">Subject</th>
@@ -1168,7 +1168,7 @@ function StudentViewContent() {
                     </div>
 
                     <div className="overflow-x-auto">
-                      <table className="erp-table text-[12px]">
+                      <table className="w-full text-left text-[12px]">
                         <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border font-bold">
                           <tr>
                             <th className="px-5 py-3">Leave Type</th>
@@ -1254,7 +1254,7 @@ function StudentViewContent() {
                     </div>
 
                     <div className="overflow-x-auto custom-scrollbar">
-                      <table className="erp-table text-[12px] min- sm:w-[800px]">
+                      <table className="w-full text-left text-[12px] min-w-full sm:w-[800px]">
                         <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border font-bold">
                           <tr>
                             <th className="px-4 py-3 whitespace-nowrap">Date | Month</th>
@@ -1873,7 +1873,7 @@ function ExamCard({
       {expanded && (
         <div className="p-5 bg-white dark:bg-slate-900 border-t border-border animate-in slide-in-from-top-2 duration-200">
           <div className="overflow-x-auto">
-            <table className="erp-table text-[12px] min- sm:w-[600px]">
+            <table className="w-full text-left text-[12px] min-w-full sm:w-[600px]">
               <thead className="border-b border-border text-slate-900 dark:text-white font-bold">
                 <tr>
                   <th className="py-2.5 px-4">Subject</th>

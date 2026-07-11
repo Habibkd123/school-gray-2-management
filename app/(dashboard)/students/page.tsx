@@ -517,7 +517,7 @@ export default function StudentsPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Students List</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <span>Student Management</span>
@@ -808,7 +808,7 @@ export default function StudentsPage() {
 
           {/* Search Row */}
           <div className="px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border">
-            <div className="card-subtitle text-[13px]">
+            <div className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
               Showing{" "}
               <span className="font-bold text-slate-700 dark:text-slate-200">
                 {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)}` : "0"}
@@ -1317,7 +1317,7 @@ export default function StudentsPage() {
                 <div className="space-y-4 text-left">
                   <h4 className="text-[14px] font-semibold text-slate-900 dark:text-white">Report Card (Recent Term Results)</h4>
                   <div className="border border-border rounded-xl overflow-hidden shadow-sm">
-                    <table className="erp-table text-[13px]">
+                    <table className="w-full text-left text-[13px] border-collapse">
                       <thead>
                         <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                           <th className="px-5 py-3.5">Subject</th>
@@ -1343,7 +1343,7 @@ export default function StudentsPage() {
                 <div className="space-y-4 text-left">
                   <h4 className="text-[14px] font-semibold text-slate-900 dark:text-white">Financial Invoices</h4>
                   <div className="border border-border rounded-xl overflow-hidden shadow-sm">
-                    <table className="erp-table text-[13px]">
+                    <table className="w-full text-left text-[13px] border-collapse">
                       <thead>
                         <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                           <th className="px-5 py-3.5">Invoice Description</th>

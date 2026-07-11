@@ -505,7 +505,7 @@ export default function BulkImport({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">{title}</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <Link href={backUrl} className="hover:text-primary">Management</Link>
@@ -576,7 +576,7 @@ export default function BulkImport({
             <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-10 card-shadow flex flex-col items-center justify-center border-dashed border-2 hover:border-primary/50 transition-colors min-h-[300px]">
               <Upload className="w-12 h-12 text-slate-400 mb-4" />
               <h3 className="text-[16px] font-bold text-slate-800 dark:text-slate-200 mb-2">Upload spreadsheet</h3>
-              <p className="card-subtitle text-[13px] mb-6 text-center max-w-sm">
+              <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-6 text-center max-w-sm">
                 Drag and drop your spreadsheet (.xlsx, .csv) here or browse files on your computer.
               </p>
               <input
@@ -702,7 +702,7 @@ export default function BulkImport({
           </div>
 
           <div className="overflow-x-auto max-h-[450px]">
-            <table className="erp-table">
+            <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-border text-[12px] text-slate-500 uppercase font-semibold">
                   <th className="px-5 py-3 text-center w-12">
@@ -776,7 +776,7 @@ export default function BulkImport({
           <Loader2 className="w-12 h-12 animate-spin text-primary" />
           <div className="space-y-2">
             <h3 className="text-[16px] font-bold text-slate-800 dark:text-slate-200">Importing records in progress...</h3>
-            <p className="card-subtitle text-[13px]">Please do not close this tab or navigate away.</p>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400">Please do not close this tab or navigate away.</p>
           </div>
           <div className="w-full max-w-md bg-slate-100 dark:bg-slate-800 rounded-full h-3.5 overflow-hidden">
             <div
@@ -795,7 +795,7 @@ export default function BulkImport({
             <CheckCircle className="w-8 h-8 text-emerald-500" />
             <div>
               <h2 className="text-[18px] font-bold text-slate-900 dark:text-white">Import Process Finished</h2>
-              <p className="card-subtitle text-[13px] mt-0.5">Summary of bulk spreadsheet import results.</p>
+              <p className="text-[13px] text-slate-500 mt-0.5">Summary of bulk spreadsheet import results.</p>
             </div>
           </div>
 
@@ -803,7 +803,7 @@ export default function BulkImport({
             <div className="bg-emerald-50 dark:bg-emerald-950/10 border border-emerald-200 dark:border-emerald-900/30 rounded-xl p-5 flex items-center justify-between">
               <div>
                 <p className="text-[13px] text-emerald-800 dark:text-emerald-400 font-semibold uppercase tracking-wide">Successfully Imported</p>
-                <h3 className="page-title text-emerald-600 dark:text-emerald-400 mt-1">{importResult.successCount}</h3>
+                <h3 className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">{importResult.successCount}</h3>
               </div>
               <Check className="w-10 h-10 text-emerald-500/20" />
             </div>
@@ -811,7 +811,7 @@ export default function BulkImport({
             <div className="bg-rose-50 dark:bg-rose-950/10 border border-rose-200 dark:border-rose-900/30 rounded-xl p-5 flex items-center justify-between">
               <div>
                 <p className="text-[13px] text-rose-800 dark:text-rose-400 font-semibold uppercase tracking-wide">Failed to Save</p>
-                <h3 className="page-title text-rose-600 dark:text-rose-400 mt-1">{importResult.failedCount}</h3>
+                <h3 className="text-3xl font-extrabold text-rose-600 dark:text-rose-400 mt-1">{importResult.failedCount}</h3>
               </div>
               <AlertCircle className="w-10 h-10 text-rose-500/20" />
             </div>
@@ -821,7 +821,7 @@ export default function BulkImport({
             <div className="space-y-3">
               <h3 className="text-[15px] font-bold text-slate-800 dark:text-slate-200">Failure Error Logs</h3>
               <div className="border border-border rounded-xl overflow-hidden max-h-[250px] overflow-y-auto">
-                <table className="erp-table text-[13px]">
+                <table className="w-full border-collapse text-[13px]">
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-border text-[12px] text-slate-500 font-semibold uppercase">
                       <th className="px-4 py-2.5 text-left w-1/3">Row/Record</th>

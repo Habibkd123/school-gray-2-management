@@ -118,7 +118,7 @@ export default function AssessmentsClassListPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Assessments</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-bold">Assessments</span>
@@ -139,8 +139,8 @@ export default function AssessmentsClassListPage() {
             <ClipboardList className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title leading-none">{stats.total}</h3>
-            <p className="card-subtitle text-[13px] mt-1.5">Total Assessments</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats.total}</h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Total Assessments</p>
           </div>
         </div>
 
@@ -149,8 +149,8 @@ export default function AssessmentsClassListPage() {
             <Calendar className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title leading-none">{stats.scheduled}</h3>
-            <p className="card-subtitle text-[13px] mt-1.5">Scheduled</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats.scheduled}</h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Scheduled</p>
           </div>
         </div>
 
@@ -159,8 +159,8 @@ export default function AssessmentsClassListPage() {
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title leading-none">{stats.completed}</h3>
-            <p className="card-subtitle text-[13px] mt-1.5">Completed</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats.completed}</h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Completed</p>
           </div>
         </div>
 
@@ -169,8 +169,8 @@ export default function AssessmentsClassListPage() {
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title leading-none">{stats.draft}</h3>
-            <p className="card-subtitle text-[13px] mt-1.5">Draft</p>
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats.draft}</h3>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Draft</p>
           </div>
         </div>
       </div>
@@ -179,7 +179,7 @@ export default function AssessmentsClassListPage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm text-left">
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50 rounded-xl">
           <div className="flex flex-wrap items-center gap-4 flex-1">
-            <div className="card-subtitle flex items-center gap-2 text-[13px]">
+            <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
               <span>Total</span>
               <span className="font-bold text-slate-700 dark:text-slate-200">{filteredClassGroups.length}</span>
               <span>{filteredClassGroups.length === 1 ? "Class" : "Classes"}</span>

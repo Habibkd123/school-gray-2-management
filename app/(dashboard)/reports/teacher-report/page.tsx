@@ -201,7 +201,7 @@ export default function TeacherReportPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left print:hidden">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Teacher Report</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <span>Reports</span>
@@ -394,7 +394,7 @@ export default function TeacherReportPage() {
         </div>
 
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <span className="card-subtitle text-[13px]">
+          <span className="text-[13px] text-slate-500 dark:text-slate-400">
             Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredTeachers.length}</span> teachers
           </span>
           <div className="relative">
@@ -413,7 +413,7 @@ export default function TeacherReportPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="erp-table text-[13px] whitespace-nowrap">
+          <table className="w-full text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Teacher</th>
@@ -528,7 +528,7 @@ export default function TeacherReportPage() {
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
-              className="card-subtitle px-3 py-1.5 text-[13px] hover:text-slate-700 disabled:opacity-50 transition-colors"
+              className="px-3 py-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-700 disabled:opacity-50 transition-colors dark:text-slate-400"
             >
               Prev
             </button>
@@ -548,7 +548,7 @@ export default function TeacherReportPage() {
             <button
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
-              className="card-subtitle px-3 py-1.5 text-[13px] hover:text-slate-700 disabled:opacity-50 transition-colors"
+              className="px-3 py-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-700 disabled:opacity-50 transition-colors dark:text-slate-400"
             >
               Next
             </button>
@@ -598,7 +598,7 @@ export default function TeacherReportPage() {
                   {/* Print Title Header */}
                   <div className="hidden print:flex items-center justify-between border-b border-slate-300 pb-4 mb-4">
                     <div>
-                      <h2 className="section-title">Faculty Academic Profile & Performance Report</h2>
+                      <h2 className="text-2xl font-bold text-slate-900">Faculty Academic Profile & Performance Report</h2>
                       <p className="text-xs text-slate-500">MySchoolLife Management System</p>
                     </div>
                     <div className="text-right">
@@ -651,7 +651,7 @@ export default function TeacherReportPage() {
                         <Calendar className="w-4 h-4 text-emerald-500" />
                       </div>
                       <div className="flex items-baseline gap-2">
-                        <span className="page-title text-emerald-600">{teacherDetail.attendance.rate}%</span>
+                        <span className="text-3xl font-extrabold text-emerald-600">{teacherDetail.attendance.rate}%</span>
                         <span className="text-xs text-slate-400 font-medium">({teacherDetail.attendance.present} / {teacherDetail.attendance.workingDays} days present)</span>
                       </div>
                       <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -671,7 +671,7 @@ export default function TeacherReportPage() {
                         <Award className="w-4 h-4 text-indigo-500" />
                       </div>
                       <div className="flex items-baseline gap-2">
-                        <span className="page-title text-indigo-600">{teacherDetail.tests.totalCreated}</span>
+                        <span className="text-3xl font-extrabold text-indigo-600">{teacherDetail.tests.totalCreated}</span>
                         <span className="text-xs text-slate-400 font-medium">Class tests created</span>
                       </div>
                       <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -687,7 +687,7 @@ export default function TeacherReportPage() {
                         <BookOpen className="w-4 h-4 text-amber-500" />
                       </div>
                       <div className="flex items-baseline gap-2">
-                        <span className="page-title text-amber-600">{teacherDetail.homework.totalGiven}</span>
+                        <span className="text-3xl font-extrabold text-amber-600">{teacherDetail.homework.totalGiven}</span>
                         <span className="text-xs text-slate-400 font-medium">Assignments published</span>
                       </div>
                       <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -730,7 +730,7 @@ export default function TeacherReportPage() {
                         <p className="text-xs text-slate-400 py-6 text-center font-medium">No assigned classes found.</p>
                       ) : (
                         <div className="overflow-x-auto">
-                          <table className="erp-table text-[13px] whitespace-nowrap">
+                          <table className="w-full text-[13px] whitespace-nowrap text-left">
                             <thead className="bg-[#F8FAFC] dark:bg-slate-800 border-b border-border">
                               <tr>
                                 <th className="px-5 py-3 font-bold text-slate-700 dark:text-slate-200">Class Name</th>
@@ -759,7 +759,7 @@ export default function TeacherReportPage() {
                   {activeTab === "tests" && (
                     <div className="border border-border rounded-xl overflow-hidden bg-white dark:bg-slate-900">
                       <div className="overflow-x-auto">
-                        <table className="erp-table text-[13px] whitespace-nowrap">
+                        <table className="w-full text-[13px] whitespace-nowrap text-left">
                           <thead className="bg-[#F8FAFC] dark:bg-slate-800 border-b border-border">
                             <tr>
                               <th className="px-5 py-3 font-bold text-slate-700 dark:text-slate-200">Assessment Title</th>
@@ -803,7 +803,7 @@ export default function TeacherReportPage() {
                   {activeTab === "homework" && (
                     <div className="border border-border rounded-xl overflow-hidden bg-white dark:bg-slate-900">
                       <div className="overflow-x-auto">
-                        <table className="erp-table text-[13px] whitespace-nowrap">
+                        <table className="w-full text-[13px] whitespace-nowrap text-left">
                           <thead className="bg-[#F8FAFC] dark:bg-slate-800 border-b border-border">
                             <tr>
                               <th className="px-5 py-3 font-bold text-slate-700 dark:text-slate-200">Homework Title</th>

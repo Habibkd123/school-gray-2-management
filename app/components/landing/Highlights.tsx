@@ -49,7 +49,7 @@ export function Highlights({ data }: { data?: LandingData | null }) {
                   {renderStatIcon(item.icon)}
                 </div>
               )}
-              <h3 className="page-title lg:text-5xl tracking-tight mb-2">
+              <h3 className="text-4xl lg:text-5xl font-bold text-foreground tracking-tight mb-2">
                 {item.value}
               </h3>
               <p className="font-bold text-muted-text uppercase tracking-widest text-xs">

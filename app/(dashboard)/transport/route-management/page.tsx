@@ -147,7 +147,7 @@ export default function RouteManagementPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Transport Management</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span><span>/</span><span>Transport</span><span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Route Management</span>
           </div>
@@ -250,7 +250,7 @@ export default function RouteManagementPage() {
         </div>
 
         {/* Search Row */}
-        <div className="card-subtitle p-4 border-b border-border flex items-center justify-between gap-4 text-[13px]">
+        <div className="p-4 border-b border-border flex items-center justify-between gap-4 text-[13px] text-slate-500 dark:text-slate-400">
           <div className="flex flex-wrap items-center gap-2">
             <span>Row Per Page</span>
             <div className="flex items-center gap-1 px-3 py-1.5 border border-border rounded bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 cursor-pointer">10 <ChevronDown className="w-3.5 h-3.5" /></div>
@@ -265,7 +265,7 @@ export default function RouteManagementPage() {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="erp-table text-[13px] whitespace-nowrap">
+          <table className="w-full text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-4 py-4 text-left w-10"><input type="checkbox" className="rounded w-4 h-4 accent-primary" /></th>
@@ -361,7 +361,7 @@ export default function RouteManagementPage() {
         </div>
 
         {/* Pagination */}
-        <div className="card-subtitle p-4 border-t border-border flex items-center justify-between text-[13px]">
+        <div className="p-4 border-t border-border flex items-center justify-between text-[13px] text-slate-500 dark:text-slate-400">
           <span>Showing 1–{Math.min(10, filtered.length)} of {filtered.length}</span>
           <div className="flex items-center gap-1">
             <button className="px-3 py-1.5 font-medium hover:text-slate-700 dark:hover:text-slate-200">Prev</button>
@@ -517,7 +517,7 @@ export default function RouteManagementPage() {
             <div className="w-14 h-14 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center mx-auto"><Trash2 className="w-7 h-7 text-rose-500" /></div>
             <div>
               <h3 className="font-bold text-slate-900 dark:text-white text-[16px] mb-1">Delete {deleteTarget.id}?</h3>
-              <p className="card-subtitle text-[13px]">This will permanently remove <strong>{deleteTarget.routeName}</strong>.</p>
+              <p className="text-[13px] text-slate-500 dark:text-slate-400">This will permanently remove <strong>{deleteTarget.routeName}</strong>.</p>
             </div>
             <div className="flex justify-center gap-3">
               <button onClick={() => setDeleteTarget(null)} className="px-5 py-2.5 border border-border text-[13px] font-semibold rounded-lg bg-white dark:bg-slate-900 text-slate-700 hover:bg-slate-50 transition-colors dark:text-slate-200">Cancel</button>

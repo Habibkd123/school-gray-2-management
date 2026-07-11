@@ -131,7 +131,7 @@ export default function ResultsPage({ params }: { params: Promise<{ classId: str
       {/* Print Header */}
       <div className="hidden print:block text-center mb-4">
         <h2 className="text-lg font-bold">{test?.title} — Results</h2>
-        <p className="card-subtitle">Date: {test ? new Date(test.test_date).toLocaleDateString("en-IN") : ""} | Total Marks: {test?.total_marks}</p>
+        <p className="text-sm text-gray-500">Date: {test ? new Date(test.test_date).toLocaleDateString("en-IN") : ""} | Total Marks: {test?.total_marks}</p>
       </div>
 
       {/* Summary */}
@@ -186,7 +186,7 @@ export default function ResultsPage({ params }: { params: Promise<{ classId: str
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="erp-table">
+            <table className="w-full">
               <thead>
                 <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-800/30 print:bg-gray-50">
                   {["Rank", "Roll No", "Student Name", "Marks Obtained", "Total", "Percentage", "Result", "Remarks"].map((h) => (
@@ -207,13 +207,13 @@ export default function ResultsPage({ params }: { params: Promise<{ classId: str
                         }`}>{r.rank}</span>
                       ) : "—"}
                     </td>
-                    <td className="card-subtitle px-4 py-3 text-[13px]">{r.roll_no}</td>
+                    <td className="px-4 py-3 text-[13px] text-slate-500 dark:text-slate-400">{r.roll_no}</td>
                     <td className="px-4 py-3">
                       <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200">{r.name}</p>
                       <p className="text-[11px] text-slate-400">{r.admission_no}</p>
                     </td>
                     <td className="px-4 py-3 text-[14px] font-bold text-slate-900 dark:text-slate-100">{r.marks_obtained}</td>
-                    <td className="card-subtitle px-4 py-3 text-[13px]">{r.total_marks}</td>
+                    <td className="px-4 py-3 text-[13px] text-slate-500">{r.total_marks}</td>
                     <td className="px-4 py-3">
                       <span className={`text-[13px] font-semibold ${r.percentage >= 75 ? "text-emerald-600" : r.percentage >= 35 ? "text-amber-600" : "text-rose-600"}`}>
                         {r.percentage}%

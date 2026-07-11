@@ -112,7 +112,7 @@ export default function LoginPage() {
 
             <div className="mb-6">
               <h1 className="text-[24px] font-bold text-slate-900 dark:text-slate-100 mb-1">Welcome Back</h1>
-              <p className="card-subtitle text-[13px]">Sign in to your school account</p>
+              <p className="text-[13px] text-slate-500 dark:text-slate-400">Sign in to your school account</p>
             </div>
 
             {/* Tabs */}

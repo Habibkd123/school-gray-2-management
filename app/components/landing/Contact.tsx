@@ -102,7 +102,7 @@ export function Contact({ data }: { data?: ContactData | null }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="page-title md:text-5xl mb-6 leading-tight"
+            className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight"
           >
             Contact Admissions
           </motion.h3>
@@ -226,7 +226,7 @@ export function Contact({ data }: { data?: ContactData | null }) {
             transition={{ duration: 0.7 }}
             className="bg-white/80 dark:bg-white/5 backdrop-blur-2xl border border-slate-200 dark:border-white/10 p-10 lg:p-12 rounded-xl shadow-lg relative"
           >
-            <h4 className="page-title mb-8">Send an Enquiry</h4>
+            <h4 className="text-3xl font-bold text-foreground mb-8">Send an Enquiry</h4>
 
             {status === "success" && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 p-4 bg-emerald-500/20 border border-emerald-500/30 rounded-lg flex items-center gap-3">

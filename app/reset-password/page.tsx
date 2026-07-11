@@ -103,7 +103,7 @@ function ResetPasswordForm() {
             <CheckCircle2 className="w-8 h-8 text-emerald-500" />
           </div>
           <h1 className="text-[22px] font-bold text-[#202c4b] dark:text-slate-100 mb-2">Password Reset!</h1>
-          <p className="card-subtitle text-[13px] leading-relaxed mb-6">
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
             Your password has been successfully reset. Redirecting you to login...
           </p>
           <Link
@@ -118,7 +118,7 @@ function ResetPasswordForm() {
         <>
           <div className="mb-6">
             <h1 className="text-[22px] font-bold text-[#202c4b] dark:text-slate-100 mb-1">Reset Password</h1>
-            <p className="card-subtitle text-[13px] leading-relaxed">
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 leading-relaxed">
               Enter your new password below.
             </p>
           </div>

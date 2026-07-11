@@ -125,7 +125,7 @@ export default function StudentLeavePage() {
       {/* ── Page Header ────────────────────────────────────────────── */}
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">Apply for Leave</h1>
-        <p className="card-subtitle text-[13px] mt-1">
+        <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
           Request leaves and track your approval status
         </p>
       </div>

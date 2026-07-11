@@ -55,7 +55,7 @@ export function FAQ({ data }: FAQProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="page-title md:text-5xl mb-6 leading-tight"
+            className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight"
           >
             Frequently Asked Questions
           </motion.h3>

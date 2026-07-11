@@ -37,7 +37,7 @@ export default function SuperAdminDashboard({ user }: SuperAdminDashboardProps) 
         }}
       >
         <div className="relative z-10">
-          <h2 className="section-title flex items-center gap-3">
+          <h2 className="text-2xl font-semibold flex items-center gap-3">
             Welcome Back, {user?.name || "Super Admin"}
             <span className="bg-amber-500/20 px-2.5 py-0.5 rounded-full border border-amber-500/30 text-amber-400 text-xs font-semibold uppercase tracking-wider">
               Super Admin
@@ -60,10 +60,10 @@ export default function SuperAdminDashboard({ user }: SuperAdminDashboardProps) 
             <Building2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title">
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
               {loadingSchools ? "..." : superAdminSchools.length}
             </h3>
-            <p className="card-subtitle text-[13px] mt-0.5">Total Schools</p>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">Total Schools</p>
           </div>
         </div>
 
@@ -72,10 +72,10 @@ export default function SuperAdminDashboard({ user }: SuperAdminDashboardProps) 
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title">
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
               {loadingSchools ? "..." : superAdminSchools.filter((s) => s.is_active).length}
             </h3>
-            <p className="card-subtitle text-[13px] mt-0.5">Active Institutions</p>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">Active Institutions</p>
           </div>
         </div>
 
@@ -84,10 +84,10 @@ export default function SuperAdminDashboard({ user }: SuperAdminDashboardProps) 
             <X className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="section-title">
+            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">
               {loadingSchools ? "..." : superAdminSchools.filter((s) => !s.is_active).length}
             </h3>
-            <p className="card-subtitle text-[13px] mt-0.5">Inactive / Suspended</p>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">Inactive / Suspended</p>
           </div>
         </div>
       </div>
@@ -118,7 +118,7 @@ export default function SuperAdminDashboard({ user }: SuperAdminDashboardProps) 
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="erp-table">
+              <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-900/50">
                     <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">School</th>

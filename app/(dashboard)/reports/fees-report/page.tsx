@@ -59,7 +59,7 @@ export default function FeesReportPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 print:hidden">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Fees Report</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/reports" className="hover:text-primary">Reports</Link>
@@ -143,7 +143,7 @@ export default function FeesReportPage() {
             </div>
             
             <div className="overflow-x-auto">
-              <table className="erp-table text-[13px]">
+              <table className="w-full text-[13px]">
                 <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border print:bg-slate-100 print:text-black">
                   <tr>
                     <th className="px-5 py-3 text-left font-bold text-slate-700 dark:text-slate-200">Date</th>

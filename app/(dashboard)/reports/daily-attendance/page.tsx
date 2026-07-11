@@ -144,7 +144,7 @@ export default function DailyAttendanceReportPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Daily Attendance Report</h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
+          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <span>Reports</span>
@@ -207,7 +207,7 @@ export default function DailyAttendanceReportPage() {
             <p className={`text-xl font-bold border rounded-lg px-3 py-1.5 inline-block mb-2 ${card.color}`}>
               {card.value}
             </p>
-            <p className="card-subtitle text-[13px] font-semibold">{card.label}</p>
+            <p className="text-[13px] font-semibold text-slate-500 dark:text-slate-400">{card.label}</p>
           </div>
         ))}
       </div>
@@ -241,7 +241,7 @@ export default function DailyAttendanceReportPage() {
         </div>
 
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <span className="card-subtitle text-[13px]">
+          <span className="text-[13px] text-slate-500 dark:text-slate-400">
             Showing <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredStats.length}</span> classes
           </span>
           <div className="relative">
@@ -260,7 +260,7 @@ export default function DailyAttendanceReportPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="erp-table text-[13px] whitespace-nowrap">
+          <table className="w-full text-[13px] whitespace-nowrap">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
@@ -334,7 +334,7 @@ export default function DailyAttendanceReportPage() {
             <button
               onClick={() => setPage((p) => Math.max(p - 1, 1))}
               disabled={page === 1}
-              className="card-subtitle px-3 py-1.5 text-[13px] hover:text-slate-700 disabled:opacity-50 transition-colors"
+              className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 disabled:opacity-50 transition-colors"
             >
               Prev
             </button>
@@ -354,7 +354,7 @@ export default function DailyAttendanceReportPage() {
             <button
               onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
               disabled={page === totalPages}
-              className="card-subtitle px-3 py-1.5 text-[13px] hover:text-slate-700 disabled:opacity-50 transition-colors"
+              className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 disabled:opacity-50 transition-colors"
             >
               Next
             </button>

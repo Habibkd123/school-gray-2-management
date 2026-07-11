@@ -206,7 +206,7 @@ export default function TeacherDetailsPage() {
   const InfoRow = ({ label, value }: { label: string; value: string }) => (
     <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800/30">
       <span className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">{label}</span>
-      <span className="card-subtitle text-[13px] text-right">{value}</span>
+      <span className="text-[13px] text-slate-500 dark:text-slate-400 text-right">{value}</span>
     </div>
   );
 
@@ -681,7 +681,7 @@ export default function TeacherDetailsPage() {
                       <div className="p-10 text-center text-slate-400 font-medium">No leave request records found.</div>
                     ) : (
                       <div className="overflow-x-auto">
-                        <table className="erp-table text-[12px]">
+                        <table className="w-full text-left text-[12px]">
                           <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border">
                             <tr>
                               <th className="px-5 py-3 font-semibold">Leave Type</th>
@@ -799,7 +799,7 @@ export default function TeacherDetailsPage() {
                       </div>
                     ) : (
                       <div className="overflow-x-auto custom-scrollbar">
-                        <table className="erp-table text-[12px] min- sm:w-[800px]">
+                        <table className="w-full text-left text-[12px] min-w-full sm:w-[800px]">
                           <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-y border-border">
                             <tr>
                               <th className="px-4 py-3 font-semibold whitespace-nowrap">Day | Month</th>
@@ -864,7 +864,7 @@ export default function TeacherDetailsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex items-center justify-between">
                         <div>
-                          <p className="card-subtitle text-[13px] font-bold mb-1">Net Salary (Monthly)</p>
+                          <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-1">Net Salary (Monthly)</p>
                           <p className="text-[20px] font-bold text-slate-900 dark:text-white">₹{net.toLocaleString()}</p>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-[#E8F8E8] flex items-center justify-center border border-[#1D7F2C]/20">
@@ -873,7 +873,7 @@ export default function TeacherDetailsPage() {
                       </div>
                       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex items-center justify-between">
                         <div>
-                          <p className="card-subtitle text-[13px] font-bold mb-1">Gross Salary (Monthly)</p>
+                          <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-1">Gross Salary (Monthly)</p>
                           <p className="text-[20px] font-bold text-slate-900 dark:text-white">₹{(basic + allowances).toLocaleString()}</p>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
@@ -882,7 +882,7 @@ export default function TeacherDetailsPage() {
                       </div>
                       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow flex items-center justify-between">
                         <div>
-                          <p className="card-subtitle text-[13px] font-bold mb-1">Deduction (Monthly)</p>
+                          <p className="text-[13px] font-bold text-slate-500 dark:text-slate-400 mb-1">Deduction (Monthly)</p>
                           <p className="text-[20px] font-bold text-slate-900 dark:text-white">₹{deductions.toLocaleString()}</p>
                         </div>
                         <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
@@ -921,7 +921,7 @@ export default function TeacherDetailsPage() {
                         </div>
 
                         <div className="overflow-x-auto">
-                          <table className="erp-table text-[12px]">
+                          <table className="w-full text-left text-[12px]">
                             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] text-slate-700 dark:text-slate-200 border-b border-border">
                               <tr>
                                 <th className="px-5 py-3 font-semibold">ID</th>
@@ -1006,7 +1006,7 @@ export default function TeacherDetailsPage() {
               type="text"
               value={leaveDaysNum}
               readOnly
-              className="card-subtitle w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-slate-50 dark:bg-slate-800 cursor-not-allowed"
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-slate-50 dark:bg-slate-800 text-slate-500 cursor-not-allowed dark:text-slate-400"
             />
           </div>
           <div className="flex flex-col gap-1.5">

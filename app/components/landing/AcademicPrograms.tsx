@@ -48,7 +48,7 @@ export function AcademicPrograms({ data }: { data?: AcademicsData | null }) {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
           <div className="max-w-2xl">
             <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Our Curriculum</h2>
-            <h3 className="page-title md:text-5xl font-serif leading-tight">
+            <h3 className="text-4xl md:text-5xl font-serif font-bold text-foreground leading-tight">
               Academic Programs
             </h3>
             {overview && (
