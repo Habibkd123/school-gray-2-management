@@ -394,7 +394,7 @@ const TeacherDashboard = React.memo(function TeacherDashboard({ user }: TeacherD
                 })}
               </div>
             ) : (
-              <div className="text-[13px] text-slate-500 dark:text-slate-400 text-center py-6 border border-dashed border-border rounded-xl">
+              <div className="card-subtitle text-[13px] text-center py-6 border border-dashed border-border rounded-xl">
                 No classes scheduled for today
               </div>
             )}
@@ -426,7 +426,7 @@ const TeacherDashboard = React.memo(function TeacherDashboard({ user }: TeacherD
                 ))}
               </div>
             ) : (
-              <div className="text-[13px] text-slate-500 dark:text-slate-400 text-center py-6 border border-dashed border-border rounded-xl">
+              <div className="card-subtitle text-[13px] text-center py-6 border border-dashed border-border rounded-xl">
                 No chapters currently in progress
               </div>
             )}
@@ -537,10 +537,10 @@ const TeacherDashboard = React.memo(function TeacherDashboard({ user }: TeacherD
               <Clock className="w-6 h-6" />
             </div>
             <div className="text-left">
-              <h4 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">
+              <h4 className="section-title leading-none">
                 {todaysClasses.length}
               </h4>
-              <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Today's Classes</p>
+              <p className="card-subtitle text-[13px] mt-1.5">Today's Classes</p>
             </div>
           </div>
 
@@ -549,10 +549,10 @@ const TeacherDashboard = React.memo(function TeacherDashboard({ user }: TeacherD
               <Users className="w-6 h-6" />
             </div>
             <div className="text-left">
-              <h4 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">
+              <h4 className="section-title leading-none">
                 {totalTeacherStudentsCount}
               </h4>
-              <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Total Students</p>
+              <p className="card-subtitle text-[13px] mt-1.5">Total Students</p>
             </div>
           </div>
 
@@ -561,10 +561,10 @@ const TeacherDashboard = React.memo(function TeacherDashboard({ user }: TeacherD
               <UserCheck className="w-6 h-6" />
             </div>
             <div className="text-left">
-              <h4 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">
+              <h4 className="section-title leading-none">
                 {todaysAttendanceStatus}
               </h4>
-              <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Attendance Status</p>
+              <p className="card-subtitle text-[13px] mt-1.5">Attendance Status</p>
             </div>
           </div>
 
@@ -573,10 +573,10 @@ const TeacherDashboard = React.memo(function TeacherDashboard({ user }: TeacherD
               <Award className="w-6 h-6" />
             </div>
             <div className="text-left">
-              <h4 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">
+              <h4 className="section-title leading-none">
                 {teacherAssignments.length}
               </h4>
-              <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Assignments</p>
+              <p className="card-subtitle text-[13px] mt-1.5">Assignments</p>
             </div>
           </div>
         </div>
@@ -619,7 +619,7 @@ const TeacherDashboard = React.memo(function TeacherDashboard({ user }: TeacherD
               );
             })
           ) : (
-            <div className="col-span-full text-center py-8 text-[13px] text-slate-500 border border-dashed border-border rounded-xl">
+            <div className="card-subtitle col-span-full text-center py-8 text-[13px] border border-dashed border-border rounded-xl">
               All chapters are completed! No pending lesson plans.
             </div>
           )}
@@ -629,7 +629,7 @@ const TeacherDashboard = React.memo(function TeacherDashboard({ user }: TeacherD
       {/* Student Marks Table */}
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-6 card-shadow text-left overflow-x-auto">
         <h3 className="text-[15px] font-semibold text-slate-900 dark:text-white mb-6">Student Marks</h3>
-        <table className="w-full text-left border-collapse">
+        <table className="erp-table">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/50 text-[12px] text-slate-500 dark:text-slate-400 font-bold border-b border-border">
               <th className="py-3 px-4 rounded-tl-lg">ID</th>

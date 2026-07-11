@@ -51,7 +51,7 @@ export default function DashboardPage() {
                     ? "Parent Portal"
                     : "Student Dashboard"}
           </h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">

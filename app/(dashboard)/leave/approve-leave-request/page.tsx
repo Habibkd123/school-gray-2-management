@@ -227,7 +227,7 @@ export default function ApproveLeaveRequestPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Leave Requests</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/leave" className="hover:text-primary">HRM</Link>
@@ -420,7 +420,7 @@ export default function ApproveLeaveRequestPage() {
 
         {/* Controls Section */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
+          <div className="card-subtitle flex items-center gap-2 text-[13px]">
             <span>Total</span>
             <span className="font-bold text-slate-700 dark:text-slate-200">{filteredData.length}</span>
             <span>Requests</span>
@@ -543,27 +543,27 @@ export default function ApproveLeaveRequestPage() {
             
             <div className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] rounded-xl p-5 grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-6">
               <div className="space-y-1">
-                <p className="text-[13px] text-slate-500 dark:text-slate-400">Submitted By</p>
+                <p className="card-subtitle text-[13px]">Submitted By</p>
                 <p className="text-[14px] font-semibold text-foreground dark:text-slate-100">{getUserName(selectedRequest)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[13px] text-slate-500 dark:text-slate-400">Role</p>
+                <p className="card-subtitle text-[13px]">Role</p>
                 <p className="text-[14px] font-semibold text-foreground dark:text-slate-100 capitalize">{getUserRole(selectedRequest)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[13px] text-slate-500 dark:text-slate-400">Leave Type</p>
+                <p className="card-subtitle text-[13px]">Leave Type</p>
                 <p className="text-[14px] font-semibold text-foreground dark:text-slate-100 capitalize">{selectedRequest.leave_type}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[13px] text-slate-500 dark:text-slate-400">No of Days</p>
+                <p className="card-subtitle text-[13px]">No of Days</p>
                 <p className="text-[14px] font-semibold text-foreground dark:text-slate-100">{selectedRequest.total_days || 1}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[13px] text-slate-500 dark:text-slate-400">Applied On</p>
+                <p className="card-subtitle text-[13px]">Applied On</p>
                 <p className="text-[14px] font-semibold text-foreground dark:text-slate-100">{formatDate(selectedRequest.createdAt)}</p>
               </div>
               <div className="space-y-1">
-                <p className="text-[13px] text-slate-500 dark:text-slate-400">Leave</p>
+                <p className="card-subtitle text-[13px]">Leave</p>
                 <p className="text-[14px] font-semibold text-foreground dark:text-slate-100">{formatDateRange(selectedRequest.from_date, selectedRequest.to_date)}</p>
               </div>
             </div>

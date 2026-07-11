@@ -38,7 +38,7 @@ export default function StudentResultsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">My Results</h1>
-        <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Your exam grades & performance</p>
+        <p className="card-subtitle text-[13px] mt-1">Your exam grades & performance</p>
       </div>
 
       {isLoading ? (
@@ -56,28 +56,28 @@ export default function StudentResultsPage() {
               <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center mb-3">
                 <TrendingUp className="w-5 h-5 text-indigo-500" />
               </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">{overallPercent}%</p>
+              <p className="section-title">{overallPercent}%</p>
               <p className="text-[12px] text-slate-500 dark:text-slate-400">Overall Average</p>
             </div>
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
               <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center mb-3">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500" />
               </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">{passCount}</p>
+              <p className="section-title">{passCount}</p>
               <p className="text-[12px] text-slate-500 dark:text-slate-400">Subjects Passed</p>
             </div>
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
               <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center mb-3">
                 <BookOpen className="w-5 h-5 text-amber-500" />
               </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">{myResults.length}</p>
+              <p className="section-title">{myResults.length}</p>
               <p className="text-[12px] text-slate-500 dark:text-slate-400">Total Subjects</p>
             </div>
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5">
               <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-500/10 flex items-center justify-center mb-3">
                 <Award className="w-5 h-5 text-violet-500" />
               </div>
-              <p className="text-2xl font-bold text-slate-900 dark:text-white">{obtainedMarks}/{totalMarks}</p>
+              <p className="section-title">{obtainedMarks}/{totalMarks}</p>
               <p className="text-[12px] text-slate-500 dark:text-slate-400">Total Marks</p>
             </div>
           </div>

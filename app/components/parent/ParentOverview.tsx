@@ -15,7 +15,7 @@ export function ParentOverview() {
       {/* Welcome Banner */}
       <div className="relative overflow-hidden bg-gradient-to-r from-purple-900 to-purple-600 rounded-xl text-white p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between text-left shadow-lg">
         <div className="relative z-10">
-          <h2 className="text-2xl font-semibold flex items-center gap-3">
+          <h2 className="section-title flex items-center gap-3">
             Welcome to the Parent Portal
             <span className="bg-white/10 p-1.5 rounded-lg border border-white/20">
               <User className="w-5 h-5 text-white" />
@@ -84,7 +84,7 @@ export function ParentOverview() {
         !isLoading && (
           <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-xl border border-border">
             <UsersPlaceholder />
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mt-4">No Children Found</h3>
+            <h3 className="card-title mt-4">No Children Found</h3>
             <p className="text-slate-500 max-w-md mx-auto mt-2 dark:text-slate-400">
               We couldn't find any students linked to your email address. Please contact the school administrator to link your account to your children.
             </p>
@@ -101,11 +101,11 @@ function QuickActionCard({ title, description, icon, href, color }: any) {
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${color}`}>
         {icon}
       </div>
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2 flex items-center justify-between">
+      <h3 className="card-title mb-2 flex items-center justify-between">
         {title}
         <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-primary transition-colors group-hover:translate-x-1" />
       </h3>
-      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+      <p className="card-subtitle leading-relaxed">
         {description}
       </p>
     </Link>

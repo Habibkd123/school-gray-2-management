@@ -216,7 +216,7 @@ export default function ExamResultsPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Exam Result</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/examination" className="hover:text-primary">Examination</Link>
@@ -360,7 +360,7 @@ export default function ExamResultsPage() {
 
         {/* Controls Section */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
+          <div className="card-subtitle flex items-center gap-2 text-[13px]">
             <span>Showing</span>
             <span className="font-semibold text-slate-700 dark:text-slate-200">{sortedData.length}</span>
             <span>students</span>
@@ -469,9 +469,9 @@ export default function ExamResultsPage() {
 
         {/* Pagination */}
         <div className="p-5 border-t border-border flex items-center justify-end gap-2">
-          <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition-colors">Prev</button>
+          <button className="card-subtitle px-3 py-1.5 text-[13px] hover:text-slate-700 dark:text-slate-200 transition-colors">Prev</button>
           <button className="w-7 h-7 rounded-lg bg-primary text-white text-[13px] font-medium flex items-center justify-center">1</button>
-          <button className="px-3 py-1.5 text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200 transition-colors">Next</button>
+          <button className="card-subtitle px-3 py-1.5 text-[13px] hover:text-slate-700 dark:text-slate-200 transition-colors">Next</button>
         </div>
       </div>
 
@@ -568,7 +568,7 @@ export default function ExamResultsPage() {
 
                 {/* Marks Table */}
                 <div className="overflow-hidden border border-slate-300 dark:border-slate-800 rounded-lg mb-8">
-                  <table className="w-full text-left border-collapse text-[13px]">
+                  <table className="erp-table text-[13px]">
                     <thead>
                       <tr className="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold border-b border-slate-300 dark:border-slate-800">
                         <th className="px-5 py-3 uppercase text-[11px] tracking-wider">Subject Title</th>

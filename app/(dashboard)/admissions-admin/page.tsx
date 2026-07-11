@@ -105,8 +105,8 @@ export default function AdmissionsDashboard() {
                 <ClipboardList className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats?.total}</h3>
-                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Total Applications</p>
+                <h3 className="section-title leading-none">{stats?.total}</h3>
+                <p className="card-subtitle text-[13px] mt-1.5">Total Applications</p>
               </div>
             </div>
 
@@ -115,8 +115,8 @@ export default function AdmissionsDashboard() {
                 <AlertCircle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats?.newApps}</h3>
-                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">New Applications</p>
+                <h3 className="section-title leading-none">{stats?.newApps}</h3>
+                <p className="card-subtitle text-[13px] mt-1.5">New Applications</p>
               </div>
             </div>
 
@@ -125,8 +125,8 @@ export default function AdmissionsDashboard() {
                 <CheckCircle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats?.approved}</h3>
-                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Approved / Enrolled</p>
+                <h3 className="section-title leading-none">{stats?.approved}</h3>
+                <p className="card-subtitle text-[13px] mt-1.5">Approved / Enrolled</p>
               </div>
             </div>
 
@@ -135,8 +135,8 @@ export default function AdmissionsDashboard() {
                 <XCircle className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats?.rejected}</h3>
-                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Rejected</p>
+                <h3 className="section-title leading-none">{stats?.rejected}</h3>
+                <p className="card-subtitle text-[13px] mt-1.5">Rejected</p>
               </div>
             </div>
           </div>
@@ -147,8 +147,8 @@ export default function AdmissionsDashboard() {
                 <Calendar className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats?.today}</h3>
-                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Today&apos;s Applications</p>
+                <h3 className="section-title leading-none">{stats?.today}</h3>
+                <p className="card-subtitle text-[13px] mt-1.5">Today&apos;s Applications</p>
               </div>
             </div>
 
@@ -157,8 +157,8 @@ export default function AdmissionsDashboard() {
                 <Users className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats?.thisMonth}</h3>
-                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Submitted This Month</p>
+                <h3 className="section-title leading-none">{stats?.thisMonth}</h3>
+                <p className="card-subtitle text-[13px] mt-1.5">Submitted This Month</p>
               </div>
             </div>
 
@@ -167,8 +167,8 @@ export default function AdmissionsDashboard() {
                 <TrendingUp className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats?.rate}%</h3>
-                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Admission Rate</p>
+                <h3 className="section-title leading-none">{stats?.rate}%</h3>
+                <p className="card-subtitle text-[13px] mt-1.5">Admission Rate</p>
               </div>
             </div>
 
@@ -177,8 +177,8 @@ export default function AdmissionsDashboard() {
                 <BarChart2 className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none">{stats?.review}</h3>
-                <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 font-medium">Pending Review</p>
+                <h3 className="section-title leading-none">{stats?.review}</h3>
+                <p className="card-subtitle text-[13px] mt-1.5">Pending Review</p>
               </div>
             </div>
           </div>

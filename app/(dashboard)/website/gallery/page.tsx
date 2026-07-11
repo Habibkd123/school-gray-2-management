@@ -144,7 +144,7 @@ export default function GalleryPage() {
             </button>
           </div>
           {data.photos.length === 0 ? (
-            <div className="text-center py-10 text-slate-600 dark:text-slate-500 text-[13px] dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">
+            <div className="card-subtitle text-center py-10 text-slate-600 dark: text-[13px] dark:text-slate-600 dark:">
               <Camera className="w-12 h-12 text-slate-700 mx-auto mb-2 dark:text-slate-200" />
               No photos yet. Add photo URLs to build your gallery.
             </div>
@@ -203,7 +203,7 @@ export default function GalleryPage() {
             </button>
           </div>
           {data.videos.length === 0 ? (
-            <div className="text-center py-10 text-slate-600 dark:text-slate-500 text-[13px] dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">
+            <div className="card-subtitle text-center py-10 text-slate-600 dark: text-[13px] dark:text-slate-600 dark:">
               <YoutubeIcon className="w-12 h-12 text-slate-700 mx-auto mb-2 dark:text-slate-200" />
               No videos yet. Add YouTube or video embed URLs.
             </div>

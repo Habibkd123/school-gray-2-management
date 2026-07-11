@@ -284,7 +284,7 @@ export default function StudentProgressPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="text-left">
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Student Progress Desk</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/academic" className="hover:text-primary">Academic</Link>
@@ -327,7 +327,7 @@ export default function StudentProgressPage() {
                 </div>
                 <div>
                   <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider dark:text-slate-400">Class Average GPA</span>
-                  <span className="text-2xl font-bold block text-slate-900 dark:text-white mt-0.5">{classSummary.avgGpa} / 4.0</span>
+                  <span className="section-title block mt-0.5">{classSummary.avgGpa} / 4.0</span>
                 </div>
               </div>
               <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 dark:bg-indigo-900/30 px-2.5 py-1 rounded-full flex items-center gap-1">
@@ -342,7 +342,7 @@ export default function StudentProgressPage() {
                 </div>
                 <div>
                   <span className="text-[11px] uppercase font-bold text-slate-500 tracking-wider dark:text-slate-400">Passing Rate</span>
-                  <span className="text-2xl font-bold block text-slate-900 dark:text-white mt-0.5">{classSummary.passRate}%</span>
+                  <span className="section-title block mt-0.5">{classSummary.passRate}%</span>
                 </div>
               </div>
               <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full">
@@ -546,7 +546,7 @@ export default function StudentProgressPage() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-[13px] whitespace-nowrap">
+                <table className="erp-table text-[13px] whitespace-nowrap">
                   <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-b border-border">
                     <tr>
                       <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Student Name</th>
@@ -639,7 +639,7 @@ export default function StudentProgressPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-slate-950 dark:text-white">{selectedStudentMetric.student.name}</h3>
-                  <p className="text-[13px] text-slate-500 mt-0.5 dark:text-slate-400">Roll Number: {selectedStudentMetric.student.roll_no || "—"}</p>
+                  <p className="card-subtitle text-[13px] mt-0.5">Roll Number: {selectedStudentMetric.student.roll_no || "—"}</p>
                 </div>
               </div>
 
@@ -665,7 +665,7 @@ export default function StudentProgressPage() {
             <div className="space-y-3">
               <h4 className="text-[13px] font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider">Subject Analysis</h4>
               <div className="border border-border rounded-xl overflow-hidden">
-                <table className="w-full text-[13px]">
+                <table className="erp-table text-[13px]">
                   <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-b border-border">
                     <tr>
                       <th className="px-5 py-3 text-left font-bold text-slate-700 dark:text-slate-200">Subject Name</th>

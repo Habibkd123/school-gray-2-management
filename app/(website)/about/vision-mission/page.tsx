@@ -18,7 +18,7 @@ export default async function VisionMissionPage() {
 
   return (
     <main className="py-20 px-4 md:px-8 max-w-5xl mx-auto min-h-[60vh]">
-      <h1 className="text-4xl font-serif font-bold text-foreground mb-3">Vision & Mission</h1>
+      <h1 className="page-title font-serif mb-3">Vision & Mission</h1>
       <p className="text-primary font-bold uppercase tracking-widest text-[12px] mb-12">Our Purpose & Goals</p>
 
       {(vision || mission) ? (
@@ -28,7 +28,7 @@ export default async function VisionMissionPage() {
               <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <Eye className="w-7 h-7 text-primary" />
               </div>
-              <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Our Vision</h2>
+              <h2 className="section-title font-serif mb-4">Our Vision</h2>
               <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{vision}</p>
             </div>
           )}
@@ -37,7 +37,7 @@ export default async function VisionMissionPage() {
               <div className="w-14 h-14 bg-[var(--sidebar-bg)]/10 rounded-full flex items-center justify-center mb-6">
                 <Target className="w-7 h-7 text-foreground" />
               </div>
-              <h2 className="text-2xl font-serif font-bold text-foreground mb-4">Our Mission</h2>
+              <h2 className="section-title font-serif mb-4">Our Mission</h2>
               <p className="text-[15px] text-slate-600 leading-relaxed whitespace-pre-line dark:text-slate-300">{mission}</p>
             </div>
           )}

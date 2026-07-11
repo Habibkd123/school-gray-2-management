@@ -103,7 +103,7 @@ export default function StudentFeesPage() {
       {/* ── Page Header ────────────────────────────────────────────── */}
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">Fees Overview</h1>
-        <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
+        <p className="card-subtitle text-[13px] mt-1">
           View your assigned fee groups, balance dues, and billing history
         </p>
       </div>
@@ -118,7 +118,7 @@ export default function StudentFeesPage() {
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Assigned</span>
           </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+          <p className="section-title">
             ${totalAmount.toLocaleString()}
           </p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Allocated fees</p>
@@ -132,7 +132,7 @@ export default function StudentFeesPage() {
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Paid</span>
           </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+          <p className="section-title">
             ${totalPaid.toLocaleString()}
           </p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Paid till date</p>
@@ -146,7 +146,7 @@ export default function StudentFeesPage() {
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Balance Due</span>
           </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white text-rose-600 dark:text-rose-450">
+          <p className="section-title text-rose-600 dark:text-rose-450">
             ${totalBalance.toLocaleString()}
           </p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Outstanding amount</p>
@@ -160,7 +160,7 @@ export default function StudentFeesPage() {
             </div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Overdue Items</span>
           </div>
-          <p className="text-2xl font-bold text-slate-900 dark:text-white">
+          <p className="section-title">
             {overdueCount}
           </p>
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Passed due dates</p>
@@ -210,7 +210,7 @@ export default function StudentFeesPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[600px]">
+              <table className="erp-table min-w-[600px]">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-850 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     <th className="py-4">Fee Item</th>
@@ -297,7 +297,7 @@ export default function StudentFeesPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse min-w-[600px]">
+              <table className="erp-table min-w-[600px]">
                 <thead>
                   <tr className="border-b border-slate-100 dark:border-slate-850 text-[11px] font-bold uppercase tracking-wider text-slate-400">
                     <th className="py-4">Receipt</th>

@@ -44,7 +44,7 @@ export default async function StudentLifeClubsPage() {
                 </div>
                 <div>
                   <h2 className="text-[12px] font-bold text-blue-500 uppercase tracking-wider">Extracurricular Interest</h2>
-                  <h3 className="text-2xl font-serif font-bold text-foreground">Clubs and Societies</h3>
+                  <h3 className="section-title font-serif">Clubs and Societies</h3>
                 </div>
               </div>
 

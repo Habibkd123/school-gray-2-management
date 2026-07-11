@@ -183,7 +183,7 @@ export default function ExamSchedulePage() {
             </Link>
             <h1 className="page-title">Exam Schedule</h1>
           </div>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 pl-8 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 pl-8 font-normal">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/examination/exam" className="hover:text-primary">Exam</Link>
@@ -243,7 +243,7 @@ export default function ExamSchedulePage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-[13px]">
+          <table className="erp-table text-[13px]">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Subject</th>

@@ -357,7 +357,7 @@ export default function AcademicClassesPage() {
       <div className="page-header">
         <div>
           <h1 className="page-title">Classes</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Academic Management</span>
             <span>/</span>
             <span className="text-slate-900 dark:text-white font-medium">Classes</span>
@@ -432,7 +432,7 @@ export default function AcademicClassesPage() {
 
         {/* Search */}
         <div className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left border-b border-border/50">
-          <div className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
+          <div className="card-subtitle text-[13px]">
             Showing <span className="font-bold text-slate-700 dark:text-slate-200">
               {isLoading ? "…" : `${Math.min((currentPage - 1) * PAGE_SIZE + 1, total)}–${Math.min(currentPage * PAGE_SIZE, total)}`}
             </span> of <span className="font-bold text-slate-700 dark:text-slate-200">{total}</span> classes
@@ -470,7 +470,7 @@ export default function AcademicClassesPage() {
             />
             {totalPages > 1 && (
               <div className="px-5 py-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p className="text-[13px] text-slate-500 dark:text-slate-400">Page <span className="font-bold text-slate-700 dark:text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-700 dark:text-slate-200">{totalPages}</span></p>
+                <p className="card-subtitle text-[13px]">Page <span className="font-bold text-slate-700 dark:text-slate-200">{currentPage}</span> of <span className="font-bold text-slate-700 dark:text-slate-200">{totalPages}</span></p>
                 <div className="flex items-center gap-1">
                   <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage <= 1}
                     className="px-3 py-1.5 rounded-lg border border-border text-[13px] font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
@@ -928,7 +928,7 @@ export default function AcademicClassesPage() {
                   </div>
                 </div>
               </div>
-              <p className="text-[13px] text-slate-500">Would you like to archive or deactivate this class instead? Archived/Deactivated classes will be hidden from academic scheduling dropdowns.</p>
+              <p className="card-subtitle text-[13px]">Would you like to archive or deactivate this class instead? Archived/Deactivated classes will be hidden from academic scheduling dropdowns.</p>
               <div className="flex flex-wrap gap-2 justify-end pt-2 border-t border-border/50">
                 <button onClick={() => setIsDeleteOpen(false)} className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-foreground text-[13px] font-bold rounded-lg transition-colors">Cancel</button>
                 <button onClick={async () => {

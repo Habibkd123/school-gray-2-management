@@ -35,7 +35,7 @@ export default function StudentRoutinePage() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">My Routine</h1>
-        <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Your weekly class schedule</p>
+        <p className="card-subtitle text-[13px] mt-1">Your weekly class schedule</p>
       </div>
 
       {/* Day Tabs */}

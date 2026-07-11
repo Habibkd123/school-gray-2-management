@@ -24,7 +24,7 @@ export default function Error500Page() {
           Oops, something went wrong
         </h1>
         
-        <p className="text-[13px] text-gray-500 mb-8 leading-relaxed max-w-full sm:w-[300px]">
+        <p className="card-subtitle text-[13px] mb-8 leading-relaxed max-w-full sm:w-[300px]">
           Server Error 500. We apologise and are fixing the problem Please try again at a later stage
         </p>
 

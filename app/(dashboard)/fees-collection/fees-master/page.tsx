@@ -73,7 +73,7 @@ export default function FeesMasterPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Fees Master</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/fees-collection" className="hover:text-primary">Fees Collection</Link>
@@ -93,7 +93,7 @@ export default function FeesMasterPage() {
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
         {/* Controls Section */}
         <div className="p-5 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
+          <div className="card-subtitle flex items-center gap-2 text-[13px]">
             <span>Showing</span>
             <span className="font-semibold text-slate-700 dark:text-slate-200">{filteredMasters.length}</span>
             <span>fee master records</span>
@@ -113,7 +113,7 @@ export default function FeesMasterPage() {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-[13px]">
+          <table className="erp-table text-[13px]">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Fee Group</th>

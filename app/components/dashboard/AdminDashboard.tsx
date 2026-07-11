@@ -82,7 +82,7 @@ const AdminDashboard = React.memo(function AdminDashboard({ user }: AdminDashboa
         <div className="absolute top-0 right-0 w-full h-full opacity-20 pointer-events-none" style={{ backgroundImage: "url('/asset 11.svg')", backgroundSize: "cover", backgroundPosition: "center right" }} />
 
         <div className="relative z-10">
-          <h2 className="text-2xl font-semibold flex items-center gap-3">
+          <h2 className="section-title flex items-center gap-3">
             Welcome Back, {user?.name?.split(' ')[0] || 'Admin'}
             <Link href="/settings/profile" title="Edit Profile" className="bg-white/10 p-1.5 rounded-lg border border-white/20 hover:bg-white/20 transition-colors cursor-pointer">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
@@ -112,8 +112,8 @@ const AdminDashboard = React.memo(function AdminDashboard({ user }: AdminDashboa
                 <div className="flex items-center gap-4">
                   <img src="/asset 7.webp" alt="Students" className="w-[52px] h-[52px] object-contain" />
                   <div className="text-left">
-                    <h3 className="text-2xl font-semibold text-slate-900 dark:text-white leading-none">{totalStudents}</h3>
-                    <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Total Students</p>
+                    <h3 className="section-title leading-none">{totalStudents}</h3>
+                    <p className="card-subtitle text-[13px] mt-1">Total Students</p>
                   </div>
                 </div>
               </div>
@@ -130,8 +130,8 @@ const AdminDashboard = React.memo(function AdminDashboard({ user }: AdminDashboa
                 <div className="flex items-center gap-4">
                   <img src="/asset 8.webp" alt="Teachers" className="w-[52px] h-[52px] object-contain" />
                   <div className="text-left">
-                    <h3 className="text-2xl font-semibold text-slate-900 dark:text-white leading-none">{totalTeachers}</h3>
-                    <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Total Teachers</p>
+                    <h3 className="section-title leading-none">{totalTeachers}</h3>
+                    <p className="card-subtitle text-[13px] mt-1">Total Teachers</p>
                   </div>
                 </div>
               </div>
@@ -148,8 +148,8 @@ const AdminDashboard = React.memo(function AdminDashboard({ user }: AdminDashboa
                 <div className="flex items-center gap-4">
                   <img src="/asset 9.webp" alt="Classes" className="w-[52px] h-[52px] object-contain" />
                   <div className="text-left">
-                    <h3 className="text-2xl font-semibold text-slate-900 dark:text-white leading-none">{totalClasses}</h3>
-                    <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Total Classes</p>
+                    <h3 className="section-title leading-none">{totalClasses}</h3>
+                    <p className="card-subtitle text-[13px] mt-1">Total Classes</p>
                   </div>
                 </div>
               </div>

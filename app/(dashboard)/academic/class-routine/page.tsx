@@ -363,7 +363,7 @@ export default function ClassRoutinePage() {
             <Calendar className="w-6 h-6 text-indigo-600" />
             Class Routine Planner
           </h1>
-          <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <p className="card-subtitle text-[13px] mt-1">
             Build and optimize conflict-free schedules automatically integrated with teacher workload profiles.
           </p>
         </div>
@@ -535,7 +535,7 @@ export default function ClassRoutinePage() {
         ) : viewMode === "grid" ? (
           /* Visual Table Grid Matrix */
           <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
-            <table className="w-full border-collapse min-w-[900px] text-xs">
+            <table className="erp-table min-w-[900px] text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
                   <th className="p-4 border-r border-slate-200 dark:border-slate-800 font-bold text-slate-500 text-left w-48">Time Slot</th>
@@ -619,7 +619,7 @@ export default function ClassRoutinePage() {
         ) : (
           /* Records Table view mode */
           <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
-            <table className="w-full border-collapse text-xs">
+            <table className="erp-table text-xs">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 font-bold text-slate-500">
                   <th className="p-4 text-left">Day</th>

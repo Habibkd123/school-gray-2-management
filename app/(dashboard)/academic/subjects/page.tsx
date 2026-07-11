@@ -245,7 +245,7 @@ export default function SubjectsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Subjects</h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <Link href="/academic" className="hover:text-primary">Academic</Link>
@@ -414,7 +414,7 @@ export default function SubjectsPage() {
 
         {/* Controls Section */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
+          <div className="card-subtitle flex items-center gap-2 text-[13px]">
             <span>Total</span>
             <span className="font-bold text-slate-700 dark:text-slate-200">{groupedSubjects.length}</span>
             <span>Subjects</span>
@@ -434,7 +434,7 @@ export default function SubjectsPage() {
 
         {/* Table */}
         <div className={`overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
-          <table className="w-full text-[13px]">
+          <table className="erp-table text-[13px]">
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-12">

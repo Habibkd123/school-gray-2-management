@@ -163,7 +163,7 @@ export default function AdmissionsPage() {
           </button>
         </div>
         {data.documents_required.length === 0 ? (
-          <p className="text-slate-600 dark:text-slate-500 text-[13px] text-center py-4 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">No documents added yet.</p>
+          <p className="card-subtitle text-slate-600 dark: text-[13px] text-center py-4 dark:text-slate-600 dark:">No documents added yet.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {data.documents_required.map((doc, i) => (

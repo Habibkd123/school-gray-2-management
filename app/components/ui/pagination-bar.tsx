@@ -78,7 +78,7 @@ export function PaginationBar({
     >
       {/* Records Count and Page Selector */}
       <div className="flex flex-wrap items-center gap-3">
-        <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
+        <p className="card-subtitle text-[13px]">
           Showing{" "}
           <span className="font-bold text-slate-700 dark:text-slate-200">
             {from}–{to}

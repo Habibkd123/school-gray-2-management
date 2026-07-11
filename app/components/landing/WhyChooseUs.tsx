@@ -74,7 +74,7 @@ export function WhyChooseUs({ data }: WhyChooseUsProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-4xl md:text-5xl font-bold text-foreground mb-6 leading-tight"
+            className="page-title md:text-5xl mb-6 leading-tight"
           >
             Modern Learning Environment
           </motion.h3>

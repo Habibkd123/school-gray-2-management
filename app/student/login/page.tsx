@@ -131,7 +131,7 @@ export default function StudentLoginPage() {
           </div>
 
           {/* Heading */}
-          <h1 className="text-3xl font-bold text-white mb-3 leading-tight">
+          <h1 className="page-title mb-3 leading-tight">
             Your Academic Journey
             <br />
             <span className="text-indigo-300">Starts Here</span>
@@ -209,7 +209,7 @@ export default function StudentLoginPage() {
                 <h1 className="text-[24px] font-bold text-slate-900 dark:text-slate-100 mb-1">
                   Student Login
                 </h1>
-                <p className="text-[13px] text-slate-500 dark:text-slate-400">
+                <p className="card-subtitle text-[13px]">
                   Sign in with your student credentials
                 </p>
               </div>

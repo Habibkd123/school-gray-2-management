@@ -259,7 +259,7 @@ export default function WebsitePage() {
       {/* Page Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold ">Website Content Manager</h1>
+          <h1 className="section-title">Website Content Manager</h1>
           <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[13px] mt-1">
             Manage your school's public landing page — what visitors see when they visit your site.
           </p>

@@ -121,7 +121,7 @@ export default function SyllabusClassSubjectListPage() {
             </Link>
             Class Syllabus
           </h1>
-          <div className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400 mt-2 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-2 font-normal">
             <Link href="/academic-mgmt/syllabus" className="hover:text-primary transition-colors">Syllabus</Link>
             <ChevronLeft className="w-3.5 h-3.5 rotate-180" />
             <span className="text-slate-900 dark:text-white font-medium">{className} {sectionName ? `- ${sectionName}` : ''}</span>
