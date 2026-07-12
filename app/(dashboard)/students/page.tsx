@@ -805,9 +805,10 @@ export default function StudentsPage() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Search Row */}
-          <div className="px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border">
+        {/* Search Row */}
+        <div className="px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border">
             <div className="card-subtitle text-[13px]">
               Showing{" "}
               <span className="font-bold text-slate-700 dark:text-slate-200">
@@ -1481,6 +1482,5 @@ export default function StudentsPage() {
           )
         }
       </div >
-    </div >
   );
 }

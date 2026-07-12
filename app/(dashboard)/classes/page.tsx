@@ -207,7 +207,7 @@ export default function ClassesPage() {
     e.preventDefault();
     if (!validateClassForm()) return;
     setSubmitting(true);
-    
+
     const isHigherClass = formName === "Class 11" || formName === "Class 12";
     const streamsToCreate = enableStreams && isHigherClass && formStreams.length > 0 ? formStreams : [""];
     const sectionsToCreate = enableSections && formSections.length > 0 ? formSections : [""];
@@ -279,7 +279,7 @@ export default function ClassesPage() {
       {
         header: "Class",
         accessorKey: "name",
-        render: (c) => <span className="font-semibold text-slate-800 dark:text-slate-200">{c.name}</span>,
+        render: (c) => <span className="font-medium text-slate-400 dark:text-slate-200">{c.name}</span>,
       },
     ];
 
@@ -568,8 +568,8 @@ export default function ClassesPage() {
                           key={p}
                           onClick={() => handlePageChange(p as number)}
                           className={`w-8 h-8 rounded-lg text-[13px] font-bold transition-colors ${p === currentPage
-                              ? "bg-primary text-white shadow-sm"
-                              : "border border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                            ? "bg-primary text-white shadow-sm"
+                            : "border border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                             }`}
                         >
                           {p}
@@ -603,13 +603,12 @@ export default function ClassesPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Class Name <span className="text-red-500">*</span></label>
               <div className="relative">
-                <select 
+                <select
                   id="formName"
-                  value={formName} 
+                  value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer ${
-                    valErrors.formName ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50"
-                  }`}
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer ${valErrors.formName ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50"
+                    }`}
                 >
                   <option value="">Select Class</option>
                   {[
@@ -711,13 +710,12 @@ export default function ClassesPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Academic Year <span className="text-red-500">*</span></label>
               <div className="relative">
-                <select 
+                <select
                   id="formAcademicYear"
-                  value={formAcademicYear} 
+                  value={formAcademicYear}
                   onChange={(e) => setFormAcademicYear(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer ${
-                    valErrors.formAcademicYear ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50"
-                  }`}
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer ${valErrors.formAcademicYear ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50"
+                    }`}
                 >
                   <option value="">Select Year</option>
                   {[
@@ -732,27 +730,27 @@ export default function ClassesPage() {
                 </p>
               )}
             </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Capacity</label>
-              <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)}
-                min={1} max={200}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
-              <div className="relative">
-                <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
-                  <option value="">Not assigned</option>
-                  {teachers.filter(t => t.is_active).map(t => (
-                    <option key={t._id} value={t._id}>{t.name}{t.employee_id ? ` (${t.employee_id})` : ""}</option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Capacity</label>
+                <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)}
+                  min={1} max={200}
+                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
+                <div className="relative">
+                  <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm">
+                    <option value="">Not assigned</option>
+                    {teachers.filter(t => t.is_active).map(t => (
+                      <option key={t._id} value={t._id}>{t.name}{t.employee_id ? ` (${t.employee_id})` : ""}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+                </div>
               </div>
             </div>
-          </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button type="button" onClick={() => { setIsAddClassOpen(false); resetForm(); }}
@@ -781,13 +779,12 @@ export default function ClassesPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class Name <span className="text-red-500">*</span></label>
               <div className="relative">
-                <select 
+                <select
                   id="formName"
-                  value={formName} 
+                  value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer ${
-                    valErrors.formName ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50"
-                  }`}
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer ${valErrors.formName ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50"
+                    }`}
                 >
                   <option value="">Select Class</option>
                   {[
@@ -842,13 +839,12 @@ export default function ClassesPage() {
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Academic Year <span className="text-red-500">*</span></label>
               <div className="relative">
-                <select 
+                <select
                   id="formAcademicYear"
-                  value={formAcademicYear} 
+                  value={formAcademicYear}
                   onChange={(e) => setFormAcademicYear(e.target.value)}
-                  className={`w-full px-3.5 py-2.5 border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer ${
-                    valErrors.formAcademicYear ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50"
-                  }`}
+                  className={`w-full px-3.5 py-2.5 border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer ${valErrors.formAcademicYear ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50"
+                    }`}
                 >
                   <option value="">Select Year</option>
                   {[

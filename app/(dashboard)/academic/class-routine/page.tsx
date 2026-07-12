@@ -12,7 +12,9 @@ import { Modal } from "../../../components/ui/modal";
 import {
   Plus, Search, List, Grid, MoreVertical, Edit, Trash2, Copy,
   Calendar, Clock, User, Home, BookOpen, AlertCircle, RefreshCw,
-  ChevronRight, ChevronLeft, Check, HelpCircle
+  ChevronRight, ChevronLeft, Check, HelpCircle,
+  Loader2,
+  ChevronDown
 } from "lucide-react";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -30,7 +32,7 @@ const DEFAULT_SLOTS = [
 function parseTimeToMinutes(t: string): number {
   if (!t) return 0;
   const cleaned = t.trim().toLowerCase();
-  
+
   // AM/PM Format check
   const ampmMatch = cleaned.match(/^(\d{1,2}):(\d{2})\s*(am|pm)$/i);
   if (ampmMatch) {
@@ -41,7 +43,7 @@ function parseTimeToMinutes(t: string): number {
     if (period === "am" && hours === 12) hours = 0;
     return hours * 60 + mins;
   }
-  
+
   // 24-Hour Format check
   const standardMatch = cleaned.match(/^(\d{1,2}):(\d{2})$/);
   if (standardMatch) {
@@ -49,26 +51,30 @@ function parseTimeToMinutes(t: string): number {
     const mins = parseInt(standardMatch[2], 10);
     return hours * 60 + mins;
   }
-  
+
   return 0;
 }
 
 const getSubjectColor = (subjectName: string) => {
   const name = subjectName?.toLowerCase() || "";
-  if (name.includes("math")) return "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800";
-  if (name.includes("science") || name.includes("phys") || name.includes("chem") || name.includes("bio")) {
-    return "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/20 dark:text-emerald-300 dark:border-emerald-800";
-  }
-  if (name.includes("english") || name.includes("grammar") || name.includes("lit")) {
-    return "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/20 dark:text-purple-300 dark:border-purple-800";
-  }
-  if (name.includes("computer") || name.includes("it") || name.includes("programming") || name.includes("coding")) {
-    return "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800";
-  }
-  if (name.includes("history") || name.includes("civics") || name.includes("geog") || name.includes("social")) {
-    return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/20 dark:text-amber-300 dark:border-amber-800";
-  }
-  return "bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800/40 dark:text-slate-300 dark:border-slate-700";
+  if (name.includes("math")) return "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30";
+  if (name.includes("spanish") || name.includes("lang")) return "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400 border border-sky-100 dark:border-sky-900/30";
+  if (name.includes("computer") || name.includes("it")) return "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30";
+  if (name.includes("physics")) return "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30";
+  if (name.includes("english")) return "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30";
+  if (name.includes("chemistry")) return "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700/50";
+  if (name.includes("science")) return "bg-cyan-50 text-cyan-700 dark:bg-cyan-500/10 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900/30";
+
+  // Fallback cyclic colors
+  const colors = [
+    "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30",
+    "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/30",
+    "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/30",
+    "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-100 dark:border-amber-900/30",
+    "bg-sky-50 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400 border border-sky-100 dark:border-sky-900/30",
+    "bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-400 border border-purple-100 dark:border-purple-900/30"
+  ];
+  return colors[name.length % colors.length];
 };
 
 export default function ClassRoutinePage() {
@@ -79,7 +85,7 @@ export default function ClassRoutinePage() {
   const { schedules, isLoading: schedulesLoading, fetchSchedules, createSchedule, updateSchedule, deleteSchedule } = useSchedules();
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
-  
+
   // Filters State
   const [filterYear, setFilterYear] = useState(academicYear);
   const [filterClassName, setFilterClassName] = useState("");
@@ -154,14 +160,14 @@ export default function ClassRoutinePage() {
   // Wizard cascading logic: subjects assigned to class
   const wizardSubjects = useMemo(() => {
     if (!formClassName) return [];
-    const classAssigned = teacherAssignments.filter(a => 
-      a.class_id?.name === formClassName && 
+    const classAssigned = teacherAssignments.filter(a =>
+      a.class_id?.name === formClassName &&
       (formSection ? a.class_id?.section === formSection : true) &&
       a.academic_year === formAcademicYear
     );
     const assignedNames = Array.from(new Set(classAssigned.map(a => a.subject_master_id?.name).filter(Boolean)));
     if (assignedNames.length > 0) return assignedNames;
-    
+
     // Resilient fallback: list all subject master catalog names to prevent dead-locks
     return Array.from(new Set(teacherAssignments.map(a => a.subject_master_id?.name).filter(Boolean)));
   }, [formClassName, formSection, formAcademicYear, teacherAssignments]);
@@ -169,7 +175,7 @@ export default function ClassRoutinePage() {
   // Wizard cascading logic: teachers assigned to subject in class
   const wizardTeachers = useMemo(() => {
     if (!formClassName || !formSubject) return [];
-    const matched = teacherAssignments.filter(a => 
+    const matched = teacherAssignments.filter(a =>
       a.class_id?.name === formClassName &&
       (formSection ? a.class_id?.section === formSection : true) &&
       a.subject_master_id?.name === formSubject &&
@@ -188,7 +194,7 @@ export default function ClassRoutinePage() {
       });
       return unique;
     }
-    
+
     // Resilient fallback: list all active teachers in system
     return teachers.map(t => ({ _id: t._id, name: t.name }));
   }, [formClassName, formSection, formSubject, formAcademicYear, teacherAssignments, teachers]);
@@ -332,304 +338,316 @@ export default function ClassRoutinePage() {
     });
   }, [schedules]);
 
-  // Grouped details for Grid View Matrix mapping
-  const gridMatrix = useMemo(() => {
-    const matrix: Record<string, Record<string, ApiSchedule[]>> = {};
+  // Group schedules by day for the column layout
+  const routinesByDay = useMemo(() => {
+    const grouped: Record<string, ApiSchedule[]> = {};
     DAYS.forEach(day => {
-      matrix[day.toLowerCase()] = {};
-      timeSlots.forEach(slot => {
-        matrix[day.toLowerCase()][slot] = [];
-      });
+      grouped[day.toLowerCase()] = [];
     });
 
     schedules.forEach(s => {
       const d = s.day.toLowerCase();
-      const slot = `${s.start_time} - ${s.end_time}`;
-      if (matrix[d] && matrix[d][slot]) {
-        matrix[d][slot].push(s);
+      if (grouped[d]) {
+        grouped[d].push(s);
       }
     });
-    return matrix;
-  }, [schedules, timeSlots]);
+
+    // Sort by start_time
+    Object.keys(grouped).forEach(day => {
+      grouped[day].sort((a, b) => parseTimeToMinutes(a.start_time) - parseTimeToMinutes(b.start_time));
+    });
+
+    return grouped;
+  }, [schedules]);
 
   const isLoading = classesLoading || teachersLoading || schedulesLoading;
 
   return (
-    <div className="space-y-6 bg-slate-50 dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
       {/* 1. Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left border-b border-slate-100 dark:border-slate-800 pb-5">
+      <div className="page-header">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <Calendar className="w-6 h-6 text-indigo-600" />
-            Class Routine Planner
-          </h1>
-          <p className="card-subtitle text-[13px] mt-1">
-            Build and optimize conflict-free schedules automatically integrated with teacher workload profiles.
-          </p>
+          <h1 className="page-title">Class Routine Planner</h1>
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+            <span>Dashboard</span>
+            <span>/</span>
+            <span>Academic</span>
+            <span>/</span>
+            <span className="text-slate-900 dark:text-white font-medium">Class Routine</span>
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {/* List/Grid layout toggle */}
-          <div className="flex items-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-1.5 shadow-sm">
+          <div className="flex items-center bg-[#F8FAFC] dark:bg-slate-900 border border-border rounded-lg p-1 shadow-sm">
             <button
               onClick={() => setViewMode("grid")}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer flex items-center gap-1.5 transition-all ${viewMode === "grid" ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
+              className={`px-3 py-1.5 rounded-md text-[13px] font-medium cursor-pointer flex items-center gap-1.5 transition-colors ${viewMode === "grid" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
             >
               <Grid className="w-3.5 h-3.5" /> Timetable
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold cursor-pointer flex items-center gap-1.5 transition-all ${viewMode === "list" ? "bg-indigo-600 text-white shadow-md" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
+              className={`px-3 py-1.5 rounded-md text-[13px] font-medium cursor-pointer flex items-center gap-1.5 transition-colors ${viewMode === "list" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
             >
               <List className="w-3.5 h-3.5" /> Records Table
             </button>
           </div>
 
-          <button onClick={() => loadFilteredSchedules()} className="w-9 h-9 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-white transition-colors cursor-pointer shadow-sm">
+          <button onClick={() => loadFilteredSchedules()} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
+
+          {/* ERP central print button */}
+          <PrintButton targetId="printable-timetable" label="Export" variant="outline" />
 
           {isAdmin && (
             <button
               onClick={handleOpenAdd}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg flex items-center gap-2 transition-all shadow-md cursor-pointer"
+              className="btn btn-primary flex items-center gap-2"
             >
-              <Plus className="w-4 h-4" /> Add Slot
+              <Plus className="w-4 h-4" />
+              <span>Add Slot</span>
             </button>
           )}
-
-          {/* ERP central print button */}
-          <PrintButton targetId="printable-timetable" label="Export Timetable" variant="outline" />
         </div>
       </div>
 
       {/* 2. Unified Advanced Filters Panel */}
-      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-5 shadow-sm text-left grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 items-end">
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Year</label>
-          <select
-            value={filterYear}
-            onChange={(e) => setFilterYear(e.target.value)}
-            className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg outline-none"
-          >
-            <option value="2026-2027">2026-2027</option>
-            <option value="2027-2028">2027-2028</option>
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Class Name</label>
-          <select
-            value={filterClassName}
-            onChange={(e) => { setFilterClassName(e.target.value); setFilterSection(""); }}
-            className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg outline-none"
-          >
-            <option value="">All Classes</option>
-            {classNames.map(name => <option key={name} value={name}>{name}</option>)}
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Section</label>
-          <select
-            value={filterSection}
-            onChange={(e) => setFilterSection(e.target.value)}
-            disabled={!filterClassName}
-            className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg outline-none disabled:opacity-50"
-          >
-            <option value="">All Sections</option>
-            {sectionsForClassName.map(sec => <option key={sec} value={sec}>{sec}</option>)}
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Teacher</label>
-          <select
-            value={filterTeacherId}
-            onChange={(e) => setFilterTeacherId(e.target.value)}
-            className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg outline-none"
-          >
-            <option value="">All Teachers</option>
-            {teachers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Day</label>
-          <select
-            value={filterDay}
-            onChange={(e) => setFilterDay(e.target.value)}
-            className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg outline-none"
-          >
-            <option value="">All Days</option>
-            {DAYS.map(day => <option key={day} value={day}>{day}</option>)}
-          </select>
-        </div>
-
-        <div className="space-y-1">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Status</label>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="w-full text-xs font-bold bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-lg outline-none"
-          >
-            <option value="all">All Status</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-          </select>
-        </div>
-
-        <div className="col-span-1 sm:col-span-2 space-y-1 relative">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Quick Search</label>
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 items-end mb-6">
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Year</label>
           <div className="relative">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <select
+              value={filterYear}
+              onChange={(e) => setFilterYear(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
+            >
+              <option value="2026-2027">2026-2027</option>
+              <option value="2027-2028">2027-2028</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Class Name</label>
+          <div className="relative">
+            <select
+              value={filterClassName}
+              onChange={(e) => { setFilterClassName(e.target.value); setFilterSection(""); }}
+              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
+            >
+              <option value="">All Classes</option>
+              {classNames.map(name => <option key={name} value={name}>{name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Section</label>
+          <div className="relative">
+            <select
+              value={filterSection}
+              onChange={(e) => setFilterSection(e.target.value)}
+              disabled={!filterClassName}
+              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 disabled:opacity-50"
+            >
+              <option value="">All Sections</option>
+              {sectionsForClassName.map(sec => <option key={sec} value={sec}>{sec}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Teacher</label>
+          <div className="relative">
+            <select
+              value={filterTeacherId}
+              onChange={(e) => setFilterTeacherId(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
+            >
+              <option value="">All Teachers</option>
+              {teachers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Day</label>
+          <div className="relative">
+            <select
+              value={filterDay}
+              onChange={(e) => setFilterDay(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
+            >
+              <option value="">All Days</option>
+              {DAYS.map(day => <option key={day} value={day}>{day}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status</label>
+          <div className="relative">
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
+            >
+              <option value="all">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="col-span-1 sm:col-span-2 space-y-1.5 relative">
+          <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Quick Search</label>
+          <div className="relative">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
               placeholder="Search teacher, subject, room..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-indigo-500"
+              className="w-full pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)]"
             />
           </div>
         </div>
       </div>
 
       {/* 3. Main Timetable Visual Grid Layout */}
-      <div id="printable-timetable" className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm overflow-hidden text-left p-6">
-        <div className="border-b border-slate-100 dark:border-slate-800 pb-4 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">
-              {filterClassName ? `${filterClassName} - ${filterSection || "All Sections"}` : "Master Academic Timetable"} ({filterYear})
-            </h2>
-            <p className="text-xs text-slate-400 dark:text-slate-500">
-              Weekly schedule overview sorted by day period slots.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
-            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{schedules.length} Timetable slots</span>
-          </div>
+      <div id="printable-timetable" className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden p-5">
+        <div className="border-b border-border pb-4 mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4 text-left">
+          <h3 className="text-[16px] font-bold text-slate-900 dark:text-white">
+            {filterClassName ? `${filterClassName} - ${filterSection || "All Sections"}` : "Master Academic Timetable"} ({filterYear})
+            {!isLoading && (
+              <span className="ml-2 text-[13px] font-normal text-slate-400">({schedules.length} slots)</span>
+            )}
+          </h3>
         </div>
 
         {isLoading ? (
-          <div className="py-24 flex flex-col items-center justify-center text-slate-400 gap-3">
-            <div className="w-8 h-8 rounded-full border-4 border-indigo-600/20 border-t-indigo-600 animate-spin" />
-            <span className="text-xs font-semibold">Loading scheduler matrices...</span>
+          <div className="flex items-center justify-center py-20 gap-3 text-slate-400">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="text-[14px] font-medium">Loading schedules...</span>
           </div>
         ) : schedules.length === 0 ? (
-          <div className="py-24 flex flex-col items-center justify-center text-center max-w-sm mx-auto">
+          <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
             <Calendar className="w-12 h-12 text-slate-300 dark:text-slate-700 stroke-[1.5] mb-3" />
             <h3 className="font-bold text-slate-800 dark:text-slate-200">No schedules created</h3>
-            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+            <p className="text-[13px] text-slate-400 dark:text-slate-500 mt-1">
               There are no timetable slots registered matching your current filter selections.
             </p>
             {isAdmin && (
               <button
                 onClick={handleOpenAdd}
-                className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-all cursor-pointer shadow-md"
+                className="mt-4 btn btn-primary flex items-center gap-2"
               >
                 Create First Slot
               </button>
             )}
           </div>
         ) : viewMode === "grid" ? (
-          /* Visual Table Grid Matrix */
-          <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
-            <table className="erp-table min-w-[900px] text-xs">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-                  <th className="p-4 border-r border-slate-200 dark:border-slate-800 font-bold text-slate-500 text-left w-48">Time Slot</th>
-                  {DAYS.map(day => (
-                    <th key={day} className="p-4 font-bold text-slate-700 dark:text-slate-200 text-center">{day}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {timeSlots.map(slot => (
-                  <tr key={slot} className="border-b border-slate-200 dark:border-slate-800 last:border-0">
-                    <td className="p-4 border-r border-slate-200 dark:border-slate-800 font-bold text-slate-800 dark:text-slate-200 bg-slate-50/50 dark:bg-slate-900/30">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-3.5 h-3.5 text-indigo-500" />
-                        <span>{slot}</span>
+          <div className="flex flex-col gap-8 pb-4">
+            {/* The 6-Column Grid for Days */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {DAYS.map(day => {
+                const dayRoutines = routinesByDay[day.toLowerCase()] || [];
+                return (
+                  <div key={day} className="flex flex-col gap-4">
+                    <h3 className="text-[13px] font-bold text-slate-800 dark:text-slate-200">{day}</h3>
+
+                    {dayRoutines.length === 0 ? (
+                      <div className="text-center py-8 text-slate-400 dark:text-slate-600 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-dashed border-border">
+                        <span className="text-[13px] font-medium">No classes</span>
                       </div>
-                    </td>
-                    {DAYS.map(day => {
-                      const slotsForCell = gridMatrix[day.toLowerCase()][slot] || [];
-                      return (
-                        <td key={day} className="p-3 align-top min-h-24 w-40 border-r border-slate-100 dark:border-slate-900 last:border-r-0">
-                          {slotsForCell.length === 0 ? (
-                            <div className="h-full flex items-center justify-center p-4 text-slate-300 dark:text-slate-800">
-                              <span className="text-[10px] tracking-wide font-medium">—</span>
+                    ) : (
+                      dayRoutines.map(routine => {
+                        const subjectObj = typeof routine.subject_id === "object" ? routine.subject_id : null;
+                        const teacherObj = typeof routine.teacher_id === "object" ? routine.teacher_id : null;
+                        const subjectName = subjectObj ? subjectObj.name : String(routine.subject_id);
+
+                        return (
+                          <div
+                            key={routine._id}
+                            className={`rounded-xl p-4 flex flex-col gap-2 relative group transition-all hover:-translate-y-0.5 hover:shadow-md ${getSubjectColor(subjectName)}`}
+                          >
+                            <div className="flex items-center gap-1.5 text-[13px] font-semibold opacity-90">
+                              <Clock className="w-3.5 h-3.5" />
+                              <span>{routine.start_time} - {routine.end_time}</span>
                             </div>
-                          ) : (
-                            <div className="space-y-3">
-                              {slotsForCell.map(routine => {
-                                const cls = typeof routine.class_id === "object" ? routine.class_id : null;
-                                const subjectObj = typeof routine.subject_id === "object" ? routine.subject_id : null;
-                                const teacherObj = typeof routine.teacher_id === "object" ? routine.teacher_id : null;
-                                const subjectName = subjectObj ? subjectObj.name : String(routine.subject_id);
 
-                                return (
-                                  <div
-                                    key={routine._id}
-                                    className={`p-3 rounded-lg border text-left relative group shadow-sm transition-all hover:shadow-md ${getSubjectColor(subjectName)}`}
-                                  >
-                                    <div className="font-bold text-[13px] leading-tight pr-5">{subjectName}</div>
-                                    
-                                    <div className="text-[11px] mt-1.5 flex items-center gap-1.5 opacity-80 font-medium">
-                                      <User className="w-3 h-3 shrink-0" />
-                                      <span className="truncate">{teacherObj ? teacherObj.name : "N/A"}</span>
-                                    </div>
-
-                                    <div className="text-[10px] mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 opacity-85">
-                                      <span className="font-bold uppercase tracking-wider">{cls ? `${cls.name}-${cls.section}` : "Class"}</span>
-                                      {routine.room && (
-                                        <>
-                                          <span>•</span>
-                                          <span className="font-semibold bg-white/40 dark:bg-black/25 px-1 py-0.2 rounded font-mono">Room {routine.room}</span>
-                                        </>
-                                      )}
-                                    </div>
-
-                                    {routine.status === "Inactive" && (
-                                      <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-slate-400" title="Archived" />
-                                    )}
-
-                                    {/* Action Hover menu */}
-                                    {isAdmin && (
-                                      <div className="absolute right-2 bottom-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white/90 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded px-1.5 py-0.5 shadow-sm">
-                                        <button onClick={() => handleOpenEdit(routine)} className="p-0.5 hover:text-indigo-600 text-slate-500 cursor-pointer" title="Edit"><Edit className="w-3 h-3" /></button>
-                                        <button onClick={() => handleOpenDuplicate(routine)} className="p-0.5 hover:text-indigo-600 text-slate-500 cursor-pointer" title="Duplicate"><Copy className="w-3 h-3" /></button>
-                                        <button onClick={() => handleDeleteRoutine(routine._id)} className="p-0.5 hover:text-red-600 text-slate-500 cursor-pointer" title="Delete"><Trash2 className="w-3 h-3" /></button>
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })}
+                            <div className="text-[14px] font-bold mt-1">
+                              {subjectName}
                             </div>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+                            <div className="bg-white/90 dark:bg-slate-900 border border-white/50 dark:border-slate-800 rounded-lg p-2 flex items-center gap-2 shadow-sm mt-1">
+                              <div className="w-6 h-6 rounded overflow-hidden shrink-0 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                                {teacherObj?.photo_url ? (
+                                  <img src={teacherObj.photo_url} alt="T" className="w-full h-full object-cover" />
+                                ) : (
+                                  <User className="w-3.5 h-3.5" />
+                                )}
+                              </div>
+                              <span className="text-[13px] font-medium text-slate-700 dark:text-slate-300 truncate">
+                                {teacherObj ? teacherObj.name : "N/A"}
+                              </span>
+                            </div>
+
+                            {/* Action Hover menu */}
+                            {isAdmin && (
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-white/90 dark:bg-slate-900 rounded p-1 shadow-sm border border-border">
+                                <button onClick={() => handleOpenEdit(routine)} className="p-1 hover:text-primary text-slate-500"><Edit className="w-3.5 h-3.5" /></button>
+                                <button onClick={() => handleOpenDuplicate(routine)} className="p-1 hover:text-primary text-slate-500"><Copy className="w-3.5 h-3.5" /></button>
+                                <button onClick={() => handleDeleteRoutine(routine._id)} className="p-1 hover:text-red-600 text-slate-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Static Breaks Section */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 mt-4 border-t border-border">
+              <div className="border border-border bg-white dark:bg-slate-900 rounded-xl p-4 flex flex-col gap-2 shadow-sm">
+                <span className="w-max bg-primary text-white text-[12px] font-bold px-2.5 py-1 rounded">Morning Break</span>
+                <div className="flex items-center gap-1.5 text-[13px] text-slate-600 dark:text-slate-400 font-medium">
+                  <Clock className="w-3.5 h-3.5" /> 10:30 to 10:45 AM
+                </div>
+              </div>
+              <div className="border border-border bg-white dark:bg-slate-900 rounded-xl p-4 flex flex-col gap-2 shadow-sm">
+                <span className="w-max bg-amber-500 text-white text-[12px] font-bold px-2.5 py-1 rounded">Lunch</span>
+                <div className="flex items-center gap-1.5 text-[13px] text-slate-600 dark:text-slate-400 font-medium">
+                  <Clock className="w-3.5 h-3.5" /> 12:15 to 01:30 PM
+                </div>
+              </div>
+              <div className="border border-border bg-white dark:bg-slate-900 rounded-xl p-4 flex flex-col gap-2 shadow-sm">
+                <span className="w-max bg-sky-600 text-white text-[12px] font-bold px-2.5 py-1 rounded">Evening Break</span>
+                <div className="flex items-center gap-1.5 text-[13px] text-slate-600 dark:text-slate-400 font-medium">
+                  <Clock className="w-3.5 h-3.5" /> 03:30 to 03:45 PM
+                </div>
+              </div>
+            </div>
           </div>
         ) : (
           /* Records Table view mode */
-          <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
-            <table className="erp-table text-xs">
+          <div className="overflow-x-auto rounded-xl">
+            <table className="w-full text-left text-[14px]">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 font-bold text-slate-500">
-                  <th className="p-4 text-left">Day</th>
-                  <th className="p-4 text-left">Period</th>
-                  <th className="p-4 text-left">Class</th>
-                  <th className="p-4 text-left">Subject</th>
-                  <th className="p-4 text-left">Teacher</th>
-                  <th className="p-4 text-left">Room</th>
-                  <th className="p-4 text-left">Time Slot</th>
-                  <th className="p-4 text-left">Status</th>
+                <tr className="border-b border-border text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-[13px] font-semibold">
+                  <th className="p-4">Day</th>
+                  <th className="p-4">Period</th>
+                  <th className="p-4">Class</th>
+                  <th className="p-4">Subject</th>
+                  <th className="p-4">Teacher</th>
+                  <th className="p-4">Room</th>
+                  <th className="p-4">Time Slot</th>
+                  <th className="p-4">Status</th>
                   {isAdmin && <th className="p-4 text-right">Actions</th>}
                 </tr>
               </thead>
@@ -641,30 +659,30 @@ export default function ClassRoutinePage() {
                   const subjectName = subjectObj ? subjectObj.name : String(routine.subject_id);
 
                   return (
-                    <tr key={routine._id} className="border-b border-slate-200 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-900/30">
-                      <td className="p-4 font-bold text-slate-900 dark:text-white capitalize">{routine.day}</td>
-                      <td className="p-4 font-mono font-bold text-slate-500">Period {routine.period_no || idx + 1}</td>
-                      <td className="p-4 font-bold text-slate-800 dark:text-slate-200">{cls ? `${cls.name} - ${cls.section}` : "N/A"}</td>
+                    <tr key={routine._id} className="border-b border-border hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <td className="p-4 font-semibold text-slate-800 dark:text-slate-200 capitalize">{routine.day}</td>
+                      <td className="p-4 font-mono font-medium text-slate-500">Period {routine.period_no || idx + 1}</td>
+                      <td className="p-4 font-semibold text-slate-800 dark:text-slate-200">{cls ? `${cls.name} - ${cls.section}` : "N/A"}</td>
                       <td className="p-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold border ${getSubjectColor(subjectName)}`}>
+                        <span className={`px-2.5 py-1 rounded-full text-[12px] font-semibold border ${getSubjectColor(subjectName)}`}>
                           {subjectName}
                         </span>
                       </td>
-                      <td className="p-4 font-medium text-slate-700 dark:text-slate-300">{teacherObj ? teacherObj.name : "N/A"}</td>
-                      <td className="p-4 font-mono font-bold text-slate-800 dark:text-slate-200">{routine.room || "—"}</td>
+                      <td className="p-4 text-slate-600 dark:text-slate-300">{teacherObj ? teacherObj.name : "N/A"}</td>
+                      <td className="p-4 font-mono font-medium text-slate-800 dark:text-slate-200">{routine.room || "—"}</td>
                       <td className="p-4 text-slate-600 dark:text-slate-400 font-medium">{routine.start_time} - {routine.end_time}</td>
                       <td className="p-4">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${routine.status === "Inactive" ? "bg-slate-100 text-slate-600 dark:bg-slate-800" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20"}`}>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[12px] font-semibold ${routine.status === "Inactive" ? "bg-slate-100 text-slate-600 dark:bg-slate-800" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 border border-emerald-200/50"}`}>
                           {routine.status || "Active"}
                         </span>
                       </td>
                       {isAdmin && (
                         <td className="p-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
-                            <button onClick={() => handleOpenEdit(routine)} className="p-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg text-slate-500 hover:text-indigo-600 cursor-pointer" title="Edit"><Edit className="w-3.5 h-3.5" /></button>
-                            <button onClick={() => handleOpenDuplicate(routine)} className="p-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg text-slate-500 hover:text-indigo-600 cursor-pointer" title="Duplicate"><Copy className="w-3.5 h-3.5" /></button>
-                            <button onClick={() => handleToggleArchive(routine)} className="p-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg text-slate-500 hover:text-amber-600 cursor-pointer" title={routine.status === "Inactive" ? "Activate" : "Archive"}><Plus className="w-3.5 h-3.5 rotate-45" /></button>
-                            <button onClick={() => handleDeleteRoutine(routine._id)} className="p-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-lg text-slate-500 hover:text-red-600 cursor-pointer" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
+                            <button onClick={() => handleOpenEdit(routine)} className="p-1.5 text-slate-400 hover:text-primary transition-colors cursor-pointer" title="Edit"><Edit className="w-4 h-4" /></button>
+                            <button onClick={() => handleOpenDuplicate(routine)} className="p-1.5 text-slate-400 hover:text-primary transition-colors cursor-pointer" title="Duplicate"><Copy className="w-4 h-4" /></button>
+                            <button onClick={() => handleToggleArchive(routine)} className="p-1.5 text-slate-400 hover:text-amber-500 transition-colors cursor-pointer" title={routine.status === "Inactive" ? "Activate" : "Archive"}><Plus className="w-4 h-4 rotate-45" /></button>
+                            <button onClick={() => handleDeleteRoutine(routine._id)} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors cursor-pointer" title="Delete"><Trash2 className="w-4 h-4" /></button>
                           </div>
                         </td>
                       )}
@@ -681,62 +699,74 @@ export default function ClassRoutinePage() {
       <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Create New Timetable Period">
         <div className="p-0 text-left space-y-6">
           {formError && (
-            <div className="flex items-start gap-2.5 p-4 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400 text-xs font-semibold shadow-sm">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-rose-600" />
+            <div className="flex items-start gap-2 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-lg px-4 py-2.5 text-rose-600 dark:text-rose-400 text-[12px] font-semibold">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>{formError}</span>
             </div>
           )}
 
           {/* Wizard step bullets */}
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div className="flex items-center justify-between border-b border-border pb-4">
             <div className="flex items-center gap-2">
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${creationStep >= 1 ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-400"}`}>1</span>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Class</span>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[12px] ${creationStep >= 1 ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"}`}>1</span>
+              <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200">Class</span>
             </div>
             <div className="w-12 h-0.5 bg-slate-200 dark:bg-slate-800" />
             <div className="flex items-center gap-2">
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${creationStep >= 2 ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-400"}`}>2</span>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Subject</span>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[12px] ${creationStep >= 2 ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"}`}>2</span>
+              <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200">Subject</span>
             </div>
             <div className="w-12 h-0.5 bg-slate-200 dark:bg-slate-800" />
             <div className="flex items-center gap-2">
-              <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs ${creationStep >= 3 ? "bg-indigo-600 text-white" : "bg-slate-100 text-slate-400"}`}>3</span>
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Teacher & Time</span>
+              <span className={`w-6 h-6 rounded-full flex items-center justify-center font-bold text-[12px] ${creationStep >= 3 ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"}`}>3</span>
+              <span className="text-[13px] font-bold text-slate-800 dark:text-slate-200">Teacher & Time</span>
             </div>
           </div>
 
           <form onSubmit={handleSave} className="space-y-4">
             {creationStep === 1 && (
               <div className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Academic Year *</label>
-                  <select value={formAcademicYear} onChange={(e) => setFormAcademicYear(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold" required>
-                    <option value="2026-2027">2026-2027</option>
-                    <option value="2027-2028">2027-2028</option>
-                  </select>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Academic Year <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select value={formAcademicYear} onChange={(e) => setFormAcademicYear(e.target.value)} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
+                      <option value="2026-2027">2026-2027</option>
+                      <option value="2027-2028">2027-2028</option>
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Class Name *</label>
-                  <select value={formClassName} onChange={(e) => { setFormClassName(e.target.value); setFormSection(""); }} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold" required>
-                    <option value="">Select Class</option>
-                    {classNames.map(name => <option key={name} value={name}>{name}</option>)}
-                  </select>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Class Name <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select value={formClassName} onChange={(e) => { setFormClassName(e.target.value); setFormSection(""); }} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
+                      <option value="">Select Class</option>
+                      {classNames.map(name => <option key={name} value={name}>{name}</option>)}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Section (if available)</label>
-                  <select value={formSection} onChange={(e) => setFormSection(e.target.value)} disabled={!formClassName} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold disabled:opacity-50" required>
-                    <option value="">Select Section</option>
-                    {sectionsForFormClassName.map(sec => <option key={sec} value={sec}>{sec}</option>)}
-                  </select>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Section <span className="text-slate-400 text-[11px]">(optional)</span></label>
+                  <div className="relative">
+                    <select value={formSection} onChange={(e) => setFormSection(e.target.value)} disabled={!formClassName} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer disabled:opacity-50 focus:border-primary/50" required>
+                      <option value="">Select Section</option>
+                      {sectionsForFormClassName.map(sec => <option key={sec} value={sec}>{sec}</option>)}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+                  </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Day *</label>
-                  <select value={formDay} onChange={(e) => setFormDay(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold" required>
-                    {DAYS.map(day => <option key={day} value={day}>{day}</option>)}
-                  </select>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Day <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select value={formDay} onChange={(e) => setFormDay(e.target.value)} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
+                      {DAYS.map(day => <option key={day} value={day}>{day}</option>)}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+                  </div>
                 </div>
 
                 <div className="flex justify-end pt-4">
@@ -750,9 +780,9 @@ export default function ClassRoutinePage() {
                       setFormError(null);
                       setCreationStep(2);
                     }}
-                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg flex items-center gap-1 shadow cursor-pointer"
+                    className="btn btn-primary flex items-center gap-2"
                   >
-                    Next Step <ChevronRight className="w-4 h-4" />
+                    <span>Next Step</span> <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -760,18 +790,21 @@ export default function ClassRoutinePage() {
 
             {creationStep === 2 && (
               <div className="space-y-4">
-                <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                <div className="bg-[#F8FAFC] dark:bg-slate-900 p-3 rounded-lg border border-border text-[13px] font-semibold text-slate-600 dark:text-slate-400">
                   Class Room Target: <strong className="text-slate-800 dark:text-white">{formClassName} - {formSection || "All"}</strong>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Subject (Assigned to Class) *</label>
-                  <select value={formSubject} onChange={(e) => setFormSubject(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold" required>
-                    <option value="">Select Subject</option>
-                    {wizardSubjects.map(subName => <option key={subName} value={subName}>{subName}</option>)}
-                  </select>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Subject (Assigned to Class) <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select value={formSubject} onChange={(e) => setFormSubject(e.target.value)} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
+                      <option value="">Select Subject</option>
+                      {wizardSubjects.map(subName => <option key={subName} value={subName}>{subName}</option>)}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+                  </div>
                   {wizardSubjects.length === 0 && (
-                    <p className="text-[10px] text-amber-500 font-bold mt-1">⚠ No subjects assigned to this class. Using catalog master lists instead.</p>
+                    <p className="text-[11px] text-amber-500 font-bold mt-1">⚠ No subjects assigned to this class. Using catalog master lists instead.</p>
                   )}
                 </div>
 
@@ -779,9 +812,9 @@ export default function ClassRoutinePage() {
                   <button
                     type="button"
                     onClick={() => setCreationStep(1)}
-                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:text-white text-xs font-bold rounded-lg flex items-center gap-1 cursor-pointer"
+                    className="btn btn-outline flex items-center gap-2"
                   >
-                    <ChevronLeft className="w-4 h-4" /> Back
+                    <ChevronLeft className="w-4 h-4" /> <span>Back</span>
                   </button>
                   <button
                     type="button"
@@ -793,9 +826,9 @@ export default function ClassRoutinePage() {
                       setFormError(null);
                       setCreationStep(3);
                     }}
-                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg flex items-center gap-1 shadow cursor-pointer"
+                    className="btn btn-primary flex items-center gap-2"
                   >
-                    Next Step <ChevronRight className="w-4 h-4" />
+                    <span>Next Step</span> <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -803,79 +836,82 @@ export default function ClassRoutinePage() {
 
             {creationStep === 3 && (
               <div className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Teacher (Assigned to Subject) *</label>
-                  <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold" required>
-                    <option value="">Select Teacher</option>
-                    {wizardTeachers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
-                  </select>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Teacher (Assigned to Subject) <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
+                      <option value="">Select Teacher</option>
+                      {wizardTeachers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+                  </div>
                   {wizardTeachers.length === 0 && (
-                    <p className="text-[10px] text-amber-500 font-bold mt-1">⚠ No teachers mapped. Active fallbacks are loaded.</p>
+                    <p className="text-[11px] text-amber-500 font-bold mt-1">⚠ No teachers mapped. Active fallbacks are loaded.</p>
                   )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Start Time *</label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Start Time <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       placeholder="09:00 AM"
                       value={formStartTime}
                       onChange={(e) => setFormStartTime(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold"
+                      className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 font-medium shadow-sm focus:border-primary/50"
                       required
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200">End Time *</label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] font-bold text-foreground dark:text-slate-100">End Time <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       placeholder="10:00 AM"
                       value={formEndTime}
                       onChange={(e) => setFormEndTime(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold"
+                      className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 font-medium shadow-sm focus:border-primary/50"
                       required
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Room Number (Optional)</label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Room Number <span className="text-slate-400 text-[11px]">(optional)</span></label>
                     <input
                       type="text"
                       placeholder="102-B"
                       value={formRoom}
                       onChange={(e) => setFormRoom(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold"
+                      className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 font-medium shadow-sm focus:border-primary/50"
                     />
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Period Number</label>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Period Number</label>
                     <input
                       type="number"
                       min="1"
                       placeholder="1"
                       value={formPeriodNo}
                       onChange={(e) => setFormPeriodNo(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold"
+                      className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 font-medium shadow-sm focus:border-primary/50"
                     />
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between pt-4 border-t border-border">
                   <button
                     type="button"
                     onClick={() => setCreationStep(2)}
-                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:text-white text-xs font-bold rounded-lg flex items-center gap-1 cursor-pointer"
+                    className="btn btn-outline flex items-center gap-2"
                   >
-                    <ChevronLeft className="w-4 h-4" /> Back
+                    <ChevronLeft className="w-4 h-4" /> <span>Back</span>
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 shadow-md cursor-pointer"
+                    className="btn btn-primary flex items-center gap-2"
                   >
-                    Save Routine Period <Check className="w-4 h-4" />
+                    <span>Save Routine Period</span> <Check className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -886,131 +922,152 @@ export default function ClassRoutinePage() {
 
       {/* 5. Standard editing modal */}
       <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Edit Timetable Period Slot">
-        <form onSubmit={handleSave} className="p-0 text-left space-y-4">
+        <form onSubmit={handleSave} className="p-0 text-left space-y-4 font-bold">
           {formError && (
-            <div className="flex items-start gap-2.5 p-4 rounded-xl bg-rose-50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400 text-xs font-semibold shadow-sm">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0 text-rose-600" />
+            <div className="flex items-start gap-2 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 rounded-lg px-4 py-2.5 text-rose-600 dark:text-rose-400 text-[12px] font-semibold">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
               <span>{formError}</span>
             </div>
           )}
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Academic Year *</label>
-            <select value={formAcademicYear} onChange={(e) => setFormAcademicYear(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold" required>
-              <option value="2026-2027">2026-2027</option>
-              <option value="2027-2028">2027-2028</option>
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Class Name *</label>
-              <select value={formClassName} onChange={(e) => { setFormClassName(e.target.value); setFormSection(""); }} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold" required>
-                <option value="">Select Class</option>
-                {classNames.map(name => <option key={name} value={name}>{name}</option>)}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Academic Year <span className="text-red-500">*</span></label>
+            <div className="relative">
+              <select value={formAcademicYear} onChange={(e) => setFormAcademicYear(e.target.value)} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
+                <option value="2026-2027">2026-2027</option>
+                <option value="2027-2028">2027-2028</option>
               </select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Section</label>
-              <select value={formSection} onChange={(e) => setFormSection(e.target.value)} disabled={!formClassName} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold disabled:opacity-50" required>
-                <option value="">Select Section</option>
-                {sectionsForFormClassName.map(sec => <option key={sec} value={sec}>{sec}</option>)}
-              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Day *</label>
-              <select value={formDay} onChange={(e) => setFormDay(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold" required>
-                {DAYS.map(day => <option key={day} value={day}>{day}</option>)}
-              </select>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Class Name <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <select value={formClassName} onChange={(e) => { setFormClassName(e.target.value); setFormSection(""); }} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
+                  <option value="">Select Class</option>
+                  {classNames.map(name => <option key={name} value={name}>{name}</option>)}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Subject *</label>
-              <select value={formSubject} onChange={(e) => setFormSubject(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold" required>
-                <option value="">Select Subject</option>
-                {wizardSubjects.map(subName => <option key={subName} value={subName}>{subName}</option>)}
-              </select>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Section <span className="text-slate-400 text-[11px]">(optional)</span></label>
+              <div className="relative">
+                <select value={formSection} onChange={(e) => setFormSection(e.target.value)} disabled={!formClassName} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer disabled:opacity-50 focus:border-primary/50" required>
+                  <option value="">Select Section</option>
+                  {sectionsForFormClassName.map(sec => <option key={sec} value={sec}>{sec}</option>)}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+              </div>
             </div>
-          </div>
-
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Teacher *</label>
-            <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold" required>
-              <option value="">Select Teacher</option>
-              {wizardTeachers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
-            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Start Time *</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Day <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <select value={formDay} onChange={(e) => setFormDay(e.target.value)} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
+                  {DAYS.map(day => <option key={day} value={day}>{day}</option>)}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Subject <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <select value={formSubject} onChange={(e) => setFormSubject(e.target.value)} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
+                  <option value="">Select Subject</option>
+                  {wizardSubjects.map(subName => <option key={subName} value={subName}>{subName}</option>)}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Teacher <span className="text-red-500">*</span></label>
+            <div className="relative">
+              <select value={formTeacherId} onChange={(e) => setFormTeacherId(e.target.value)} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
+                <option value="">Select Teacher</option>
+                {wizardTeachers.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Start Time <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 placeholder="09:00 AM"
                 value={formStartTime}
                 onChange={(e) => setFormStartTime(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold"
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 font-medium shadow-sm focus:border-primary/50"
                 required
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">End Time *</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-bold text-foreground dark:text-slate-100">End Time <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 placeholder="10:00 AM"
                 value={formEndTime}
                 onChange={(e) => setFormEndTime(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold"
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 font-medium shadow-sm focus:border-primary/50"
                 required
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Room Number (Optional)</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Room Number <span className="text-slate-400 text-[11px]">(optional)</span></label>
               <input
                 type="text"
                 placeholder="102-B"
                 value={formRoom}
                 onChange={(e) => setFormRoom(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold"
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 font-medium shadow-sm focus:border-primary/50"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Period Number</label>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Period Number</label>
               <input
                 type="number"
                 min="1"
                 placeholder="1"
                 value={formPeriodNo}
                 onChange={(e) => setFormPeriodNo(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold"
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 font-medium shadow-sm focus:border-primary/50"
               />
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-200">Status *</label>
-            <select value={formStatus} onChange={(e) => setFormStatus(e.target.value as any)} className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs outline-none focus:border-indigo-600 font-bold">
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-            </select>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
+            <div className="relative">
+              <select value={formStatus} onChange={(e) => setFormStatus(e.target.value as any)} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
+            </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="p-4 flex justify-end gap-3 pt-4 border-t border-border mt-6 -mx-6 mb-[-24px] bg-[#F8FAFC] dark:bg-slate-900/50 rounded-b-xl">
             <button
               type="button"
               onClick={() => setIsEditOpen(false)}
-              className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-850 dark:text-white text-xs font-bold rounded-lg cursor-pointer"
+              className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-foreground dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg flex items-center gap-1 shadow-md cursor-pointer"
+              className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-2"
             >
               Save Changes
             </button>

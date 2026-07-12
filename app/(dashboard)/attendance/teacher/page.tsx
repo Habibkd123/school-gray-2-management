@@ -83,7 +83,7 @@ export default function TeacherAttendancePage() {
       working_hours: number;
       late_minutes: number;
     }> = {};
-    
+
     // Set default registers values for all teachers
     teachers.forEach(t => {
       newRecords[t._id] = {
@@ -126,7 +126,7 @@ export default function TeacherAttendancePage() {
         working_hours: 8,
         late_minutes: 0
       };
-      
+
       let updatedCheckIn = current.check_in;
       let updatedCheckOut = current.check_out;
       let updatedWorking = current.working_hours;
@@ -198,10 +198,10 @@ export default function TeacherAttendancePage() {
 
   const handleSave = async () => {
     if (!filterDate || !filterYear) return;
-    
+
     setSubmitting(true);
     setSuccessMsg("");
-    
+
     const recordsToSave = Object.keys(attendanceRecords).map(teacher_id => ({
       teacher_id,
       status: attendanceRecords[teacher_id].status,
@@ -269,7 +269,7 @@ export default function TeacherAttendancePage() {
       const matchSearch = !searchQuery
         ? true
         : t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (t.employee_id || "").toLowerCase().includes(searchQuery.toLowerCase());
+        (t.employee_id || "").toLowerCase().includes(searchQuery.toLowerCase());
 
       const rec = attendanceRecords[t._id];
       const matchStatus = !statusFilter
@@ -327,9 +327,9 @@ export default function TeacherAttendancePage() {
       <div className="page-header">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            Staff Attendance Board
+            Staff Attendance Boar
           </h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
             <span>Dashboard</span>
             <span>/</span>
             <span>Attendance</span>
@@ -340,119 +340,117 @@ export default function TeacherAttendancePage() {
         <div className="flex gap-2">
           <button
             onClick={() => PrintService.print("printable-area", { pageSize: "A4" })}
-            className="btn btn-outline flex items-center gap-1.5"
+            className="btn btn-outline flex items-center gap-2"
           >
-            <Printer className="w-4 h-4 text-slate-555" />
+            <Printer className="w-4 h-4" />
             <span>Print register</span>
           </button>
           <button
             onClick={handleBulkExport}
-            className="btn btn-outline flex items-center gap-1.5"
+            className="btn btn-outline flex items-center gap-2"
           >
-            <Download className="w-4 h-4 text-slate-555" />
+            <Download className="w-4 h-4" />
             <span>Export CSV</span>
           </button>
         </div>
       </div>
 
       {/* Dynamic Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-left">
-        <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm">
-          <h4 className="text-xl font-bold text-slate-900 dark:text-white leading-none">{metrics.total}</h4>
-          <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">Total Staff</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+        <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 card-shadow">
+          <h4 className="text-[24px] font-bold text-slate-900 dark:text-white leading-none">{metrics.total}</h4>
+          <p className="text-[12px] text-slate-500 mt-2 font-semibold uppercase tracking-wide">Total Staff</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm">
-          <h4 className="text-xl font-bold text-emerald-600 dark:text-emerald-450 leading-none">{metrics.present}</h4>
-          <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">Present</p>
+        <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 card-shadow">
+          <h4 className="text-[24px] font-bold text-success leading-none">{metrics.present}</h4>
+          <p className="text-[12px] text-slate-500 mt-2 font-semibold uppercase tracking-wide">Present</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm">
-          <h4 className="text-xl font-bold text-rose-600 dark:text-rose-450 leading-none">{metrics.absent}</h4>
-          <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">Absent</p>
+        <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 card-shadow">
+          <h4 className="text-[24px] font-bold text-danger leading-none">{metrics.absent}</h4>
+          <p className="text-[12px] text-slate-500 mt-2 font-semibold uppercase tracking-wide">Absent</p>
         </div>
-        <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm">
-          <h4 className="text-xl font-bold text-amber-600 dark:text-amber-450 leading-none">{metrics.late}</h4>
-          <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">Late Count</p>
-        </div>
-        <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm">
-          <h4 className="text-xl font-bold text-indigo-650 dark:text-indigo-400 leading-none">{metrics.percentage}%</h4>
-          <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">Present Rate</p>
+        {/* <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 card-shadow">
+          <h4 className="text-[24px] font-bold text-warning leading-none">{metrics.late}</h4>
+          <p className="text-[12px] text-slate-500 mt-2 font-semibold uppercase tracking-wide">Late Count</p>
+        </div> */}
+        <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 card-shadow">
+          <h4 className="text-[24px] font-bold text-primary leading-none">{metrics.percentage}%</h4>
+          <p className="text-[12px] text-slate-500 mt-2 font-semibold uppercase tracking-wide">Present Rate</p>
         </div>
       </div>
 
       {/* Standard Filter Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 flex flex-col gap-4 text-left shadow-sm">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 flex flex-col gap-4 text-left card-shadow">
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex flex-col gap-1 w-full sm:w-44">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-455 mb-1">Session Year</label>
+          <div className="flex flex-col gap-1.5 w-full sm:w-44">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Session Year</label>
             <div className="relative">
               <select
                 value={filterYear}
                 onChange={(e) => setFilterYear(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none cursor-pointer appearance-none"
+                className="w-full pl-3.5 pr-8 py-2 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border text-[13px] font-medium rounded-sm outline-none cursor-pointer appearance-none focus:border-primary/50 transition-colors shadow-sm"
               >
                 <option value="2026">Session 2026</option>
                 <option value="2027">Session 2027</option>
               </select>
-              <ChevronDown className="w-4 h-4 text-slate-455 absolute right-3 top-2.5 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
             </div>
           </div>
 
-          <div className="flex flex-col gap-1 w-full sm:w-44">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-455 mb-1">Attendance Date</label>
+          <div className="flex flex-col gap-1.5 w-full sm:w-44">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Attendance Date</label>
             <input
               type="date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
-              className="w-full px-3 py-1.8 bg-slate-50 dark:bg-slate-955 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none"
+              className="w-full px-3.5 py-2 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border text-[13px] font-medium rounded-sm outline-none focus:border-primary/50 transition-colors shadow-sm"
             />
           </div>
 
-          <div className="flex flex-col gap-1 w-full sm:w-44">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-455 mb-1">Department</label>
+          <div className="flex flex-col gap-1.5 w-full sm:w-44">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Department</label>
             <div className="relative">
               <select
                 value={deptFilter}
                 onChange={(e) => setDeptFilter(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none cursor-pointer appearance-none"
+                className="w-full pl-3.5 pr-8 py-2 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border text-[13px] font-medium rounded-sm outline-none cursor-pointer appearance-none focus:border-primary/50 transition-colors shadow-sm"
               >
                 <option value="">All Departments</option>
                 {departments.map(d => (
                   <option key={d} value={d}>{d}</option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-slate-455 absolute right-3 top-2.5 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
             </div>
           </div>
 
-          <div className="flex flex-col gap-1 w-full sm:w-44">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-455 mb-1">Status filter</label>
+          <div className="flex flex-col gap-1.5 w-full sm:w-44">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Status filter</label>
             <div className="relative">
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-955 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none cursor-pointer appearance-none"
+                className="w-full pl-3.5 pr-8 py-2 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border text-[13px] font-medium rounded-sm outline-none cursor-pointer appearance-none focus:border-primary/50 transition-colors shadow-sm"
               >
                 <option value="">All Statuses</option>
                 <option value="present">Present</option>
                 <option value="absent">Absent</option>
                 <option value="leave">Leave</option>
-                <option value="late">Late</option>
-                <option value="half_day">Half Day</option>
               </select>
-              <ChevronDown className="w-4 h-4 text-slate-455 absolute right-3 top-2.5 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
             </div>
           </div>
 
-          <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-455 mb-1">Search Staff</label>
+          <div className="flex flex-col gap-1.5 flex-1 min-w-[200px]">
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Search Staff</label>
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 placeholder="Search staff name or employee ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8.5 pr-3 py-1.8 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none"
+                className="w-full pl-9 pr-3.5 py-2 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border text-[13px] font-medium rounded-sm outline-none focus:border-primary/50 transition-colors shadow-sm"
               />
             </div>
           </div>
@@ -461,9 +459,8 @@ export default function TeacherAttendancePage() {
 
       {/* Main Table Container */}
       <div
-        className={`erp-table-wrap text-left relative transition-opacity duration-200 ${
-          (loadingTeachers || loadingAttendance) && !isInitialLoad.current ? "opacity-60 pointer-events-none" : ""
-        }`}
+        className={`erp-table-wrap text-left relative transition-opacity duration-200 ${(loadingTeachers || loadingAttendance) && !isInitialLoad.current ? "opacity-60 pointer-events-none" : ""
+          }`}
         id="printable-area"
       >
         {(loadingTeachers || loadingAttendance) && !isInitialLoad.current && (
@@ -473,46 +470,46 @@ export default function TeacherAttendancePage() {
           </div>
         )}
         {(loadingTeachers || loadingAttendance) && isInitialLoad.current ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <p className="text-xs font-bold">Compiling staff registers...</p>
+          <div className="flex items-center justify-center py-20 gap-3 text-slate-400">
+            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+            <p className="text-[14px] font-medium">Compiling staff registers...</p>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-rose-550 border border-rose-100 rounded-xl">
-            <AlertCircle className="w-8 h-8" />
-            <p className="text-xs font-bold">{error}</p>
+          <div className="flex flex-col items-center justify-center py-20 gap-3 text-danger border border-danger/10 rounded-md bg-danger/5">
+            <AlertCircle className="w-6 h-6" />
+            <p className="text-[14px] font-medium">{error}</p>
           </div>
         ) : teachers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
             <Users className="w-12 h-12 opacity-20" />
-            <p className="text-xs font-bold">No active teachers registered in the system.</p>
+            <p className="text-[14px] font-medium">No active teachers registered in the system.</p>
           </div>
         ) : (
           <div>
             {/* Header selection control */}
-            <div className="p-4 border-b border-border bg-slate-50/50 dark:bg-slate-955/20 flex flex-wrap justify-between items-center gap-3">
+            <div className="p-4 border-b border-border bg-white dark:bg-slate-900 flex flex-wrap justify-between items-center gap-3">
               <div className="flex gap-2">
                 <button
                   onClick={() => markAll("present")}
-                  className="px-3 py-1.5 text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 text-[13px] font-medium bg-success/10 text-success hover:bg-success/20 rounded-sm transition-colors cursor-pointer"
                 >
                   All Present
                 </button>
                 <button
                   onClick={() => markAll("absent")}
-                  className="px-3 py-1.5 text-xs font-bold bg-rose-50 text-rose-700 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 text-[13px] font-medium bg-danger/10 text-danger hover:bg-danger/20 rounded-sm transition-colors cursor-pointer"
                 >
                   All Absent
                 </button>
                 <button
                   onClick={() => markAll("leave")}
-                  className="px-3 py-1.5 text-xs font-bold bg-amber-50 text-amber-700 hover:bg-amber-100 rounded-lg border border-amber-200 transition-colors cursor-pointer"
+                  className="px-3 py-1.5 text-[13px] font-medium bg-warning/10 text-warning hover:bg-warning/20 rounded-sm transition-colors cursor-pointer"
                 >
                   All Leave
                 </button>
               </div>
-              <div className="text-[11px] font-extrabold text-slate-500">
-                Matching Results Count: <span className="font-mono text-slate-850 dark:text-white text-xs">{filteredTeachers.length}</span>
+              <div className="text-[13px] font-medium text-slate-500">
+                Matching Results Count: <span className="font-bold text-slate-800 dark:text-slate-200">{filteredTeachers.length}</span>
               </div>
             </div>
 
@@ -521,7 +518,7 @@ export default function TeacherAttendancePage() {
               <table className="erp-table">
                 <thead>
                   <tr>
-                    <th className="w-10 col-center">
+                    <th className="w-12 text-center">
                       <input
                         type="checkbox"
                         checked={filteredTeachers.length > 0 && selectedTeacherIds.length === filteredTeachers.length}
@@ -529,15 +526,15 @@ export default function TeacherAttendancePage() {
                         className="w-4 h-4 accent-primary rounded cursor-pointer"
                       />
                     </th>
-                    <th className="w-28">Emp ID</th>
-                    <th>Staff Profile</th>
-                    <th className="w-44">Status</th>
-                    <th className="w-24">In Time</th>
-                    <th className="w-24">Out Time</th>
-                    <th className="w-20 text-center">Late (Min)</th>
-                    <th className="w-20 text-center">Hours</th>
-                    <th>Remark Note</th>
-                    <th className="w-16 col-center">Profile</th>
+                    <th className="w-28 font-semibold text-slate-700 dark:text-slate-200">Emp ID</th>
+                    <th className="font-semibold text-slate-700 dark:text-slate-200">Staff Profile</th>
+                    <th className="w-44 font-semibold text-slate-700 dark:text-slate-200">Status</th>
+                    {/* <th className="w-24 font-semibold text-slate-700 dark:text-slate-200">In Time</th>
+                    <th className="w-24 font-semibold text-slate-700 dark:text-slate-200">Out Time</th>
+                    <th className="w-20 text-center font-semibold text-slate-700 dark:text-slate-200">Late (Min)</th>
+                    <th className="w-20 text-center font-semibold text-slate-700 dark:text-slate-200">Hours</th> */}
+                    <th className="font-semibold text-slate-700 dark:text-slate-200">Remark Note</th>
+                    <th className="w-16 text-center font-semibold text-slate-700 dark:text-slate-200">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -554,7 +551,7 @@ export default function TeacherAttendancePage() {
 
                     return (
                       <tr key={teacher._id}>
-                        <td className="col-center">
+                        <td className="text-center">
                           <input
                             type="checkbox"
                             checked={selectedTeacherIds.includes(teacher._id)}
@@ -562,12 +559,12 @@ export default function TeacherAttendancePage() {
                             className="w-4 h-4 accent-primary rounded cursor-pointer"
                           />
                         </td>
-                        <td className="font-mono font-bold text-slate-500 dark:text-slate-400">
+                        <td className="font-medium text-slate-600 dark:text-slate-400">
                           {teacher.employee_id || "-"}
                         </td>
                         <td>
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500 text-[11px] overflow-hidden shrink-0 border border-border">
+                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-semibold text-slate-500 text-[11px] overflow-hidden shrink-0 border border-border">
                               {teacher.photo_url ? (
                                 <img src={teacher.photo_url} alt={teacher.name} className="w-full h-full object-cover" />
                               ) : (
@@ -575,7 +572,7 @@ export default function TeacherAttendancePage() {
                               )}
                             </div>
                             <div>
-                              <div className="font-bold text-slate-850 dark:text-white">{teacher.name}</div>
+                              <div className="font-medium text-slate-450 dark:text-white">{teacher.name}</div>
                               <div className="flex items-center gap-2 mt-0.5 text-[10px] font-bold text-slate-400">
                                 <span className="flex items-center gap-0.5">
                                   <Briefcase className="w-2.5 h-2.5" /> {teacher.designation || "Teacher"}
@@ -593,15 +590,14 @@ export default function TeacherAttendancePage() {
                             value={record.status}
                             onChange={(e) => handleStatusChange(teacher._id, e.target.value)}
                             disabled={submitting}
-                            className={`w-full px-2.5 py-1.5 rounded-lg text-xs font-bold outline-none border cursor-pointer appearance-none bg-no-repeat bg-[right_8px_center] ${
-                              record.status === "present"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                : record.status === "absent"
-                                ? "bg-rose-50 text-rose-700 border-rose-200"
+                            className={`w-full px-2.5 py-1.5 rounded-sm text-[13px] font-semibold outline-none border-2 border-transparent cursor-pointer appearance-none bg-no-repeat bg-[right_8px_center] ${record.status === "present"
+                              ? "bg-success/10 text-success focus:border-success/30"
+                              : record.status === "absent"
+                                ? "bg-danger/10 text-danger focus:border-danger/30"
                                 : ["leave", "late", "half_day"].includes(record.status)
-                                ? "bg-amber-50 text-amber-700 border-amber-200"
-                                : "bg-slate-50 text-slate-700 border-border"
-                            }`}
+                                  ? "bg-warning/10 text-warning focus:border-warning/30"
+                                  : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 focus:border-slate-300"
+                              }`}
                             style={{
                               backgroundImage:
                                 'url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22currentColor%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E")',
@@ -611,17 +607,17 @@ export default function TeacherAttendancePage() {
                             <option value="present">Present</option>
                             <option value="absent">Absent</option>
                             <option value="leave">Leave</option>
-                            <option value="late">Late</option>
-                            <option value="half_day">Half Day</option>
+                            {/* <option value="late">Late</option>
+                            <option value="half_day">Half Day</option> */}
                           </select>
                         </td>
-                        <td>
+                        {/* <td>
                           <input
                             type="time"
                             value={record.check_in || ""}
                             disabled={isTimeDisabled || submitting}
                             onChange={(e) => handleFieldChange(teacher._id, "check_in", e.target.value)}
-                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-lg outline-none text-xs font-semibold focus:border-primary disabled:opacity-50"
+                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-sm outline-none text-xs font-semibold focus:border-primary disabled:opacity-50"
                           />
                         </td>
                         <td>
@@ -630,7 +626,7 @@ export default function TeacherAttendancePage() {
                             value={record.check_out || ""}
                             disabled={isTimeDisabled || submitting}
                             onChange={(e) => handleFieldChange(teacher._id, "check_out", e.target.value)}
-                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-lg outline-none text-xs font-semibold focus:border-primary disabled:opacity-50"
+                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-sm outline-none text-xs font-semibold focus:border-primary disabled:opacity-50"
                           />
                         </td>
                         <td>
@@ -639,7 +635,7 @@ export default function TeacherAttendancePage() {
                             value={record.late_minutes}
                             disabled={isTimeDisabled || submitting}
                             onChange={(e) => handleFieldChange(teacher._id, "late_minutes", Math.max(0, parseInt(e.target.value) || 0))}
-                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-lg outline-none text-xs font-semibold text-center focus:border-primary disabled:opacity-50 font-mono"
+                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-sm outline-none text-xs font-semibold text-center focus:border-primary disabled:opacity-50 font-mono"
                           />
                         </td>
                         <td>
@@ -649,9 +645,9 @@ export default function TeacherAttendancePage() {
                             value={record.working_hours}
                             disabled={isTimeDisabled || submitting}
                             onChange={(e) => handleFieldChange(teacher._id, "working_hours", Math.max(0, parseFloat(e.target.value) || 0))}
-                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-lg outline-none text-xs font-semibold text-center focus:border-primary disabled:opacity-50 font-mono"
+                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-sm outline-none text-xs font-semibold text-center focus:border-primary disabled:opacity-50 font-mono"
                           />
-                        </td>
+                        </td> */}
                         <td>
                           <input
                             type="text"
@@ -659,13 +655,13 @@ export default function TeacherAttendancePage() {
                             value={record.note}
                             onChange={(e) => handleFieldChange(teacher._id, "note", e.target.value)}
                             disabled={submitting}
-                            className="w-full px-2.5 py-1 border border-transparent hover:border-border focus:border-primary rounded-lg text-xs outline-none bg-transparent focus:bg-white dark:focus:bg-slate-955 transition-all"
+                            className="w-full px-3 py-1.5 border border-transparent hover:border-border focus:border-primary/50 rounded-sm text-[13px] outline-none bg-transparent focus:bg-[#F8FAFC] dark:focus:bg-[var(--sidebar-bg)] transition-colors"
                           />
                         </td>
-                        <td className="col-center">
+                        <td className="text-center">
                           <Link
                             href={`/attendance/teacher/${teacher._id}`}
-                            className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-colors cursor-pointer"
+                            className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-sm transition-colors cursor-pointer"
                           >
                             <Eye className="w-4 h-4" />
                           </Link>
@@ -678,10 +674,10 @@ export default function TeacherAttendancePage() {
             </div>
 
             {/* Bottom Actions footer bar */}
-            <div className="p-4 border-t border-border flex items-center justify-between bg-slate-50/50 dark:bg-slate-955/20">
+            <div className="p-4 border-t border-border flex items-center justify-between bg-white dark:bg-slate-900">
               <div>
                 {successMsg && (
-                  <span className="text-emerald-500 text-xs font-bold flex items-center gap-1">
+                  <span className="text-success text-[13px] font-semibold flex items-center gap-1">
                     <CheckCircle2 className="w-4 h-4" /> {successMsg}
                   </span>
                 )}
@@ -701,39 +697,39 @@ export default function TeacherAttendancePage() {
 
       {/* Floating Bulk Operations bar */}
       {selectedTeacherIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-800 text-white rounded-2xl px-6 py-4 shadow-2xl flex items-center gap-6 z-50 animate-bounce-short font-sans text-xs">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900 border border-slate-800 text-white rounded-2xl px-6 py-4 card-shadow flex items-center gap-6 z-50 animate-bounce-short text-[13px]">
           <div>
-            <span className="font-black text-emerald-450">{selectedTeacherIds.length}</span> staff selected
+            <span className="font-bold text-success">{selectedTeacherIds.length}</span> staff selected
           </div>
           <div className="w-px h-6 bg-slate-700" />
           <div className="flex gap-2">
             <button
               onClick={() => markAll("present")}
-              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg font-bold transition-colors cursor-pointer"
+              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-sm font-semibold transition-colors cursor-pointer"
             >
               Mark Present
             </button>
             <button
               onClick={() => markAll("absent")}
-              className="px-3 py-2 bg-rose-600 hover:bg-rose-500 rounded-lg font-bold transition-colors cursor-pointer"
+              className="px-3 py-2 bg-rose-600 hover:bg-rose-500 rounded-sm font-semibold transition-colors cursor-pointer"
             >
               Mark Absent
             </button>
             <button
               onClick={() => markAll("leave")}
-              className="px-3 py-2 bg-amber-600 hover:bg-amber-500 rounded-lg font-bold transition-colors cursor-pointer"
+              className="px-3 py-2 bg-amber-600 hover:bg-amber-500 rounded-sm font-semibold transition-colors cursor-pointer"
             >
               Mark Leave
             </button>
             <button
               onClick={handleBulkExport}
-              className="px-3 py-2 bg-slate-800 hover:bg-slate-750 rounded-lg font-bold flex items-center gap-1.5 transition-all cursor-pointer border border-slate-750"
+              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-sm font-semibold flex items-center gap-1.5 transition-all cursor-pointer border border-slate-700"
             >
               <Download className="w-3.5 h-3.5" /> CSV
             </button>
             <button
               onClick={() => setSelectedTeacherIds([])}
-              className="px-3 py-2 border border-slate-700 text-slate-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+              className="px-3 py-2 border border-slate-700 text-slate-400 hover:text-white rounded-sm transition-colors cursor-pointer font-medium"
             >
               Clear
             </button>
