@@ -73,12 +73,12 @@ export default function SubjectAssignmentDetailsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <button 
+          {/* <button 
             onClick={() => router.back()}
             className="w-10 h-10 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-border text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm"
           >
             <ArrowLeft className="w-5 h-5" />
-          </button>
+          </button> */}
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
               {classInfo.name} {classInfo.section ? `- ${classInfo.section}` : ""}
@@ -98,9 +98,9 @@ export default function SubjectAssignmentDetailsPage() {
           <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm">
             <Users className="w-4 h-4" /> Assign Teacher
           </button>
-          <button className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-300 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm">
+          {/* <button className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-300 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm">
             <Printer className="w-4 h-4" /> Print
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -115,7 +115,7 @@ export default function SubjectAssignmentDetailsPage() {
             <h3 className="text-2xl font-black text-slate-800 dark:text-white mt-1">{uniqueSubjects}</h3>
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-slate-900 border border-border rounded-lg p-5 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center">
             <Users className="w-6 h-6" />
@@ -125,7 +125,7 @@ export default function SubjectAssignmentDetailsPage() {
             <h3 className="text-2xl font-black text-slate-800 dark:text-white mt-1">{uniqueTeachers}</h3>
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-slate-900 border border-border rounded-lg p-5 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-purple-100/50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 flex items-center justify-center">
             <Clock className="w-6 h-6" />
@@ -142,7 +142,7 @@ export default function SubjectAssignmentDetailsPage() {
         <div className="p-5 border-b border-border bg-[#F8FAFC] dark:bg-slate-800/40">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Assigned Subjects List</h2>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -182,10 +182,10 @@ export default function SubjectAssignmentDetailsPage() {
                   <td className="py-3 px-5">
                     {assignment.teacher_id ? (
                       <div className="flex items-center gap-2">
-                        <img 
-                          src={assignment.teacher_id?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignment.teacher_id?.name || "T")}&background=d68600&color=fff&bold=true`} 
-                          alt="Avatar" 
-                          className="w-6 h-6 rounded-full object-cover border border-slate-200" 
+                        <img
+                          src={assignment.teacher_id?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignment.teacher_id?.name || "T")}&background=d68600&color=fff&bold=true`}
+                          alt="Avatar"
+                          className="w-6 h-6 rounded-full object-cover border border-slate-200"
                         />
                         <span className="font-bold text-[13px] text-slate-700 dark:text-slate-200">
                           {assignment.teacher_id?.name}

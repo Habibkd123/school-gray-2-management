@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
@@ -22,13 +22,21 @@ function resolveName(field: { name: string } | string | undefined, fallback = ""
 export default function MeritListPage() {
   const { exams } = useExams();
   const { classes } = useClasses();
-  const { results, fetchResults, isLoading } = useResults();
-  const { students, isLoading: studentsLoading } = useStudents();
+  const { results, fetchResults, isLoading } = useResults({ skip: true });
+  const { students, isLoading: studentsLoading, fetchStudents } = useStudents({ skip: true });
 
   const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [isExportOpen, setIsExportOpen] = useState(false);
+
+  // Lazy load data when both exam and class are selected
+  React.useEffect(() => {
+    if (selectedExamId && selectedClassId) {
+      fetchStudents({ classId: selectedClassId, limit: 500 });
+      fetchResults({ exam_id: selectedExamId, class_id: selectedClassId }, 1, 500);
+    }
+  }, [selectedExamId, selectedClassId, fetchStudents, fetchResults]);
 
   const isLoadingAll = isLoading || studentsLoading;
 

@@ -39,6 +39,7 @@ interface RegisterData {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 let _permissionsFetchPromise: Promise<any> | null = null;
+let _activeRefreshPromise: Promise<boolean> | null = null;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -221,28 +222,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // ─── Token Refresh ────────────────────────────────────────────
   const tryRefreshToken = useCallback(async (): Promise<boolean> => {
+    if (_activeRefreshPromise) {
+      return _activeRefreshPromise;
+    }
+
+    _activeRefreshPromise = (async () => {
+      try {
+        const refreshToken = getRefreshToken();
+        if (!refreshToken) return false;
+
+        const res = await fetch("/api/auth/refresh", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data.success) return false;
+
+        const { access_token, refresh_token } = data.data;
+        const currentUser = getStoredUser();
+        if (!currentUser) return false;
+
+        saveSession(access_token, refresh_token, currentUser);
+        return true;
+      } catch {
+        return false;
+      }
+    })();
+
     try {
-      const refreshToken = getRefreshToken();
-      if (!refreshToken) return false;
-
-      const res = await fetch("/api/auth/refresh", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) return false;
-
-      const { access_token, refresh_token } = data.data;
-      const currentUser = getStoredUser();
-      if (!currentUser) return false;
-
-      saveSession(access_token, refresh_token, currentUser);
-      return true;
-    } catch {
-      return false;
+      const success = await _activeRefreshPromise;
+      return success;
+    } finally {
+      _activeRefreshPromise = null;
     }
   }, []);
 

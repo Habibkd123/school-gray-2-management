@@ -10,15 +10,23 @@ import { useStudents } from "../../../hooks/useStudents";
 import { useClasses } from "../../../hooks/useClasses";
 
 export default function GradeReportPage() {
-  const { results, isLoading: resultsLoading } = useResults();
+  const { results, isLoading: resultsLoading, fetchResults } = useResults({ skip: true });
   const { exams } = useExams();
-  const { students } = useStudents();
+  const { students } = useStudents({ skip: true });
   const { classes } = useClasses();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedExam, setSelectedExam] = useState("");
   const [isExportOpen, setIsExportOpen] = useState(false);
+
+  // Fetch filtered results from the server when class or exam filters change
+  React.useEffect(() => {
+    fetchResults({
+      class_id: selectedClass || undefined,
+      exam_id: selectedExam || undefined
+    });
+  }, [selectedClass, selectedExam, fetchResults]);
 
   const getStudentName = (sid: any) => {
     if (sid && typeof sid === "object" && sid.name) {
@@ -41,22 +49,17 @@ export default function GradeReportPage() {
 
   const filteredResults = useMemo(() => {
     return results.filter(r => {
-      const sid = typeof r.student_id === "object" ? r.student_id._id : r.student_id;
-      const student = students.find(s => s._id === sid);
-      const studentName = student?.name || (r.student_id && typeof r.student_id === "object" ? r.student_id.name : "") || "";
-      const adminNo = student?.admission_no || "";
-      const classId = student ? (typeof student.class_id === "object" ? student.class_id?._id : student.class_id) : undefined;
-      const examId = typeof r.exam_id === "object" ? r.exam_id._id : r.exam_id;
+      const studentObj = r.student_id && typeof r.student_id === "object" ? r.student_id : null;
+      const studentName = studentObj?.name || "";
+      const rollNo = studentObj?.roll_no || "";
 
       const matchSearch =
         studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        adminNo.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchClass = !selectedClass || classId === selectedClass;
-      const matchExam = !selectedExam || examId === selectedExam;
+        rollNo.toLowerCase().includes(searchTerm.toLowerCase());
 
-      return matchSearch && matchClass && matchExam;
+      return matchSearch;
     });
-  }, [results, searchTerm, selectedClass, selectedExam, students]);
+  }, [results, searchTerm]);
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">

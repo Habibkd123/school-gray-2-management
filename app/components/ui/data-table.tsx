@@ -18,6 +18,7 @@ interface DataTableProps<T> {
   selectionHeader?: React.ReactNode;
   noDataMessage?: string;
   minWidth?: string;
+  minHeight?: string;
 }
 
 export function DataTable<T>({ 
@@ -27,7 +28,8 @@ export function DataTable<T>({
   renderSelection,
   selectionHeader,
   noDataMessage = "No records found.",
-  minWidth = "1000px"
+  minWidth = "1000px",
+  minHeight = "180px"
 }: DataTableProps<T>) {
   const [sortConfig, setSortConfig] = useState<{ key: keyof T, direction: 'asc' | 'desc' } | null>(null);
 
@@ -65,7 +67,7 @@ export function DataTable<T>({
   }, [data, sortConfig]);
 
   return (
-    <div className="overflow-x-auto custom-scrollbar">
+    <div className="overflow-x-auto custom-scrollbar pb-10" style={{ minHeight }}>
       <table className="erp-table" style={{ minWidth }}>
         <thead>
           <tr>

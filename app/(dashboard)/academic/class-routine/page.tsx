@@ -103,6 +103,14 @@ export default function ClassRoutinePage() {
   const [creationStep, setCreationStep] = useState<1 | 2 | 3>(1);
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
   const [activeRoutine, setActiveRoutine] = useState<ApiSchedule | null>(null);
+  const [expandedClasses, setExpandedClasses] = useState<Record<string, boolean>>({});
+
+  const toggleExpandClass = (classId: string) => {
+    setExpandedClasses((prev) => ({
+      ...prev,
+      [classId]: !prev[classId],
+    }));
+  };
 
   // Form Fields
   const [formAcademicYear, setFormAcademicYear] = useState(academicYear);
@@ -142,6 +150,10 @@ export default function ClassRoutinePage() {
   useEffect(() => {
     loadFilteredSchedules();
   }, [loadFilteredSchedules]);
+
+  useEffect(() => {
+    setExpandedClasses({});
+  }, [filterYear, filterClassName, filterSection, filterTeacherId, filterDay, filterStatus, searchTerm, viewMode]);
 
   // Derived filter selections lists
   const classNames = useMemo(() => {
@@ -397,6 +409,16 @@ export default function ClassRoutinePage() {
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes fadeInSlide {
+          from { opacity: 0; transform: translateY(-8px); max-height: 0; }
+          to { opacity: 1; transform: translateY(0); max-height: 1000px; }
+        }
+        .animate-expand-period {
+          animation: fadeInSlide 250ms ease-out forwards;
+          overflow: hidden;
+        }
+      `}} />
       {/* 1. Header Banner */}
       <div className="page-header">
         <div>
@@ -675,85 +697,104 @@ export default function ClassRoutinePage() {
                 No routines found for selected criteria.
               </div>
             ) : (
-              routinesByClass.map((group, idx) => (
-                <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col">
-                  <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center">
-                        <GraduationCap className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900 dark:text-white text-[16px]">
-                          {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
-                        </h3>
-                      </div>
-                    </div>
-                    <span className="text-[11px] font-bold text-slate-500 bg-slate-200/50 dark:bg-slate-700 px-2 py-1 rounded-md">
-                      {filterYear || academicYear}
-                    </span>
-                  </div>
-                  <div className="p-4 flex-1">
-                    <div className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-wider">
-                      Routine Periods ({group.routines.length})
-                    </div>
-                    <div className="space-y-3">
-                      {group.routines.map((routine, ridx) => {
-                        const subjectObj = typeof routine.subject_id === "object" ? routine.subject_id : null;
-                        const teacherObj = typeof routine.teacher_id === "object" ? routine.teacher_id : null;
-                        const subjectName = subjectObj ? subjectObj.name : String(routine.subject_id);
+              routinesByClass.map((group, idx) => {
+                const classId = group.class._id;
+                const isExpanded = !!expandedClasses[classId];
+                const hasMore = group.routines.length > 5;
+                const visibleRoutines = hasMore && !isExpanded ? group.routines.slice(0, 5) : group.routines;
 
-                        return (
-                          <div key={routine._id} className="group relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl p-3.5 flex items-start gap-3 transition-colors">
-                            <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-200 shrink-0 mt-0.5">
-                              <img
-                                src={teacherObj?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(teacherObj?.name || "T")}&background=d68600&color=fff&bold=true`}
-                                alt="Teacher Avatar"
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <h4 className="font-bold text-slate-900 dark:text-slate-100 text-[13px] tracking-wide uppercase">
-                                  PER {routine.period_no || ridx + 1}: {subjectName}
-                                </h4>
-                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize border ${routine.status === "Inactive" ? "bg-slate-100 text-slate-500 dark:bg-slate-800 border-slate-200" : "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20"}`}>
-                                  {routine.day.substring(0, 3)}
-                                </span>
-                              </div>
-                              <div className="text-[11px] font-medium text-slate-500 mt-1 font-sans flex flex-col gap-0.5">
-                                <div className="flex items-center gap-1.5 uppercase text-slate-700 dark:text-slate-300">
-                                  <User className="w-3.5 h-3.5 text-slate-400" />
-                                  <span>{teacherObj?.name || "Unknown Teacher"}</span>
+                return (
+                  <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col transition-all">
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center">
+                          <GraduationCap className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900 dark:text-white text-[16px]">
+                            {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                          </h3>
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-bold text-slate-500 bg-slate-200/50 dark:bg-slate-700 px-2 py-1 rounded-md">
+                        {filterYear || academicYear}
+                      </span>
+                    </div>
+                    <div className="p-4 flex-1 flex flex-col justify-between">
+                      <div>
+                        <div className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-wider">
+                          Routine Periods ({group.routines.length})
+                        </div>
+                        <div className="space-y-3">
+                          {visibleRoutines.map((routine, ridx) => {
+                            const subjectObj = typeof routine.subject_id === "object" ? routine.subject_id : null;
+                            const teacherObj = typeof routine.teacher_id === "object" ? routine.teacher_id : null;
+                            const subjectName = subjectObj ? subjectObj.name : String(routine.subject_id);
+
+                            return (
+                              <div key={routine._id} className={`group relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl p-3.5 flex items-start gap-3 transition-colors ${ridx >= 5 ? "animate-expand-period" : ""}`}>
+                                <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-200 shrink-0 mt-0.5">
+                                  <img
+                                    src={teacherObj?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(teacherObj?.name || "T")}&background=d68600&color=fff&bold=true`}
+                                    alt="Teacher Avatar"
+                                    className="w-full h-full object-cover"
+                                  />
                                 </div>
-                                <div className="flex items-center gap-1.5 text-slate-500">
-                                  <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                  <span>{routine.start_time} - {routine.end_time}</span>
-                                  {routine.room && (
-                                    <>
-                                      <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                                      <span>Room {routine.room}</span>
-                                    </>
-                                  )}
+                                <div className="flex-1">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="font-bold text-slate-900 dark:text-slate-100 text-[13px] tracking-wide uppercase">
+                                      PER {routine.period_no || ridx + 1}: {subjectName}
+                                    </h4>
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize border ${routine.status === "Inactive" ? "bg-slate-100 text-slate-500 dark:bg-slate-800 border-slate-200" : "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20"}`}>
+                                      {routine.day.substring(0, 3)}
+                                    </span>
+                                  </div>
+                                  <div className="text-[11px] font-medium text-slate-500 mt-1 font-sans flex flex-col gap-0.5">
+                                    <div className="flex items-center gap-1.5 uppercase text-slate-700 dark:text-slate-300">
+                                      <User className="w-3.5 h-3.5 text-slate-400" />
+                                      <span>{teacherObj?.name || "Unknown Teacher"}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 text-slate-500">
+                                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                      <span>{routine.start_time} - {routine.end_time}</span>
+                                      {routine.room && (
+                                        <>
+                                          <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                          <span>Room {routine.room}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
+                                {isAdmin && (
+                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center gap-1">
+                                    <button onClick={() => handleOpenEdit(routine)} className="text-slate-400 hover:text-primary transition-colors p-1" title="Edit">
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button onClick={() => handleDeleteRoutine(routine._id)} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Delete">
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                )}
                               </div>
-                            </div>
-                            {isAdmin && (
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center gap-1">
-                                <button onClick={() => handleOpenEdit(routine)} className="text-slate-400 hover:text-primary transition-colors p-1" title="Edit">
-                                  <Edit className="w-3.5 h-3.5" />
-                                </button>
-                                <button onClick={() => handleDeleteRoutine(routine._id)} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Delete">
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                            );
+                          })}
+                        </div>
+                      </div>
+                      {hasMore && (
+                        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                          <button
+                            onClick={() => toggleExpandClass(classId)}
+                            className="w-full py-2 bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/80 text-[12px] font-bold text-primary dark:text-blue-400 rounded-xl transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                          >
+                            {isExpanded ? "Show Less" : `+${group.routines.length - 5} More Periods`}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         )}

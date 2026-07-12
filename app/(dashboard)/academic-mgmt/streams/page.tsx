@@ -13,7 +13,6 @@ import { useAuth } from "@/app/context/auth";
 
 import { getPersistedPageSize } from "@/app/components/ui/pagination-bar";
 import { getAuthHeaders } from "@/lib/utils/session";
-import * as XLSX from "xlsx";
 import { PrintService } from "@/app/lib/print-service";
 export default function StreamsPage() {
   const { user } = useAuth();
@@ -162,7 +161,7 @@ export default function StreamsPage() {
     } as ColumnDef<ApiStream>] : []),
   ];
   // 3. Export to Excel
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     const rows = streams.map((item) => {
       const row: Record<string, any> = {};
       columns.forEach((col) => {
@@ -173,6 +172,7 @@ export default function StreamsPage() {
       return row;
     });
 
+    const XLSX = await import("xlsx");
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data");

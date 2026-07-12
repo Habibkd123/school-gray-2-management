@@ -20,10 +20,33 @@ export async function GET(req: NextRequest) {
 
     const query: any = { school_id: schoolId };
     if (examId) query.exam_id = examId;
-    
+
+    // Launch all independent lookup queries in parallel to avoid database query waterfalls
+    const classStudentsPromise = classId
+      ? Student.find({ class_id: classId, school_id: schoolId }).select("_id").lean()
+      : null;
+
+    const studentProfilePromise = role === "student"
+      ? Student.findOne({ school_id: schoolId, user_id: userId }).select("_id").lean()
+      : null;
+
+    const parentPromise = role === "parent"
+      ? Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean()
+      : null;
+
+    const examsForYearPromise = (academic_year && !examId)
+      ? Exam.find({ school_id: schoolId, academic_year }).select("_id").lean()
+      : null;
+
+    const [classStudents, studentProfile, parent, examsForYear] = await Promise.all([
+      classStudentsPromise,
+      studentProfilePromise,
+      parentPromise,
+      examsForYearPromise,
+    ]);
+
     let targetStudentIds: string[] | null = null;
-    if (classId) {
-      const classStudents = await Student.find({ class_id: classId, school_id: schoolId }).select("_id").lean();
+    if (classStudents) {
       targetStudentIds = classStudents.map((s: any) => s._id.toString());
     }
 
@@ -37,7 +60,6 @@ export async function GET(req: NextRequest) {
     }
 
     if (role === "student") {
-      const studentProfile = await Student.findOne({ school_id: schoolId, user_id: userId }).select("_id").lean();
       if (!studentProfile) {
         return NextResponse.json({ success: true, data: { results: [], total: 0, page: 1, totalPages: 1, limit: 25 } });
       }
@@ -46,7 +68,6 @@ export async function GET(req: NextRequest) {
       }
       query.student_id = studentProfile._id;
     } else if (role === "parent") {
-      const parent = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
       if (!parent) {
         return NextResponse.json({ success: true, data: { results: [], total: 0, page: 1, totalPages: 1, limit: 25 } });
       }
@@ -63,8 +84,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Filter by academic year — look up exam IDs for that year
-    if (academic_year && !examId) {
-      const examsForYear = await Exam.find({ school_id: schoolId, academic_year }).select("_id").lean();
+    if (examsForYear) {
       const examIds = examsForYear.map((e: any) => e._id);
       query.exam_id = { $in: examIds };
     }

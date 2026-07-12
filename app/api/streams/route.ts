@@ -29,12 +29,14 @@ export async function GET(req: NextRequest) {
       query.status = { $ne: "Archived" };
     }
 
-    const total = await Stream.countDocuments(query);
-    const streams = await Stream.find(query)
-      .sort({ name: 1 })
-      .skip(isAll ? 0 : (page - 1) * limit)
-      .limit(limit)
-      .lean();
+    const [total, streams] = await Promise.all([
+      Stream.countDocuments(query),
+      Stream.find(query)
+        .sort({ name: 1 })
+        .skip(isAll ? 0 : (page - 1) * limit)
+        .limit(limit)
+        .lean()
+    ]);
 
     const streamsWithStats = await Promise.all(
       streams.map(async (s: any) => {

@@ -114,7 +114,7 @@ export default function FeesPage() {
     { id: "total_fees", label: "Total Fees", visible: true },
     { id: "total_paid", label: "Total Paid", visible: true },
     { id: "balance", label: "Balance", visible: true },
-    { id: "due_status", label: "Due Status", visible: true },
+    { id: "due_status", label: "Due Status", visible: false },
     { id: "payment_status", label: "Payment Status", visible: true },
     { id: "last_payment", label: "Last Payment", visible: true },
     { id: "actions", label: "Actions", visible: true, mandatory: true }
@@ -251,6 +251,11 @@ export default function FeesPage() {
     setDueStatusFilter("");
     setDateFromFilter("");
     setDateToFilter("");
+    setCurrentPage(1);
+  }, []);
+
+  const handleSearchChange = useCallback((val: string) => {
+    setSearch(val);
     setCurrentPage(1);
   }, []);
 
@@ -1238,10 +1243,7 @@ export default function FeesPage() {
         <>
           <SearchToolbar
             searchQuery={search}
-            onSearchChange={(val) => {
-              setSearch(val);
-              setCurrentPage(1);
-            }}
+            onSearchChange={handleSearchChange}
             searchPlaceholder="Search student name, admission no, guardian..."
             filters={filterConfig}
             activeFiltersCount={activeFiltersCount}
@@ -1272,9 +1274,9 @@ export default function FeesPage() {
                     {isColVisible("student") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-550 uppercase tracking-wider">Student Name</th>}
                     {isColVisible("admission_no") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Admission No</th>}
                     {isColVisible("class") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Class</th>}
-                    {isColVisible("section") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Section</th>}
+                    {/* {isColVisible("section") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Section</th>} */}
                     {isColVisible("guardian") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Guardian</th>}
-                    {isColVisible("fee_structure") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Fee Structure</th>}
+                    {/* {isColVisible("fee_structure") && <th className="p-3 text-left font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Fee Structure</th>} */}
                     {isColVisible("total_fees") && <th className="p-3 text-right font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Total Fees</th>}
                     {isColVisible("total_paid") && <th className="p-3 text-right font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Amount Paid</th>}
                     {isColVisible("balance") && <th className="p-3 text-right font-extrabold text-[11px] text-slate-400 dark:text-slate-555 uppercase tracking-wider">Balance</th>}
@@ -1336,15 +1338,15 @@ export default function FeesPage() {
                             </td>
                           )}
                           {isColVisible("class") && (
-                            <td className="p-3 text-slate-655 font-bold">
-                              {student.class_name.split(" - ")[0]}
+                            <td className="px-3 py-2 text-slate-655 font-bold whitespace-nowrap">
+                              {student.class_name.split(" - ")[0] + (student.section !== "N/A" ? " - " + student.section : "")}
                             </td>
                           )}
-                          {isColVisible("section") && (
+                          {/* {isColVisible("section") && (
                             <td className="p-3 text-slate-600 dark:text-slate-400 font-bold">
                               {student.section}
                             </td>
-                          )}
+                          )} */}
                           {isColVisible("guardian") && (
                             <td className="p-3">
                               <div className="flex flex-col">
@@ -1353,7 +1355,7 @@ export default function FeesPage() {
                               </div>
                             </td>
                           )}
-                          {isColVisible("fee_structure") && (
+                          {/* {isColVisible("fee_structure") && (
                             <td className="p-3 max-w-[200px] truncate">
                               <div className="flex flex-wrap gap-1">
                                 {student.fee_structure.slice(0, 3).map((item, idx) => (
@@ -1368,7 +1370,7 @@ export default function FeesPage() {
                                 )}
                               </div>
                             </td>
-                          )}
+                          )} */}
                           {isColVisible("total_fees") && (
                             <td className="p-3 col-right font-sans font-bold text-slate-800 dark:text-slate-205">
                               {money(student.totalFees)}
@@ -1425,13 +1427,21 @@ export default function FeesPage() {
                           {isColVisible("actions") && (
                             <td className="p-3 col-right">
                               <div className="flex justify-end gap-1.5">
-                                <button
-                                  onClick={() => handleOpenPay(student)}
-                                  disabled={student.totalFees === 0 || student.balanceAmount === 0}
-                                  className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-bold rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                >
-                                  <CreditCard className="w-3.5 h-3.5" /> Pay
-                                </button>
+                                {student.totalFees === 0 || student.balanceAmount === 0 ? (
+                                  <button
+                                    disabled
+                                    className="px-3 py-1.5 bg-primary/10 text-primary text-[11px] font-bold rounded-lg opacity-50 cursor-not-allowed flex items-center gap-1"
+                                  >
+                                    <CreditCard className="w-3.5 h-3.5" /> Pay
+                                  </button>
+                                ) : (
+                                  <Link
+                                    href={`/fees/collect?studentId=${student._id}`}
+                                    className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-bold rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                                  >
+                                    <CreditCard className="w-3.5 h-3.5" /> Pay
+                                  </Link>
+                                )}
                                 <button
                                   onClick={() => handleOpenHistory(student)}
                                   className="p-1.5 border border-border text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all cursor-pointer"
@@ -1944,10 +1954,11 @@ export default function FeesPage() {
       {isCustomSetupOpen && customSetupStudent && (
         <Modal
           isOpen={isCustomSetupOpen}
+          size="lg"
           onClose={() => { setIsCustomSetupOpen(false); setCustomSetupStudent(null); }}
           title="Configure Individual Student Fees Structure"
         >
-          <div className="space-y-5 text-left">
+          <div className="space-y-6 text-left">
             {/* Student context preview card */}
             <div className="p-4 bg-slate-900 text-white rounded-xl flex items-center justify-between">
               <div>
@@ -1985,7 +1996,7 @@ export default function FeesPage() {
                 </div>
               </div>
 
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+              <div className="space-y-2 max-h-[550px] overflow-y-auto pr-1 custom-scrollbar">
                 {customFeeTypes.map((ft, index) => (
                   <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-slate-50/50 dark:bg-slate-950/40 border border-border/80 p-2.5 rounded-xl hover:border-border transition-colors">
                     {/* Toggle button switch */}
@@ -2136,15 +2147,7 @@ export default function FeesPage() {
         </Modal>
       )}
 
-      {/* MODAL: RECORD STUDENT PAYMENT */}
-      <CollectFeesModal
-        isOpen={!!payStudent}
-        onClose={() => {
-          setPayStudent(null);
-          fetchStudents();
-        }}
-        student={payStudent}
-      />
+
 
       {/* MODAL: STUDENT HISTORY LOGS QUICKVIEW */}
       {historyStudent && (

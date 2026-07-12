@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { getPersistedPageSize, PaginationBar } from "@/app/components/ui/pagination-bar";
+import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
 
@@ -522,6 +523,211 @@ export default function SalaryDashboardPage() {
     return names[m - 1];
   };
 
+  // Column definitions for Salary Desk Table
+  const deskColumns = useMemo<ColumnDef<any>[]>(() => [
+    {
+      header: "Employee",
+      render: (s) => (
+        <div>
+          <span className="font-bold text-slate-900 dark:text-white block">{s.name}</span>
+          <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{s.role}</span>
+        </div>
+      )
+    },
+    {
+      header: "Emp ID",
+      accessorKey: "empId",
+      render: (s) => <span className="font-sans font-bold text-slate-600 dark:text-slate-400">{s.empId}</span>
+    },
+    {
+      header: "Base Contract",
+      render: (s) => (
+        s.basic > 0 ? (
+          <span className="font-sans font-bold text-slate-800 dark:text-slate-200">{money(s.basic)}</span>
+        ) : (
+          <button
+            onClick={() => openSetupSalary(s)}
+            className="px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-250 bg-slate-100 dark:bg-slate-850 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 border border-border"
+          >
+            Configure Salary
+          </button>
+        )
+      )
+    },
+    {
+      header: "Attendance Stats",
+      render: (s) => (
+        s.payoutRecord ? (
+          <span className="font-bold text-slate-600 dark:text-slate-400">{s.payoutRecord.present_days} Pres / {s.payoutRecord.absent_days} Abs</span>
+        ) : (
+          <span className="text-slate-400 text-xs">Not generated</span>
+        )
+      )
+    },
+    {
+      header: "Last Payout",
+      accessorKey: "lastPaid",
+      render: (s) => <span className="font-bold text-slate-500 dark:text-slate-400">{s.lastPaid}</span>
+    },
+    {
+      header: "Status",
+      render: (s) => (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
+          s.status === "Paid"
+            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-500/20"
+            : s.status === "Approved"
+              ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-450 dark:border-blue-500/20"
+              : s.status === "Draft"
+                ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-450 dark:border-amber-500/20"
+                : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-450 dark:border-rose-500/20"
+        }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${
+            s.status === "Paid"
+              ? "bg-emerald-500"
+              : s.status === "Approved"
+                ? "bg-blue-500"
+                : s.status === "Draft"
+                  ? "bg-amber-500"
+                  : "bg-rose-500"
+          }`} />
+          {s.status}
+        </span>
+      )
+    },
+    {
+      header: "Process",
+      className: "text-center",
+      render: (s) => (
+        s.status === "Pending" ? (
+          <span className="text-slate-400 text-xs">—</span>
+        ) : s.status === "Unpaid" ? (
+          <button
+            onClick={() => handleGenerateSingleDraft(s)}
+            className="px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 border border-border rounded-lg transition-all"
+          >
+            Generate Draft
+          </button>
+        ) : (
+          <button
+            onClick={() => openEditPayroll(s)}
+            className="px-2.5 py-1 text-[11px] font-bold text-indigo-650 bg-indigo-50 border border-indigo-200 rounded-md hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 transition-all flex items-center gap-1 mx-auto"
+          >
+            Pay
+          </button>
+        )
+      )
+    },
+    {
+      header: "Actions",
+      className: "text-right",
+      render: (s) => (
+        <div className="flex items-center justify-end gap-1.5">
+          {s.payoutRecord && s.status === "Paid" && (
+            <>
+              <button
+                onClick={() => window.open(`/salary/print/${s.payoutRecord._id}`, "_blank")}
+                className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-all"
+                title="Print Salary Slip"
+              >
+                <Printer className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => {
+                  setGenerateSlipId(s.payoutRecord._id);
+                  setGenerateTeacherName(s.name);
+                  setIsGenerateWizardOpen(true);
+                }}
+                className="p-1.5 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-all"
+                title="Generate Document PDF"
+              >
+                <FileText className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => handleCancelPayment(s.payoutRecord)}
+                className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all"
+                title="Cancel Payment"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </>
+          )}
+          {s.payoutRecord && s.status !== "Paid" && (
+            <button
+              onClick={() => handleCancelPayment(s.payoutRecord)}
+              className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-slate-100 rounded-lg transition-all"
+              title="Delete Draft Payout"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+          <button
+            onClick={() => openHistory(s)}
+            className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
+            title="Salary Logs History"
+          >
+            <History className="w-4 h-4" />
+          </button>
+        </div>
+      )
+    }
+  ], [money, openSetupSalary, handleGenerateSingleDraft, openEditPayroll, handleCancelPayment, openHistory]);
+
+  // Column definitions for Reports Payouts Table
+  const reportsColumns = useMemo<ColumnDef<any>[]>(() => [
+    {
+      header: "Receipt No.",
+      accessorKey: "receipt_number",
+      render: (p) => <span className="font-sans font-bold text-slate-655">{p.receipt_number}</span>
+    },
+    {
+      header: "Employee",
+      render: (p) => {
+        const teacher = p.teacher_id || {};
+        return (
+          <div>
+            <span className="font-bold text-slate-900 dark:text-white block">{teacher.name || "Unknown"}</span>
+            <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">ID: {teacher.employee_id || "N/A"}</span>
+          </div>
+        );
+      }
+    },
+    {
+      header: "Contract Base",
+      accessorKey: "monthly_salary",
+      render: (p) => <span className="font-sans text-slate-700 dark:text-slate-350">{money(p.monthly_salary)}</span>
+    },
+    {
+      header: "Present/Absent",
+      render: (p) => <span className="text-slate-600 dark:text-slate-400 font-bold">{p.present_days} / {p.absent_days}</span>
+    },
+    {
+      header: "Deduction",
+      render: (p) => <span className="font-sans text-rose-500 font-bold">-{money(p.suggested_deduction)}</span>
+    },
+    {
+      header: "Amount Paid",
+      accessorKey: "final_salary",
+      render: (p) => <span className="font-sans font-black text-slate-900 dark:text-white">{money(p.final_salary)}</span>
+    },
+    {
+      header: "Payment Date",
+      accessorKey: "payment_date",
+      render: (p) => <span className="font-bold text-slate-500">{fmtDate(p.payment_date)}</span>
+    },
+    {
+      header: "Slip",
+      className: "text-right",
+      render: (p) => (
+        <button
+          onClick={() => window.open(`/salary/print/${p._id}`, "_blank")}
+          className="p-1.5 text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors inline-block"
+        >
+          <FileText className="w-4 h-4" />
+        </button>
+      )
+    }
+  ], [money, fmtDate]);
+
   // Export to CSV
   const exportToCSV = () => {
     if (paymentsData.payments.length === 0) {
@@ -739,151 +945,13 @@ export default function SalaryDashboardPage() {
               </div>
 
               {/* Table Desk */}
-              <div className="erp-table-wrap">
-                <div className="overflow-x-auto">
-                  <table className="erp-table">
-                    <thead>
-                      <tr>
-                        <th>Employee</th>
-                        <th>Emp ID</th>
-                        <th>Base Contract</th>
-                        <th>Attendance Stats</th>
-                        <th>Last Payout</th>
-                        <th>Status</th>
-                        <th className="col-center">Process</th>
-                        <th className="col-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pagedSalaries.length === 0 ? (
-                        <tr>
-                          <td colSpan={8} className="table-empty">
-                            No employee records match the filter criteria.
-                          </td>
-                        </tr>
-                      ) : (
-                        pagedSalaries.map((s) => (
-                          <tr key={s.id}>
-                            <td>
-                              <span className="font-bold text-slate-900 dark:text-white block">{s.name}</span>
-                              {/* <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{s.role}</span> */}
-                            </td>
-                            <td className="font-sans font-bold text-slate-600 dark:text-slate-400">{s.empId}</td>
-                            <td>
-                              {s.basic > 0 ? (
-                                <span className="font-sans font-bold text-slate-800 dark:text-slate-200">{money(s.basic)}</span>
-                              ) : (
-                                <button
-                                  onClick={() => openSetupSalary(s)}
-                                  className="px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-250 bg-slate-100 dark:bg-slate-850 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 border border-border"
-                                >
-                                  Configure Salary
-                                </button>
-                              )}
-                            </td>
-                            <td className="font-bold text-slate-655">
-                              {s.payoutRecord ? (
-                                <span>{s.payoutRecord.present_days} Pres / {s.payoutRecord.absent_days} Abs</span>
-                              ) : (
-                                <span className="text-slate-400 text-xs">Not generated</span>
-                              )}
-                            </td>
-                            <td className="font-bold text-slate-500 dark:text-slate-400">{s.lastPaid}</td>
-                            <td>
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${s.status === "Paid"
-                                ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-500/20"
-                                : s.status === "Approved"
-                                  ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-450 dark:border-blue-500/20"
-                                  : s.status === "Draft"
-                                    ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-450 dark:border-amber-500/20"
-                                    : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-450 dark:border-rose-500/20"
-                                }`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${s.status === "Paid"
-                                  ? "bg-emerald-500"
-                                  : s.status === "Approved"
-                                    ? "bg-blue-500"
-                                    : s.status === "Draft"
-                                      ? "bg-amber-500"
-                                      : "bg-rose-500"
-                                  }`} />
-                                {s.status}
-                              </span>
-                            </td>
-                            <td className="col-center">
-                              {s.status === "Pending" ? (
-                                <span className="text-slate-400 text-xs">—</span>
-                              ) : s.status === "Unpaid" ? (
-                                <button
-                                  onClick={() => handleGenerateSingleDraft(s)}
-                                  className="px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-200 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-750 border border-border rounded-lg transition-all"
-                                >
-                                  Generate Draft
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => openEditPayroll(s)}
-                                  className="px-2.5 py-1 text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 rounded-md hover:bg-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-400 dark:border-indigo-500/20 transition-all flex items-center gap-1 mx-auto"
-                                >
-                                  {/* <Edit2 className="w-3 h-3" /> */}
-                                  Pay
-                                </button>
-                              )}
-                            </td>
-                            <td className="col-right">
-                              <div className="flex items-center justify-end gap-1.5">
-                                {s.status === "Paid" && s.payoutRecord && (
-                                  <>
-                                    <button
-                                      onClick={() => window.open(`/salary/print/${s.payoutRecord._id}`, "_blank")}
-                                      className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-all"
-                                      title="Print Salary Slip"
-                                    >
-                                      <Printer className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setGenerateSlipId(s.payoutRecord._id);
-                                        setGenerateTeacherName(s.name);
-                                        setIsGenerateWizardOpen(true);
-                                      }}
-                                      className="p-1.5 text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-all"
-                                      title="Generate Document PDF"
-                                    >
-                                      <FileText className="w-4 h-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleCancelPayment(s.payoutRecord)}
-                                      className="p-1.5 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-all"
-                                      title="Cancel Payment"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </button>
-                                  </>
-                                )}
-                                {s.status !== "Paid" && s.payoutRecord && (
-                                  <button
-                                    onClick={() => handleCancelPayment(s.payoutRecord)}
-                                    className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-slate-100 rounded-lg transition-all"
-                                    title="Delete Draft Payout"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => openHistory(s)}
-                                  className="p-1.5 text-slate-500 dark:text-slate-400 hover:bg-slate-100 rounded-lg transition-colors"
-                                  title="Salary Logs History"
-                                >
-                                  <History className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden">
+                <DataTable
+                  columns={deskColumns}
+                  data={pagedSalaries}
+                  noDataMessage="No employee records match the filter criteria."
+                  minWidth="1000px"
+                />
               </div>
 
               <PaginationBar
@@ -946,61 +1014,16 @@ export default function SalaryDashboardPage() {
               </div>
 
               {/* Payments Report Table */}
-              <div className="erp-table-wrap" id="printable-salary-report" data-print-zone="true">
-                <div className="px-4 py-3 border-b border-border bg-slate-50/50 dark:bg-slate-800/50">
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden" id="printable-salary-report" data-print-zone="true">
+                <div className="px-4 py-3 border-b border-border bg-slate-50/50 dark:bg-slate-800/50 text-left">
                   <h3 className="font-bold text-slate-800 dark:text-white text-sm">Disbursement Log - {getMonthName(parseInt(selectedMonth))} {selectedYear}</h3>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="erp-table">
-                    <thead>
-                      <tr>
-                        <th>Receipt No.</th>
-                        <th>Employee</th>
-                        <th>Contract Base</th>
-                        <th>Present/Absent</th>
-                        <th>Deduction</th>
-                        <th>Amount Paid</th>
-                        <th>Payment Date</th>
-                        <th className="col-right">Slip</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paymentsData.payments.length === 0 ? (
-                        <tr>
-                          <td colSpan={8} className="table-empty">
-                            No disbursements recorded for this month.
-                          </td>
-                        </tr>
-                      ) : (
-                        paymentsData.payments.map((p) => {
-                          const teacher = p.teacher_id || {};
-                          return (
-                            <tr key={p._id}>
-                              <td className="font-sans font-bold text-slate-655">{p.receipt_number}</td>
-                              <td>
-                                <span className="font-bold text-slate-900 dark:text-white block">{teacher.name || "Unknown"}</span>
-                                <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">ID: {teacher.employee_id || "N/A"}</span>
-                              </td>
-                              <td className="font-sans text-slate-700 dark:text-slate-350">{money(p.monthly_salary)}</td>
-                              <td className="text-slate-600 dark:text-slate-400 font-bold">{p.present_days} / {p.absent_days}</td>
-                              <td className="font-sans text-rose-500 font-bold">-{money(p.suggested_deduction)}</td>
-                              <td className="font-sans font-black text-slate-900 dark:text-white">{money(p.final_salary)}</td>
-                              <td className="font-bold text-slate-500">{fmtDate(p.payment_date)}</td>
-                              <td className="col-right">
-                                <button
-                                  onClick={() => window.open(`/salary/print/${p._id}`, "_blank")}
-                                  className="p-1.5 text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors inline-block"
-                                >
-                                  <FileText className="w-4 h-4" />
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                <DataTable
+                  columns={reportsColumns}
+                  data={paymentsData.payments}
+                  noDataMessage="No disbursements recorded for this month."
+                  minWidth="1000px"
+                />
               </div>
             </div>
           )}

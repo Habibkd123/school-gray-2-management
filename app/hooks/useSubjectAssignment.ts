@@ -37,7 +37,7 @@ export function useSubjectAssignment() {
     search?: string;
     sort?: string;
     page?: number;
-    limit?: number;
+    limit?: number | string;
   } = {}) => {
     setIsLoading(true); setError(null);
     try {

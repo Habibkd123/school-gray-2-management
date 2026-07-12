@@ -214,19 +214,108 @@ export async function GET(req: NextRequest) {
       }))
     }));
 
+    let mergedSyllabi = [...syllabi];
+
+    // If query by class_id and academic_year, check for and merge virtual syllabi for assigned subjects
+    if (class_id && academic_year && mongoose.Types.ObjectId.isValid(class_id)) {
+      const assignments = await TeacherAssignment.find({
+        school_id: new mongoose.Types.ObjectId(schoolId!),
+        class_id: new mongoose.Types.ObjectId(class_id),
+        academic_year,
+        status: "Active",
+        is_deleted: false
+      })
+      .populate("class_id", "name section")
+      .populate("section_id", "name")
+      .populate("stream_id", "name")
+      .populate("subject_master_id", "name subject_code description code")
+      .populate("teacher_id", "name employee_id designation photo_url")
+      .lean();
+
+      assignments.forEach((assignment: any) => {
+        if (!assignment.subject_master_id) return;
+        const subjectIdStr = String(assignment.subject_master_id._id || assignment.subject_master_id);
+        
+        const exists = mergedSyllabi.some(
+          (s: any) => String(s.subject_master_id?._id || s.subject_master_id) === subjectIdStr
+        );
+
+        if (!exists) {
+          const virtualSyllabus = {
+            _id: String(assignment._id),
+            school_id: String(schoolId),
+            academic_year: assignment.academic_year,
+            class_id: assignment.class_id ? { _id: String(assignment.class_id._id), name: assignment.class_id.name, section: assignment.class_id.section } : null,
+            section_id: assignment.section_id ? { _id: String(assignment.section_id._id), name: assignment.section_id.name } : null,
+            stream_id: assignment.stream_id ? { _id: String(assignment.stream_id._id), name: assignment.stream_id.name } : null,
+            subject_master_id: assignment.subject_master_id ? { 
+              _id: String(assignment.subject_master_id._id), 
+              name: assignment.subject_master_id.name, 
+              subject_code: assignment.subject_master_id.subject_code || assignment.subject_master_id.code || "—", 
+              description: assignment.subject_master_id.description || "" 
+            } : null,
+            teacher_id: assignment.teacher_id ? { _id: String(assignment.teacher_id._id), name: assignment.teacher_id.name, employee_id: assignment.teacher_id.employee_id, designation: assignment.teacher_id.designation, photo_url: assignment.teacher_id.photo_url } : null,
+            title: `${assignment.academic_year} Syllabus`,
+            description: "",
+            version: 1,
+            status: "Draft",
+            publish_date: null,
+            visibility: "Public",
+            attachments: [],
+            reference_links: [],
+            nodes: [],
+            history: [],
+            created_by: null,
+            updated_by: null,
+            createdAt: assignment.createdAt,
+            updatedAt: assignment.updatedAt,
+            teacher_assignment_id: String(assignment._id),
+            chapters: [],
+            isVirtual: true
+          };
+          mergedSyllabi.push(virtualSyllabus);
+        }
+      });
+    }
+
+    // Debug logging as requested
+    console.log("====================================================");
+    console.log("DEBUG LOG: GET /api/syllabus");
+    console.log("Incoming route params:", {
+      search,
+      status,
+      academic_year,
+      class_id,
+      section_id,
+      stream_id,
+      subject_master_id,
+      teacher_id,
+      teacher_assignment_id,
+      page,
+      limitParam
+    });
+    console.log("Requested classId:", class_id);
+    console.log("Mongo query:", JSON.stringify(query));
+    console.log("Mongo result count (raw database matches):", rawSyllabi.length);
+    console.log("Returned subjects count (active assignments):", (class_id && academic_year) ? mergedSyllabi.length : "N/A");
+    console.log("Returned syllabus count (actual + virtual):", mergedSyllabi.length);
+    console.log("====================================================");
+
     // If teacher_assignment_id query fallback is called, return single document formatting
     if (teacher_assignment_id) {
       return NextResponse.json({
         success: true,
-        data: syllabi[0] || { teacher_assignment_id, chapters: [] }
+        data: mergedSyllabi[0] || { teacher_assignment_id, chapters: [] }
       });
     }
 
+    const finalTotal = (class_id && academic_year) ? mergedSyllabi.length : total;
+
     return NextResponse.json({
       success: true,
-      data: syllabi,
-      total,
-      totalPages: Math.ceil(total / limit),
+      data: mergedSyllabi,
+      total: finalTotal,
+      totalPages: (class_id && academic_year) ? Math.ceil(finalTotal / limit) : Math.ceil(total / limit),
       page
     });
   } catch (err: any) {

@@ -34,6 +34,7 @@ export default function TeacherAssignmentPage() {
   const {
     assignments,
     total,
+    totalPages,
     isLoading,
     error,
     fetchAssignments,
@@ -139,10 +140,10 @@ export default function TeacherAssignmentPage() {
       status: statusFilter,
       sort: selectedSort,
       academic_year: filterYear || undefined,
-      page: 1,
-      limit: 5000
+      page: page,
+      limit: PAGE_SIZE
     });
-  }, [fetchAssignments, debouncedSearch, filterClassId, filterSubjectId, filterTeacherId, filterType, statusFilter, selectedSort, filterYear]);
+  }, [fetchAssignments, debouncedSearch, filterClassId, filterSubjectId, filterTeacherId, filterType, statusFilter, selectedSort, filterYear, page]);
 
   useEffect(() => {
     doFetch();
@@ -185,10 +186,10 @@ export default function TeacherAssignmentPage() {
     return Object.values(groups).sort((a, b) => {
       const nameA = a.class.name || "";
       const nameB = b.class.name || "";
-      
+
       const nameComparison = nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
       if (nameComparison !== 0) return nameComparison;
-      
+
       const secA = a.class.section || "";
       const secB = b.class.section || "";
       return secA.localeCompare(secB, undefined, { numeric: true, sensitivity: 'base' });
@@ -196,10 +197,7 @@ export default function TeacherAssignmentPage() {
   }, [assignments]);
 
   const totalGroups = groupedAssignments.length;
-  const paginatedGroups = useMemo(() => {
-    const startIndex = (page - 1) * PAGE_SIZE;
-    return groupedAssignments.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [groupedAssignments, page]);
+  const paginatedGroups = groupedAssignments;
 
   // Available subjects assigned to the resolved class
   const availableSubjectsForClass = useMemo(() => {
@@ -457,8 +455,6 @@ export default function TeacherAssignmentPage() {
     setIsExportOpen(false);
   };
 
-  const totalPages = Math.ceil(totalGroups / PAGE_SIZE);
-
   const columns: ColumnDef<PopulatedTeacherAssignment>[] = [
     {
       header: "Teacher",
@@ -507,18 +503,6 @@ export default function TeacherAssignmentPage() {
               {item.subject_master_id.subject_code}
             </span>
           )}
-        </span>
-      )
-    },
-    {
-      header: "Assignment Type",
-      accessorKey: "assignment_type",
-      render: (item) => (
-        <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${item.assignment_type === "Class Teacher" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
-          item.assignment_type === "Subject Teacher" ? "bg-slate-50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400" :
-            "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400"
-          }`}>
-          {item.assignment_type || "Subject Teacher"}
         </span>
       )
     },
@@ -907,7 +891,7 @@ export default function TeacherAssignmentPage() {
                         return (
                           <React.Fragment key={groupId}>
                             {/* Group Header Row */}
-                            <tr 
+                            <tr
                               onClick={() => toggleListGroup(groupId)}
                               className="bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer border-b border-border group"
                             >
@@ -936,7 +920,7 @@ export default function TeacherAssignmentPage() {
                                 </div>
                               </td>
                             </tr>
-                            
+
                             {/* Group Items Rows */}
                             {!isCollapsed && group.assignments.map(assignment => (
                               <tr key={assignment._id} className="erp-table-row border-b border-slate-100 dark:border-slate-800/50">
@@ -1014,9 +998,16 @@ export default function TeacherAssignmentPage() {
                             </p>
                           </div>
                         </div>
-                        <Link href={`/academic-mgmt/teacher-assignment/${group.class._id}`} className="px-3 py-1.5 border border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 rounded-lg text-[12px] font-bold shadow-sm transition-colors cursor-pointer shrink-0">
-                          View Details
-                        </Link>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Link href={`/academic-mgmt/teacher-assignment/${group.class._id}`} className="w-[34px] h-[34px] flex items-center justify-center rounded-lg border border-border bg-white dark:bg-slate-900 text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm cursor-pointer" title="View Details">
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                          {isAdmin && group.assignments.length > 0 && (
+                            <button onClick={() => startEdit(group.assignments[0])} className="w-[34px] h-[34px] flex items-center justify-center rounded-lg border border-border bg-white dark:bg-slate-900 text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm cursor-pointer" title="Edit Assignment">
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="p-4">
                         <div className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-wider">
@@ -1077,7 +1068,7 @@ export default function TeacherAssignmentPage() {
             <PaginationBar
               currentPage={page}
               totalPages={totalPages}
-              totalItems={totalGroups}
+              totalItems={total}
               pageSize={PAGE_SIZE}
               onPageChange={setPage}
               className="mt-6 border-t-0"

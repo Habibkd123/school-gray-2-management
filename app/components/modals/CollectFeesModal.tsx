@@ -431,12 +431,12 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
   if (!isOpen || !student) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 max-w-[98vw] flex items-center justify-center p-4">
       {/* Background Mask */}
       <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]" onClick={step !== "receipt" ? onClose : undefined} />
 
       {/* Modal Container */}
-      <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-4xl flex flex-col max-h-[92vh] overflow-hidden transform transition-all text-left border border-border">
+      <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-[92vw] md:max-w-7xl flex flex-col max-h-[95vh] overflow-hidden transform transition-all text-left border border-border">
 
         {/* Header toolbar */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-slate-50/50 dark:bg-slate-950/20">
@@ -457,7 +457,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
         {isLoadingDetails ? (
           <div className="h-80 flex flex-col items-center justify-center text-slate-450 gap-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            <span className="text-xs font-bold">Retrieving billing ledger info...</span>
+            <span className="text-xs font-bold font-sans">Retrieving billing ledger info...</span>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
@@ -499,10 +499,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                   <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Status</span>
                   <div className="mt-0.5">
                     <span className={`inline-flex px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wide ${overallStatus === "Paid"
-                        ? "bg-emerald-500/20 text-emerald-300"
-                        : overallStatus === "Partial"
-                          ? "bg-amber-500/20 text-amber-300"
-                          : "bg-rose-500/20 text-rose-300"
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : overallStatus === "Partial"
+                        ? "bg-amber-500/20 text-amber-300"
+                        : "bg-rose-500/20 text-rose-300"
                       }`}>
                       {overallStatus}
                     </span>
@@ -527,14 +527,22 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[380px] overflow-y-auto pr-1.5 custom-scrollbar text-left">
-                    {feeTypesConfig.length === 0 ? (
+                    {feeTypesConfig.filter(ft => {
+                      const { total } = getFeeHeadStats(ft);
+                      return total > 0;
+                    }).length === 0 ? (
                       <div className="md:col-span-2 py-10 text-center text-slate-400 border border-dashed border-border rounded-xl">
                         No active fee heads configured for this academic year.
                       </div>
                     ) : (
-                      feeTypesConfig.map(ft => {
-                        const { total, paid, balance } = getFeeHeadStats(ft);
-                        const isPaid = balance <= 0;
+                      feeTypesConfig
+                        .filter(ft => {
+                          const { total } = getFeeHeadStats(ft);
+                          return total > 0;
+                        })
+                        .map(ft => {
+                          const { total, paid, balance } = getFeeHeadStats(ft);
+                          const isPaid = balance <= 0;
                         const isSelected = selectedFees.includes(ft.name);
 
                         let statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">Pending</span>;
@@ -549,10 +557,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                             key={ft._id || ft.name}
                             onClick={() => !isPaid && toggleFee(ft.name, balance)}
                             className={`p-4 border rounded-xl shadow-sm transition-all text-left flex flex-col justify-between relative cursor-pointer group ${isPaid
-                                ? "bg-slate-50/50 dark:bg-slate-900/30 border-border opacity-70 cursor-not-allowed"
-                                : isSelected
-                                  ? "bg-primary/[0.02] border-primary ring-2 ring-primary/10"
-                                  : "bg-white dark:bg-slate-900 border-border hover:border-slate-350 dark:hover:border-slate-700"
+                              ? "bg-slate-50/50 dark:bg-slate-900/30 border-border opacity-70 cursor-not-allowed"
+                              : isSelected
+                                ? "bg-primary/[0.02] border-primary ring-2 ring-primary/10"
+                                : "bg-white dark:bg-slate-900 border-border hover:border-slate-350 dark:hover:border-slate-700"
                               }`}
                           >
                             {/* Selection Icon */}
@@ -650,8 +658,8 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                           value={startDate}
                           onChange={(e) => setStartDate(e.target.value)}
                           className={`flex-1 px-2 py-1.5 border rounded-lg bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-white outline-none ${startDate && endDate && new Date(endDate) < new Date(startDate)
-                              ? "border-rose-400 bg-rose-50 dark:bg-rose-900/20"
-                              : "border-border"
+                            ? "border-rose-400 bg-rose-50 dark:bg-rose-900/20"
+                            : "border-border"
                             }`}
                         />
                         <span className="text-slate-400 font-bold text-[10px] shrink-0">to</span>
@@ -661,8 +669,8 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                           onChange={(e) => setEndDate(e.target.value)}
                           min={startDate}
                           className={`flex-1 px-2 py-1.5 border rounded-lg bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-white outline-none ${startDate && endDate && new Date(endDate) < new Date(startDate)
-                              ? "border-rose-400 bg-rose-50 dark:bg-rose-900/20"
-                              : "border-border"
+                            ? "border-rose-400 bg-rose-50 dark:bg-rose-900/20"
+                            : "border-border"
                             }`}
                         />
                       </div>

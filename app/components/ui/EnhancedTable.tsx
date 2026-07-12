@@ -1,8 +1,7 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo } from "react";
 import { Search, Download, Printer } from "lucide-react";
-import * as XLSX from "xlsx";
 import { DataTable, ColumnDef } from "./data-table";
 import { PaginationBar } from "./pagination-bar";
 import { PrintService } from "@/app/lib/print-service";
@@ -122,7 +121,7 @@ export function EnhancedTable<T extends Record<string, any>>({
   }, [processedData, currentPage, pageSize, isExternalPagination, data]);
 
   // 3. Export to Excel
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
     const rows = processedData.map((item) => {
       const row: Record<string, any> = {};
       columns.forEach((col) => {
@@ -133,6 +132,7 @@ export function EnhancedTable<T extends Record<string, any>>({
       return row;
     });
 
+    const XLSX = await import("xlsx");
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Data");

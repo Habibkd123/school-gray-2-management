@@ -77,6 +77,16 @@ export default function SyllabusClassSubjectListPage() {
     });
   }, [syllabi, searchTerm]);
 
+  useEffect(() => {
+    console.log("====================================================");
+    console.log("DEBUG LOG: Syllabus detail page loaded");
+    console.log("Incoming route params:", params);
+    console.log("Requested classId:", classId);
+    console.log("Frontend received subjects (raw list from API):", syllabi);
+    console.log("Frontend rendered subjects (after search filtering):", filteredSyllabi);
+    console.log("====================================================");
+  }, [params, classId, syllabi, filteredSyllabi]);
+
   // Compute aggregated stats
   const classStats = useMemo(() => {
     let totalChapters = 0;

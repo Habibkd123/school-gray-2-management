@@ -3,7 +3,6 @@
 import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import * as XLSX from "xlsx";
 import {
   Upload, Download, AlertCircle, CheckCircle, ArrowLeft,
   Loader2, RefreshCw, FileText, Info, Check, Play, Trash2
@@ -127,9 +126,10 @@ export default function BulkImport({
     document.body.removeChild(link);
   };
 
-  const downloadExcelTemplate = () => {
+  const downloadExcelTemplate = async () => {
     const cleanHeaders = sampleHeaders.map(h => h.replace("*", ""));
     const data = getDynamicSampleData();
+    const XLSX = await import("xlsx");
     const ws = XLSX.utils.aoa_to_sheet([cleanHeaders, ...data]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Template");
@@ -156,10 +156,10 @@ export default function BulkImport({
         URL.revokeObjectURL(url);
       } catch {
         // Fallback to client-side generation
-        downloadExcelTemplate();
+        await downloadExcelTemplate();
       }
     } else {
-      downloadExcelTemplate();
+      await downloadExcelTemplate();
     }
   };
 
@@ -209,6 +209,7 @@ export default function BulkImport({
       try {
         setIsParsing(true);
         const data = evt.target?.result;
+        const XLSX = await import("xlsx");
         const workbook = XLSX.read(data, { type: "array" });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];

@@ -31,6 +31,7 @@ export default function SubjectAssignmentPage() {
   const {
     assignments,
     total,
+    totalPages,
     isLoading,
     error,
     fetchAssignments,
@@ -123,10 +124,10 @@ export default function SubjectAssignmentPage() {
       academic_year: filterYear || undefined,
       status: statusFilter,
       sort: selectedSort,
-      page: 1,
-      limit: 5000
+      page: page,
+      limit: PAGE_SIZE
     });
-  }, [fetchAssignments, debouncedSearch, filterClassId, filterSubjectId, filterTeacherId, filterYear, statusFilter, selectedSort]);
+  }, [fetchAssignments, debouncedSearch, filterClassId, filterSubjectId, filterTeacherId, filterYear, statusFilter, selectedSort, page]);
 
   useEffect(() => {
     doFetch();
@@ -180,10 +181,7 @@ export default function SubjectAssignmentPage() {
   }, [assignments]);
 
   const totalGroups = groupedAssignments.length;
-  const paginatedGroups = useMemo(() => {
-    const startIndex = (page - 1) * PAGE_SIZE;
-    return groupedAssignments.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [groupedAssignments, page]);
+  const paginatedGroups = groupedAssignments;
 
   const filteredTeachers = useMemo(() => {
     if (!teacherSearchText) return teachers;
@@ -229,8 +227,8 @@ export default function SubjectAssignmentPage() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formYear || !formClassName || !formSection || !formSubjectId) {
-      setFormError("Class, Section, Subject, and Academic Year are required.");
+    if (!formYear || !formClassName || !formSubjectId) {
+      setFormError("Class, Subject, and Academic Year are required.");
       return;
     }
 
@@ -366,8 +364,6 @@ export default function SubjectAssignmentPage() {
     document.body.removeChild(link);
     setIsExportOpen(false);
   };
-
-  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const columns: ColumnDef<PopulatedAssignment>[] = [
     {
@@ -915,9 +911,16 @@ export default function SubjectAssignmentPage() {
                             </p>
                           </div>
                         </div>
-                        <Link href={`/academic-mgmt/subject-assignment/${group.class._id}`} className="px-3 py-1.5 border border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 rounded-lg text-[12px] font-bold shadow-sm transition-colors cursor-pointer shrink-0">
-                          View Details
-                        </Link>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Link href={`/academic-mgmt/subject-assignment/${group.class._id}`} className="w-[34px] h-[34px] flex items-center justify-center rounded-lg border border-border bg-white dark:bg-slate-900 text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm cursor-pointer" title="View Details">
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                          {isAdmin && group.assignments.length > 0 && (
+                            <button onClick={() => startEdit(group.assignments[0])} className="w-[34px] h-[34px] flex items-center justify-center rounded-lg border border-border bg-white dark:bg-slate-900 text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm cursor-pointer" title="Edit Assignment">
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="p-4">
                         <div className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-wider">
@@ -967,7 +970,7 @@ export default function SubjectAssignmentPage() {
             <PaginationBar
               currentPage={page}
               totalPages={totalPages}
-              totalItems={totalGroups}
+              totalItems={total}
               pageSize={PAGE_SIZE}
               onPageChange={setPage}
               className="mt-6 border-t-0"
@@ -1002,10 +1005,9 @@ export default function SubjectAssignmentPage() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Section <span className="text-red-500">*</span></label>
+              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Section</label>
               <div className="relative">
                 <select
-                  required
                   value={formSection}
                   onChange={(e) => setFormSection(e.target.value)}
                   disabled={!formClassName}

@@ -22,12 +22,14 @@ export async function GET(req: NextRequest) {
     if (search) query.name = { $regex: search, $options: "i" };
     if (status) query.status = status;
 
-    const total = await Section.countDocuments(query);
-    const sections = await Section.find(query)
-      .sort({ name: 1 })
-      .skip(isAll ? 0 : (page - 1) * limit)
-      .limit(limit)
-      .lean();
+    const [total, sections] = await Promise.all([
+      Section.countDocuments(query),
+      Section.find(query)
+        .sort({ name: 1 })
+        .skip(isAll ? 0 : (page - 1) * limit)
+        .limit(limit)
+        .lean()
+    ]);
 
     return NextResponse.json({
       success: true,

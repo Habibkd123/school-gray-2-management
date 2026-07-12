@@ -1106,6 +1106,9 @@ const feePaymentSchema = new Schema<IFeePayment>({
   remarks: { type: String, trim: true },
 }, { timestamps: true });
 
+feePaymentSchema.index({ school_id: 1, student_id: 1 }, { name: "fee_payment_school_student_v1" });
+feePaymentSchema.index({ school_id: 1, transaction_date: -1 }, { name: "fee_payment_school_date_v1" });
+
 export const FeeGroup: Model<IFeeGroup> = mongoose.models.FeeGroup || mongoose.model("FeeGroup", feeGroupSchema);
 export const FeeType: Model<IFeeType> = mongoose.models.FeeType || mongoose.model("FeeType", feeTypeSchema);
 export const FeeMaster: Model<IFeeMaster> = mongoose.models.FeeMaster || mongoose.model("FeeMaster", feeMasterSchema);

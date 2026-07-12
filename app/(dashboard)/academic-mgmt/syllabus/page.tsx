@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Loader2, GraduationCap, BookOpen, ArrowRight, User, Search, RefreshCw, ChevronDown, ChevronLeft, ArrowLeft, Edit2, Trash2 } from "lucide-react";
+import { Loader2, GraduationCap, BookOpen, ArrowRight, User, Search, RefreshCw, ChevronDown, ChevronLeft, ArrowLeft, Edit2, Trash2, Eye, Edit } from "lucide-react";
 import { useTeacherAssignment } from "@/app/hooks/useTeacherAssignment";
 import { useTeachers } from "@/app/hooks/useTeachers";
 import { useClasses } from "@/app/hooks/useClasses";
@@ -15,6 +15,7 @@ export default function SyllabusClassListPage() {
   const { academicYear } = useAppState();
   const { user } = useAuth();
   const isTeacher = user?.role === "teacher";
+  const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
   const { assignments, isLoading, fetchAssignments } = useTeacherAssignment();
   const { teachers } = useTeachers();
   const { classes } = useClasses();
@@ -69,7 +70,7 @@ export default function SyllabusClassListPage() {
 
   useEffect(() => {
     if (!assignments || assignments.length === 0) {
-      fetchAssignments({ limit: 10 });
+      fetchAssignments({ limit: "all" });
     }
   }, [assignments, fetchAssignments]);
 
@@ -138,7 +139,7 @@ export default function SyllabusClassListPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={() => fetchAssignments({ limit: 5000 })} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
+          <button onClick={() => fetchAssignments({ limit: "all" })} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
           <div className="px-4 py-2 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] font-bold text-slate-700 dark:text-slate-350 shadow-sm font-sans">
@@ -239,9 +240,16 @@ export default function SyllabusClassListPage() {
                           </p>
                         </div>
                       </div>
-                      <Link href={`/academic-mgmt/syllabus/${c.classId}`} className="px-3 py-1.5 border border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 rounded-lg text-[12px] font-bold shadow-sm transition-colors cursor-pointer">
-                        View Details
-                      </Link>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Link href={`/academic-mgmt/syllabus/${c.classId}`} className="w-[34px] h-[34px] flex items-center justify-center rounded-lg border border-border bg-white dark:bg-slate-900 text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm cursor-pointer" title="View Details">
+                          <Eye className="w-4 h-4" />
+                        </Link>
+                        {isAdmin && (
+                          <Link href={`/academic-mgmt/syllabus/${c.classId}`} className="w-[34px] h-[34px] flex items-center justify-center rounded-lg border border-border bg-white dark:bg-slate-900 text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm cursor-pointer" title="Edit Syllabus">
+                            <Edit className="w-4 h-4" />
+                          </Link>
+                        )}
+                      </div>
                     </div>
 
                     <div className="p-5 space-y-3 border-b border-border">

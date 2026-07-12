@@ -95,15 +95,17 @@ export async function GET(request: NextRequest) {
       filter.is_active = status.toLowerCase() === "active";
     }
 
-    const total = await Parent.countDocuments(filter);
     const skip = isAll ? 0 : (page - 1) * limit;
 
-    const parents = await Parent.find(filter)
-      .populate("user_id", "name email role is_active plain_password")
-      .sort({ name: 1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+    const [total, parents] = await Promise.all([
+      Parent.countDocuments(filter),
+      Parent.find(filter)
+        .populate("user_id", "name email role is_active plain_password")
+        .sort({ name: 1 })
+        .skip(skip)
+        .limit(limit)
+        .lean()
+    ]);
 
     const parentIds = parents.map((p: any) => p._id);
     const childrenQuery: any = { parent_id: { $in: parentIds }, school_id: schoolId };

@@ -222,6 +222,7 @@ export async function GET(req: NextRequest) {
     // 2. Fetch all matching students to compute statuses in memory
     const students = await Student.find(studentQuery)
       .populate("class_id", "name section")
+      .sort({ name: 1 })
       .lean();
 
     // Get all ClassFees for this school to avoid N+1 queries
@@ -366,6 +367,9 @@ export async function GET(req: NextRequest) {
     }
 
     // 6. Apply pagination slicing
+    // Sort alphabetically by student name (case-insensitive, localized)
+    filteredList.sort((a: any, b: any) => a.name.localeCompare(b.name));
+
     const totalItems = filteredList.length;
     const totalPages = Math.ceil(totalItems / limit);
     const startIndex = (page - 1) * limit;

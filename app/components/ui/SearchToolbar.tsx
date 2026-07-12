@@ -79,12 +79,13 @@ export function SearchToolbar({
 
   // Debounce the search input updates
   useEffect(() => {
+    if (localSearch === searchQuery) return;
     const handler = setTimeout(() => {
       onSearchChange(localSearch);
     }, 300);
 
     return () => clearTimeout(handler);
-  }, [localSearch, onSearchChange]);
+  }, [localSearch, onSearchChange, searchQuery]);
 
   // Dropdown/Popover open states
   const [isFilterOpen, setIsFilterOpen] = useState(false);

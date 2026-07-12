@@ -32,8 +32,8 @@ if (!cached) {
 }
 
 const MONGOOSE_OPTS: mongoose.ConnectOptions = {
-  // Connection pool — allows up to 10 simultaneous DB operations
-  maxPoolSize: 10,
+  // Connection pool — allows up to 100 simultaneous DB operations for scalability
+  maxPoolSize: 100,
   minPoolSize: 0,  // serverless-friendly: no idle connections kept open permanently
 
   // Timeout settings — increased for Vercel cold start tolerance
