@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -138,12 +138,12 @@ export default function AttendanceReportPage() {
           >
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button
+          {/* <button
             onClick={() => PrintService.print('printable-area', { pageSize: 'A4' })}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary transition-colors shadow-sm cursor-pointer dark:text-slate-400"
           >
             <Printer className="w-4 h-4" />
-          </button>
+          </button> */}
           <div className="relative">
             <button
               onClick={() => setIsExportOpen(!isExportOpen)}
@@ -190,7 +190,7 @@ export default function AttendanceReportPage() {
               <option value="">All Classes</option>
               {classes.map((c) => (
                 <option key={c._id} value={c._id}>
-                  {c.name} - {c.section}
+                  {c.name}{c.section ? ` - ${c.section}` : ""}
                 </option>
               ))}
             </select>
@@ -227,7 +227,7 @@ export default function AttendanceReportPage() {
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Section</th>
+                {/* <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Section</th> */}
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Total Students</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Working Days</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Avg Present</th>
@@ -238,13 +238,13 @@ export default function AttendanceReportPage() {
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-slate-400">
+                  <td colSpan={6} className="px-6 py-10 text-center text-slate-400">
                     <Loader2 className="w-5 h-5 animate-spin inline" />
                   </td>
                 </tr>
               ) : paginatedStats.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-slate-400">
+                  <td colSpan={6} className="px-6 py-10 text-center text-slate-400">
                     No stats found.
                   </td>
                 </tr>
@@ -254,8 +254,10 @@ export default function AttendanceReportPage() {
                     key={s.classId}
                     className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <td className="px-6 py-4 font-semibold text-foreground dark:text-slate-100">{s.className}</td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{s.section}</td>
+                    <td className="px-6 py-4 font-semibold text-foreground dark:text-slate-100">
+                      {s.className}{s.section ? ` - ${s.section}` : ""}
+                    </td>
+                    {/* <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{s.section}</td> */}
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{s.studentCount}</td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{s.workingDays}</td>
                     <td className="px-6 py-4 text-emerald-600 font-medium">{s.averagePresent}</td>
@@ -291,11 +293,10 @@ export default function AttendanceReportPage() {
               <button
                 key={p}
                 onClick={() => setPage(p)}
-                className={`w-7 h-7 rounded-lg text-[13px] font-medium flex items-center justify-center ${
-                  page === p
-                    ? "bg-primary text-white"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
-                }`}
+                className={`w-7 h-7 rounded-lg text-[13px] font-medium flex items-center justify-center ${page === p
+                  ? "bg-primary text-white"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
+                  }`}
               >
                 {p}
               </button>

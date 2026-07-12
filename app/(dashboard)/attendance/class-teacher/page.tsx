@@ -419,7 +419,7 @@ export default function ClassTeacherAssignmentPage() {
               <select
                 value={filterYear}
                 onChange={(e) => setFilterYear(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none cursor-pointer appearance-none"
+                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none"
               >
                 <option value="2026">Session 2026</option>
                 <option value="2027">Session 2027</option>
@@ -435,7 +435,7 @@ export default function ClassTeacherAssignmentPage() {
               <select
                 value={filterClassId}
                 onChange={(e) => setFilterClassId(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none cursor-pointer appearance-none"
+                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none"
               >
                 <option value="">All Classes</option>
                 {classes.map(c => (
@@ -453,7 +453,7 @@ export default function ClassTeacherAssignmentPage() {
               <select
                 value={filterSection}
                 onChange={(e) => setFilterSection(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none cursor-pointer appearance-none"
+                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none"
               >
                 <option value="">All Sections</option>
                 {uniqueSections.map(sec => (
@@ -471,7 +471,7 @@ export default function ClassTeacherAssignmentPage() {
               <select
                 value={filterTeacherId}
                 onChange={(e) => setFilterTeacherId(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none cursor-pointer appearance-none"
+                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none"
               >
                 <option value="">All Teachers</option>
                 {activeTeachers.map(t => (
@@ -489,7 +489,7 @@ export default function ClassTeacherAssignmentPage() {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-955 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none cursor-pointer appearance-none"
+                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-955 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none"
               >
                 <option value="">All Statuses</option>
                 <option value="Active">Active</option>
@@ -501,15 +501,41 @@ export default function ClassTeacherAssignmentPage() {
 
           {/* Search Input */}
           <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-455 mb-1">Global Query Search</label>
+            <label className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              Global Query Search
+            </label>
+
             <div className="relative">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              <Search
+                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+              />
+
               <input
                 type="text"
                 placeholder="Search teacher, employee ID, class, section, session..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-8.5 pr-3 py-1.8 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none"
+                className="
+        h-8
+        w-full
+        rounded-md
+        border
+        border-slate-300
+        bg-slate-50
+        pl-10
+        pr-3
+        text-sm
+        font-medium
+        text-slate-800
+        outline-none
+        placeholder:text-slate-400
+        focus:border-blue-500
+        focus:ring-2
+        focus:ring-blue-100
+        dark:border-slate-700
+        dark:bg-slate-900
+        dark:text-slate-200
+      "
               />
             </div>
           </div>
@@ -521,8 +547,8 @@ export default function ClassTeacherAssignmentPage() {
         <button
           onClick={() => setActiveReportTab("list")}
           className={`px-4 py-3 border-b-2 transition-all ${activeReportTab === "list"
-              ? "border-primary text-primary"
-              : "border-transparent text-slate-500 hover:text-slate-700"
+            ? "border-primary text-primary"
+            : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
         >
           Class Teacher Assignments ({filteredAssignments.length})
@@ -530,8 +556,8 @@ export default function ClassTeacherAssignmentPage() {
         <button
           onClick={() => setActiveReportTab("workload")}
           className={`px-4 py-3 border-b-2 transition-all ${activeReportTab === "workload"
-              ? "border-primary text-primary"
-              : "border-transparent text-slate-500 hover:text-slate-700"
+            ? "border-primary text-primary"
+            : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
         >
           Teacher Workload Audit Report
@@ -539,8 +565,8 @@ export default function ClassTeacherAssignmentPage() {
         <button
           onClick={() => setActiveReportTab("unassigned")}
           className={`px-4 py-3 border-b-2 transition-all ${activeReportTab === "unassigned"
-              ? "border-primary text-primary"
-              : "border-transparent text-slate-500 hover:text-slate-700"
+            ? "border-primary text-primary"
+            : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
         >
           Unassigned Classes Mapping ({unassignedClassesList.length})
@@ -588,8 +614,8 @@ export default function ClassTeacherAssignmentPage() {
                       </td>
                       <td className="px-4 py-4">
                         <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-extrabold border ${a.assignment_type === "Class Teacher"
-                            ? "bg-indigo-50 text-indigo-700 border-indigo-200"
-                            : "bg-purple-50 text-purple-700 border-purple-200"
+                          ? "bg-indigo-50 text-indigo-700 border-indigo-200"
+                          : "bg-purple-50 text-purple-700 border-purple-200"
                           }`}>
                           {a.assignment_type}
                         </span>
@@ -617,8 +643,8 @@ export default function ClassTeacherAssignmentPage() {
                       </td>
                       <td className="px-4 py-4">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${a.status === "Active"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-slate-100 text-slate-700 border-border"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-slate-100 text-slate-700 border-border"
                           }`}>
                           {a.status}
                         </span>
@@ -702,8 +728,8 @@ export default function ClassTeacherAssignmentPage() {
                       <td className="px-4 py-4 text-center font-bold text-slate-800 dark:text-slate-200">{workload.periodsCount}</td>
                       <td className="px-4 py-4">
                         <span className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold border ${workload.isOverloaded
-                            ? "bg-rose-50 text-rose-700 border-rose-200"
-                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          ? "bg-rose-50 text-rose-700 border-rose-200"
+                          : "bg-emerald-50 text-emerald-700 border-emerald-200"
                           }`}>
                           {workload.isOverloaded ? "OVERLOADED" : "Normal Load"}
                         </span>
@@ -1052,8 +1078,8 @@ export default function ClassTeacherAssignmentPage() {
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-slate-500">Workload Audit Status:</span>
                         <span className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold border ${workload.isOverloaded
-                            ? "bg-rose-50 text-rose-700 border-rose-200"
-                            : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          ? "bg-rose-50 text-rose-700 border-rose-200"
+                          : "bg-emerald-50 text-emerald-700 border-emerald-200"
                           }`}>
                           {workload.isOverloaded ? "OVERLOADED" : "Normal Load"}
                         </span>

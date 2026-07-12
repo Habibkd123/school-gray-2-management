@@ -156,9 +156,9 @@ export function SearchToolbar({
   };
 
   return (
-    <div className="sticky top-0 z-30 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-border rounded-2xl shadow-sm p-4 no-print transition-all duration-300">
+    <div className="sticky top-0 z-30 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-border rounded-xl shadow-sm p-4 no-print transition-all duration-300">
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
-        
+
         {/* Left Section: Search Input */}
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
@@ -196,11 +196,10 @@ export function SearchToolbar({
           <div className="relative" ref={filterRef}>
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`px-4 py-2.5 border text-xs font-bold rounded-xl flex items-center gap-2 transition-all duration-200 cursor-pointer ${
-                isFilterOpen || activeFiltersCount > 0
-                  ? "bg-primary text-white border-primary shadow-sm shadow-primary/20"
-                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/60"
-              }`}
+              className={`px-4 py-2.5 border text-xs font-bold rounded-xl flex items-center gap-2 transition-all duration-200 cursor-pointer ${isFilterOpen || activeFiltersCount > 0
+                ? "bg-primary text-white border-primary shadow-sm shadow-primary/20"
+                : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
               <span>Filter {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ""}</span>
@@ -308,9 +307,8 @@ export function SearchToolbar({
                                         setAutocompleteSearch(prev => ({ ...prev, [f.id]: "" }));
                                         if (f.onSearch) f.onSearch("");
                                       }}
-                                      className={`p-2 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 flex justify-between items-center ${
-                                        tempFilterValues[f.id] === opt.value ? "bg-primary/10 text-primary" : ""
-                                      }`}
+                                      className={`p-2 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 flex justify-between items-center ${tempFilterValues[f.id] === opt.value ? "bg-primary/10 text-primary" : ""
+                                        }`}
                                     >
                                       <div className="text-left">
                                         <p className="font-extrabold text-slate-850 dark:text-slate-200">{opt.label}</p>
@@ -385,9 +383,8 @@ export function SearchToolbar({
                   {columns.map((col) => (
                     <label
                       key={col.id}
-                      className={`flex items-center justify-between p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        col.mandatory ? "opacity-60 cursor-not-allowed" : "hover:bg-slate-50 dark:hover:bg-slate-900"
-                      }`}
+                      className={`flex items-center justify-between p-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${col.mandatory ? "opacity-60 cursor-not-allowed" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                        }`}
                     >
                       <div className="flex items-center gap-2">
                         <input
@@ -477,14 +474,14 @@ export function SearchToolbar({
             )}
           </div>
 
-          {/* Print Button */}
+          {/* Print Button
           <button
             onClick={onPrint}
             className="px-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-850 text-xs font-bold rounded-xl flex items-center gap-2 transition-all duration-200 cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>Print</span>
-          </button>
+          </button> */}
         </div>
 
         {/* Mobile Actions Menu Dropdown (Visible on mobile/tablet, hidden on desktop) */}
@@ -655,9 +652,8 @@ export function SearchToolbar({
                                     setAutocompleteSearch(prev => ({ ...prev, [f.id]: "" }));
                                     if (f.onSearch) f.onSearch("");
                                   }}
-                                  className={`p-2 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 flex justify-between items-center ${
-                                    tempFilterValues[f.id] === opt.value ? "bg-primary/10 text-primary" : ""
-                                  }`}
+                                  className={`p-2 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 flex justify-between items-center ${tempFilterValues[f.id] === opt.value ? "bg-primary/10 text-primary" : ""
+                                    }`}
                                 >
                                   <div className="text-left">
                                     <p className="font-extrabold text-slate-850 dark:text-slate-200">{opt.label}</p>
@@ -721,9 +717,8 @@ export function SearchToolbar({
               {columns.map((col) => (
                 <label
                   key={col.id}
-                  className={`flex items-center justify-between p-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                    col.mandatory ? "opacity-60 cursor-not-allowed" : "hover:bg-slate-50 dark:hover:bg-slate-900"
-                  }`}
+                  className={`flex items-center justify-between p-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${col.mandatory ? "opacity-60 cursor-not-allowed" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                    }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <input

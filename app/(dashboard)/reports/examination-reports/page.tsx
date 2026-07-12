@@ -254,7 +254,7 @@ export default function ExaminationReportPage() {
               >
                 <option value="">Select Class</option>
                 {classes.map(c => (
-                  <option key={c._id} value={c._id}>{c.name} - {c.section}</option>
+                  <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>
                 ))}
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />

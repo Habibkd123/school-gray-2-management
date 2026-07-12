@@ -1181,7 +1181,9 @@ function StudentViewContent() {
                         <tbody className="divide-y divide-border text-slate-600 dark:text-slate-300 font-medium">
                           {leavesLoading ? (
                             <tr>
-                              <td colSpan={5} className="px-5 py-8 text-center text-slate-400 font-semibold">Loading leave requests...</td>
+                              <td colSpan={8} className="table-loading ">
+                                <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+                              </td>
                             </tr>
                           ) : filteredLeaveRequests.length === 0 ? (
                             <tr>

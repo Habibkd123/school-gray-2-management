@@ -90,7 +90,7 @@ export default function StudentDayWiseReportPage() {
             )}
             <select value={selectedClass} onChange={e => setSelectedClass(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer">
               <option value="">All Classes</option>
-              {classes.map(c => <option key={c._id} value={c._id}>{c.name} - {c.section}</option>)}
+              {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
             </select>
           </div>
         </div>

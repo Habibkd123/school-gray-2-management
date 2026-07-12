@@ -572,24 +572,22 @@ export default function SalaryDashboardPage() {
     {
       header: "Status",
       render: (s) => (
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-          s.status === "Paid"
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${s.status === "Paid"
             ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-500/20"
             : s.status === "Approved"
               ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-500/10 dark:text-blue-450 dark:border-blue-500/20"
               : s.status === "Draft"
                 ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-450 dark:border-amber-500/20"
                 : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-450 dark:border-rose-500/20"
-        }`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${
-            s.status === "Paid"
+          }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${s.status === "Paid"
               ? "bg-emerald-500"
               : s.status === "Approved"
                 ? "bg-blue-500"
                 : s.status === "Draft"
                   ? "bg-amber-500"
                   : "bg-rose-500"
-          }`} />
+            }`} />
           {s.status}
         </span>
       )
@@ -858,7 +856,7 @@ export default function SalaryDashboardPage() {
 
           {/* TAB 1: SALARY DESK */}
           {activeTab === "desk" && (
-            <div className="space-y-5">
+            <div className="space-y-5 mb-2 mt-6">
               {/* Date Filters & Search Desk */}
               <div className="bg-white dark:bg-slate-900 border border-border p-5 rounded-xl shadow-sm space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
@@ -931,14 +929,14 @@ export default function SalaryDashboardPage() {
                       <select
                         value={bulkAction}
                         onChange={(e) => handleBulkOperation(e.target.value)}
-                        className="pl-3 pr-8 py-1.5 bg-primary text-white text-xs font-bold rounded-lg outline-none appearance-none cursor-pointer shadow-sm hover:bg-primary/90"
+                        className="pl-3 pr-8 py-1.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-lg outline-none appearance-none cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-900 shadow-sm"
                       >
-                        <option value="">⚡ Bulk Operations</option>
-                        <option value="generate">Generate Drafts</option>
-                        <option value="approve">Approve Drafts</option>
-                        <option value="pay">Disburse (Pay)</option>
+                        <option value="" className="text-slate-500">⚡ Bulk Operations</option>
+                        <option value="generate" className="text-slate-850 dark:text-slate-200 font-bold">Generate Drafts</option>
+                        <option value="approve" className="text-slate-850 dark:text-slate-200 font-bold">Approve Drafts</option>
+                        <option value="pay" className="text-slate-850 dark:text-slate-200 font-bold">Disburse (Pay)</option>
                       </select>
-                      <ChevronDown className="w-4 h-4 text-white absolute right-2.5 top-2 pointer-events-none" />
+                      <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2 pointer-events-none" />
                     </div>
                   </div>
                 </div>
@@ -966,7 +964,7 @@ export default function SalaryDashboardPage() {
 
           {/* TAB 2: REPORTS DESK */}
           {activeTab === "reports" && (
-            <div className="space-y-6">
+            <div className="space-y-6 mt-6">
               {/* Controls */}
               <div className="bg-white dark:bg-slate-900 border border-border p-5 rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5">
                 <div className="flex items-center gap-4 flex-wrap">

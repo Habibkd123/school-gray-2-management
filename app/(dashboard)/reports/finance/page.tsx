@@ -64,6 +64,16 @@ export default function FinanceReportPage() {
 
   const [isExportOpen, setIsExportOpen] = useState(false);
 
+  const [feesPage, setFeesPage] = useState(1);
+  const [salaryPage, setSalaryPage] = useState(1);
+  const PAGE_SIZE = 10;
+
+  // Reset pages when filters change
+  useEffect(() => {
+    setFeesPage(1);
+    setSalaryPage(1);
+  }, [selectedClass, selectedStatus, startDate, endDate, activeTab]);
+
   // Load all student fees data (fetch large limit to compute summaries locally)
   const fetchStudentFees = useCallback(async () => {
     setIsLoadingStudents(true);
@@ -188,6 +198,20 @@ export default function FinanceReportPage() {
       historyLogs: salariesList
     };
   }, [salariesList, teachersList]);
+
+  const paginatedClassWise = useMemo(() => {
+    const start = (feesPage - 1) * PAGE_SIZE;
+    return studentDuesAggregates.classWiseList.slice(start, start + PAGE_SIZE);
+  }, [studentDuesAggregates.classWiseList, feesPage]);
+
+  const totalFeesPages = Math.ceil(studentDuesAggregates.classWiseList.length / PAGE_SIZE);
+
+  const paginatedHistoryLogs = useMemo(() => {
+    const start = (salaryPage - 1) * PAGE_SIZE;
+    return teacherSalariesAggregates.historyLogs.slice(start, start + PAGE_SIZE);
+  }, [teacherSalariesAggregates.historyLogs, salaryPage]);
+
+  const totalSalaryPages = Math.ceil(teacherSalariesAggregates.historyLogs.length / PAGE_SIZE);
 
   // Export to Excel / CSV
   const handleExport = (format: "csv" | "excel") => {
@@ -351,7 +375,7 @@ export default function FinanceReportPage() {
                   <option value="">All Classes</option>
                   {classes.map((cls) => (
                     <option key={cls._id} value={cls._id}>
-                      {cls.name} - {cls.section}
+                      {cls.name}{cls.section ? ` - ${cls.section}` : ""}
                     </option>
                   ))}
                 </select>
@@ -485,14 +509,14 @@ export default function FinanceReportPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {studentDuesAggregates.classWiseList.length === 0 ? (
+                      {paginatedClassWise.length === 0 ? (
                         <tr>
                           <td colSpan={5} className="px-6 py-12 text-center text-slate-450 font-bold">
                             No class fee summaries generated yet.
                           </td>
                         </tr>
                       ) : (
-                        studentDuesAggregates.classWiseList.map((row) => (
+                        paginatedClassWise.map((row) => (
                           <tr key={row.class_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                             <td className="px-6 py-4 font-bold text-slate-850 dark:text-slate-200">{row.class_name}</td>
                             <td className="px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-350">{row.student_count}</td>
@@ -505,6 +529,44 @@ export default function FinanceReportPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Pagination Strip */}
+                {totalFeesPages > 1 && (
+                  <div className="p-4 border-t border-border flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+                    <div className="text-[12px] text-slate-500 font-semibold">
+                      Showing {Math.min((feesPage - 1) * PAGE_SIZE + 1, studentDuesAggregates.classWiseList.length)} to {Math.min(feesPage * PAGE_SIZE, studentDuesAggregates.classWiseList.length)} of {studentDuesAggregates.classWiseList.length} entries
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setFeesPage(p => Math.max(p - 1, 1))}
+                        disabled={feesPage === 1}
+                        className="px-3 py-1.5 bg-white border border-border text-[12px] rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors font-semibold cursor-pointer"
+                      >
+                        Previous
+                      </button>
+                      {Array.from({ length: totalFeesPages }, (_, i) => i + 1).map(p => (
+                        <button
+                          key={p}
+                          onClick={() => setFeesPage(p)}
+                          className={`w-7 h-7 rounded-lg text-[12px] font-bold flex items-center justify-center ${
+                            feesPage === p
+                              ? "bg-primary text-white"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setFeesPage(p => Math.min(p + 1, totalFeesPages))}
+                        disabled={feesPage === totalFeesPages}
+                        className="px-3 py-1.5 bg-white border border-border text-[12px] rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors font-semibold cursor-pointer"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}
@@ -568,14 +630,14 @@ export default function FinanceReportPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                      {teacherSalariesAggregates.historyLogs.length === 0 ? (
+                      {paginatedHistoryLogs.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="px-6 py-12 text-center text-slate-450 font-bold">
                             No salary payments disbursed in this range.
                           </td>
                         </tr>
                       ) : (
-                        teacherSalariesAggregates.historyLogs.map((row) => (
+                        paginatedHistoryLogs.map((row) => (
                           <tr key={row._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                             <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{row.teacher_id?.name || "N/A"}</td>
                             <td className="px-6 py-4 font-sans font-bold text-slate-700 dark:text-slate-350">{row.teacher_id?.employee_id || "N/A"}</td>
@@ -593,6 +655,44 @@ export default function FinanceReportPage() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Pagination Strip */}
+                {totalSalaryPages > 1 && (
+                  <div className="p-4 border-t border-border flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+                    <div className="text-[12px] text-slate-500 font-semibold">
+                      Showing {Math.min((salaryPage - 1) * PAGE_SIZE + 1, teacherSalariesAggregates.historyLogs.length)} to {Math.min(salaryPage * PAGE_SIZE, teacherSalariesAggregates.historyLogs.length)} of {teacherSalariesAggregates.historyLogs.length} entries
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setSalaryPage(p => Math.max(p - 1, 1))}
+                        disabled={salaryPage === 1}
+                        className="px-3 py-1.5 bg-white border border-border text-[12px] rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors font-semibold cursor-pointer"
+                      >
+                        Previous
+                      </button>
+                      {Array.from({ length: totalSalaryPages }, (_, i) => i + 1).map(p => (
+                        <button
+                          key={p}
+                          onClick={() => setSalaryPage(p)}
+                          className={`w-7 h-7 rounded-lg text-[12px] font-bold flex items-center justify-center ${
+                            salaryPage === p
+                              ? "bg-primary text-white"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 hover:bg-slate-200"
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setSalaryPage(p => Math.min(p + 1, totalSalaryPages))}
+                        disabled={salaryPage === totalSalaryPages}
+                        className="px-3 py-1.5 bg-white border border-border text-[12px] rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors font-semibold cursor-pointer"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}

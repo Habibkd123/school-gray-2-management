@@ -460,7 +460,7 @@ export default function ApproveLeaveRequestPage() {
                 <tr>
                   <td colSpan={8} className="table-loading">
                     <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-                    <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading leave requests...</p>
+                    {/* <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading leave requests...</p> */}
                   </td>
                 </tr>
               ) : filteredData.length === 0 ? (

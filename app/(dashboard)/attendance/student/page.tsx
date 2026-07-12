@@ -829,8 +829,8 @@ export default function StudentAttendancePage() {
                 </div>
 
                 {/* Attendance Completed */}
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-650 flex items-center justify-center shrink-0">
+                <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-md bg-emerald-50 text-emerald-650 flex items-center justify-center shrink-0">
                     <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <div>
@@ -844,8 +844,8 @@ export default function StudentAttendancePage() {
                 </div>
 
                 {/* Attendance Pending */}
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-650 flex items-center justify-center shrink-0">
+                <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-md bg-amber-50 text-amber-650 flex items-center justify-center shrink-0">
                     <Clock className="w-5 h-5" />
                   </div>
                   <div>
@@ -859,8 +859,8 @@ export default function StudentAttendancePage() {
                 </div>
 
                 {/* Attendance Percentage */}
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-650 flex items-center justify-center shrink-0">
+                <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-md bg-indigo-50 text-indigo-650 flex items-center justify-center shrink-0">
                     <Layers className="w-5 h-5" />
                   </div>
                   <div>
@@ -874,8 +874,8 @@ export default function StudentAttendancePage() {
                 </div>
 
                 {/* Students Present */}
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-650 flex items-center justify-center shrink-0">
+                <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-md bg-emerald-50 text-emerald-650 flex items-center justify-center shrink-0">
                     <User className="w-5 h-5" />
                   </div>
                   <div>
@@ -889,8 +889,8 @@ export default function StudentAttendancePage() {
                 </div>
 
                 {/* Students Absent */}
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-rose-50 text-rose-650 flex items-center justify-center shrink-0">
+                <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-md bg-rose-50 text-rose-650 flex items-center justify-center shrink-0">
                     <XCircle className="w-5 h-5" />
                   </div>
                   <div>
@@ -912,7 +912,7 @@ export default function StudentAttendancePage() {
                 <p className="text-xs font-bold">No active classes registered.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left mb-5">
                 {filteredClasses.map((cls) => {
                   const att = dailyAttendances.find((a) => {
                     const classIdStr =
@@ -956,7 +956,7 @@ export default function StudentAttendancePage() {
                     <div
                       key={cls._id}
                       onClick={() => setFilterClassId(cls._id)}
-                      className="bg-white dark:bg-slate-900 border border-border rounded-xl overflow-hidden flex flex-col hover:border-primary/50 hover:shadow-md transition-all group cursor-pointer shadow-sm"
+                      className="bg-white dark:bg-slate-900 border border-border rounded-md overflow-hidden flex flex-col hover:border-primary/50 hover:shadow-md transition-all group cursor-pointer shadow-sm"
                     >
                       <div className="p-5 border-b border-border bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -1215,11 +1215,11 @@ export default function StudentAttendancePage() {
                       </div>
                     )}
 
-                  <div className="overflow-x-auto custom-scrollbar">
+                  <div className="overflow-x-auto custom-scrollbar ">
                     <table className="erp-table text-[13px] whitespace-nowrap w-full">
                       <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
                         <tr>
-                          <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200 w-12">
+                          {/* <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200 w-12">
                             <input
                               type="checkbox"
                               checked={
@@ -1230,7 +1230,7 @@ export default function StudentAttendancePage() {
                               onChange={handleSelectAllStudents}
                               className="w-4 h-4 accent-primary cursor-pointer rounded"
                             />
-                          </th>
+                          </th> */}
                           <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">
                             Admission No
                           </th>
@@ -1290,7 +1290,7 @@ export default function StudentAttendancePage() {
 
                             return (
                               <tr key={student._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                                <td className="px-4 py-4 text-center">
+                                {/* <td className="px-4 py-4 text-center">
                                   <input
                                     type="checkbox"
                                     checked={selectedStudentIds.includes(
@@ -1302,7 +1302,7 @@ export default function StudentAttendancePage() {
                                     className="w-4 h-4 accent-primary cursor-pointer rounded"
                                     disabled={isDisabled}
                                   />
-                                </td>
+                                </td> */}
                                 <td className="px-4 py-4 text-primary cursor-pointer hover:underline font-medium">
                                   {student.admission_no || "-"}
                                 </td>

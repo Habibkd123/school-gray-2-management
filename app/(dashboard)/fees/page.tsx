@@ -1225,7 +1225,7 @@ export default function FeesPage() {
       <div className="border-b border-border flex gap-6 text-xs font-bold text-slate-500 uppercase tracking-wider">
         <button
           onClick={() => setActiveTab("ledger")}
-          className={`pb-2.5 transition-colors border-b-2 outline-none ${activeTab === "ledger" ? "border-primary text-primary" : "border-transparent hover:text-slate-800"
+          className={` transition-colors border-b-2 outline-none ${activeTab === "ledger" ? "border-primary text-primary" : "border-transparent hover:text-slate-800"
             }`}
         >
           Dues Ledger
@@ -1240,7 +1240,7 @@ export default function FeesPage() {
       </div>
 
       {activeTab === "ledger" && (
-        <>
+        <div className="!mt-4 space-y-4">
           <SearchToolbar
             searchQuery={search}
             onSearchChange={handleSearchChange}
@@ -1537,11 +1537,11 @@ export default function FeesPage() {
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
 
       {activeTab === "reports" && (
-        <div className="space-y-6">
+        <div className="!mt-4 space-y-6">
           {isReportsLoading ? (
             <div className="h-60 flex flex-col items-center justify-center text-slate-400 gap-3">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -1799,123 +1799,156 @@ export default function FeesPage() {
                 </div>
               </div>
 
-              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
+              {/* Grid Column Headers */}
+              <div className="grid grid-cols-12 gap-3 px-3 py-1.5 bg-slate-50 dark:bg-slate-950/60 border border-border rounded-lg text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                <div className="col-span-4">Fee Head</div>
+                <div className="col-span-3 text-right">Amount (₹)</div>
+                <div className="col-span-3">Frequency</div>
+                <div className="col-span-2 text-right pr-2">Mandatory</div>
+              </div>
+
+              <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
                 {feeTypes.map((ft, index) => (
-                  <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-3 bg-slate-50/50 dark:bg-slate-950/40 border border-border/80 p-2.5 rounded-xl hover:border-border transition-colors">
-                    {/* Toggle button */}
-                    <div className="flex items-center gap-2 shrink-0">
+                  <div
+                    key={index}
+                    className={`grid grid-cols-12 gap-3 items-center px-3 py-2 border border-border/50 rounded-xl transition-all ${
+                      ft.is_enabled
+                        ? "bg-white dark:bg-slate-900 border-border"
+                        : "bg-slate-50/40 dark:bg-slate-950/20 border-transparent opacity-60"
+                    }`}
+                  >
+                    {/* Toggle + Name */}
+                    <div className="col-span-4 flex items-center gap-3">
                       <button
                         type="button"
                         onClick={() => handleToggleFeeType(index)}
-                        className={`w-9 h-5 rounded-full relative cursor-pointer transition-colors focus:outline-none ${ft.is_enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"
-                          }`}
+                        className={`w-8 h-4.5 rounded-full relative cursor-pointer transition-colors focus:outline-none shrink-0 ${
+                          ft.is_enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"
+                        }`}
                       >
-                        <div className={`w-3.5 h-3.5 bg-white dark:bg-slate-900 rounded-full absolute top-0.5 shadow-sm transition-transform ${ft.is_enabled ? "left-[18px]" : "left-0.5"
-                          }`} />
+                        <div
+                          className={`w-3.5 h-3.5 bg-white dark:bg-slate-900 rounded-full absolute top-0.5 shadow-sm transition-transform ${
+                            ft.is_enabled ? "left-[14px]" : "left-0.5"
+                          }`}
+                        />
                       </button>
-                      <span className={`text-xs font-bold w-32 truncate ${ft.is_enabled ? "text-slate-850 dark:text-white" : "text-slate-400 line-through"}`} title={ft.name}>
+                      <span className="text-xs font-bold truncate text-slate-800 dark:text-slate-250" title={ft.name}>
                         {ft.name}
                       </span>
                     </div>
 
                     {/* Amount Input */}
-                    <div className="flex items-center gap-1.5 flex-1 min-w-[100px]">
-                      <span className="text-[10px] text-slate-500 font-bold">Amount:</span>
-                      <input
-                        type="number"
-                        value={ft.amount}
-                        disabled={!ft.is_enabled}
-                        onChange={(e) => handleUpdateFeeTypeAmount(index, Number(e.target.value))}
-                        className="w-full px-2 py-1 border border-border bg-white dark:bg-slate-900 font-sans font-bold text-xs rounded-lg outline-none text-right focus:border-primary/50"
-                      />
+                    <div className="col-span-3">
+                      <div className="relative rounded-lg border border-border bg-white dark:bg-slate-900 focus-within:border-primary/50 transition-colors">
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">₹</span>
+                        <input
+                          type="number"
+                          value={ft.amount}
+                          disabled={!ft.is_enabled}
+                          onChange={(e) => handleUpdateFeeTypeAmount(index, Number(e.target.value))}
+                          className="w-full pl-5 pr-2 py-1 bg-transparent font-sans font-bold text-xs outline-none text-right text-slate-800 dark:text-slate-100 disabled:text-slate-400"
+                        />
+                      </div>
                     </div>
 
-                    {/* Frequency Dropdown */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] text-slate-500 font-bold">Freq:</span>
-                      <select
-                        value={ft.frequency || "Monthly"}
-                        disabled={!ft.is_enabled}
-                        onChange={(e) => handleUpdateFeeTypeFrequency(index, e.target.value as any)}
-                        className="px-2 py-1 border border-border bg-white dark:bg-slate-900 font-bold text-xs rounded-lg outline-none cursor-pointer focus:border-primary/50"
-                      >
-                        <option value="One Time">One Time</option>
-                        <option value="Monthly">Monthly</option>
-                        <option value="Quarterly">Quarterly</option>
-                        <option value="Half Yearly">Half Yearly</option>
-                        <option value="Yearly">Yearly</option>
-                      </select>
+                    {/* Frequency Select */}
+                    <div className="col-span-3">
+                      <div className="relative">
+                        <select
+                          value={ft.frequency || "Monthly"}
+                          disabled={!ft.is_enabled}
+                          onChange={(e) => handleUpdateFeeTypeFrequency(index, e.target.value as any)}
+                          className="w-full pl-2.5 pr-7 py-1 border border-border bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-bold text-xs rounded-lg outline-none cursor-pointer disabled:text-slate-400 focus:border-primary/50 transition-colors appearance-none"
+                        >
+                          <option value="One Time">One Time</option>
+                          <option value="Monthly">Monthly</option>
+                          <option value="Quarterly">Quarterly</option>
+                          <option value="Half Yearly">Half Yearly</option>
+                          <option value="Yearly">Yearly</option>
+                        </select>
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2 pointer-events-none" />
+                      </div>
                     </div>
 
-                    {/* Mandatory Switch */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[10px] text-slate-500 font-bold">Mandatory:</span>
+                    {/* Mandatory Switch + Delete */}
+                    <div className="col-span-2 flex items-center justify-end gap-2.5">
                       <input
                         type="checkbox"
                         checked={ft.is_mandatory !== false}
                         disabled={!ft.is_enabled}
                         onChange={() => handleToggleFeeTypeMandatory(index)}
-                        className="w-3.5 h-3.5 accent-primary cursor-pointer"
+                        className="w-3.5 h-3.5 accent-primary cursor-pointer disabled:opacity-40"
                       />
-                    </div>
 
-                    {/* Delete Custom Fee item if not a default key item */}
-                    {index >= DEFAULT_FEE_TYPES.length && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveFeeType(index)}
-                        className="p-1 text-rose-500 hover:bg-rose-550/10 rounded transition-colors shrink-0 cursor-pointer"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
+                      {index >= DEFAULT_FEE_TYPES.length ? (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFeeType(index)}
+                          className="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded transition-colors cursor-pointer shrink-0"
+                          title="Delete custom fee head"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      ) : (
+                        <div className="w-5.5 h-5.5 shrink-0" />
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
 
               {/* Add Custom Type Field Form */}
-              <div className="pt-3 border-t border-border flex flex-wrap gap-2.5 items-center">
-                <input
-                  type="text"
-                  placeholder="Custom Fee Name (e.g. Activity Fee)"
-                  value={newFeeTypeName}
-                  onChange={(e) => setNewFeeTypeName(e.target.value)}
-                  className="flex-1 min-w-[150px] px-3 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none focus:border-primary/30"
-                />
-                <input
-                  type="number"
-                  placeholder="Amount"
-                  value={newFeeTypeAmount}
-                  onChange={(e) => setNewFeeTypeAmount(e.target.value)}
-                  className="w-20 px-2 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none font-sans focus:border-primary/30"
-                />
-                <select
-                  value={newFeeTypeFrequency}
-                  onChange={(e) => setNewFeeTypeFrequency(e.target.value as any)}
-                  className="px-2 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none cursor-pointer"
-                >
-                  <option value="One Time">One Time</option>
-                  <option value="Monthly">Monthly</option>
-                  <option value="Quarterly">Quarterly</option>
-                  <option value="Half Yearly">Half Yearly</option>
-                  <option value="Yearly">Yearly</option>
-                </select>
-                <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-655 dark:text-slate-400 cursor-pointer">
+              <div className="p-3 bg-slate-50 dark:bg-slate-950/40 border border-border rounded-xl flex flex-col gap-2.5">
+                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Add Custom Fee Head</span>
+                <div className="flex flex-wrap gap-2.5 items-center">
                   <input
-                    type="checkbox"
-                    checked={newFeeTypeIsMandatory}
-                    onChange={(e) => setNewFeeTypeIsMandatory(e.target.checked)}
-                    className="w-3.5 h-3.5 accent-primary"
+                    type="text"
+                    placeholder="Fee Name (e.g. Activity Fee)"
+                    value={newFeeTypeName}
+                    onChange={(e) => setNewFeeTypeName(e.target.value)}
+                    className="flex-1 min-w-[150px] px-3 py-1.5 border border-border bg-white dark:bg-slate-900 text-xs font-semibold rounded-lg outline-none focus:border-primary/50 transition-colors"
                   />
-                  <span>Mandatory</span>
-                </label>
-                <button
-                  type="button"
-                  onClick={handleAddCustomFeeType}
-                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-750 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" /> Add
-                </button>
+                  <div className="relative w-24">
+                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">₹</span>
+                    <input
+                      type="number"
+                      placeholder="Amount"
+                      value={newFeeTypeAmount}
+                      onChange={(e) => setNewFeeTypeAmount(e.target.value)}
+                      className="w-full pl-5 pr-2 py-1.5 border border-border bg-white dark:bg-slate-900 text-xs font-bold rounded-lg outline-none font-sans focus:border-primary/50 transition-colors"
+                    />
+                  </div>
+                  <div className="relative">
+                    <select
+                      value={newFeeTypeFrequency}
+                      onChange={(e) => setNewFeeTypeFrequency(e.target.value as any)}
+                      className="pl-2.5 pr-7 py-1.5 border border-border bg-white dark:bg-slate-900 text-xs font-semibold rounded-lg outline-none cursor-pointer focus:border-primary/50 transition-colors appearance-none"
+                    >
+                      <option value="One Time">One Time</option>
+                      <option value="Monthly">Monthly</option>
+                      <option value="Quarterly">Quarterly</option>
+                      <option value="Half Yearly">Half Yearly</option>
+                      <option value="Yearly">Yearly</option>
+                    </select>
+                    <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2 top-2 pointer-events-none" />
+                  </div>
+                  <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newFeeTypeIsMandatory}
+                      onChange={(e) => setNewFeeTypeIsMandatory(e.target.checked)}
+                      className="w-3.5 h-3.5 accent-primary rounded cursor-pointer"
+                    />
+                    <span>Mandatory</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAddCustomFeeType}
+                    className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-750 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer ml-auto"
+                  >
+                    <Plus className="w-3.5 h-3.5" /> Add Fee
+                  </button>
+                </div>
               </div>
             </div>
 

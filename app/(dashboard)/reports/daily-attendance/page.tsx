@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -159,12 +159,12 @@ export default function DailyAttendanceReportPage() {
           >
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button
+          {/* <button
             onClick={() => PrintService.print('printable-area', { pageSize: 'A4' })}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary transition-colors shadow-sm cursor-pointer dark:text-slate-400"
           >
             <Printer className="w-4 h-4" />
-          </button>
+          </button> */}
           <div className="relative">
             <button
               onClick={() => setIsExportOpen(!isExportOpen)}
@@ -227,7 +227,7 @@ export default function DailyAttendanceReportPage() {
               <option value="">All Classes</option>
               {classes.map((c) => (
                 <option key={c._id} value={c._id}>
-                  {c.name} - {c.section}
+                  {c.name}{c.section ? ` - ${c.section}` : ""}
                 </option>
               ))}
             </select>
@@ -313,11 +313,10 @@ export default function DailyAttendanceReportPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2 py-1 rounded text-[12px] font-bold ${
-                          s.rate >= 75
+                        className={`px-2 py-1 rounded text-[12px] font-bold ${s.rate >= 75
                             ? "bg-emerald-100 text-emerald-700"
                             : "bg-rose-100 text-rose-700"
-                        }`}
+                          }`}
                       >
                         {s.rate}%
                       </span>
@@ -342,11 +341,10 @@ export default function DailyAttendanceReportPage() {
               <button
                 key={p}
                 onClick={() => setPage(p)}
-                className={`w-7 h-7 rounded-lg text-[13px] font-medium flex items-center justify-center ${
-                  page === p
+                className={`w-7 h-7 rounded-lg text-[13px] font-medium flex items-center justify-center ${page === p
                     ? "bg-primary text-white"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
-                }`}
+                  }`}
               >
                 {p}
               </button>
