@@ -6,8 +6,9 @@ import {
   Plus, Search, RefreshCw, Trash2, Loader2, AlertCircle,
   ChevronDown, Filter, BookOpen, GraduationCap, Edit,
   MoreVertical, Eye, Copy, Download, FileText, Check, X,
-  User, ShieldAlert
+  User, ShieldAlert, Grid, List, UploadCloud, LayoutGrid
 } from "lucide-react";
+import Link from "next/link";
 import { Modal } from "@/app/components/ui/modal";
 import { useTeacherAssignment, PopulatedTeacherAssignment } from "@/app/hooks/useTeacherAssignment";
 import { useSubjectAssignment } from "@/app/hooks/useSubjectAssignment";
@@ -22,6 +23,7 @@ import { useAuthReady } from "@/lib/utils/session";
 
 const ACADEMIC_YEARS = ["2025-2026", "2026-2027", "2027-2028"];
 const ASSIGNMENT_TYPES = ["Subject Teacher", "Class Teacher", "Co-Class Teacher", "Temporary Teacher", "Substitute Teacher"];
+const PAGE_SIZE = 30;
 
 export default function TeacherAssignmentPage() {
   const router = useRouter();
@@ -57,6 +59,17 @@ export default function TeacherAssignmentPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedSort, setSelectedSort] = useState("CreatedDateDesc");
   const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({});
+  const [collapsedListGroups, setCollapsedListGroups] = useState<Set<string>>(new Set());
+  const toggleListGroup = (groupId: string) => {
+    setCollapsedListGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) newSet.delete(groupId);
+      else newSet.add(groupId);
+      return newSet;
+    });
+  };
 
   // Popover States
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -70,7 +83,7 @@ export default function TeacherAssignmentPage() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isWorkloadWarningOpen, setIsWorkloadWarningOpen] = useState(false);
   const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
-  
+
   const [selectedAssignment, setSelectedAssignment] = useState<PopulatedTeacherAssignment | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
@@ -126,10 +139,10 @@ export default function TeacherAssignmentPage() {
       status: statusFilter,
       sort: selectedSort,
       academic_year: filterYear || undefined,
-      page,
-      limit: 10
+      page: 1,
+      limit: 5000
     });
-  }, [fetchAssignments, debouncedSearch, filterClassId, filterSubjectId, filterTeacherId, filterType, statusFilter, selectedSort, filterYear, page]);
+  }, [fetchAssignments, debouncedSearch, filterClassId, filterSubjectId, filterTeacherId, filterType, statusFilter, selectedSort, filterYear]);
 
   useEffect(() => {
     doFetch();
@@ -157,11 +170,42 @@ export default function TeacherAssignmentPage() {
     return classes.find(c => c.name === formClassName && (c.section || "") === targetSection);
   }, [classes, formClassName, formSection]);
 
+  // Group assignments by class for Grid View
+  const groupedAssignments = useMemo(() => {
+    const groups: Record<string, { class: any, assignments: PopulatedTeacherAssignment[] }> = {};
+    assignments.forEach(a => {
+      if (!a.class_id) return;
+      const key = `${a.class_id.name} ${a.class_id.section || ""}`.trim();
+      if (!groups[key]) {
+        groups[key] = { class: a.class_id, assignments: [] };
+      }
+      groups[key].assignments.push(a);
+    });
+    // Sort groups naturally by class name and then section
+    return Object.values(groups).sort((a, b) => {
+      const nameA = a.class.name || "";
+      const nameB = b.class.name || "";
+      
+      const nameComparison = nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+      if (nameComparison !== 0) return nameComparison;
+      
+      const secA = a.class.section || "";
+      const secB = b.class.section || "";
+      return secA.localeCompare(secB, undefined, { numeric: true, sensitivity: 'base' });
+    });
+  }, [assignments]);
+
+  const totalGroups = groupedAssignments.length;
+  const paginatedGroups = useMemo(() => {
+    const startIndex = (page - 1) * PAGE_SIZE;
+    return groupedAssignments.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [groupedAssignments, page]);
+
   // Available subjects assigned to the resolved class
   const availableSubjectsForClass = useMemo(() => {
     if (!resolvedClass) return [];
     const classIdStr = resolvedClass._id.toString();
-    
+
     // Filter subject assignments matching selected class and year
     const assigned = subjectAssignments.filter(a => {
       const aClassId = typeof a.class_id === "object" ? a.class_id?._id : a.class_id;
@@ -175,7 +219,7 @@ export default function TeacherAssignmentPage() {
   const filteredTeachers = useMemo(() => {
     if (!teacherSearchText) return teachers;
     const q = teacherSearchText.toLowerCase();
-    return teachers.filter(t => 
+    return teachers.filter(t =>
       t.name.toLowerCase().includes(q) ||
       (t.employee_id && t.employee_id.toLowerCase().includes(q)) ||
       (t.phone && t.phone.toLowerCase().includes(q)) ||
@@ -190,7 +234,7 @@ export default function TeacherAssignmentPage() {
   const filteredEditTeachers = useMemo(() => {
     if (!editTeacherSearchText) return teachers;
     const q = editTeacherSearchText.toLowerCase();
-    return teachers.filter(t => 
+    return teachers.filter(t =>
       t.name.toLowerCase().includes(q) ||
       (t.employee_id && t.employee_id.toLowerCase().includes(q)) ||
       (t.phone && t.phone.toLowerCase().includes(q)) ||
@@ -232,10 +276,10 @@ export default function TeacherAssignmentPage() {
       .filter(a => {
         const aClassId = typeof a.class_id === "object" ? a.class_id?._id : a.class_id;
         const subId = typeof a.subject_master_id === "object" ? a.subject_master_id?._id : a.subject_master_id;
-        return aClassId === classIdStr && 
-               a.academic_year === formYear && 
-               selectedSubjectIds.includes(subId) &&
-               a.status === "Active";
+        return aClassId === classIdStr &&
+          a.academic_year === formYear &&
+          selectedSubjectIds.includes(subId) &&
+          a.status === "Active";
       })
       .reduce((sum, a) => sum + (a.weekly_periods || 0), 0);
   }, [resolvedClass, selectedSubjectIds, subjectAssignments, formYear]);
@@ -257,7 +301,7 @@ export default function TeacherAssignmentPage() {
   const executeAddAssignment = async (data: any) => {
     setSubmitting(true);
     setFormError("");
-    
+
     const res = await createAssignment(data);
     setSubmitting(false);
 
@@ -413,8 +457,7 @@ export default function TeacherAssignmentPage() {
     setIsExportOpen(false);
   };
 
-  const PAGE_SIZE = 10;
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.ceil(totalGroups / PAGE_SIZE);
 
   const columns: ColumnDef<PopulatedTeacherAssignment>[] = [
     {
@@ -422,16 +465,16 @@ export default function TeacherAssignmentPage() {
       accessorKey: "teacher_id" as any,
       render: (item) => (
         <div className="flex items-center gap-3">
-          <img 
+          <img
             src={item.teacher_id?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(item.teacher_id?.name || "User")}&background=d68600&color=fff&bold=true`}
             className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-800"
             alt={item.teacher_id?.name}
           />
           <div>
-            <span className="font-bold text-slate-900 dark:text-white block group-hover:text-primary transition-colors">
+            <span className="font-medium text-slate-900 dark:text-white block group-hover:text-primary transition-colors">
               {item.teacher_id?.name || "—"}
             </span>
-            <span className="text-[11px] text-slate-400 block font-semibold">
+            <span className="text-[11px] text-slate-500 block font-normal">
               {item.teacher_id?.designation || "Faculty"}
             </span>
           </div>
@@ -441,26 +484,26 @@ export default function TeacherAssignmentPage() {
     {
       header: "Employee ID",
       accessorKey: "teacher_id" as any,
-      render: (item) => <span className="font-mono text-xs font-semibold">{item.teacher_id?.employee_id || "—"}</span>
+      render: (item) => <span className="font-sans text-xs font-medium">{item.teacher_id?.employee_id || "—"}</span>
     },
     {
       header: "Assigned Class",
       accessorKey: "class_id" as any,
-      render: (item) => <span className="font-semibold text-slate-850 dark:text-slate-200">{item.class_id?.name || "—"}</span>
+      render: (item) => <span className="font-medium text-slate-800 dark:text-slate-200">{item.class_id?.name || "—"}</span>
     },
     {
       header: "Section",
       accessorKey: "class_id" as any,
-      render: (item) => <span className="font-semibold text-slate-850 dark:text-slate-200">{item.class_id?.section || "—"}</span>
+      render: (item) => <span className="font-medium text-slate-800 dark:text-slate-200">{item.class_id?.section || "—"}</span>
     },
     {
       header: "Subject",
       accessorKey: "subject_master_id" as any,
       render: (item) => (
-        <span className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
+        <span className="font-medium text-slate-900 dark:text-white flex items-center gap-2">
           {item.subject_master_id?.name}
           {item.subject_master_id?.subject_code && (
-            <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded font-bold">
+            <span className="font-sans text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded font-medium">
               {item.subject_master_id.subject_code}
             </span>
           )}
@@ -471,11 +514,10 @@ export default function TeacherAssignmentPage() {
       header: "Assignment Type",
       accessorKey: "assignment_type",
       render: (item) => (
-        <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-          item.assignment_type === "Class Teacher" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
+        <span className={`px-2 py-0.5 rounded text-[11px] font-medium ${item.assignment_type === "Class Teacher" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
           item.assignment_type === "Subject Teacher" ? "bg-slate-50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400" :
-          "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400"
-        }`}>
+            "bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400"
+          }`}>
           {item.assignment_type || "Subject Teacher"}
         </span>
       )
@@ -483,13 +525,13 @@ export default function TeacherAssignmentPage() {
     {
       header: "Academic Year",
       accessorKey: "academic_year",
-      render: (item) => <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{item.academic_year}</span>
+      render: (item) => <span className="font-sans text-xs text-slate-500 dark:text-slate-400">{item.academic_year}</span>
     },
     {
       header: "Status",
       accessorKey: "status",
       render: (item) => (
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${item.status === "Active" ? "bg-success/10 text-success" : "bg-[#FFEBEB] text-[#E02424]"}`}>
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-medium ${item.status === "Active" ? "bg-success/10 text-success" : "bg-[#FFEBEB] text-[#E02424]"}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${item.status === "Active" ? "bg-success" : "bg-[#E02424]"}`} />
           {item.status || "Active"}
         </span>
@@ -623,8 +665,24 @@ export default function TeacherAssignmentPage() {
         {/* Filters Top Row */}
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-5">
           <h2 className="text-[16px] font-semibold text-foreground dark:text-slate-100">Faculty Assignments</h2>
-          
+
           <div className="flex flex-wrap items-center gap-3">
+            {/* List/Grid layout toggle */}
+            <div className="flex items-center bg-[#F8FAFC] dark:bg-slate-900 border border-border rounded-lg p-1 shadow-sm">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`px-3 py-1.5 rounded-md text-[13px] font-medium cursor-pointer flex items-center gap-1.5 transition-colors ${viewMode === "grid" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              >
+                <Grid className="w-3.5 h-3.5" /> Grouped
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`px-3 py-1.5 rounded-md text-[13px] font-medium cursor-pointer flex items-center gap-1.5 transition-colors ${viewMode === "list" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              >
+                <List className="w-3.5 h-3.5" /> Records
+              </button>
+            </div>
+
             {/* Filter Toggle */}
             <div className="relative">
               <button
@@ -708,7 +766,7 @@ export default function TeacherAssignmentPage() {
                         <select
                           value={filterYear}
                           onChange={(e) => { setFilterYear(e.target.value); setPage(1); }}
-                          className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none font-mono"
+                          className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none font-sans"
                         >
                           {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                         </select>
@@ -787,11 +845,11 @@ export default function TeacherAssignmentPage() {
           <div className="card-subtitle text-[13px]">
             Showing{" "}
             <span className="font-bold text-slate-700 dark:text-slate-250">
-              {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)}` : "0"}
+              {totalGroups > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, totalGroups)}` : "0"}
             </span>{" "}of{" "}
             <span className="font-bold text-slate-700 dark:text-slate-250">
-              {total}
-            </span>{" "}assignments
+              {totalGroups}
+            </span>{" "}classes
           </div>
           <div className="relative w-full sm:w-72">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -822,19 +880,207 @@ export default function TeacherAssignmentPage() {
           </div>
         ) : (
           <>
-            <DataTable
-              columns={columns}
-              data={assignments}
-              noDataMessage="No teacher assignments matching criteria."
-              minWidth="1200px"
-            />
+            {viewMode === "list" ? (
+              <div className="erp-table-container">
+                {paginatedGroups.length === 0 ? (
+                  <div className="py-20 text-center text-slate-500">
+                    No assignments matching criteria.
+                  </div>
+                ) : (
+                  <table className="erp-table w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-100/50 dark:bg-slate-800/50 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-border">
+                        <th className="py-3 px-4 w-8"></th>
+                        <th className="py-3 px-4">Teacher</th>
+                        <th className="py-3 px-4">Subject</th>
+                        <th className="py-3 px-4">Type</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4 text-center w-24">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedGroups.map((group, idx) => {
+                        const groupId = group.class._id;
+                        const isCollapsed = collapsedListGroups.has(groupId);
+                        const uniqueTeachers = new Set(group.assignments.map(a => a.teacher_id?._id).filter(Boolean)).size;
+
+                        return (
+                          <React.Fragment key={groupId}>
+                            {/* Group Header Row */}
+                            <tr 
+                              onClick={() => toggleListGroup(groupId)}
+                              className="bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer border-b border-border group"
+                            >
+                              <td className="py-3 px-4"></td>
+                              <td colSpan={4} className="py-3 px-4">
+                                <div className="flex items-center gap-4">
+                                  <div className="flex items-center gap-2">
+                                    <GraduationCap className="w-4 h-4 text-primary" />
+                                    <span className="font-bold text-[14px] text-slate-800 dark:text-slate-100">
+                                      {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-3 text-[12px] font-medium text-slate-500">
+                                    <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 rounded-full">
+                                      {group.assignments.length} Assignments
+                                    </span>
+                                    <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 rounded-full">
+                                      {uniqueTeachers} Teachers
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-center text-slate-400 group-hover:text-primary transition-colors">
+                                <div className="flex justify-center">
+                                  <ChevronDown className={`w-4 h-4 transition-transform ${isCollapsed ? "-rotate-90" : ""}`} />
+                                </div>
+                              </td>
+                            </tr>
+                            
+                            {/* Group Items Rows */}
+                            {!isCollapsed && group.assignments.map(assignment => (
+                              <tr key={assignment._id} className="erp-table-row border-b border-slate-100 dark:border-slate-800/50">
+                                <td className="py-3 px-4"></td>
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center gap-3">
+                                    <img src={assignment.teacher_id?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignment.teacher_id?.name || "T")}&background=d68600&color=fff&bold=true`} alt="Avatar" className="w-8 h-8 rounded-full bg-slate-200 object-cover border border-slate-200 dark:border-slate-700" />
+                                    <div>
+                                      <span className="font-bold text-[13px] text-primary block">
+                                        {assignment.teacher_id?.name || "Unknown"}
+                                      </span>
+                                      {assignment.teacher_id?.employee_id && (
+                                        <span className="text-[10px] text-slate-400 mt-0.5 inline-block bg-slate-100 dark:bg-slate-800 px-1.5 rounded">ID: {assignment.teacher_id.employee_id}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="font-medium text-[13px] text-slate-700 dark:text-slate-200">
+                                    {assignment.subject_master_id?.name || "—"}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="text-[12px] font-medium text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+                                    {assignment.assignment_type || "Subject Teacher"}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold ${assignment.status === "Active" ? "bg-success/10 text-success" : "bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400"}`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${assignment.status === "Active" ? "bg-success" : "bg-rose-500"}`} />
+                                    {assignment.status || "Active"}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  {isAdmin && (
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button onClick={() => startEdit(assignment)} className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-md transition-colors" title="Edit">
+                                        <Edit className="w-4 h-4" />
+                                      </button>
+                                      <button onClick={() => { setSelectedAssignment(assignment); setIsDeleteOpen(true); }} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-colors" title="Delete">
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            ) : (
+              <div className="columns-1 md:columns-2 xl:columns-3 gap-6">
+                {paginatedGroups.length === 0 ? (
+                  <div className="col-span-full py-20 text-center text-slate-500">
+                    No assignments matching criteria.
+                  </div>
+                ) : (
+                  paginatedGroups.map((group, idx) => (
+                    <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col break-inside-avoid mb-6">
+                      <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
+                            <GraduationCap className="w-5 h-5" />
+                          </div>
+                          <div className="truncate">
+                            <h3 className="font-bold text-slate-900 dark:text-white text-[16px] truncate">
+                              {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                            </h3>
+                            <p className="text-[12px] font-medium text-slate-500 mt-0.5 truncate">
+                              {filterYear || academicYear}
+                            </p>
+                          </div>
+                        </div>
+                        <Link href={`/academic-mgmt/teacher-assignment/${group.class._id}`} className="px-3 py-1.5 border border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 rounded-lg text-[12px] font-bold shadow-sm transition-colors cursor-pointer shrink-0">
+                          View Details
+                        </Link>
+                      </div>
+                      <div className="p-4">
+                        <div className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-wider">
+                          Assigned Teachers ({group.assignments.length})
+                        </div>
+                        <div className="space-y-3">
+                          {(expandedGroups[idx] ? group.assignments : group.assignments.slice(0, 3)).map(assignment => (
+                            <div key={assignment._id} className="group relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl p-3.5 flex items-start gap-3 transition-colors">
+                              <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-200 shrink-0">
+                                <img
+                                  src={assignment.teacher_id?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignment.teacher_id?.name || "T")}&background=d68600&color=fff&bold=true`}
+                                  alt="Teacher Avatar"
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-bold text-slate-900 dark:text-slate-100 text-[13px] tracking-wide">
+                                  {assignment.teacher_id?.name || "Unknown Teacher"}
+                                </h4>
+                                <div className="text-[11px] font-medium text-slate-500 mt-0.5 font-sans uppercase flex items-center gap-1.5">
+                                  <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>{assignment?.subject_master_id?.name || "No Subject"}</span>
+                                  {assignment.assignment_type && (
+                                    <>
+                                      <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                      <span className="text-primary">{assignment.assignment_type}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              {isAdmin && (
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                                  <button onClick={() => startEdit(assignment)} className="text-slate-400 hover:text-primary transition-colors p-1" title="Edit">
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button onClick={() => { setSelectedAssignment(assignment); setIsDeleteOpen(true); }} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Delete">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        {group.assignments.length > 3 && (
+                          <button
+                            onClick={() => setExpandedGroups(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                            className="w-full mt-3 py-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-1.5 bg-primary/5 hover:bg-primary/10 rounded-lg"
+                          >
+                            {expandedGroups[idx] ? "Show Less" : `+ ${group.assignments.length - 3} More Assignments`}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
             <PaginationBar
               currentPage={page}
               totalPages={totalPages}
-              totalItems={total}
+              totalItems={totalGroups}
               pageSize={PAGE_SIZE}
               onPageChange={setPage}
-              className="mt-4 border-t-0"
+              className="mt-6 border-t-0"
             />
           </>
         )}
@@ -852,15 +1098,15 @@ export default function TeacherAssignmentPage() {
           {/* Custom Searchable Faculty Selection */}
           <div className="flex flex-col gap-1.5 relative">
             <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Teacher <span className="text-red-500">*</span></label>
-            
+
             {/* Input Selection Trigger */}
-            <div 
+            <div
               className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground cursor-pointer flex items-center justify-between outline-none focus:border-primary/50"
               onClick={() => setIsTeacherDropdownOpen(!isTeacherDropdownOpen)}
             >
               {selectedTeacherDetails ? (
                 <div className="flex items-center gap-2">
-                  <img 
+                  <img
                     src={selectedTeacherDetails.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedTeacherDetails.name)}&background=d68600&color=fff&bold=true`}
                     className="w-5 h-5 rounded-full object-cover"
                     alt={selectedTeacherDetails.name}
@@ -901,12 +1147,11 @@ export default function TeacherAssignmentPage() {
                             setIsTeacherDropdownOpen(false);
                             setTeacherSearchText("");
                           }}
-                          className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${
-                            formTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
-                          }`}
+                          className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${formTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                            }`}
                         >
                           <div className="flex items-center gap-3">
-                            <img 
+                            <img
                               src={t.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=d68600&color=fff&bold=true`}
                               className="w-8 h-8 rounded-full object-cover"
                               alt={t.name}
@@ -939,11 +1184,10 @@ export default function TeacherAssignmentPage() {
 
             {/* Display Active Workload Badge */}
             {selectedTeacherDetails && (
-              <div className={`mt-1.5 text-[12px] font-bold flex items-center gap-1.5 ${
-                teacherWorkload >= 40 ? "text-rose-600 dark:text-rose-400" :
+              <div className={`mt-1.5 text-[12px] font-bold flex items-center gap-1.5 ${teacherWorkload >= 40 ? "text-rose-600 dark:text-rose-400" :
                 teacherWorkload >= 30 ? "text-amber-600 dark:text-amber-400" :
-                "text-emerald-600 dark:text-emerald-400"
-              }`}>
+                  "text-emerald-600 dark:text-emerald-400"
+                }`}>
                 <ShieldAlert className="w-3.5 h-3.5" />
                 <span>Current Workload: {teacherWorkload} periods/week</span>
               </div>
@@ -1001,19 +1245,18 @@ export default function TeacherAssignmentPage() {
                   {availableSubjectsForClass.map(s => {
                     const isChecked = selectedSubjectIds.includes(s._id);
                     return (
-                      <label 
-                        key={s._id} 
-                        className={`flex items-center gap-2 p-2 border rounded-lg cursor-pointer transition-colors ${
-                          isChecked 
-                            ? "bg-primary/5 border-primary/50 text-primary dark:bg-primary/10" 
-                            : "bg-white border-border hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
-                        }`}
+                      <label
+                        key={s._id}
+                        className={`flex items-center gap-2 p-2 border rounded-lg cursor-pointer transition-colors ${isChecked
+                          ? "bg-primary/5 border-primary/50 text-primary dark:bg-primary/10"
+                          : "bg-white border-border hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900"
+                          }`}
                       >
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => {
-                            setSelectedSubjectIds(prev => 
+                            setSelectedSubjectIds(prev =>
                               prev.includes(s._id) ? prev.filter(id => id !== s._id) : [...prev, s._id]
                             );
                           }}
@@ -1021,7 +1264,7 @@ export default function TeacherAssignmentPage() {
                         />
                         <div className="flex-1 min-w-0 text-left">
                           <p className="text-[12px] font-bold truncate leading-tight">{s.name}</p>
-                          {s.subject_code && <p className="font-mono text-[9px] text-slate-400 mt-0.5">{s.subject_code}</p>}
+                          {s.subject_code && <p className="font-sans text-[9px] text-slate-400 mt-0.5">{s.subject_code}</p>}
                         </div>
                       </label>
                     );
@@ -1050,7 +1293,7 @@ export default function TeacherAssignmentPage() {
                 required
                 value={formYear}
                 onChange={(e) => setFormYear(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 font-mono"
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 font-sans"
               >
                 {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
@@ -1124,15 +1367,15 @@ export default function TeacherAssignmentPage() {
           {/* Custom Searchable Faculty Selection for Edit */}
           <div className="flex flex-col gap-1.5 relative font-normal text-left">
             <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Teacher <span className="text-red-500">*</span></label>
-            
+
             {/* Input Selection Trigger */}
-            <div 
+            <div
               className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground cursor-pointer flex items-center justify-between outline-none focus:border-primary/50"
               onClick={() => setIsEditTeacherDropdownOpen(!isEditTeacherDropdownOpen)}
             >
               {selectedEditTeacherDetails ? (
                 <div className="flex items-center gap-2">
-                  <img 
+                  <img
                     src={selectedEditTeacherDetails.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedEditTeacherDetails.name)}&background=d68600&color=fff&bold=true`}
                     className="w-5 h-5 rounded-full object-cover"
                     alt={selectedEditTeacherDetails.name}
@@ -1173,12 +1416,11 @@ export default function TeacherAssignmentPage() {
                             setIsEditTeacherDropdownOpen(false);
                             setEditTeacherSearchText("");
                           }}
-                          className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${
-                            editTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
-                          }`}
+                          className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${editTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                            }`}
                         >
                           <div className="flex items-center gap-3">
-                            <img 
+                            <img
                               src={t.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=d68600&color=fff&bold=true`}
                               className="w-8 h-8 rounded-full object-cover"
                               alt={t.name}
@@ -1211,11 +1453,10 @@ export default function TeacherAssignmentPage() {
 
             {/* Display Active Workload Badge */}
             {selectedEditTeacherDetails && (
-              <div className={`mt-1.5 text-[12px] font-bold flex items-center gap-1.5 ${
-                editTeacherWorkload >= 40 ? "text-rose-600 dark:text-rose-400" :
+              <div className={`mt-1.5 text-[12px] font-bold flex items-center gap-1.5 ${editTeacherWorkload >= 40 ? "text-rose-600 dark:text-rose-400" :
                 editTeacherWorkload >= 30 ? "text-amber-600 dark:text-amber-400" :
-                "text-emerald-600 dark:text-emerald-400"
-              }`}>
+                  "text-emerald-600 dark:text-emerald-400"
+                }`}>
                 <ShieldAlert className="w-3.5 h-3.5" />
                 <span>Current Workload: {editTeacherWorkload} periods/week</span>
               </div>
@@ -1265,7 +1506,7 @@ export default function TeacherAssignmentPage() {
                 required
                 value={editYear}
                 onChange={(e) => setEditYear(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 font-mono"
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 font-sans"
               >
                 {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
@@ -1367,7 +1608,7 @@ export default function TeacherAssignmentPage() {
               </p>
             </div>
           </div>
-          
+
           <p className="text-slate-600 dark:text-slate-350 text-[13px]">
             Do you wish to proceed and save this assignment anyway?
           </p>

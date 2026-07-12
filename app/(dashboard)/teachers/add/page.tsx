@@ -90,8 +90,8 @@ function InputGroup({
   error?: string;
   id?: string;
 }) {
-  const borderClass = error 
-    ? "border border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" 
+  const borderClass = error
+    ? "border border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
     : "border border-border focus:border-primary/50";
 
   return (
@@ -388,15 +388,15 @@ function AddTeacherContent() {
               value={designation}
               onChange={e => setDesignation(e.target.value)}
             />
-            <InputGroup 
-              label="Class Teacher" 
-              type="select" 
-              value={classId} 
-              onChange={e => setClassId(e.target.value)} 
+            <InputGroup
+              label="Class Teacher"
+              type="select"
+              value={classId}
+              onChange={e => setClassId(e.target.value)}
               options={[
-                { label: "Select Class", value: "" }, 
+                { label: "Select Class", value: "" },
                 ...classes.map(c => ({ label: `${c.name} - ${c.section}`, value: c._id }))
-              ]} 
+              ]}
             />
           </div>
         </SectionCard>
@@ -527,7 +527,7 @@ function AddTeacherContent() {
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-border">
                 <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Login ID (Username)</p>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[13px] font-bold text-slate-900 dark:text-white font-mono break-all">{createdCredentials.loginId}</span>
+                  <span className="text-[13px] font-bold text-slate-900 dark:text-white font-sans break-all">{createdCredentials.loginId}</span>
                   <button
                     onClick={() => handleCopyCredential(createdCredentials.loginId, "loginId")}
                     className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
@@ -544,7 +544,7 @@ function AddTeacherContent() {
                   <KeyRound className="w-3 h-3" /> Default Password
                 </p>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[13px] font-bold text-slate-900 dark:text-white font-mono">{createdCredentials.password}</span>
+                  <span className="text-[13px] font-bold text-slate-900 dark:text-white font-sans">{createdCredentials.password}</span>
                   <button
                     onClick={() => handleCopyCredential(createdCredentials.password, "password")}
                     className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"

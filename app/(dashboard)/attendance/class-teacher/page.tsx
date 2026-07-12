@@ -54,7 +54,7 @@ export default function ClassTeacherAssignmentPage() {
   // Modals state
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<PopulatedTeacherAssignment | null>(null);
-  
+
   // Detail Drawer state
   const [selectedAssignmentDetails, setSelectedAssignmentDetails] = useState<PopulatedTeacherAssignment | null>(null);
 
@@ -97,7 +97,7 @@ export default function ClassTeacherAssignmentPage() {
   // Compute stats of Class Teacher roles
   const stats = useMemo(() => {
     const totalClasses = classes.length;
-    
+
     // Class Teacher assignments for selected year
     const activeClassAssignments = assignments.filter(
       a => a.academic_year === filterYear && a.assignment_type === "Class Teacher" && a.status === "Active"
@@ -173,10 +173,10 @@ export default function ClassTeacherAssignmentPage() {
         const tEmpId = a.teacher_id?.employee_id || "";
         const cName = a.class_id?.name || "";
         const cSection = a.class_id?.section || "";
-        const match = tName.toLowerCase().includes(q) || 
-                      tEmpId.toLowerCase().includes(q) || 
-                      cName.toLowerCase().includes(q) || 
-                      cSection.toLowerCase().includes(q);
+        const match = tName.toLowerCase().includes(q) ||
+          tEmpId.toLowerCase().includes(q) ||
+          cName.toLowerCase().includes(q) ||
+          cSection.toLowerCase().includes(q);
         if (!match) return false;
       }
 
@@ -520,31 +520,28 @@ export default function ClassTeacherAssignmentPage() {
       <div className="flex border-b border-border text-xs font-bold">
         <button
           onClick={() => setActiveReportTab("list")}
-          className={`px-4 py-3 border-b-2 transition-all ${
-            activeReportTab === "list"
+          className={`px-4 py-3 border-b-2 transition-all ${activeReportTab === "list"
               ? "border-primary text-primary"
               : "border-transparent text-slate-500 hover:text-slate-700"
-          }`}
+            }`}
         >
           Class Teacher Assignments ({filteredAssignments.length})
         </button>
         <button
           onClick={() => setActiveReportTab("workload")}
-          className={`px-4 py-3 border-b-2 transition-all ${
-            activeReportTab === "workload"
+          className={`px-4 py-3 border-b-2 transition-all ${activeReportTab === "workload"
               ? "border-primary text-primary"
               : "border-transparent text-slate-500 hover:text-slate-700"
-          }`}
+            }`}
         >
           Teacher Workload Audit Report
         </button>
         <button
           onClick={() => setActiveReportTab("unassigned")}
-          className={`px-4 py-3 border-b-2 transition-all ${
-            activeReportTab === "unassigned"
+          className={`px-4 py-3 border-b-2 transition-all ${activeReportTab === "unassigned"
               ? "border-primary text-primary"
               : "border-transparent text-slate-500 hover:text-slate-700"
-          }`}
+            }`}
         >
           Unassigned Classes Mapping ({unassignedClassesList.length})
         </button>
@@ -565,23 +562,23 @@ export default function ClassTeacherAssignmentPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="erp-table text-xs">
-                <thead>
-                  <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-950/10 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                    <th className="px-6 py-4">Assigned Class</th>
-                    <th className="px-6 py-4">Type</th>
-                    <th className="px-6 py-4">Teacher Profile</th>
-                    <th className="px-6 py-4">Session</th>
-                    <th className="px-6 py-4">Effective Date</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4">Author Info</th>
-                    <th className="px-6 py-4 text-center">Actions</th>
+              <table className="erp-table text-[13px] whitespace-nowrap w-full">
+                <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
+                  <tr>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Assigned Class</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Type</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Teacher Profile</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Session</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Effective Date</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Status</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Author Info</th>
+                    <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {filteredAssignments.map((a) => (
-                    <tr key={a._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="px-6 py-4">
+                    <tr key={a._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-4 py-4">
                         <div className="font-extrabold text-slate-900 dark:text-white">
                           {a.class_id?.name || "Class"}
                         </div>
@@ -589,16 +586,15 @@ export default function ClassTeacherAssignmentPage() {
                           <div className="text-[10px] text-slate-400 font-bold mt-0.5">Section: {a.class_id.section}</div>
                         )}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-extrabold border ${
-                          a.assignment_type === "Class Teacher"
+                      <td className="px-4 py-4">
+                        <span className={`px-2 py-0.5 rounded-full text-[9.5px] font-extrabold border ${a.assignment_type === "Class Teacher"
                             ? "bg-indigo-50 text-indigo-700 border-indigo-200"
                             : "bg-purple-50 text-purple-700 border-purple-200"
-                        }`}>
+                          }`}>
                           {a.assignment_type}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-bold text-slate-500 overflow-hidden border border-border">
                             {a.teacher_id?.photo_url ? (
@@ -615,26 +611,25 @@ export default function ClassTeacherAssignmentPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-mono font-bold text-slate-500">{a.academic_year}</td>
-                      <td className="px-6 py-4 font-semibold text-slate-600">
+                      <td className="px-4 py-4 font-sans font-bold text-slate-500">{a.academic_year}</td>
+                      <td className="px-4 py-4 font-semibold text-slate-600">
                         {a.effective_date ? new Date(a.effective_date).toLocaleDateString() : "—"}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${
-                          a.status === "Active"
+                      <td className="px-4 py-4">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase border ${a.status === "Active"
                             ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                             : "bg-slate-100 text-slate-700 border-border"
-                        }`}>
+                          }`}>
                           {a.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 py-4">
                         <div className="font-bold text-slate-700 dark:text-slate-350">{a.created_by?.name || "Admin"}</div>
                         <div className="text-[10px] font-semibold text-slate-400 mt-0.5">
                           {a.createdAt ? new Date(a.createdAt).toLocaleDateString() : ""}
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-4 py-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             onClick={() => setSelectedAssignmentDetails(a)}
@@ -680,37 +675,36 @@ export default function ClassTeacherAssignmentPage() {
               <Download className="w-3.5 h-3.5" /> Export Workload Report
             </button>
           </div>
-          
+
           <div className="overflow-x-auto">
-            <table className="erp-table text-xs">
-              <thead>
-                <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-950/10 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                  <th className="px-6 py-4">Emp ID</th>
-                  <th className="px-6 py-4">Teacher Name</th>
-                  <th className="px-6 py-4">Department</th>
-                  <th className="px-6 py-4 text-center">Assigned Classes</th>
-                  <th className="px-6 py-4 text-center">Assigned Subjects</th>
-                  <th className="px-6 py-4 text-center">Weekly Periods</th>
-                  <th className="px-6 py-4">Workload Status</th>
+            <table className="erp-table text-[13px] whitespace-nowrap w-full">
+              <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
+                <tr>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Emp ID</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Teacher Name</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Department</th>
+                  <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Assigned Classes</th>
+                  <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Assigned Subjects</th>
+                  <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Weekly Periods</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Workload Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border font-semibold">
                 {activeTeachers.map(t => {
                   const workload = computeTeacherWorkload(t._id);
                   return (
-                    <tr key={t._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                      <td className="px-6 py-4 font-mono text-slate-500 font-bold">{t.employee_id || "-"}</td>
-                      <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{t.name}</td>
-                      <td className="px-6 py-4 text-slate-455">{t.department || "Academic"}</td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-800 dark:text-slate-200">{workload.classesCount}</td>
-                      <td className="px-6 py-4 text-center text-slate-600 dark:text-slate-350">{workload.subjectsCount}</td>
-                      <td className="px-6 py-4 text-center font-bold text-slate-800 dark:text-slate-200">{workload.periodsCount}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold border ${
-                          workload.isOverloaded
+                    <tr key={t._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-4 py-4 font-sans text-slate-500 font-bold">{t.employee_id || "-"}</td>
+                      <td className="px-4 py-4 font-bold text-slate-900 dark:text-white">{t.name}</td>
+                      <td className="px-4 py-4 text-slate-455">{t.department || "Academic"}</td>
+                      <td className="px-4 py-4 text-center font-bold text-slate-800 dark:text-slate-200">{workload.classesCount}</td>
+                      <td className="px-4 py-4 text-center text-slate-600 dark:text-slate-350">{workload.subjectsCount}</td>
+                      <td className="px-4 py-4 text-center font-bold text-slate-800 dark:text-slate-200">{workload.periodsCount}</td>
+                      <td className="px-4 py-4">
+                        <span className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold border ${workload.isOverloaded
                             ? "bg-rose-50 text-rose-700 border-rose-200"
                             : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        }`}>
+                          }`}>
                           {workload.isOverloaded ? "OVERLOADED" : "Normal Load"}
                         </span>
                       </td>
@@ -736,26 +730,26 @@ export default function ClassTeacherAssignmentPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="erp-table text-xs">
-                <thead>
-                  <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-955/10 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                    <th className="px-6 py-4">Class Code</th>
-                    <th className="px-6 py-4">Class Name</th>
-                    <th className="px-6 py-4">Section</th>
-                    <th className="px-6 py-4">Capacity</th>
-                    <th className="px-6 py-4">Academic Year</th>
-                    <th className="px-6 py-4 text-center">Action</th>
+              <table className="erp-table text-[13px] whitespace-nowrap w-full">
+                <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
+                  <tr>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class Code</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class Name</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Section</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Capacity</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Academic Year</th>
+                    <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {unassignedClassesList.map(c => (
-                    <tr key={c._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                      <td className="px-6 py-4 font-mono font-bold text-slate-500">{c.class_code || "—"}</td>
-                      <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{c.name}</td>
-                      <td className="px-6 py-4 font-semibold text-slate-655">{c.section || "—"}</td>
-                      <td className="px-6 py-4 font-mono">{c.capacity} Students</td>
-                      <td className="px-6 py-4">{c.academic_year}</td>
-                      <td className="px-6 py-4 text-center">
+                    <tr key={c._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-4 py-4 font-sans font-bold text-slate-500">{c.class_code || "—"}</td>
+                      <td className="px-4 py-4 font-bold text-slate-900 dark:text-white">{c.name}</td>
+                      <td className="px-4 py-4 font-semibold text-slate-655">{c.section || "—"}</td>
+                      <td className="px-4 py-4 font-sans">{c.capacity} Students</td>
+                      <td className="px-4 py-4">{c.academic_year}</td>
+                      <td className="px-4 py-4 text-center">
                         <button
                           onClick={() => {
                             setFormClassId(c._id);
@@ -1030,7 +1024,7 @@ export default function ClassTeacherAssignmentPage() {
                   </div>
                   <div className="bg-slate-50/50 dark:bg-slate-800/40 p-3 rounded-lg border border-border/80">
                     <span className="text-[10px] text-slate-400 block font-bold mb-1">Session Year</span>
-                    <span className="font-mono text-slate-800 dark:text-slate-200">{selectedAssignmentDetails.academic_year}</span>
+                    <span className="font-sans text-slate-800 dark:text-slate-200">{selectedAssignmentDetails.academic_year}</span>
                   </div>
                 </div>
               </div>
@@ -1057,11 +1051,10 @@ export default function ClassTeacherAssignmentPage() {
                       <div className="h-px bg-border my-2" />
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-slate-500">Workload Audit Status:</span>
-                        <span className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold border ${
-                          workload.isOverloaded
+                        <span className={`px-2 py-0.5 rounded text-[9.5px] font-extrabold border ${workload.isOverloaded
                             ? "bg-rose-50 text-rose-700 border-rose-200"
                             : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                        }`}>
+                          }`}>
                           {workload.isOverloaded ? "OVERLOADED" : "Normal Load"}
                         </span>
                       </div>

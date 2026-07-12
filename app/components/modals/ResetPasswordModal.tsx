@@ -69,7 +69,7 @@ export function ResetPasswordModal({ isOpen, onClose, userId, userName, userEmai
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
       <form onSubmit={handleReset} className="relative bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-md flex flex-col overflow-hidden transform transition-all border border-border text-left">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border">
           <h2 className="text-[16px] font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -88,7 +88,7 @@ export function ResetPasswordModal({ isOpen, onClose, userId, userName, userEmai
               <Lock className="w-6 h-6" />
             </div>
             <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">{userName}</h3>
-            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">{userEmail || "No Email Linked"}</p>
+            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-sans mt-0.5">{userEmail || "No Email Linked"}</p>
           </div>
 
           {msg && (

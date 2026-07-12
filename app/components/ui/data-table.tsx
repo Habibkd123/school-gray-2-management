@@ -76,10 +76,10 @@ export function DataTable<T>({
                 className={`${col.sortable !== false && col.accessorKey ? 'cursor-pointer select-none hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors' : ''} ${col.className || ''}`}
                 onClick={() => col.sortable !== false && col.accessorKey && handleSort(col.accessorKey)}
               >
-                <div className="flex items-center gap-1">
-                  {col.header}
+                <div className="flex items-center justify-between w-full">
+                  <span>{col.header}</span>
                   {col.sortable !== false && col.accessorKey && (
-                     <span className={`text-[10px] ml-1 font-bold ${sortConfig?.key === col.accessorKey ? 'text-primary' : 'text-slate-400 dark:text-slate-500'}`}>
+                     <span className={`text-[10px] ml-2 font-bold flex-shrink-0 ${sortConfig?.key === col.accessorKey ? 'text-primary' : 'text-slate-300 dark:text-slate-600'}`}>
                        {sortConfig?.key === col.accessorKey ? (sortConfig.direction === 'asc' ? '↑' : '↓') : '⇅'}
                      </span>
                   )}

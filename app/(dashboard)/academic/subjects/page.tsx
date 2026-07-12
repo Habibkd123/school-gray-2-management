@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { 
+import {
   Plus, Search, List, MoreVertical, Edit, Trash2,
   Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, ToggleRight, FileText, Loader2
 } from "lucide-react";
@@ -19,32 +19,32 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
   const to = new Date(now);
   const from = new Date(now);
   switch (range) {
-    case "Today": 
-      from.setHours(0, 0, 0, 0); 
+    case "Today":
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
     case "Yesterday":
       from.setDate(from.getDate() - 1); from.setHours(0, 0, 0, 0);
       to.setDate(to.getDate() - 1); to.setHours(23, 59, 59, 999);
       break;
-    case "Last 7 Days": 
-      from.setDate(from.getDate() - 7); 
+    case "Last 7 Days":
+      from.setDate(from.getDate() - 7);
       from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "Last 30 Days": 
-      from.setDate(from.getDate() - 30); 
+    case "Last 30 Days":
+      from.setDate(from.getDate() - 30);
       from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "This Year": 
-      from.setMonth(0, 1); 
-      from.setHours(0, 0, 0, 0); 
+    case "This Year":
+      from.setMonth(0, 1);
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
     case "All Time":
       return { from: null, to: null };
-    default: 
+    default:
       return { from: null, to: null };
   }
   return { from, to };
@@ -60,10 +60,10 @@ export default function SubjectsPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const [valErrors, setValErrors] = useState<Record<string, string>>({});
-  
+
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
-  
+
   // Date range state
   const [selectedRange, setSelectedRange] = useState("All Time");
   const [customFrom, setCustomFrom] = useState("");
@@ -91,7 +91,7 @@ export default function SubjectsPage() {
   const [filterType, setFilterType] = useState("All");
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState("Ascending");
-  
+
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [selectedAllIds, setSelectedAllIds] = useState<string[]>([]);
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
@@ -194,7 +194,7 @@ export default function SubjectsPage() {
   const groupedSubjects = useMemo(() => {
     const filtered = subjects.filter(s => {
       const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (s.code || "").toLowerCase().includes(searchTerm.toLowerCase());
+        (s.code || "").toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = filterType === "All"
         ? true
         : s.type.toLowerCase() === filterType.toLowerCase();
@@ -261,9 +261,9 @@ export default function SubjectsPage() {
           <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors shadow-sm cursor-pointer">
             <Printer className="w-4 h-4" />
           </button>
-          
+
           <div className="relative">
-            <button 
+            <button
               onClick={() => setIsExportOpen(!isExportOpen)}
               className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
             >
@@ -284,7 +284,7 @@ export default function SubjectsPage() {
             )}
           </div>
 
-          <button 
+          <button
             onClick={openAddModal}
             className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer"
           >
@@ -298,7 +298,7 @@ export default function SubjectsPage() {
         {/* Table Header Section */}
         <div className="p-5 border-b border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Class Subject</h2>
-          
+
           <div className="flex flex-wrap items-center gap-3">
             {/* ── Date Range ── */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
@@ -363,8 +363,8 @@ export default function SubjectsPage() {
                       <div className="space-y-1.5">
                         <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Type</label>
                         <div className="relative">
-                          <select 
-                            value={filterType} 
+                          <select
+                            value={filterType}
                             onChange={(e) => setFilterType(e.target.value)}
                             className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
                           >
@@ -397,8 +397,8 @@ export default function SubjectsPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                     {["Ascending", "Descending", "Recently Added"].map((item) => (
-                      <button 
-                        key={item} 
+                      <button
+                        key={item}
                         onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
                         className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-primary font-bold" : "text-slate-700 dark:text-slate-200"}`}
                       >
@@ -422,9 +422,9 @@ export default function SubjectsPage() {
 
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text" 
-              placeholder="Search subjects..." 
+            <input
+              type="text"
+              placeholder="Search subjects..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
@@ -473,21 +473,20 @@ export default function SubjectsPage() {
                       ? (subject.class_id.section ? `${subject.class_id.name} - ${subject.class_id.section}` : subject.class_id.name)
                       : subject.class_id || "—"}
                   </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-mono">{subject.code || "—"}</td>
+                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-sans">{subject.code || "—"}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${
-                      subject.type === "theory" 
-                        ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400" 
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${subject.type === "theory"
+                        ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
                         : subject.type === "practical"
-                        ? "bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
-                        : "bg-slate-100 text-slate-600"
-                    }`}>
+                          ? "bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400"
+                          : "bg-slate-100 text-slate-600"
+                      }`}>
                       {subject.type.charAt(0).toUpperCase() + subject.type.slice(1)}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{subject.full_marks}</td>
                   <td className="px-6 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
-                    <button 
+                    <button
                       onClick={() => setActionMenuId(actionMenuId === subject.key ? null : subject.key)}
                       className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === subject.key ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
                     >
@@ -531,17 +530,16 @@ export default function SubjectsPage() {
               <span>⚠️ {formError}</span>
             </div>
           )}
-          
+
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class <span className="text-rose-500">*</span></label>
             <div className="relative">
-              <select 
+              <select
                 id="formClassId"
                 value={formClassId}
                 onChange={(e) => setFormClassId(e.target.value)}
-                className={`w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border rounded-lg outline-none transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer ${
-                  valErrors.formClassId ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary"
-                }`}
+                className={`w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border rounded-lg outline-none transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer ${valErrors.formClassId ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary"
+                  }`}
               >
                 <option value="">Select Class</option>
                 {classes.map((cls) => (
@@ -558,17 +556,16 @@ export default function SubjectsPage() {
               </p>
             )}
           </div>
- 
+
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Name <span className="text-rose-500">*</span></label>
-            <input 
+            <input
               id="formName"
               type="text"
               value={formName}
               onChange={(e) => setFormName(e.target.value)}
-              className={`w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border rounded-lg outline-none transition-colors text-slate-700 dark:text-slate-200 ${
-                valErrors.formName ? "border-rose-500 focus-border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary"
-              }`}
+              className={`w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border rounded-lg outline-none transition-colors text-slate-700 dark:text-slate-200 ${valErrors.formName ? "border-rose-500 focus-border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary"
+                }`}
               placeholder="e.g. Mathematics"
             />
             {valErrors.formName && (
@@ -580,7 +577,7 @@ export default function SubjectsPage() {
 
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Code (optional)</label>
-            <input 
+            <input
               type="text"
               value={formCode}
               onChange={(e) => setFormCode(e.target.value)}
@@ -592,7 +589,7 @@ export default function SubjectsPage() {
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Type</label>
             <div className="relative">
-              <select 
+              <select
                 value={formType}
                 onChange={(e) => setFormType(e.target.value as "theory" | "practical")}
                 className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
@@ -606,15 +603,15 @@ export default function SubjectsPage() {
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => { setIsAddOpen(false); setIsEditOpen(false); }}
               className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={saving}
               className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
             >
@@ -638,13 +635,13 @@ export default function SubjectsPage() {
               Are you sure you want to delete this subject? This action cannot be undone.
             </p>
             <div className="flex justify-center gap-3">
-              <button 
+              <button
                 onClick={() => setIsDeleteOpen(false)}
                 className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleDeleteConfirm}
                 className="px-6 py-2.5 bg-rose-500 text-white text-[14px] font-bold rounded-lg hover:bg-rose-600 transition-colors shadow-sm shadow-rose-500/20 cursor-pointer"
               >

@@ -528,45 +528,45 @@ export default function GuardiansPage() {
               <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-1">Try resetting filter parameters or searches.</p>
             </div>
           ) : (
-            <table className="custom-page-table">
-              <thead>
+            <table className="erp-table text-[13px] whitespace-nowrap w-full">
+              <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
                 <tr>
-                  <th>ID</th>
-                  <th>Parent Name</th>
-                  <th>Guardian Type</th>
-                  <th>Father of</th>
-                  <th>Mother of</th>
-                  <th>Students Count</th>
-                  <th>Primary Mobile</th>
-                  <th>Email</th>
-                  <th>Status</th>
-                  <th className="col-center">Actions</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">ID</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Parent Name</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Guardian Type</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Father of</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Mother of</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Students Count</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Primary Mobile</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Email</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Status</th>
+                  <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              <tbody className="divide-y divide-border">
                 {parents.map((parent) => {
                   const childrenCount = parent.children?.length || 0;
                   const relationLower = (parent.relation || "").trim().toLowerCase();
-                  
+
                   // Father/Mother column assignments
                   const isFather = relationLower === "father";
                   const isMother = relationLower === "mother";
-                  
+
                   const fatherOfText = isFather ? parent.children.map(c => c.name).join(", ") : "—";
                   const motherOfText = isMother ? parent.children.map(c => c.name).join(", ") : "—";
 
                   return (
-                    <tr key={parent._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td>
+                    <tr key={parent._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-4 py-4">
                         <button
                           onClick={() => router.push(`/guardians/${parent._id}`)}
-                          className="font-mono text-primary font-bold hover:underline"
+                          className="font-sans text-primary font-bold hover:underline"
                         >
                           {parent._id.slice(-6).toUpperCase()}
                         </button>
                       </td>
 
-                      <td>
+                      <td className="px-4 py-4">
                         <div className="flex items-center gap-3">
                           <img
                             src={getAvatar(parent.name, parent.photo_url)}
@@ -580,33 +580,33 @@ export default function GuardiansPage() {
                         </div>
                       </td>
 
-                      <td className="text-slate-700 dark:text-slate-350 capitalize font-medium">
+                      <td className="px-4 py-4 text-slate-700 dark:text-slate-350 capitalize font-medium">
                         {parent.relation || "—"}
                       </td>
 
-                      <td className="text-slate-600 dark:text-slate-400 font-medium max-w-[150px] truncate" title={fatherOfText}>
+                      <td className="px-4 py-4 text-slate-600 dark:text-slate-400 font-medium max-w-[150px] truncate" title={fatherOfText}>
                         {fatherOfText}
                       </td>
 
-                      <td className="text-slate-600 dark:text-slate-400 font-medium max-w-[150px] truncate" title={motherOfText}>
+                      <td className="px-4 py-4 text-slate-600 dark:text-slate-400 font-medium max-w-[150px] truncate" title={motherOfText}>
                         {motherOfText}
                       </td>
 
-                      <td>
+                      <td className="px-4 py-4">
                         <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary/10 text-primary">
                           {childrenCount} {childrenCount === 1 ? "Student" : "Students"}
                         </span>
                       </td>
 
-                      <td className="text-slate-700 dark:text-slate-350 font-medium">
+                      <td className="px-4 py-4 text-slate-700 dark:text-slate-350 font-medium">
                         {parent.phone || "—"}
                       </td>
 
-                      <td className="text-slate-600 dark:text-slate-400 max-w-[160px] truncate">
+                      <td className="px-4 py-4 text-slate-600 dark:text-slate-400 max-w-[160px] truncate">
                         {parent.email || "—"}
                       </td>
 
-                      <td>
+                      <td className="px-4 py-4">
                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold
                           ${parent.is_active ? "bg-emerald-500/10 text-emerald-500" : "bg-rose-500/10 text-rose-500"}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${parent.is_active ? "bg-emerald-500" : "bg-rose-500"}`} />
@@ -614,7 +614,7 @@ export default function GuardiansPage() {
                         </span>
                       </td>
 
-                      <td className="col-center">
+                      <td className="px-4 py-4 text-center">
                         <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => setActiveDropdown(activeDropdown === parent._id ? null : parent._id)}

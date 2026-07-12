@@ -63,7 +63,7 @@ export function EnhancedTable<T extends Record<string, any>>({
   const [localPageSize, setLocalPageSize] = useState(defaultPageSize);
 
   const isExternalPagination = externalPage !== undefined;
-  
+
   const currentPage = isExternalPagination ? externalPage : localPage;
   const pageSize = isExternalPagination ? externalPageSize! : localPageSize;
 
@@ -193,25 +193,7 @@ export function EnhancedTable<T extends Record<string, any>>({
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 ml-auto">
-          <button
-            onClick={handleExportExcel}
-            className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors flex items-center gap-1.5 text-[12.5px] font-semibold"
-            title="Export Excel"
-          >
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export Excel</span>
-          </button>
-          <button
-            onClick={handlePrint}
-            className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors flex items-center gap-1.5 text-[12.5px] font-semibold"
-            title="Print"
-          >
-            <Printer className="w-4 h-4" />
-            <span className="hidden sm:inline">Print / PDF</span>
-          </button>
-        </div>
+
       </div>
 
       {/* Embedded Table Component */}
@@ -229,7 +211,7 @@ export function EnhancedTable<T extends Record<string, any>>({
           renderSelection={renderSelection}
           selectionHeader={selectionHeader}
         />
-        
+
         {/* Pagination Bar */}
         <div className="no-print">
           <PaginationBar

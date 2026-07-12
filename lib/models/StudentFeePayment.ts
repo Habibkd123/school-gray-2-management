@@ -60,9 +60,9 @@ const studentFeePaymentSchema = new Schema<IStudentFeePayment>(
 );
 
 // Fast receipt history lookups: "show me all payments for student X, newest first"
-studentFeePaymentSchema.index({ school_id: 1, student_id: 1, createdAt: -1 });
+studentFeePaymentSchema.index({ school_id: 1, student_id: 1, createdAt: -1 }, { name: "fee_payment_school_student_created_v1" });
 // Fast payment-date range queries for reporting
-studentFeePaymentSchema.index({ school_id: 1, payment_date: -1 });
+studentFeePaymentSchema.index({ school_id: 1, payment_date: -1 }, { name: "fee_payment_school_payment_date_v1" });
 
 const StudentFeePayment: Model<IStudentFeePayment> =
   mongoose.models.StudentFeePayment || mongoose.model<IStudentFeePayment>("StudentFeePayment", studentFeePaymentSchema);

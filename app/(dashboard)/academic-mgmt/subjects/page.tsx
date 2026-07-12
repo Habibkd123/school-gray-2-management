@@ -145,21 +145,20 @@ export default function SubjectMasterPage() {
   };
 
   const StatusBadge = ({ status }: { status: string }) => (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-      status === "Inactive"
-        ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-        : status === "Archived"
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${status === "Inactive"
+      ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+      : status === "Archived"
         ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
         : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-    }`}>{status}</span>
+      }`}>{status}</span>
   );
 
   const columns: ColumnDef<any>[] = [
-    { header: "#", accessorKey: "_id", render: (_s: ApiSubjectMaster, i: number) => <span className="text-slate-500 font-medium text-[13px]">{i + 1}</span> },
-    { header: "Subject Name", accessorKey: "name", render: (s) => <span className="font-semibold text-slate-800 dark:text-slate-200">{s.name}</span> },
-    { header: "Subject Code", accessorKey: "subject_code", render: (s) => <span className="font-mono text-[12px] text-slate-500 dark:text-slate-400">{s.subject_code || "—"}</span> },
-    { header: "Classes", accessorKey: "classesCount", render: (s) => <span className="font-semibold text-slate-700 dark:text-slate-350">{(s as any).classesCount ?? 0}</span> },
-    { header: "Teachers", accessorKey: "teachersCount", render: (s) => <span className="font-semibold text-slate-700 dark:text-slate-355">{(s as any).teachersCount ?? 0}</span> },
+    { header: "#", accessorKey: "_id", render: (_s: ApiSubjectMaster, i: number) => <span className="text-slate-500 text-[13px]">{i + 1}</span> },
+    { header: "Subject Name", accessorKey: "name", render: (s) => <span className="font-medium text-slate-500 dark:text-slate-200">{s.name}</span> },
+    { header: "Subject Code", accessorKey: "subject_code", render: (s) => <span className="font-sans text-[12px] text-slate-500 dark:text-slate-400">{s.subject_code || "—"}</span> },
+    { header: "Classes", accessorKey: "classesCount", render: (s) => <span className="text-slate-600 dark:text-slate-300">{(s as any).classesCount ?? 0}</span> },
+    { header: "Teachers", accessorKey: "teachersCount", render: (s) => <span className="text-slate-600 dark:text-slate-300">{(s as any).teachersCount ?? 0}</span> },
     { header: "Status", accessorKey: "status", render: (s) => <StatusBadge status={s.status} /> },
     ...(isAdmin ? [{
       header: "Action", sortable: false,
@@ -322,17 +321,14 @@ export default function SubjectMasterPage() {
               <button
                 type="button"
                 onClick={() => setFormStatus(formStatus === "Active" ? "Inactive" : "Active")}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
-                  formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
-                }`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                  }`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                  formStatus === "Active" ? "translate-x-6" : "translate-x-1"
-                }`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${formStatus === "Active" ? "translate-x-6" : "translate-x-1"
+                  }`} />
               </button>
-              <span className={`text-[13px] font-semibold ${
-                formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
-              }`}>{formStatus}</span>
+              <span className={`text-[13px] font-semibold ${formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
+                }`}>{formStatus}</span>
             </div>
           </div>
 
@@ -410,17 +406,14 @@ export default function SubjectMasterPage() {
               <button
                 type="button"
                 onClick={() => setFormStatus(formStatus === "Active" ? "Inactive" : "Active")}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
-                  formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
-                }`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                  }`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                  formStatus === "Active" ? "translate-x-6" : "translate-x-1"
-                }`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${formStatus === "Active" ? "translate-x-6" : "translate-x-1"
+                  }`} />
               </button>
-              <span className={`text-[13px] font-semibold ${
-                formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
-              }`}>{formStatus}</span>
+              <span className={`text-[13px] font-semibold ${formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
+                }`}>{formStatus}</span>
             </div>
           </div>
 

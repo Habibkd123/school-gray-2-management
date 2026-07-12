@@ -6,8 +6,9 @@ import {
   Plus, Search, RefreshCw, Trash2, Loader2, AlertCircle,
   ChevronDown, Filter, BookOpen, GraduationCap, Edit,
   MoreVertical, AlignLeft, CheckSquare, Download, FileText,
-  Copy, Eye, Check
+  Copy, Eye, Check, Grid, List, Printer, X, Users, UploadCloud
 } from "lucide-react";
+import Link from "next/link";
 import { Modal } from "@/app/components/ui/modal";
 import { useSubjectAssignment, PopulatedAssignment } from "@/app/hooks/useSubjectAssignment";
 import { useSubjectMaster } from "@/app/hooks/useSubjectMaster";
@@ -19,6 +20,7 @@ import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
 import { PaginationBar } from "@/app/components/ui/pagination-bar";
 
 const ACADEMIC_YEARS = ["2025-2026", "2026-2027", "2027-2028"];
+const PAGE_SIZE = 30;
 
 export default function SubjectAssignmentPage() {
   const router = useRouter();
@@ -37,7 +39,7 @@ export default function SubjectAssignmentPage() {
     deleteAssignment
   } = useSubjectAssignment();
 
-  const { subjects: subjectList } = useSubjectMaster({ limit: 1000 });
+  const { subjects: subjectList } = useSubjectMaster({ limit: 20 });
   const { classes } = useClasses({ filterByYear: false });
   const { teachers } = useTeachers({ limit: "all" });
 
@@ -51,6 +53,17 @@ export default function SubjectAssignmentPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedSort, setSelectedSort] = useState("CreatedDateDesc");
   const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({});
+  const [collapsedListGroups, setCollapsedListGroups] = useState<Set<string>>(new Set());
+  const toggleListGroup = (groupId: string) => {
+    setCollapsedListGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) newSet.delete(groupId);
+      else newSet.add(groupId);
+      return newSet;
+    });
+  };
 
   // Popover States
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -110,10 +123,10 @@ export default function SubjectAssignmentPage() {
       academic_year: filterYear || undefined,
       status: statusFilter,
       sort: selectedSort,
-      page,
-      limit: 10
+      page: 1,
+      limit: 5000
     });
-  }, [fetchAssignments, debouncedSearch, filterClassId, filterSubjectId, filterTeacherId, filterYear, statusFilter, selectedSort, page]);
+  }, [fetchAssignments, debouncedSearch, filterClassId, filterSubjectId, filterTeacherId, filterYear, statusFilter, selectedSort]);
 
   useEffect(() => {
     doFetch();
@@ -140,10 +153,42 @@ export default function SubjectAssignmentPage() {
     const targetSection = formSection === "No Section" ? "" : formSection;
     return classes.find(c => c.name === formClassName && (c.section || "") === targetSection);
   }, [classes, formClassName, formSection]);
+
+  // Group assignments by class for Grid View
+  const groupedAssignments = useMemo(() => {
+    const groups: Record<string, { class: any, assignments: PopulatedAssignment[] }> = {};
+    assignments.forEach(a => {
+      if (!a.class_id) return;
+      const key = `${a.class_id.name} ${a.class_id.section || ""}`.trim();
+      if (!groups[key]) {
+        groups[key] = { class: a.class_id, assignments: [] };
+      }
+      groups[key].assignments.push(a);
+    });
+    // Sort groups naturally by class name and then section
+    return Object.values(groups).sort((a, b) => {
+      const nameA = a.class.name || "";
+      const nameB = b.class.name || "";
+
+      const nameComparison = nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+      if (nameComparison !== 0) return nameComparison;
+
+      const secA = a.class.section || "";
+      const secB = b.class.section || "";
+      return secA.localeCompare(secB, undefined, { numeric: true, sensitivity: 'base' });
+    });
+  }, [assignments]);
+
+  const totalGroups = groupedAssignments.length;
+  const paginatedGroups = useMemo(() => {
+    const startIndex = (page - 1) * PAGE_SIZE;
+    return groupedAssignments.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [groupedAssignments, page]);
+
   const filteredTeachers = useMemo(() => {
     if (!teacherSearchText) return teachers;
     const q = teacherSearchText.toLowerCase();
-    return teachers.filter(t => 
+    return teachers.filter(t =>
       t.name.toLowerCase().includes(q) ||
       (t.employee_id && t.employee_id.toLowerCase().includes(q)) ||
       (t.phone && t.phone.toLowerCase().includes(q)) ||
@@ -158,7 +203,7 @@ export default function SubjectAssignmentPage() {
   const filteredEditTeachers = useMemo(() => {
     if (!editTeacherSearchText) return teachers;
     const q = editTeacherSearchText.toLowerCase();
-    return teachers.filter(t => 
+    return teachers.filter(t =>
       t.name.toLowerCase().includes(q) ||
       (t.employee_id && t.employee_id.toLowerCase().includes(q)) ||
       (t.phone && t.phone.toLowerCase().includes(q)) ||
@@ -322,7 +367,6 @@ export default function SubjectAssignmentPage() {
     setIsExportOpen(false);
   };
 
-  const PAGE_SIZE = 10;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const columns: ColumnDef<PopulatedAssignment>[] = [
@@ -331,42 +375,48 @@ export default function SubjectAssignmentPage() {
       accessorKey: "subject_master_id" as any,
       render: (item) => (
         <div>
-          <span className="font-bold text-slate-900 dark:text-white block">
-            {item.subject_master_id?.name || "—"}
+          <span className="font-medium text-xs text-slate-500 dark:text-white block">
+            {item.subject_master_id?.name || "—"
+            }
           </span>
+          {item.subject_master_id?.subject_code && <span className="font-sans text-[9px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-400 dark:text-slate-400 font-medium">
+            {item.subject_master_id?.subject_code}
+          </span>}
           {item.description && (
             <span className="text-[11px] text-slate-400 block max-w-xs truncate">{item.description}</span>
           )}
         </div>
       )
     },
-    {
-      header: "Subject Code",
-      accessorKey: "subject_master_id" as any,
-      render: (item) => (
-        item.subject_master_id?.subject_code ? (
-          <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400 font-semibold">
-            {item.subject_master_id.subject_code}
-          </span>
-        ) : "—"
-      )
-    },
+    // {
+    //   header: "Subject Code",
+    //   accessorKey: "subject_master_id" as any,
+    //   render: (item) => (
+    //     item.subject_master_id?.subject_code ? (
+    //       <span className="font-sans text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400 font-semibold">
+    //         {item.subject_master_id.subject_code}
+    //       </span>
+    //     ) : "—"
+    //   )
+    // },
     {
       header: "Class",
       accessorKey: "class_id" as any,
-      render: (item) => <span className="font-semibold text-slate-800 dark:text-slate-200">{item.class_id?.name || "—"}</span>
+      render: (item) => (<>
+        <span className="font-medium text-slate-600 dark:text-slate-200">{item.class_id?.name || "—"}</span>
+        {item.class_id?.section && <span className="font-medium text-slate-800 dark:text-slate-200">{"-" + item.class_id?.section}</span>}</>)
     },
-    {
-      header: "Section",
-      accessorKey: "class_id" as any,
-      render: (item) => <span className="font-semibold text-slate-800 dark:text-slate-200">{item.class_id?.section || "—"}</span>
-    },
+    // {
+    //   header: "Section",
+    //   accessorKey: "class_id" as any,
+    //   render: (item) => <span className="font-semibold text-slate-800 dark:text-slate-200">{item.class_id?.section || "—"}</span>
+    // },
     {
       header: "Assigned Teacher",
       accessorKey: "teacher_id" as any,
       render: (item) => (
         item.teacher_id?.name ? (
-          <span className="font-bold text-primary">{item.teacher_id.name}</span>
+          <span className="font-medium text-primary">{item.teacher_id.name}</span>
         ) : (
           <span className="text-slate-400 dark:text-slate-550 italic">Not Assigned</span>
         )
@@ -375,13 +425,13 @@ export default function SubjectAssignmentPage() {
     {
       header: "Weekly Periods",
       accessorKey: "weekly_periods" as any,
-      render: (item) => <span className="font-semibold text-slate-700 dark:text-slate-350">{item.weekly_periods || 0}</span>
+      render: (item) => <span className="font-medium text-slate-700 dark:text-slate-350">{item.weekly_periods || 0}</span>
     },
-    {
-      header: "Academic Year",
-      accessorKey: "academic_year",
-      render: (item) => <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{item.academic_year}</span>
-    },
+    // {
+    //   header: "Academic Year",
+    //   accessorKey: "academic_year",
+    //   render: (item) => <span className="font-sans text-xs text-slate-500 dark:text-slate-400">{item.academic_year}</span>
+    // },
     {
       header: "Status",
       accessorKey: "status",
@@ -392,22 +442,22 @@ export default function SubjectAssignmentPage() {
         </span>
       )
     },
-    {
-      header: "Created By",
-      accessorKey: "created_by" as any,
-      render: (item) => <span className="text-slate-500 dark:text-slate-450">{item.created_by?.name || "Administrator"}</span>
-    },
-    {
-      header: "Created Date",
-      accessorKey: "createdAt" as any,
-      render: (item) => (
-        item.createdAt ? (
-          <span className="text-slate-500 dark:text-slate-450 font-medium">
-            {new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
-          </span>
-        ) : "—"
-      )
-    },
+    // {
+    //   header: "Created By",
+    //   accessorKey: "created_by" as any,
+    //   render: (item) => <span className="text-slate-500 dark:text-slate-450">{item.created_by?.name || "Administrator"}</span>
+    // },
+    // {
+    //   header: "Created Date",
+    //   accessorKey: "createdAt" as any,
+    //   render: (item) => (
+    //     item.createdAt ? (
+    //       <span className="text-slate-500 dark:text-slate-450 font-medium">
+    //         {new Date(item.createdAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+    //       </span>
+    //     ) : "—"
+    //   )
+    // },
     {
       header: "Action",
       sortable: false,
@@ -529,8 +579,24 @@ export default function SubjectAssignmentPage() {
         {/* Filters Top Row */}
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-5">
           <h2 className="text-[16px] font-semibold text-foreground dark:text-slate-100">Subject Assignments</h2>
-          
+
           <div className="flex flex-wrap items-center gap-3">
+            {/* List/Grid layout toggle */}
+            <div className="flex items-center bg-[#F8FAFC] dark:bg-slate-900 border border-border rounded-lg p-1 shadow-sm">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={`px-3 py-1.5 rounded-md text-[13px] font-medium cursor-pointer flex items-center gap-1.5 transition-colors ${viewMode === "grid" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              >
+                <Grid className="w-3.5 h-3.5" /> Grouped
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={`px-3 py-1.5 rounded-md text-[13px] font-medium cursor-pointer flex items-center gap-1.5 transition-colors ${viewMode === "list" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+              >
+                <List className="w-3.5 h-3.5" /> Records
+              </button>
+            </div>
+
             {/* Filter Toggle */}
             <div className="relative">
               <button
@@ -602,7 +668,7 @@ export default function SubjectAssignmentPage() {
                         <select
                           value={filterYear}
                           onChange={(e) => { setFilterYear(e.target.value); setPage(1); }}
-                          className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none font-mono"
+                          className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none font-sans"
                         >
                           {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                         </select>
@@ -679,11 +745,11 @@ export default function SubjectAssignmentPage() {
           <div className="card-subtitle text-[13px]">
             Showing{" "}
             <span className="font-bold text-slate-700 dark:text-slate-250">
-              {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)}` : "0"}
+              {totalGroups > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, totalGroups)}` : "0"}
             </span>{" "}of{" "}
             <span className="font-bold text-slate-700 dark:text-slate-250">
-              {total}
-            </span>{" "}assignments
+              {totalGroups}
+            </span>{" "}classes
           </div>
           <div className="relative w-full sm:w-72">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
@@ -714,19 +780,197 @@ export default function SubjectAssignmentPage() {
           </div>
         ) : (
           <>
-            <DataTable
-              columns={columns}
-              data={assignments}
-              noDataMessage="No subject assignments matching criteria."
-              minWidth="1200px"
-            />
+            {viewMode === "list" ? (
+              <div className="erp-table-container">
+                {paginatedGroups.length === 0 ? (
+                  <div className="py-20 text-center text-slate-500">
+                    No assignments matching criteria.
+                  </div>
+                ) : (
+                  <table className="erp-table w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-100/50 dark:bg-slate-800/50 text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider border-b border-border">
+                        <th className="py-3 px-4 w-8"></th>
+                        <th className="py-3 px-4">Subject</th>
+                        <th className="py-3 px-4">Assigned Teacher</th>
+                        <th className="py-3 px-4">Weekly Periods</th>
+                        <th className="py-3 px-4">Status</th>
+                        <th className="py-3 px-4 text-center w-24">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paginatedGroups.map((group, idx) => {
+                        const groupId = group.class._id;
+                        const isCollapsed = collapsedListGroups.has(groupId);
+                        const uniqueTeachers = new Set(group.assignments.map(a => a.teacher_id?._id).filter(Boolean)).size;
+
+                        return (
+                          <React.Fragment key={groupId}>
+                            {/* Group Header Row */}
+                            <tr 
+                              onClick={() => toggleListGroup(groupId)}
+                              className="bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer border-b border-border group"
+                            >
+                              <td className="py-3 px-4"></td>
+                              <td colSpan={4} className="py-3 px-4">
+                                <div className="flex items-center gap-4">
+                                  <div className="flex items-center gap-2">
+                                    <GraduationCap className="w-4 h-4 text-primary" />
+                                    <span className="font-bold text-[14px] text-slate-800 dark:text-slate-100">
+                                      {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-3 text-[12px] font-medium text-slate-500">
+                                    <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 rounded-full">
+                                      {group.assignments.length} Subjects
+                                    </span>
+                                    <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 rounded-full">
+                                      {uniqueTeachers} Teachers
+                                    </span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3 px-4 text-center text-slate-400 group-hover:text-primary transition-colors">
+                                <div className="flex justify-center">
+                                  <ChevronDown className={`w-4 h-4 transition-transform ${isCollapsed ? "-rotate-90" : ""}`} />
+                                </div>
+                              </td>
+                            </tr>
+                            
+                            {/* Group Items Rows */}
+                            {!isCollapsed && group.assignments.map(assignment => (
+                              <tr key={assignment._id} className="erp-table-row border-b border-slate-100 dark:border-slate-800/50">
+                                <td className="py-3 px-4"></td>
+                                <td className="py-3 px-4">
+                                  <div>
+                                    <span className="font-medium text-[13px] text-slate-700 dark:text-slate-200 block">
+                                      {assignment.subject_master_id?.name || "—"}
+                                    </span>
+                                    {assignment.subject_master_id?.subject_code && (
+                                      <span className="font-sans text-[10px] bg-slate-100 dark:bg-slate-800/80 px-1.5 py-0.5 rounded text-slate-500 dark:text-slate-400 font-medium mt-0.5 inline-block">
+                                        Code: {assignment.subject_master_id?.subject_code}
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  {assignment.teacher_id?.name ? (
+                                    <span className="font-medium text-[13px] text-primary">{assignment.teacher_id.name}</span>
+                                  ) : (
+                                    <span className="text-slate-400 dark:text-slate-550 italic text-[13px]">Not Assigned</span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="font-medium text-[13px] text-slate-700 dark:text-slate-300">
+                                    {assignment.weekly_periods || 0}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold ${assignment.status === "Active" ? "bg-success/10 text-success" : "bg-rose-50 text-rose-500 dark:bg-rose-500/10 dark:text-rose-400"}`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${assignment.status === "Active" ? "bg-success" : "bg-rose-500"}`} />
+                                    {assignment.status || "Active"}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4 text-center">
+                                  {isAdmin && (
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button onClick={() => startEdit(assignment)} className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-md transition-colors" title="Edit">
+                                        <Edit className="w-4 h-4" />
+                                      </button>
+                                      <button onClick={() => { setSelectedAssignment(assignment); setIsDeleteOpen(true); }} className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-colors" title="Delete">
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            ) : (
+              <div className="columns-1 md:columns-2 xl:columns-3 gap-6">
+                {paginatedGroups.length === 0 ? (
+                  <div className="col-span-full py-20 text-center text-slate-500">
+                    No assignments matching criteria.
+                  </div>
+                ) : (
+                  paginatedGroups.map((group, idx) => (
+                    <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col break-inside-avoid mb-6">
+                      <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
+                            <GraduationCap className="w-5 h-5" />
+                          </div>
+                          <div className="truncate">
+                            <h3 className="font-bold text-slate-900 dark:text-white text-[16px] truncate">
+                              {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                            </h3>
+                            <p className="text-[12px] font-medium text-slate-500 mt-0.5 truncate">
+                              {filterYear || academicYear}
+                            </p>
+                          </div>
+                        </div>
+                        <Link href={`/academic-mgmt/subject-assignment/${group.class._id}`} className="px-3 py-1.5 border border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 rounded-lg text-[12px] font-bold shadow-sm transition-colors cursor-pointer shrink-0">
+                          View Details
+                        </Link>
+                      </div>
+                      <div className="p-4">
+                        <div className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-wider">
+                          Assigned Subjects ({group.assignments.length})
+                        </div>
+                        <div className="space-y-3">
+                          {(expandedGroups[idx] ? group.assignments : group.assignments.slice(0, 3)).map(assignment => (
+                            <div key={assignment._id} className="group relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl p-3.5 flex items-start gap-3 transition-colors">
+                              <div className="mt-0.5">
+                                <BookOpen className="w-4 h-4 text-slate-400" />
+                              </div>
+                              <div className="flex-1">
+                                <h4 className="font-bold text-slate-900 dark:text-slate-100 text-[13px] uppercase tracking-wide">
+                                  {assignment.subject_master_id?.name || "Unknown"}
+                                </h4>
+                                <div className="text-[11px] font-medium text-slate-500 mt-0.5 font-sans uppercase">
+                                  Code: {assignment.subject_master_id?.subject_code || "—"}
+                                </div>
+                              </div>
+                              {isAdmin && (
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                                  <button onClick={() => startEdit(assignment)} className="text-slate-400 hover:text-primary transition-colors p-1" title="Edit">
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button onClick={() => { setSelectedAssignment(assignment); setIsDeleteOpen(true); }} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Delete">
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        {group.assignments.length > 3 && (
+                          <button
+                            onClick={() => setExpandedGroups(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                            className="w-full mt-3 py-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-1.5 bg-primary/5 hover:bg-primary/10 rounded-lg"
+                          >
+                            {expandedGroups[idx] ? "Show Less" : `+ ${group.assignments.length - 3} More Subjects`}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
             <PaginationBar
               currentPage={page}
               totalPages={totalPages}
-              totalItems={total}
+              totalItems={totalGroups}
               pageSize={PAGE_SIZE}
               onPageChange={setPage}
-              className="mt-4 border-t-0"
+              className="mt-6 border-t-0"
             />
           </>
         )}
@@ -796,15 +1040,15 @@ export default function SubjectAssignmentPage() {
           {/* Custom Searchable Faculty Selection */}
           <div className="flex flex-col gap-1.5 relative text-left">
             <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Teacher</label>
-            
+
             {/* Input Selection Trigger */}
-            <div 
+            <div
               className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground cursor-pointer flex items-center justify-between outline-none focus:border-primary/50"
               onClick={() => setIsTeacherDropdownOpen(!isTeacherDropdownOpen)}
             >
               {selectedTeacherDetails ? (
                 <div className="flex items-center gap-2">
-                  <img 
+                  <img
                     src={selectedTeacherDetails.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedTeacherDetails.name)}&background=d68600&color=fff&bold=true`}
                     className="w-5 h-5 rounded-full object-cover"
                     alt={selectedTeacherDetails.name}
@@ -840,9 +1084,8 @@ export default function SubjectAssignmentPage() {
                         setIsTeacherDropdownOpen(false);
                         setTeacherSearchText("");
                       }}
-                      className={`p-2.5 rounded-lg cursor-pointer transition-colors text-[13px] font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 ${
-                        !formTeacherId ? "bg-primary/10 text-primary" : ""
-                      }`}
+                      className={`p-2.5 rounded-lg cursor-pointer transition-colors text-[13px] font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 ${!formTeacherId ? "bg-primary/10 text-primary" : ""
+                        }`}
                     >
                       Not Assigned (Optional)
                     </div>
@@ -857,12 +1100,11 @@ export default function SubjectAssignmentPage() {
                             setIsTeacherDropdownOpen(false);
                             setTeacherSearchText("");
                           }}
-                          className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${
-                            formTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
-                          }`}
+                          className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${formTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                            }`}
                         >
                           <div className="flex items-center gap-3">
-                            <img 
+                            <img
                               src={t.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=d68600&color=fff&bold=true`}
                               className="w-8 h-8 rounded-full object-cover"
                               alt={t.name}
@@ -908,7 +1150,7 @@ export default function SubjectAssignmentPage() {
                 required
                 value={formYear}
                 onChange={(e) => setFormYear(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 font-mono"
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 font-sans"
               >
                 {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
@@ -994,15 +1236,15 @@ export default function SubjectAssignmentPage() {
           {/* Custom Searchable Faculty Selection for Edit */}
           <div className="flex flex-col gap-1.5 relative text-left">
             <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Teacher</label>
-            
+
             {/* Input Selection Trigger */}
-            <div 
+            <div
               className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground cursor-pointer flex items-center justify-between outline-none focus:border-primary/50"
               onClick={() => setIsEditTeacherDropdownOpen(!isEditTeacherDropdownOpen)}
             >
               {selectedEditTeacherDetails ? (
                 <div className="flex items-center gap-2">
-                  <img 
+                  <img
                     src={selectedEditTeacherDetails.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedEditTeacherDetails.name)}&background=d68600&color=fff&bold=true`}
                     className="w-5 h-5 rounded-full object-cover"
                     alt={selectedEditTeacherDetails.name}
@@ -1038,9 +1280,8 @@ export default function SubjectAssignmentPage() {
                         setIsEditTeacherDropdownOpen(false);
                         setEditTeacherSearchText("");
                       }}
-                      className={`p-2.5 rounded-lg cursor-pointer transition-colors text-[13px] font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 ${
-                        !editTeacherId ? "bg-primary/10 text-primary" : ""
-                      }`}
+                      className={`p-2.5 rounded-lg cursor-pointer transition-colors text-[13px] font-bold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 ${!editTeacherId ? "bg-primary/10 text-primary" : ""
+                        }`}
                     >
                       Not Assigned (Optional)
                     </div>
@@ -1055,12 +1296,11 @@ export default function SubjectAssignmentPage() {
                             setIsEditTeacherDropdownOpen(false);
                             setEditTeacherSearchText("");
                           }}
-                          className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${
-                            editTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
-                          }`}
+                          className={`flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-colors ${editTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                            }`}
                         >
                           <div className="flex items-center gap-3">
-                            <img 
+                            <img
                               src={t.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=d68600&color=fff&bold=true`}
                               className="w-8 h-8 rounded-full object-cover"
                               alt={t.name}
@@ -1106,7 +1346,7 @@ export default function SubjectAssignmentPage() {
                 required
                 value={editYear}
                 onChange={(e) => setEditYear(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 font-mono"
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 font-sans"
               >
                 {ACADEMIC_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
               </select>

@@ -99,7 +99,7 @@ export function TeacherLoginDetailsModal({ isOpen, onClose, teacher }: TeacherLo
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-[11px] font-bold">
                   💼 Teacher Login
                 </span>
-                <span className="text-[12px] text-slate-600 dark:text-slate-300 font-bold font-mono break-all">
+                <span className="text-[12px] text-slate-600 dark:text-slate-300 font-bold font-sans break-all">
                   {teacherEmail || "—"}
                 </span>
               </div>

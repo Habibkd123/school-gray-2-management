@@ -85,10 +85,10 @@ export default function SubjectAssignmentDetailsPage() {
       // Filter by Stream if streamId parameter is provided
       const filteredSubjects = streamId
         ? allSubjects.filter(
-            (s) =>
-              s.stream_id?._id === streamId ||
-              (typeof s.stream_id === "string" && s.stream_id === streamId)
-          )
+          (s) =>
+            s.stream_id?._id === streamId ||
+            (typeof s.stream_id === "string" && s.stream_id === streamId)
+        )
         : allSubjects;
 
       setSubjects(filteredSubjects);
@@ -236,7 +236,7 @@ export default function SubjectAssignmentDetailsPage() {
           <div className="border-t border-border pt-4 space-y-3.5 text-[13px] font-semibold">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
               <span>Academic Year</span>
-              <span className="text-slate-800 dark:text-slate-200 font-mono">
+              <span className="text-slate-800 dark:text-slate-200 font-sans">
                 {classInfo.academicYear}
               </span>
             </div>
@@ -252,7 +252,7 @@ export default function SubjectAssignmentDetailsPage() {
             </div>
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
               <span>Last Updated</span>
-              <span className="text-slate-850 dark:text-slate-250 font-mono">
+              <span className="text-slate-850 dark:text-slate-250 font-sans">
                 {classInfo.lastUpdated}
               </span>
             </div>
@@ -293,7 +293,7 @@ export default function SubjectAssignmentDetailsPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       {sub.subject_master_id?.subject_code ? (
-                        <span className="font-mono text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400">
+                        <span className="font-sans text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400">
                           {sub.subject_master_id.subject_code}
                         </span>
                       ) : (
@@ -314,7 +314,7 @@ export default function SubjectAssignmentDetailsPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="px-5 py-3.5 font-mono text-xs">{sub.teacherEmpId}</td>
+                    <td className="px-5 py-3.5 font-sans text-xs">{sub.teacherEmpId}</td>
                   </tr>
                 ))}
               </tbody>

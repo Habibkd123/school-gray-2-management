@@ -128,9 +128,8 @@ export default function ApplicationsListPage() {
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {toast && (
-        <div className={`fixed top-5 right-5 z-[80] flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-[13px] font-semibold transition-all ${
-          toast.type === "success" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"
-        }`}>
+        <div className={`fixed top-5 right-5 z-[80] flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-[13px] font-semibold transition-all ${toast.type === "success" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"
+          }`}>
           {toast.type === "success" ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           {toast.text}
         </div>
@@ -245,70 +244,69 @@ export default function ApplicationsListPage() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-            <table className="erp-table">
-              <thead>
-                <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-800/40 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                  <th className="px-5 py-3.5">App Number</th>
-                  <th className="px-5 py-3.5">Student Name</th>
-                  <th className="px-5 py-3.5">Applied Class</th>
-                  <th className="px-5 py-3.5">Guardian Details</th>
-                  <th className="px-5 py-3.5">Submission Date</th>
-                  <th className="px-5 py-3.5 text-center">Status</th>
-                  <th className="px-5 py-3.5 text-center w-28">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border text-[13.5px]">
-                {apps.map((r) => (
-                  <tr key={r._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
-                    <td className="px-5 py-4 font-mono font-bold text-primary">
-                      {r.application_no}
-                    </td>
-                    <td className="px-5 py-4 font-bold text-slate-800 dark:text-slate-100">
-                      {r.student_name || `${r.first_name} ${r.last_name}`.trim()}
-                    </td>
-                    <td className="px-5 py-4 font-semibold text-slate-700 dark:text-slate-300">
-                      {r.class_id ? `${r.class_id.name}${r.class_id.section ? ` - ${r.class_id.section}` : ""}` : "Unassigned"}
-                    </td>
-                    <td className="px-5 py-4 text-slate-655 dark:text-slate-400">
-                      <div className="font-semibold text-slate-700 dark:text-slate-300">{r.guardian_name || "—"}</div>
-                      <div className="text-[11px] mt-0.5">{r.phone}</div>
-                    </td>
-                    <td className="px-5 py-4 text-slate-500">
-                      {new Date(r.submission_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
-                    </td>
-                    <td className="px-5 py-4 text-center">
-                      <span className={`inline-flex px-2.5 py-0.5 rounded text-[11px] font-semibold uppercase ${
-                        r.status === "New" ? "bg-blue-500/10 text-blue-500" :
-                        r.status === "Approved" || r.status === "Admission Completed" ? "bg-emerald-500/10 text-emerald-500" :
-                        r.status === "Rejected" ? "bg-rose-500/10 text-rose-500" :
-                        "bg-slate-500/10 text-slate-500"
-                      }`}>
-                        {r.status}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <Link
-                          href={`/admissions-admin/applications/${r._id}`}
-                          className="p-1.5 border border-border bg-white dark:bg-slate-900 rounded-lg hover:text-primary transition-colors cursor-pointer text-slate-500"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Link>
-                        <button
-                          onClick={() => setDeleteId(r._id)}
-                          className="p-1.5 border border-border bg-white dark:bg-slate-900 rounded-lg hover:text-rose-600 transition-colors cursor-pointer text-slate-550"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+              <table className="erp-table">
+                <thead>
+                  <tr className="border-b border-border bg-slate-50/50 dark:bg-slate-800/40 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="px-5 py-3.5">App Number</th>
+                    <th className="px-5 py-3.5">Student Name</th>
+                    <th className="px-5 py-3.5">Applied Class</th>
+                    <th className="px-5 py-3.5">Guardian Details</th>
+                    <th className="px-5 py-3.5">Submission Date</th>
+                    <th className="px-5 py-3.5 text-center">Status</th>
+                    <th className="px-5 py-3.5 text-center w-28">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody className="divide-y divide-border text-[13.5px]">
+                  {apps.map((r) => (
+                    <tr key={r._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
+                      <td className="px-5 py-4 font-sans font-bold text-primary">
+                        {r.application_no}
+                      </td>
+                      <td className="px-5 py-4 font-bold text-slate-800 dark:text-slate-100">
+                        {r.student_name || `${r.first_name} ${r.last_name}`.trim()}
+                      </td>
+                      <td className="px-5 py-4 font-semibold text-slate-700 dark:text-slate-300">
+                        {r.class_id ? `${r.class_id.name}${r.class_id.section ? ` - ${r.class_id.section}` : ""}` : "Unassigned"}
+                      </td>
+                      <td className="px-5 py-4 text-slate-655 dark:text-slate-400">
+                        <div className="font-semibold text-slate-700 dark:text-slate-300">{r.guardian_name || "—"}</div>
+                        <div className="text-[11px] mt-0.5">{r.phone}</div>
+                      </td>
+                      <td className="px-5 py-4 text-slate-500">
+                        {new Date(r.submission_date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                      </td>
+                      <td className="px-5 py-4 text-center">
+                        <span className={`inline-flex px-2.5 py-0.5 rounded text-[11px] font-semibold uppercase ${r.status === "New" ? "bg-blue-500/10 text-blue-500" :
+                            r.status === "Approved" || r.status === "Admission Completed" ? "bg-emerald-500/10 text-emerald-500" :
+                              r.status === "Rejected" ? "bg-rose-500/10 text-rose-500" :
+                                "bg-slate-500/10 text-slate-500"
+                          }`}>
+                          {r.status}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <Link
+                            href={`/admissions-admin/applications/${r._id}`}
+                            className="p-1.5 border border-border bg-white dark:bg-slate-900 rounded-lg hover:text-primary transition-colors cursor-pointer text-slate-500"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                          <button
+                            onClick={() => setDeleteId(r._id)}
+                            className="p-1.5 border border-border bg-white dark:bg-slate-900 rounded-lg hover:text-rose-600 transition-colors cursor-pointer text-slate-550"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
 
         {/* Pagination */}
         {totalPages > 1 && (

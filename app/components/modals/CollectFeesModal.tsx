@@ -41,7 +41,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
   // Selections & Forms
   const [selectedFees, setSelectedFees] = useState<string[]>([]);
   const [amounts, setAmounts] = useState<Record<string, string>>({});
-  
+
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "Cheque" | "Bank Transfer" | "Online" | "UPI">("Cash");
   const [collectionDate, setCollectionDate] = useState("");
   const [referenceNo, setReferenceNo] = useState("");
@@ -113,7 +113,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
           { headers: getAuthHeaders() }
         );
         const configData = await configRes.json();
-        
+
         // Payments history log
         const paymentsRes = await fetch(`/api/fees/payments?student_id=${studentId}`, { headers: getAuthHeaders() });
         const paymentsData = await paymentsRes.json();
@@ -359,7 +359,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
   // Grand summary aggregates
   const subtotalCollecting = selectedFees.reduce((sum, name) => sum + Number(amounts[name] || 0), 0);
   const grandTotalCollecting = Math.max(0.01, (subtotalCollecting + Number(fine || 0)) - (Number(discount || 0) + Number(scholarship || 0) + Number(waiver || 0) + Number(adjustment || 0)) + Number(roundOff || 0));
-  
+
   let overallTotalFees = 0;
   let overallTotalPaid = 0;
   feeTypesConfig.forEach(ft => {
@@ -396,10 +396,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
             (end.getMonth() - start.getMonth()) +
             1;
           switch (config.frequency) {
-            case "Monthly":    mult = Math.max(1, monthsDiff); break;
-            case "Quarterly":  mult = Math.max(1, Math.ceil(monthsDiff / 3)); break;
-            case "Half Yearly":mult = Math.max(1, Math.ceil(monthsDiff / 6)); break;
-            case "Yearly":     mult = Math.max(1, Math.ceil(monthsDiff / 12)); break;
+            case "Monthly": mult = Math.max(1, monthsDiff); break;
+            case "Quarterly": mult = Math.max(1, Math.ceil(monthsDiff / 3)); break;
+            case "Half Yearly": mult = Math.max(1, Math.ceil(monthsDiff / 6)); break;
+            case "Yearly": mult = Math.max(1, Math.ceil(monthsDiff / 12)); break;
           }
         }
       }
@@ -437,7 +437,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
 
       {/* Modal Container */}
       <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-4xl flex flex-col max-h-[92vh] overflow-hidden transform transition-all text-left border border-border">
-        
+
         {/* Header toolbar */}
         <div className="flex items-center justify-between p-4 border-b border-border bg-slate-50/50 dark:bg-slate-950/20">
           <div className="flex items-center gap-2.5">
@@ -445,8 +445,8 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
               {step === "form" ? "Collect Student Fees" : "Payment Transaction Receipt"}
             </h2>
           </div>
-          <button 
-            onClick={onClose} 
+          <button
+            onClick={onClose}
             className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-650 transition-colors"
           >
             <X className="w-4 h-4" />
@@ -465,10 +465,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
             {/* HEADER STUDENT SUMMARY CARD */}
             <div className="bg-slate-900 text-white rounded-xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <img 
-                  src={student.photo_url || getAvatar(student.name)} 
-                  className="w-12 h-12 rounded-full object-cover border border-slate-700 shadow-sm shrink-0" 
-                  alt="Student avatar" 
+                <img
+                  src={student.photo_url || getAvatar(student.name)}
+                  className="w-12 h-12 rounded-full object-cover border border-slate-700 shadow-sm shrink-0"
+                  alt="Student avatar"
                 />
                 <div>
                   <h4 className="text-[14px] font-extrabold text-white leading-tight">{student.name}</h4>
@@ -485,26 +485,25 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
               <div className="flex items-center gap-6 border-t md:border-t-0 border-slate-800 pt-3 md:pt-0 justify-between md:justify-end text-xs font-sans">
                 <div className="text-left md:text-right">
                   <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Total Fees</span>
-                  <span className="font-mono font-bold text-slate-200 block mt-0.5">{money(overallTotalFees)}</span>
+                  <span className="font-sans font-bold text-slate-200 block mt-0.5">{money(overallTotalFees)}</span>
                 </div>
                 <div className="text-left md:text-right">
                   <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Total Paid</span>
-                  <span className="font-mono font-bold text-emerald-400 block mt-0.5">{money(overallTotalPaid)}</span>
+                  <span className="font-sans font-bold text-emerald-400 block mt-0.5">{money(overallTotalPaid)}</span>
                 </div>
                 <div className="text-left md:text-right">
                   <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Outstanding</span>
-                  <span className="font-mono font-bold text-rose-400 block mt-0.5">{money(overallBalance)}</span>
+                  <span className="font-sans font-bold text-rose-400 block mt-0.5">{money(overallBalance)}</span>
                 </div>
                 <div className="text-left md:text-right">
                   <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider block">Status</span>
                   <div className="mt-0.5">
-                    <span className={`inline-flex px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wide ${
-                      overallStatus === "Paid" 
+                    <span className={`inline-flex px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wide ${overallStatus === "Paid"
                         ? "bg-emerald-500/20 text-emerald-300"
                         : overallStatus === "Partial"
-                        ? "bg-amber-500/20 text-amber-300"
-                        : "bg-rose-500/20 text-rose-300"
-                    }`}>
+                          ? "bg-amber-500/20 text-amber-300"
+                          : "bg-rose-500/20 text-rose-300"
+                      }`}>
                       {overallStatus}
                     </span>
                   </div>
@@ -515,7 +514,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
             {/* STEP 1: DIRECT ENTRY FEE COLLECTION FORM */}
             {step === "form" && (
               <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                
+
                 {/* LEFT COLUMN: OUTSTANDING FEES CARD DISPLAY */}
                 <div className="lg:col-span-3 space-y-4">
                   <div className="flex items-center justify-between border-b border-border pb-1">
@@ -526,7 +525,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                       Select cards to collect
                     </span>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[380px] overflow-y-auto pr-1.5 custom-scrollbar text-left">
                     {feeTypesConfig.length === 0 ? (
                       <div className="md:col-span-2 py-10 text-center text-slate-400 border border-dashed border-border rounded-xl">
@@ -546,16 +545,15 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                         }
 
                         return (
-                          <div 
-                            key={ft._id || ft.name} 
+                          <div
+                            key={ft._id || ft.name}
                             onClick={() => !isPaid && toggleFee(ft.name, balance)}
-                            className={`p-4 border rounded-xl shadow-sm transition-all text-left flex flex-col justify-between relative cursor-pointer group ${
-                              isPaid 
+                            className={`p-4 border rounded-xl shadow-sm transition-all text-left flex flex-col justify-between relative cursor-pointer group ${isPaid
                                 ? "bg-slate-50/50 dark:bg-slate-900/30 border-border opacity-70 cursor-not-allowed"
-                                : isSelected 
-                                ? "bg-primary/[0.02] border-primary ring-2 ring-primary/10" 
-                                : "bg-white dark:bg-slate-900 border-border hover:border-slate-350 dark:hover:border-slate-700"
-                            }`}
+                                : isSelected
+                                  ? "bg-primary/[0.02] border-primary ring-2 ring-primary/10"
+                                  : "bg-white dark:bg-slate-900 border-border hover:border-slate-350 dark:hover:border-slate-700"
+                              }`}
                           >
                             {/* Selection Icon */}
                             {!isPaid && (
@@ -581,35 +579,35 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                               <div className="grid grid-cols-3 gap-2 border-t border-border mt-3.5 pt-3.5 text-[11px] font-sans">
                                 <div>
                                   <span className="text-slate-400 block font-bold text-[9px] uppercase">Total Due</span>
-                                  <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{money(total)}</span>
+                                  <span className="font-sans font-bold text-slate-700 dark:text-slate-300">{money(total)}</span>
                                 </div>
                                 <div>
                                   <span className="text-slate-455 block font-bold text-[9px] uppercase">Paid</span>
-                                  <span className="font-mono font-bold text-emerald-600">{money(paid)}</span>
+                                  <span className="font-sans font-bold text-emerald-600">{money(paid)}</span>
                                 </div>
                                 <div>
                                   <span className="text-slate-455 block font-bold text-[9px] uppercase">Balance</span>
-                                  <span className="font-mono font-bold text-rose-500">{money(balance)}</span>
+                                  <span className="font-sans font-bold text-rose-500">{money(balance)}</span>
                                 </div>
                               </div>
                             </div>
 
                             <div className="flex items-center justify-between border-t border-border mt-3.5 pt-3.5">
                               <div>{statusBadge}</div>
-                              
+
                               {!isPaid && isSelected && (
                                 <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
                                   <span className="text-[10px] font-bold text-slate-455 uppercase">Collect:</span>
                                   <div className="relative w-28">
                                     <span className="absolute left-2.5 top-1.5 text-slate-450 font-bold">₹</span>
-                                    <input 
+                                    <input
                                       type="number"
                                       min="0.01"
                                       max={balance}
                                       step="0.01"
                                       value={amounts[ft.name] || ""}
                                       onChange={e => handleAmountChange(ft.name, e.target.value)}
-                                      className="w-full pl-5 pr-1.5 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-slate-800 dark:text-white outline-none focus:border-primary text-right"
+                                      className="w-full pl-5 pr-1.5 py-1 border border-border rounded bg-white dark:bg-slate-900 font-sans font-bold text-slate-800 dark:text-white outline-none focus:border-primary text-right"
                                     />
                                   </div>
                                 </div>
@@ -624,7 +622,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
 
                 {/* RIGHT COLUMN: PAYMENT INFO & SUMMARY */}
                 <div className="lg:col-span-2 space-y-4">
-                  
+
                   {/* Payment Information Form Card */}
                   <div className="bg-slate-50 dark:bg-slate-950 p-4 border border-border rounded-xl space-y-3.5 text-xs shadow-sm">
                     <h3 className="text-[10px] uppercase font-bold tracking-wider text-slate-500 border-b border-border pb-1.5">
@@ -633,7 +631,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
 
                     <div className="flex flex-col gap-1 text-left">
                       <label className="font-bold text-slate-500">Collection Date</label>
-                      <input 
+                      <input
                         type="date"
                         value={collectionDate}
                         onChange={(e) => setCollectionDate(e.target.value)}
@@ -651,11 +649,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                           type="date"
                           value={startDate}
                           onChange={(e) => setStartDate(e.target.value)}
-                          className={`flex-1 px-2 py-1.5 border rounded-lg bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-white outline-none ${
-                            startDate && endDate && new Date(endDate) < new Date(startDate)
+                          className={`flex-1 px-2 py-1.5 border rounded-lg bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-white outline-none ${startDate && endDate && new Date(endDate) < new Date(startDate)
                               ? "border-rose-400 bg-rose-50 dark:bg-rose-900/20"
                               : "border-border"
-                          }`}
+                            }`}
                         />
                         <span className="text-slate-400 font-bold text-[10px] shrink-0">to</span>
                         <input
@@ -663,11 +660,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                           value={endDate}
                           onChange={(e) => setEndDate(e.target.value)}
                           min={startDate}
-                          className={`flex-1 px-2 py-1.5 border rounded-lg bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-white outline-none ${
-                            startDate && endDate && new Date(endDate) < new Date(startDate)
+                          className={`flex-1 px-2 py-1.5 border rounded-lg bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-white outline-none ${startDate && endDate && new Date(endDate) < new Date(startDate)
                               ? "border-rose-400 bg-rose-50 dark:bg-rose-900/20"
                               : "border-border"
-                          }`}
+                            }`}
                         />
                       </div>
                       {startDate && endDate && new Date(endDate) < new Date(startDate) && (
@@ -679,7 +675,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
 
                     <div className="flex flex-col gap-1 text-left">
                       <label className="font-bold text-slate-550">Payment Method</label>
-                      <select 
+                      <select
                         value={paymentMethod}
                         onChange={(e) => setPaymentMethod(e.target.value as any)}
                         className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-350 outline-none cursor-pointer"
@@ -694,11 +690,11 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                     {isRefVisible && (
                       <div className="flex flex-col gap-1 text-left">
                         <label className="font-bold text-slate-550">Reference Number / Txn ID</label>
-                        <input 
+                        <input
                           type="text"
                           value={referenceNo}
                           onChange={(e) => setReferenceNo(e.target.value)}
-                          className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-white outline-none font-mono"
+                          className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-xs font-bold text-slate-800 dark:text-white outline-none font-sans"
                           placeholder="Enter Reference Code"
                         />
                       </div>
@@ -715,7 +711,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                             min="0"
                             value={fine}
                             onChange={(e) => setFine(e.target.value)}
-                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-sans font-bold text-xs"
                           />
                         </div>
                         <div className="flex flex-col gap-1 text-left">
@@ -725,7 +721,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                             min="0"
                             value={discount}
                             onChange={(e) => setDiscount(e.target.value)}
-                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-sans font-bold text-xs"
                           />
                         </div>
                         <div className="flex flex-col gap-1 text-left">
@@ -735,7 +731,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                             min="0"
                             value={scholarship}
                             onChange={(e) => setScholarship(e.target.value)}
-                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-sans font-bold text-xs"
                           />
                         </div>
                         <div className="flex flex-col gap-1 text-left">
@@ -745,7 +741,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                             min="0"
                             value={waiver}
                             onChange={(e) => setWaiver(e.target.value)}
-                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-sans font-bold text-xs"
                           />
                         </div>
                         <div className="flex flex-col gap-1 text-left">
@@ -755,7 +751,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                             min="0"
                             value={adjustment}
                             onChange={(e) => setAdjustment(e.target.value)}
-                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-sans font-bold text-xs"
                           />
                         </div>
                         <div className="flex flex-col gap-1 text-left">
@@ -764,7 +760,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                             type="number"
                             value={roundOff}
                             onChange={(e) => setRoundOff(e.target.value)}
-                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-mono font-bold text-xs"
+                            className="px-2 py-1 border border-border rounded bg-white dark:bg-slate-900 font-sans font-bold text-xs"
                           />
                         </div>
                       </div>
@@ -783,68 +779,68 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                           {selectedFees.length > 0 ? selectedFees.join(", ") : "None Selected"}
                         </span>
                       </div>
-                      
+
                       <div className="border-t border-slate-800/80 my-2 pt-2.5 space-y-1 text-[11px]">
                         <div className="flex justify-between">
                           <span className="text-slate-400">Outstanding Before Payment:</span>
-                          <span className="font-mono font-bold text-slate-200">{money(overallBalance)}</span>
+                          <span className="font-sans font-bold text-slate-200">{money(overallBalance)}</span>
                         </div>
-                        
+
                         <div className="flex justify-between text-slate-400">
                           <span>Subtotal:</span>
-                          <span className="font-mono">{money(subtotalCollecting)}</span>
+                          <span className="font-sans">{money(subtotalCollecting)}</span>
                         </div>
 
                         {Number(fine) > 0 && (
                           <div className="flex justify-between text-amber-400">
                             <span>Fine (+):</span>
-                            <span className="font-mono">+{money(Number(fine))}</span>
+                            <span className="font-sans">+{money(Number(fine))}</span>
                           </div>
                         )}
 
                         {Number(discount) > 0 && (
                           <div className="flex justify-between text-emerald-450">
                             <span>Discount (-):</span>
-                            <span className="font-mono">-{money(Number(discount))}</span>
+                            <span className="font-sans">-{money(Number(discount))}</span>
                           </div>
                         )}
 
                         {Number(scholarship) > 0 && (
                           <div className="flex justify-between text-emerald-450">
                             <span>Scholarship (-):</span>
-                            <span className="font-mono">-{money(Number(scholarship))}</span>
+                            <span className="font-sans">-{money(Number(scholarship))}</span>
                           </div>
                         )}
 
                         {Number(waiver) > 0 && (
                           <div className="flex justify-between text-emerald-450">
                             <span>Waiver (-):</span>
-                            <span className="font-mono">-{money(Number(waiver))}</span>
+                            <span className="font-sans">-{money(Number(waiver))}</span>
                           </div>
                         )}
 
                         {Number(adjustment) > 0 && (
                           <div className="flex justify-between text-emerald-450">
                             <span>Adjustment (-):</span>
-                            <span className="font-mono">-{money(Number(adjustment))}</span>
+                            <span className="font-sans">-{money(Number(adjustment))}</span>
                           </div>
                         )}
 
                         {Number(roundOff) !== 0 && (
                           <div className="flex justify-between text-slate-350">
                             <span>Round Off:</span>
-                            <span className="font-mono">{Number(roundOff) > 0 ? "+" : ""}{money(Number(roundOff))}</span>
+                            <span className="font-sans">{Number(roundOff) > 0 ? "+" : ""}{money(Number(roundOff))}</span>
                           </div>
                         )}
 
                         <div className="flex justify-between text-emerald-455 font-bold border-t border-slate-800/60 pt-2 text-xs">
                           <span>Grand Total Collecting:</span>
-                          <span className="font-mono text-base">{money(grandTotalCollecting)}</span>
+                          <span className="font-sans text-base">{money(grandTotalCollecting)}</span>
                         </div>
-                        
+
                         <div className="flex justify-between text-rose-455 font-bold border-t border-dashed border-slate-800/60 pt-2 text-xs">
                           <span>Remaining Balance:</span>
-                          <span className="font-mono">{money(remainingBalanceAfter)}</span>
+                          <span className="font-sans">{money(remainingBalanceAfter)}</span>
                         </div>
                       </div>
                     </div>
@@ -869,8 +865,8 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                   const statusColor = ft.status === "Paid"
                     ? "background:#d1fae5;color:#065f46;border:1px solid #a7f3d0"
                     : ft.status === "Partial"
-                    ? "background:#fef3c7;color:#92400e;border:1px solid #fde68a"
-                    : "background:#fee2e2;color:#991b1b;border:1px solid #fecaca";
+                      ? "background:#fef3c7;color:#92400e;border:1px solid #fde68a"
+                      : "background:#fee2e2;color:#991b1b;border:1px solid #fecaca";
 
                   return `
                     <tr>
@@ -1055,7 +1051,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                   <div className="p-5 border border-slate-200 rounded-2xl bg-white text-slate-800 font-sans text-xs space-y-3 text-left">
                     <div className="text-center border-b border-slate-200 pb-3 mb-3">
                       <p className="text-base font-black uppercase tracking-widest text-slate-900">Fee Payment Receipt</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5 font-mono">{lastPaymentResult.receipt_number}</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5 font-sans">{lastPaymentResult.receipt_number}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-[11px]">
@@ -1068,7 +1064,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
 
                     <div className="flex justify-between items-center bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
                       <span className="font-bold text-slate-700">Amount Paid</span>
-                      <span className="font-mono font-black text-emerald-700 text-lg">{money(lastPaymentResult.amount_paid)}</span>
+                      <span className="font-sans font-black text-emerald-700 text-lg">{money(lastPaymentResult.amount_paid)}</span>
                     </div>
 
                     <p className="text-center text-[10px] text-slate-400">
@@ -1108,13 +1104,13 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
         {/* Footer controls */}
         {!isLoadingDetails && step === "form" && (
           <div className="p-4 border-t border-border flex items-center justify-end gap-3 bg-slate-50/50 dark:bg-slate-950/20">
-            <button 
-              onClick={onClose} 
+            <button
+              onClick={onClose}
               className="px-4 py-2 border border-border text-xs font-bold rounded-xl bg-white hover:bg-slate-50 text-slate-700 transition-colors"
             >
               Cancel
             </button>
-            <button 
+            <button
               onClick={handleCollectFeesSubmit}
               disabled={isRecording || grandTotalCollecting <= 0 || !!validationMessage}
               className="px-4 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm"

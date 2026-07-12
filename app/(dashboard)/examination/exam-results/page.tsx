@@ -20,32 +20,32 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
   const to = new Date(now);
   const from = new Date(now);
   switch (range) {
-    case "Today": 
-      from.setHours(0, 0, 0, 0); 
+    case "Today":
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
     case "Yesterday":
       from.setDate(from.getDate() - 1); from.setHours(0, 0, 0, 0);
       to.setDate(to.getDate() - 1); to.setHours(23, 59, 59, 999);
       break;
-    case "Last 7 Days": 
-      from.setDate(from.getDate() - 7); 
+    case "Last 7 Days":
+      from.setDate(from.getDate() - 7);
       from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "Last 30 Days": 
-      from.setDate(from.getDate() - 30); 
+    case "Last 30 Days":
+      from.setDate(from.getDate() - 30);
       from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "This Year": 
-      from.setMonth(0, 1); 
-      from.setHours(0, 0, 0, 0); 
+    case "This Year":
+      from.setMonth(0, 1);
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
     case "All Time":
       return { from: null, to: null };
-    default: 
+    default:
       return { from: null, to: null };
   }
   return { from, to };
@@ -70,7 +70,7 @@ export default function ExamResultsPage() {
   const [selectedExamId, setSelectedExamId] = useState("");
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
-  
+
   const [selectedRange, setSelectedRange] = useState("All Time");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
@@ -95,7 +95,7 @@ export default function ExamResultsPage() {
     fromDate.setHours(0, 0, 0, 0);
     const toDate = new Date(customTo);
     toDate.setHours(23, 59, 59, 999);
-    setActiveFrom(fromDate); 
+    setActiveFrom(fromDate);
     setActiveTo(toDate);
     setSelectedRange(`${customFrom} — ${customTo}`);
     setIsCustom(false); setIsDateRangeOpen(false);
@@ -112,7 +112,7 @@ export default function ExamResultsPage() {
   const dateRangeLabel = (activeFrom && activeTo && !isCustom)
     ? `${formatDateLabel(activeFrom)} — ${formatDateLabel(activeTo)}`
     : selectedRange;
-  
+
   // State for Report Card Modal
   const [reportCardData, setReportCardData] = useState<any | null>(null);
 
@@ -281,8 +281,8 @@ export default function ExamResultsPage() {
 
             {/* Date Range */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
-              <button 
-                onClick={() => setIsDateRangeOpen(!isDateRangeOpen)} 
+              <button
+                onClick={() => setIsDateRangeOpen(!isDateRangeOpen)}
                 className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors cursor-pointer
                   ${(activeFrom && activeTo) || isDateRangeOpen
                     ? "border-primary bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-bold"
@@ -335,9 +335,8 @@ export default function ExamResultsPage() {
             <div className="relative" onClick={(e) => e.stopPropagation()}>
               <button
                 onClick={() => setIsSortOpen(!isSortOpen)}
-                className={`px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer ${
-                  selectedSort !== "A-Z by Name" ? "border-primary bg-primary/10 dark:bg-primary/10" : ""
-                }`}
+                className={`px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer ${selectedSort !== "A-Z by Name" ? "border-primary bg-primary/10 dark:bg-primary/10" : ""
+                  }`}
               >
                 <List className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Sort: {selectedSort} <ChevronDown className="w-3 h-3 text-slate-400 dark:text-slate-500" />
               </button>
@@ -428,7 +427,7 @@ export default function ExamResultsPage() {
                         {row.studentName}
                       </Link>
                     </td>
-                    <td className="text-slate-500 dark:text-slate-400 font-mono font-bold">{row.rollNo || "—"}</td>
+                    <td className="text-slate-500 dark:text-slate-400 font-sans font-bold">{row.rollNo || "—"}</td>
                     {subjectNames.map((sub) => {
                       const subData = row.subjects.find((s) => s.name === sub);
                       return (
@@ -452,7 +451,7 @@ export default function ExamResultsPage() {
                       )}
                     </td>
                     <td className="col-center">
-                      <button 
+                      <button
                         onClick={() => setReportCardData({ ...row, percent, grade, failed, totalObtained, totalMax })}
                         className="p-1.5 rounded-lg bg-indigo-50 text-indigo-650 hover:bg-indigo-100 transition-colors cursor-pointer"
                         title="Print Report Card"
@@ -479,18 +478,18 @@ export default function ExamResultsPage() {
       {reportCardData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[95vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200 dark:bg-slate-900">
-            
+
             {/* Modal Header (Not Printed) */}
             <div className="flex items-center justify-between p-4 border-b border-border print:hidden">
               <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">Student Report Card</h2>
               <div className="flex flex-wrap items-center gap-2">
-                <button 
+                <button
                   onClick={() => PrintService.print('printable-report-card', { pageSize: 'A4' })}
                   className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
                 >
                   <Printer className="w-4 h-4" /> Print Report Card
                 </button>
-                <button 
+                <button
                   onClick={() => setReportCardData(null)}
                   className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                 >
@@ -501,8 +500,9 @@ export default function ExamResultsPage() {
 
             {/* Printable Content */}
             <div className="p-6 overflow-y-auto print:p-0 print:overflow-visible print:w-full print:absolute print:left-0 print:top-0 scrollbar-thin" id="printable-report-card" data-print-zone="true">
-              
-              <style dangerouslySetInnerHTML={{__html: `
+
+              <style dangerouslySetInnerHTML={{
+                __html: `
                 @media print {
                   .print-border { border: 12px double #1e293b !important; }
                 }
@@ -510,7 +510,7 @@ export default function ExamResultsPage() {
 
               {/* Certificate Border Frame */}
               <div className="border-[12px] border-double border-slate-800 dark:border-slate-700 p-6 md:p-10 relative overflow-hidden bg-white dark:bg-slate-900 print-border rounded-xl">
-                
+
                 {/* Subtle Guilloche Watermark Effect */}
                 <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.03] pointer-events-none select-none flex items-center justify-center">
                   <svg className="w-96 h-96 text-slate-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5">

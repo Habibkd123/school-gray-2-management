@@ -134,7 +134,7 @@ export default function DocumentsListPage() {
                     <td className="px-5 py-4 font-bold text-slate-800 dark:text-slate-100">
                       {d.student_name || `${d.first_name} ${d.last_name}`.trim()}
                     </td>
-                    <td className="px-5 py-4 font-mono font-semibold text-primary">
+                    <td className="px-5 py-4 font-sans font-semibold text-primary">
                       {d.application_no}
                     </td>
                     <td className="px-5 py-4 font-semibold text-slate-700 dark:text-slate-350">

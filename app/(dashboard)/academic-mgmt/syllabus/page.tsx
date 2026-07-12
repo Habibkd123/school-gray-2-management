@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Loader2, GraduationCap, BookOpen, ArrowRight, User, Search, RefreshCw, ChevronDown, ChevronLeft, ArrowLeft } from "lucide-react";
+import { Loader2, GraduationCap, BookOpen, ArrowRight, User, Search, RefreshCw, ChevronDown, ChevronLeft, ArrowLeft, Edit2, Trash2 } from "lucide-react";
 import { useTeacherAssignment } from "@/app/hooks/useTeacherAssignment";
 import { useTeachers } from "@/app/hooks/useTeachers";
 import { useClasses } from "@/app/hooks/useClasses";
@@ -21,6 +21,11 @@ export default function SyllabusClassListPage() {
   const [filterTeacherId, setFilterTeacherId] = useState("");
   const [syllabiStats, setSyllabiStats] = useState<Record<string, { total: number, completed: number, percent: number, updatedAt?: string }>>({});
   const [loadingStats, setLoadingStats] = useState(false);
+  const [expandedClasses, setExpandedClasses] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (classId: string) => {
+    setExpandedClasses(prev => ({ ...prev, [classId]: !prev[classId] }));
+  };
 
   useEffect(() => {
     async function fetchAllStats() {
@@ -31,7 +36,7 @@ export default function SyllabusClassListPage() {
         const data = await res.json();
         if (res.ok && data.success && data.data) {
           const statsMap: Record<string, any> = {};
-          
+
           data.data.forEach((syllabus: any) => {
             const assignmentId = syllabus.teacher_assignment_id;
             if (assignmentId) {
@@ -81,7 +86,7 @@ export default function SyllabusClassListPage() {
 
       const className = typeof a.class_id === 'object' ? (a.class_id?.name || "Class") : "Class";
       const section = typeof a.class_id === 'object' ? (a.class_id?.section || "") : "";
-      
+
       const classObj = classes.find(c => c._id === classId);
       const classTeacherName = classObj?.class_teacher_id?.name || "Not Assigned";
 
@@ -123,12 +128,12 @@ export default function SyllabusClassListPage() {
             <span className="text-slate-900 dark:text-white font-medium">Syllabus</span>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <button onClick={() => fetchAssignments({ limit: 5000 })} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <div className="px-4 py-2 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] font-bold text-slate-700 dark:text-slate-350 shadow-sm font-mono">
+          <div className="px-4 py-2 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] font-bold text-slate-700 dark:text-slate-350 shadow-sm font-sans">
             Academic Year: {academicYear}
           </div>
         </div>
@@ -167,9 +172,9 @@ export default function SyllabusClassListPage() {
 
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text" 
-              placeholder="Search classes or subjects..." 
+            <input
+              type="text"
+              placeholder="Search classes or subjects..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors text-slate-800 dark:text-slate-100 placeholder:text-slate-400"
@@ -194,12 +199,12 @@ export default function SyllabusClassListPage() {
             let totalChapters = 0;
             let completedChapters = 0;
             c.assignments.forEach(a => {
-               const stats = syllabiStats[a._id] || { total: 0, completed: 0, percent: 0 };
-               totalChapters += stats.total;
-               completedChapters += stats.completed;
+              const stats = syllabiStats[a._id] || { total: 0, completed: 0, percent: 0 };
+              totalChapters += stats.total;
+              completedChapters += stats.completed;
             });
             const percent = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
-            
+
             // Count unique teachers in this class
             const uniqueTeachers = new Set(
               c.assignments
@@ -230,20 +235,46 @@ export default function SyllabusClassListPage() {
                     </Link>
                   </div>
 
-                  <div className="p-5 space-y-4 border-b border-border">
-                    <div className="flex flex-col">
-                      <p className="text-[12px] font-bold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-1.5">
-                        <BookOpen className="w-3.5 h-3.5 text-slate-400" /> Subjects ({c.assignments.length})
-                      </p>
-                      <ul className="text-[13px] text-slate-600 dark:text-slate-400 space-y-1 ml-5 list-disc marker:text-slate-300 dark:marker:text-slate-600">
-                        {c.assignments.slice(0, 4).map((a, idx) => {
-                          const subjName = typeof a.subject_master_id === 'object' ? a.subject_master_id?.name : "Unknown Subject";
-                          return <li key={idx} className="truncate">{subjName}</li>;
-                        })}
-                        {c.assignments.length > 4 && (
-                          <li className="list-none -ml-5 mt-1 text-primary font-medium text-[12px]">+{c.assignments.length - 4} More</li>
-                        )}
-                      </ul>
+                  <div className="p-5 space-y-3 border-b border-border">
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                      Assigned Subjects ({c.assignments.length})
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      {c.assignments.slice(0, expandedClasses[c.classId] ? undefined : 4).map((a, idx) => {
+                        const subjName = typeof a.subject_master_id === 'object' ? a.subject_master_id?.name : "Unknown Subject";
+                        const subjCode = typeof a.subject_master_id === 'object' ? a.subject_master_id?.code : "—";
+                        return (
+                          <div key={idx} className="flex items-center justify-between p-3 rounded-md border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 group/subject transition-colors hover:border-slate-200 dark:hover:border-slate-700">
+                            <div className="flex items-center gap-3">
+                              <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
+                              <div>
+                                <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200 uppercase">{subjName}</p>
+                                {subjCode && subjCode !== "—" && (
+                                  <p className="text-[10px] font-medium text-slate-400 mt-0.5 font-mono">Code: {subjCode}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 opacity-0 group-hover/subject:opacity-100 transition-opacity">
+                              <button className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors" title="Edit Subject Syllabus">
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md transition-colors" title="Remove Syllabus">
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {c.assignments.length > 4 && (
+                        <div className="text-center py-1 mt-1">
+                          <button 
+                            onClick={() => toggleExpand(c.classId)}
+                            className="text-[#E29013] font-bold text-[12px] hover:underline cursor-pointer bg-transparent border-none p-0"
+                          >
+                            {expandedClasses[c.classId] ? "Show Less" : `+${c.assignments.length - 4} More`}
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
 

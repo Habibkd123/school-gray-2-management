@@ -17,7 +17,7 @@ const sectionSchema = new Schema<ISection>(
   { timestamps: true }
 );
 
-sectionSchema.index({ school_id: 1, name: 1 }, { unique: true });
+sectionSchema.index({ school_id: 1, name: 1 }, { unique: true, name: "section_school_name_unique_v1" });
 
 const Section: Model<ISection> =
   mongoose.models.Section || mongoose.model<ISection>("Section", sectionSchema);

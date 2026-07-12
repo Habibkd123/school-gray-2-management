@@ -292,7 +292,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-slate-500 dark:text-slate-400 font-medium shrink-0">School Username</span>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-slate-900 dark:text-white font-mono break-all text-right text-[12px]">
+                    <span className="font-bold text-slate-900 dark:text-white font-sans break-all text-right text-[12px]">
                       {email || "—"}
                     </span>
                     {email && (
@@ -315,7 +315,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
                       {mustChangePassword ? "Default Password" : "Password"}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-slate-900 dark:text-white font-mono text-[12px] tracking-widest">
+                      <span className="font-bold text-slate-900 dark:text-white font-sans text-[12px] tracking-widest">
                         {showPassword ? defaultPassword : "••••••••"}
                       </span>
                       <button

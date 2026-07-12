@@ -38,9 +38,9 @@ const studentFeeAssignmentSchema = new Schema<IStudentFeeAssignment>(
 );
 
 // Student fee ledger: "show fee assignment for student X in year Y"
-studentFeeAssignmentSchema.index({ school_id: 1, student_id: 1, academic_year: 1 });
+studentFeeAssignmentSchema.index({ school_id: 1, student_id: 1, academic_year: 1 }, { name: "fee_assignment_school_student_year_v1" });
 // Year-level listing for fee reports
-studentFeeAssignmentSchema.index({ school_id: 1, academic_year: 1 });
+studentFeeAssignmentSchema.index({ school_id: 1, academic_year: 1 }, { name: "fee_assignment_school_year_v1" });
 
 const StudentFeeAssignment: Model<IStudentFeeAssignment> =
   mongoose.models.StudentFeeAssignment || mongoose.model<IStudentFeeAssignment>("StudentFeeAssignment", studentFeeAssignmentSchema);

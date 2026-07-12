@@ -707,6 +707,7 @@ body {
 .erp-table thead tr {
   border-bottom: 1px solid var(--border-color);
   background-color: #f8fafc;
+  height: 48px; /* Consistent header height */
 }
 
 .dark .erp-table thead tr {
@@ -714,19 +715,19 @@ body {
 }
 
 .erp-table thead th {
-  padding: 0.5rem var(--px-table);
-  font-size: var(--text-table-header) !important;
-  font-weight: 500 !important;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  padding: 0 1.25rem;
+  font-size: 13px !important;
+  font-weight: 500 !important; /* Less bold, simple */
   color: var(--muted-text);
   white-space: nowrap;
   text-align: left;
+  vertical-align: middle;
 }
 
 .erp-table tbody tr {
   border-bottom: 1px solid var(--border-color);
-  transition: background-color 0.12s;
+  transition: background-color 0.15s ease;
+  height: 56px; /* Equal row height */
 }
 
 .erp-table tbody tr:last-child {
@@ -734,18 +735,59 @@ body {
 }
 
 .erp-table tbody tr:hover {
-  background-color: rgba(30, 58, 95, 0.03);
+  background-color: #f8fafc; /* Subtle hover */
 }
 
 .dark .erp-table tbody tr:hover {
-  background-color: rgba(30, 58, 95, 0.15);
+  background-color: rgba(255, 255, 255, 0.03); /* Subtle hover dark */
 }
 
 .erp-table tbody td {
-  padding: var(--py-table) var(--px-table);
-  font-size: var(--text-table-body);
+  padding: 0 1.25rem;
+  font-size: 13px;
+  font-weight: 400; /* Regular, not bold */
   color: var(--foreground);
   vertical-align: middle;
+}
+
+.erp-table tbody td a, 
+.erp-table tbody td .link {
+  font-weight: 500; /* Medium for links */
+}
+
+/* Inputs within table */
+.erp-table-input {
+  height: 36px;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-family: var(--font-family-base);
+  font-weight: 400;
+  font-size: 13px;
+  outline: none;
+  background-color: transparent;
+  width: 100%;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.erp-table-input:focus {
+  border-color: var(--primary);
+  background-color: var(--background);
+}
+
+.erp-table-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: transparent;
+}
+
+/* Sort icons in header */
+.erp-table-sort-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  font-size: 10px;
+  font-weight: bold;
 }
 
 .erp-table .col-num {
@@ -762,7 +804,7 @@ body {
 }
 
 .erp-table .table-empty {
-  padding: 3rem var(--px-table);
+  padding: 3rem 1rem;
   text-align: center;
   font-size: var(--text-body);
   color: var(--muted-text);

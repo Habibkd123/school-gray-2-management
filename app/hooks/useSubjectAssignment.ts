@@ -10,7 +10,7 @@ export interface PopulatedAssignment {
   class_id?: { _id: string; name: string; class_code?: string; section?: string } | null;
   stream_id?: { _id: string; name: string } | null;
   subject_master_id: { _id: string; name: string; subject_code?: string; description?: string };
-  teacher_id?: { _id: string; name: string; employee_id?: string } | null;
+  teacher_id?: { _id: string; name: string; employee_id?: string; photo_url?: string; designation?: string; is_active?: boolean; } | null;
   weekly_periods?: number;
   description?: string;
   status?: "Active" | "Inactive";

@@ -229,9 +229,8 @@ export default function ApplicationDetailPage() {
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {toast && (
-        <div className={`fixed top-5 right-5 z-[80] flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-[13px] font-semibold transition-all ${
-          toast.type === "success" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"
-        }`}>
+        <div className={`fixed top-5 right-5 z-[80] flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-[13px] font-semibold transition-all ${toast.type === "success" ? "bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" : "bg-rose-500/10 border border-rose-500/20 text-rose-400"
+          }`}>
           {toast.type === "success" ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           {toast.text}
         </div>
@@ -296,7 +295,7 @@ export default function ApplicationDetailPage() {
                   </div>
                   <div>
                     <span className="text-[11px] font-bold text-slate-400 uppercase">Student Initial Password</span>
-                    <div className="text-[13px] font-mono font-bold text-slate-850 dark:text-slate-200">{credentials.password_plain}</div>
+                    <div className="text-[13px] font-sans font-bold text-slate-850 dark:text-slate-200">{credentials.password_plain}</div>
                   </div>
                 </div>
 
@@ -374,7 +373,7 @@ export default function ApplicationDetailPage() {
           </button>
           <div>
             <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              Application detail <span className="text-primary font-mono text-[16px]">({app.application_no})</span>
+              Application detail <span className="text-primary font-sans text-[16px]">({app.application_no})</span>
             </h1>
             <p className="text-[12px] text-slate-500 mt-1">Submitted on {new Date(app.submission_date).toLocaleDateString()}</p>
           </div>

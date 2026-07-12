@@ -299,7 +299,7 @@ export default function HomeworkPage() {
                       </div>
 
                       <div className="mt-6 pt-4 border-t border-border flex items-center justify-between text-[13px]">
-                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-mono text-[11px] font-bold">
+                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 font-sans text-[11px] font-bold">
                           <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                           <span>Due: {new Date(hw.due_date).toLocaleDateString()}</span>
                         </div>
@@ -387,9 +387,8 @@ export default function HomeworkPage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Shakespearean Drama Analysis"
-              className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all shadow-sm ${
-                valErrors.title ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
-              }`}
+              className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all shadow-sm ${valErrors.title ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
+                }`}
             />
             {valErrors.title && (
               <p className="text-[11px] text-rose-500 font-bold mt-0.5 animate-in slide-in-from-top-1">
@@ -406,9 +405,8 @@ export default function HomeworkPage() {
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="Provide a prompt, text readings, or instructions..."
-              className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all shadow-sm resize-none ${
-                valErrors.description ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
-              }`}
+              className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all shadow-sm resize-none ${valErrors.description ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
+                }`}
             />
             {valErrors.description && (
               <p className="text-[11px] text-rose-500 font-bold mt-0.5 animate-in slide-in-from-top-1">
@@ -424,9 +422,8 @@ export default function HomeworkPage() {
                 id="classId"
                 value={classId}
                 onChange={(e) => setClassId(e.target.value)}
-                className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none transition-all shadow-sm cursor-pointer ${
-                  valErrors.classId ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
-                }`}
+                className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none transition-all shadow-sm cursor-pointer ${valErrors.classId ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
+                  }`}
               >
                 {classes.map((c) => (
                   <option key={c._id} value={c._id}>
@@ -448,9 +445,8 @@ export default function HomeworkPage() {
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
                 placeholder="e.g. English"
-                className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all shadow-sm ${
-                  valErrors.subject ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
-                }`}
+                className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all shadow-sm ${valErrors.subject ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
+                  }`}
               />
               {valErrors.subject && (
                 <p className="text-[11px] text-rose-500 font-bold mt-0.5 animate-in slide-in-from-top-1">
@@ -465,9 +461,8 @@ export default function HomeworkPage() {
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all font-mono font-bold text-slate-600 dark:text-slate-300 cursor-pointer shadow-sm ${
-                  valErrors.dueDate ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
-                }`}
+                className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all font-sans font-bold text-slate-600 dark:text-slate-300 cursor-pointer shadow-sm ${valErrors.dueDate ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
+                  }`}
               />
               {valErrors.dueDate && (
                 <p className="text-[11px] text-rose-500 font-bold mt-0.5 animate-in slide-in-from-top-1">
@@ -519,9 +514,8 @@ export default function HomeworkPage() {
               onChange={(e) => setSubmissionContent(e.target.value)}
               rows={6}
               placeholder="Write your assignment text here..."
-              className={`px-3.5 py-3 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all shadow-sm resize-none leading-relaxed ${
-                valErrors.submissionContent ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
-              }`}
+              className={`px-3.5 py-3 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all shadow-sm resize-none leading-relaxed ${valErrors.submissionContent ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
+                }`}
             />
             {valErrors.submissionContent && (
               <p className="text-[11px] text-rose-500 font-bold mt-0.5 animate-in slide-in-from-top-1">
@@ -697,9 +691,8 @@ export default function HomeworkPage() {
                 value={feedback}
                 onChange={(e) => setFeedback(e.target.value)}
                 placeholder="Good analytical structure..."
-                className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all shadow-sm ${
-                  valErrors.feedback ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
-                }`}
+                className={`px-3.5 py-2.5 border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none transition-all shadow-sm ${valErrors.feedback ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" : "border-border focus:border-primary/50 focus:ring-2 focus:ring-primary/10"
+                  }`}
               />
               {valErrors.feedback && (
                 <p className="text-[11px] text-rose-500 font-bold mt-0.5 animate-in slide-in-from-top-1">

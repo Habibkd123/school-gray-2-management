@@ -17,7 +17,7 @@ const rolePermissionSchema = new Schema<IRolePermission>(
   { timestamps: true }
 );
 
-rolePermissionSchema.index({ school_id: 1, role: 1 }, { unique: true });
+rolePermissionSchema.index({ school_id: 1, role: 1 }, { unique: true, name: "role_permission_school_role_unique_v1" });
 
 const RolePermission: Model<IRolePermission> =
   mongoose.models.RolePermission || mongoose.model<IRolePermission>("RolePermission", rolePermissionSchema);

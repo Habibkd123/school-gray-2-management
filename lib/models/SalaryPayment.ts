@@ -68,7 +68,7 @@ const salaryPaymentSchema = new Schema<ISalaryPayment>(
 );
 
 
-salaryPaymentSchema.index({ school_id: 1, teacher_id: 1, salary_period: 1 }, { unique: true });
+salaryPaymentSchema.index({ school_id: 1, teacher_id: 1, salary_period: 1 }, { unique: true, name: "salary_payment_school_teacher_period_unique_v1" });
 
 const SalaryPayment: Model<ISalaryPayment> =
   mongoose.models.SalaryPayment || mongoose.model<ISalaryPayment>("SalaryPayment", salaryPaymentSchema);

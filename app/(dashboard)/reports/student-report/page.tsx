@@ -25,7 +25,7 @@ export default function StudentReportPage() {
   const [joinStartDate, setJoinStartDate] = useState("");
   const [joinEndDate, setJoinEndDate] = useState("");
   const [sortOption, setSortOption] = useState<"name" | "roll" | "join">("name");
-  
+
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
 
@@ -56,7 +56,7 @@ export default function StudentReportPage() {
 
       const classId = typeof s.class_id === "object" ? s.class_id?._id : s.class_id;
       const cls = classes.find((c) => c._id === classId);
-      
+
       const matchClass = !filterClass || classId === filterClass;
       const matchSection = !filterSection || (cls && cls.section === filterSection);
       const matchGender = !filterGender || (s.gender || "").toLowerCase() === filterGender.toLowerCase();
@@ -183,7 +183,7 @@ export default function StudentReportPage() {
       <div className="print:hidden">
         <ReportTabs />
       </div>
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left print:hidden">
         <div>
@@ -549,11 +549,10 @@ export default function StudentReportPage() {
               <button
                 key={p}
                 onClick={() => setPage(p)}
-                className={`w-7 h-7 rounded-lg text-[13px] font-medium flex items-center justify-center ${
-                  page === p
+                className={`w-7 h-7 rounded-lg text-[13px] font-medium flex items-center justify-center ${page === p
                     ? "bg-primary text-white"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
-                }`}
+                  }`}
               >
                 {p}
               </button>
@@ -631,7 +630,7 @@ export default function StudentReportPage() {
                         <span className="text-xs text-slate-400 uppercase tracking-wide font-bold">Student Profile</span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-1">
                       <p className="text-slate-400 text-xs uppercase font-bold">Academic Details</p>
                       <p className="font-semibold text-slate-800 dark:text-slate-200">
@@ -721,11 +720,10 @@ export default function StudentReportPage() {
                       <button
                         key={t.id}
                         onClick={() => setActiveTab(t.id as any)}
-                        className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${
-                          activeTab === t.id
+                        className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeTab === t.id
                             ? "border-primary text-primary"
                             : "border-transparent text-slate-500 hover:text-slate-700"
-                        }`}
+                          }`}
                       >
                         {t.label}
                       </button>
@@ -824,16 +822,15 @@ export default function StudentReportPage() {
                                 <tr key={i} className="hover:bg-slate-50/50 transition-colors">
                                   <td className="px-5 py-3 font-semibold text-slate-800 dark:text-slate-100">{t.title}</td>
                                   <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{t.subject}</td>
-                                  <td className="px-5 py-3 text-slate-500 font-mono">
+                                  <td className="px-5 py-3 text-slate-500 font-sans">
                                     {t.testDate ? new Date(t.testDate).toLocaleDateString("en-GB") : "—"}
                                   </td>
                                   <td className="px-5 py-3 text-slate-800 dark:text-slate-200 font-bold">{t.marksObtained}</td>
                                   <td className="px-5 py-3 text-slate-600 dark:text-slate-400">{t.totalMarks}</td>
-                                  <td className="px-5 py-3 text-slate-600 dark:text-slate-300 font-bold font-mono">{t.percentage}%</td>
+                                  <td className="px-5 py-3 text-slate-600 dark:text-slate-300 font-bold font-sans">{t.percentage}%</td>
                                   <td className="px-5 py-3">
-                                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                                      t.isPass ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"
-                                    }`}>
+                                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${t.isPass ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "bg-rose-50 text-rose-700 border border-rose-100"
+                                      }`}>
                                       {t.isPass ? "Pass" : "Fail"}
                                     </span>
                                   </td>
@@ -872,10 +869,10 @@ export default function StudentReportPage() {
                                 <tr key={i} className="hover:bg-slate-50/50 transition-colors">
                                   <td className="px-5 py-3 font-semibold text-slate-800 dark:text-slate-100">{hw.title}</td>
                                   <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{hw.subject}</td>
-                                  <td className="px-5 py-3 text-slate-500 font-mono">
+                                  <td className="px-5 py-3 text-slate-500 font-sans">
                                     {hw.assignedDate ? new Date(hw.assignedDate).toLocaleDateString("en-GB") : "—"}
                                   </td>
-                                  <td className="px-5 py-3 text-slate-500 font-mono">
+                                  <td className="px-5 py-3 text-slate-500 font-sans">
                                     {hw.dueDate ? new Date(hw.dueDate).toLocaleDateString("en-GB") : "—"}
                                   </td>
                                   <td className="px-5 py-3">

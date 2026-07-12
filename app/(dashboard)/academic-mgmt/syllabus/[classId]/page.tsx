@@ -21,7 +21,7 @@ export default function SyllabusClassSubjectListPage() {
 
   const { academicYear } = useAppState();
   const { user } = useAuth();
-  
+
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
   const isTeacher = user?.role === "teacher";
   const isStudentOrParent = user?.role === "student" || user?.role === "parent";
@@ -38,7 +38,7 @@ export default function SyllabusClassSubjectListPage() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
-  
+
   // Delete action states
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedSyllabus, setSelectedSyllabus] = useState<SyllabusData | null>(null);
@@ -85,7 +85,7 @@ export default function SyllabusClassSubjectListPage() {
     syllabi.forEach(s => {
       const nodes = s.nodes || [];
       totalChapters += nodes.length;
-      completedChapters += nodes.filter((n: any) => n.resources?.some((r: any) => r.type === "youtube") || false).length; 
+      completedChapters += nodes.filter((n: any) => n.resources?.some((r: any) => r.type === "youtube") || false).length;
     });
 
     const percent = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
@@ -132,7 +132,7 @@ export default function SyllabusClassSubjectListPage() {
           <button onClick={fetchClassSyllabi} className="btn btn-outline p-2 w-9 h-9">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <div className="px-4 py-2 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] font-bold text-slate-700 dark:text-slate-350 shadow-sm font-mono">
+          <div className="px-4 py-2 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] font-bold text-slate-700 dark:text-slate-350 shadow-sm font-sans">
             Academic Year: {academicYear}
           </div>
         </div>
@@ -149,7 +149,7 @@ export default function SyllabusClassSubjectListPage() {
             <p className="text-[15px] font-bold text-slate-800 dark:text-white leading-tight mt-0.5">{classTeacherName}</p>
           </div>
         </div>
-        
+
         <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 flex items-center gap-4 shadow-sm text-left font-medium">
           <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center shrink-0">
             <BookOpen className="w-6 h-6 text-blue-500" />
@@ -194,9 +194,9 @@ export default function SyllabusClassSubjectListPage() {
           </div>
           <div className="relative w-full sm:w-72">
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-550 absolute left-3 top-2.5" />
-            <input 
-              type="text" 
-              placeholder="Search subject, teacher..." 
+            <input
+              type="text"
+              placeholder="Search subject, teacher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-2 w-full bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors text-slate-850 dark:text-slate-100 placeholder:text-slate-400"
@@ -242,9 +242,8 @@ export default function SyllabusClassSubjectListPage() {
                     </div>
 
                     <div className="flex items-center gap-2 relative">
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${
-                        isPublished ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20" : "bg-slate-100 text-slate-600 dark:bg-slate-800"
-                      }`}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${isPublished ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20" : "bg-slate-100 text-slate-600 dark:bg-slate-800"
+                        }`}>
                         {s.status || "Draft"}
                       </span>
 
@@ -303,7 +302,7 @@ export default function SyllabusClassSubjectListPage() {
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span>Syllabus Version:</span>
-                      <span className="font-mono bg-slate-100 dark:bg-slate-855 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300 font-bold">v{s.version}</span>
+                      <span className="font-sans bg-slate-100 dark:bg-slate-855 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300 font-bold">v{s.version}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
                       <span>Chapters Map:</span>

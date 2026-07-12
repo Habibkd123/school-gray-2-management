@@ -33,11 +33,8 @@ const userSchema = new Schema<IUser>(
     email: { type: String, required: [true, "Email is required"], lowercase: true, trim: true },
     username: {
       type: String,
-      unique: true,
       lowercase: true,
       trim: true,
-      sparse: true,
-      index: true,
     },
     password_hash: { type: String, required: true, select: false }, // Never returned by default
     plain_password: { type: String, default: null },
@@ -56,8 +53,8 @@ const userSchema = new Schema<IUser>(
 );
 
 // ─── Indexes ───────────────────────────────────────────────────────
-userSchema.index({ email: 1, school_id: 1 }, { unique: true });
-userSchema.index({ username: 1 }, { unique: true });
+userSchema.index({ email: 1, school_id: 1 }, { unique: true, name: "user_email_school_unique_v1" });
+userSchema.index({ username: 1 }, { unique: true, sparse: true, name: "user_username_unique_v1" });
 
 // ─── Generate username if missing before validation ─────────────────
 userSchema.pre("validate", async function () {

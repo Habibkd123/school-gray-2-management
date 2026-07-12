@@ -185,7 +185,7 @@ export default function PublicApplyPage() {
 
           <div className="p-5 bg-white/5 border border-white/10 rounded-xl max-w-sm mx-auto">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Application Reference No</span>
-            <span className="section-title font-mono text-primary block mt-1.5 tracking-wider">
+            <span className="section-title font-sans text-primary block mt-1.5 tracking-wider">
               {successData.application_no}
             </span>
           </div>

@@ -156,12 +156,11 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
           {/* Student metadata info banner */}
           <div className="bg-slate-50 dark:bg-slate-800 p-4 border border-border rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
             <div>Student Name: <span className="text-slate-900 dark:text-white font-extrabold">{studentDetails.name}</span></div>
-            <div>Admission Number: <span className="text-slate-900 dark:text-white font-mono font-extrabold">{studentDetails.admission_no}</span></div>
+            <div>Admission Number: <span className="text-slate-900 dark:text-white font-sans font-extrabold">{studentDetails.admission_no}</span></div>
             <div>Class & Section: <span className="text-slate-900 dark:text-white font-extrabold">{studentDetails.class_name}</span></div>
-            <div>Status: 
-              <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                studentDetails.status === "Paid" ? "bg-emerald-100 text-emerald-700" : studentDetails.status === "Partial" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
-              }`}>{studentDetails.status}</span>
+            <div>Status:
+              <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold ${studentDetails.status === "Paid" ? "bg-emerald-100 text-emerald-700" : studentDetails.status === "Partial" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
+                }`}>{studentDetails.status}</span>
             </div>
           </div>
 
@@ -192,7 +191,7 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                   ) : (
                     payments.map((p) => (
                       <tr key={p._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td className="px-6 py-4 font-mono font-bold text-primary">{p.receipt_number || p.receipt_no}</td>
+                        <td className="px-6 py-4 font-sans font-bold text-primary">{p.receipt_number || p.receipt_no}</td>
                         <td className="px-6 py-4 font-semibold">{fmtDate(p.payment_date)}</td>
                         <td className="px-6 py-4">
                           <span className="px-2.5 py-0.5 rounded bg-slate-100 text-[10px] font-bold">
@@ -200,7 +199,7 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                           </span>
                         </td>
                         <td className="px-6 py-4 text-slate-500">{p.remarks || "—"}</td>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-emerald-600">
+                        <td className="px-6 py-4 text-right font-sans font-bold text-emerald-600">
                           {money(p.amount_paid || p.total_amount)}
                         </td>
                         <td className="px-6 py-4 text-right">
@@ -289,19 +288,19 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                 </div>
                 <div className="flex border-b border-dashed border-slate-200 pb-1">
                   <span className="font-bold text-slate-400 w-28">Admission No:</span>
-                  <span className="font-mono font-bold text-slate-900">{printedReceipt.student_id?.admission_no || "N/A"}</span>
+                  <span className="font-sans font-bold text-slate-900">{printedReceipt.student_id?.admission_no || "N/A"}</span>
                 </div>
                 <div className="flex border-b border-dashed border-slate-200 pb-1 col-span-2">
                   <span className="font-bold text-slate-400 w-28">Class Assigned:</span>
                   <span className="font-bold text-slate-900">
-                    {printedReceipt.student_id?.class_id?.name 
+                    {printedReceipt.student_id?.class_id?.name
                       ? `${printedReceipt.student_id.class_id.name} - ${printedReceipt.student_id.class_id.section}`
                       : "N/A"}
                   </span>
                 </div>
                 <div className="flex border-b border-dashed border-slate-200 pb-1">
                   <span className="font-bold text-slate-400 w-28">Receipt Number:</span>
-                  <span className="font-mono font-bold text-primary">{printedReceipt.receipt_number || printedReceipt.receipt_no}</span>
+                  <span className="font-sans font-bold text-primary">{printedReceipt.receipt_number || printedReceipt.receipt_no}</span>
                 </div>
                 <div className="flex border-b border-dashed border-slate-200 pb-1">
                   <span className="font-bold text-slate-400 w-28">Payment Date:</span>
@@ -314,7 +313,7 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
               {(() => {
                 const receiptBreakdown = (printedReceipt.fee_breakdown || []).map((item: any) => {
                   const config = (printedReceipt.feeTypesConfig || []).find((c: any) => c.name === item.name);
-                  
+
                   // Calculate multiplier for the transaction billing range
                   const start = new Date(printedReceipt.start_date);
                   const end = new Date(printedReceipt.end_date);
@@ -392,19 +391,18 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                           {receiptBreakdown.map((ft: any, i: number) => (
                             <tr key={i} className="hover:bg-slate-50 transition-colors">
                               <td className="px-3 py-2.5 font-bold text-slate-800">{ft.name}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-slate-700">{money(ft.totalAmount)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-slate-500">{money(ft.paidBefore)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono font-black text-primary bg-primary/5">{money(ft.paidNow)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono text-slate-800">{money(ft.totalPaid)}</td>
-                              <td className="px-3 py-2.5 text-right font-mono font-bold text-rose-600 bg-rose-50/20">{money(ft.outstanding)}</td>
+                              <td className="px-3 py-2.5 text-right font-sans text-slate-700">{money(ft.totalAmount)}</td>
+                              <td className="px-3 py-2.5 text-right font-sans text-slate-500">{money(ft.paidBefore)}</td>
+                              <td className="px-3 py-2.5 text-right font-sans font-black text-primary bg-primary/5">{money(ft.paidNow)}</td>
+                              <td className="px-3 py-2.5 text-right font-sans text-slate-800">{money(ft.totalPaid)}</td>
+                              <td className="px-3 py-2.5 text-right font-sans font-bold text-rose-600 bg-rose-50/20">{money(ft.outstanding)}</td>
                               <td className="px-3 py-2.5 text-center">
-                                <span className={`px-2 py-0.3 rounded text-[8px] font-black uppercase tracking-wider ${
-                                  ft.status === "Paid"
+                                <span className={`px-2 py-0.3 rounded text-[8px] font-black uppercase tracking-wider ${ft.status === "Paid"
                                     ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                                     : ft.status === "Partial"
-                                    ? "bg-amber-100 text-amber-800 border border-amber-200"
-                                    : "bg-rose-100 text-rose-800 border border-rose-200"
-                                }`}>
+                                      ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                      : "bg-rose-100 text-rose-800 border border-rose-200"
+                                  }`}>
                                   {ft.status}
                                 </span>
                               </td>
@@ -418,7 +416,7 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                     <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-sans space-y-1.5 mb-6 text-[10px]">
                       <div className="flex justify-between font-bold text-slate-850">
                         <span>Total Amount Paid In This Transaction:</span>
-                        <span className="font-mono text-emerald-600 font-black text-sm">
+                        <span className="font-sans text-emerald-600 font-black text-sm">
                           {money(printedReceipt.amount_paid || printedReceipt.total_amount)}
                         </span>
                       </div>

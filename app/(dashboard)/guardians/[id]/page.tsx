@@ -79,7 +79,7 @@ export default function ParentDetailPage() {
   const [parent, setParent] = useState<ApiParent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Tabs State
   const [activeTab, setActiveTab] = useState<"students" | "fees" | "communication">("students");
 
@@ -270,7 +270,7 @@ export default function ParentDetailPage() {
   const totalFeesAssigned = Object.values(feesSummaries).reduce((sum, f) => sum + (f.totalFees || 0), 0);
   const totalFeesPaid = Object.values(feesSummaries).reduce((sum, f) => sum + (f.totalPaid || 0), 0);
   const totalFeesPending = Object.values(feesSummaries).reduce((sum, f) => sum + (f.balanceAmount || 0), 0);
-  
+
   // Calculate Overdue amounts (balance sum for kids with "Overdue" status)
   const totalFeesOverdue = Object.values(feesSummaries)
     .filter(f => f.dueStatus === "Overdue")
@@ -353,14 +353,14 @@ export default function ParentDetailPage() {
               <Lock className="w-3.5 h-3.5" />
               <span>Login Details</span>
             </button>
-            <button 
+            <button
               onClick={() => {
                 const pUser = parent?.user_id;
                 const pUid = pUser && typeof pUser === "object" ? pUser._id : undefined;
                 const pEmail = pUser && typeof pUser === "object" ? pUser.email : parent.email || "";
                 setResetPassTarget({ userId: pUid, name: parent.name, email: pEmail });
                 setIsResetPassModalOpen(true);
-              }} 
+              }}
               className="flex items-center gap-2 px-3.5 py-2 bg-rose-550 hover:bg-rose-600 text-white text-[12px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer font-sans"
             >
               <Lock className="w-3.5 h-3.5" />
@@ -492,7 +492,7 @@ export default function ParentDetailPage() {
                       return (
                         <div key={child._id} className="border border-slate-200 dark:border-slate-800 rounded-xl p-5 hover:border-primary/45 transition-colors flex flex-col justify-between bg-white dark:bg-slate-850 shadow-xs text-left">
                           <div className="flex items-center justify-between mb-4">
-                            <span className="font-bold text-primary font-mono text-[13px]">
+                            <span className="font-bold text-primary font-sans text-[13px]">
                               {child.admission_no || `AD${child._id.slice(-6).toUpperCase()}`}
                             </span>
                             <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold
@@ -635,7 +635,7 @@ export default function ParentDetailPage() {
                             .map((f: any) => (
                               <div key={f._id} className="flex justify-between items-center text-[13px] font-semibold">
                                 <span className="text-slate-800 dark:text-slate-200">{f.name} ({f.class_name})</span>
-                                <span className="text-rose-500 font-mono">₹{f.balanceAmount.toLocaleString("en-IN")}</span>
+                                <span className="text-rose-500 font-sans">₹{f.balanceAmount.toLocaleString("en-IN")}</span>
                               </div>
                             ))
                         )}
@@ -657,7 +657,7 @@ export default function ParentDetailPage() {
                               <th className="px-4 py-3 font-bold text-slate-600 dark:text-slate-350">Payment Date</th>
                               <th className="px-4 py-3 font-bold text-slate-600 dark:text-slate-350">Student</th>
                               <th className="px-4 py-3 font-bold text-slate-600 dark:text-slate-350">Method</th>
-                              <th className="px-4 py-3 font-bold text-slate-600 dark:text-slate-350 font-mono text-right">Amount</th>
+                              <th className="px-4 py-3 font-bold text-slate-600 dark:text-slate-350 font-sans text-right">Amount</th>
                               <th className="px-4 py-3 font-bold text-slate-600 dark:text-slate-350">Collected By</th>
                               <th className="px-4 py-3 font-bold text-slate-600 dark:text-slate-350 text-center">Actions</th>
                             </tr>
@@ -673,11 +673,11 @@ export default function ParentDetailPage() {
                             ) : (
                               paymentsList.map((payment) => (
                                 <tr key={payment._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                                  <td className="px-4 py-3 text-primary font-mono font-bold">{payment.receipt_number}</td>
+                                  <td className="px-4 py-3 text-primary font-sans font-bold">{payment.receipt_number}</td>
                                   <td className="px-4 py-3 text-slate-650">{formatDate(payment.payment_date)}</td>
                                   <td className="px-4 py-3 text-slate-800 dark:text-slate-200">{payment.student_id?.name || "—"}</td>
                                   <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{payment.payment_method}</td>
-                                  <td className="px-4 py-3 text-emerald-500 text-right font-mono font-bold">₹{payment.amount_paid.toLocaleString("en-IN")}</td>
+                                  <td className="px-4 py-3 text-emerald-500 text-right font-sans font-bold">₹{payment.amount_paid.toLocaleString("en-IN")}</td>
                                   <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{payment.collected_by?.name || "Self Portal"}</td>
                                   <td className="px-4 py-3 text-center">
                                     <button
@@ -770,7 +770,7 @@ export default function ParentDetailPage() {
                   <p className="text-[11px] text-slate-400">Payment Transaction Receipt</p>
                 </div>
                 <div className="text-right">
-                  <h4 className="font-mono font-bold text-primary text-[14px]">{selectedReceipt.receipt_number}</h4>
+                  <h4 className="font-sans font-bold text-primary text-[14px]">{selectedReceipt.receipt_number}</h4>
                   <p className="text-[11px] text-slate-450">Date: {formatDate(selectedReceipt.payment_date)}</p>
                 </div>
               </div>
@@ -805,13 +805,13 @@ export default function ParentDetailPage() {
                     selectedReceipt.fee_breakdown.map((item: any, idx: number) => (
                       <div key={idx} className="grid grid-cols-2 px-3 py-2 text-slate-700">
                         <span>{item.name}</span>
-                        <span className="text-right font-mono">₹{item.amount_paid.toLocaleString("en-IN")}</span>
+                        <span className="text-right font-sans">₹{item.amount_paid.toLocaleString("en-IN")}</span>
                       </div>
                     ))
                   ) : (
                     <div className="grid grid-cols-2 px-3 py-2 text-slate-700">
                       <span>General School Fees</span>
-                      <span className="text-right font-mono">₹{selectedReceipt.amount_paid.toLocaleString("en-IN")}</span>
+                      <span className="text-right font-sans">₹{selectedReceipt.amount_paid.toLocaleString("en-IN")}</span>
                     </div>
                   )}
                 </div>
@@ -819,7 +819,7 @@ export default function ParentDetailPage() {
 
               <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-[14px] font-bold text-slate-900">
                 <span>Total Amount Paid</span>
-                <span className="font-mono text-emerald-600">₹{selectedReceipt.amount_paid.toLocaleString("en-IN")}</span>
+                <span className="font-sans text-emerald-600">₹{selectedReceipt.amount_paid.toLocaleString("en-IN")}</span>
               </div>
 
               {selectedReceipt.remarks && (

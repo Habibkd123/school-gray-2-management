@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { 
+import {
   Search, List, Filter, ChevronDown, RefreshCw, Printer, Download, FileText, Calendar, MoreVertical, Check, X, Loader2
 } from "lucide-react";
 import { Modal } from "../../../components/ui/modal";
@@ -17,37 +17,37 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
   const to = new Date(now);
   const from = new Date(now);
   switch (range) {
-    case "Today": 
-      from.setHours(0, 0, 0, 0); 
+    case "Today":
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
     case "Yesterday":
       from.setDate(from.getDate() - 1); from.setHours(0, 0, 0, 0);
       to.setDate(to.getDate() - 1); to.setHours(23, 59, 59, 999);
       break;
-    case "Last 7 Days": 
-      from.setDate(from.getDate() - 7); 
+    case "Last 7 Days":
+      from.setDate(from.getDate() - 7);
       from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "Last 30 Days": 
-      from.setDate(from.getDate() - 30); 
+    case "Last 30 Days":
+      from.setDate(from.getDate() - 30);
       from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "This Month": 
-      from.setDate(1); 
-      from.setHours(0, 0, 0, 0); 
+    case "This Month":
+      from.setDate(1);
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "This Year": 
-      from.setMonth(0, 1); 
-      from.setHours(0, 0, 0, 0); 
+    case "This Year":
+      from.setMonth(0, 1);
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
     case "All Time":
       return { from: null, to: null };
-    default: 
+    default:
       return { from: null, to: null };
   }
   return { from, to };
@@ -55,10 +55,10 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
 
 export default function ApproveLeaveRequestPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
-  
+
   // Date range state
   const [selectedRange, setSelectedRange] = useState("All Time");
   const [customFrom, setCustomFrom] = useState("");
@@ -169,19 +169,19 @@ export default function ApproveLeaveRequestPage() {
   const filteredData = useMemo(() => {
     let list = leaveRequests.filter(item => {
       const name = getUserName(item);
-      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            item.leave_type.toLowerCase().includes(searchTerm.toLowerCase());
-      
+      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.leave_type.toLowerCase().includes(searchTerm.toLowerCase());
+
       const matchesLeaveType = filterLeaveType ? item.leave_type === filterLeaveType : true;
       const matchesStatus = filterStatus ? item.status === filterStatus.toLowerCase() : true;
-      
+
       let matchesDate = true;
       if (activeFrom && activeTo) {
         const fromDate = new Date(item.from_date);
         const toDate = new Date(item.to_date);
         matchesDate = (fromDate <= activeTo && toDate >= activeFrom);
       }
-      
+
       return matchesSearch && matchesLeaveType && matchesStatus && matchesDate;
     });
 
@@ -243,9 +243,9 @@ export default function ApproveLeaveRequestPage() {
           <button className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <Printer className="w-4 h-4" />
           </button>
-          
+
           <div className="relative">
-            <button 
+            <button
               onClick={() => setIsExportOpen(!isExportOpen)}
               className="btn btn-outline flex items-center gap-2"
             >
@@ -275,7 +275,7 @@ export default function ApproveLeaveRequestPage() {
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">
             Leave Request List
           </h2>
-          
+
           <div className="flex items-center gap-3 flex-wrap">
             {/* ── Date Range ── */}
             <div className="relative" onClick={(e) => e.stopPropagation()}>
@@ -340,7 +340,7 @@ export default function ApproveLeaveRequestPage() {
                       <div className="space-y-1.5">
                         <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Leave Type</label>
                         <div className="relative">
-                          <select 
+                          <select
                             value={filterLeaveType}
                             onChange={(e) => setFilterLeaveType(e.target.value)}
                             className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
@@ -357,7 +357,7 @@ export default function ApproveLeaveRequestPage() {
                       <div className="space-y-1.5">
                         <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Status</label>
                         <div className="relative">
-                          <select 
+                          <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
                             className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
@@ -372,13 +372,13 @@ export default function ApproveLeaveRequestPage() {
                       </div>
                     </div>
                     <div className="p-4 flex justify-end gap-3 bg-white dark:bg-slate-900 rounded-b-lg border-t border-border mt-2">
-                      <button 
+                      <button
                         onClick={() => { setFilterLeaveType(""); setFilterStatus(""); }}
                         className="px-5 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 hover:bg-[#E2E8F0] dark:hover:bg-slate-700 text-foreground dark:text-slate-100 text-[13px] font-bold rounded-lg transition-colors cursor-pointer"
                       >
                         Reset
                       </button>
-                      <button 
+                      <button
                         onClick={() => setIsFilterOpen(false)}
                         className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors cursor-pointer"
                       >
@@ -402,8 +402,8 @@ export default function ApproveLeaveRequestPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                     {["Ascending", "Descending", "Recently Added"].map((item) => (
-                      <button 
-                        key={item} 
+                      <button
+                        key={item}
                         onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
                         className={`w-full px-4 py-2.5 text-[13px] text-left transition-colors cursor-pointer
                           ${selectedSort === item ? "bg-primary/10 dark:bg-primary/20 text-[var(--primary-hover)] dark:text-primary font-semibold" : "text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`}
@@ -428,9 +428,9 @@ export default function ApproveLeaveRequestPage() {
 
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text" 
-              placeholder="Search..." 
+            <input
+              type="text"
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors"
@@ -486,7 +486,7 @@ export default function ApproveLeaveRequestPage() {
                   <td className="text-slate-655 font-semibold">
                     {formatDateRange(item.from_date, item.to_date)}
                   </td>
-                  <td className="text-slate-655 font-mono">
+                  <td className="text-slate-655 font-sans">
                     {item.total_days || 1}
                   </td>
                   <td className="text-slate-655">
@@ -496,7 +496,7 @@ export default function ApproveLeaveRequestPage() {
                     {getStatusBadge(item.status)}
                   </td>
                   <td className="col-center relative" onClick={(e) => e.stopPropagation()}>
-                    <button 
+                    <button
                       onClick={() => setActionMenuId(actionMenuId === item._id ? null : item._id)}
                       className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
                     >
@@ -518,7 +518,7 @@ export default function ApproveLeaveRequestPage() {
             </tbody>
           </table>
         </div>
- 
+
         {/* Pagination */}
         <PaginationBar
           currentPage={page}
@@ -540,7 +540,7 @@ export default function ApproveLeaveRequestPage() {
       >
         {selectedRequest && (
           <form onSubmit={handleSubmit} className="space-y-6 text-left">
-            
+
             <div className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] rounded-xl p-5 grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-6">
               <div className="space-y-1">
                 <p className="card-subtitle text-[13px]">Submitted By</p>
@@ -584,11 +584,11 @@ export default function ApproveLeaveRequestPage() {
                       {formStatus === status && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
                     </div>
                     <span className="text-[14px] text-slate-700 dark:text-slate-200 capitalize">{status}</span>
-                    <input 
-                      type="radio" 
-                      className="hidden" 
-                      checked={formStatus === status} 
-                      onChange={() => setFormStatus(status)} 
+                    <input
+                      type="radio"
+                      className="hidden"
+                      checked={formStatus === status}
+                      onChange={() => setFormStatus(status)}
                     />
                   </label>
                 ))}
@@ -597,7 +597,7 @@ export default function ApproveLeaveRequestPage() {
 
             <div className="space-y-2">
               <h4 className="text-[15px] font-bold text-foreground dark:text-slate-100">Note</h4>
-              <textarea 
+              <textarea
                 placeholder="Add Comment"
                 value={formNote}
                 onChange={(e) => setFormNote(e.target.value)}
@@ -606,15 +606,15 @@ export default function ApproveLeaveRequestPage() {
             </div>
 
             <div className="flex justify-end gap-3 pt-2">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={saving}
                 className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
               >

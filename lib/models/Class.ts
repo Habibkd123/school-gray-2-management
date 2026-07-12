@@ -45,9 +45,9 @@ const classSchema = new Schema<IClass>(
 );
 
 // Unique constraint on class identity
-classSchema.index({ school_id: 1, name: 1, section: 1, academic_year: 1 }, { unique: true });
+classSchema.index({ school_id: 1, name: 1, section: 1, academic_year: 1 }, { unique: true, name: "class_school_name_section_year_unique_v1" });
 // Efficient DB-level ordering for list views
-classSchema.index({ school_id: 1, sort_weight: 1, section: 1 });
+classSchema.index({ school_id: 1, sort_weight: 1, section: 1 }, { name: "class_school_sort_weight_section_v1" });
 
 const Class: Model<IClass> =
   mongoose.models.Class && mongoose.models.Class.schema.paths.status?.options?.enum?.includes("Archived")

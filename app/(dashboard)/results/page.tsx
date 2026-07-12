@@ -179,7 +179,7 @@ export default function ResultsPage() {
                         <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{getStudentName(result.student_id)}</td>
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{getSubjectName(result.subject_id)}</td>
                         <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{getExamName(result.exam_id)}</td>
-                        <td className="px-6 py-4 font-mono font-semibold text-slate-700 dark:text-slate-200">
+                        <td className="px-6 py-4 font-sans font-semibold text-slate-700 dark:text-slate-200">
                           {result.marks_obtained} / {result.total_marks}
                           <span className="text-slate-400 text-[11px] ml-1">({percent}%)</span>
                         </td>

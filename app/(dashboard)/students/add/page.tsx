@@ -82,8 +82,8 @@ function InputGroup({ label, type = "text", placeholder, options, value, onChang
   value?: string; onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void; required?: boolean;
   error?: string; id?: string;
 }) {
-  const borderClass = error 
-    ? "border border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" 
+  const borderClass = error
+    ? "border border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
     : "border border-border focus:border-primary/50";
 
   return (
@@ -93,10 +93,10 @@ function InputGroup({ label, type = "text", placeholder, options, value, onChang
       </label>
       {type === "select" ? (
         <div className="relative">
-          <select 
+          <select
             id={id}
-            className={`w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 rounded-lg outline-none transition-all appearance-none cursor-pointer ${borderClass}`} 
-            value={value} 
+            className={`w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 rounded-lg outline-none transition-all appearance-none cursor-pointer ${borderClass}`}
+            value={value}
             onChange={onChange as any}
           >
             {options?.map(opt => {
@@ -109,13 +109,13 @@ function InputGroup({ label, type = "text", placeholder, options, value, onChang
           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">▾</span>
         </div>
       ) : (
-        <input 
+        <input
           id={id}
-          type={type} 
-          placeholder={placeholder} 
-          value={value} 
-          onChange={onChange as any} 
-          className={`w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 rounded-lg outline-none transition-all ${borderClass}`} 
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange as any}
+          className={`w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-white dark:bg-slate-900 rounded-lg outline-none transition-all ${borderClass}`}
         />
       )}
       {error && (
@@ -334,7 +334,7 @@ function AddStudentContent() {
           if (!val) return "Class selection is mandatory.";
           const selectedClass = apiClasses.find(c => c._id === val);
           if (!selectedClass) return "Selected class is invalid.";
-          
+
           const sectionsExistForClass = apiClasses.some(
             c => c.name.toLowerCase() === selectedClass.name.toLowerCase() && c.section && c.section.trim() !== ""
           );
@@ -652,7 +652,7 @@ function AddStudentContent() {
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-border">
                 <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Login ID (Username)</p>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[13px] font-bold text-slate-900 dark:text-white font-mono break-all">{createdCredentials.loginId}</span>
+                  <span className="text-[13px] font-bold text-slate-900 dark:text-white font-sans break-all">{createdCredentials.loginId}</span>
                   <button
                     onClick={() => handleCopyCredential(createdCredentials.loginId, "loginId")}
                     className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
@@ -669,7 +669,7 @@ function AddStudentContent() {
                   <KeyRound className="w-3 h-3" /> Default Password
                 </p>
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-[13px] font-bold text-slate-900 dark:text-white font-mono tracking-widest">{createdCredentials.password}</span>
+                  <span className="text-[13px] font-bold text-slate-900 dark:text-white font-sans tracking-widest">{createdCredentials.password}</span>
                   <button
                     onClick={() => handleCopyCredential(createdCredentials.password, "password")}
                     className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-primary/10 hover:bg-primary/20 text-primary transition-colors"

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { 
+import {
   TrendingUp, TrendingDown, Award, BookOpen, Search, Filter, Loader2, ArrowLeft, ArrowRight,
   ChevronRight, Calendar, User, CheckCircle2, AlertTriangle, HelpCircle, BarChart3, LineChart,
   List, ChevronDown
@@ -21,32 +21,32 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
   const to = new Date(now);
   const from = new Date(now);
   switch (range) {
-    case "Today": 
-      from.setHours(0, 0, 0, 0); 
+    case "Today":
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
     case "Yesterday":
       from.setDate(from.getDate() - 1); from.setHours(0, 0, 0, 0);
       to.setDate(to.getDate() - 1); to.setHours(23, 59, 59, 999);
       break;
-    case "Last 7 Days": 
-      from.setDate(from.getDate() - 7); 
+    case "Last 7 Days":
+      from.setDate(from.getDate() - 7);
       from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "Last 30 Days": 
-      from.setDate(from.getDate() - 30); 
+    case "Last 30 Days":
+      from.setDate(from.getDate() - 30);
       from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "This Year": 
-      from.setMonth(0, 1); 
-      from.setHours(0, 0, 0, 0); 
+    case "This Year":
+      from.setMonth(0, 1);
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
     case "All Time":
       return { from: null, to: null };
-    default: 
+    default:
       return { from: null, to: null };
   }
   return { from, to };
@@ -126,7 +126,7 @@ export default function StudentProgressPage() {
     return results.filter(r => {
       const sId = typeof r.student_id === "object" && r.student_id !== null ? r.student_id._id : r.student_id;
       const matchesStudent = studentIds.includes(sId);
-      
+
       let matchesDate = true;
       if (activeFrom && activeTo) {
         if (r.createdAt) {
@@ -206,8 +206,8 @@ export default function StudentProgressPage() {
   const filteredStudentMetrics = useMemo(() => {
     let list = studentMetrics.filter(m => {
       const matchesSearch = m.student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (m.student.admission_no || "").toLowerCase().includes(searchTerm.toLowerCase());
-      
+        (m.student.admission_no || "").toLowerCase().includes(searchTerm.toLowerCase());
+
       const matchesStatus = filterStatus === "All"
         ? true
         : filterStatus === "Pass" ? m.hasPassed : !m.hasPassed;
@@ -239,7 +239,7 @@ export default function StudentProgressPage() {
     if (studentMetrics.length === 0) return { avgGpa: 0, passRate: 0, topPerformer: "N/A" };
     const totalGpa = studentMetrics.reduce((sum, m) => sum + m.gpa, 0);
     const avgGpa = Math.round((totalGpa / studentMetrics.length) * 100) / 100;
-    
+
     const passedCount = studentMetrics.filter(m => m.hasPassed).length;
     const passRate = Math.round((passedCount / studentMetrics.length) * 100);
 
@@ -384,12 +384,11 @@ export default function StudentProgressPage() {
                         <span className="text-slate-500 dark:text-slate-400">{count} {count === 1 ? "student" : "students"}</span>
                       </div>
                       <div className="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            grade === "A+" || grade === "A" ? "bg-emerald-500" :
-                            grade === "B" || grade === "C" ? "bg-indigo-500" :
-                            grade === "D" ? "bg-amber-500" : "bg-rose-500"
-                          }`}
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${grade === "A+" || grade === "A" ? "bg-emerald-500" :
+                              grade === "B" || grade === "C" ? "bg-indigo-500" :
+                                grade === "D" ? "bg-amber-500" : "bg-rose-500"
+                            }`}
                           style={{ width: `${percent}%` }}
                         />
                       </div>
@@ -403,7 +402,7 @@ export default function StudentProgressPage() {
             <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left lg:col-span-2">
               <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                 <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Student Academic Ledger</h3>
-                
+
                 <div className="flex flex-col sm:flex-row items-center gap-3 flex-wrap">
                   {/* ── Date Range ── */}
                   <div className="relative" onClick={(e) => e.stopPropagation()}>
@@ -468,8 +467,8 @@ export default function StudentProgressPage() {
                             <div className="space-y-1.5">
                               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Passing Status</label>
                               <div className="relative">
-                                <select 
-                                  value={filterStatus} 
+                                <select
+                                  value={filterStatus}
                                   onChange={(e) => setFilterStatus(e.target.value)}
                                   className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
                                 >
@@ -483,8 +482,8 @@ export default function StudentProgressPage() {
                             <div className="space-y-1.5">
                               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Overall Grade</label>
                               <div className="relative">
-                                <select 
-                                  value={filterGrade} 
+                                <select
+                                  value={filterGrade}
                                   onChange={(e) => setFilterGrade(e.target.value)}
                                   className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
                                 >
@@ -518,8 +517,8 @@ export default function StudentProgressPage() {
                         <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
                         <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                           {["Ascending", "Descending", "GPA: High to Low", "GPA: Low to High"].map((item) => (
-                            <button 
-                              key={item} 
+                            <button
+                              key={item}
                               onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
                               className={`w-full px-4 py-2.5 text-[14px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-primary font-bold" : "text-slate-700 dark:text-slate-200"}`}
                             >
@@ -579,14 +578,13 @@ export default function StudentProgressPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-center font-semibold text-slate-500 dark:text-slate-400">{subjectsCount}</td>
-                          <td className="px-6 py-4 text-right font-bold font-mono text-slate-800 dark:text-slate-100">{averagePercentage}%</td>
+                          <td className="px-6 py-4 text-right font-bold font-sans text-slate-800 dark:text-slate-100">{averagePercentage}%</td>
                           <td className="px-6 py-4 text-center">
-                            <span className={`px-2 py-0.5 rounded font-bold ${
-                              gpa >= 3.5 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400" :
-                              gpa >= 2.5 ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400" :
-                              gpa >= 1.5 ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400" :
-                              "bg-rose-50 text-rose-700 dark:bg-rose-955/30 dark:text-rose-400"
-                            }`}>
+                            <span className={`px-2 py-0.5 rounded font-bold ${gpa >= 3.5 ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400" :
+                                gpa >= 2.5 ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400" :
+                                  gpa >= 1.5 ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400" :
+                                    "bg-rose-50 text-rose-700 dark:bg-rose-955/30 dark:text-rose-400"
+                              }`}>
                               {gpa.toFixed(2)}
                             </span>
                           </td>
@@ -645,7 +643,7 @@ export default function StudentProgressPage() {
 
               <div className="text-right flex sm:flex-col gap-2 sm:gap-1.5 items-center sm:items-end">
                 <span className="text-[11px] uppercase font-bold text-slate-400">Ledger GPA</span>
-                <span className="text-3xl font-black font-mono text-primary">{selectedStudentMetric.gpa.toFixed(2)}</span>
+                <span className="text-3xl font-black font-sans text-primary">{selectedStudentMetric.gpa.toFixed(2)}</span>
               </div>
             </div>
 
@@ -653,7 +651,7 @@ export default function StudentProgressPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-border">
                 <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400">Cumulative Score</span>
-                <span className="text-2xl font-black block mt-1 font-mono text-slate-900 dark:text-white">{selectedStudentMetric.averagePercentage}%</span>
+                <span className="text-2xl font-black block mt-1 font-sans text-slate-900 dark:text-white">{selectedStudentMetric.averagePercentage}%</span>
               </div>
               <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-border">
                 <span className="text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400">Letter Grade</span>
@@ -685,14 +683,13 @@ export default function StudentProgressPage() {
                         return (
                           <tr key={r._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20">
                             <td className="px-5 py-3 text-slate-800 dark:text-slate-100 font-semibold">{sName}</td>
-                            <td className="px-5 py-3 text-right text-slate-500 font-mono dark:text-slate-400">{r.total_marks}</td>
-                            <td className="px-5 py-3 text-right text-slate-900 dark:text-white font-bold font-mono">{r.marks_obtained}</td>
+                            <td className="px-5 py-3 text-right text-slate-500 font-sans dark:text-slate-400">{r.total_marks}</td>
+                            <td className="px-5 py-3 text-right text-slate-900 dark:text-white font-bold font-sans">{r.marks_obtained}</td>
                             <td className="px-5 py-3 text-center">
-                              <span className={`px-2 py-0.5 rounded font-semibold text-[11px] ${
-                                r.grade === "A" || r.grade === "A+" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20" :
-                                r.grade === "B" || r.grade === "C" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/20" :
-                                "bg-rose-50 text-rose-700 dark:bg-rose-955/20"
-                              }`}>
+                              <span className={`px-2 py-0.5 rounded font-semibold text-[11px] ${r.grade === "A" || r.grade === "A+" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20" :
+                                  r.grade === "B" || r.grade === "C" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/20" :
+                                    "bg-rose-50 text-rose-700 dark:bg-rose-955/20"
+                                }`}>
                                 {r.grade || "—"}
                               </span>
                             </td>

@@ -515,10 +515,10 @@ export default function TeacherAttendancePage() {
 
             {/* Responsive Table */}
             <div className="overflow-x-auto">
-              <table className="erp-table">
-                <thead>
+              <table className="erp-table text-[13px] whitespace-nowrap w-full">
+                <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
                   <tr>
-                    <th className="w-12 text-center">
+                    <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200 w-12">
                       <input
                         type="checkbox"
                         checked={filteredTeachers.length > 0 && selectedTeacherIds.length === filteredTeachers.length}
@@ -526,15 +526,15 @@ export default function TeacherAttendancePage() {
                         className="w-4 h-4 accent-primary rounded cursor-pointer"
                       />
                     </th>
-                    <th className="w-28 font-semibold text-slate-700 dark:text-slate-200">Emp ID</th>
-                    <th className="font-semibold text-slate-700 dark:text-slate-200">Staff Profile</th>
-                    <th className="w-44 font-semibold text-slate-700 dark:text-slate-200">Status</th>
-                    {/* <th className="w-24 font-semibold text-slate-700 dark:text-slate-200">In Time</th>
-                    <th className="w-24 font-semibold text-slate-700 dark:text-slate-200">Out Time</th>
-                    <th className="w-20 text-center font-semibold text-slate-700 dark:text-slate-200">Late (Min)</th>
-                    <th className="w-20 text-center font-semibold text-slate-700 dark:text-slate-200">Hours</th> */}
-                    <th className="font-semibold text-slate-700 dark:text-slate-200">Remark Note</th>
-                    <th className="w-16 text-center font-semibold text-slate-700 dark:text-slate-200">Action</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-28">Emp ID</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Staff Profile</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-44">Status</th>
+                    {/* <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-24">In Time</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200 w-24">Out Time</th>
+                    <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200 w-20">Late (Min)</th>
+                    <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200 w-20">Hours</th> */}
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Remark Note</th>
+                    <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200 w-16">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -550,8 +550,8 @@ export default function TeacherAttendancePage() {
                     const isTimeDisabled = record.status === "absent" || record.status === "leave";
 
                     return (
-                      <tr key={teacher._id}>
-                        <td className="text-center">
+                      <tr key={teacher._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="px-4 py-4 text-center">
                           <input
                             type="checkbox"
                             checked={selectedTeacherIds.includes(teacher._id)}
@@ -559,10 +559,10 @@ export default function TeacherAttendancePage() {
                             className="w-4 h-4 accent-primary rounded cursor-pointer"
                           />
                         </td>
-                        <td className="font-medium text-slate-600 dark:text-slate-400">
+                        <td className="px-4 py-4 font-medium text-slate-600 dark:text-slate-400">
                           {teacher.employee_id || "-"}
                         </td>
-                        <td>
+                        <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-semibold text-slate-500 text-[11px] overflow-hidden shrink-0 border border-border">
                               {teacher.photo_url ? (
@@ -585,7 +585,7 @@ export default function TeacherAttendancePage() {
                             </div>
                           </div>
                         </td>
-                        <td>
+                        <td className="px-4 py-4">
                           <select
                             value={record.status}
                             onChange={(e) => handleStatusChange(teacher._id, e.target.value)}
@@ -611,7 +611,7 @@ export default function TeacherAttendancePage() {
                             <option value="half_day">Half Day</option> */}
                           </select>
                         </td>
-                        {/* <td>
+                        {/* <td className="px-4 py-4">
                           <input
                             type="time"
                             value={record.check_in || ""}
@@ -620,7 +620,7 @@ export default function TeacherAttendancePage() {
                             className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-sm outline-none text-xs font-semibold focus:border-primary disabled:opacity-50"
                           />
                         </td>
-                        <td>
+                        <td className="px-4 py-4">
                           <input
                             type="time"
                             value={record.check_out || ""}
@@ -629,26 +629,26 @@ export default function TeacherAttendancePage() {
                             className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-sm outline-none text-xs font-semibold focus:border-primary disabled:opacity-50"
                           />
                         </td>
-                        <td>
+                        <td className="px-4 py-4">
                           <input
                             type="number"
                             value={record.late_minutes}
                             disabled={isTimeDisabled || submitting}
                             onChange={(e) => handleFieldChange(teacher._id, "late_minutes", Math.max(0, parseInt(e.target.value) || 0))}
-                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-sm outline-none text-xs font-semibold text-center focus:border-primary disabled:opacity-50 font-mono"
+                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-sm outline-none text-xs font-semibold text-center focus:border-primary disabled:opacity-50 font-sans"
                           />
                         </td>
-                        <td>
+                        <td className="px-4 py-4">
                           <input
                             type="number"
                             step="0.5"
                             value={record.working_hours}
                             disabled={isTimeDisabled || submitting}
                             onChange={(e) => handleFieldChange(teacher._id, "working_hours", Math.max(0, parseFloat(e.target.value) || 0))}
-                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-sm outline-none text-xs font-semibold text-center focus:border-primary disabled:opacity-50 font-mono"
+                            className="w-full px-2 py-1 bg-slate-50 dark:bg-slate-955 border border-border rounded-sm outline-none text-xs font-semibold text-center focus:border-primary disabled:opacity-50 font-sans"
                           />
                         </td> */}
-                        <td>
+                        <td className="px-4 py-4">
                           <input
                             type="text"
                             placeholder="Add note..."
@@ -658,7 +658,7 @@ export default function TeacherAttendancePage() {
                             className="w-full px-3 py-1.5 border border-transparent hover:border-border focus:border-primary/50 rounded-sm text-[13px] outline-none bg-transparent focus:bg-[#F8FAFC] dark:focus:bg-[var(--sidebar-bg)] transition-colors"
                           />
                         </td>
-                        <td className="text-center">
+                        <td className="px-4 py-4 text-center">
                           <Link
                             href={`/attendance/teacher/${teacher._id}`}
                             className="inline-flex items-center justify-center p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-sm transition-colors cursor-pointer"

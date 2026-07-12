@@ -97,7 +97,7 @@ export default function ForgetPasswordPage() {
 
       {/* Right Side - Form */}
       <div className="flex-1 flex flex-col relative bg-white dark:bg-slate-900">
-        
+
         {/* Theme Toggle
         {mounted && (
           <button
@@ -126,7 +126,7 @@ export default function ForgetPasswordPage() {
                 {devToken && (
                   <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg p-4 mb-6 text-left">
                     <p className="text-[11px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-2">🛠 Dev Mode — Reset Token</p>
-                    <p className="text-[11px] text-amber-600 dark:text-amber-300 break-all font-mono bg-amber-100 dark:bg-amber-500/20 rounded p-2">
+                    <p className="text-[11px] text-amber-600 dark:text-amber-300 break-all font-sans bg-amber-100 dark:bg-amber-500/20 rounded p-2">
                       {devToken}
                     </p>
                     <Link

@@ -1331,7 +1331,7 @@ export default function FeesPage() {
                             </td>
                           )}
                           {isColVisible("admission_no") && (
-                            <td className="p-3 font-mono font-bold text-slate-700 dark:text-slate-350">
+                            <td className="p-3 font-sans font-bold text-slate-700 dark:text-slate-350">
                               {student.admission_no}
                             </td>
                           )}
@@ -1370,17 +1370,17 @@ export default function FeesPage() {
                             </td>
                           )}
                           {isColVisible("total_fees") && (
-                            <td className="p-3 col-right font-mono font-bold text-slate-800 dark:text-slate-205">
+                            <td className="p-3 col-right font-sans font-bold text-slate-800 dark:text-slate-205">
                               {money(student.totalFees)}
                             </td>
                           )}
                           {isColVisible("total_paid") && (
-                            <td className="p-3 col-right font-mono font-bold text-emerald-600">
+                            <td className="p-3 col-right font-sans font-bold text-emerald-600">
                               {money(student.totalPaid)}
                             </td>
                           )}
                           {isColVisible("balance") && (
-                            <td className="p-3 col-right font-mono font-bold text-rose-500">
+                            <td className="p-3 col-right font-sans font-bold text-rose-500">
                               {money(student.balanceAmount)}
                             </td>
                           )}
@@ -1414,7 +1414,7 @@ export default function FeesPage() {
                             <td className="p-3">
                               {student.lastPaymentDate ? (
                                 <div className="flex flex-col text-[11px]">
-                                  <span className="font-mono font-bold text-slate-800 dark:text-slate-205">{money(student.lastPaidAmount)}</span>
+                                  <span className="font-sans font-bold text-slate-800 dark:text-slate-205">{money(student.lastPaidAmount)}</span>
                                   <span className="text-[10px] text-slate-400 mt-0.5">{fmtDate(student.lastPaymentDate)}</span>
                                 </div>
                               ) : (
@@ -1545,7 +1545,7 @@ export default function FeesPage() {
                   <div className="p-3 bg-blue-50 text-blue-600 rounded-lg"><Activity className="w-5 h-5" /></div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Today Collection</span>
-                    <strong className="text-lg font-mono text-slate-800 mt-0.5 block">{money(reportStats.dailyCollection)}</strong>
+                    <strong className="text-lg font-sans text-slate-800 mt-0.5 block">{money(reportStats.dailyCollection)}</strong>
                   </div>
                 </div>
 
@@ -1553,7 +1553,7 @@ export default function FeesPage() {
                   <div className="p-3 bg-violet-50 text-violet-600 rounded-lg"><TrendingUp className="w-5 h-5" /></div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Month Collection</span>
-                    <strong className="text-lg font-mono text-slate-800 mt-0.5 block">{money(reportStats.monthlyCollection)}</strong>
+                    <strong className="text-lg font-sans text-slate-800 mt-0.5 block">{money(reportStats.monthlyCollection)}</strong>
                   </div>
                 </div>
 
@@ -1561,7 +1561,7 @@ export default function FeesPage() {
                   <div className="p-3 bg-emerald-50 text-emerald-600 rounded-lg"><CheckCircle className="w-5 h-5" /></div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Total Received</span>
-                    <strong className="text-lg font-mono text-emerald-600 mt-0.5 block">{money(reportStats.totalPaid)}</strong>
+                    <strong className="text-lg font-sans text-emerald-600 mt-0.5 block">{money(reportStats.totalPaid)}</strong>
                   </div>
                 </div>
 
@@ -1569,7 +1569,7 @@ export default function FeesPage() {
                   <div className="p-3 bg-rose-50 text-rose-600 rounded-lg"><XCircle className="w-5 h-5" /></div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Total Outstanding</span>
-                    <strong className="text-lg font-mono text-rose-550 mt-0.5 block">{money(reportStats.totalPending)}</strong>
+                    <strong className="text-lg font-sans text-rose-550 mt-0.5 block">{money(reportStats.totalPending)}</strong>
                   </div>
                 </div>
 
@@ -1577,7 +1577,7 @@ export default function FeesPage() {
                   <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg"><Building2 className="w-5 h-5" /></div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Total Invoiced</span>
-                    <strong className="text-lg font-mono text-indigo-600 mt-0.5 block">{money(reportStats.totalInvoiced)}</strong>
+                    <strong className="text-lg font-sans text-indigo-600 mt-0.5 block">{money(reportStats.totalInvoiced)}</strong>
                   </div>
                 </div>
               </div>
@@ -1606,9 +1606,9 @@ export default function FeesPage() {
                           <tr key={idx}>
                             <td className="font-bold text-slate-800 dark:text-slate-100">{c.className}</td>
                             <td className="font-semibold text-slate-655">{c.teacherName}</td>
-                            <td className="col-right font-mono font-bold text-slate-700 dark:text-slate-300">{money(c.invoiced)}</td>
-                            <td className="col-right font-mono font-bold text-emerald-600">{money(c.paid)}</td>
-                            <td className="col-right font-mono font-bold text-rose-500">{money(c.balance)}</td>
+                            <td className="col-right font-sans font-bold text-slate-700 dark:text-slate-300">{money(c.invoiced)}</td>
+                            <td className="col-right font-sans font-bold text-emerald-600">{money(c.paid)}</td>
+                            <td className="col-right font-sans font-bold text-rose-500">{money(c.balance)}</td>
                             <td className="col-center">
                               <span className="px-2 py-0.5 rounded bg-blue-50 text-[10px] font-black text-blue-700">
                                 {pct}%
@@ -1646,9 +1646,9 @@ export default function FeesPage() {
                           <tr key={idx}>
                             <td className="font-bold text-slate-800 dark:text-slate-100">{t.teacherName}</td>
                             <td className="font-semibold text-slate-655">{t.className}</td>
-                            <td className="col-right font-mono font-bold text-slate-700 dark:text-slate-300">{money(t.invoiced)}</td>
-                            <td className="col-right font-mono font-bold text-emerald-650">{money(t.paid)}</td>
-                            <td className="col-right font-mono font-bold text-rose-500">{money(t.balance)}</td>
+                            <td className="col-right font-sans font-bold text-slate-700 dark:text-slate-300">{money(t.invoiced)}</td>
+                            <td className="col-right font-sans font-bold text-emerald-650">{money(t.paid)}</td>
+                            <td className="col-right font-sans font-bold text-rose-500">{money(t.balance)}</td>
                             <td className="col-center">
                               <span className="px-2 py-0.5 rounded bg-violet-50 text-[10px] font-black text-violet-700">
                                 {pct}%
@@ -1816,7 +1816,7 @@ export default function FeesPage() {
                         value={ft.amount}
                         disabled={!ft.is_enabled}
                         onChange={(e) => handleUpdateFeeTypeAmount(index, Number(e.target.value))}
-                        className="w-full px-2 py-1 border border-border bg-white dark:bg-slate-900 font-mono font-bold text-xs rounded-lg outline-none text-right focus:border-primary/50"
+                        className="w-full px-2 py-1 border border-border bg-white dark:bg-slate-900 font-sans font-bold text-xs rounded-lg outline-none text-right focus:border-primary/50"
                       />
                     </div>
 
@@ -1877,7 +1877,7 @@ export default function FeesPage() {
                   placeholder="Amount"
                   value={newFeeTypeAmount}
                   onChange={(e) => setNewFeeTypeAmount(e.target.value)}
-                  className="w-20 px-2 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none font-mono focus:border-primary/30"
+                  className="w-20 px-2 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none font-sans focus:border-primary/30"
                 />
                 <select
                   value={newFeeTypeFrequency}
@@ -1915,7 +1915,7 @@ export default function FeesPage() {
                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Class Fees Invoice</span>
                 <p className="text-[11px] text-slate-350 mt-0.5">Calculated based on active enabled fee types</p>
               </div>
-              <span className="text-xl font-mono font-bold text-emerald-400">{money(totalConfiguredFees)}</span>
+              <span className="text-xl font-sans font-bold text-emerald-400">{money(totalConfiguredFees)}</span>
             </div>
 
             <div className="flex justify-end gap-3 pt-3 border-t border-border">
@@ -1958,7 +1958,7 @@ export default function FeesPage() {
               </div>
               <div className="text-right">
                 <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Current Dues</span>
-                <p className="text-[13px] font-mono font-bold text-emerald-400 mt-0.5">{money(customSetupStudent.totalFees)}</p>
+                <p className="text-[13px] font-sans font-bold text-emerald-400 mt-0.5">{money(customSetupStudent.totalFees)}</p>
               </div>
             </div>
 
@@ -2012,7 +2012,7 @@ export default function FeesPage() {
                         value={ft.amount}
                         disabled={!ft.is_enabled}
                         onChange={(e) => handleUpdateCustomFeeTypeAmount(index, Number(e.target.value))}
-                        className="w-full px-2 py-1 border border-border bg-white dark:bg-slate-900 font-mono font-bold text-xs rounded-lg outline-none text-right focus:border-primary/50"
+                        className="w-full px-2 py-1 border border-border bg-white dark:bg-slate-900 font-sans font-bold text-xs rounded-lg outline-none text-right focus:border-primary/50"
                       />
                     </div>
 
@@ -2073,7 +2073,7 @@ export default function FeesPage() {
                   placeholder="Amount"
                   value={newCustomFeeTypeAmount}
                   onChange={(e) => setNewCustomFeeTypeAmount(e.target.value)}
-                  className="w-20 px-2 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none font-mono focus:border-primary/30"
+                  className="w-20 px-2 py-1.5 border border-border bg-slate-50 dark:bg-slate-950 text-xs font-semibold rounded-lg outline-none font-sans focus:border-primary/30"
                 />
                 <select
                   value={newCustomFeeTypeFrequency}
@@ -2111,7 +2111,7 @@ export default function FeesPage() {
                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Total Custom Student Fees</span>
                 <p className="text-[11px] text-slate-350 mt-0.5">Overrides default class-wise setup for this student</p>
               </div>
-              <span className="text-xl font-mono font-bold text-emerald-400">{money(totalCustomConfiguredFees)}</span>
+              <span className="text-xl font-sans font-bold text-emerald-400">{money(totalCustomConfiguredFees)}</span>
             </div>
 
             <div className="flex justify-end gap-3 pt-3 border-t border-border">
@@ -2172,14 +2172,14 @@ export default function FeesPage() {
                   <tbody>
                     {studentHistoryLogs.map((log: any) => (
                       <tr key={log._id}>
-                        <td className="font-mono font-bold text-primary">{log.receipt_number || log.receipt_no}</td>
+                        <td className="font-sans font-bold text-primary">{log.receipt_number || log.receipt_no}</td>
                         <td className="font-semibold">{fmtDate(log.payment_date)}</td>
                         <td>
                           <span className="px-2 py-0.5 rounded bg-slate-100 text-[10px] font-bold">
                             {log.payment_method}
                           </span>
                         </td>
-                        <td className="col-right font-mono font-bold text-emerald-600">{money(log.amount_paid || log.total_amount)}</td>
+                        <td className="col-right font-sans font-bold text-emerald-600">{money(log.amount_paid || log.total_amount)}</td>
                       </tr>
                     ))}
                   </tbody>

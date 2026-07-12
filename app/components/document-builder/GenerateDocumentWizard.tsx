@@ -168,39 +168,39 @@ const DOC_TYPES: DocumentTypeOption[] = [
 ];
 
 const COLOR_MAP: Record<string, string> = {
-  blue:   "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800/50",
+  blue: "bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-800/50",
   orange: "bg-orange-50 text-orange-600 border-orange-200 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-800/50",
-  green:  "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/50",
+  green: "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-800/50",
   purple: "bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800/50",
-  teal:   "bg-teal-50 text-teal-600 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800/50",
+  teal: "bg-teal-50 text-teal-600 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800/50",
   yellow: "bg-yellow-50 text-yellow-600 border-yellow-200 dark:bg-yellow-950/30 dark:text-yellow-400 dark:border-yellow-800/50",
   indigo: "bg-indigo-50 text-indigo-600 border-indigo-200 dark:bg-indigo-950/30 dark:text-indigo-400 dark:border-indigo-800/50",
-  pink:   "bg-pink-50 text-pink-600 border-pink-200 dark:bg-pink-950/30 dark:text-pink-400 dark:border-pink-800/50",
-  slate:  "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/30 dark:text-slate-400 dark:border-slate-700/50",
-  rose:   "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/50",
+  pink: "bg-pink-50 text-pink-600 border-pink-200 dark:bg-pink-950/30 dark:text-pink-400 dark:border-pink-800/50",
+  slate: "bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-800/30 dark:text-slate-400 dark:border-slate-700/50",
+  rose: "bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-800/50",
 };
 
 // Category display names for the breadcrumb in Step 3
 const CATEGORY_LABELS: Record<string, string> = {
-  report_card:  "Report Card",
-  student:      "Student",
-  certificate:  "Certificate",
-  teacher:      "Teacher",
-  fees:         "Fee",
-  exam:         "Exam",
-  letter:       "Letter",
-  circular:     "Circular",
-  notice:       "Notice",
-  blank:        "Blank",
+  report_card: "Report Card",
+  student: "Student",
+  certificate: "Certificate",
+  teacher: "Teacher",
+  fees: "Fee",
+  exam: "Exam",
+  letter: "Letter",
+  circular: "Circular",
+  notice: "Notice",
+  blank: "Blank",
 };
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 function StepDot({ num, active, done }: { num: number; active: boolean; done: boolean }) {
   return (
     <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold border-2 transition-all
-      ${done  ? "bg-primary border-primary text-white" :
+      ${done ? "bg-primary border-primary text-white" :
         active ? "bg-white dark:bg-slate-900 border-primary text-primary" :
-                 "bg-white dark:bg-slate-900 border-border text-slate-400"}`}>
+          "bg-white dark:bg-slate-900 border-border text-slate-400"}`}>
       {done ? <Check className="w-3.5 h-3.5" /> : num}
     </div>
   );
@@ -231,11 +231,10 @@ function TemplateCard({
     >
       {/* Thumbnail strip */}
       <div
-        className={`h-1.5 w-full transition-all ${
-          selected
+        className={`h-1.5 w-full transition-all ${selected
             ? "bg-primary"
             : "bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-600 group-hover:from-primary/40 group-hover:to-primary/20"
-        }`}
+          }`}
       />
 
       <div className="flex items-start gap-3 p-3.5">
@@ -293,24 +292,24 @@ export function GenerateDocumentWizard({
   const [selectedDocType, setSelectedDocType] = useState<DocumentTypeOption | null>(null);
 
   // Step 2
-  const [recordSearch, setRecordSearch]   = useState("");
+  const [recordSearch, setRecordSearch] = useState("");
   const [recordResults, setRecordResults] = useState<any[]>([]);
   const [recordLoading, setRecordLoading] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any | null>(null);
 
   // Step 3
-  const [allTemplates, setAllTemplates]       = useState<TemplateMeta[]>([]);
-  const [templateSearch, setTemplateSearch]   = useState("");
+  const [allTemplates, setAllTemplates] = useState<TemplateMeta[]>([]);
+  const [templateSearch, setTemplateSearch] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateMeta | null>(null);
 
   // Step 4
-  const [resolvedVars, setResolvedVars]     = useState<Record<string, string>>({});
+  const [resolvedVars, setResolvedVars] = useState<Record<string, string>>({});
   const [resolveLoading, setResolveLoading] = useState(false);
-  const [resolveError, setResolveError]     = useState("");
+  const [resolveError, setResolveError] = useState("");
 
   // Step 5
   const [generating, setGenerating] = useState(false);
-  const [generated,  setGenerated]  = useState(false);
+  const [generated, setGenerated] = useState(false);
   const [builderUrl, setBuilderUrl] = useState("");
 
   // ── Derived module ──────────────────────────────────────────────────────────
@@ -626,7 +625,7 @@ export function GenerateDocumentWizard({
                           <div>
                             <p className="text-[13px] font-semibold text-slate-900 dark:text-white">{r.name}</p>
                             {r.admission_no && <p className="text-[11px] text-slate-500 dark:text-slate-400">{r.admission_no}</p>}
-                            {r.employee_id  && <p className="text-[11px] text-slate-500 dark:text-slate-400">{r.employee_id}</p>}
+                            {r.employee_id && <p className="text-[11px] text-slate-500 dark:text-slate-400">{r.employee_id}</p>}
                           </div>
                         </button>
                       ))}
@@ -704,9 +703,8 @@ export function GenerateDocumentWizard({
                     <p className="text-[12px] text-slate-400 dark:text-slate-500 mt-1 max-w-xs">
                       {templateSearch
                         ? "Try a different search term within this category."
-                        : `Create a template in the Template Library with category "${
-                            selectedDocType?.templateCategories.map(c => CATEGORY_LABELS[c] || c).join(" or ") || "Custom"
-                          }" to see it here.`}
+                        : `Create a template in the Template Library with category "${selectedDocType?.templateCategories.map(c => CATEGORY_LABELS[c] || c).join(" or ") || "Custom"
+                        }" to see it here.`}
                     </p>
                   </div>
                   <div className="flex gap-2">
@@ -781,7 +779,7 @@ export function GenerateDocumentWizard({
                     <tbody className="divide-y divide-border">
                       {Object.entries(resolvedVars).map(([key, val]) => (
                         <tr key={key} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
-                          <td className="px-4 py-2.5 font-mono text-indigo-600 dark:text-indigo-400 text-[11px]">{`{{${key}}}`}</td>
+                          <td className="px-4 py-2.5 font-sans text-indigo-600 dark:text-indigo-400 text-[11px]">{`{{${key}}}`}</td>
                           <td className="px-4 py-2.5 text-slate-700 dark:text-slate-200 font-medium truncate max-w-0">
                             {val || <span className="text-slate-400 italic">empty</span>}
                           </td>

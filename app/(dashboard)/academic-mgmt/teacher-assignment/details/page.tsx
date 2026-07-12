@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { 
-  ArrowLeft, BookOpen, GraduationCap, Calendar, Loader2, 
+import {
+  ArrowLeft, BookOpen, GraduationCap, Calendar, Loader2,
   User, AlertCircle, RefreshCw, Layers, ShieldCheck, Mail, Phone,
   Clock, History, CheckCircle, Info
 } from "lucide-react";
@@ -276,7 +276,7 @@ export default function TeacherAssignmentDetailsPage() {
               <p className="text-[12px] font-semibold text-slate-400 mt-1">
                 {teacher.designation || "Faculty Member"}
               </p>
-              <p className="text-[11px] font-mono text-slate-450 mt-0.5">
+              <p className="text-[11px] font-sans text-slate-450 mt-0.5">
                 Emp ID: {teacher.employee_id || "—"}
               </p>
             </div>
@@ -285,18 +285,17 @@ export default function TeacherAssignmentDetailsPage() {
           <div className="border-t border-border pt-4 space-y-3.5 text-[13px] font-semibold">
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
               <span>Academic Year</span>
-              <span className="text-slate-800 dark:text-slate-200 font-mono">
+              <span className="text-slate-800 dark:text-slate-200 font-sans">
                 {year}
               </span>
             </div>
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
               <span>Status</span>
               <span
-                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  teacherStatus
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${teacherStatus
                     ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400"
                     : "bg-rose-100 text-rose-700 dark:bg-rose-950/20 dark:text-rose-400"
-                }`}
+                  }`}
               >
                 {teacherStatus ? "Active" : "Inactive"}
               </span>
@@ -309,11 +308,11 @@ export default function TeacherAssignmentDetailsPage() {
             </div>
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
               <span className="flex items-center gap-1.5"><Phone className="w-4 h-4 text-slate-400" /> Phone</span>
-              <span className="text-slate-800 dark:text-slate-200 font-mono">
+              <span className="text-slate-800 dark:text-slate-200 font-sans">
                 {teacher.phone || "—"}
               </span>
             </div>
-            
+
             <div className="border-t border-border/60 pt-3.5">
               <p className="text-[12px] font-bold text-slate-400 uppercase tracking-wide mb-2.5">Workload Summary</p>
               <div className="grid grid-cols-2 gap-3 text-center">
@@ -323,11 +322,10 @@ export default function TeacherAssignmentDetailsPage() {
                 </div>
                 <div className="p-2 border border-border/80 rounded-lg bg-slate-50 dark:bg-slate-800/40">
                   <span className="text-[11px] font-bold text-slate-450 dark:text-slate-400 block uppercase">Periods/Wk</span>
-                  <span className={`text-lg font-black block ${
-                    stats.periodsCount >= 40 ? "text-rose-600 dark:text-rose-400" :
-                    stats.periodsCount >= 30 ? "text-amber-600 dark:text-amber-400" :
-                    "text-emerald-600 dark:text-emerald-400"
-                  }`}>{stats.periodsCount}</span>
+                  <span className={`text-lg font-black block ${stats.periodsCount >= 40 ? "text-rose-600 dark:text-rose-400" :
+                      stats.periodsCount >= 30 ? "text-amber-600 dark:text-amber-400" :
+                        "text-emerald-600 dark:text-emerald-400"
+                    }`}>{stats.periodsCount}</span>
                 </div>
               </div>
             </div>
@@ -380,17 +378,16 @@ export default function TeacherAssignmentDetailsPage() {
                             <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
                             <span className="font-semibold text-slate-850 dark:text-slate-100">{assign.subject_master_id?.name}</span>
                             {assign.subject_master_id?.subject_code && (
-                              <span className="font-mono text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-550 px-1.5 py-0.5 rounded font-bold">
+                              <span className="font-sans text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-550 px-1.5 py-0.5 rounded font-bold">
                                 {assign.subject_master_id.subject_code}
                               </span>
                             )}
                           </div>
                         </td>
                         <td className="px-5 py-3.5">
-                          <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
-                            assign.assignment_type === "Class Teacher" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
-                            "bg-slate-50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400"
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${assign.assignment_type === "Class Teacher" ? "bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400" :
+                              "bg-slate-50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400"
+                            }`}>
                             {assign.assignment_type || "Subject Teacher"}
                           </span>
                         </td>
@@ -398,9 +395,8 @@ export default function TeacherAssignmentDetailsPage() {
                           {assign.weekly_periods || 0} periods/wk
                         </td>
                         <td className="px-5 py-3.5">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            assign.status === "Active" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20" : "bg-rose-50 text-rose-600"
-                          }`}>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${assign.status === "Active" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20" : "bg-rose-50 text-rose-600"
+                            }`}>
                             {assign.status || "Active"}
                           </span>
                         </td>
@@ -432,7 +428,7 @@ export default function TeacherAssignmentDetailsPage() {
                       <p className="text-[12px] font-bold text-primary uppercase tracking-wider border-b border-border/80 pb-1.5 mb-2.5">
                         {day}
                       </p>
-                      
+
                       {dayEntries.length === 0 ? (
                         <p className="text-slate-400 text-xs italic py-4">No scheduled periods.</p>
                       ) : (
@@ -445,7 +441,7 @@ export default function TeacherAssignmentDetailsPage() {
                               <p className="text-[11px] font-semibold text-slate-450 dark:text-slate-400 mt-0.5">
                                 Class: {slot.class_id?.name} - {slot.class_id?.section}
                               </p>
-                              <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono mt-2 pt-1.5 border-t border-border/40">
+                              <div className="flex items-center justify-between text-[10px] text-slate-400 font-sans mt-2 pt-1.5 border-t border-border/40">
                                 <span>{slot.start_time} - {slot.end_time}</span>
                                 {slot.room && <span className="bg-slate-100 dark:bg-slate-800 px-1 rounded font-bold">R: {slot.room}</span>}
                               </div>
@@ -473,17 +469,15 @@ export default function TeacherAssignmentDetailsPage() {
                 {auditHistory.map((historyItem, idx) => (
                   <div key={idx} className="relative pl-7 text-left flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                     {/* Bullet marker */}
-                    <div className={`absolute left-1.5 top-1.5 w-3.5 h-3.5 rounded-full border-4 border-white dark:border-slate-900 shadow-sm ${
-                      historyItem.action === "Create" ? "bg-emerald-500" :
-                      historyItem.action === "Soft Delete" ? "bg-rose-500" : "bg-amber-500"
-                    }`} />
-                    
+                    <div className={`absolute left-1.5 top-1.5 w-3.5 h-3.5 rounded-full border-4 border-white dark:border-slate-900 shadow-sm ${historyItem.action === "Create" ? "bg-emerald-500" :
+                        historyItem.action === "Soft Delete" ? "bg-rose-500" : "bg-amber-500"
+                      }`} />
+
                     <div className="space-y-1">
                       <p className="text-[13px] font-bold text-slate-900 dark:text-white">
-                        <span className={`px-1.5 py-0.25 text-[10px] rounded font-bold mr-1.5 ${
-                          historyItem.action === "Create" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20" :
-                          historyItem.action === "Soft Delete" ? "bg-rose-50 text-rose-600 dark:bg-rose-955/20" : "bg-amber-50 text-amber-600 dark:bg-amber-950/20"
-                        }`}>{historyItem.action}</span>
+                        <span className={`px-1.5 py-0.25 text-[10px] rounded font-bold mr-1.5 ${historyItem.action === "Create" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20" :
+                            historyItem.action === "Soft Delete" ? "bg-rose-50 text-rose-600 dark:bg-rose-955/20" : "bg-amber-50 text-amber-600 dark:bg-amber-950/20"
+                          }`}>{historyItem.action}</span>
                         Subject: <span className="text-primary">{historyItem.subjectName}</span> ({historyItem.className} {historyItem.sectionName ? ` - ${historyItem.sectionName}` : ""})
                       </p>
                       {historyItem.changes && (
@@ -500,7 +494,7 @@ export default function TeacherAssignmentDetailsPage() {
                     </div>
 
                     <div className="text-right shrink-0">
-                      <p className="text-[11px] text-slate-405 font-mono">
+                      <p className="text-[11px] text-slate-405 font-sans">
                         {new Date(historyItem.date).toLocaleDateString("en-GB", {
                           day: "2-digit",
                           month: "short",
@@ -515,7 +509,7 @@ export default function TeacherAssignmentDetailsPage() {
                     </div>
                   </div>
                 ))}
-                
+
                 {auditHistory.length === 0 && (
                   <p className="text-slate-450 italic text-sm text-center">No assignment change history recorded.</p>
                 )}

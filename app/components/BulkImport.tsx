@@ -102,7 +102,7 @@ export default function BulkImport({
           // Format second class
           const secondClass = apiClasses[1];
           const secondClassStr = secondClass ? (secondClass.section ? `, ${secondClass.name} - ${secondClass.section}` : `, ${secondClass.name}`) : "";
-          
+
           data[0][assignedClassIdx] = `${firstClassStr}${secondClassStr}`;
           if (data[1]) {
             data[1][assignedClassIdx] = firstClassStr;
@@ -243,7 +243,7 @@ export default function BulkImport({
           if (sh.endsWith("*")) {
             const cleanH = sh.replace("*", "").toLowerCase().trim();
             const aliases = ALIAS_MAP[cleanH] || [cleanH];
-            const isPresent = headers.some(h => 
+            const isPresent = headers.some(h =>
               aliases.some(alias => h.includes(alias) || alias.includes(h))
             );
             if (!isPresent) {
@@ -629,11 +629,10 @@ export default function BulkImport({
                 return (
                   <span
                     key={idx}
-                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold ${
-                      isMandatory
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] font-semibold ${isMandatory
                         ? "bg-rose-50 text-rose-700 border border-rose-100 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-900/30"
                         : "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-800"
-                    }`}
+                      }`}
                   >
                     <span>{cleanName}</span>
                     {isMandatory && <span className="text-rose-500 font-bold">*</span>}
@@ -734,7 +733,7 @@ export default function BulkImport({
                         className="rounded border-slate-300 w-4 h-4 accent-primary disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
                       />
                     </td>
-                    <td className="px-5 py-3.5 text-slate-500 font-mono">#{row.index + 1}</td>
+                    <td className="px-5 py-3.5 text-slate-500 font-sans">#{row.index + 1}</td>
                     <td className="px-5 py-3.5">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold ${row.isValid ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-400" : "bg-rose-100 text-rose-800 dark:bg-rose-950/30 dark:text-rose-400"}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${row.isValid ? "bg-emerald-500" : "bg-rose-500"}`} />

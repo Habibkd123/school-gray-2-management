@@ -1106,12 +1106,12 @@ index 4d21ecb..5fd7ba8 100644
                                <span className="font-bold text-slate-900 dark:text-white block">{s.name}</span>
                                <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{s.role}</span>
                              </td>
--                            <td className="px-6 py-4 font-mono font-bold text-slate-600 dark:text-slate-400">{s.empId}</td>
+-                            <td className="px-6 py-4 font-sans font-bold text-slate-600 dark:text-slate-400">{s.empId}</td>
 -                            <td className="px-6 py-4">
-+                            <td className="font-mono font-bold text-slate-600 dark:text-slate-400">{s.empId}</td>
++                            <td className="font-sans font-bold text-slate-600 dark:text-slate-400">{s.empId}</td>
 +                            <td>
                                {s.basic > 0 ? (
-                                 <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{money(s.basic)}</span>
+                                 <span className="font-sans font-bold text-slate-800 dark:text-slate-200">{money(s.basic)}</span>
                                ) : (
 @@ -754,72 +768,105 @@ export default function SalaryDashboardPage() {
                                    onClick={() => openSetupSalary(s)}
@@ -1438,24 +1438,24 @@ index 4d21ecb..5fd7ba8 100644
                            const teacher = p.teacher_id || {};
                            return (
 -                            <tr key={p._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
--                              <td className="px-6 py-4 font-mono font-bold text-slate-655">{p.receipt_number}</td>
+-                              <td className="px-6 py-4 font-sans font-bold text-slate-655">{p.receipt_number}</td>
 -                              <td className="px-6 py-4">
 +                            <tr key={p._id}>
-+                              <td className="font-mono font-bold text-slate-655">{p.receipt_number}</td>
++                              <td className="font-sans font-bold text-slate-655">{p.receipt_number}</td>
 +                              <td>
                                  <span className="font-bold text-slate-900 dark:text-white block">{teacher.name || "Unknown"}</span>
                                  <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">ID: {teacher.employee_id || "N/A"}</span>
                                </td>
--                              <td className="px-6 py-4 font-mono text-slate-700 dark:text-slate-350">{money(p.monthly_salary)}</td>
+-                              <td className="px-6 py-4 font-sans text-slate-700 dark:text-slate-350">{money(p.monthly_salary)}</td>
 -                              <td className="px-6 py-4 text-slate-600 dark:text-slate-400 font-bold">{p.present_days} / {p.absent_days}</td>
--                              <td className="px-6 py-4 font-mono text-rose-500 font-bold">-{money(p.suggested_deduction)}</td>
--                              <td className="px-6 py-4 font-mono font-black text-slate-900 dark:text-white">{money(p.final_salary)}</td>
+-                              <td className="px-6 py-4 font-sans text-rose-500 font-bold">-{money(p.suggested_deduction)}</td>
+-                              <td className="px-6 py-4 font-sans font-black text-slate-900 dark:text-white">{money(p.final_salary)}</td>
 -                              <td className="px-6 py-4 font-bold text-slate-500">{fmtDate(p.payment_date)}</td>
 -                              <td className="px-6 py-4 text-right">
-+                              <td className="font-mono text-slate-700 dark:text-slate-350">{money(p.monthly_salary)}</td>
++                              <td className="font-sans text-slate-700 dark:text-slate-350">{money(p.monthly_salary)}</td>
 +                              <td className="text-slate-600 dark:text-slate-400 font-bold">{p.present_days} / {p.absent_days}</td>
-+                              <td className="font-mono text-rose-500 font-bold">-{money(p.suggested_deduction)}</td>
-+                              <td className="font-mono font-black text-slate-900 dark:text-white">{money(p.final_salary)}</td>
++                              <td className="font-sans text-rose-500 font-bold">-{money(p.suggested_deduction)}</td>
++                              <td className="font-sans font-black text-slate-900 dark:text-white">{money(p.final_salary)}</td>
 +                              <td className="font-bold text-slate-500">{fmtDate(p.payment_date)}</td>
 +                              <td className="col-right">
                                  <button
@@ -1494,7 +1494,7 @@ index 4d21ecb..5fd7ba8 100644
 -                onChange={e => setSetupSalaryAmount(e.target.value)}
 +                value={setupAmount}
 +                onChange={e => setSetupAmount(e.target.value)}
-                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-900 dark:text-white font-mono rounded-xl outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
+                 className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-900 dark:text-white font-sans rounded-xl outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
                />
              </div>
              <div className="flex justify-end gap-3 pt-4 border-t border-border">
@@ -1541,7 +1541,7 @@ index 4d21ecb..5fd7ba8 100644
 +              </div>
 +              <div>
 +                <span className="text-slate-400 font-medium">Employee ID</span>
-+                <p className="font-mono font-bold text-white mt-1">{editPayrollRecord.teacher_id?.employee_id || "EMP-N/A"}</p>
++                <p className="font-sans font-bold text-white mt-1">{editPayrollRecord.teacher_id?.employee_id || "EMP-N/A"}</p>
 +              </div>
 +              <div>
 +                <span className="text-slate-400 font-medium">Monthly Contract Base</span>
@@ -1566,7 +1566,7 @@ index 4d21ecb..5fd7ba8 100644
 -                </div>
 -                <div>
 -                  <span className="text-slate-500 font-medium">Employee ID</span>
--                  <p className="font-mono font-bold text-slate-800 dark:text-white mt-1">{previewData.employeeId}</p>
+-                  <p className="font-sans font-bold text-slate-800 dark:text-white mt-1">{previewData.employeeId}</p>
 -                </div>
 -                <div>
 -                  <span className="text-slate-500 font-medium">Monthly Contract Salary</span>
@@ -1661,7 +1661,7 @@ index 4d21ecb..5fd7ba8 100644
 +                      type="number"
 +                      value={bonus}
 +                      onChange={(e) => setBonus(Number(e.target.value))}
-+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-emerald-600 font-mono"
++                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-emerald-600 font-sans"
 +                    />
                    </div>
 -                  <div className="bg-rose-50 dark:bg-rose-500/10 p-3 rounded-lg border border-rose-100 dark:border-rose-500/20 text-rose-800 dark:text-rose-400">
@@ -1673,7 +1673,7 @@ index 4d21ecb..5fd7ba8 100644
 +                      type="number"
 +                      value={overtimeAmount}
 +                      onChange={(e) => setOvertimeAmount(Number(e.target.value))}
-+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-emerald-600 font-mono"
++                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-emerald-600 font-sans"
 +                    />
                    </div>
                  </div>
@@ -1683,11 +1683,11 @@ index 4d21ecb..5fd7ba8 100644
 -              <div className="space-y-3 text-xs border-t border-border pt-4">
 -                <div className="flex justify-between">
 -                  <span className="text-slate-500 font-medium">Monthly Contract Salary</span>
--                  <span className="font-bold font-mono text-slate-800 dark:text-white">{money(previewData.monthlySalary)}</span>
+-                  <span className="font-bold font-sans text-slate-800 dark:text-white">{money(previewData.monthlySalary)}</span>
 -                </div>
 -                <div className="flex justify-between">
 -                  <span className="text-slate-500 font-medium">Daily Salary (Monthly Salary ├╖ 26)</span>
--                  <span className="font-bold font-mono text-slate-700 dark:text-slate-350">{money(previewData.dailySalary)}</span>
+-                  <span className="font-bold font-sans text-slate-700 dark:text-slate-350">{money(previewData.dailySalary)}</span>
 -                </div>
 -                <div className="flex justify-between">
 -                  <span className="text-slate-500 font-medium">Payable Days (Present Days)</span>
@@ -1695,7 +1695,7 @@ index 4d21ecb..5fd7ba8 100644
 -                </div>
 -                <div className="flex justify-between text-[14px] font-black border-t border-dashed border-border pt-3">
 -                  <span className="text-slate-800 dark:text-white">Total Payable Amount</span>
--                  <span className="text-primary font-mono font-bold">{money(previewData.totalPayableAmount)}</span>
+-                  <span className="text-primary font-sans font-bold">{money(previewData.totalPayableAmount)}</span>
 +              <div className="space-y-3">
 +                <h4 className="text-xs font-bold text-slate-900 dark:text-white border-b pb-1">Deductions & Adjustments</h4>
 +                <div className="grid grid-cols-2 gap-3.5">
@@ -1705,7 +1705,7 @@ index 4d21ecb..5fd7ba8 100644
 +                      type="number"
 +                      value={deduction}
 +                      onChange={(e) => setDeduction(Number(e.target.value))}
-+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-rose-500 font-mono"
++                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-rose-500 font-sans"
 +                    />
 +                  </div>
 +                  <div>
@@ -1714,7 +1714,7 @@ index 4d21ecb..5fd7ba8 100644
 +                      type="number"
 +                      value={taxDeduction}
 +                      onChange={(e) => setTaxDeduction(Number(e.target.value))}
-+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-rose-500 font-mono"
++                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-rose-500 font-sans"
 +                    />
 +                  </div>
                  </div>
@@ -1776,7 +1776,7 @@ index 4d21ecb..5fd7ba8 100644
 +                  type="number"
 +                  value={finalSalaryOverride}
 +                  onChange={(e) => setFinalSalaryOverride(Number(e.target.value))}
-+                  className="px-3 py-1 bg-white dark:bg-slate-900 border border-border rounded-md text-xs font-bold text-primary font-mono w-32"
++                  className="px-3 py-1 bg-white dark:bg-slate-900 border border-border rounded-md text-xs font-bold text-primary font-sans w-32"
 +                />
 +              )}
              </div>
@@ -1923,7 +1923,7 @@ index 4d21ecb..5fd7ba8 100644
 -                            type="text"
 -                            readOnly
 -                            value={(payData.totalPayableAmount || 0).toLocaleString("en-IN")}
--                            className="w-full pl-6 pr-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 border border-border rounded-lg font-mono font-bold outline-none cursor-not-allowed text-right"
+-                            className="w-full pl-6 pr-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 border border-border rounded-lg font-sans font-bold outline-none cursor-not-allowed text-right"
 -                          />
 -                        </div>
 -                      </div>
@@ -1960,7 +1960,7 @@ index 4d21ecb..5fd7ba8 100644
 -                            min="0"
 -                            value={bonus}
 -                            onChange={(e) => setBonus(e.target.value)}
--                            className="w-full pl-6 pr-3 py-1.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-border rounded-lg font-mono font-bold outline-none focus:border-primary/50 text-right"
+-                            className="w-full pl-6 pr-3 py-1.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-border rounded-lg font-sans font-bold outline-none focus:border-primary/50 text-right"
 -                          />
 -                        </div>
 -                      </div>
@@ -1975,7 +1975,7 @@ index 4d21ecb..5fd7ba8 100644
 -                            min="0"
 -                            value={deduction}
 -                            onChange={(e) => setDeduction(e.target.value)}
--                            className="w-full pl-6 pr-3 py-1.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-border rounded-lg font-mono font-bold outline-none focus:border-primary/50 text-right"
+-                            className="w-full pl-6 pr-3 py-1.5 bg-white dark:bg-slate-900 text-slate-800 dark:text-white border border-border rounded-lg font-sans font-bold outline-none focus:border-primary/50 text-right"
 -                          />
 -                        </div>
 -                      </div>
@@ -1998,7 +1998,7 @@ index 4d21ecb..5fd7ba8 100644
 -                            readOnly={!isManualOverride}
 -                            value={finalSalaryAmount}
 -                            onChange={(e) => setFinalSalaryAmount(e.target.value)}
--                            className={`w-full pl-7 pr-3 py-2 font-mono text-sm font-black border rounded-lg outline-none text-right ${isManualOverride
+-                            className={`w-full pl-7 pr-3 py-2 font-sans text-sm font-black border rounded-lg outline-none text-right ${isManualOverride
 -                              ? "bg-white dark:bg-slate-900 text-primary border-primary"
 -                              : "bg-slate-100 dark:bg-slate-800 text-slate-655 border-border cursor-not-allowed"
 -                              }`}
@@ -2143,18 +2143,18 @@ index 4d21ecb..5fd7ba8 100644
 -                          <tr key={p._id} className="hover:bg-slate-50 dark:hover:bg-slate-850/50">
 -                            <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-100">{periodName}</td>
 -                            <td className="px-4 py-3 font-bold text-slate-500">{fmtDate(p.payment_date)}</td>
--                            <td className="px-4 py-3 font-mono">{money(p.monthly_salary)}</td>
+-                            <td className="px-4 py-3 font-sans">{money(p.monthly_salary)}</td>
 -                            <td className="px-4 py-3 font-bold text-slate-550">{p.present_days} / {p.absent_days}</td>
--                            <td className="px-4 py-3 font-mono font-bold text-slate-900 dark:text-white">{money(p.final_salary)}</td>
+-                            <td className="px-4 py-3 font-sans font-bold text-slate-900 dark:text-white">{money(p.final_salary)}</td>
 -                            <td className="px-4 py-3">
 -                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-500/20">
 -                                Paid
 +                          <tr key={p._id}>
 +                            <td className="font-bold text-slate-800 dark:text-slate-100">{periodName}</td>
 +                            <td className="font-bold text-slate-500">{fmtDate(p.payment_date)}</td>
-+                            <td className="font-mono">{money(p.monthly_salary)}</td>
++                            <td className="font-sans">{money(p.monthly_salary)}</td>
 +                            <td className="font-bold text-slate-550">{p.present_days} / {p.absent_days}</td>
-+                            <td className="font-mono font-bold text-slate-900 dark:text-white">{money(p.final_salary)}</td>
++                            <td className="font-sans font-bold text-slate-900 dark:text-white">{money(p.final_salary)}</td>
 +                            <td>
 +                              <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${p.status === "Paid"
 +                                ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-500/20"
@@ -2230,7 +2230,7 @@ index 4d21ecb..5fd7ba8 100644
 -                </div>
 -                <div className="flex border-b border-dashed border-slate-200 pb-1">
 -                  <span className="font-bold text-slate-500 w-32">Employee ID:</span>
--                  <span className="font-mono font-bold text-slate-900 dark:text-white">{selectedSlip.teacher_id?.employee_id || "N/A"}</span>
+-                  <span className="font-sans font-bold text-slate-900 dark:text-white">{selectedSlip.teacher_id?.employee_id || "N/A"}</span>
 -                </div>
 -                <div className="flex border-b border-dashed border-slate-200 pb-1">
 -                  <span className="font-bold text-slate-500 w-32">Designation:</span>
@@ -2248,7 +2248,7 @@ index 4d21ecb..5fd7ba8 100644
 -                </div>
 -                <div className="flex border-b border-dashed border-slate-200 pb-1">
 -                  <span className="font-bold text-slate-500 w-32">Receipt Number:</span>
--                  <span className="font-mono font-bold text-slate-900 dark:text-white">{selectedSlip.receipt_number}</span>
+-                  <span className="font-sans font-bold text-slate-900 dark:text-white">{selectedSlip.receipt_number}</span>
 -                </div>
 -                <div className="flex border-b border-dashed border-slate-200 pb-1">
 -                  <span className="font-bold text-slate-500 w-32">Payment Date:</span>
@@ -2296,11 +2296,11 @@ index 4d21ecb..5fd7ba8 100644
 -                  <tbody className="divide-y divide-slate-200">
 -                    <tr>
 -                      <td className="px-4 py-3">Monthly Contract Salary</td>
--                      <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">{money(selectedSlip.monthly_salary)}</td>
+-                      <td className="px-4 py-3 text-right font-sans font-bold text-slate-800">{money(selectedSlip.monthly_salary)}</td>
 -                    </tr>
 -                    <tr>
 -                      <td className="px-4 py-3">Daily Salary Rate (Monthly ├╖ 30)</td>
--                      <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">{money(Math.round((selectedSlip.monthly_salary / 30) * 100) / 100)}</td>
+-                      <td className="px-4 py-3 text-right font-sans font-bold text-slate-800">{money(Math.round((selectedSlip.monthly_salary / 30) * 100) / 100)}</td>
 -                    </tr>
 -                    <tr>
 -                      <td className="px-4 py-3">Payable Days (Present Days)</td>
@@ -2308,21 +2308,21 @@ index 4d21ecb..5fd7ba8 100644
 -                    </tr>
 -                    <tr className="bg-slate-50/50">
 -                      <td className="px-4 py-3 font-bold text-slate-700">Payable Amount (Auto Calculated)</td>
--                      <td className="px-4 py-3 text-right font-mono font-bold text-slate-800">
+-                      <td className="px-4 py-3 text-right font-sans font-bold text-slate-800">
 -                        {money(selectedSlip.payable_amount !== undefined ? selectedSlip.payable_amount : (selectedSlip.final_salary - (selectedSlip.bonus || 0) + (selectedSlip.deduction || 0)))}
 -                      </td>
 -                    </tr>
 -                    <tr>
 -                      <td className="px-4 py-3 text-emerald-600 font-bold">Bonus (+)</td>
--                      <td className="px-4 py-3 text-right font-mono font-bold text-emerald-600">+{money(selectedSlip.bonus || 0)}</td>
+-                      <td className="px-4 py-3 text-right font-sans font-bold text-emerald-600">+{money(selectedSlip.bonus || 0)}</td>
 -                    </tr>
 -                    <tr>
 -                      <td className="px-4 py-3 text-rose-500 font-bold">Deduction (-)</td>
--                      <td className="px-4 py-3 text-right font-mono font-bold text-rose-500">-{money(selectedSlip.deduction || 0)}</td>
+-                      <td className="px-4 py-3 text-right font-sans font-bold text-rose-500">-{money(selectedSlip.deduction || 0)}</td>
 -                    </tr>
 -                    <tr className="bg-slate-100/80">
 -                      <td className="px-4 py-3 font-bold text-slate-900">Final Salary Paid</td>
--                      <td className="px-4 py-3 text-right font-mono font-bold text-primary">{money(selectedSlip.final_salary)}</td>
+-                      <td className="px-4 py-3 text-right font-sans font-bold text-primary">{money(selectedSlip.final_salary)}</td>
 -                    </tr>
 -                    {selectedSlip.remarks && (
 -                      <tr>
@@ -2337,24 +2337,24 @@ index 4d21ecb..5fd7ba8 100644
 -              <div className="bg-slate-900 text-white rounded-xl p-5 flex items-center justify-between mb-12 font-sans text-[11px]">
 -                <div>
 -                  <span className="text-[9px] uppercase font-bold text-slate-400 tracking-wider">Payable Amount</span>
--                  <div className="text-xs font-bold font-mono">
+-                  <div className="text-xs font-bold font-sans">
 -                    {money(selectedSlip.payable_amount !== undefined ? selectedSlip.payable_amount : (selectedSlip.final_salary - (selectedSlip.bonus || 0) + (selectedSlip.deduction || 0)))}
 -                  </div>
 -                </div>
 -                <div className="w-px h-8 bg-slate-800"></div>
 -                <div>
 -                  <span className="text-[9px] uppercase font-bold text-emerald-400 tracking-wider">Bonus</span>
--                  <div className="text-xs font-bold font-mono text-emerald-400">+{money(selectedSlip.bonus || 0)}</div>
+-                  <div className="text-xs font-bold font-sans text-emerald-400">+{money(selectedSlip.bonus || 0)}</div>
 -                </div>
 -                <div className="w-px h-8 bg-slate-800"></div>
 -                <div>
 -                  <span className="text-[9px] uppercase font-bold text-rose-400 tracking-wider">Deduction</span>
--                  <div className="text-xs font-bold font-mono text-rose-450">-{money(selectedSlip.deduction || 0)}</div>
+-                  <div className="text-xs font-bold font-sans text-rose-450">-{money(selectedSlip.deduction || 0)}</div>
 -                </div>
 -                <div className="w-px h-8 bg-slate-800"></div>
 -                <div className="text-right">
 -                  <span className="text-[9px] uppercase font-bold text-emerald-450 tracking-wider">Final Paid</span>
--                  <div className="text-sm font-black text-emerald-400 font-mono">{money(selectedSlip.final_salary)}</div>
+-                  <div className="text-sm font-black text-emerald-400 font-sans">{money(selectedSlip.final_salary)}</div>
 -                </div>
 -              </div>
 -

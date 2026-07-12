@@ -188,7 +188,7 @@ export default function MyAttendancePage() {
             type="month"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="bg-transparent text-slate-900 dark:text-white outline-none cursor-pointer font-bold font-mono"
+            className="bg-transparent text-slate-900 dark:text-white outline-none cursor-pointer font-bold font-sans"
           />
         </div>
       </div>
@@ -280,7 +280,7 @@ export default function MyAttendancePage() {
 
                       return (
                         <tr key={rec.date} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                          <td className="px-6 py-4 font-medium text-slate-900 dark:text-white font-mono">
+                          <td className="px-6 py-4 font-medium text-slate-900 dark:text-white font-sans">
                             {formattedDate}
                           </td>
                           <td className="px-6 py-4 text-slate-500 dark:text-slate-400">

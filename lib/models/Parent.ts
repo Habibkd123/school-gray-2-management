@@ -31,10 +31,10 @@ const parentSchema = new Schema<IParent>(
   { timestamps: true }
 );
 
-parentSchema.index({ school_id: 1, name: 1 });
-parentSchema.index({ email: 1 });
-parentSchema.index({ phone: 1 });
-parentSchema.index({ user_id: 1 });
+parentSchema.index({ school_id: 1, name: 1 }, { name: "parent_school_name_v1" });
+parentSchema.index({ email: 1 }, { name: "parent_email_v1" });
+parentSchema.index({ phone: 1 }, { name: "parent_phone_v1" });
+parentSchema.index({ user_id: 1 }, { name: "parent_user_id_v1" });
 
 const Parent: Model<IParent> =
   mongoose.models.Parent || mongoose.model<IParent>("Parent", parentSchema);

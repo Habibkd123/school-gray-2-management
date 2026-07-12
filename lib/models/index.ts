@@ -38,7 +38,7 @@ const subjectSchema = new Schema<ISubject>(
   { timestamps: true }
 );
 
-subjectSchema.index({ school_id: 1, class_id: 1, name: 1 }, { unique: true });
+subjectSchema.index({ school_id: 1, class_id: 1, name: 1 }, { unique: true, name: "subject_school_class_name_unique_v1" });
 
 // ─── Class Group ───────────────────────────────────────────────────
 export interface IClassGroup extends Document {
@@ -74,7 +74,7 @@ const classGroupSchema = new Schema<IClassGroup>(
   { timestamps: true }
 );
 
-classGroupSchema.index({ school_id: 1, academic_year: 1, name: 1 }, { unique: true });
+classGroupSchema.index({ school_id: 1, academic_year: 1, name: 1 }, { unique: true, name: "class_group_school_year_name_unique_v1" });
 
 // ─── Teacher Assignment ─────────────────────────────────────────────
 export interface ITeacherAssignment extends Document {
@@ -150,7 +150,7 @@ teacherAssignmentSchema.index(
 
 teacherAssignmentSchema.index(
   { school_id: 1, academic_year: 1, class_group_id: 1, subject_master_id: 1 },
-  { unique: true, partialFilterExpression: { class_group_id: { $gt: null }, is_deleted: false } }
+  { unique: true, partialFilterExpression: { class_group_id: { $gt: null }, is_deleted: false }, name: "teacher_assignment_group_unique_v2" }
 );
 
 
@@ -430,17 +430,17 @@ const attendanceSchema = new Schema<IAttendance>(
 
 attendanceSchema.index(
   { school_id: 1, academic_year: 1, class_id: 1, stream_id: 1, section_id: 1, date: 1, type: 1 },
-  { unique: true, partialFilterExpression: { type: "student" } }
+  { unique: true, partialFilterExpression: { type: "student" }, name: "attendance_student_unique_v1" }
 );
 
 attendanceSchema.index(
   { school_id: 1, academic_year: 1, date: 1, type: 1 },
-  { unique: true, partialFilterExpression: { type: "teacher" } }
+  { unique: true, partialFilterExpression: { type: "teacher" }, name: "attendance_teacher_unique_v1" }
 );
 
 // Fast date-range queries (dashboard stats, reports)
-attendanceSchema.index({ school_id: 1, class_id: 1, date: 1 });
-attendanceSchema.index({ school_id: 1, type: 1, date: 1 });
+attendanceSchema.index({ school_id: 1, class_id: 1, date: 1 }, { name: "attendance_school_class_date_v1" });
+attendanceSchema.index({ school_id: 1, type: 1, date: 1 }, { name: "attendance_school_type_date_v1" });
 
 // ─── Homework ─────────────────────────────────────────────────────
 export interface IHomework extends Document {
@@ -493,9 +493,9 @@ const homeworkSchema = new Schema<IHomework>(
   { timestamps: true }
 );
 
-homeworkSchema.index({ school_id: 1, class_id: 1, status: 1 });
-homeworkSchema.index({ school_id: 1, teacher_id: 1 });
-homeworkSchema.index({ school_id: 1, due_date: -1 });
+homeworkSchema.index({ school_id: 1, class_id: 1, status: 1 }, { name: "homework_school_class_status_v1" });
+homeworkSchema.index({ school_id: 1, teacher_id: 1 }, { name: "homework_school_teacher_v1" });
+homeworkSchema.index({ school_id: 1, due_date: -1 }, { name: "homework_school_due_date_v1" });
 
 // ─── Notice ───────────────────────────────────────────────────────
 export interface INotice extends Document {
@@ -527,8 +527,8 @@ const noticeSchema = new Schema<INotice>(
   { timestamps: true }
 );
 
-noticeSchema.index({ school_id: 1, is_published: 1, publish_date: -1 });
-noticeSchema.index({ school_id: 1, target_audience: 1, publish_date: -1 });
+noticeSchema.index({ school_id: 1, is_published: 1, publish_date: -1 }, { name: "notice_school_published_date_v1" });
+noticeSchema.index({ school_id: 1, target_audience: 1, publish_date: -1 }, { name: "notice_school_audience_date_v1" });
 
 // ─── Fees ─────────────────────────────────────────────────────────
 export interface IFeesStructure extends Document {
@@ -559,7 +559,7 @@ const feesStructureSchema = new Schema<IFeesStructure>(
 );
 
 // Fast fee structure lookup: "which fee heads exist for class X in year Y?"
-feesStructureSchema.index({ school_id: 1, class_id: 1, academic_year: 1, is_active: 1 });
+feesStructureSchema.index({ school_id: 1, class_id: 1, academic_year: 1, is_active: 1 }, { name: "fees_structure_school_class_year_active_v1" });
 
 // ─── Grade ─────────────────────────────────────────────────────────
 export interface IGrade extends Document {
@@ -585,7 +585,7 @@ const gradeSchema = new Schema<IGrade>(
   { timestamps: true }
 );
 
-gradeSchema.index({ school_id: 1, grade_name: 1 }, { unique: true });
+gradeSchema.index({ school_id: 1, grade_name: 1 }, { unique: true, name: "grade_school_name_unique_v1" });
 
 // ─── Holiday ───────────────────────────────────────────────────────
 export interface IHoliday extends Document {
@@ -609,7 +609,7 @@ const holidaySchema = new Schema<IHoliday>(
   { timestamps: true }
 );
 
-holidaySchema.index({ school_id: 1, title: 1, date: 1 }, { unique: true });
+holidaySchema.index({ school_id: 1, title: 1, date: 1 }, { unique: true, name: "holiday_school_title_date_unique_v1" });
 
 // ─── Leave Type ────────────────────────────────────────────────────
 export interface ILeaveType extends Document {
@@ -627,7 +627,7 @@ const leaveTypeSchema = new Schema<ILeaveType>(
   { timestamps: true }
 );
 
-leaveTypeSchema.index({ school_id: 1, leave_type: 1 }, { unique: true });
+leaveTypeSchema.index({ school_id: 1, leave_type: 1 }, { unique: true, name: "leave_type_school_type_unique_v1" });
 
 // ─── Exam & Result ────────────────────────────────────────────────
 export interface IExam extends Document {
@@ -660,7 +660,7 @@ const examSchema = new Schema<IExam>(
 );
 
 // Exam listing per class: "show me all exams for Class 10 in 2026-2027 that are active"
-examSchema.index({ school_id: 1, class_id: 1, academic_year: 1, status: 1 });
+examSchema.index({ school_id: 1, class_id: 1, academic_year: 1, status: 1 }, { name: "exam_school_class_year_status_v1" });
 
 export interface IResult extends Document {
   school_id: mongoose.Types.ObjectId;
@@ -697,9 +697,9 @@ const resultSchema = new Schema<IResult>(
   { timestamps: true }
 );
 
-resultSchema.index({ school_id: 1, exam_id: 1, student_id: 1, subject_id: 1 }, { unique: true });
+resultSchema.index({ school_id: 1, exam_id: 1, student_id: 1, subject_id: 1 }, { unique: true, name: "result_school_exam_student_subject_unique_v1" });
 // Report card query: "get all results for student X across all exams in this year"
-resultSchema.index({ school_id: 1, student_id: 1, exam_id: 1 });
+resultSchema.index({ school_id: 1, student_id: 1, exam_id: 1 }, { name: "result_school_student_exam_v1" });
 
 // ─── Result Audit ──────────────────────────────────────────────────
 export interface IResultAudit extends Document {
@@ -741,7 +741,7 @@ const resultAuditSchema = new Schema<IResultAudit>(
   { timestamps: true }
 );
 
-resultAuditSchema.index({ school_id: 1, exam_id: 1, student_id: 1, subject_id: 1 });
+resultAuditSchema.index({ school_id: 1, exam_id: 1, student_id: 1, subject_id: 1 }, { name: "result_audit_school_exam_student_subject_v1" });
 
 // ─── Leave Request ────────────────────────────────────────────────
 export interface ILeaveRequest extends Document {
@@ -775,8 +775,8 @@ const leaveRequestSchema = new Schema<ILeaveRequest>(
   { timestamps: true }
 );
 
-leaveRequestSchema.index({ school_id: 1, user_id: 1, status: 1 });
-leaveRequestSchema.index({ school_id: 1, status: 1, createdAt: -1 });
+leaveRequestSchema.index({ school_id: 1, user_id: 1, status: 1 }, { name: "leave_request_school_user_status_v1" });
+leaveRequestSchema.index({ school_id: 1, status: 1, createdAt: -1 }, { name: "leave_request_school_status_created_v1" });
 
 // ─── Room ─────────────────────────────────────────────────────────
 export interface IRoom extends Document {
@@ -796,7 +796,7 @@ const roomSchema = new Schema<IRoom>(
   { timestamps: true }
 );
 
-roomSchema.index({ school_id: 1, room_no: 1 }, { unique: true });
+roomSchema.index({ school_id: 1, room_no: 1 }, { unique: true, name: "room_school_no_unique_v1" });
 
 // ─── Export all models (with cache check for Next.js hot reload) ──
 export const Subject: Model<ISubject> = mongoose.models.Subject || mongoose.model("Subject", subjectSchema);
@@ -867,7 +867,7 @@ const subjectMasterSchema = new Schema<ISubjectMaster>(
   { timestamps: true }
 );
 
-subjectMasterSchema.index({ school_id: 1, name: 1 }, { unique: true });
+subjectMasterSchema.index({ school_id: 1, name: 1 }, { unique: true, name: "subject_master_school_name_unique_v1" });
 
 export const SubjectMaster: Model<ISubjectMaster> =
   mongoose.models.SubjectMaster && mongoose.models.SubjectMaster.schema.paths.status?.options?.enum?.includes("Archived")
@@ -917,12 +917,12 @@ const subjectAssignmentSchema = new Schema<ISubjectAssignment>(
 // Prevent duplicate assignments
 subjectAssignmentSchema.index(
   { school_id: 1, academic_year: 1, class_id: 1, stream_id: 1, subject_master_id: 1 },
-  { unique: true }
+  { unique: true, name: "subject_assignment_unique_v1" }
 );
 
 subjectAssignmentSchema.index(
   { school_id: 1, academic_year: 1, class_group_id: 1, subject_master_id: 1 },
-  { unique: true, partialFilterExpression: { class_group_id: { $gt: null } } }
+  { unique: true, partialFilterExpression: { class_group_id: { $gt: null } }, name: "subject_assignment_group_unique_v1" }
 );
 
 export const SubjectAssignment: Model<ISubjectAssignment> =
@@ -957,7 +957,7 @@ const busSchema = new Schema<IBus>(
   { timestamps: true }
 );
 
-busSchema.index({ school_id: 1, busNumber: 1 }, { unique: true });
+busSchema.index({ school_id: 1, busNumber: 1 }, { unique: true, name: "bus_school_number_unique_v1" });
 
 export interface IRoute extends Document {
   school_id: mongoose.Types.ObjectId;
@@ -986,7 +986,7 @@ const routeSchema = new Schema<IRoute>(
   { timestamps: true }
 );
 
-routeSchema.index({ school_id: 1, routeName: 1 }, { unique: true });
+routeSchema.index({ school_id: 1, routeName: 1 }, { unique: true, name: "route_school_name_unique_v1" });
 
 export interface ITransportAllocation extends Document {
   school_id: mongoose.Types.ObjectId;
@@ -1009,7 +1009,7 @@ const transportAllocationSchema = new Schema<ITransportAllocation>(
   { timestamps: true }
 );
 
-transportAllocationSchema.index({ school_id: 1, student_id: 1 }, { unique: true });
+transportAllocationSchema.index({ school_id: 1, student_id: 1 }, { unique: true, name: "transport_allocation_school_student_unique_v1" });
 
 export const Bus: Model<IBus> = mongoose.models.Bus || mongoose.model("Bus", busSchema);
 export const Route: Model<IRoute> = mongoose.models.Route || mongoose.model("Route", routeSchema);
@@ -1080,7 +1080,7 @@ const feeAllocationSchema = new Schema<IFeeAllocation>({
 }, { timestamps: true });
 
 // Prevent duplicate assignment of the same group to the same student
-feeAllocationSchema.index({ student_id: 1, fee_group_id: 1 }, { unique: true });
+feeAllocationSchema.index({ student_id: 1, fee_group_id: 1 }, { unique: true, name: "fee_allocation_student_group_unique_v1" });
 
 export interface IFeePayment extends Document {
   school_id: mongoose.Types.ObjectId;
@@ -1165,8 +1165,8 @@ const classTestSchema = new Schema<IClassTest>(
   { timestamps: true }
 );
 
-classTestSchema.index({ school_id: 1, class_id: 1, test_date: 1 });
-classTestSchema.index({ school_id: 1, teacher_id: 1 });
+classTestSchema.index({ school_id: 1, class_id: 1, test_date: 1 }, { name: "class_test_school_class_date_v1" });
+classTestSchema.index({ school_id: 1, teacher_id: 1 }, { name: "class_test_school_teacher_v1" });
 
 export const ClassTest: Model<IClassTest> =
   mongoose.models.ClassTest && Object.keys(mongoose.models.ClassTest.schema.paths).includes("assessment_type")
@@ -1207,7 +1207,7 @@ const classTestMarkSchema = new Schema<IClassTestMark>(
   { timestamps: true }
 );
 
-classTestMarkSchema.index({ test_id: 1, student_id: 1 }, { unique: true });
+classTestMarkSchema.index({ test_id: 1, student_id: 1 }, { unique: true, name: "class_test_mark_test_student_unique_v1" });
 
 export const ClassTestMark: Model<IClassTestMark> =
   mongoose.models.ClassTestMark && Object.keys(mongoose.models.ClassTestMark.schema.paths).includes("attendance_status")
@@ -1252,7 +1252,7 @@ const classTestMarkAuditSchema = new Schema<IClassTestMarkAudit>(
   { timestamps: true }
 );
 
-classTestMarkAuditSchema.index({ school_id: 1, test_id: 1, student_id: 1 });
+classTestMarkAuditSchema.index({ school_id: 1, test_id: 1, student_id: 1 }, { name: "class_test_mark_audit_school_test_student_v1" });
 
 export const ClassTestMarkAudit: Model<IClassTestMarkAudit> =
   mongoose.models.ClassTestMarkAudit || mongoose.model<IClassTestMarkAudit>("ClassTestMarkAudit", classTestMarkAuditSchema);
@@ -1295,7 +1295,7 @@ const examScheduleSchema = new Schema<IExamSchedule>(
 );
 
 // Unique index to prevent duplicate schedules for the same exam, subject, and date
-examScheduleSchema.index({ exam_id: 1, subject_id: 1, date: 1 }, { unique: true });
+examScheduleSchema.index({ exam_id: 1, subject_id: 1, date: 1 }, { unique: true, name: "exam_schedule_exam_subject_date_unique_v1" });
 
 export const ExamSchedule: Model<IExamSchedule> =
   mongoose.models.ExamSchedule || mongoose.model<IExamSchedule>("ExamSchedule", examScheduleSchema);

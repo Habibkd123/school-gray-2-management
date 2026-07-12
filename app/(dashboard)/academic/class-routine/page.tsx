@@ -14,7 +14,8 @@ import {
   Calendar, Clock, User, Home, BookOpen, AlertCircle, RefreshCw,
   ChevronRight, ChevronLeft, Check, HelpCircle,
   Loader2,
-  ChevronDown
+  ChevronDown,
+  GraduationCap
 } from "lucide-react";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -360,6 +361,38 @@ export default function ClassRoutinePage() {
     return grouped;
   }, [schedules]);
 
+  // Group schedules by class for Class View (Records Table replacement)
+  const routinesByClass = useMemo(() => {
+    const groups: Record<string, { class: any, routines: ApiSchedule[] }> = {};
+    schedules.forEach(s => {
+      const cls = typeof s.class_id === "object" ? s.class_id : null;
+      if (!cls) return;
+      const key = `${cls.name} ${cls.section || ""}`.trim();
+      if (!groups[key]) {
+        groups[key] = { class: cls, routines: [] };
+      }
+      groups[key].routines.push(s);
+    });
+
+    // Sort routines within each group by Day and Time
+    const dayOrder: Record<string, number> = { "Monday": 1, "Tuesday": 2, "Wednesday": 3, "Thursday": 4, "Friday": 5, "Saturday": 6, "Sunday": 7 };
+    Object.values(groups).forEach(g => {
+      g.routines.sort((a, b) => {
+        if (dayOrder[a.day] !== dayOrder[b.day]) {
+          return (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99);
+        }
+        return parseTimeToMinutes(a.start_time) - parseTimeToMinutes(b.start_time);
+      });
+    });
+
+    // Sort groups by class name
+    return Object.values(groups).sort((a, b) => {
+      const nameA = a.class.name || "";
+      const nameB = b.class.name || "";
+      return nameA.localeCompare(nameB);
+    });
+  }, [schedules]);
+
   const isLoading = classesLoading || teachersLoading || schedulesLoading;
 
   return (
@@ -390,7 +423,7 @@ export default function ClassRoutinePage() {
               onClick={() => setViewMode("list")}
               className={`px-3 py-1.5 rounded-md text-[13px] font-medium cursor-pointer flex items-center gap-1.5 transition-colors ${viewMode === "list" ? "bg-white dark:bg-slate-800 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
             >
-              <List className="w-3.5 h-3.5" /> Records Table
+              <List className="w-3.5 h-3.5" /> Class View
             </button>
           </div>
 
@@ -635,62 +668,93 @@ export default function ClassRoutinePage() {
             </div>
           </div>
         ) : (
-          /* Records Table view mode */
-          <div className="overflow-x-auto rounded-xl">
-            <table className="w-full text-left text-[14px]">
-              <thead>
-                <tr className="border-b border-border text-slate-500 bg-slate-50/50 dark:bg-slate-800/50 text-[13px] font-semibold">
-                  <th className="p-4">Day</th>
-                  <th className="p-4">Period</th>
-                  <th className="p-4">Class</th>
-                  <th className="p-4">Subject</th>
-                  <th className="p-4">Teacher</th>
-                  <th className="p-4">Room</th>
-                  <th className="p-4">Time Slot</th>
-                  <th className="p-4">Status</th>
-                  {isAdmin && <th className="p-4 text-right">Actions</th>}
-                </tr>
-              </thead>
-              <tbody>
-                {schedules.map((routine, idx) => {
-                  const cls = typeof routine.class_id === "object" ? routine.class_id : null;
-                  const subjectObj = typeof routine.subject_id === "object" ? routine.subject_id : null;
-                  const teacherObj = typeof routine.teacher_id === "object" ? routine.teacher_id : null;
-                  const subjectName = subjectObj ? subjectObj.name : String(routine.subject_id);
+          /* Class View mode */
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {routinesByClass.length === 0 ? (
+              <div className="col-span-full py-20 text-center text-slate-500">
+                No routines found for selected criteria.
+              </div>
+            ) : (
+              routinesByClass.map((group, idx) => (
+                <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col">
+                  <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center">
+                        <GraduationCap className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 dark:text-white text-[16px]">
+                          {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                        </h3>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-500 bg-slate-200/50 dark:bg-slate-700 px-2 py-1 rounded-md">
+                      {filterYear || academicYear}
+                    </span>
+                  </div>
+                  <div className="p-4 flex-1">
+                    <div className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-wider">
+                      Routine Periods ({group.routines.length})
+                    </div>
+                    <div className="space-y-3">
+                      {group.routines.map((routine, ridx) => {
+                        const subjectObj = typeof routine.subject_id === "object" ? routine.subject_id : null;
+                        const teacherObj = typeof routine.teacher_id === "object" ? routine.teacher_id : null;
+                        const subjectName = subjectObj ? subjectObj.name : String(routine.subject_id);
 
-                  return (
-                    <tr key={routine._id} className="border-b border-border hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="p-4 font-semibold text-slate-800 dark:text-slate-200 capitalize">{routine.day}</td>
-                      <td className="p-4 font-mono font-medium text-slate-500">Period {routine.period_no || idx + 1}</td>
-                      <td className="p-4 font-semibold text-slate-800 dark:text-slate-200">{cls ? `${cls.name} - ${cls.section}` : "N/A"}</td>
-                      <td className="p-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[12px] font-semibold border ${getSubjectColor(subjectName)}`}>
-                          {subjectName}
-                        </span>
-                      </td>
-                      <td className="p-4 text-slate-600 dark:text-slate-300">{teacherObj ? teacherObj.name : "N/A"}</td>
-                      <td className="p-4 font-mono font-medium text-slate-800 dark:text-slate-200">{routine.room || "—"}</td>
-                      <td className="p-4 text-slate-600 dark:text-slate-400 font-medium">{routine.start_time} - {routine.end_time}</td>
-                      <td className="p-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[12px] font-semibold ${routine.status === "Inactive" ? "bg-slate-100 text-slate-600 dark:bg-slate-800" : "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 border border-emerald-200/50"}`}>
-                          {routine.status || "Active"}
-                        </span>
-                      </td>
-                      {isAdmin && (
-                        <td className="p-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
-                            <button onClick={() => handleOpenEdit(routine)} className="p-1.5 text-slate-400 hover:text-primary transition-colors cursor-pointer" title="Edit"><Edit className="w-4 h-4" /></button>
-                            <button onClick={() => handleOpenDuplicate(routine)} className="p-1.5 text-slate-400 hover:text-primary transition-colors cursor-pointer" title="Duplicate"><Copy className="w-4 h-4" /></button>
-                            <button onClick={() => handleToggleArchive(routine)} className="p-1.5 text-slate-400 hover:text-amber-500 transition-colors cursor-pointer" title={routine.status === "Inactive" ? "Activate" : "Archive"}><Plus className="w-4 h-4 rotate-45" /></button>
-                            <button onClick={() => handleDeleteRoutine(routine._id)} className="p-1.5 text-slate-400 hover:text-red-500 transition-colors cursor-pointer" title="Delete"><Trash2 className="w-4 h-4" /></button>
+                        return (
+                          <div key={routine._id} className="group relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl p-3.5 flex items-start gap-3 transition-colors">
+                            <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-200 shrink-0 mt-0.5">
+                              <img
+                                src={teacherObj?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(teacherObj?.name || "T")}&background=d68600&color=fff&bold=true`}
+                                alt="Teacher Avatar"
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <h4 className="font-bold text-slate-900 dark:text-slate-100 text-[13px] tracking-wide uppercase">
+                                  PER {routine.period_no || ridx + 1}: {subjectName}
+                                </h4>
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold capitalize border ${routine.status === "Inactive" ? "bg-slate-100 text-slate-500 dark:bg-slate-800 border-slate-200" : "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/20"}`}>
+                                  {routine.day.substring(0, 3)}
+                                </span>
+                              </div>
+                              <div className="text-[11px] font-medium text-slate-500 mt-1 font-sans flex flex-col gap-0.5">
+                                <div className="flex items-center gap-1.5 uppercase text-slate-700 dark:text-slate-300">
+                                  <User className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>{teacherObj?.name || "Unknown Teacher"}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-slate-500">
+                                  <Clock className="w-3.5 h-3.5 text-slate-400" />
+                                  <span>{routine.start_time} - {routine.end_time}</span>
+                                  {routine.room && (
+                                    <>
+                                      <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                      <span>Room {routine.room}</span>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            {isAdmin && (
+                              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center gap-1">
+                                <button onClick={() => handleOpenEdit(routine)} className="text-slate-400 hover:text-primary transition-colors p-1" title="Edit">
+                                  <Edit className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => handleDeleteRoutine(routine._id)} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Delete">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>

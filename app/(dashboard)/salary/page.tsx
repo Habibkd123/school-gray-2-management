@@ -768,10 +768,10 @@ export default function SalaryDashboardPage() {
                               <span className="font-bold text-slate-900 dark:text-white block">{s.name}</span>
                               {/* <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{s.role}</span> */}
                             </td>
-                            <td className="font-mono font-bold text-slate-600 dark:text-slate-400">{s.empId}</td>
+                            <td className="font-sans font-bold text-slate-600 dark:text-slate-400">{s.empId}</td>
                             <td>
                               {s.basic > 0 ? (
-                                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{money(s.basic)}</span>
+                                <span className="font-sans font-bold text-slate-800 dark:text-slate-200">{money(s.basic)}</span>
                               ) : (
                                 <button
                                   onClick={() => openSetupSalary(s)}
@@ -976,15 +976,15 @@ export default function SalaryDashboardPage() {
                           const teacher = p.teacher_id || {};
                           return (
                             <tr key={p._id}>
-                              <td className="font-mono font-bold text-slate-655">{p.receipt_number}</td>
+                              <td className="font-sans font-bold text-slate-655">{p.receipt_number}</td>
                               <td>
                                 <span className="font-bold text-slate-900 dark:text-white block">{teacher.name || "Unknown"}</span>
                                 <span className="block text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">ID: {teacher.employee_id || "N/A"}</span>
                               </td>
-                              <td className="font-mono text-slate-700 dark:text-slate-350">{money(p.monthly_salary)}</td>
+                              <td className="font-sans text-slate-700 dark:text-slate-350">{money(p.monthly_salary)}</td>
                               <td className="text-slate-600 dark:text-slate-400 font-bold">{p.present_days} / {p.absent_days}</td>
-                              <td className="font-mono text-rose-500 font-bold">-{money(p.suggested_deduction)}</td>
-                              <td className="font-mono font-black text-slate-900 dark:text-white">{money(p.final_salary)}</td>
+                              <td className="font-sans text-rose-500 font-bold">-{money(p.suggested_deduction)}</td>
+                              <td className="font-sans font-black text-slate-900 dark:text-white">{money(p.final_salary)}</td>
                               <td className="font-bold text-slate-500">{fmtDate(p.payment_date)}</td>
                               <td className="col-right">
                                 <button
@@ -1021,7 +1021,7 @@ export default function SalaryDashboardPage() {
                 placeholder="Enter base salary, e.g., 35000"
                 value={setupAmount}
                 onChange={e => setSetupAmount(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-900 dark:text-white font-mono rounded-xl outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-900 dark:text-white font-sans rounded-xl outline-none focus:ring-2 focus:ring-primary/20 shadow-sm"
               />
             </div>
             <div className="flex justify-end gap-3 pt-4 border-t border-border">
@@ -1057,7 +1057,7 @@ export default function SalaryDashboardPage() {
               </div>
               <div>
                 <span className="text-slate-400 font-medium">Employee ID</span>
-                <p className="font-mono font-bold text-white mt-1">{editPayrollRecord.teacher_id?.employee_id || "EMP-N/A"}</p>
+                <p className="font-sans font-bold text-white mt-1">{editPayrollRecord.teacher_id?.employee_id || "EMP-N/A"}</p>
               </div>
               <div>
                 <span className="text-slate-400 font-medium">Monthly Contract Base</span>
@@ -1140,7 +1140,7 @@ export default function SalaryDashboardPage() {
                       type="number"
                       value={bonus}
                       onChange={(e) => setBonus(Number(e.target.value))}
-                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-emerald-600 font-mono"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-emerald-600 font-sans"
                     />
                   </div>
                   <div>
@@ -1149,7 +1149,7 @@ export default function SalaryDashboardPage() {
                       type="number"
                       value={overtimeAmount}
                       onChange={(e) => setOvertimeAmount(Number(e.target.value))}
-                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-emerald-600 font-mono"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-emerald-600 font-sans"
                     />
                   </div>
                 </div>
@@ -1164,7 +1164,7 @@ export default function SalaryDashboardPage() {
                       type="number"
                       value={deduction}
                       onChange={(e) => setDeduction(Number(e.target.value))}
-                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-rose-500 font-mono"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-rose-500 font-sans"
                     />
                   </div>
                   <div>
@@ -1173,7 +1173,7 @@ export default function SalaryDashboardPage() {
                       type="number"
                       value={taxDeduction}
                       onChange={(e) => setTaxDeduction(Number(e.target.value))}
-                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-rose-500 font-mono"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-border text-xs rounded-lg text-rose-500 font-sans"
                     />
                   </div>
                 </div>
@@ -1216,7 +1216,7 @@ export default function SalaryDashboardPage() {
                   type="number"
                   value={finalSalaryOverride}
                   onChange={(e) => setFinalSalaryOverride(Number(e.target.value))}
-                  className="px-3 py-1 bg-white dark:bg-slate-900 border border-border rounded-md text-xs font-bold text-primary font-mono w-32"
+                  className="px-3 py-1 bg-white dark:bg-slate-900 border border-border rounded-md text-xs font-bold text-primary font-sans w-32"
                 />
               )}
             </div>
@@ -1334,9 +1334,9 @@ export default function SalaryDashboardPage() {
                           <tr key={p._id}>
                             <td className="font-bold text-slate-800 dark:text-slate-100">{periodName}</td>
                             <td className="font-bold text-slate-500">{fmtDate(p.payment_date)}</td>
-                            <td className="font-mono">{money(p.monthly_salary)}</td>
+                            <td className="font-sans">{money(p.monthly_salary)}</td>
                             <td className="font-bold text-slate-550">{p.present_days} / {p.absent_days}</td>
-                            <td className="font-mono font-bold text-slate-900 dark:text-white">{money(p.final_salary)}</td>
+                            <td className="font-sans font-bold text-slate-900 dark:text-white">{money(p.final_salary)}</td>
                             <td>
                               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${p.status === "Paid"
                                 ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-450 dark:border-emerald-500/20"

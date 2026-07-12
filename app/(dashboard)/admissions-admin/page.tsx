@@ -210,7 +210,7 @@ export default function AdmissionsDashboard() {
                     <tbody className="divide-y divide-border">
                       {recents.map(r => (
                         <tr key={r._id}>
-                          <td className="font-mono font-bold text-primary">
+                          <td className="font-sans font-bold text-primary">
                             <Link href={`/admissions-admin/applications/${r._id}`} className="hover:underline">
                               {r.application_no}
                             </Link>
@@ -225,12 +225,11 @@ export default function AdmissionsDashboard() {
                             {r.phone}
                           </td>
                           <td className="col-center">
-                            <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-extrabold border uppercase ${
-                              r.status === "New" ? "bg-blue-50 text-blue-700 border-blue-200" :
-                              r.status === "Approved" || r.status === "Admission Completed" ? "bg-emerald-50 text-emerald-705 border-emerald-205" :
-                              r.status === "Rejected" ? "bg-rose-50 text-rose-705 border-rose-205" :
-                              "bg-slate-50 text-slate-705 border-slate-205"
-                            }`}>
+                            <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-extrabold border uppercase ${r.status === "New" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                r.status === "Approved" || r.status === "Admission Completed" ? "bg-emerald-50 text-emerald-705 border-emerald-205" :
+                                  r.status === "Rejected" ? "bg-rose-50 text-rose-705 border-rose-205" :
+                                    "bg-slate-50 text-slate-705 border-slate-205"
+                              }`}>
                               {r.status}
                             </span>
                           </td>

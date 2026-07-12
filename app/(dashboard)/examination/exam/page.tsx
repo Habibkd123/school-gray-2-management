@@ -2,18 +2,21 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
-import Link from "next/link";
+// import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { 
+import {
   Plus, Search, List, MoreVertical, Edit, Trash2,
-  Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, FileText, Loader2, Eye, CalendarRange, PenTool
+  Calendar, Filter, ChevronDown, RefreshCw, Printer, Download, FileText, Loader2, Eye, CalendarRange, PenTool, LayoutGrid, GraduationCap
 } from "lucide-react";
+import Link from "next/link";
 import { Modal } from "../../../components/ui/modal";
 import { useExams } from "@/app/hooks/useExams";
 import { useClasses } from "@/app/hooks/useClasses";
 import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar";
 import { useAppState } from "@/app/context/store";
 import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
+
+const PAGE_SIZE = 30;
 
 export default function ExamListPage() {
   const router = useRouter();
@@ -27,9 +30,29 @@ export default function ExamListPage() {
 
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
 
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [collapsedListGroups, setCollapsedListGroups] = useState<Set<string>>(new Set());
+
+  const toggleListGroup = (groupId: string) => {
+    setCollapsedListGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) newSet.delete(groupId);
+      else newSet.add(groupId);
+      return newSet;
+    });
+  };
+
   useEffect(() => {
     setIsMounted(true);
+    const savedView = localStorage.getItem("exam-view-mode");
+    if (savedView === "grid" || savedView === "list") setViewMode(savedView);
   }, []);
+
+  const handleViewModeChange = (mode: "grid" | "list") => {
+    setViewMode(mode);
+    localStorage.setItem("exam-view-mode", mode);
+  };
 
   useEffect(() => {
     const handleClose = () => {
@@ -59,10 +82,10 @@ export default function ExamListPage() {
   const dropdownStyles = useMemo(() => {
     if (!menuAnchorRect) return {};
     const spaceBelow = window.innerHeight - menuAnchorRect.bottom;
-    const dropdownHeight = 180; 
+    const dropdownHeight = 180;
     const margin = 4;
     const left = menuAnchorRect.right - 176 + window.scrollX;
-    
+
     if (spaceBelow < dropdownHeight && menuAnchorRect.top > dropdownHeight) {
       const top = menuAnchorRect.top - dropdownHeight - margin + window.scrollY;
       return { position: "absolute" as const, top: `${top}px`, left: `${left}px`, width: "176px" };
@@ -99,12 +122,12 @@ export default function ExamListPage() {
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [generateExamId, setGenerateExamId] = useState<string | null>(null);
   const [generateExamLabel, setGenerateExamLabel] = useState("");
-  
+
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [selectedSort, setSelectedSort] = useState("Recently Added");
-  
+
   const [selectedExamId, setSelectedExamId] = useState<string | null>(null);
   const [viewingExam, setViewingExam] = useState<any>(null);
 
@@ -203,17 +226,17 @@ export default function ExamListPage() {
 
   const formatDate = (d?: string) => {
     if (!d) return "—";
-    try { 
-      return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }); 
-    } catch { 
-      return d; 
+    try {
+      return new Date(d).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    } catch {
+      return d;
     }
   };
 
   const calculateStatus = (item: any): "upcoming" | "ongoing" | "completed" => {
     if (item.status) return item.status;
     const now = new Date();
-    now.setHours(0,0,0,0);
+    now.setHours(0, 0, 0, 0);
     const start = item.start_date ? new Date(item.start_date) : null;
     const end = item.end_date ? new Date(item.end_date) : null;
     if (start && start > now) return "upcoming";
@@ -247,8 +270,8 @@ export default function ExamListPage() {
   const filteredData = useMemo(() => {
     let list = exams.filter(s => {
       const matchesSearch = (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            (s.type || '').toLowerCase().includes(searchTerm.toLowerCase());
-      
+        (s.type || '').toLowerCase().includes(searchTerm.toLowerCase());
+
       const sClassId = s.class_id ? (typeof s.class_id === "object" ? s.class_id?._id : s.class_id) : "";
       const matchesClass = selectedClassFilter === "All" || sClassId === selectedClassFilter;
 
@@ -273,7 +296,47 @@ export default function ExamListPage() {
     return list;
   }, [exams, searchTerm, selectedClassFilter, selectedStatusFilter, selectedSort]);
 
-  const pag = usePagination(filteredData, 10);
+  const [page, setPage] = useState(1);
+
+  const groupedExams = useMemo(() => {
+    const groupsMap = new Map<string, { class: any; exams: any[] }>();
+
+    filteredData.forEach(exam => {
+      const cls = exam.class_id && typeof exam.class_id === "object" ? exam.class_id : { _id: "unassigned", name: "Unassigned Class", section: "" };
+      const groupId = cls._id;
+      if (!groupsMap.has(groupId)) {
+        groupsMap.set(groupId, { class: cls, exams: [] });
+      }
+      groupsMap.get(groupId)!.exams.push(exam);
+    });
+
+    const groupsArray = Array.from(groupsMap.values());
+
+    // Natural sort by class name and section
+    groupsArray.sort((a, b) => {
+      if (a.class._id === "unassigned") return 1;
+      if (b.class._id === "unassigned") return -1;
+
+      const nameA = a.class.name || "";
+      const nameB = b.class.name || "";
+      const cmp = nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+      if (cmp !== 0) return cmp;
+
+      const secA = a.class.section || "";
+      const secB = b.class.section || "";
+      return secA.localeCompare(secB, undefined, { numeric: true, sensitivity: 'base' });
+    });
+
+    return groupsArray;
+  }, [filteredData]);
+
+  const totalGroups = groupedExams.length;
+  const totalPages = Math.ceil(totalGroups / PAGE_SIZE);
+
+  const paginatedGroups = useMemo(() => {
+    const startIndex = (page - 1) * PAGE_SIZE;
+    return groupedExams.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [groupedExams, page]);
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
@@ -292,9 +355,9 @@ export default function ExamListPage() {
           <button onClick={() => window.location.reload()} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
-          
+
           <div className="relative">
-            <button 
+            <button
               onClick={() => setIsExportOpen(!isExportOpen)}
               className="btn btn-outline flex items-center gap-2"
             >
@@ -315,7 +378,23 @@ export default function ExamListPage() {
             )}
           </div>
 
-          <button 
+          {/* View Switcher */}
+          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+            <button
+              onClick={() => handleViewModeChange("list")}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] font-bold transition-all cursor-pointer ${viewMode === "list" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            >
+              <List className="w-4 h-4" /> Table
+            </button>
+            <button
+              onClick={() => handleViewModeChange("grid")}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-[13px] font-bold transition-all cursor-pointer ${viewMode === "grid" ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+            >
+              <LayoutGrid className="w-4 h-4" /> Cards
+            </button>
+          </div>
+
+          <button
             onClick={openAddModal}
             className="btn btn-primary flex items-center gap-2"
           >
@@ -326,7 +405,7 @@ export default function ExamListPage() {
           <button
             onClick={() => { setGenerateExamId(null); setGenerateExamLabel(""); setIsGenerateOpen(true); }}
             className="btn flex items-center gap-2 text-white"
-            style={{ background: "linear-gradient(90deg, #4338ca, #7c3aed)" }}
+            style={{ background: "linear-gradient(90deg, #ca9238ff, #ed9f3aff)" }}
           >
             <FileText className="w-4 h-4" /> Generate Report Cards
           </button>
@@ -338,13 +417,13 @@ export default function ExamListPage() {
         {/* Table Header Section */}
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Exam List Overview</h2>
-          
+
           <div className="flex flex-wrap items-center gap-3">
             {/* Class Filter */}
             <div className="flex items-center gap-2">
               <span className="text-[12px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">Class:</span>
-              <select 
-                value={selectedClassFilter} 
+              <select
+                value={selectedClassFilter}
                 onChange={(e) => setSelectedClassFilter(e.target.value)}
                 className="px-3 py-1.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
               >
@@ -358,8 +437,8 @@ export default function ExamListPage() {
             {/* Status Filter */}
             <div className="flex items-center gap-2">
               <span className="text-[12px] font-bold text-slate-500 dark:text-slate-400 whitespace-nowrap">Status:</span>
-              <select 
-                value={selectedStatusFilter} 
+              <select
+                value={selectedStatusFilter}
                 onChange={(e) => setSelectedStatusFilter(e.target.value)}
                 className="px-3 py-1.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 font-medium cursor-pointer"
               >
@@ -382,8 +461,8 @@ export default function ExamListPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsSortOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 overflow-hidden py-1.5 text-left">
                     {["Ascending", "Descending", "Recently Added"].map((item) => (
-                      <button 
-                        key={item} 
+                      <button
+                        key={item}
                         onClick={() => { setSelectedSort(item); setIsSortOpen(false); }}
                         className={`w-full px-4 py-2.5 text-[13px] hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left transition-colors font-medium cursor-pointer ${item === selectedSort ? "text-primary font-bold" : "text-slate-700 dark:text-slate-200"}`}
                       >
@@ -400,16 +479,20 @@ export default function ExamListPage() {
         {/* Search and Counts Section */}
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
           <div className="card-subtitle flex items-center gap-2 text-[13px]">
-            <span>Total</span>
-            <span className="font-bold text-slate-700 dark:text-slate-200">{filteredData.length}</span>
-            <span>Exams</span>
+            <span>Showing</span>
+            <span className="font-bold text-slate-700 dark:text-slate-200">
+              {totalGroups > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, totalGroups)}` : "0"}
+            </span>
+            <span>of</span>
+            <span className="font-bold text-slate-700 dark:text-slate-200">{totalGroups}</span>
+            <span>Classes</span>
           </div>
 
           <div className="relative">
             <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-            <input 
-              type="text" 
-              placeholder="Search exams..." 
+            <input
+              type="text"
+              placeholder="Search exams..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-4 py-2 w-full sm:w-[240px] bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] outline-none focus:border-primary transition-colors text-slate-800 dark:text-slate-100"
@@ -417,74 +500,186 @@ export default function ExamListPage() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className={`custom-page-table-wrap overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
-          <table className="custom-page-table">
-            <thead>
-              <tr>
-                <th>Exam Name</th>
-                <th>Type</th>
-                <th>Academic Year</th>
-                <th>Class</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Status</th>
-                <th className="w-20 col-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loading ? (
-                <tr>
-                  <td colSpan={8} className="table-loading">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-                    <p className="text-slate-500 dark:text-slate-400 mt-3 text-[13px]">Loading exams...</p>
-                  </td>
-                </tr>
-              ) : pag.paged.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="table-empty">
-                    No exams found. Click &quot;Add Exam&quot; to create one.
-                  </td>
-                </tr>
-              ) : pag.paged.map((item) => {
-                const currentStatus = calculateStatus(item);
-                return (
-                  <tr key={item._id}>
-                    <td className="font-semibold text-slate-800 dark:text-slate-100">{item.name}</td>
-                    <td className="text-slate-605 dark:text-slate-300 font-medium capitalize">
-                      {item.type.replace("_", " ")}
-                    </td>
-                    <td className="text-slate-600 dark:text-slate-300">{item.academic_year}</td>
-                    <td className="text-slate-600 dark:text-slate-300">
-                      {typeof item.class_id === "object"
-                        ? `${item.class_id?.name || ""} - ${item.class_id?.section || ""}`
-                        : "—"}
-                    </td>
-                    <td className="text-slate-600 dark:text-slate-300">{formatDate(item.start_date)}</td>
-                    <td className="text-slate-600 dark:text-slate-300">{formatDate(item.end_date)}</td>
-                    <td>{getStatusBadge(currentStatus)}</td>
-                    <td className="col-center relative" onClick={(e) => e.stopPropagation()}>
-                      <button 
-                        onClick={(e) => handleTriggerClick(e, item)}
-                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
-                      >
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    </td>
+        {/* Table / Grid */}
+        {viewMode === "list" ? (
+          <div className={`custom-page-table-wrap overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
+            {paginatedGroups.length === 0 ? (
+              <div className="py-20 text-center text-slate-500">
+                No exams matching criteria.
+              </div>
+            ) : (
+              <table className="erp-table text-[13px] whitespace-nowrap w-full border-collapse">
+                <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
+                  <tr>
+                    <th className="px-4 py-4 w-8"></th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Exam Name</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Type</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Academic Year</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Start Date</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">End Date</th>
+                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Status</th>
+                    <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200 w-24">Actions</th>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {paginatedGroups.map((group, idx) => {
+                    const groupId = group.class._id;
+                    const isCollapsed = collapsedListGroups.has(groupId);
+
+                    return (
+                      <React.Fragment key={groupId}>
+                        {/* Group Header Row */}
+                        <tr
+                          onClick={() => toggleListGroup(groupId)}
+                          className="bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer border-b border-border group"
+                        >
+                          <td className="px-4 py-4"></td>
+                          <td colSpan={6} className="px-4 py-4">
+                            <div className="flex items-center gap-4">
+                              <span className="font-bold text-[14px] text-slate-800 dark:text-slate-100">
+                                {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                              </span>
+                              <div className="flex items-center gap-3 text-[12px] font-medium text-slate-500">
+                                <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 rounded-full">
+                                  {group.exams.length} Exams
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-center text-slate-400 group-hover:text-primary transition-colors">
+                            <div className="flex justify-center">
+                              <ChevronDown className={`w-4 h-4 transition-transform ${isCollapsed ? "-rotate-90" : ""}`} />
+                            </div>
+                          </td>
+                        </tr>
+
+                        {/* Group Items Rows */}
+                        {!isCollapsed && group.exams.map((item: any) => {
+                          const currentStatus = calculateStatus(item);
+                          return (
+                            <tr key={item._id} className="erp-table-row border-b border-slate-100 dark:border-slate-800/50">
+                              <td className="px-4 py-4"></td>
+                              <td className="px-4 py-4 font-semibold text-slate-800 dark:text-slate-100">{item.name}</td>
+                              <td className="px-4 py-4 text-slate-605 dark:text-slate-300 font-medium capitalize">
+                                {item.type.replace("_", " ")}
+                              </td>
+                              <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{item.academic_year}</td>
+                              <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{formatDate(item.start_date)}</td>
+                              <td className="px-4 py-4 text-slate-600 dark:text-slate-300">{formatDate(item.end_date)}</td>
+                              <td className="px-4 py-4">{getStatusBadge(currentStatus)}</td>
+                              <td className="px-4 py-4 text-center relative" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  onClick={(e) => handleTriggerClick(e, item)}
+                                  className={`p-1.5 rounded-lg transition-colors cursor-pointer ${actionMenuId === item._id ? "bg-primary text-white" : "hover:bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"}`}
+                                >
+                                  <MoreVertical className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </React.Fragment>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        ) : (
+          <div className="p-5">
+            <div className="columns-1 md:columns-2 xl:columns-3 gap-6">
+              {paginatedGroups.length === 0 ? (
+                <div className="col-span-full py-20 text-center text-slate-500">
+                  No exams matching criteria.
+                </div>
+              ) : (
+                paginatedGroups.map((group, idx) => {
+                  const upcoming = group.exams.filter(e => calculateStatus(e) === "upcoming").length;
+                  const completed = group.exams.filter(e => calculateStatus(e) === "completed").length;
+                  const ongoing = group.exams.filter(e => calculateStatus(e) === "ongoing").length;
+
+                  return (
+                    <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col break-inside-avoid mb-6">
+                      <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30 flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
+                            <GraduationCap className="w-5 h-5" />
+                          </div>
+                          <div className="truncate">
+                            <h3 className="font-bold text-slate-900 dark:text-white text-[16px] truncate">
+                              {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                            </h3>
+                            <p className="text-[12px] font-medium text-slate-500 mt-0.5 truncate">
+                              {academicYear}
+                            </p>
+                          </div>
+                        </div>
+                        <Link href={`/examination/exam/${group.class._id}`} className="px-3 py-1.5 border border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 rounded-lg text-[12px] font-bold shadow-sm transition-colors cursor-pointer shrink-0">
+                          View Details
+                        </Link>
+                      </div>
+                      <div className="p-4">
+                        <div className="flex flex-wrap items-center gap-2 mb-4">
+                          <span className="text-[11px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">Total: {group.exams.length}</span>
+                          {upcoming > 0 && <span className="text-[11px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-md">Upcoming: {upcoming}</span>}
+                          {completed > 0 && <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded-md">Completed: {completed}</span>}
+                          {ongoing > 0 && <span className="text-[11px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-md">Ongoing: {ongoing}</span>}
+                        </div>
+
+                        <div className="space-y-3">
+                          {(expandedGroups[idx] ? group.exams : group.exams.slice(0, 3)).map((exam: any) => (
+                            <div key={exam._id} className="group/item relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl p-3.5 flex flex-col gap-2 transition-colors">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1">
+                                  <h4 className="font-bold text-slate-900 dark:text-slate-100 text-[13px] tracking-wide">
+                                    {exam.name}
+                                  </h4>
+                                  <div className="text-[11px] font-medium text-slate-500 mt-1 uppercase">
+                                    {exam.type.replace("_", " ")}
+                                  </div>
+                                </div>
+                                <div className="shrink-0">{getStatusBadge(calculateStatus(exam))}</div>
+                              </div>
+                              <div className="flex items-center justify-between text-[11px] text-slate-400 font-medium pt-2 border-t border-slate-100 dark:border-slate-800">
+                                <span>{formatDate(exam.start_date)} - {formatDate(exam.end_date)}</span>
+                                <div className="relative">
+                                  <button
+                                    onClick={(e) => handleTriggerClick(e, exam)}
+                                    className="p-1 rounded-md text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                                  >
+                                    <MoreVertical className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {group.exams.length > 3 && (
+                          <button
+                            onClick={() => setExpandedGroups(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                            className="w-full mt-3 py-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-1.5 bg-primary/5 hover:bg-primary/10 rounded-lg cursor-pointer"
+                          >
+                            {expandedGroups[idx] ? "Show Less" : `+ ${group.exams.length - 3} More Exams`}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Pagination */}
+        {/* Pagination */}
         <PaginationBar
-          currentPage={pag.page}
-          totalPages={pag.totalPages}
-          totalItems={pag.totalItems}
-          pageSize={pag.pageSize}
-          onPageChange={pag.setPage}
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalGroups}
+          pageSize={PAGE_SIZE}
+          onPageChange={setPage}
         />
       </div>
 
@@ -537,7 +732,7 @@ export default function ExamListPage() {
               </p>
             </div>
             <div className="flex justify-end pt-2">
-              <button 
+              <button
                 onClick={() => setIsViewOpen(false)}
                 className="px-6 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-[13px] font-bold rounded-lg transition-colors cursor-pointer"
               >
@@ -553,7 +748,7 @@ export default function ExamListPage() {
         <form onSubmit={handleAddSubmit} className="p-6 space-y-5 text-left max-h-[80vh] overflow-y-auto custom-scrollbar">
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Exam Name</label>
-            <input 
+            <input
               type="text"
               value={formExamName}
               onChange={(e) => setFormExamName(e.target.value)}
@@ -566,7 +761,7 @@ export default function ExamListPage() {
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Exam Type</label>
             <div className="relative">
-              <select 
+              <select
                 value={formExamType}
                 onChange={(e) => setFormExamType(e.target.value)}
                 className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
@@ -583,7 +778,7 @@ export default function ExamListPage() {
 
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Academic Year</label>
-            <input 
+            <input
               type="text"
               value={formAcademicYear}
               onChange={(e) => setFormAcademicYear(e.target.value)}
@@ -621,7 +816,7 @@ export default function ExamListPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Start Date</label>
-              <input 
+              <input
                 type="date"
                 value={formStartDate}
                 onChange={(e) => setFormStartDate(e.target.value)}
@@ -631,7 +826,7 @@ export default function ExamListPage() {
             </div>
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">End Date</label>
-              <input 
+              <input
                 type="date"
                 value={formEndDate}
                 onChange={(e) => setFormEndDate(e.target.value)}
@@ -644,7 +839,7 @@ export default function ExamListPage() {
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Status</label>
             <div className="relative">
-              <select 
+              <select
                 value={formStatus}
                 onChange={(e) => setFormStatus(e.target.value as any)}
                 className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
@@ -659,7 +854,7 @@ export default function ExamListPage() {
 
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Description (Optional)</label>
-            <textarea 
+            <textarea
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
               rows={3}
@@ -669,15 +864,15 @@ export default function ExamListPage() {
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => setIsAddOpen(false)}
               className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={saving || formClassIds.length === 0}
               className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
             >
@@ -691,10 +886,10 @@ export default function ExamListPage() {
       {/* Edit Exam Modal */}
       <Modal isOpen={isEditOpen} onClose={() => { setIsEditOpen(false); }} title="Edit Exam">
         <form onSubmit={handleEditSubmit} className="p-6 space-y-5 text-left max-h-[80vh] overflow-y-auto custom-scrollbar">
-          
+
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Exam Name</label>
-            <input 
+            <input
               type="text"
               value={formExamName}
               onChange={(e) => setFormExamName(e.target.value)}
@@ -706,7 +901,7 @@ export default function ExamListPage() {
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Exam Type</label>
             <div className="relative">
-              <select 
+              <select
                 value={formExamType}
                 onChange={(e) => setFormExamType(e.target.value)}
                 className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
@@ -724,7 +919,7 @@ export default function ExamListPage() {
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class</label>
             <div className="relative">
-              <select 
+              <select
                 value={formClassId}
                 onChange={(e) => setFormClassId(e.target.value)}
                 className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
@@ -741,7 +936,7 @@ export default function ExamListPage() {
 
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Academic Year</label>
-            <input 
+            <input
               type="text"
               value={formAcademicYear}
               onChange={(e) => setFormAcademicYear(e.target.value)}
@@ -753,7 +948,7 @@ export default function ExamListPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Start Date</label>
-              <input 
+              <input
                 type="date"
                 value={formStartDate}
                 onChange={(e) => setFormStartDate(e.target.value)}
@@ -763,7 +958,7 @@ export default function ExamListPage() {
             </div>
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">End Date</label>
-              <input 
+              <input
                 type="date"
                 value={formEndDate}
                 onChange={(e) => setFormEndDate(e.target.value)}
@@ -776,7 +971,7 @@ export default function ExamListPage() {
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Status</label>
             <div className="relative">
-              <select 
+              <select
                 value={formStatus}
                 onChange={(e) => setFormStatus(e.target.value as any)}
                 className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
@@ -791,7 +986,7 @@ export default function ExamListPage() {
 
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Description (Optional)</label>
-            <textarea 
+            <textarea
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
               rows={3}
@@ -800,15 +995,15 @@ export default function ExamListPage() {
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => { setIsEditOpen(false); }}
               className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={saving}
               className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer disabled:opacity-60 flex items-center gap-2"
             >
@@ -823,8 +1018,8 @@ export default function ExamListPage() {
       {isDeleteOpen && (
         <>
           <div className="fixed inset-0 bg-slate-900/50 z-[60] backdrop-blur-sm" onClick={() => setIsDeleteOpen(false)} />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-full sm:w-[400px] bg-white dark:bg-slate-900 rounded-2xl shadow-xl z-[70] overflow-hidden p-8 text-center animate-in fade-in zoom-in duration-200">
-            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-full sm:w-[400px] bg-white dark:bg-slate-900 rounded-xl shadow-xl z-[70] overflow-hidden p-8 text-center animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 bg-rose-50 rounded-xl flex items-center justify-center mx-auto mb-6">
               <Trash2 className="w-8 h-8 text-rose-500" />
             </div>
             <h2 className="text-xl font-bold text-foreground dark:text-slate-100 mb-3">Confirm Deletion</h2>
@@ -832,13 +1027,13 @@ export default function ExamListPage() {
               Are you sure you want to delete this exam? This action cannot be undone.
             </p>
             <div className="flex justify-center gap-3">
-              <button 
+              <button
                 onClick={() => setIsDeleteOpen(false)}
                 className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={handleDeleteConfirm}
                 className="px-6 py-2.5 bg-rose-500 text-white text-[14px] font-bold rounded-lg hover:bg-rose-600 transition-colors shadow-sm shadow-rose-500/20 cursor-pointer"
               >
@@ -854,7 +1049,7 @@ export default function ExamListPage() {
         createPortal(
           <>
             <div className="fixed inset-0 z-[90] bg-transparent" onClick={() => { setActionMenuId(null); setMenuAnchorRect(null); setActiveExam(null); }} />
-            <div 
+            <div
               style={dropdownStyles}
               className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-[100] overflow-hidden py-1.5 text-left animate-in fade-in duration-100"
               onClick={(e) => e.stopPropagation()}
@@ -883,7 +1078,7 @@ export default function ExamListPage() {
                 }}
                 className="w-full px-4 py-2 text-[13px] text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 flex items-center gap-2 font-medium transition-colors cursor-pointer"
               >
-                <FileText className="w-4 h-4 text-indigo-500" /> Generate Report Cards
+                <FileText className="w-4 h-4 text-indigo-500" /> Generate Report
               </button>
               <div className="h-px bg-border my-1" />
               <button onClick={() => { openDeleteModal(activeExam._id); setActionMenuId(null); }} className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">

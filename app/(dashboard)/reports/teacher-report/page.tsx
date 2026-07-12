@@ -196,7 +196,7 @@ export default function TeacherReportPage() {
       <div className="print:hidden">
         <ReportTabs />
       </div>
-      
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left print:hidden">
         <div>
@@ -464,31 +464,30 @@ export default function TeacherReportPage() {
                             <div
                               key={i}
                               title={status}
-                              className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${
-                                status.toLowerCase() === "present"
+                              className={`w-6 h-6 rounded flex items-center justify-center text-[10px] font-bold ${status.toLowerCase() === "present"
                                   ? "bg-emerald-100 text-emerald-700"
                                   : status.toLowerCase() === "absent"
-                                  ? "bg-rose-100 text-rose-700"
-                                  : status.toLowerCase() === "late"
-                                  ? "bg-amber-100 text-amber-700"
-                                  : status.toLowerCase() === "leave"
-                                  ? "bg-violet-100 text-violet-700"
-                                  : status.toLowerCase() === "half_day"
-                                  ? "bg-sky-100 text-sky-700"
-                                  : "bg-slate-100 text-slate-400"
-                              }`}
+                                    ? "bg-rose-100 text-rose-700"
+                                    : status.toLowerCase() === "late"
+                                      ? "bg-amber-100 text-amber-700"
+                                      : status.toLowerCase() === "leave"
+                                        ? "bg-violet-100 text-violet-700"
+                                        : status.toLowerCase() === "half_day"
+                                          ? "bg-sky-100 text-sky-700"
+                                          : "bg-slate-100 text-slate-400"
+                                }`}
                             >
                               {status.toLowerCase() === "present"
                                 ? "P"
                                 : status.toLowerCase() === "absent"
-                                ? "A"
-                                : status.toLowerCase() === "late"
-                                ? "L"
-                                : status.toLowerCase() === "leave"
-                                ? "LV"
-                                : status.toLowerCase() === "half_day"
-                                ? "H"
-                                : "—"}
+                                  ? "A"
+                                  : status.toLowerCase() === "late"
+                                    ? "L"
+                                    : status.toLowerCase() === "leave"
+                                      ? "LV"
+                                      : status.toLowerCase() === "half_day"
+                                        ? "H"
+                                        : "—"}
                             </div>
                           ))}
                         </div>
@@ -536,11 +535,10 @@ export default function TeacherReportPage() {
               <button
                 key={p}
                 onClick={() => setPage(p)}
-                className={`w-7 h-7 rounded-lg text-[13px] font-medium flex items-center justify-center ${
-                  page === p
+                className={`w-7 h-7 rounded-lg text-[13px] font-medium flex items-center justify-center ${page === p
                     ? "bg-primary text-white"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
-                }`}
+                  }`}
               >
                 {p}
               </button>
@@ -707,11 +705,10 @@ export default function TeacherReportPage() {
                       <button
                         key={t.id}
                         onClick={() => setActiveTab(t.id as any)}
-                        className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${
-                          activeTab === t.id
+                        className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeTab === t.id
                             ? "border-primary text-primary"
                             : "border-transparent text-slate-500 hover:text-slate-700"
-                        }`}
+                          }`}
                       >
                         {t.label}
                       </button>
@@ -745,7 +742,7 @@ export default function TeacherReportPage() {
                                   <td className="px-5 py-3 font-semibold text-slate-800 dark:text-slate-100">{a.className}</td>
                                   <td className="px-5 py-3 text-slate-600 dark:text-slate-300 font-bold">{a.section}</td>
                                   <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{a.subjectName}</td>
-                                  <td className="px-5 py-3 text-slate-500 font-mono">{a.subjectCode || "—"}</td>
+                                  <td className="px-5 py-3 text-slate-500 font-sans">{a.subjectCode || "—"}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -782,7 +779,7 @@ export default function TeacherReportPage() {
                                   <td className="px-5 py-3 font-semibold text-slate-800 dark:text-slate-100">{t.title}</td>
                                   <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{t.subject}</td>
                                   <td className="px-5 py-3 text-slate-600 dark:text-slate-300 font-bold">{t.className} - {t.section}</td>
-                                  <td className="px-5 py-3 text-slate-500 font-mono">
+                                  <td className="px-5 py-3 text-slate-500 font-sans">
                                     {t.testDate ? new Date(t.testDate).toLocaleDateString("en-GB") : "—"}
                                   </td>
                                   <td className="px-5 py-3 text-slate-600 dark:text-slate-400 font-bold">{t.totalMarks}</td>
@@ -826,10 +823,10 @@ export default function TeacherReportPage() {
                                   <td className="px-5 py-3 font-semibold text-slate-800 dark:text-slate-100">{hw.title}</td>
                                   <td className="px-5 py-3 text-slate-600 dark:text-slate-300">{hw.subject}</td>
                                   <td className="px-5 py-3 text-slate-600 dark:text-slate-300 font-bold">{hw.className} - {hw.section}</td>
-                                  <td className="px-5 py-3 text-slate-500 font-mono">
+                                  <td className="px-5 py-3 text-slate-500 font-sans">
                                     {hw.assignedDate ? new Date(hw.assignedDate).toLocaleDateString("en-GB") : "—"}
                                   </td>
-                                  <td className="px-5 py-3 text-slate-500 font-mono">
+                                  <td className="px-5 py-3 text-slate-500 font-sans">
                                     {hw.dueDate ? new Date(hw.dueDate).toLocaleDateString("en-GB") : "—"}
                                   </td>
                                   <td className="px-5 py-3 font-bold text-indigo-600">{hw.submissionsCount}</td>

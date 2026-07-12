@@ -133,7 +133,10 @@ const admissionSchema = new Schema<IAdmission>(
   { timestamps: true }
 );
 
-admissionSchema.index({ student_name: "text", first_name: "text", last_name: "text", application_no: "text", guardian_name: "text" });
+admissionSchema.index(
+  { student_name: "text", first_name: "text", last_name: "text", application_no: "text", guardian_name: "text" },
+  { name: "admission_text_search_v1" }
+);
 
 const Admission: Model<IAdmission> =
   mongoose.models.Admission || mongoose.model<IAdmission>("Admission", admissionSchema);

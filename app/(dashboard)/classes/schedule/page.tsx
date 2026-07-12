@@ -7,7 +7,7 @@ import { useClasses } from "../../../hooks/useClasses";
 import { useTeachers } from "../../../hooks/useTeachers";
 import { useSubjects } from "../../../hooks/useSubjects";
 import { useAuth } from "../../../context/auth";
-import { 
+import {
   Plus, Search, Edit, Trash2,
   Calendar, ChevronDown, RefreshCw, Loader2, Clock, MapPin, User, BookOpen,
   MoreVertical, CalendarDays, CheckCircle, Layout, ListVideo, Layers
@@ -26,7 +26,7 @@ export default function SchedulePage() {
 
   // Hook to fetch schedules filtered by teacher
   const { schedules, isLoading: schedulesLoading, fetchSchedules, createSchedule, updateSchedule, deleteSchedule } = useSchedules(
-    undefined, 
+    undefined,
     selectedTeacherId || undefined
   );
 
@@ -34,7 +34,7 @@ export default function SchedulePage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null);
-  
+
   // Action Menu State
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
@@ -294,15 +294,15 @@ export default function SchedulePage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button 
-            onClick={() => fetchSchedules(undefined, selectedTeacherId || undefined)} 
+          <button
+            onClick={() => fetchSchedules(undefined, selectedTeacherId || undefined)}
             className="w-10 h-10 rounded-xl bg-[#F8FAFC] dark:bg-slate-800 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary hover:bg-primary/5 transition-all shadow-sm cursor-pointer"
             title="Refresh Schedule"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-primary' : ''}`} />
           </button>
           {isAdmin && (
-            <button 
+            <button
               onClick={openAddModal}
               className="px-5 py-2.5 bg-primary hover:bg-[var(--primary-hover)] text-white text-[14px] font-bold rounded-xl flex items-center gap-2 transition-all shadow-sm shadow-primary/20 cursor-pointer"
             >
@@ -324,7 +324,7 @@ export default function SchedulePage() {
             <h3 className="text-2xl font-black text-slate-800 dark:text-white mt-1">{todaysClassesCount}</h3>
           </div>
         </div>
-        
+
         {/* Weekly Classes */}
         <div className="bg-white dark:bg-slate-900 border border-border rounded-2xl p-5 shadow-sm flex items-center gap-4 hover:shadow-md transition-shadow">
           <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
@@ -425,8 +425,8 @@ export default function SchedulePage() {
             </div>
             <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300">No Routines Found</h3>
             <p className="text-[14px] text-slate-400 max-w-[320px]">
-              {selectedTeacherId 
-                ? "This teacher doesn't have any classes scheduled matching the criteria." 
+              {selectedTeacherId
+                ? "This teacher doesn't have any classes scheduled matching the criteria."
                 : "No schedule routines mapped yet. Click 'Add Routine' to start planning."}
             </p>
           </div>
@@ -435,13 +435,13 @@ export default function SchedulePage() {
             {/* Inner Header for All Routines (as seen in image) */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 pb-4 border-b border-border/40 gap-4">
               <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">All Routines</h2>
-              
+
               {/* Search Bar directly opposite to All Routines */}
               <div className="relative w-full sm:w-[280px]">
                 <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input 
-                  type="text" 
-                  placeholder="Search routines" 
+                <input
+                  type="text"
+                  placeholder="Search routines"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-2 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-[13px] font-medium outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
@@ -454,7 +454,7 @@ export default function SchedulePage() {
                 const routines = groupedSchedulesByClass[className];
                 return (
                   <div key={className} className="bg-white dark:bg-slate-800/20 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col max-h-[70vh]">
-                    
+
                     {/* Column Header */}
                     <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700/50">
                       <div className="flex items-center gap-2.5">
@@ -465,7 +465,7 @@ export default function SchedulePage() {
                         {routines.length} {routines.length === 1 ? 'Period' : 'Periods'}
                       </span>
                     </div>
-                    
+
                     {/* Column Cards */}
                     <div className="space-y-4 flex-1 overflow-y-auto p-4 custom-scrollbar">
                       {routines.map((schedule) => {
@@ -473,8 +473,8 @@ export default function SchedulePage() {
                         const isMenuOpen = activeMenuId === schedule._id;
 
                         return (
-                          <div 
-                            key={schedule._id} 
+                          <div
+                            key={schedule._id}
                             className="relative group bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-700/50 p-3.5 transition-all duration-300 hover:shadow-md hover:border-slate-200 dark:hover:border-slate-600 flex flex-col gap-3"
                           >
                             {/* Top Row: Subject & Actions */}
@@ -485,7 +485,7 @@ export default function SchedulePage() {
                                   <span className="text-[7px] font-bold text-amber-600/70 uppercase tracking-wider leading-none mb-[1px]">PER</span>
                                   <span className="text-[12px] font-black text-amber-600 leading-none">{schedule.period_no || "-"}</span>
                                 </div>
-                                
+
                                 <div className="flex flex-col">
                                   <h4 className="text-[13px] font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide leading-tight">
                                     {subjectName}
@@ -503,11 +503,11 @@ export default function SchedulePage() {
                                   </div>
                                 </div>
                               </div>
-                              
+
                               {/* Action Menu (Admin Only) */}
                               {isAdmin && (
                                 <div className="relative shrink-0">
-                                  <button 
+                                  <button
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       setActiveMenuId(isMenuOpen ? null : schedule._id);
@@ -516,16 +516,16 @@ export default function SchedulePage() {
                                   >
                                     <MoreVertical className="w-4 h-4" />
                                   </button>
-                                  
+
                                   {isMenuOpen && (
                                     <div className="absolute right-0 top-8 w-32 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-border py-1.5 z-10 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
-                                      <button 
+                                      <button
                                         onClick={(e) => { e.stopPropagation(); openEditModal(schedule); }}
                                         className="w-full px-3 py-1.5 text-[13px] font-medium text-left text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-2"
                                       >
                                         <Edit className="w-3.5 h-3.5" /> Edit
                                       </button>
-                                      <button 
+                                      <button
                                         onClick={(e) => { e.stopPropagation(); handleDelete(schedule._id); }}
                                         className="w-full px-3 py-1.5 text-[13px] font-medium text-left text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-2"
                                       >
@@ -541,7 +541,7 @@ export default function SchedulePage() {
                             <div className="flex items-center justify-between pt-2.5 border-t border-slate-50 dark:border-slate-700/30 mt-1">
                               <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-slate-800/50 px-2 py-1 rounded-md border border-slate-100/50 dark:border-slate-700/50">
                                 <Clock className="w-3.5 h-3.5 text-slate-400" />
-                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 font-mono whitespace-nowrap">
+                                <span className="text-[10px] font-bold text-slate-600 dark:text-slate-300 font-sans whitespace-nowrap">
                                   {schedule.start_time} - {schedule.end_time}
                                 </span>
                               </div>
@@ -564,11 +564,11 @@ export default function SchedulePage() {
       {/* Add / Edit Modals */}
       <Modal isOpen={isAddOpen || isEditOpen} onClose={() => { setIsAddOpen(false); setIsEditOpen(false); }} title={isAddOpen ? "Add Routine" : "Edit Routine"}>
         <form onSubmit={isAddOpen ? handleAddSubmit : handleEditSubmit} className="p-6 space-y-5 text-left">
-          
+
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class</label>
             <div className="relative">
-              <select 
+              <select
                 value={formClassId}
                 onChange={(e) => setFormClassId(e.target.value)}
                 className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
@@ -583,7 +583,7 @@ export default function SchedulePage() {
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Subject</label>
             <div className="relative">
-              <select 
+              <select
                 value={formSubject}
                 onChange={(e) => setFormSubject(e.target.value)}
                 className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer disabled:opacity-50"
@@ -600,7 +600,7 @@ export default function SchedulePage() {
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Teacher</label>
             <div className="relative">
-              <select 
+              <select
                 value={formTeacherId}
                 onChange={(e) => setFormTeacherId(e.target.value)}
                 className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
@@ -616,7 +616,7 @@ export default function SchedulePage() {
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Day</label>
               <div className="relative">
-                <select 
+                <select
                   value={formDay}
                   onChange={(e) => setFormDay(e.target.value)}
                   className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
@@ -630,14 +630,14 @@ export default function SchedulePage() {
 
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Period Number</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 min="1"
                 max="20"
-                value={formPeriodNo} 
-                onChange={(e) => setFormPeriodNo(e.target.value)} 
+                value={formPeriodNo}
+                onChange={(e) => setFormPeriodNo(e.target.value)}
                 placeholder="e.g. 1, 2, 3"
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200" 
+                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
               />
             </div>
           </div>
@@ -646,10 +646,10 @@ export default function SchedulePage() {
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Start Time</label>
               <div className="relative">
-                <select 
+                <select
                   value={formStartTime}
                   onChange={(e) => setFormStartTime(e.target.value)}
-                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer font-mono"
+                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer font-sans"
                   required
                 >
                   <option value="">Select Start Time</option>
@@ -661,10 +661,10 @@ export default function SchedulePage() {
             <div className="space-y-1.5">
               <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">End Time</label>
               <div className="relative">
-                <select 
+                <select
                   value={formEndTime}
                   onChange={(e) => setFormEndTime(e.target.value)}
-                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer font-mono"
+                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer font-sans"
                   required
                 >
                   <option value="">Select End Time</option>
@@ -677,25 +677,25 @@ export default function SchedulePage() {
 
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class Room / Room No</label>
-            <input 
-              type="text" 
-              value={formRoom} 
-              onChange={(e) => setFormRoom(e.target.value)} 
+            <input
+              type="text"
+              value={formRoom}
+              onChange={(e) => setFormRoom(e.target.value)}
               placeholder="e.g. 101"
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200" 
+              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
             />
           </div>
 
           <div className="flex items-center justify-end gap-3 pt-2">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => { setIsAddOpen(false); setIsEditOpen(false); }}
               className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               Cancel
             </button>
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer"
             >
               {isAddOpen ? "Add Routine" : "Save Changes"}

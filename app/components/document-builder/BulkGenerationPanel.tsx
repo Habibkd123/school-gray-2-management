@@ -39,18 +39,18 @@ export function BulkGenerationPanel() {
   const router = useRouter();
 
   // ── State: Class & students ───────────────────────────────────────────────
-  const [classes, setClasses]               = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [classesLoading, setClassesLoading] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState("");
   const [selectedClassName, setSelectedClassName] = useState("");
 
-  const [students, setStudents]             = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  const [studentSearch, setStudentSearch]   = useState("");
+  const [studentSearch, setStudentSearch] = useState("");
 
   // ── State: Template ───────────────────────────────────────────────────────
-  const [templates, setTemplates]             = useState<TemplateMeta[]>([]);
+  const [templates, setTemplates] = useState<TemplateMeta[]>([]);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateMeta | null>(null);
   const [showTemplateDropdown, setShowTemplateDropdown] = useState(false);
 
@@ -60,7 +60,7 @@ export function BulkGenerationPanel() {
   // ── State: Bulk results ───────────────────────────────────────────────────
   const [results, setResults] = useState<BulkResult[]>([]);
   const [running, setRunning] = useState(false);
-  const [done, setDone]       = useState(false);
+  const [done, setDone] = useState(false);
 
   // ── Load classes ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -168,10 +168,10 @@ export function BulkGenerationPanel() {
   };
 
   // ── Derived stats ─────────────────────────────────────────────────────────
-  const doneCount  = results.filter(r => r.status === "done").length;
+  const doneCount = results.filter(r => r.status === "done").length;
   const errorCount = results.filter(r => r.status === "error").length;
   const totalCount = results.length;
-  const progress   = totalCount > 0 ? Math.round((doneCount + errorCount) / totalCount * 100) : 0;
+  const progress = totalCount > 0 ? Math.round((doneCount + errorCount) / totalCount * 100) : 0;
 
   const canStart = !!selectedTemplate && selectedStudents.length > 0 && !running;
 
@@ -337,7 +337,7 @@ export function BulkGenerationPanel() {
             <span className="font-bold text-slate-900 dark:text-white">
               {running ? "Generating…" : done ? "Generation Complete" : "Progress"}
             </span>
-            <span className="font-mono font-bold text-slate-500 dark:text-slate-400">
+            <span className="font-sans font-bold text-slate-500 dark:text-slate-400">
               {doneCount + errorCount} / {totalCount}
             </span>
           </div>

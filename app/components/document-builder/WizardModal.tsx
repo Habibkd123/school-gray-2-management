@@ -166,7 +166,7 @@ export function WizardModal({ isOpen, onClose, onCreate, preselectedCategoryId, 
   const handleCreate = () => {
     if (!selectedTemplate) return;
     const title = docTitle.trim() || `${selectedCategory?.name ?? "Document"} — ${selectedTemplate.name}`;
-    
+
     if (linkMode === "attach" && selectedRecord) {
       onCreate(selectedCategoryId, selectedTemplate, title, {
         id: selectedRecord._id,
@@ -177,7 +177,7 @@ export function WizardModal({ isOpen, onClose, onCreate, preselectedCategoryId, 
     } else {
       onCreate(selectedCategoryId, selectedTemplate, title);
     }
-    
+
     onClose();
     resetState();
   };
@@ -289,8 +289,8 @@ export function WizardModal({ isOpen, onClose, onCreate, preselectedCategoryId, 
                       transition: "all 0.15s",
                       textAlign: "center",
                     }}
-                    onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "#93C5FD"; e.currentTarget.style.background = "#F8FAFC"; }}}
-                    onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "#E2E8F0"; e.currentTarget.style.background = "white"; }}}
+                    onMouseEnter={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "#93C5FD"; e.currentTarget.style.background = "#F8FAFC"; } }}
+                    onMouseLeave={(e) => { if (!isSelected) { e.currentTarget.style.borderColor = "#E2E8F0"; e.currentTarget.style.background = "white"; } }}
                   >
                     <div style={{
                       width: 52, height: 52, borderRadius: 14,
@@ -504,7 +504,7 @@ export function WizardModal({ isOpen, onClose, onCreate, preselectedCategoryId, 
                       <div className="max-h-40 overflow-y-auto divide-y divide-slate-100 text-[11.5px] p-1">
                         {Object.entries(resolvedVars).slice(0, 10).map(([k, val]) => (
                           <div key={k} className="flex justify-between py-1.5 px-2 hover:bg-slate-50/50">
-                            <span className="font-mono text-indigo-600">{`{{${k}}}`}</span>
+                            <span className="font-sans text-indigo-600">{`{{${k}}}`}</span>
                             <span className="text-slate-800 font-semibold truncate max-w-[200px]">{val || <em className="text-slate-400">blank</em>}</span>
                           </div>
                         ))}

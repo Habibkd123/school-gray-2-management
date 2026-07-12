@@ -115,12 +115,12 @@ export default function AcademicClassesPage() {
   const filteredTeachers = React.useMemo(() => {
     if (!teacherSearchText) return teachers.filter(t => t.is_active);
     const q = teacherSearchText.toLowerCase();
-    return teachers.filter(t => 
+    return teachers.filter(t =>
       t.is_active &&
       (t.name.toLowerCase().includes(q) ||
-      (t.employee_id && t.employee_id.toLowerCase().includes(q)) ||
-      (t.department && t.department.toLowerCase().includes(q)) ||
-      (t.designation && t.designation.toLowerCase().includes(q)))
+        (t.employee_id && t.employee_id.toLowerCase().includes(q)) ||
+        (t.department && t.department.toLowerCase().includes(q)) ||
+        (t.designation && t.designation.toLowerCase().includes(q)))
     );
   }, [teachers, teacherSearchText]);
 
@@ -297,27 +297,27 @@ export default function AcademicClassesPage() {
   const columns: ColumnDef<any>[] = React.useMemo(() => {
     const cols: ColumnDef<any>[] = [
       { header: "#", accessorKey: "_id", render: (_c: ApiClass, i: number) => <span className="text-slate-500 font-medium text-[13px]">{i + 1}</span> },
-      { header: "Class", accessorKey: "name", render: (c) => <span className="font-semibold text-slate-800 dark:text-slate-200">{c.name}{c.section ? ` - ${c.section}` : ""}</span> },
+      { header: "Class", accessorKey: "name", render: (c) => <span className="font-medium text-slate-800 dark:text-slate-200">{c.name}{c.section ? ` - ${c.section}` : ""}</span> },
     ];
 
     if (enableSections) {
       cols.push({
         header: "Section Count",
         accessorKey: "sectionCount",
-        render: (c) => <span className="font-semibold text-slate-700 dark:text-slate-300">{(c as any).sectionCount ?? 0}</span>,
+        render: (c) => <span className="font-medium text-slate-700 dark:text-slate-300">{(c as any).sectionCount ?? 0}</span>,
       });
     }
 
     cols.push(
-      { header: "Students", accessorKey: "studentCount", render: (c) => <span className="font-semibold text-slate-700 dark:text-slate-300">{(c as any).studentCount ?? 0}</span> },
+      { header: "Students", accessorKey: "studentCount", render: (c) => <span className="font-medium text-slate-700 dark:text-slate-300">{(c as any).studentCount ?? 0}</span> },
       {
         header: "Class Teacher", accessorKey: "class_teacher_id", render: (c) => (
-          <span className="text-slate-600 dark:text-slate-300 font-medium">
-            {c.class_teacher_id ? (typeof c.class_teacher_id === 'object' ? c.class_teacher_id.name : c.class_teacher_id) : <span className="text-slate-400 italic">Not assigned</span>}
+          <span className="text-[13px] text-slate-700 dark:text-slate-300 font-medium">
+            {c.class_teacher_id ? (typeof c.class_teacher_id === 'object' ? c.class_teacher_id.name : c.class_teacher_id) : <span className="text-slate-400 italic font-normal">Not assigned</span>}
           </span>
         )
       },
-      { header: "Subjects", accessorKey: "subjectCount", render: (c) => <span className="font-semibold text-slate-700 dark:text-slate-300">{(c as any).subjectCount ?? 0}</span> },
+      { header: "Subjects", accessorKey: "subjectCount", render: (c) => <span className="font-medium text-slate-700 dark:text-slate-300">{(c as any).subjectCount ?? 0}</span> },
       { header: "Status", accessorKey: "status", render: (c) => <StatusBadge status={(c as any).status} /> }
     );
 
@@ -621,7 +621,7 @@ export default function AcademicClassesPage() {
             </div>
             <div className="flex flex-col gap-1.5 relative">
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100 font-medium">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
-              <div 
+              <div
                 className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground cursor-pointer flex items-center justify-between outline-none focus:border-primary/50 font-semibold"
                 onClick={() => setIsTeacherDropdownOpen(!isTeacherDropdownOpen)}
               >
@@ -656,9 +656,8 @@ export default function AcademicClassesPage() {
                           setIsTeacherDropdownOpen(false);
                           setTeacherSearchText("");
                         }}
-                        className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors text-[13px] font-semibold ${
-                          !formTeacherId ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
-                        }`}
+                        className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors text-[13px] font-semibold ${!formTeacherId ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                          }`}
                       >
                         <span>Not assigned</span>
                       </div>
@@ -673,9 +672,8 @@ export default function AcademicClassesPage() {
                               setIsTeacherDropdownOpen(false);
                               setTeacherSearchText("");
                             }}
-                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
-                              formTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
-                            }`}
+                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${formTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                              }`}
                           >
                             <div className="text-left">
                               <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200">{t.name}</p>
@@ -823,7 +821,7 @@ export default function AcademicClassesPage() {
             </div>
             <div className="flex flex-col gap-1.5 relative">
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100 font-medium">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
-              <div 
+              <div
                 className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground cursor-pointer flex items-center justify-between outline-none focus:border-primary/50 font-semibold"
                 onClick={() => setIsTeacherDropdownOpen(!isTeacherDropdownOpen)}
               >
@@ -858,9 +856,8 @@ export default function AcademicClassesPage() {
                           setIsTeacherDropdownOpen(false);
                           setTeacherSearchText("");
                         }}
-                        className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors text-[13px] font-semibold ${
-                          !formTeacherId ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
-                        }`}
+                        className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors text-[13px] font-semibold ${!formTeacherId ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                          }`}
                       >
                         <span>Not assigned</span>
                       </div>
@@ -875,9 +872,8 @@ export default function AcademicClassesPage() {
                               setIsTeacherDropdownOpen(false);
                               setTeacherSearchText("");
                             }}
-                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${
-                              formTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
-                            }`}
+                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors ${formTeacherId === t._id ? "bg-primary/10 text-primary" : "hover:bg-slate-50 dark:hover:bg-slate-900"
+                              }`}
                           >
                             <div className="text-left">
                               <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200">{t.name}</p>

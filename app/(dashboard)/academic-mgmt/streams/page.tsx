@@ -3,7 +3,7 @@
 import React, { useState, useCallback } from "react";
 import {
   Plus, Search, RefreshCcw, MoreVertical, Edit, Trash2,
-  Loader2, AlertCircle, Layers
+  Loader2, AlertCircle, Layers, Download, Printer
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
@@ -13,7 +13,8 @@ import { useAuth } from "@/app/context/auth";
 
 import { getPersistedPageSize } from "@/app/components/ui/pagination-bar";
 import { getAuthHeaders } from "@/lib/utils/session";
-
+import * as XLSX from "xlsx";
+import { PrintService } from "@/app/lib/print-service";
 export default function StreamsPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
@@ -121,13 +122,12 @@ export default function StreamsPage() {
   };
 
   const StatusBadge = ({ status }: { status: string }) => (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
-      status === "Inactive"
-        ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-        : status === "Archived"
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${status === "Inactive"
+      ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+      : status === "Archived"
         ? "bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
         : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
-    }`}>{status}</span>
+      }`}>{status}</span>
   );
 
   const columns: ColumnDef<any>[] = [
@@ -161,6 +161,33 @@ export default function StreamsPage() {
       ),
     } as ColumnDef<ApiStream>] : []),
   ];
+  // 3. Export to Excel
+  const handleExportExcel = () => {
+    const rows = streams.map((item) => {
+      const row: Record<string, any> = {};
+      columns.forEach((col) => {
+        if (col.accessorKey) {
+          row[col.header] = item[col.accessorKey as keyof ApiStream];
+        }
+      });
+      return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+    XLSX.writeFile(workbook, `streams-list.xlsx`);
+  };
+
+  // 4. Print / Save to PDF
+  const handlePrint = () => {
+    const tableContainer = document.getElementById("streams-table");
+    if (tableContainer) {
+      tableContainer.classList.add("printable-area");
+      PrintService.print('printable-area', { pageSize: 'A4' });
+      tableContainer.classList.remove("printable-area");
+    }
+  };
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
@@ -177,6 +204,25 @@ export default function StreamsPage() {
           <button onClick={() => doFetch()} className="btn btn-outline p-2 w-9 h-9">
             <RefreshCcw className="w-4 h-4" />
           </button>
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2 ml-auto">
+            <button
+              onClick={handleExportExcel}
+              className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors flex items-center gap-1.5 text-[12.5px] font-semibold"
+              title="Export Excel"
+            >
+              <Download className="w-4 h-4" />
+              <span className="hidden sm:inline">Export Excel</span>
+            </button>
+            <button
+              onClick={handlePrint}
+              className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-colors flex items-center gap-1.5 text-[12.5px] font-semibold"
+              title="Print"
+            >
+              <Printer className="w-4 h-4" />
+              <span className="hidden sm:inline">Print / PDF</span>
+            </button>
+          </div>
           {isAdmin && (
             <button onClick={() => { resetForm(); setIsAddOpen(true); }}
               className="btn btn-primary">
@@ -195,6 +241,7 @@ export default function StreamsPage() {
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <input type="text" placeholder="Search streams..." value={searchQuery} onChange={(e) => handleSearch(e.target.value)}
               className="pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none w-full sm:w-56 focus:border-primary/50 transition-colors shadow-sm bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)]" />
+
           </div>
         </div>
 
@@ -219,20 +266,22 @@ export default function StreamsPage() {
             )}
           </div>
         ) : (
-          <EnhancedTable columns={columns} data={streams}
-            selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
-            renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
-            searchPlaceholder="Search streams..."
-            searchKeys={["name"]}
-            exportFileName="streams-list"
-            currentPage={page}
-            totalPages={totalPages}
-            totalItems={total}
-            pageSize={pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={setPageSize}
-            isLoading={isLoading}
-          />
+          <div id="streams-table">
+            <EnhancedTable columns={columns} data={streams}
+              selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
+              renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
+              searchPlaceholder="Search streams..."
+              searchKeys={["name"]}
+              exportFileName="streams-list"
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={total}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              isLoading={isLoading}
+            />
+          </div>
         )}
       </div>
 
@@ -255,17 +304,14 @@ export default function StreamsPage() {
               <button
                 type="button"
                 onClick={() => setFormStatus(formStatus === "Active" ? "Inactive" : "Active")}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
-                  formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
-                }`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                  }`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                  formStatus === "Active" ? "translate-x-6" : "translate-x-1"
-                }`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${formStatus === "Active" ? "translate-x-6" : "translate-x-1"
+                  }`} />
               </button>
-              <span className={`text-[13px] font-semibold ${
-                formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
-              }`}>{formStatus}</span>
+              <span className={`text-[13px] font-semibold ${formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
+                }`}>{formStatus}</span>
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
@@ -300,17 +346,14 @@ export default function StreamsPage() {
               <button
                 type="button"
                 onClick={() => setFormStatus(formStatus === "Active" ? "Inactive" : "Active")}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${
-                  formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
-                }`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                  }`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${
-                  formStatus === "Active" ? "translate-x-6" : "translate-x-1"
-                }`} />
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${formStatus === "Active" ? "translate-x-6" : "translate-x-1"
+                  }`} />
               </button>
-              <span className={`text-[13px] font-semibold ${
-                formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
-              }`}>{formStatus}</span>
+              <span className={`text-[13px] font-semibold ${formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
+                }`}>{formStatus}</span>
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">

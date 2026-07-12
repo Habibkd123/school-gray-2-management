@@ -17,7 +17,7 @@ const streamSchema = new Schema<IStream>(
   { timestamps: true }
 );
 
-streamSchema.index({ school_id: 1, name: 1 }, { unique: true });
+streamSchema.index({ school_id: 1, name: 1 }, { unique: true, name: "stream_school_name_unique_v1" });
 
 const Stream: Model<IStream> =
   mongoose.models.Stream && mongoose.models.Stream.schema.paths.status?.options?.enum?.includes("Archived")

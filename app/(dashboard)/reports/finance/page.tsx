@@ -395,21 +395,19 @@ export default function FinanceReportPage() {
       <div className="flex gap-2 border-b border-border pb-px print:hidden">
         <button
           onClick={() => setActiveTab("student_fees")}
-          className={`px-5 py-2.5 text-xs font-extrabold border-b-2 transition-all cursor-pointer ${
-            activeTab === "student_fees"
+          className={`px-5 py-2.5 text-xs font-extrabold border-b-2 transition-all cursor-pointer ${activeTab === "student_fees"
               ? "border-primary text-primary"
               : "border-transparent text-slate-450 hover:text-slate-700"
-          }`}
+            }`}
         >
           Student Fees Collection
         </button>
         <button
           onClick={() => setActiveTab("teacher_salary")}
-          className={`px-5 py-2.5 text-xs font-extrabold border-b-2 transition-all cursor-pointer ${
-            activeTab === "teacher_salary"
+          className={`px-5 py-2.5 text-xs font-extrabold border-b-2 transition-all cursor-pointer ${activeTab === "teacher_salary"
               ? "border-primary text-primary"
               : "border-transparent text-slate-450 hover:text-slate-700"
-          }`}
+            }`}
         >
           Teacher Salary Disbursements
         </button>
@@ -498,9 +496,9 @@ export default function FinanceReportPage() {
                           <tr key={row.class_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                             <td className="px-6 py-4 font-bold text-slate-850 dark:text-slate-200">{row.class_name}</td>
                             <td className="px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-350">{row.student_count}</td>
-                            <td className="px-6 py-4 text-right font-mono font-bold text-slate-900 dark:text-white">{money(row.total_fees)}</td>
-                            <td className="px-6 py-4 text-right font-mono font-bold text-emerald-600">{money(row.total_paid)}</td>
-                            <td className="px-6 py-4 text-right font-mono font-bold text-rose-500">{money(row.balance_amount)}</td>
+                            <td className="px-6 py-4 text-right font-sans font-bold text-slate-900 dark:text-white">{money(row.total_fees)}</td>
+                            <td className="px-6 py-4 text-right font-sans font-bold text-emerald-600">{money(row.total_paid)}</td>
+                            <td className="px-6 py-4 text-right font-sans font-bold text-rose-500">{money(row.balance_amount)}</td>
                           </tr>
                         ))
                       )}
@@ -580,7 +578,7 @@ export default function FinanceReportPage() {
                         teacherSalariesAggregates.historyLogs.map((row) => (
                           <tr key={row._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                             <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{row.teacher_id?.name || "N/A"}</td>
-                            <td className="px-6 py-4 font-mono font-bold text-slate-700 dark:text-slate-350">{row.teacher_id?.employee_id || "N/A"}</td>
+                            <td className="px-6 py-4 font-sans font-bold text-slate-700 dark:text-slate-350">{row.teacher_id?.employee_id || "N/A"}</td>
                             <td className="px-6 py-4">{row.salary_period}</td>
                             <td className="px-6 py-4 font-semibold">{new Date(row.payment_date).toLocaleDateString()}</td>
                             <td className="px-6 py-4">
@@ -588,7 +586,7 @@ export default function FinanceReportPage() {
                                 {row.payment_method || "Bank Transfer"}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-right font-mono font-bold text-emerald-600">{money(row.final_salary || row.amount_paid || 0)}</td>
+                            <td className="px-6 py-4 text-right font-sans font-bold text-emerald-600">{money(row.final_salary || row.amount_paid || 0)}</td>
                           </tr>
                         ))
                       )}

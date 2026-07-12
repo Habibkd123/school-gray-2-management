@@ -579,7 +579,7 @@ function TimePicker({ value, onChange }: TimePickerProps) {
         <select
           value={currentHour}
           onChange={(e) => handleHourChange(e.target.value)}
-          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary appearance-none text-slate-700 dark:text-slate-200 font-sans cursor-pointer"
         >
           {hours.map((h) => (
             <option key={h} value={h}>
@@ -596,7 +596,7 @@ function TimePicker({ value, onChange }: TimePickerProps) {
         <select
           value={currentMinute}
           onChange={(e) => handleMinuteChange(e.target.value)}
-          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary appearance-none text-slate-700 dark:text-slate-200 font-mono cursor-pointer"
+          className="w-full pl-3 pr-8 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary appearance-none text-slate-700 dark:text-slate-200 font-sans cursor-pointer"
         >
           {minutes.map((m) => (
             <option key={m} value={m}>

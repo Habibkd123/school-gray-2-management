@@ -64,7 +64,7 @@ export function LineChart({ data, color, height = 200 }: ChartProps) {
                 x={padding - 10}
                 y={y + 4}
                 textAnchor="end"
-                className="fill-slate-400 text-[10px] font-mono"
+                className="fill-slate-400 text-[10px] font-sans"
               >
                 {gridVal}%
               </text>
@@ -169,7 +169,7 @@ export function BarChart({ data, color, height = 200 }: ChartProps) {
                 x={padding - 10}
                 y={y + 4}
                 textAnchor="end"
-                className="fill-slate-400 text-[10px] font-mono"
+                className="fill-slate-400 text-[10px] font-sans"
               >
                 {gridVal}
               </text>
@@ -311,7 +311,7 @@ export function DoughnutChart({ data, colors }: DoughnutChartProps) {
               />
               <span className="font-semibold text-slate-700 dark:text-slate-200 min-w-full sm:w-[70px]">{d.label}</span>
               <span className="font-bold text-slate-900 dark:text-white">{d.value}</span>
-              <span className="text-slate-400 dark:text-slate-500 font-mono text-[11px] ml-1">({percentage}%)</span>
+              <span className="text-slate-400 dark:text-slate-500 font-sans text-[11px] ml-1">({percentage}%)</span>
             </div>
           );
         })}

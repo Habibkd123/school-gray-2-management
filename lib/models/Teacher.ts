@@ -173,10 +173,10 @@ const teacherSchema = new Schema<ITeacher>(
   { timestamps: true }
 );
 
-teacherSchema.index({ school_id: 1, employee_id: 1 }, { unique: true, sparse: true });
-teacherSchema.index({ school_id: 1, is_active: 1 });
-teacherSchema.index({ school_id: 1, name: 1 });
-teacherSchema.index({ user_id: 1 });
+teacherSchema.index({ school_id: 1, employee_id: 1 }, { unique: true, sparse: true, name: "teacher_school_employee_unique_v1" });
+teacherSchema.index({ school_id: 1, is_active: 1 }, { name: "teacher_school_is_active_v1" });
+teacherSchema.index({ school_id: 1, name: 1 }, { name: "teacher_school_name_v1" });
+teacherSchema.index({ user_id: 1 }, { name: "teacher_user_id_v1" });
 
 if (mongoose.models && mongoose.models.Teacher) {
   const registeredSchema = mongoose.models.Teacher.schema;

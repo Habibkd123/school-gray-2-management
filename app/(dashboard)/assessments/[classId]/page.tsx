@@ -19,11 +19,11 @@ import {
 } from "lucide-react";
 import { PrintService } from "@/app/lib/print-service";
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
-  draft:      { bg: "bg-slate-500/10", text: "text-slate-500", label: "Draft" },
-  scheduled:  { bg: "bg-blue-500/10",  text: "text-blue-600 dark:text-blue-400", label: "Scheduled" },
-  ongoing:    { bg: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400", label: "Ongoing" },
-  completed:  { bg: "bg-purple-500/10",text: "text-purple-600 dark:text-purple-400", label: "Completed" },
-  published:  { bg: "bg-emerald-500/10",text: "text-emerald-600 dark:text-emerald-400", label: "Published" },
+  draft: { bg: "bg-slate-500/10", text: "text-slate-500", label: "Draft" },
+  scheduled: { bg: "bg-blue-500/10", text: "text-blue-600 dark:text-blue-400", label: "Scheduled" },
+  ongoing: { bg: "bg-amber-500/10", text: "text-amber-600 dark:text-amber-400", label: "Ongoing" },
+  completed: { bg: "bg-purple-500/10", text: "text-purple-600 dark:text-purple-400", label: "Completed" },
+  published: { bg: "bg-emerald-500/10", text: "text-emerald-600 dark:text-emerald-400", label: "Published" },
 };
 
 const STATUS_OPTIONS = ["All", "draft", "scheduled", "ongoing", "completed", "published"];
@@ -35,37 +35,37 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
   const to = new Date(now);
   const from = new Date(now);
   switch (range) {
-    case "Today": 
-      from.setHours(0, 0, 0, 0); 
+    case "Today":
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
     case "Yesterday":
       from.setDate(from.getDate() - 1); from.setHours(0, 0, 0, 0);
       to.setDate(to.getDate() - 1); to.setHours(23, 59, 59, 999);
       break;
-    case "Last 7 Days": 
-      from.setDate(from.getDate() - 7); 
+    case "Last 7 Days":
+      from.setDate(from.getDate() - 7);
       from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "Last 30 Days": 
-      from.setDate(from.getDate() - 30); 
+    case "Last 30 Days":
+      from.setDate(from.getDate() - 30);
       from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "This Month": 
-      from.setDate(1); 
-      from.setHours(0, 0, 0, 0); 
+    case "This Month":
+      from.setDate(1);
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
-    case "This Year": 
-      from.setMonth(0, 1); 
-      from.setHours(0, 0, 0, 0); 
+    case "This Year":
+      from.setMonth(0, 1);
+      from.setHours(0, 0, 0, 0);
       to.setHours(23, 59, 59, 999);
       break;
     case "All Time":
       return { from: null, to: null };
-    default: 
+    default:
       return { from: null, to: null };
   }
   return { from, to };
@@ -136,7 +136,7 @@ export default function AssessmentsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [toastMsg, setToastMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  
+
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0, bottom: false, right: false });
 
   // Close action menu on scroll to prevent detached fixed positioning
@@ -159,7 +159,7 @@ export default function AssessmentsPage() {
     const rect = e.currentTarget.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceRight = window.innerWidth - rect.right;
-    
+
     setMenuPos({
       top: spaceBelow < 280 ? rect.top - 8 : rect.bottom + 8,
       left: spaceRight < 220 ? rect.right : rect.left,
@@ -329,13 +329,13 @@ export default function AssessmentsPage() {
   // Group assessments class-wise
   const groupedAssessments = useMemo(() => {
     const groups: Record<string, { classId: string; className: string; tests: Test[] }> = {};
-    
+
     filteredTests.forEach(t => {
       const classId = t.class_id?._id || "unassigned";
       const className = t.class_id
         ? `${t.class_id.name}${t.class_id.section ? ` — ${t.class_id.section}` : ""}`
         : "Unassigned Class";
-        
+
       if (!groups[classId]) {
         groups[classId] = {
           classId,
@@ -345,7 +345,7 @@ export default function AssessmentsPage() {
       }
       groups[classId].tests.push(t);
     });
-    
+
     // Sort classes alphabetically
     return Object.values(groups).sort((a, b) => a.className.localeCompare(b.className));
   }, [filteredTests]);
@@ -399,11 +399,10 @@ export default function AssessmentsPage() {
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Toast notifications */}
       {toastMsg && (
-        <div className={`fixed top-5 right-5 z-[80] flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-[13px] font-medium transition-all ${
-          toastMsg.type === "success"
+        <div className={`fixed top-5 right-5 z-[80] flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-[13px] font-medium transition-all ${toastMsg.type === "success"
             ? "bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-400"
             : "bg-rose-50 border border-rose-200 text-rose-700 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-400"
-        }`}>
+          }`}>
           {toastMsg.type === "success" ? <CheckCircle className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
           {toastMsg.text}
         </div>
@@ -542,7 +541,7 @@ export default function AssessmentsPage() {
 
       {/* Main Content Card */}
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm text-left">
-        
+
         {/* Table Header & Controls Section */}
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Assessment List (Class-wise)</h2>
@@ -841,7 +840,7 @@ export default function AssessmentsPage() {
                     const rowSerial = (currentPage - 1) * pageSize + idx + 1;
                     return (
                       <tr key={t._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                        <td className="px-5 py-4 text-center font-mono font-bold text-slate-400 text-xs">
+                        <td className="px-5 py-4 text-center font-sans font-bold text-slate-400 text-xs">
                           {rowSerial}
                         </td>
                         <td className="px-5 py-4 font-bold text-slate-805 dark:text-slate-100">
@@ -875,11 +874,11 @@ export default function AssessmentsPage() {
                             >
                               <MoreVertical className="w-4 h-4" />
                             </button>
-                            
+
                             {actionMenuId === t._id && typeof document !== "undefined" && createPortal(
                               <>
                                 <div className="fixed inset-0 z-[100]" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                                <div 
+                                <div
                                   className="fixed w-48 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] z-[110] overflow-hidden py-2 text-left animate-in fade-in zoom-in-95 duration-100"
                                   style={{
                                     top: menuPos.bottom ? "auto" : menuPos.top,
@@ -892,7 +891,7 @@ export default function AssessmentsPage() {
                                   <Link href={`/assessments/${routeClassId}/${t._id}`} className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
                                     <Eye className="w-4 h-4 text-indigo-500" /> View Details
                                   </Link>
-                                  
+
                                   {(isAdmin || isTeacher) && (
                                     <Link href={`/assessments/${routeClassId}/${t._id}/marks`} className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
                                       <BookOpen className="w-4 h-4 text-emerald-500" /> Enter Marks
@@ -943,7 +942,7 @@ export default function AssessmentsPage() {
             <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(350px,1fr))] gap-6 items-start">
               {paginatedGroups.map((group) => (
                 <div key={group.classId} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] p-6 animate-in fade-in">
-                  
+
                   {/* Outer Card Header */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -974,7 +973,7 @@ export default function AssessmentsPage() {
                       const statusStyle = STATUS_STYLES[t.computedStatus] || STATUS_STYLES.scheduled;
                       return (
                         <div key={t._id} className="border border-slate-100 dark:border-slate-800/60 rounded-xl p-4 bg-slate-50/50 dark:bg-slate-900/20 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors relative flex flex-col gap-3">
-                          
+
                           {/* Inner Card Header */}
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
@@ -1027,11 +1026,11 @@ export default function AssessmentsPage() {
                               >
                                 <MoreVertical className="w-4 h-4" />
                               </button>
-                              
+
                               {actionMenuId === t._id && typeof document !== "undefined" && createPortal(
                                 <>
                                   <div className="fixed inset-0 z-[100]" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                                  <div 
+                                  <div
                                     className="fixed w-48 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.15)] z-[110] overflow-hidden py-2 text-left animate-in fade-in zoom-in-95 duration-100"
                                     style={{
                                       top: menuPos.bottom ? "auto" : menuPos.top,
@@ -1044,7 +1043,7 @@ export default function AssessmentsPage() {
                                     <Link href={`/assessments/${routeClassId}/${t._id}`} className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
                                       <Eye className="w-4 h-4 text-indigo-500" /> View Details
                                     </Link>
-                                    
+
                                     {(isAdmin || isTeacher) && (
                                       <Link href={`/assessments/${routeClassId}/${t._id}/marks`} className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">
                                         <BookOpen className="w-4 h-4 text-emerald-500" /> Enter Marks
