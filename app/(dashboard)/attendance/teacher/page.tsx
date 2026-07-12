@@ -327,7 +327,7 @@ export default function TeacherAttendancePage() {
       <div className="page-header">
         <div>
           <h1 className="page-title flex items-center gap-2">
-            Staff Attendance Boar
+            Staff Attendance Board
           </h1>
           <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
             <span>Dashboard</span>
@@ -338,13 +338,13 @@ export default function TeacherAttendancePage() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button
+          {/* <button
             onClick={() => PrintService.print("printable-area", { pageSize: "A4" })}
             className="btn btn-outline flex items-center gap-2"
           >
             <Printer className="w-4 h-4" />
             <span>Print register</span>
-          </button>
+          </button> */}
           <button
             onClick={handleBulkExport}
             className="btn btn-outline flex items-center gap-2"

@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { useResults } from "../../../hooks/useResults";
 import { useExams } from "../../../hooks/useExams";
-import { useStudents } from "../../../hooks/useStudents";
 import { PrintService } from "@/app/lib/print-service";
 
 const PASS_MARK = 35;
@@ -64,7 +63,6 @@ function resolveName(field: any, fallback = ""): string {
 export default function ExamResultsPage() {
   const { results, isLoading, fetchResults } = useResults();
   const { exams } = useExams();
-  const { students } = useStudents();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedExamId, setSelectedExamId] = useState("");

@@ -75,7 +75,7 @@ export default function SubjectAssignmentDetailsPage() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => router.back()}
-            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-900 border border-border text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm"
+            className="w-10 h-10 flex items-center justify-center rounded-lg bg-white dark:bg-slate-900 border border-border text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -106,8 +106,8 @@ export default function SubjectAssignmentDetailsPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-100/50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 flex items-center justify-center">
+        <div className="bg-white dark:bg-slate-900 border border-border rounded-lg p-5 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-lg bg-emerald-100/50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400 flex items-center justify-center">
             <BookOpen className="w-6 h-6" />
           </div>
           <div>
@@ -116,8 +116,8 @@ export default function SubjectAssignmentDetailsPage() {
           </div>
         </div>
         
-        <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center">
+        <div className="bg-white dark:bg-slate-900 border border-border rounded-lg p-5 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-lg bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center">
             <Users className="w-6 h-6" />
           </div>
           <div>
@@ -126,8 +126,8 @@ export default function SubjectAssignmentDetailsPage() {
           </div>
         </div>
         
-        <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-purple-100/50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 flex items-center justify-center">
+        <div className="bg-white dark:bg-slate-900 border border-border rounded-lg p-5 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-lg bg-purple-100/50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400 flex items-center justify-center">
             <Clock className="w-6 h-6" />
           </div>
           <div>
@@ -138,7 +138,7 @@ export default function SubjectAssignmentDetailsPage() {
       </div>
 
       {/* Main Content */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-lg shadow-sm overflow-hidden text-left">
         <div className="p-5 border-b border-border bg-[#F8FAFC] dark:bg-slate-800/40">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Assigned Subjects List</h2>
         </div>

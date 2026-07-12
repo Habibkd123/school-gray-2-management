@@ -19,7 +19,7 @@ interface LocalRecord {
 }
 
 export default function ExamAttendancePage() {
-  const { students, isLoading: studentsLoading } = useStudents();
+  const { students, fetchStudents, isLoading: studentsLoading } = useStudents({ skip: true });
   const { classes } = useClasses();
   const { exams } = useExams();
   const { fetchAttendance, saveAttendance, isLoading: saving } = useAttendance();
@@ -56,6 +56,12 @@ export default function ExamAttendancePage() {
       }
     }
   }, [selectedExamId, exams]);
+
+  // Fetch students for the selected class (lazy — avoids loading all students on mount)
+  useEffect(() => {
+    if (!selectedClassId) return;
+    fetchStudents({ classId: selectedClassId, limit: 500, status: "all" });
+  }, [selectedClassId, fetchStudents]);
 
   // Fetch marked attendance records for the selected class and date
   useEffect(() => {

@@ -475,7 +475,7 @@ export default function SubjectAssignmentPage() {
           {actionMenuId === item._id && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setActionMenuId(null)} />
-              <div className="absolute right-12 top-0 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
+              <div className="absolute right-12 top-0 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
                 <button
                   onClick={() => {
                     router.push(`/academic-mgmt/subject-assignment/details?classId=${item.class_id?._id}&year=${item.academic_year}`);
@@ -575,7 +575,7 @@ export default function SubjectAssignmentPage() {
       </div>
 
       {/* Main Listing Panel */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow text-left p-5">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-lg card-shadow text-left p-5">
         {/* Filters Top Row */}
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-5">
           <h2 className="text-[16px] font-semibold text-foreground dark:text-slate-100">Subject Assignments</h2>
@@ -807,7 +807,7 @@ export default function SubjectAssignmentPage() {
                         return (
                           <React.Fragment key={groupId}>
                             {/* Group Header Row */}
-                            <tr 
+                            <tr
                               onClick={() => toggleListGroup(groupId)}
                               className="bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer border-b border-border group"
                             >
@@ -836,7 +836,7 @@ export default function SubjectAssignmentPage() {
                                 </div>
                               </td>
                             </tr>
-                            
+
                             {/* Group Items Rows */}
                             {!isCollapsed && group.assignments.map(assignment => (
                               <tr key={assignment._id} className="erp-table-row border-b border-slate-100 dark:border-slate-800/50">
@@ -900,10 +900,10 @@ export default function SubjectAssignmentPage() {
                   </div>
                 ) : (
                   paginatedGroups.map((group, idx) => (
-                    <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col break-inside-avoid mb-6">
+                    <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm flex flex-col break-inside-avoid mb-6">
                       <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 overflow-hidden">
-                          <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <div className="w-10 h-10 rounded-lg bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
                             <GraduationCap className="w-5 h-5" />
                           </div>
                           <div className="truncate">
@@ -925,7 +925,7 @@ export default function SubjectAssignmentPage() {
                         </div>
                         <div className="space-y-3">
                           {(expandedGroups[idx] ? group.assignments : group.assignments.slice(0, 3)).map(assignment => (
-                            <div key={assignment._id} className="group relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl p-3.5 flex items-start gap-3 transition-colors">
+                            <div key={assignment._id} className="group relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-lg p-3.5 flex items-start gap-3 transition-colors">
                               <div className="mt-0.5">
                                 <BookOpen className="w-4 h-4 text-slate-400" />
                               </div>
@@ -1065,7 +1065,7 @@ export default function SubjectAssignmentPage() {
             {isTeacherDropdownOpen && (
               <>
                 <div className="fixed inset-0 z-[60]" onClick={() => setIsTeacherDropdownOpen(false)} />
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-lg shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
                   <div className="relative">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                     <input
@@ -1261,7 +1261,7 @@ export default function SubjectAssignmentPage() {
             {isEditTeacherDropdownOpen && (
               <>
                 <div className="fixed inset-0 z-[60]" onClick={() => setIsEditTeacherDropdownOpen(false)} />
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-955 border border-border rounded-xl shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-955 border border-border rounded-lg shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
                   <div className="relative">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                     <input

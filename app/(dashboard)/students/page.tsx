@@ -401,7 +401,7 @@ export default function StudentsPage() {
   const PAGE_SIZE = 12;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  const columns: ColumnDef<typeof tableData[0]>[] = [
+  const columns: ColumnDef<typeof tableData[0]>[] = React.useMemo(() => [
     { header: "Admission No", accessorKey: "displayId", render: (s) => <span className="font-semibold text-primary">{s.displayId}</span> },
     { header: "Roll No", accessorKey: "roll_no" },
     {
@@ -482,7 +482,8 @@ export default function StudentsPage() {
         </div>
       )
     }
-  ];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], [enableSections, activeDropdown, router]);
 
   if (isLoading && isInitialLoad) {
     return (

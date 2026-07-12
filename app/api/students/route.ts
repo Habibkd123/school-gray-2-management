@@ -41,7 +41,9 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limitParam = searchParams.get("limit");
     const isAll = limitParam === "all";
-    const limit = isAll ? 100000 : parseInt(limitParam || "12");
+    // Hard cap at 500 — no legitimate page needs 100k documents in one shot.
+    // Callers that genuinely need all students should paginate.
+    const limit = isAll ? 500 : parseInt(limitParam || "12");
     const skip = isAll ? 0 : (page - 1) * limit;
 
     // Build filter
@@ -88,6 +90,7 @@ export async function GET(request: NextRequest) {
 
     const section = searchParams.get("section");
     if (section && section !== "all") {
+      // Fetch section classes in parallel with the academic_year fetch above when applicable
       const classesWithSection = await Class.find({ section, school_id: schoolId }).select("_id").lean();
       const classIds = classesWithSection.map(c => c._id);
       if (filter.class_id) {

@@ -9,6 +9,7 @@ import { useAppState } from "@/app/context/store";
 import { useAuth } from "@/app/context/auth";
 import { getAuthHeaders } from "@/lib/utils/session";
 import Link from "next/link";
+import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar";
 
 export default function SyllabusClassListPage() {
   const { academicYear } = useAppState();
@@ -68,7 +69,7 @@ export default function SyllabusClassListPage() {
 
   useEffect(() => {
     if (!assignments || assignments.length === 0) {
-      fetchAssignments({ limit: 5000 });
+      fetchAssignments({ limit: 10 });
     }
   }, [assignments, fetchAssignments]);
 
@@ -97,7 +98,12 @@ export default function SyllabusClassListPage() {
       groups[key].assignments.push(a);
     });
 
-    return Object.values(groups).sort((a, b) => a.className.localeCompare(b.className));
+    return Object.values(groups).sort((a, b) => {
+      const numA = parseInt(a.className.replace(/\D/g, '')) || 0;
+      const numB = parseInt(b.className.replace(/\D/g, '')) || 0;
+      if (numA !== numB) return numA - numB;
+      return a.className.localeCompare(b.className);
+    });
   }, [assignments, academicYear, filterTeacherId, classes]);
 
   const filteredClassGroups = useMemo(() => {
@@ -113,6 +119,8 @@ export default function SyllabusClassListPage() {
       return nameMatch || sectionMatch || subjectMatch;
     });
   }, [classGroups, searchTerm]);
+
+  const { page, setPage, pageSize, setPageSize, totalPages, totalItems, paged: paginatedGroups } = usePagination(filteredClassGroups, 9);
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
@@ -193,139 +201,152 @@ export default function SyllabusClassListPage() {
           <p className="font-medium text-[14px]">No classes matching search found.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
-          {filteredClassGroups.map((c) => {
-            // Calculate overall progress for the class
-            let totalChapters = 0;
-            let completedChapters = 0;
-            c.assignments.forEach(a => {
-              const stats = syllabiStats[a._id] || { total: 0, completed: 0, percent: 0 };
-              totalChapters += stats.total;
-              completedChapters += stats.completed;
-            });
-            const percent = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
+        <>
+          <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+            {paginatedGroups.map((c) => {
+              // Calculate overall progress for the class
+              let totalChapters = 0;
+              let completedChapters = 0;
+              c.assignments.forEach(a => {
+                const stats = syllabiStats[a._id] || { total: 0, completed: 0, percent: 0 };
+                totalChapters += stats.total;
+                completedChapters += stats.completed;
+              });
+              const percent = totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
 
-            // Count unique teachers in this class
-            const uniqueTeachers = new Set(
-              c.assignments
-                .map(a => typeof a.teacher_id === 'object' ? a.teacher_id?._id : a.teacher_id)
-                .filter(Boolean)
-            ).size;
+              // Count unique teachers in this class
+              const uniqueTeachers = new Set(
+                c.assignments
+                  .map(a => typeof a.teacher_id === 'object' ? a.teacher_id?._id : a.teacher_id)
+                  .filter(Boolean)
+              ).size;
 
-            return (
-              <div key={c.classId} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden flex flex-col justify-between text-left hover:shadow-md transition-shadow group animate-in fade-in h-fit">
-                <div>
-                  {/* Header of card */}
-                  <div className="p-5 border-b border-border bg-[#F8FAFC] dark:bg-slate-800/40 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0 border border-primary/10">
-                        <GraduationCap className="w-5 h-5 text-primary" />
+              return (
+                <div key={c.classId} className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden flex flex-col justify-between text-left hover:shadow-md transition-shadow group animate-in fade-in break-inside-avoid">
+                  <div>
+                    {/* Header of card */}
+                    <div className="p-5 border-b border-border bg-[#F8FAFC] dark:bg-slate-800/40 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center shrink-0 border border-primary/10">
+                          <GraduationCap className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-[15px] text-slate-900 dark:text-white leading-tight">
+                            {c.className} {c.section ? <span className="text-slate-400 font-semibold text-[14px]">- {c.section}</span> : ""}
+                          </h4>
+                          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 mt-1">
+                            Class Teacher: <span className="text-slate-700 dark:text-slate-300 font-semibold">{c.classTeacherName}</span>
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-bold text-[15px] text-slate-900 dark:text-white leading-tight">
-                          {c.className} {c.section ? <span className="text-slate-400 font-semibold text-[14px]">- {c.section}</span> : ""}
-                        </h4>
-                        <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400 mt-1">
-                          Class Teacher: <span className="text-slate-700 dark:text-slate-300 font-semibold">{c.classTeacherName}</span>
-                        </p>
-                      </div>
+                      <Link href={`/academic-mgmt/syllabus/${c.classId}`} className="px-3 py-1.5 border border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 rounded-lg text-[12px] font-bold shadow-sm transition-colors cursor-pointer">
+                        View Details
+                      </Link>
                     </div>
-                    <Link href={`/academic-mgmt/syllabus/${c.classId}`} className="px-3 py-1.5 border border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-primary hover:border-primary/30 rounded-lg text-[12px] font-bold shadow-sm transition-colors cursor-pointer">
-                      View Details
-                    </Link>
-                  </div>
 
-                  <div className="p-5 space-y-3 border-b border-border">
-                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
-                      Assigned Subjects ({c.assignments.length})
-                    </p>
-                    <div className="flex flex-col gap-2">
-                      {c.assignments.slice(0, expandedClasses[c.classId] ? undefined : 4).map((a, idx) => {
-                        const subjName = typeof a.subject_master_id === 'object' ? a.subject_master_id?.name : "Unknown Subject";
-                        const subjCode = typeof a.subject_master_id === 'object' ? a.subject_master_id?.code : "—";
-                        return (
-                          <div key={idx} className="flex items-center justify-between p-3 rounded-md border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 group/subject transition-colors hover:border-slate-200 dark:hover:border-slate-700">
-                            <div className="flex items-center gap-3">
-                              <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
-                              <div>
-                                <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200 uppercase">{subjName}</p>
-                                {subjCode && subjCode !== "—" && (
-                                  <p className="text-[10px] font-medium text-slate-400 mt-0.5 font-mono">Code: {subjCode}</p>
-                                )}
+                    <div className="p-5 space-y-3 border-b border-border">
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">
+                        Assigned Subjects ({c.assignments.length})
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {c.assignments.slice(0, expandedClasses[c.classId] ? undefined : 4).map((a, idx) => {
+                          const subjName = typeof a.subject_master_id === 'object' ? a.subject_master_id?.name : "Unknown Subject";
+                          const subjCode = typeof a.subject_master_id === 'object' ? a.subject_master_id?.code : "—";
+                          return (
+                            <div key={idx} className="flex items-center justify-between p-3 rounded-md border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 group/subject transition-colors hover:border-slate-200 dark:hover:border-slate-700">
+                              <div className="flex items-center gap-3">
+                                <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
+                                <div>
+                                  <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200 uppercase">{subjName}</p>
+                                  {subjCode && subjCode !== "—" && (
+                                    <p className="text-[10px] font-medium text-slate-400 mt-0.5 font-mono">Code: {subjCode}</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1 opacity-0 group-hover/subject:opacity-100 transition-opacity">
+                                <button className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors" title="Edit Subject Syllabus">
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md transition-colors" title="Remove Syllabus">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
                               </div>
                             </div>
-                            <div className="flex items-center gap-1 opacity-0 group-hover/subject:opacity-100 transition-opacity">
-                              <button className="p-1.5 text-slate-400 hover:text-primary hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors" title="Edit Subject Syllabus">
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-md transition-colors" title="Remove Syllabus">
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                          );
+                        })}
+                        {c.assignments.length > 4 && (
+                          <div className="text-center py-1 mt-1">
+                            <button
+                              onClick={() => toggleExpand(c.classId)}
+                              className="text-[#E29013] font-bold text-[12px] hover:underline cursor-pointer bg-transparent border-none p-0"
+                            >
+                              {expandedClasses[c.classId] ? "Show Less" : `+${c.assignments.length - 4} More`}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="p-5 space-y-4">
+                      {loadingStats ? (
+                        <div className="animate-pulse space-y-3">
+                          <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
+                          <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded w-2/3"></div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-end justify-between">
+                            <div>
+                              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Overall Progress</p>
+                              <p className="text-[18px] font-bold text-slate-800 dark:text-slate-200 leading-tight mt-1">{percent}%</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Last Updated</p>
+                              <p className="text-[13px] font-bold text-slate-600 dark:text-slate-300 mt-1">
+                                {(() => {
+                                  let latestDate = 0;
+                                  c.assignments.forEach(a => {
+                                    const s = syllabiStats[a._id];
+                                    if (s && s.updatedAt) {
+                                      const d = new Date(s.updatedAt).getTime();
+                                      if (d > latestDate) latestDate = d;
+                                    }
+                                  });
+                                  return latestDate > 0
+                                    ? new Date(latestDate).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' })
+                                    : "—";
+                                })()}
+                              </p>
                             </div>
                           </div>
-                        );
-                      })}
-                      {c.assignments.length > 4 && (
-                        <div className="text-center py-1 mt-1">
-                          <button 
-                            onClick={() => toggleExpand(c.classId)}
-                            className="text-[#E29013] font-bold text-[12px] hover:underline cursor-pointer bg-transparent border-none p-0"
-                          >
-                            {expandedClasses[c.classId] ? "Show Less" : `+${c.assignments.length - 4} More`}
-                          </button>
-                        </div>
+
+                          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-emerald-500 transition-all duration-500 rounded-full" style={{ width: `${percent}%` }} />
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
 
-                  <div className="p-5 space-y-4">
-                    {loadingStats ? (
-                      <div className="animate-pulse space-y-3">
-                        <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
-                        <div className="h-2 bg-slate-200 dark:bg-slate-800 rounded w-2/3"></div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-end justify-between">
-                          <div>
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Overall Progress</p>
-                            <p className="text-[18px] font-bold text-slate-800 dark:text-slate-200 leading-tight mt-1">{percent}%</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Last Updated</p>
-                            <p className="text-[13px] font-bold text-slate-600 dark:text-slate-300 mt-1">
-                              {(() => {
-                                let latestDate = 0;
-                                c.assignments.forEach(a => {
-                                  const s = syllabiStats[a._id];
-                                  if (s && s.updatedAt) {
-                                    const d = new Date(s.updatedAt).getTime();
-                                    if (d > latestDate) latestDate = d;
-                                  }
-                                });
-                                return latestDate > 0
-                                  ? new Date(latestDate).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' })
-                                  : "—";
-                              })()}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-500 transition-all duration-500 rounded-full" style={{ width: `${percent}%` }} />
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  <Link href={`/academic-mgmt/syllabus/${c.classId}`} className="p-3 border-t border-border/50 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center gap-2 text-[13px] font-bold text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer">
+                    View Syllabus <ArrowRight className="w-4 h-4" />
+                  </Link>
                 </div>
+              );
+            })}
+          </div>
 
-                <Link href={`/academic-mgmt/syllabus/${c.classId}`} className="p-3 border-t border-border/50 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center gap-2 text-[13px] font-bold text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors cursor-pointer">
-                  View Syllabus <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            );
-          })}
-        </div>
+          <div className="mt-6 border border-border rounded-xl overflow-hidden shadow-sm">
+            <PaginationBar
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+            />
+          </div>
+        </>
       )}
     </div>
   );

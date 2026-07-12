@@ -570,7 +570,7 @@ export default function TeacherAssignmentPage() {
           {actionMenuId === item._id && (
             <>
               <div className="fixed inset-0 z-40" onClick={() => setActionMenuId(null)} />
-              <div className="absolute right-12 top-0 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
+              <div className="absolute right-12 top-0 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left">
                 <button
                   onClick={() => {
                     router.push(`/academic-mgmt/teacher-assignment/details?teacherId=${item.teacher_id?._id}&year=${item.academic_year}`);
@@ -661,7 +661,7 @@ export default function TeacherAssignmentPage() {
       </div>
 
       {/* Main Listing Panel */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow text-left p-5">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-lg card-shadow text-left p-5">
         {/* Filters Top Row */}
         <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-5">
           <h2 className="text-[16px] font-semibold text-foreground dark:text-slate-100">Faculty Assignments</h2>
@@ -999,10 +999,10 @@ export default function TeacherAssignmentPage() {
                   </div>
                 ) : (
                   paginatedGroups.map((group, idx) => (
-                    <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col break-inside-avoid mb-6">
+                    <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm flex flex-col break-inside-avoid mb-6">
                       <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 overflow-hidden">
-                          <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <div className="w-10 h-10 rounded-lg bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
                             <GraduationCap className="w-5 h-5" />
                           </div>
                           <div className="truncate">
@@ -1024,7 +1024,7 @@ export default function TeacherAssignmentPage() {
                         </div>
                         <div className="space-y-3">
                           {(expandedGroups[idx] ? group.assignments : group.assignments.slice(0, 3)).map(assignment => (
-                            <div key={assignment._id} className="group relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl p-3.5 flex items-start gap-3 transition-colors">
+                            <div key={assignment._id} className="group relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-lg p-3.5 flex items-start gap-3 transition-colors">
                               <div className="w-8 h-8 rounded-full overflow-hidden bg-slate-200 shrink-0">
                                 <img
                                   src={assignment.teacher_id?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(assignment.teacher_id?.name || "T")}&background=d68600&color=fff&bold=true`}
@@ -1123,7 +1123,7 @@ export default function TeacherAssignmentPage() {
             {isTeacherDropdownOpen && (
               <>
                 <div className="fixed inset-0 z-[60]" onClick={() => setIsTeacherDropdownOpen(false)} />
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-lg shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
                   <div className="relative">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                     <input
@@ -1225,7 +1225,7 @@ export default function TeacherAssignmentPage() {
 
           {/* Dynamic Subject Multi-Select */}
           {resolvedClass && (
-            <div className="flex flex-col gap-2 border border-border/60 rounded-xl p-3.5 bg-slate-50/50 dark:bg-slate-900/50">
+            <div className="flex flex-col gap-2 border border-border/60 rounded-lg p-3.5 bg-slate-50/50 dark:bg-slate-900/50">
               <div className="flex items-center justify-between">
                 <label className="text-[13px] font-bold text-slate-750 dark:text-slate-200">Subjects to Assign <span className="text-red-500">*</span></label>
                 {selectedSubjectIds.length > 0 && (
@@ -1392,7 +1392,7 @@ export default function TeacherAssignmentPage() {
             {isEditTeacherDropdownOpen && (
               <>
                 <div className="fixed inset-0 z-[60]" onClick={() => setIsEditTeacherDropdownOpen(false)} />
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-lg shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
                   <div className="relative">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                     <input

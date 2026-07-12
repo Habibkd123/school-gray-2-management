@@ -129,6 +129,11 @@ studentSchema.index({ school_id: 1, admission_no: 1 }, { name: "student_school_a
 studentSchema.index({ name: 1 }, { name: "student_name_v1" });
 studentSchema.index({ parent_id: 1 }, { name: "student_parent_id_v1" });
 studentSchema.index({ user_id: 1 }, { name: "student_user_id_v1" });
+// ── Compound indexes for high-frequency filtered queries ──────────────────────
+// Attendance & exam-attendance pages: always filter school + class + active
+studentSchema.index({ school_id: 1, class_id: 1, is_active: 1 }, { name: "student_school_class_active_v1" });
+// Dashboard & report pages: filter active students within an academic year
+studentSchema.index({ school_id: 1, academic_year: 1, is_active: 1 }, { name: "student_school_year_active_v1" });
 
 const Student: Model<IStudent> =
   mongoose.models.Student || mongoose.model<IStudent>("Student", studentSchema);

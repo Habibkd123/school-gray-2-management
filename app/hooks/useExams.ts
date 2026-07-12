@@ -97,13 +97,13 @@ export function useExams(classId?: string) {
 export function useResults(examId?: string, studentId?: string) {
   const [results, setResults] = useState<ApiResult[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [loading, setLoading] = useState(true);
+  // Note: `loading` was removed (was identical to `isLoading`, causing double re-renders).
+  // Exposed as an alias below for backward compatibility.
 
   const { academicYear } = useAppState();
 
   const fetchResults = useCallback(async () => {
     setIsLoading(true);
-    setLoading(true);
     try {
       const params = new URLSearchParams();
       if (examId) params.set("exam_id", examId);
@@ -116,7 +116,6 @@ export function useResults(examId?: string, studentId?: string) {
       console.error("useResults fetch error", e);
     } finally {
       setIsLoading(false);
-      setLoading(false);
     }
   }, [examId, studentId, academicYear]);
 
@@ -134,5 +133,5 @@ export function useResults(examId?: string, studentId?: string) {
     return data;
   }, [fetchResults]);
 
-  return { results, loading, isLoading, fetchResults, createResults };
+  return { results, loading: isLoading, isLoading, fetchResults, createResults };
 }

@@ -40,6 +40,11 @@ export async function GET(request: NextRequest) {
         statuses: ["Active", "Inactive"],
         admissionStatuses: admissionStatuses.filter(Boolean),
       }
+    }, {
+      headers: {
+        // Filter metadata changes rarely — 2-min browser cache reduces 6 parallel DB queries on every mount
+        "Cache-Control": "private, max-age=120, stale-while-revalidate=60",
+      }
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

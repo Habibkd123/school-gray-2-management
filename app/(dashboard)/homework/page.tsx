@@ -23,12 +23,15 @@ function mapRole(role?: string): "admin" | "teacher" | "student" {
 export default function HomeworkPage() {
   const { user } = useAuth();
   const activeRole = mapRole(user?.role);
+  const isStudent = activeRole === "student";
 
   const { classes, isLoading: classesLoading } = useClasses();
-  const { students, isLoading: studentsLoading } = useStudents();
+  // Only fetch students when the viewer is a student (to get their own class info).
+  // Admins/teachers don't need the student list — submission data is already populated.
+  const { students, isLoading: studentsLoading } = useStudents({ skip: !isStudent });
 
-  // Find active student (simplified since user_id mapping not in ApiStudent type)
-  const activeStudent = students[0];
+  // For student role: the API returns only their own record, so students[0] is them.
+  const activeStudent = isStudent ? students[0] : undefined;
 
   const activeStudentClassId = activeStudent
     ? (typeof activeStudent.class_id === "object" ? activeStudent.class_id._id : activeStudent.class_id)

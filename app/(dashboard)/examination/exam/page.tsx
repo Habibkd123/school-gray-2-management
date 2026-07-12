@@ -413,7 +413,7 @@ export default function ExamListPage() {
       </div>
 
       {/* Main Content */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-lg shadow-sm overflow-hidden text-left">
         {/* Table Header Section */}
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Exam List Overview</h2>
@@ -599,10 +599,10 @@ export default function ExamListPage() {
                   const ongoing = group.exams.filter(e => calculateStatus(e) === "ongoing").length;
 
                   return (
-                    <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col break-inside-avoid mb-6">
+                    <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm flex flex-col break-inside-avoid mb-6">
                       <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 overflow-hidden">
-                          <div className="w-10 h-10 rounded-xl bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
+                          <div className="w-10 h-10 rounded-lg bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
                             <GraduationCap className="w-5 h-5" />
                           </div>
                           <div className="truncate">
@@ -628,7 +628,7 @@ export default function ExamListPage() {
 
                         <div className="space-y-3">
                           {(expandedGroups[idx] ? group.exams : group.exams.slice(0, 3)).map((exam: any) => (
-                            <div key={exam._id} className="group/item relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl p-3.5 flex flex-col gap-2 transition-colors">
+                            <div key={exam._id} className="group/item relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-lg p-3.5 flex flex-col gap-2 transition-colors">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1">
                                   <h4 className="font-bold text-slate-900 dark:text-slate-100 text-[13px] tracking-wide">
@@ -1018,8 +1018,8 @@ export default function ExamListPage() {
       {isDeleteOpen && (
         <>
           <div className="fixed inset-0 bg-slate-900/50 z-[60] backdrop-blur-sm" onClick={() => setIsDeleteOpen(false)} />
-          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-full sm:w-[400px] bg-white dark:bg-slate-900 rounded-xl shadow-xl z-[70] overflow-hidden p-8 text-center animate-in fade-in zoom-in duration-200">
-            <div className="w-16 h-16 bg-rose-50 rounded-xl flex items-center justify-center mx-auto mb-6">
+          <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-full sm:w-[400px] bg-white dark:bg-slate-900 rounded-lg shadow-xl z-[70] overflow-hidden p-8 text-center animate-in fade-in zoom-in duration-200">
+            <div className="w-16 h-16 bg-rose-50 rounded-lg flex items-center justify-center mx-auto mb-6">
               <Trash2 className="w-8 h-8 text-rose-500" />
             </div>
             <h2 className="text-xl font-bold text-foreground dark:text-slate-100 mb-3">Confirm Deletion</h2>
@@ -1051,7 +1051,7 @@ export default function ExamListPage() {
             <div className="fixed inset-0 z-[90] bg-transparent" onClick={() => { setActionMenuId(null); setMenuAnchorRect(null); setActiveExam(null); }} />
             <div
               style={dropdownStyles}
-              className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-[100] overflow-hidden py-1.5 text-left animate-in fade-in duration-100"
+              className="bg-white dark:bg-slate-900 border border-border rounded-lg shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-[100] overflow-hidden py-1.5 text-left animate-in fade-in duration-100"
               onClick={(e) => e.stopPropagation()}
             >
               <button onClick={() => { openViewModal(activeExam); setActionMenuId(null); }} className="w-full px-4 py-2 text-[13px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 font-medium transition-colors cursor-pointer">

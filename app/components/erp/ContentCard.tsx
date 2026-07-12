@@ -1,7 +1,7 @@
 "use client";
 
 import React, { ReactNode } from "react";
-import { cn } from "@/lib/utils/cn"; // Assuming a classnames utility exists, if not we'll handle standard template literals
+
 
 export interface ContentCardProps {
   children: ReactNode;
