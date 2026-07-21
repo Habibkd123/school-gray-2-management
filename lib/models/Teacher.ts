@@ -15,7 +15,8 @@ export interface ITeacher extends Document {
   photo_url?: string;
   blood_group?: string;
   qualification?: string;
-  subject_specialization?: string;
+  subject_specialization?: string; // legacy single-value
+  expertise?: string[];            // multi-select specializations
   experience_years: number;
   join_date: Date;
   languages?: string[];
@@ -101,7 +102,8 @@ const teacherSchema = new Schema<ITeacher>(
     photo_url: { type: String, default: null },
     blood_group: { type: String, trim: true },
     qualification: { type: String, trim: true },
-    subject_specialization: { type: String, trim: true },
+    subject_specialization: { type: String, trim: true },  // legacy
+    expertise: { type: [String], default: [] },
     experience_years: { type: Number, default: 0 },
     join_date: { type: Date, default: Date.now },
     languages: { type: [String], default: [] },
@@ -177,6 +179,8 @@ teacherSchema.index({ school_id: 1, employee_id: 1 }, { unique: true, sparse: tr
 teacherSchema.index({ school_id: 1, is_active: 1 }, { name: "teacher_school_is_active_v1" });
 teacherSchema.index({ school_id: 1, name: 1 }, { name: "teacher_school_name_v1" });
 teacherSchema.index({ user_id: 1 }, { name: "teacher_user_id_v1" });
+teacherSchema.index({ school_id: 1, qualification: 1 }, { name: "teacher_school_qualification_v1" });
+teacherSchema.index({ school_id: 1, expertise: 1 }, { name: "teacher_school_expertise_v1" });
 
 if (mongoose.models && mongoose.models.Teacher) {
   const registeredSchema = mongoose.models.Teacher.schema;

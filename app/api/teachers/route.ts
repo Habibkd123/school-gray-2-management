@@ -50,6 +50,8 @@ export async function GET(req: NextRequest) {
         { phone: { $regex: search, $options: "i" } },
         { department: { $regex: search, $options: "i" } },
         { designation: { $regex: search, $options: "i" } },
+        { qualification: { $regex: search, $options: "i" } },
+        { expertise: { $elemMatch: { $regex: search, $options: "i" } } },
       ];
     }
 
@@ -61,6 +63,16 @@ export async function GET(req: NextRequest) {
     const designation = url.searchParams.get("designation");
     if (designation && designation !== "all") {
       query.designation = { $regex: `^${designation}$`, $options: "i" };
+    }
+
+    const qualification = url.searchParams.get("qualification");
+    if (qualification && qualification !== "all") {
+      query.qualification = { $regex: `^${qualification}$`, $options: "i" };
+    }
+
+    const expertise = url.searchParams.get("expertise");
+    if (expertise && expertise !== "all") {
+      query.expertise = { $elemMatch: { $regex: `^${expertise}$`, $options: "i" } };
     }
 
     const status = url.searchParams.get("status");
@@ -183,6 +195,7 @@ export async function POST(req: NextRequest) {
     const {
       name, employee_id, gender, dob, phone, email, address,
       photo_url, blood_group, qualification, subject_specialization,
+      expertise,
       experience_years, join_date, languages, training_details, password,
       class_id, class_ids,
       father_name, mother_name, marital_status, previous_school_name,
@@ -251,7 +264,8 @@ export async function POST(req: NextRequest) {
       photo_url,
       blood_group: blood_group?.trim(),
       qualification: qualification?.trim(),
-      subject_specialization: subject_specialization?.trim(),
+      subject_specialization: Array.isArray(expertise) && expertise.length > 0 ? expertise[0] : subject_specialization?.trim(),
+      expertise: Array.isArray(expertise) ? expertise : (subject_specialization?.trim() ? [subject_specialization.trim()] : []),
       experience_years: experience_years ? parseInt(experience_years) : 0,
       join_date: join_date ? new Date(join_date) : undefined,
       languages: Array.isArray(languages) ? languages : undefined,

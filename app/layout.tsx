@@ -1,24 +1,10 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "./context/store";
 import { AuthProvider } from "./context/auth";
 import { ThemeProvider } from "./providers";
 import { RootThemeProvider } from "./components/RootThemeProvider";
 import { ServerThemeStyles } from "./components/ServerThemeStyles";
-
-// ── Font ─────────────────────────────────────────────────────────────
-// display:'swap' ensures text stays visible in the fallback font while
-// Roboto loads — avoids invisible-text during font load (FOIT).
-// preload:true adds a <link rel="preload"> in <head> for the primary weight.
-const roboto = Roboto({
-  variable: "--font-roboto",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-  display: "swap",
-  preload: true,
-  fallback: ["system-ui", "Arial", "sans-serif"],
-});
 
 export const metadata: Metadata = {
   title: "Portal | My School Life",
@@ -33,11 +19,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${roboto.variable} h-full antialiased`}
+      className="h-full antialiased"
       suppressHydrationWarning
     >
       <head>
-        {/* DNS prefetch for Cloudinary CDN used for uploaded images / avatars */}
+        {/* Roboto font — loaded at runtime via CDN so build is not blocked */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+          rel="stylesheet"
+        />
+        {/* DNS prefetch for CDNs used for uploaded images / avatars */}
         <link rel="dns-prefetch" href="//res.cloudinary.com" />
         <link rel="dns-prefetch" href="//ui-avatars.com" />
       </head>

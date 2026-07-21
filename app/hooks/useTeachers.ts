@@ -22,6 +22,7 @@ export interface ApiTeacher {
   blood_group?: string;
   qualification?: string;
   subject_specialization?: string;
+  expertise?: string[];            // multi-select specializations
   /** alias for subject_specialization */
   subject?: string;
   experience_years: number;
@@ -110,6 +111,7 @@ export interface CreateTeacherInput {
   blood_group?: string;
   qualification?: string;
   subject_specialization?: string;
+  expertise?: string[];
   experience_years?: number;
   join_date?: string;
   languages?: string[];

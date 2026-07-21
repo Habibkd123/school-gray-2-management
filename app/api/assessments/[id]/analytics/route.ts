@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const totalStudents = await Student.countDocuments({
       school_id: schoolId,
       class_id: test.class_id,
-      status: "Active",
+      is_active: true,
     });
 
     if (marks.length === 0) {

@@ -7,7 +7,7 @@ import { getAuthHeaders } from "@/lib/utils/session";
 import { useClasses } from "@/app/hooks/useClasses";
 import {
   Search, Loader2, AlertCircle, BookOpen, BarChart2, RefreshCw, GraduationCap, ArrowRight,
-  ClipboardList, Calendar, CheckCircle2, FileText
+  ClipboardList, Calendar, CheckCircle2, FileText, Plus
 } from "lucide-react";
 
 interface Test {
@@ -27,6 +27,7 @@ interface Test {
 
 export default function AssessmentsClassListPage() {
   const { user } = useAuth();
+  const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   const [tests, setTests] = useState<Test[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -129,6 +130,15 @@ export default function AssessmentsClassListPage() {
           <button onClick={() => fetchTests()} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
+          {isAdmin && (
+            <Link
+              href="/assessments/create"
+              className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-[13px] font-semibold transition-colors shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              Add Assessment
+            </Link>
+          )}
         </div>
       </div>
 

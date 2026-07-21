@@ -241,6 +241,10 @@ export default function TeachersPage() {
       joinDateStr: teacher.join_date ? new Date(teacher.join_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—",
       classNameStr: getClassName(teacher),
       subject: teacher.subject_specialization || "—",
+      qualificationStr: (teacher as any).qualification || "—",
+      expertiseArr: Array.isArray((teacher as any).expertise) && (teacher as any).expertise.length > 0
+        ? (teacher as any).expertise
+        : teacher.subject_specialization ? [teacher.subject_specialization] : [],
       status: teacher.is_active ? "Active" : "Inactive"
     }));
   }, [teachers]);
@@ -292,7 +296,25 @@ export default function TeachersPage() {
         </div>
     ) },
     { header: "Class", accessorKey: "classNameStr" },
-    { header: "Subject", accessorKey: "subject" },
+    { header: "Qualification", accessorKey: "qualificationStr", render: (t: any) => (
+      <div className="flex flex-col gap-1">
+        {t.qualificationStr !== "—" && (
+          <span className="inline-flex items-center px-2 py-0.5 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded text-[10px] font-bold w-fit">
+            {t.qualificationStr}
+          </span>
+        )}
+        {t.expertiseArr.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {t.expertiseArr.slice(0, 2).map((e: string) => (
+              <span key={e} className="px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[9px] font-bold">{e}</span>
+            ))}
+            {t.expertiseArr.length > 2 && (
+              <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded text-[9px] font-bold">+{t.expertiseArr.length - 2}</span>
+            )}
+          </div>
+        )}
+      </div>
+    ) },
     { header: "Email", accessorKey: "email", render: (t) => t.email ? t.email.toLowerCase() : "—" },
     { header: "Phone", accessorKey: "phoneStr" },
     { header: "Date of Join", accessorKey: "joinDateStr" },
@@ -617,7 +639,7 @@ export default function TeachersPage() {
           <div className="relative w-full sm:w-80">
             <input
               type="text"
-              placeholder="Search Name, ID, Email, Phone, Dept, Desg..."
+              placeholder="Search Name, ID, Email, Qualification, Expertise..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full px-3.5 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900"
@@ -768,11 +790,16 @@ export default function TeachersPage() {
                       </div>
 
                       {/* Avatar & Info */}
-                      <div className="flex items-center gap-3 mb-5 cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>
+                      <div className="flex items-center gap-3 mb-4 cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>
                         <img src={teacher.photo_url || getAvatar(teacher.name)} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={teacher.name} />
                         <div>
                           <h3 className="font-bold text-foreground dark:text-slate-100 text-[14px] group-hover:text-primary transition-colors">{teacher.name}</h3>
                           <p className="text-slate-500 dark:text-slate-400 text-[12px] font-medium">{getClassName(teacher)}</p>
+                          {(teacher as any).qualification && (
+                            <span className="inline-flex items-center mt-1 px-2 py-0.5 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-800 rounded text-[10px] font-bold">
+                              {(teacher as any).qualification}
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -788,7 +815,19 @@ export default function TeachersPage() {
                         </div>
                       </div>
 
-                      {/* Bottom: Department, Designation & Button */}
+                      {/* Expertise tags */}
+                      {Array.isArray((teacher as any).expertise) && (teacher as any).expertise.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mb-4">
+                          {((teacher as any).expertise as string[]).slice(0, 3).map((e: string) => (
+                            <span key={e} className="px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-full text-[10px] font-bold">{e}</span>
+                          ))}
+                          {(teacher as any).expertise.length > 3 && (
+                            <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full text-[10px] font-bold">+{(teacher as any).expertise.length - 3}</span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Bottom: Department & Button */}
                       <div className="flex items-center justify-between pt-4 border-t border-border mt-auto">
                         <span className="px-2 py-1 bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400 text-[10px] font-bold rounded">
                           {teacher.department || "Academic"}

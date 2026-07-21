@@ -14,6 +14,19 @@ import {
 
 import { validateSequential } from "@/lib/utils/formValidation";
 
+const QUALIFICATION_OPTIONS = [
+  "B.Ed", "M.Ed", "BCA", "MCA", "B.Tech", "M.Tech", "PhD",
+  "B.Sc", "M.Sc", "B.A", "M.A", "B.Com", "M.Com", "Diploma", "Other"
+];
+
+const EXPERTISE_OPTIONS = [
+  "Mathematics", "Physics", "Chemistry", "Biology", "English",
+  "Hindi", "Computer Science", "Commerce", "Accountancy", "Economics",
+  "History", "Geography", "Civics", "Political Science", "Science",
+  "Social Studies", "Environmental Science", "Physical Education",
+  "Art", "Music", "Sanskrit", "Urdu", "French", "German"
+];
+
 // ─── Photo Uploader (square, for profile photo) ────────────────────
 function PhotoUploader({
   label, preview, onChange, onRemove, uploading,
@@ -147,6 +160,82 @@ function InputGroup({
   );
 }
 
+// ─── Expertise multi-select chip picker ────────────────────────────
+function ExpertiseSelector({
+  selected,
+  onChange,
+}: {
+  selected: string[];
+  onChange: (vals: string[]) => void;
+}) {
+  const [customInput, setCustomInput] = React.useState("");
+
+  const toggle = (val: string) => {
+    onChange(
+      selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val]
+    );
+  };
+
+  const addCustom = () => {
+    const trimmed = customInput.trim();
+    if (trimmed && !selected.includes(trimmed)) {
+      onChange([...selected, trimmed]);
+    }
+    setCustomInput("");
+  };
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Selected chips */}
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selected.map(val => (
+            <span key={val} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-[11px] font-bold">
+              {val}
+              <button
+                type="button"
+                onClick={() => toggle(val)}
+                className="hover:text-rose-500 transition-colors font-black leading-none cursor-pointer"
+              >✕</button>
+            </span>
+          ))}
+        </div>
+      )}
+      {/* Preset options */}
+      <div className="flex flex-wrap gap-1.5">
+        {EXPERTISE_OPTIONS.filter(o => !selected.includes(o)).map(opt => (
+          <button
+            key={opt}
+            type="button"
+            onClick={() => toggle(opt)}
+            className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-border rounded-full text-[11px] font-semibold hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-colors cursor-pointer"
+          >
+            + {opt}
+          </button>
+        ))}
+      </div>
+      {/* Custom input */}
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          value={customInput}
+          onChange={e => setCustomInput(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addCustom(); } }}
+          placeholder="Add custom expertise…"
+          className="flex-1 px-3 py-2 text-[12px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary/50 text-slate-800 dark:text-slate-200"
+        />
+        <button
+          type="button"
+          onClick={addCustom}
+          className="px-3 py-2 text-[12px] font-bold bg-slate-100 dark:bg-slate-800 border border-border rounded-lg hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer"
+        >
+          Add
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Section card ──────────────────────────────────────────────────
 function SectionCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
   return (
@@ -184,6 +273,7 @@ function AddTeacherContent() {
   const [dob, setDob] = useState("");
   const [joinDate, setJoinDate] = useState("");
   const [qualification, setQualification] = useState("");
+  const [expertise, setExpertise] = useState<string[]>([]);
   const [experienceYears, setExperienceYears] = useState("");
   const [department, setDepartment] = useState("Academic");
   const [designation, setDesignation] = useState("Teacher");
@@ -220,6 +310,13 @@ function AddTeacherContent() {
           setAddress(teacher.address || "");
           setPhotoUrl(teacher.photo_url || "");
           setQualification(teacher.qualification || "");
+          // Load expertise: prefer array, fall back to legacy string
+          const loadedExpertise = Array.isArray(teacher.expertise) && teacher.expertise.length > 0
+            ? teacher.expertise
+            : teacher.subject_specialization
+              ? [teacher.subject_specialization]
+              : [];
+          setExpertise(loadedExpertise);
           setExperienceYears(teacher.experience_years != null ? teacher.experience_years.toString() : "");
           setJoinDate(teacher.join_date ? new Date(teacher.join_date).toISOString().split("T")[0] : "");
           setStatus(teacher.is_active ? "Active" : "Inactive");
@@ -290,6 +387,8 @@ function AddTeacherContent() {
       address: address.trim() || undefined,
       photo_url: photoUrl || undefined,
       qualification: qualification.trim() || undefined,
+      expertise,
+      subject_specialization: expertise.length > 0 ? expertise[0] : undefined, // backward compat
       experience_years: experienceYears ? parseInt(experienceYears) : 0,
       join_date: joinDate || undefined,
       is_active: status === "Active",
@@ -364,10 +463,13 @@ function AddTeacherContent() {
             />
             <InputGroup
               label="Highest Qualification"
+              type="select"
               value={qualification}
               onChange={e => setQualification(e.target.value)}
-              datalistOptions={["B.Ed", "M.Ed", "B.Sc", "M.Sc", "B.A", "M.A", "Ph.D", "B.Tech", "M.Tech", "Diploma"]}
-              placeholder="e.g. M.Ed"
+              options={[
+                { label: "Select Qualification", value: "" },
+                ...QUALIFICATION_OPTIONS.map(q => ({ label: q, value: q }))
+              ]}
             />
             <InputGroup
               label="Experience (Years)"
@@ -398,6 +500,14 @@ function AddTeacherContent() {
                 ...classes.map(c => ({ label: `${c.name} - ${c.section}`, value: c._id }))
               ]}
             />
+          </div>
+          {/* Expertise – full width */}
+          <div className="px-6 pb-6">
+            <label className="block text-[12px] font-semibold text-slate-700 dark:text-slate-200 mb-2">
+              Specialization / Expertise
+              <span className="ml-1.5 text-[10px] font-normal text-slate-400">(Select multiple)</span>
+            </label>
+            <ExpertiseSelector selected={expertise} onChange={setExpertise} />
           </div>
         </SectionCard>
 

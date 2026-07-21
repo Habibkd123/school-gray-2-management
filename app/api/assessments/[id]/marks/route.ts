@@ -3,6 +3,7 @@ import connectDB from "@/lib/db";
 import { ClassTest, ClassTestMark } from "@/lib/models/index";
 import Student from "@/lib/models/Student";
 import Teacher from "@/lib/models/Teacher";
+import Class from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   try {
     await connectDB();
-    void [Teacher.modelName];
+    void [Teacher.modelName, Class.modelName];
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ success: false, message: "Invalid test ID" }, { status: 400 });
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const students = await Student.find({
       school_id: schoolId,
       class_id: test.class_id,
-      status: "Active",
+      is_active: true,
     })
       .select("_id name roll_no admission_no photo_url")
       .sort({ roll_no: 1, name: 1 })
@@ -54,6 +55,99 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       };
     });
 
+    // ── Diagnostic checks when no students load ───────────────────────────────
+    let diagnostics: any = null;
+    if (rows.length === 0) {
+      const [classDoc, totalEnrolled, activeEnrolled, subjectAssignment] = await Promise.all([
+        // 1. Does the class exist and is it Active?
+        Class.findOne({ _id: test.class_id, school_id: schoolId })
+          .select("name section status academic_year")
+          .lean(),
+
+        // 2. Total students in class (ignoring active status) — enrollment check
+        Student.countDocuments({ school_id: schoolId, class_id: test.class_id }),
+
+        // 3. Active students only — status check
+        Student.countDocuments({ school_id: schoolId, class_id: test.class_id, is_active: true }),
+
+        // 4. Subject assignment — is this subject linked to this class?
+        test.subject_id
+          ? mongoose.model("TeacherAssignment").findOne({
+              school_id: schoolId,
+              class_id: test.class_id,
+              subject_master_id: test.subject_id,
+              status: "Active",
+              is_deleted: { $ne: true },
+            }).lean()
+          : Promise.resolve(null),
+      ]);
+
+      const classExists = !!classDoc;
+      const classIsActive = classDoc ? (classDoc as any).status === "Active" : false;
+      const hasEnrolled = totalEnrolled > 0;
+      const hasActiveStudents = activeEnrolled > 0;
+      const subjectAssigned = !!subjectAssignment;
+
+      diagnostics = {
+        checks: [
+          {
+            label: "Class exists",
+            pass: classExists,
+            detail: classExists
+              ? `${(classDoc as any).name}${(classDoc as any).section ? " – " + (classDoc as any).section : ""}`
+              : "The class linked to this assessment was not found in the database",
+          },
+          {
+            label: "Class is Active",
+            pass: classIsActive,
+            detail: classIsActive
+              ? "Class status is Active"
+              : classExists
+                ? `Class status is "${(classDoc as any).status}" — only Active classes are included`
+                : "Cannot verify — class not found",
+          },
+          {
+            label: "Students enrolled",
+            pass: hasEnrolled,
+            detail: hasEnrolled
+              ? `${totalEnrolled} student(s) found enrolled in this class`
+              : "No students are enrolled in this class — enroll students via the Students module",
+          },
+          {
+            label: "Active students found",
+            pass: hasActiveStudents,
+            detail: hasActiveStudents
+              ? `${activeEnrolled} active student(s) — ${totalEnrolled - activeEnrolled} inactive`
+              : totalEnrolled > 0
+                ? `All ${totalEnrolled} enrolled student(s) are marked inactive — activate them in the Students module`
+                : "No students enrolled to check",
+          },
+          {
+            label: "Subject assigned to class",
+            pass: subjectAssigned,
+            detail: subjectAssigned
+              ? "Subject has an active teacher assignment for this class"
+              : "No active teacher assignment found for this subject + class — verify in Subject Assignment",
+          },
+          {
+            label: "Academic session",
+            pass: classExists,
+            detail: classDoc
+              ? `Class academic year: ${(classDoc as any).academic_year}`
+              : "Class not found — cannot verify academic session",
+          },
+        ],
+        summary: {
+          classExists,
+          classIsActive,
+          totalEnrolled,
+          activeEnrolled,
+          inactiveEnrolled: totalEnrolled - activeEnrolled,
+          subjectAssigned,
+        },
+      };
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -68,6 +162,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           subject_id: test.subject_id,
         },
         rows,
+        diagnostics,
       },
     });
   } catch (err: any) {

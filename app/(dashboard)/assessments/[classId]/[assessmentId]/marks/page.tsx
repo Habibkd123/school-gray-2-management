@@ -26,6 +26,24 @@ import {
   Calculator
 } from "lucide-react";
 
+interface DiagnosticCheck {
+  label: string;
+  pass: boolean;
+  detail: string;
+}
+
+interface Diagnostics {
+  checks: DiagnosticCheck[];
+  summary: {
+    classExists: boolean;
+    classIsActive: boolean;
+    totalEnrolled: number;
+    activeEnrolled: number;
+    inactiveEnrolled: number;
+    subjectAssigned: boolean;
+  };
+}
+
 interface MarkRow {
   student_id: string;
   name: string;
@@ -39,6 +57,107 @@ interface MarkRow {
   has_entry: boolean;
 }
 
+// ── Diagnostic Panel Component ────────────────────────────────────────────────
+function DiagnosticPanel({
+  diagnostics,
+  onRefresh,
+}: {
+  diagnostics: Diagnostics | null;
+  onRefresh: () => void;
+}) {
+  const failedChecks = diagnostics?.checks.filter((c) => !c.pass) ?? [];
+  const allPassed = failedChecks.length === 0;
+
+  return (
+    <div className="py-6 px-2 space-y-5 max-w-2xl mx-auto text-left">
+      {/* Title */}
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 flex items-center justify-center shrink-0">
+          <AlertOctagon className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">No Students Found</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            The system ran {diagnostics?.checks.length ?? 6} checks to identify the issue.
+            {allPassed
+              ? " All checks passed — students may have been removed after this assessment was created."
+              : ` ${failedChecks.length} check${failedChecks.length !== 1 ? "s" : ""} failed.`}
+          </p>
+        </div>
+      </div>
+
+      {/* Checklist */}
+      {diagnostics && (
+        <div className="bg-white dark:bg-slate-900 border border-border rounded-xl overflow-hidden divide-y divide-border">
+          {diagnostics.checks.map((check, i) => (
+            <div key={i} className="flex items-start gap-3 px-4 py-3">
+              <div className={`mt-0.5 w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                check.pass
+                  ? "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+                  : "bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"
+              }`}>
+                {check.pass ? (
+                  <CheckCircle className="w-3.5 h-3.5 stroke-[2.5]" />
+                ) : (
+                  <XCircle className="w-3.5 h-3.5 stroke-[2.5]" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-xs font-bold ${check.pass ? "text-slate-700 dark:text-slate-300" : "text-rose-700 dark:text-rose-400"}`}>
+                  {check.label}
+                </p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                  {check.detail}
+                </p>
+              </div>
+              <span className={`text-[10px] font-extrabold uppercase tracking-wide px-2 py-0.5 rounded border shrink-0 mt-0.5 ${
+                check.pass
+                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-800"
+                  : "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-800"
+              }`}>
+                {check.pass ? "Pass" : "Fail"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Quick action hint */}
+      {!allPassed && diagnostics && (
+        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 text-xs text-blue-700 dark:text-blue-300 space-y-1.5">
+          <p className="font-bold text-blue-800 dark:text-blue-200">How to fix:</p>
+          {!diagnostics.summary.classExists && (
+            <p>• The class linked to this assessment may have been deleted. Re-create the class or create a new assessment for an existing class.</p>
+          )}
+          {diagnostics.summary.classExists && !diagnostics.summary.classIsActive && (
+            <p>• Go to <strong>Classes</strong> and set the class status to <strong>Active</strong>.</p>
+          )}
+          {diagnostics.summary.classIsActive && diagnostics.summary.totalEnrolled === 0 && (
+            <p>• Go to <strong>Students</strong> and enroll students into this class.</p>
+          )}
+          {diagnostics.summary.totalEnrolled > 0 && diagnostics.summary.activeEnrolled === 0 && (
+            <p>• Go to <strong>Students</strong> and activate the {diagnostics.summary.inactiveEnrolled} inactive student(s) in this class.</p>
+          )}
+          {!diagnostics.summary.subjectAssigned && (
+            <p>• Go to <strong>Subject Assignment</strong> and assign this subject to the class for the current academic year.</p>
+          )}
+        </div>
+      )}
+
+      {/* Refresh button */}
+      <div className="flex justify-center">
+        <button
+          onClick={onRefresh}
+          className="flex items-center gap-2 px-4 py-2 text-xs font-bold border border-border rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 transition-colors cursor-pointer"
+        >
+          <AlertCircle className="w-3.5 h-3.5" />
+          Re-run Checks
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function MarksEntryPage({ params }: { params: Promise<{ classId: string; assessmentId: string }> }) {
   const { classId, assessmentId } = React.use(params);
   const router = useRouter();
@@ -48,6 +167,7 @@ export default function MarksEntryPage({ params }: { params: Promise<{ classId: 
 
   const [test, setTest] = useState<any>(null);
   const [rows, setRows] = useState<MarkRow[]>([]);
+  const [diagnostics, setDiagnostics] = useState<Diagnostics | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -79,6 +199,7 @@ export default function MarksEntryPage({ params }: { params: Promise<{ classId: 
           remarks: r.remarks || "",
           attendance_status: r.attendance_status || "Present",
         })));
+        setDiagnostics(data.data.diagnostics || null);
       }
     } catch (e) {
       console.error(e);
@@ -545,10 +666,16 @@ export default function MarksEntryPage({ params }: { params: Promise<{ classId: 
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredRows.length === 0 ? (
+              {filteredRows.length === 0 && searchTerm.trim() ? (
                 <tr>
                   <td colSpan={9} className="px-6 py-16 text-center text-slate-450 font-bold">
-                    No active students matching the search filter query.
+                    No students matching &ldquo;{searchTerm}&rdquo;.
+                  </td>
+                </tr>
+              ) : filteredRows.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-6">
+                    <DiagnosticPanel diagnostics={diagnostics} onRefresh={fetchMarksRoster} />
                   </td>
                 </tr>
               ) : filteredRows.map((row, idx) => {

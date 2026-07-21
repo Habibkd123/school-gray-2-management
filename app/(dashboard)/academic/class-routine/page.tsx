@@ -6,6 +6,7 @@ import { useSchedules, ApiSchedule } from "../../../hooks/useSchedules";
 import { useClasses } from "../../../hooks/useClasses";
 import { useTeachers } from "../../../hooks/useTeachers";
 import { useTeacherAssignment } from "../../../hooks/useTeacherAssignment";
+import { useSubjectAssignment } from "../../../hooks/useSubjectAssignment";
 import { useAppState } from "../../../context/store";
 import { PrintButton } from "../../../components/ui/PrintButton";
 import { Modal } from "../../../components/ui/modal";
@@ -83,6 +84,7 @@ export default function ClassRoutinePage() {
   const { classes, isLoading: classesLoading } = useClasses();
   const { teachers, isLoading: teachersLoading } = useTeachers();
   const { assignments: teacherAssignments, fetchAssignments: fetchTeacherAssignments } = useTeacherAssignment();
+  const { assignments: subjectAssignments, fetchAssignments: fetchSubjectAssignments } = useSubjectAssignment();
   const { schedules, isLoading: schedulesLoading, fetchSchedules, createSchedule, updateSchedule, deleteSchedule } = useSchedules();
 
   const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
@@ -133,7 +135,8 @@ export default function ClassRoutinePage() {
   // Load dependency data on mount
   useEffect(() => {
     fetchTeacherAssignments({ academic_year: filterYear, limit: 1000 });
-  }, [fetchTeacherAssignments, filterYear]);
+    fetchSubjectAssignments({ academic_year: filterYear, limit: 1000 });
+  }, [fetchTeacherAssignments, fetchSubjectAssignments, filterYear]);
 
   // Sync routine parameters list
   const loadFilteredSchedules = useCallback(() => {
@@ -170,20 +173,46 @@ export default function ClassRoutinePage() {
     return Array.from(new Set(classes.filter(c => c.name === formClassName).map(c => c.section).filter(Boolean))).sort();
   }, [classes, formClassName]);
 
-  // Wizard cascading logic: subjects assigned to class
+  // Wizard cascading logic: subjects assigned to the selected class (from subject-assignment module)
   const wizardSubjects = useMemo(() => {
     if (!formClassName) return [];
-    const classAssigned = teacherAssignments.filter(a =>
+
+    // Resolve the class object that matches formClassName + formSection
+    const matchedClass = classes.find(c =>
+      c.name === formClassName &&
+      (formSection ? c.section === formSection : true)
+    );
+
+    // Filter subject assignments for this class + academic year
+    const classSubjectAssignments = subjectAssignments.filter(a => {
+      const classMatch = matchedClass
+        ? a.class_id?._id === matchedClass._id
+        : a.class_id?.name === formClassName && (formSection ? a.class_id?.section === formSection : true);
+      return classMatch && a.academic_year === formAcademicYear && a.status !== "Inactive";
+    });
+
+    const subjectNames = Array.from(
+      new Set(classSubjectAssignments.map(a => a.subject_master_id?.name).filter(Boolean) as string[])
+    ).sort();
+
+    if (subjectNames.length > 0) return subjectNames;
+
+    // Fallback: try teacher-assignments as a secondary source (legacy data)
+    const classTeacherAssigned = teacherAssignments.filter(a =>
       a.class_id?.name === formClassName &&
       (formSection ? a.class_id?.section === formSection : true) &&
       a.academic_year === formAcademicYear
     );
-    const assignedNames = Array.from(new Set(classAssigned.map(a => a.subject_master_id?.name).filter(Boolean)));
-    if (assignedNames.length > 0) return assignedNames;
+    const fromTeacher = Array.from(
+      new Set(classTeacherAssigned.map(a => a.subject_master_id?.name).filter(Boolean) as string[])
+    ).sort();
+    if (fromTeacher.length > 0) return fromTeacher;
 
-    // Resilient fallback: list all subject master catalog names to prevent dead-locks
-    return Array.from(new Set(teacherAssignments.map(a => a.subject_master_id?.name).filter(Boolean)));
-  }, [formClassName, formSection, formAcademicYear, teacherAssignments]);
+    // Last resort: all subjects from subject-assignment catalog
+    return Array.from(
+      new Set(subjectAssignments.map(a => a.subject_master_id?.name).filter(Boolean) as string[])
+    ).sort();
+  }, [formClassName, formSection, formAcademicYear, subjectAssignments, teacherAssignments, classes]);
 
   // Wizard cascading logic: teachers assigned to subject in class
   const wizardTeachers = useMemo(() => {

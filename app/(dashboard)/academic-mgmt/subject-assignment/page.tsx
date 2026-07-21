@@ -40,7 +40,7 @@ export default function SubjectAssignmentPage() {
     deleteAssignment
   } = useSubjectAssignment();
 
-  const { subjects: subjectList } = useSubjectMaster({ limit: 20 });
+  const { subjects: subjectList } = useSubjectMaster({ limit: 1000 });
   const { classes } = useClasses({ filterByYear: false });
   const { teachers } = useTeachers({ limit: "all" });
 
@@ -84,7 +84,9 @@ export default function SubjectAssignmentPage() {
   const [formYear, setFormYear] = useState(academicYear);
   const [formClassName, setFormClassName] = useState("");
   const [formSection, setFormSection] = useState("");
-  const [formSubjectId, setFormSubjectId] = useState("");
+  const [formSubjectIds, setFormSubjectIds] = useState<string[]>([]);
+  const [subjectSearch, setSubjectSearch] = useState("");
+  const [isSubjectPickerOpen, setIsSubjectPickerOpen] = useState(false);
   const [formTeacherId, setFormTeacherId] = useState("");
   const [formWeeklyPeriods, setFormWeeklyPeriods] = useState("0");
   const [formDescription, setFormDescription] = useState("");
@@ -155,6 +157,34 @@ export default function SubjectAssignmentPage() {
     return classes.find(c => c.name === formClassName && (c.section || "") === targetSection);
   }, [classes, formClassName, formSection]);
 
+  // Already-assigned subject IDs for the selected class + year (for duplicate prevention)
+  const alreadyAssignedSubjectIds = useMemo(() => {
+    if (!resolvedClass || !formYear) return new Set<string>();
+    return new Set(
+      assignments
+        .filter(a => a.class_id?._id === resolvedClass._id && a.academic_year === formYear)
+        .map(a => a.subject_master_id._id)
+    );
+  }, [assignments, resolvedClass, formYear]);
+
+  // Active subjects filtered by search text for the picker
+  const filteredPickerSubjects = useMemo(() => {
+    const active = subjectList.filter(s => s.status === "Active");
+    if (!subjectSearch.trim()) return active;
+    const q = subjectSearch.toLowerCase();
+    return active.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      (s.subject_code && s.subject_code.toLowerCase().includes(q))
+    );
+  }, [subjectList, subjectSearch]);
+
+  // Toggle a subject in/out of the multi-select form state
+  const toggleSubjectSelection = (id: string) => {
+    setFormSubjectIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
   // Group assignments by class for Grid View
   const groupedAssignments = useMemo(() => {
     const groups: Record<string, { class: any, assignments: PopulatedAssignment[] }> = {};
@@ -216,7 +246,9 @@ export default function SubjectAssignmentPage() {
     setFormYear(academicYear);
     setFormClassName("");
     setFormSection("");
-    setFormSubjectId("");
+    setFormSubjectIds([]);
+    setSubjectSearch("");
+    setIsSubjectPickerOpen(false);
     setFormTeacherId("");
     setTeacherSearchText("");
     setFormWeeklyPeriods("0");
@@ -227,11 +259,14 @@ export default function SubjectAssignmentPage() {
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formYear || !formClassName || !formSubjectId) {
-      setFormError("Class, Subject, and Academic Year are required.");
+    if (!formYear || !formClassName) {
+      setFormError("Class and Academic Year are required.");
       return;
     }
-
+    if (formSubjectIds.length === 0) {
+      setFormError("Please select at least one subject to assign.");
+      return;
+    }
     if (!resolvedClass) {
       setFormError("The selected class and section combination does not exist.");
       return;
@@ -243,7 +278,7 @@ export default function SubjectAssignmentPage() {
     const res = await createAssignment({
       academic_year: formYear,
       class_id: resolvedClass._id,
-      subject_master_id: formSubjectId,
+      subject_master_ids: formSubjectIds,
       teacher_id: formTeacherId || undefined,
       weekly_periods: formWeeklyPeriods ? parseInt(formWeeklyPeriods, 10) : 0,
       description: formDescription,
@@ -325,7 +360,9 @@ export default function SubjectAssignmentPage() {
     setFormYear(item.academic_year);
     setFormClassName(item.class_id?.name || "");
     setFormSection(item.class_id?.section || "No Section");
-    setFormSubjectId(item.subject_master_id?._id || "");
+    setFormSubjectIds(item.subject_master_id?._id ? [item.subject_master_id._id] : []);
+    setSubjectSearch("");
+    setIsSubjectPickerOpen(false);
     setFormTeacherId(item.teacher_id?._id || "");
     setFormWeeklyPeriods(String(item.weekly_periods || 0));
     setFormDescription(item.description || "");
@@ -1020,22 +1057,133 @@ export default function SubjectAssignmentPage() {
             </div>
           </div>
 
+          {/* Multi-Subject Picker */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Subject <span className="text-red-500">*</span></label>
+            <div className="flex items-center justify-between">
+              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Subjects <span className="text-red-500">*</span></label>
+              {formSubjectIds.length > 0 && (
+                <span className="text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                  {formSubjectIds.length} selected
+                </span>
+              )}
+            </div>
+
+            {/* Selected subject chips */}
+            {formSubjectIds.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 p-2 bg-slate-50 dark:bg-slate-800/40 rounded-lg border border-border">
+                {formSubjectIds.map(id => {
+                  const s = subjectList.find(x => x._id === id);
+                  return s ? (
+                    <span key={id} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-primary/10 text-primary rounded-md text-[12px] font-semibold">
+                      <BookOpen className="w-3 h-3" />
+                      {s.name}{s.subject_code ? ` (${s.subject_code})` : ""}
+                      <button
+                        type="button"
+                        onClick={() => toggleSubjectSelection(id)}
+                        className="ml-0.5 hover:text-red-500 transition-colors"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            )}
+
+            {/* Picker toggle */}
             <div className="relative">
-              <select
-                required
-                value={formSubjectId}
-                onChange={(e) => setFormSubjectId(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+              <button
+                type="button"
+                onClick={() => setIsSubjectPickerOpen(!isSubjectPickerOpen)}
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 flex items-center justify-between cursor-pointer"
               >
-                <option value="">Select Subject</option>
-                {subjectList.filter(s => s.status === "Active").map(s => (
-                  <option key={s._id} value={s._id}>
-                    {s.name} {s.subject_code ? `(${s.subject_code})` : ""}
-                  </option>
-                ))}
-              </select>
+                <span className={formSubjectIds.length === 0 ? "text-slate-400" : "text-foreground"}>
+                  {formSubjectIds.length === 0 ? "Click to select subjects..." : `${formSubjectIds.length} subject${formSubjectIds.length > 1 ? "s" : ""} selected`}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isSubjectPickerOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isSubjectPickerOpen && (
+                <>
+                  <div className="fixed inset-0 z-[60]" onClick={() => { setIsSubjectPickerOpen(false); setSubjectSearch(""); }} />
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-slate-950 border border-border rounded-lg shadow-2xl z-[70] flex flex-col">
+                    {/* Search input */}
+                    <div className="p-3 border-b border-border">
+                      <div className="relative">
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+                        <input
+                          type="text"
+                          placeholder="Search subject or code..."
+                          value={subjectSearch}
+                          onChange={(e) => setSubjectSearch(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-slate-50 dark:bg-slate-900 text-foreground"
+                          autoFocus
+                        />
+                      </div>
+                    </div>
+
+                    {/* Subject list */}
+                    <div className="overflow-y-auto max-h-[240px] custom-scrollbar p-2 space-y-1">
+                      {filteredPickerSubjects.length === 0 ? (
+                        <p className="text-slate-400 text-[13px] py-6 text-center">No subjects found.</p>
+                      ) : (
+                        filteredPickerSubjects.map(s => {
+                          const isSelected = formSubjectIds.includes(s._id);
+                          const isAssigned = alreadyAssignedSubjectIds.has(s._id);
+                          return (
+                            <button
+                              key={s._id}
+                              type="button"
+                              disabled={isAssigned}
+                              onClick={() => !isAssigned && toggleSubjectSelection(s._id)}
+                              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-colors ${
+                                isAssigned
+                                  ? "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-800/30"
+                                  : isSelected
+                                  ? "bg-primary/10 text-primary cursor-pointer"
+                                  : "hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5">
+                                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                                  isSelected ? "bg-primary border-primary" : isAssigned ? "bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600" : "border-slate-300 dark:border-slate-600"
+                                }`}>
+                                  {isSelected && <Check className="w-2.5 h-2.5 text-white" />}
+                                </div>
+                                <div>
+                                  <span className="text-[13px] font-semibold text-slate-900 dark:text-slate-100 block">{s.name}</span>
+                                  {s.subject_code && (
+                                    <span className="text-[10px] font-mono text-slate-400">{s.subject_code}</span>
+                                  )}
+                                </div>
+                              </div>
+                              {isAssigned && (
+                                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 dark:bg-amber-900/20 dark:text-amber-400 px-2 py-0.5 rounded-full shrink-0">
+                                  Assigned
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-3 border-t border-border flex items-center justify-between">
+                      <span className="text-[12px] text-slate-400">
+                        {formSubjectIds.length} of {filteredPickerSubjects.filter(s => !alreadyAssignedSubjectIds.has(s._id)).length} available selected
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => { setIsSubjectPickerOpen(false); setSubjectSearch(""); }}
+                        className="px-3 py-1.5 bg-primary text-white text-[12px] font-bold rounded-lg cursor-pointer"
+                      >
+                        Done
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
@@ -1231,7 +1379,13 @@ export default function SubjectAssignmentPage() {
               onChange={(e) => setEditSubjectId(e.target.value)}
               className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
             >
-              {subjectList.map(s => <option key={s._id} value={s._id}>{s.name} {s.subject_code ? `(${s.subject_code})` : ""}</option>)}
+              {subjectList
+                .filter(s => s.status === "Active" || s._id === editSubjectId)
+                .map(s => (
+                  <option key={s._id} value={s._id}>
+                    {s.name} {s.subject_code ? `(${s.subject_code})` : ""}{s.status !== "Active" ? " [Inactive]" : ""}
+                  </option>
+                ))}
             </select>
           </div>
 
