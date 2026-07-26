@@ -25,10 +25,12 @@ export interface ISalaryPayment extends Document {
   payment_method?: "Cash" | "Bank Transfer" | "Cheque";
   receipt_number: string;
   remarks?: string;
-  status: "Draft" | "Approved" | "Paid";
+  status: "Draft" | "Under Review" | "Approved" | "Finalized" | "Paid";
   calculation_type: string; // "Monthly" or "Day Wise"
   generated_by?: mongoose.Types.ObjectId;
   approved_by?: mongoose.Types.ObjectId;
+  finalized_by?: mongoose.Types.ObjectId;
+  finalized_at?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,10 +61,12 @@ const salaryPaymentSchema = new Schema<ISalaryPayment>(
     payment_method: { type: String, enum: ["Cash", "Bank Transfer", "Cheque"], default: "Bank Transfer" },
     receipt_number: { type: String, required: true, unique: true },
     remarks: { type: String, trim: true },
-    status: { type: String, enum: ["Draft", "Approved", "Paid"], default: "Draft" },
+    status: { type: String, enum: ["Draft", "Under Review", "Approved", "Finalized", "Paid"], default: "Draft" },
     calculation_type: { type: String, enum: ["Monthly", "Day Wise"], default: "Monthly" },
     generated_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+    approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    finalized_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    finalized_at: { type: Date }
   },
   { timestamps: true }
 );

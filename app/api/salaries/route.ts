@@ -208,8 +208,22 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, message: "Salary period (YYYY-MM) is required" }, { status: 400 });
       }
 
+      if (action === "submit_review") {
+        const reviewQuery: any = { school_id: schoolId, salary_period, status: "Draft" };
+        if (teacher_ids && Array.isArray(teacher_ids) && teacher_ids.length > 0) {
+          reviewQuery.teacher_id = { $in: teacher_ids };
+        }
+        const result = await SalaryPayment.updateMany(reviewQuery, {
+          status: "Under Review"
+        });
+        return NextResponse.json({
+          success: true,
+          message: `Successfully submitted ${result.modifiedCount} payroll records for review.`
+        });
+      }
+
       if (action === "approve") {
-        const approveQuery: any = { school_id: schoolId, salary_period, status: "Draft" };
+        const approveQuery: any = { school_id: schoolId, salary_period, status: { $in: ["Draft", "Under Review"] } };
         if (teacher_ids && Array.isArray(teacher_ids) && teacher_ids.length > 0) {
           approveQuery.teacher_id = { $in: teacher_ids };
         }
@@ -223,8 +237,39 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      if (action === "finalize") {
+        // Month end check
+        const [yearStr, monthStr] = salary_period.split("-");
+        const year = parseInt(yearStr);
+        const month = parseInt(monthStr);
+        const monthEndDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+        const now = new Date();
+        const isMonthEnded = now >= monthEndDate;
+
+        if (!isMonthEnded && !body.allow_early_finalization) {
+          return NextResponse.json({
+            success: false,
+            message: `Salary period ${salary_period} has not ended yet. Check 'Allow early finalization before month end' to proceed.`
+          }, { status: 400 });
+        }
+
+        const finalizeQuery: any = { school_id: schoolId, salary_period, status: "Approved" };
+        if (teacher_ids && Array.isArray(teacher_ids) && teacher_ids.length > 0) {
+          finalizeQuery.teacher_id = { $in: teacher_ids };
+        }
+        const result = await SalaryPayment.updateMany(finalizeQuery, {
+          status: "Finalized",
+          finalized_by: new mongoose.Types.ObjectId(userId),
+          finalized_at: new Date()
+        });
+        return NextResponse.json({
+          success: true,
+          message: `Successfully finalized and locked ${result.modifiedCount} payroll records.`
+        });
+      }
+
       if (action === "pay") {
-        const payQuery: any = { school_id: schoolId, salary_period, status: { $in: ["Draft", "Approved"] } };
+        const payQuery: any = { school_id: schoolId, salary_period, status: { $in: ["Approved", "Finalized", "Draft", "Under Review"] } };
         if (teacher_ids && Array.isArray(teacher_ids) && teacher_ids.length > 0) {
           payQuery.teacher_id = { $in: teacher_ids };
         }

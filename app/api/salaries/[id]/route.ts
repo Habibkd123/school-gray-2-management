@@ -71,12 +71,38 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ success: false, message: "Salary record not found" }, { status: 404 });
     }
 
-    // Audit logs / status validations
-    if (payment.status === "Paid" && body.status === "Paid") {
+    // Audit logs / status validations & Lock Rules
+    const isCurrentlyLocked = payment.status === "Finalized" || payment.status === "Paid";
+    const isTransitioningToPaid = payment.status === "Finalized" && body.status === "Paid";
+    
+    if (isCurrentlyLocked && !isTransitioningToPaid) {
       return NextResponse.json({
         success: false,
-        message: "Paid salary records cannot be modified directly. Please cancel the payment or record an adjustment."
+        message: `Salary record is ${payment.status} and locked. Locked salary records cannot be edited.`
       }, { status: 400 });
+    }
+
+    if (body.status === "Finalized") {
+      const [yearStr, monthStr] = payment.salary_period.split("-");
+      const year = parseInt(yearStr);
+      const month = parseInt(monthStr);
+      const monthEndDate = new Date(Date.UTC(year, month, 0, 23, 59, 59, 999));
+      const now = new Date();
+      const isMonthEnded = now >= monthEndDate;
+
+      if (!isMonthEnded && !body.allow_early_finalization) {
+        return NextResponse.json({
+          success: false,
+          message: `Salary period ${payment.salary_period} has not ended yet. Check 'Allow early finalization before month end' to proceed.`
+        }, { status: 400 });
+      }
+
+      payment.finalized_by = new mongoose.Types.ObjectId(userId);
+      payment.finalized_at = new Date();
+    }
+
+    if (body.status === "Approved") {
+      payment.approved_by = new mongoose.Types.ObjectId(userId);
     }
 
     // Update fields
@@ -94,7 +120,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     });
 
     if (body.status === "Paid") {
-      payment.approved_by = new mongoose.Types.ObjectId(userId);
+      payment.approved_by = payment.approved_by || new mongoose.Types.ObjectId(userId);
       if (!payment.payment_date) {
         payment.payment_date = new Date();
       }

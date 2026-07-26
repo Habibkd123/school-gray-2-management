@@ -140,6 +140,8 @@ export async function GET(req: NextRequest) {
     // Net payable
     const totalPayableAmount = Math.max(0, Math.round((monthlySalary - suggestedDeduction) * 100) / 100);
 
+    const isMonthEnded = new Date() >= endDate;
+
     return NextResponse.json({
       success: true,
       data: {
@@ -162,6 +164,7 @@ export async function GET(req: NextRequest) {
         suggestedDeduction,
         totalPayableAmount,
         hasAttendance: attendanceRecordsCount > 0,
+        isMonthEnded,
       },
     });
   } catch (err: any) {
