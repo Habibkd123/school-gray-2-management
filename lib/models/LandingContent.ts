@@ -348,11 +348,9 @@ const landingContentSchema = new Schema<ILandingContent>(
   { timestamps: true }
 );
 
-if (mongoose.models.LandingContent) {
-  delete (mongoose.models as any).LandingContent;
-}
-
 const LandingContent: Model<ILandingContent> =
+  (mongoose.models.LandingContent as Model<ILandingContent>) ||
   mongoose.model<ILandingContent>("LandingContent", landingContentSchema);
+
 
 export default LandingContent;

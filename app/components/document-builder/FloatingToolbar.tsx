@@ -35,13 +35,13 @@ function pxToCmdSize(px: number): string {
 // ── Shared button styles ─────────────────────────────────────────────────────
 const BTN: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "center",
-  width: 28, height: 26, border: "none", borderRadius: 5,
-  cursor: "pointer", background: "transparent", color: "#475569",
+  width: 28, height: 26, border: "none", borderRadius: 6,
+  cursor: "pointer", background: "transparent", color: "#4B5563",
   flexShrink: 0, transition: "background 0.12s, color 0.12s, transform 0.1s",
   fontSize: 12, fontWeight: 600,
 };
-const BTN_ACTIVE: React.CSSProperties = { background: "#EFF6FF", color: "#2563EB" };
-const DIVIDER = <div style={{ width: 1, height: 18, background: "rgba(0, 0, 0, 0.08)", margin: "0 4px", flexShrink: 0 }} />;
+const BTN_ACTIVE: React.CSSProperties = { background: "#EDE9FE", color: "#7C3AED" };
+const DIVIDER = <div style={{ width: 1, height: 18, background: "rgba(0, 0, 0, 0.07)", margin: "0 4px", flexShrink: 0 }} />;
 
 // ── Props ────────────────────────────────────────────────────────────────────
 interface FloatingToolbarProps {
@@ -224,32 +224,32 @@ export function FloatingToolbar({
     zIndex: 10000,
     display: "flex",
     alignItems: "center",
-    gap: 4,
-    background: "rgba(255, 255, 255, 0.9)",
-    backdropFilter: "blur(12px)",
-    WebkitBackdropFilter: "blur(12px)",
-    borderRadius: 14,
-    padding: "6px 10px",
-    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 16px -6px rgba(0, 0, 0, 0.03), 0 0 1px 1px rgba(0, 0, 0, 0.05)",
-    border: "1px solid rgba(0, 0, 0, 0.08)",
+    gap: 3,
+    background: "rgba(255, 255, 255, 0.95)",
+    backdropFilter: "blur(16px)",
+    WebkitBackdropFilter: "blur(16px)",
+    borderRadius: 12,
+    padding: "5px 9px",
+    boxShadow: "0 8px 24px -4px rgba(0, 0, 0, 0.10), 0 0 0 1px rgba(0, 0, 0, 0.06)",
+    border: "1px solid rgba(124, 58, 237, 0.12)",
     flexWrap: "nowrap",
     maxWidth: 650,
     overflowX: "auto",
-    animation: "ftbar-in 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+    animation: "ftbar-in 0.18s cubic-bezier(0.16, 1, 0.3, 1)",
   };
 
   const animStyles = (
     <style>{`
       @keyframes ftbar-in {
-        from { opacity: 0; transform: translateY(4px) scale(0.98); }
+        from { opacity: 0; transform: translateY(6px) scale(0.97); }
         to   { opacity: 1; transform: translateY(0) scale(1); }
       }
       .ft-btn:hover {
-        background-color: #F1F5F9 !important;
-        color: #0F172A !important;
+        background-color: #F3F4F6 !important;
+        color: #111827 !important;
       }
       .ft-btn:active {
-        transform: scale(0.96);
+        transform: scale(0.94);
       }
     `}</style>
   );

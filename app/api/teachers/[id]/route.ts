@@ -13,18 +13,13 @@ export async function GET(
   { params }: RouteParams
 ) {
   const { schoolId, role, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
-  if (error) {
-    console.log("[GET /api/teachers/[id]] auth error:", error);
-    return error;
-  }
+  if (error) return error;
 
   const { id } = await params;
-  console.log("[GET /api/teachers/[id]] id:", id, "schoolId:", schoolId, "role:", role);
 
   try {
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      console.log("[GET /api/teachers/[id]] invalid ID:", id);
       return NextResponse.json({ success: false, message: "Invalid teacher ID" }, { status: 400 });
     }
 
@@ -40,10 +35,7 @@ export async function GET(
       .populate("class_id", "name section")
       .populate("class_ids", "name section");
 
-    console.log("[GET /api/teachers/[id]] query result:", teacher);
-
     if (!teacher) {
-      console.log("[GET /api/teachers/[id]] teacher not found in DB for id:", id, "schoolId:", schoolId);
       return NextResponse.json({ success: false, message: "Teacher not found" }, { status: 404 });
     }
 

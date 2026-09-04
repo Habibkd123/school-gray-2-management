@@ -5,7 +5,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,   // remove "X-Powered-By: Next.js" from every response
   compress: true,            // enable gzip/brotli compression for all responses
 
-  allowedDevOrigins: ["moustache-dentist-twilight.ngrok-free.dev", "https://school-management-one-ivory.vercel.app/"],
+  allowedDevOrigins: [
+    ...(process.env.NEXT_PUBLIC_DEV_ORIGIN ? [process.env.NEXT_PUBLIC_DEV_ORIGIN] : []),
+    "https://school-management-one-ivory.vercel.app/",
+  ],
 
   // ── Increase body size limit for file uploads (10MB) ─────────────
   experimental: {

@@ -74,8 +74,8 @@ export default function AcademicClassesPage() {
 
   React.useEffect(() => {
     if (!authReady) return;
-    setPage(1);
     fetchClasses({ search: searchQuery, sort: sortOrder, page: 1, limit: PAGE_SIZE, academic_year: academicYear });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchClasses, academicYear, authReady]);
 
   const handleSearchChange = (val: string) => {

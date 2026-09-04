@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { Plus, Search, RefreshCcw, MoreVertical, Edit, Trash2, Loader2, AlertCircle, LayoutGrid } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
-import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
+import { ColumnDef } from "@/app/components/ui/data-table";
 import { EnhancedTable } from "@/app/components/ui/EnhancedTable";
 import { useSections, ApiSection } from "@/app/hooks/useSections";
 import { useAuth } from "@/app/context/auth";
@@ -38,8 +38,6 @@ export default function SectionsPage() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(() => getPersistedPageSize(25));
-
-  const searchRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   React.useEffect(() => {
     fetchSections({ page, limit: pageSize, search: searchQuery });
@@ -122,7 +120,7 @@ export default function SectionsPage() {
     } as ColumnDef<ApiSection>] : []),
   ];
 
-  const SectionForm = ({ onSubmit, submitLabel }: { onSubmit: (e: React.FormEvent) => void; submitLabel: string }) => (
+  const sectionFormJsx = (onSubmit: (e: React.FormEvent) => void, submitLabel: string) => (
     <form onSubmit={onSubmit} className="space-y-5 text-left">
       {formError && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[13px] font-medium">
@@ -231,10 +229,10 @@ export default function SectionsPage() {
       </div>
 
       <Modal isOpen={isAddOpen} onClose={() => { setIsAddOpen(false); resetForm(); }} title="Add Section">
-        <SectionForm onSubmit={handleAdd} submitLabel="Add Section" />
+        {sectionFormJsx(handleAdd, "Add Section")}
       </Modal>
       <Modal isOpen={isEditOpen} onClose={() => { setIsEditOpen(false); resetForm(); }} title="Edit Section">
-        <SectionForm onSubmit={handleEdit} submitLabel="Save Changes" />
+        {sectionFormJsx(handleEdit, "Save Changes")}
       </Modal>
       <Modal isOpen={isDeleteOpen} onClose={() => setIsDeleteOpen(false)} title="Delete Section">
         <div className="space-y-5 text-left">

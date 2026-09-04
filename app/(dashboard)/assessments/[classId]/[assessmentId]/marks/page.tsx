@@ -312,8 +312,8 @@ export default function MarksEntryPage({ params }: { params: Promise<{ classId: 
     return { grade, level };
   };
 
-  // Save changes handler
-  const handleSaveAllMarks = async (showToast = true) => {
+  // Save changes handler — wrapped in useCallback to prevent stale closure in auto-save effect
+  const handleSaveAllMarks = useCallback(async (showToast = true) => {
     if (Object.keys(validationErrors).length > 0) {
       setToastError("Please fix validation warning thresholds first.");
       setTimeout(() => setToastError(""), 3500);
@@ -370,19 +370,19 @@ export default function MarksEntryPage({ params }: { params: Promise<{ classId: 
     } finally {
       setIsSaving(false);
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [validationErrors, rows, assessmentId, fetchMarksRoster]);
 
   // Auto-Save Daemon
   useEffect(() => {
     const daemon = setInterval(() => {
       if (hasUnsavedChanges.current && !isTestLocked && test) {
-        console.log("Auto-Saving assessment draft in background...");
         handleSaveAllMarks(false);
       }
     }, 10000); // 10 seconds interval
 
     return () => clearInterval(daemon);
-  }, [rows, isTestLocked, test]);
+  }, [handleSaveAllMarks, isTestLocked, test]);
 
   // Load audit history logs
   const handleOpenAuditDrawer = async () => {

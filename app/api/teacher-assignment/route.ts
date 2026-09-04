@@ -35,7 +35,6 @@ export async function GET(req: NextRequest) {
         for (const idxName of oldIndexNames) {
           if (indexes.some(idx => idx.name === idxName)) {
             await collection.dropIndex(idxName);
-            console.log(`Successfully dropped old index: ${idxName}`);
           }
         }
         // Force model index creation

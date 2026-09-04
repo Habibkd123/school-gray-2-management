@@ -10,7 +10,7 @@ import {
   RefreshCw, Upload, Edit, EyeOff, Eye, Save, X,
   Loader2, CheckCircle2, AlertCircle, User, Lock, MapPin,
   TrendingUp, ClipboardList, CreditCard, Users, Mail, MessageSquare, 
-  PieChart, Wallet, Book, Sparkles
+  PieChart, Wallet, Book, Sparkles, ShieldCheck
 } from "lucide-react";
 
 interface ParentProfile {
@@ -421,6 +421,12 @@ export default function ProfilePage() {
             >
               Login Settings
             </button>
+            <a
+              href="/settings/backup"
+              className="pb-3 text-[14px] font-semibold border-b-2 border-transparent text-slate-500 hover:text-primary dark:hover:text-slate-300 dark:text-slate-400 whitespace-nowrap transition-all flex items-center gap-1.5"
+            >
+              <ShieldCheck className="w-4 h-4 text-emerald-500" /> Data Backup & PDF Export
+            </a>
           </>
         )}
         <button

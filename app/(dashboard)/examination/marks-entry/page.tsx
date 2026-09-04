@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -282,8 +282,8 @@ export default function MarksEntryPage() {
     return { grade, isPass, resultLabel: isPass ? "Pass" : "Fail" };
   };
 
-  // Save Marks handler
-  const handleSaveMarks = async (status: "draft" | "final", showToast = true) => {
+  // Save Marks handler — wrapped in useCallback to prevent stale closure in auto-save effect
+  const handleSaveMarks = useCallback(async (status: "draft" | "final", showToast = true) => {
     if (!selectedExamId || !resolvedClassId || !selectedSubjectId) return false;
 
     // Collect and validate entries
@@ -352,19 +352,19 @@ export default function MarksEntryPage() {
       }
       return false;
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedExamId, resolvedClassId, selectedSubjectId, classStudents, marksData, maxMarksForSubject, passingMarksForSubject, createResults, fetchResults]);
 
   // Background Auto-Save Daemon
   useEffect(() => {
     const timer = setInterval(() => {
       if (hasUnsavedChanges.current && !isExamLocked && selectedExamId && resolvedClassId && selectedSubjectId) {
-        console.log("Auto-Saving draft in background...");
         handleSaveMarks("draft", false);
       }
     }, 10000); // Trigger auto save every 10 seconds
 
     return () => clearInterval(timer);
-  }, [selectedExamId, resolvedClassId, selectedSubjectId, marksData, isExamLocked]);
+  }, [handleSaveMarks, isExamLocked, selectedExamId, resolvedClassId, selectedSubjectId]);
 
   // Load Audit Trail logs drawer
   const handleOpenAuditLogs = async () => {

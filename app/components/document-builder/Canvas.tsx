@@ -1274,9 +1274,38 @@ export function Canvas({
     ];
   };
 
+  // ── Listen to TopToolbar custom events for insert ────────────────────────
+  useEffect(() => {
+    const handleInsertTable = (e: CustomEvent) => {
+      const { rows, cols } = e.detail;
+      handleInsert({
+        type: "table", width: 600, height: rows * 36,
+        tableData: {
+          rows, cols, headerRow: true, cellPadding: 8, borderWidth: 1, borderColor: "#E0E0E0",
+          cells: Array.from({ length: rows }, (_, r) =>
+            Array.from({ length: cols }, (_, c) => r === 0 ? `Header ${c + 1}` : "")
+          ),
+        },
+      });
+    };
+    const handleInsertImage = (e: CustomEvent) => {
+      handleInsert({
+        type: "image", width: 250, height: 180,
+        content: e.detail.src,
+        imageStyle: { opacity: 1, borderRadius: 0, borderWidth: 0, borderColor: "#E0E0E0", boxShadow: "none", rotation: 0, objectFit: "contain" },
+      });
+    };
+    window.addEventListener("db:insert-table", handleInsertTable as EventListener);
+    window.addEventListener("db:insert-image", handleInsertImage as EventListener);
+    return () => {
+      window.removeEventListener("db:insert-table", handleInsertTable as EventListener);
+      window.removeEventListener("db:insert-image", handleInsertImage as EventListener);
+    };
+  }, [handleInsert]);
+
   return (
     <div
-      style={{ display: "flex", flex: 1, overflow: "hidden", background: "#E8EDF3" }}
+      style={{ display: "flex", flex: 1, overflow: "hidden", background: "#F0F2F7" }}
       onContextMenu={(e) => {
         e.preventDefault();
         setContextMenu({ x: e.clientX, y: e.clientY });
@@ -1288,7 +1317,9 @@ export function Canvas({
         style={{
           flex: 1, overflow: "auto",
           display: "flex", flexDirection: "column", alignItems: "center",
-          padding: "48px 40px", gap: 40,
+          padding: "40px 48px", gap: 36,
+          backgroundImage: "radial-gradient(circle at 1px 1px, rgba(0,0,0,0.04) 1px, transparent 0)",
+          backgroundSize: "24px 24px",
         }}
         onClick={(e) => {
           if (e.target === e.currentTarget) onSelectElements([]);
@@ -1303,17 +1334,19 @@ export function Canvas({
               {/* Page label */}
               <div
                 style={{
-                  fontSize: 11, fontWeight: 700, color: isCurrentPage ? "#1E3A5F" : "#94A3B8",
-                  marginBottom: 10, letterSpacing: 0.5, userSelect: "none",
+                  fontSize: 10.5, fontWeight: 700,
+                  color: isCurrentPage ? "#7C3AED" : "#94A3B8",
+                  marginBottom: 8, letterSpacing: 0.8, userSelect: "none",
                   display: "flex", alignItems: "center", gap: 8,
+                  textTransform: "uppercase",
                 }}
               >
-                <span>PAGE {pgIdx + 1}</span>
+                <span>Page {pgIdx + 1}</span>
                 {isCurrentPage && (
                   <span
                     style={{
-                      fontSize: 9, background: "#1E3A5F", color: "white",
-                      padding: "1px 6px", borderRadius: 10, letterSpacing: 0.3,
+                      fontSize: 8.5, background: "linear-gradient(135deg, #7C3AED, #6D28D9)",
+                      color: "white", padding: "1px 7px", borderRadius: 10, letterSpacing: 0.5,
                     }}
                   >
                     ACTIVE
@@ -1342,8 +1375,9 @@ export function Canvas({
                     height: pageHeight,
                     background: "white",
                     boxShadow: isCurrentPage
-                      ? "0 0 0 2.5px #1E3A5F, 0 12px 48px rgba(0,0,0,0.22)"
-                      : "0 4px 24px rgba(0,0,0,0.12)",
+                      ? "0 0 0 2px #7C3AED, 0 20px 60px rgba(124,58,237,0.15), 0 8px 24px rgba(0,0,0,0.12)"
+                      : "0 4px 24px rgba(0,0,0,0.10), 0 1px 6px rgba(0,0,0,0.06)",
+                    borderRadius: 4,
                     position: "relative",
                     overflow: "hidden",
                     cursor: "default",
@@ -1467,32 +1501,33 @@ export function Canvas({
               </div>
 
               {/* Page controls */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 10 }}>
                 <button
                   onClick={() => duplicatePage(pgIdx)}
                   style={{
-                    padding: "4px 12px", border: "1px solid #CBD5E1", borderRadius: 6,
-                    background: "white", cursor: "pointer", fontSize: 11, fontWeight: 600,
-                    color: "#475569", display: "flex", alignItems: "center", gap: 4,
-                    transition: "all 0.15s",
+                    padding: "4px 12px", border: "1px solid #E2E8F0", borderRadius: 20,
+                    background: "white", cursor: "pointer", fontSize: 10.5, fontWeight: 600,
+                    color: "#64748B", display: "flex", alignItems: "center", gap: 4,
+                    transition: "all 0.15s", boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#1E3A5F"; e.currentTarget.style.color = "#1E3A5F"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#CBD5E1"; e.currentTarget.style.color = "#475569"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#7C3AED"; e.currentTarget.style.color = "#7C3AED"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#E2E8F0"; e.currentTarget.style.color = "#64748B"; }}
                 >
-                  <Copy size={11} /> Duplicate Page
+                  <Copy size={10} /> Duplicate
                 </button>
                 {pages.length > 1 && (
                   <button
                     onClick={() => deletePage(pgIdx)}
                     style={{
-                      padding: "4px 12px", border: "1px solid #FCA5A5", borderRadius: 6,
-                      background: "white", cursor: "pointer", fontSize: 11, fontWeight: 600,
-                      color: "#DC2626", display: "flex", alignItems: "center", gap: 4,
+                      padding: "4px 12px", border: "1px solid #FECACA", borderRadius: 20,
+                      background: "white", cursor: "pointer", fontSize: 10.5, fontWeight: 600,
+                      color: "#EF4444", display: "flex", alignItems: "center", gap: 4,
+                      transition: "all 0.15s", boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.background = "#FEF2F2"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = "white"; }}
                   >
-                    <Trash2 size={11} /> Delete Page
+                    <Trash2 size={10} /> Delete
                   </button>
                 )}
               </div>
@@ -1505,15 +1540,15 @@ export function Canvas({
           onClick={addPage}
           style={{
             display: "flex", alignItems: "center", gap: 8,
-            padding: "14px 32px", border: "2px dashed #CBD5E1",
-            borderRadius: 12, background: "white", cursor: "pointer",
-            fontSize: 13, fontWeight: 700, color: "#64748B",
-            transition: "all 0.15s",
+            padding: "12px 28px", border: "1.5px dashed #C4B5FD",
+            borderRadius: 12, background: "rgba(237,233,254,0.5)", cursor: "pointer",
+            fontSize: 12.5, fontWeight: 700, color: "#7C3AED",
+            transition: "all 0.15s", boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#1E3A5F"; e.currentTarget.style.color = "#1E3A5F"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#CBD5E1"; e.currentTarget.style.color = "#64748B"; }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(237,233,254,0.9)"; e.currentTarget.style.borderColor = "#7C3AED"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(237,233,254,0.5)"; e.currentTarget.style.borderColor = "#C4B5FD"; }}
         >
-          <Plus size={16} /> Add Page
+          <Plus size={15} /> Add New Page
         </button>
 
         <div style={{ height: 48 }} />

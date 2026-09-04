@@ -42,7 +42,6 @@ async function fetchUserById(userId: string) {
       cache: "no-store"
     });
     const data = await res.json();
-    console.log("data", data)
     if (data.success) return data.data;
   } catch { }
   return null;
@@ -147,7 +146,6 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
 
     // ── Always prefer live user data ───
     if (liveUser) {
-      console.log("jhdsf", liveUser)
       email = liveUser.username || liveUser.email || "";
       isActive = liveUser.is_active;
       mustChangePassword = !!liveUser.must_change_password;
@@ -224,7 +222,6 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
   }
 
   const avatarUrl = photoUrl || getAvatar(name || "User");
-  console.log("defaultPassword", defaultPassword)
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />

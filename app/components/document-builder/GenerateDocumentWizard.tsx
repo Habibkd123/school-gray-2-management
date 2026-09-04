@@ -459,10 +459,6 @@ export function GenerateDocumentWizard({
     if (!selectedTemplate) return;
     setGenerating(true);
     try {
-      // Debug: log variable map being passed to builder
-      console.log("[Wizard→Builder] Variables generated in Step 4:", resolvedVars);
-      console.log("[Wizard→Builder] Total variables to pass:", Object.keys(resolvedVars).length);
-
       const encoded = encodeVariablesClient(resolvedVars);
 
       // BUG FIX: btoa() produces + and / which are special URL characters.
@@ -471,7 +467,6 @@ export function GenerateDocumentWizard({
       const safeEncoded = encodeURIComponent(encoded);
 
       const url = `/documents/builder/${selectedTemplate.id}?variables=${safeEncoded}&generatedFor=${encodeURIComponent(selectedRecord?.name || "")}&generatedTitle=${encodeURIComponent(selectedTemplate.name || "")}`;
-      console.log("[Wizard→Builder] Builder URL constructed:", url.substring(0, 120) + "...");
       setBuilderUrl(url);
       setGenerated(true);
     } catch (e) {

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ArrowRight, FileText, CheckCircle2 } from "lucide-react";
+import { ArrowRight, FileText, CheckCircle2, DollarSign } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface AdmissionsData {
@@ -109,6 +109,41 @@ export function AdmissionProcess({ data }: { data?: AdmissionsData | null }) {
                   </li>
                 ))}
               </ul>
+            </motion.div>
+          )}
+
+          {data?.fee_structure && data.fee_structure.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+              className="mt-8 pt-8 border-t border-slate-200 dark:border-white/10 text-left"
+            >
+              <div className="flex items-center gap-3 mb-6 justify-center md:justify-start">
+                <DollarSign className="w-5 h-5 text-primary" />
+                <h4 className="font-bold text-foreground uppercase tracking-wider text-sm">Fee Structure</h4>
+              </div>
+              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-white/10">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-primary/10 text-primary">
+                      <th className="text-left px-5 py-3 font-bold uppercase tracking-wider text-xs">Class / Grade</th>
+                      <th className="text-right px-5 py-3 font-bold uppercase tracking-wider text-xs">Annual Fee (₹)</th>
+                      <th className="text-right px-5 py-3 font-bold uppercase tracking-wider text-xs">Monthly Fee (₹)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.fee_structure.map((fee, idx) => (
+                      <tr key={idx} className={`border-t border-slate-100 dark:border-white/5 ${idx % 2 === 0 ? "bg-white dark:bg-white/[0.02]" : "bg-slate-50/50 dark:bg-white/[0.04]"}`}>
+                        <td className="px-5 py-3 font-semibold text-foreground">{fee.class_name}</td>
+                        <td className="px-5 py-3 text-right text-muted-text">₹{fee.annual_fee.toLocaleString("en-IN")}</td>
+                        <td className="px-5 py-3 text-right text-muted-text">₹{fee.monthly_fee.toLocaleString("en-IN")}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </motion.div>
           )}
 

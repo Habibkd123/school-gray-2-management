@@ -167,34 +167,18 @@ export default function ApproveLeaveRequestPage() {
       : "border-border text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"}`;
 
   const filteredData = useMemo(() => {
-    let list = leaveRequests.filter(item => {
-      const name = getUserName(item);
-      const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.leave_type.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesLeaveType = filterLeaveType ? item.leave_type === filterLeaveType : true;
-      const matchesStatus = filterStatus ? item.status === filterStatus.toLowerCase() : true;
-
-      let matchesDate = true;
-      if (activeFrom && activeTo) {
-        const fromDate = new Date(item.from_date);
-        const toDate = new Date(item.to_date);
-        matchesDate = (fromDate <= activeTo && toDate >= activeFrom);
-      }
-
-      return matchesSearch && matchesLeaveType && matchesStatus && matchesDate;
-    });
+    let list = [...leaveRequests];
 
     if (selectedSort === "Ascending") {
-      list = [...list].sort((a, b) => getUserName(a).localeCompare(getUserName(b)));
+      list.sort((a, b) => getUserName(a).localeCompare(getUserName(b)));
     } else if (selectedSort === "Descending") {
-      list = [...list].sort((a, b) => getUserName(b).localeCompare(getUserName(a)));
+      list.sort((a, b) => getUserName(b).localeCompare(getUserName(a)));
     } else if (selectedSort === "Recently Added") {
-      list = [...list].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     }
 
     return list;
-  }, [leaveRequests, searchTerm, filterLeaveType, filterStatus, activeFrom, activeTo, selectedSort]);
+  }, [leaveRequests, selectedSort]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -422,7 +406,7 @@ export default function ApproveLeaveRequestPage() {
         <div className="p-5 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-800/50">
           <div className="card-subtitle flex items-center gap-2 text-[13px]">
             <span>Total</span>
-            <span className="font-bold text-slate-700 dark:text-slate-200">{filteredData.length}</span>
+            <span className="font-bold text-slate-700 dark:text-slate-200">{total}</span>
             <span>Requests</span>
           </div>
 

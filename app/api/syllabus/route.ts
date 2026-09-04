@@ -210,7 +210,10 @@ export async function GET(req: NextRequest) {
         chapter_no: idx + 1,
         chapter_name: n.title,
         description: n.description || "",
-        status: n.resources?.some((r: any) => r.type === "youtube") ? "In Progress" : "Not Started"
+        status:
+          n.resources?.some((r: any) => r.url && r.url !== "#")
+            ? "Completed"
+            : (n.children?.length > 0 ? "In Progress" : "Not Started")
       }))
     }));
 
@@ -278,28 +281,7 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Debug logging as requested
-    console.log("====================================================");
-    console.log("DEBUG LOG: GET /api/syllabus");
-    console.log("Incoming route params:", {
-      search,
-      status,
-      academic_year,
-      class_id,
-      section_id,
-      stream_id,
-      subject_master_id,
-      teacher_id,
-      teacher_assignment_id,
-      page,
-      limitParam
-    });
-    console.log("Requested classId:", class_id);
-    console.log("Mongo query:", JSON.stringify(query));
-    console.log("Mongo result count (raw database matches):", rawSyllabi.length);
-    console.log("Returned subjects count (active assignments):", (class_id && academic_year) ? mergedSyllabi.length : "N/A");
-    console.log("Returned syllabus count (actual + virtual):", mergedSyllabi.length);
-    console.log("====================================================");
+
 
     // If teacher_assignment_id query fallback is called, return single document formatting
     if (teacher_assignment_id) {

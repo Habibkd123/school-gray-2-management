@@ -1,12 +1,19 @@
 import nodemailer from "nodemailer";
 
+export interface SendMailAttachment {
+  filename: string;
+  content: Buffer | string;
+  contentType?: string;
+}
+
 export interface SendMailOptions {
   to: string;
   subject: string;
   html: string;
+  attachments?: SendMailAttachment[];
 }
 
-export async function sendEmail({ to, subject, html }: SendMailOptions) {
+export async function sendEmail({ to, subject, html, attachments }: SendMailOptions) {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || process.env.EMAIL_HOST || "smtp.gmail.com",
     port: Number(process.env.SMTP_PORT || process.env.EMAIL_PORT) || 587,
@@ -17,12 +24,16 @@ export async function sendEmail({ to, subject, html }: SendMailOptions) {
     },
   });
 
-  const mailOptions = {
+  const mailOptions: any = {
     from: process.env.SMTP_USER || process.env.EMAIL_USER,
     to,
     subject,
     html,
   };
+
+  if (attachments && attachments.length > 0) {
+    mailOptions.attachments = attachments;
+  }
 
   try {
     const info = await transporter.sendMail(mailOptions);

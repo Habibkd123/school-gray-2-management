@@ -11,6 +11,7 @@ import Teacher from "./Teacher";
 import LandingContent from "./LandingContent";
 import GeneratedDocument from "./GeneratedDocument";
 import Admission from "./Admission";
+import RolePermissionModel from "./RolePermission";
 
 export { Class, Student, School, User, Stream, Section, Teacher, LandingContent, GeneratedDocument, Admission };
 
@@ -1114,7 +1115,7 @@ export const FeeType: Model<IFeeType> = mongoose.models.FeeType || mongoose.mode
 export const FeeMaster: Model<IFeeMaster> = mongoose.models.FeeMaster || mongoose.model("FeeMaster", feeMasterSchema);
 export const FeeAllocation: Model<IFeeAllocation> = mongoose.models.FeeAllocation || mongoose.model("FeeAllocation", feeAllocationSchema);
 export const FeePayment: Model<IFeePayment> = mongoose.models.FeePayment || mongoose.model("FeePayment", feePaymentSchema);
-export const RolePermission: Model<any> = mongoose.models.RolePermission || require("./RolePermission").default;
+export const RolePermission: Model<any> = mongoose.models.RolePermission || RolePermissionModel;
 
 // ─── Class Test (Assessment Module) ──────────────────────────────────────────
 // Completely independent from the Exam module. For regular class tests only.
