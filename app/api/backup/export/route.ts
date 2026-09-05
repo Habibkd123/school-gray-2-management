@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
     // Fetch School metadata for Header if available
     const school = await School.findOne({}).lean();
-    const schoolName = school?.name || "School Management System";
+    const schoolName = (school as any)?.name || "School Management System";
     options.schoolName = schoolName;
 
     switch (module) {
@@ -34,6 +34,15 @@ export async function POST(req: NextRequest) {
         if (academicYear) query.academic_year = academicYear;
 
         const students = await Student.find(query).populate("class_id", "name grade").sort({ admission_number: 1 }).lean();
+
+        // ── Empty Check ──────────────────────────────────────────
+        if (students.length === 0) {
+          return NextResponse.json({
+            success: false,
+            noData: true,
+            message: "No students found in the system. Add students first to generate this backup.",
+          });
+        }
 
         let totalMale = 0;
         let totalFemale = 0;
@@ -77,6 +86,15 @@ export async function POST(req: NextRequest) {
 
         const teachers = await Teacher.find({}).sort({ employee_id: 1 }).lean();
 
+        // ── Empty Check ──────────────────────────────────────────
+        if (teachers.length === 0) {
+          return NextResponse.json({
+            success: false,
+            noData: true,
+            message: "No faculty or staff records found. Add teachers first to generate this backup.",
+          });
+        }
+
         let totalActive = 0;
         let totalSalary = 0;
 
@@ -84,7 +102,7 @@ export async function POST(req: NextRequest) {
           const name = t.first_name || t.last_name ? `${t.first_name || ""} ${t.last_name || ""}`.trim() : (t.name || "N/A");
           const status = t.status || "Active";
           if (status.toLowerCase() === "active") totalActive++;
-          
+
           const sal = Number(t.basic_salary || t.salary || 0);
           totalSalary += sal;
 
@@ -113,7 +131,16 @@ export async function POST(req: NextRequest) {
         options.subtitle = "Fee Payment Transactions & Receipts";
         options.headers = ["Receipt No", "Student Name", "Payment Method", "Transaction Date", "Remarks", "Amount Paid"];
 
-        const payments = await FeePayment.find({}).populate("student_id", "first_name last_name name").sort({ transaction_date: -1 }).limit(200).lean();
+        const payments = await FeePayment.find({}).populate("student_id", "first_name last_name name").sort({ transaction_date: -1 }).limit(500).lean();
+
+        // ── Empty Check ──────────────────────────────────────────
+        if (payments.length === 0) {
+          return NextResponse.json({
+            success: false,
+            noData: true,
+            message: "No fee payment records found. Fee collection transactions will appear here once fees are collected.",
+          });
+        }
 
         let totalCollection = 0;
 
@@ -148,14 +175,23 @@ export async function POST(req: NextRequest) {
         options.subtitle = "Staff Salary Records & Payment History";
         options.headers = ["Voucher No", "Teacher Name", "Month / Year", "Basic", "Allowances", "Deductions", "Net Paid"];
 
-        const salaryLogs = await SalaryPayment.find({}).populate("teacher_id", "first_name last_name name employee_id").sort({ payment_date: -1 }).limit(200).lean();
+        const salaryLogs = await SalaryPayment.find({}).populate("teacher_id", "first_name last_name name employee_id").sort({ payment_date: -1 }).limit(500).lean();
+
+        // ── Empty Check ──────────────────────────────────────────
+        if (salaryLogs.length === 0) {
+          return NextResponse.json({
+            success: false,
+            noData: true,
+            message: "No salary disbursement records found. Salary vouchers will appear here after processing payroll.",
+          });
+        }
 
         let totalNetSalary = 0;
 
         options.rows = salaryLogs.map((s: any) => {
           const t = s.teacher_id;
           const teacherName = t ? (t.first_name || t.last_name ? `${t.first_name || ""} ${t.last_name || ""}`.trim() : (t.name || "N/A")) : "N/A";
-          
+
           const netPaid = Number(s.net_salary || s.amount_paid || 0);
           totalNetSalary += netPaid;
 
@@ -185,7 +221,16 @@ export async function POST(req: NextRequest) {
         options.subtitle = "Student & Faculty Daily Attendance Records";
         options.headers = ["Date", "Attendance Type", "Academic Year", "Total Marked", "Present", "Absent", "Leave"];
 
-        const attendanceLogs = await Attendance.find({}).sort({ date: -1 }).limit(150).lean();
+        const attendanceLogs = await Attendance.find({}).sort({ date: -1 }).limit(300).lean();
+
+        // ── Empty Check ──────────────────────────────────────────
+        if (attendanceLogs.length === 0) {
+          return NextResponse.json({
+            success: false,
+            noData: true,
+            message: "No attendance records found. Daily attendance logs will appear here once attendance is marked.",
+          });
+        }
 
         let totalPresent = 0;
         let totalAbsent = 0;
@@ -238,8 +283,17 @@ export async function POST(req: NextRequest) {
           .populate("exam_id", "name")
           .populate("subject_id", "name")
           .sort({ createdAt: -1 })
-          .limit(200)
+          .limit(500)
           .lean();
+
+        // ── Empty Check ──────────────────────────────────────────
+        if (results.length === 0) {
+          return NextResponse.json({
+            success: false,
+            noData: true,
+            message: "No exam results found. Results will appear here after exams are conducted and marks are entered.",
+          });
+        }
 
         let passCount = 0;
 
@@ -248,7 +302,7 @@ export async function POST(req: NextRequest) {
           const studentName = st ? (st.first_name || st.last_name ? `${st.first_name || ""} ${st.last_name || ""}`.trim() : (st.name || "N/A")) : "N/A";
           const examName = r.exam_id?.name || "Exam";
           const subjectName = r.subject_id?.name || "Subject";
-          
+
           const isPass = r.is_pass ?? (Number(r.marks_obtained || 0) >= Number(r.passing_marks || 33));
           if (isPass) passCount++;
 
@@ -287,30 +341,43 @@ export async function POST(req: NextRequest) {
           Result.countDocuments({}),
         ]);
 
-        const totalFeesCollected = feePayments.reduce((acc, p: any) => acc + Number(p.amount_paid || 0), 0);
-        const totalSalaryPaid = salaryPayments.reduce((acc, s: any) => acc + Number(s.net_salary || s.amount_paid || 0), 0);
+        const totalFeesCollected = (feePayments as any[]).reduce((acc, p) => acc + Number(p.amount_paid || 0), 0);
+        const totalSalaryPaid = (salaryPayments as any[]).reduce((acc, s) => acc + Number(s.net_salary || s.amount_paid || 0), 0);
 
-        options.rows = [
-          ["Students Management", studentCount, `${studentCount} Enrolled Students`, "Active"],
-          ["Faculty & Staff", teacherCount, `${teacherCount} Teachers & Staff`, "Active"],
-          ["Student Fees Collection", feePayments.length, `Rs. ${totalFeesCollected.toLocaleString("en-IN")} Total Collected`, "Active"],
-          ["Teacher Salary Payroll", salaryPayments.length, `Rs. ${totalSalaryPaid.toLocaleString("en-IN")} Total Paid`, "Active"],
-          ["Attendance Logs", attendanceCount, `${attendanceCount} Daily Attendance Sheets`, "Active"],
-          ["Examination Results", examCount, `${examCount} Grade & Result Entries`, "Active"],
+        // ── Only include rows where data exists ──────────────────
+        const allRows: (string | number)[][] = [
+          ["Students Management",        studentCount,           `${studentCount} Enrolled Students`,                          studentCount  > 0 ? "Active" : "No Data"],
+          ["Faculty & Staff",            teacherCount,           `${teacherCount} Teachers & Staff`,                           teacherCount  > 0 ? "Active" : "No Data"],
+          ["Student Fees Collection",    feePayments.length,     `Rs. ${totalFeesCollected.toLocaleString("en-IN")} Collected`, feePayments.length  > 0 ? "Active" : "No Data"],
+          ["Teacher Salary Payroll",     salaryPayments.length,  `Rs. ${totalSalaryPaid.toLocaleString("en-IN")} Paid`,         salaryPayments.length > 0 ? "Active" : "No Data"],
+          ["Attendance Logs",            attendanceCount,        `${attendanceCount} Daily Attendance Sheets`,                  attendanceCount > 0 ? "Active" : "No Data"],
+          ["Examination Results",        examCount,              `${examCount} Grade & Result Entries`,                         examCount     > 0 ? "Active" : "No Data"],
         ];
 
+        // Always include all rows for full backup (shows zero counts too — that's useful info)
+        options.rows = allRows;
+
+        const totalAllModules = studentCount + teacherCount + feePayments.length + salaryPayments.length + attendanceCount + examCount;
+        if (totalAllModules === 0) {
+          return NextResponse.json({
+            success: false,
+            noData: true,
+            message: "No data found in any module. Please add students, teachers, or records first before generating a full backup.",
+          });
+        }
+
         options.summaryCards = [
-          { label: "Total Students", value: studentCount },
-          { label: "Total Staff", value: teacherCount },
-          { label: "Total Revenue", value: `Rs. ${totalFeesCollected.toLocaleString("en-IN")}` },
-          { label: "Total Payroll", value: `Rs. ${totalSalaryPaid.toLocaleString("en-IN")}` },
+          { label: "Total Students",  value: studentCount },
+          { label: "Total Staff",     value: teacherCount },
+          { label: "Total Revenue",   value: `Rs. ${totalFeesCollected.toLocaleString("en-IN")}` },
+          { label: "Total Payroll",   value: `Rs. ${totalSalaryPaid.toLocaleString("en-IN")}` },
         ];
         filename = `Full_System_Backup_${Date.now()}.pdf`;
         break;
       }
     }
 
-    // Generate the PDF Buffer
+    // ── Generate the PDF Buffer ──────────────────────────────────
     const pdfBuffer = await generatePDFBuffer(options);
 
     // If action is EMAIL
@@ -355,10 +422,7 @@ export async function POST(req: NextRequest) {
 
       if (!emailSent) {
         return NextResponse.json(
-          {
-            success: false,
-            error: "Failed to send email. Please verify SMTP host and credentials in settings/.env.",
-          },
+          { success: false, error: "Failed to send email. Please verify SMTP host and credentials in settings/.env." },
           { status: 500 }
         );
       }
