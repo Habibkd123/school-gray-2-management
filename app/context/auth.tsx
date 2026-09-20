@@ -38,26 +38,80 @@ interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-let _permissionsFetchPromise: Promise<any> | null = null;
+const PERMISSIONS_CACHE_KEY = "sm_cached_permissions";
+const PERMISSIONS_CACHE_TIME_KEY = "sm_cached_permissions_time";
+const PERMISSIONS_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+let _permissionsFetchPromise: Promise<Record<string, Record<string, string[]>>> | null = null;
 let _activeRefreshPromise: Promise<boolean> | null = null;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const [user, setUser] = useState<StoredUser | null>(null);
-  const [permissions, setPermissions] = useState<Record<string, Record<string, string[]>> | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [mustChangePassword, setMustChangePassword] = useState(false);
+  const [user, setUser] = useState<StoredUser | null>(() => {
+    if (typeof window !== "undefined") {
+      const storedUser = getStoredUser();
+      const token = getAccessToken();
+      if (storedUser && token) {
+        const currentSchoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
+        if (storedUser.role === "super_admin" || storedUser.school_id === currentSchoolId) {
+          return storedUser;
+        }
+      }
+    }
+    return null;
+  });
+
+  const [permissions, setPermissions] = useState<Record<string, Record<string, string[]>> | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem(PERMISSIONS_CACHE_KEY);
+        if (cached) {
+          return JSON.parse(cached);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return null;
+  });
+
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const storedUser = getStoredUser();
+      const token = getAccessToken();
+      if (storedUser && token) {
+        return false;
+      }
+    }
+    return true;
+  });
+
+  const [mustChangePassword, setMustChangePassword] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const storedUser = getStoredUser();
+      return !!storedUser?.must_change_password;
+    }
+    return false;
+  });
   const [sessionExpiredToast, setSessionExpiredToast] = useState(false);
 
-  const fetchPermissions = useCallback(async () => {
+  const fetchPermissions = useCallback(async (force = false): Promise<Record<string, Record<string, string[]>> | null> => {
+    if (typeof window !== "undefined" && !force) {
+      const cached = sessionStorage.getItem(PERMISSIONS_CACHE_KEY);
+      const cachedTime = sessionStorage.getItem(PERMISSIONS_CACHE_TIME_KEY);
+      const now = Date.now();
+      if (cached && cachedTime && now - parseInt(cachedTime, 10) < PERMISSIONS_TTL_MS) {
+        return null; // Fresh cache already in state
+      }
+    }
+
     if (_permissionsFetchPromise) {
       try {
-        const data = await _permissionsFetchPromise;
-        setPermissions(data);
+        return await _permissionsFetchPromise;
       } catch (err) {
         console.error("Failed to fetch permissions", err);
+        return null;
       }
-      return;
     }
 
     _permissionsFetchPromise = (async () => {
@@ -68,44 +122,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!res.ok || !data.success) {
         throw new Error(data.message || "Failed to fetch permissions");
       }
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem(PERMISSIONS_CACHE_KEY, JSON.stringify(data.data));
+          sessionStorage.setItem(PERMISSIONS_CACHE_TIME_KEY, Date.now().toString());
+        } catch {
+          // ignore storage quota errors
+        }
+      }
       return data.data;
     })();
 
     try {
       const data = await _permissionsFetchPromise;
-      setPermissions(data);
+      return data;
     } catch (err) {
       _permissionsFetchPromise = null;
       console.error("Failed to fetch permissions", err);
+      return null;
     }
   }, []);
 
   useEffect(() => {
+    let isCancelled = false;
     if (user) {
-      fetchPermissions();
-    } else {
-      setPermissions(null);
+      fetchPermissions().then((data) => {
+        if (!isCancelled && data) {
+          setPermissions(data);
+        }
+      });
     }
+    return () => {
+      isCancelled = true;
+    };
   }, [user, fetchPermissions]);
 
-  // ─── Load user from localStorage on mount ─────────────────────
+  // ─── Verify session validity on mount ─────────────────────────
   useEffect(() => {
     const storedUser = getStoredUser();
     const token = getAccessToken();
-    if (storedUser && token) {
-      const currentSchoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
-      if (storedUser.role !== "super_admin" && storedUser.school_id !== currentSchoolId) {
-        clearSession();
-        setUser(null);
-      } else {
-        setUser(storedUser);
-        // Restore must_change_password from persisted session
-        if (storedUser.must_change_password) {
-          setMustChangePassword(true);
-        }
-      }
+    if (!storedUser || !token) {
+      queueMicrotask(() => setIsLoading(false));
+      return;
     }
-    setIsLoading(false);
+    const currentSchoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
+    if (storedUser.role !== "super_admin" && storedUser.school_id !== currentSchoolId) {
+      clearSession();
+      queueMicrotask(() => {
+        setUser(null);
+        setIsLoading(false);
+      });
+      return;
+    }
+    queueMicrotask(() => setIsLoading(false));
   }, []);
 
   // ─── Login ────────────────────────────────────────────────────
@@ -213,6 +282,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // ─── Logout ───────────────────────────────────────────────────
   const logout = useCallback(() => {
     clearSession();
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(PERMISSIONS_CACHE_KEY);
+      sessionStorage.removeItem(PERMISSIONS_CACHE_TIME_KEY);
+    }
     setUser(null);
     setPermissions(null);
     setMustChangePassword(false);
@@ -368,12 +441,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       setPermissions((prev) => {
         if (!prev) return null;
-        return {
+        const updated = {
           ...prev,
           [role]: perms,
         };
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(PERMISSIONS_CACHE_KEY, JSON.stringify(updated));
+            sessionStorage.setItem(PERMISSIONS_CACHE_TIME_KEY, Date.now().toString());
+          } catch {
+            // ignore
+          }
+        }
+        return updated;
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       throw err;
     }
   }, []);
@@ -394,6 +476,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     permissions,
     isLoading,
+    mustChangePassword,
     login,
     register,
     logout,

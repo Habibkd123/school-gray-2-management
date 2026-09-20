@@ -193,14 +193,18 @@ export function useFeeAllocations(studentId?: string) {
   return { allocations, loading, fetchAllocations, allocateFees };
 }
 
-export function useFeePayments(studentId?: string, options?: { skip?: boolean }) {
+export function useFeePayments(studentId?: string, options?: { skip?: boolean; limit?: number }) {
   const [payments, setPayments] = useState<ApiFeePayment[]>([]);
   const [loading, setLoading] = useState(options?.skip ? false : true);
 
   const fetchPayments = useCallback(async (sId?: string) => {
     setLoading(true);
     try {
-      const url = sId ? `/api/fees/payments?student_id=${sId}` : "/api/fees/payments";
+      const params = new URLSearchParams();
+      if (sId) params.set("student_id", sId);
+      if (options?.limit) params.set("limit", String(options.limit));
+      const qs = params.toString();
+      const url = qs ? `/api/fees/payments?${qs}` : "/api/fees/payments";
       const res = await fetch(url, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) setPayments(data.data.payments);
@@ -209,7 +213,7 @@ export function useFeePayments(studentId?: string, options?: { skip?: boolean })
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [options?.limit]);
 
   useEffect(() => {
     if (options?.skip) return;

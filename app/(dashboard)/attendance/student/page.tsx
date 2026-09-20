@@ -140,6 +140,7 @@ export default function StudentAttendancePage() {
 
   // Daily statistics and list
   const [dailyAttendances, setDailyAttendances] = useState<any[]>([]);
+  const [classStudentCounts, setClassStudentCounts] = useState<Record<string, number>>({});
   const [loadingDailyAttendances, setLoadingDailyAttendances] = useState(false);
 
   // Selected student rows for bulk operations
@@ -171,12 +172,17 @@ export default function StudentAttendancePage() {
         const data = await res.json();
         if (data.success && data.data) {
           setDailyAttendances(data.data);
+          if (data.classStudentCounts) {
+            setClassStudentCounts(data.classStudentCounts);
+          }
         } else {
           setDailyAttendances([]);
+          setClassStudentCounts({});
         }
       } catch (err) {
         console.error("Failed to fetch daily attendances:", err);
         setDailyAttendances([]);
+        setClassStudentCounts({});
       } finally {
         setLoadingDailyAttendances(false);
       }
@@ -194,12 +200,6 @@ export default function StudentAttendancePage() {
     }
   }, [filterYear, filterDate, filterStreamId, fetchDailyAttendances]);
 
-  // Fetch all students for dashboard overview if no class is selected
-  useEffect(() => {
-    if (!filterClassId && filterYear) {
-      fetchStudents({ academic_year: filterYear, limit: 1000 });
-    }
-  }, [filterClassId, filterYear, fetchStudents]);
 
   // Fetch student registers when filters change
   useEffect(() => {
@@ -279,17 +279,9 @@ export default function StudentAttendancePage() {
 
     filteredClasses.forEach((cls) => {
       const att = attendanceMap[cls._id];
-      const classStudentsCount = students.filter((s) => {
-        const sClassId =
-          typeof s.class_id === "object" ? s.class_id?._id : s.class_id;
-        const matchesClass = sClassId === cls._id;
-        const sStreamId =
-          typeof (s as any).stream_id === "object" && (s as any).stream_id
-            ? ((s as any).stream_id as any)._id
-            : (s as any).stream_id;
-        const matchesStream = !filterStreamId || sStreamId === filterStreamId;
-        return matchesClass && matchesStream;
-      }).length;
+      const classStudentsCount = classStudentCounts[cls._id] ?? (
+        filterClassId === cls._id ? students.length : 0
+      );
 
       totalStudents += classStudentsCount;
 
@@ -335,7 +327,7 @@ export default function StudentAttendancePage() {
       studentsLeave,
       attendancePercentage,
     };
-  }, [filteredClasses, dailyAttendances, students, filterStreamId]);
+  }, [filteredClasses, dailyAttendances, classStudentCounts, students, filterClassId]);
 
   // Date permission helper info
   const dateInfo = useMemo(() => {
@@ -924,21 +916,7 @@ export default function StudentAttendancePage() {
 
                   const isCompleted =
                     att && att.records && att.records.length > 0;
-                  const classStudents = students.filter((s) => {
-                    const sClassId =
-                      typeof s.class_id === "object"
-                        ? s.class_id?._id
-                        : s.class_id;
-                    const matchesClass = sClassId === cls._id;
-                    const sStreamId =
-                      typeof (s as any).stream_id === "object" &&
-                        (s as any).stream_id
-                        ? ((s as any).stream_id as any)._id
-                        : (s as any).stream_id;
-                    const matchesStream =
-                      !filterStreamId || sStreamId === filterStreamId;
-                    return matchesClass && matchesStream;
-                  });
+                  const studentCount = classStudentCounts[cls._id] ?? 0;
 
                   // Correct Teacher Designation/Meta Loading
                   const teacherObj = cls.class_teacher_id;
@@ -975,7 +953,7 @@ export default function StudentAttendancePage() {
                               )}
                             </h3>
                             <p className="text-[11px] font-bold text-slate-400 mt-0.5">
-                              {classStudents.length} Students
+                              {studentCount} Students
                             </p>
                           </div>
                         </div>

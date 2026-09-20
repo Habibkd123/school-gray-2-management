@@ -2,6 +2,24 @@ import School from "@/lib/models/School";
 import connectDB from "@/lib/db";
 
 
+interface CacheEntry {
+  data: string | null;
+  expiresAt: number;
+}
+
+// In-memory cache for slug -> school_id resolution (TTL: 10 minutes)
+const SLUG_CACHE_TTL_MS = 10 * 60 * 1000;
+const slugToIdCache = new Map<string, CacheEntry>();
+
+/** Invalidate cached school ID for a specific slug or all slugs */
+export function invalidateSchoolSlugCache(slug?: string): void {
+  if (!slug) {
+    slugToIdCache.clear();
+    return;
+  }
+  slugToIdCache.delete(slug.trim().toLowerCase());
+}
+
 export async function resolveSchoolIdServer(
   headersList: { get: (name: string) => string | null },
   urlStr?: string
@@ -64,10 +82,25 @@ export async function resolveSchoolIdServer(
     return schoolId;
   }
   if (schoolSlug) {
+    const slugKey = schoolSlug.trim().toLowerCase();
+    const cached = slugToIdCache.get(slugKey);
+    const now = Date.now();
+
+    if (cached && cached.expiresAt > now) {
+      return cached.data;
+    }
+
     await connectDB();
-    const school = await School.findOne({ slug: schoolSlug }).select("_id").lean();
-    if (school) {
-      return school._id.toString();
+    const school = await School.findOne({ slug: slugKey }).select("_id").lean();
+    const resolvedId = school ? school._id.toString() : null;
+
+    slugToIdCache.set(slugKey, {
+      data: resolvedId,
+      expiresAt: now + (resolvedId ? SLUG_CACHE_TTL_MS : 60 * 1000),
+    });
+
+    if (resolvedId) {
+      return resolvedId;
     }
   }
 

@@ -66,8 +66,11 @@ export async function GET(req: NextRequest) {
     const dateFrom = url.searchParams.get("date_from");
     const dateTo = url.searchParams.get("date_to");
     const search = url.searchParams.get("search") || "";
-    const page = parseInt(url.searchParams.get("page") || "1");
-    const limit = parseInt(url.searchParams.get("limit") || "10");
+    const rawPage = parseInt(url.searchParams.get("page") || "1", 10);
+    const page = Math.max(1, isNaN(rawPage) ? 1 : rawPage);
+    const rawLimit = parseInt(url.searchParams.get("limit") || "10", 10);
+    // Hard cap between 1 and 5000 (default: 10, reports: 2000, exports: up to 5000)
+    const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 10 : rawLimit), 5000);
 
     // Teacher assignments restriction
     let allowedClassIds: string[] | null = null;
@@ -219,39 +222,17 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // 2. Fetch all matching students to compute statuses in memory
-    const students = await Student.find(studentQuery)
-      .populate("class_id", "name section")
-      .sort({ name: 1 })
-      .lean();
+    // 2. Check if post-computation filters are present
+    const hasPostComputationFilter = Boolean(
+      statusFilter || dueStatusFilter || feeTypeFilterName || dateFrom || dateTo
+    );
 
-    // Get all ClassFees for this school to avoid N+1 queries
-    const classFeesList = await ClassFee.find({ school_id: schoolId }).lean();
-    const classFeesMap = new Map(classFeesList.map((cf) => [cf.class_id.toString(), cf]));
-
-    // Get all StudentFeeAssignments for this school to avoid N+1 queries
-    const studentAssignments = await StudentFeeAssignment.find({ school_id: schoolId }).lean();
-    const studentAssignmentsMap = new Map(studentAssignments.map((sa) => [sa.student_id.toString(), sa]));
-
-    // 3. Batch-fetch ALL payments for the matching students in ONE query
-    const studentIds = students.map((s: any) => s._id);
-    const allPayments = await StudentFeePayment.find({
-      school_id: schoolId,
-      student_id: { $in: studentIds },
-    })
-      .sort({ payment_date: -1 })
-      .lean();
-
-    // Group payments by student_id string for O(1) lookup
-    const paymentsByStudentId = new Map<string, typeof allPayments>();
-    for (const p of allPayments) {
-      const sid = p.student_id.toString();
-      if (!paymentsByStudentId.has(sid)) paymentsByStudentId.set(sid, []);
-      paymentsByStudentId.get(sid)!.push(p);
-    }
-
-    // 4. Compute status/totals for each student
-    const computedList = students.map((student: any) => {
+    const computeStudentFeeData = (
+      student: any,
+      classFeesMap: Map<string, any>,
+      studentAssignmentsMap: Map<string, any>,
+      paymentsByStudentId: Map<string, any[]>
+    ) => {
       const studentIdStr = student._id.toString();
       const studentClassId = student.class_id?._id?.toString() || student.class_id?.toString();
 
@@ -345,7 +326,123 @@ export async function GET(req: NextRequest) {
         dueStatus,
         academic_year: student.academic_year || "2026"
       };
-    }).filter(Boolean); // Clean filter nulls
+    };
+
+    if (!hasPostComputationFilter) {
+      // ─── Fast Direct-Paged Path (0 full-scan memory overhead) ───────────────
+      const totalItems = await Student.countDocuments(studentQuery);
+      const totalPages = Math.ceil(totalItems / limit);
+      const startIndex = (page - 1) * limit;
+
+      const pageStudents = await Student.find(studentQuery)
+        .select("_id name admission_no class_id section guardian_name guardian_phone guardian_relation admission_date createdAt academic_year")
+        .populate("class_id", "name section")
+        .sort({ name: 1 })
+        .skip(startIndex)
+        .limit(limit)
+        .lean();
+
+      const pageStudentIds = pageStudents.map((s: any) => s._id);
+      const pageClassIds = Array.from(
+        new Set(
+          pageStudents
+            .map((s: any) => (s.class_id?._id || s.class_id)?.toString())
+            .filter(Boolean)
+        )
+      );
+
+      // Concurrent batch queries for only the current page's students & classes
+      const [classFeesList, studentAssignments, allPayments] = await Promise.all([
+        ClassFee.find({
+          school_id: schoolId,
+          class_id: { $in: pageClassIds },
+          academic_year,
+        })
+          .select("class_id fee_types total_amount")
+          .lean(),
+        StudentFeeAssignment.find({
+          school_id: schoolId,
+          student_id: { $in: pageStudentIds },
+          academic_year,
+        })
+          .select("student_id fee_types total_amount")
+          .lean(),
+        StudentFeePayment.find({
+          school_id: schoolId,
+          student_id: { $in: pageStudentIds },
+        })
+          .select("student_id amount_paid payment_date end_date fee_breakdown")
+          .sort({ payment_date: -1 })
+          .lean(),
+      ]);
+
+      const classFeesMap = new Map(classFeesList.map((cf: any) => [cf.class_id.toString(), cf]));
+      const studentAssignmentsMap = new Map(studentAssignments.map((sa: any) => [sa.student_id.toString(), sa]));
+
+      const paymentsByStudentId = new Map<string, any[]>();
+      for (const p of allPayments) {
+        const sid = p.student_id.toString();
+        if (!paymentsByStudentId.has(sid)) paymentsByStudentId.set(sid, []);
+        paymentsByStudentId.get(sid)!.push(p);
+      }
+
+      const computedList = pageStudents
+        .map((s: any) => computeStudentFeeData(s, classFeesMap, studentAssignmentsMap, paymentsByStudentId))
+        .filter(Boolean);
+
+      return NextResponse.json({
+        success: true,
+        data: {
+          students: computedList,
+          pagination: {
+            totalItems,
+            totalPages,
+            currentPage: page,
+            limit,
+          },
+        },
+      });
+    }
+
+    // ─── Filtered / Aggregated Path (status, dueStatus, date range, fee type) ───
+    const students = await Student.find(studentQuery)
+      .select("_id name admission_no class_id section guardian_name guardian_phone guardian_relation admission_date createdAt academic_year")
+      .populate("class_id", "name section")
+      .sort({ name: 1 })
+      .lean();
+
+    const studentIds = students.map((s: any) => s._id);
+
+    // Concurrent batch queries with field projection
+    const [classFeesList, studentAssignments, allPayments] = await Promise.all([
+      ClassFee.find({ school_id: schoolId, academic_year })
+        .select("class_id fee_types total_amount")
+        .lean(),
+      StudentFeeAssignment.find({ school_id: schoolId, academic_year })
+        .select("student_id fee_types total_amount")
+        .lean(),
+      StudentFeePayment.find({
+        school_id: schoolId,
+        student_id: { $in: studentIds },
+      })
+        .select("student_id amount_paid payment_date end_date fee_breakdown")
+        .sort({ payment_date: -1 })
+        .lean(),
+    ]);
+
+    const classFeesMap = new Map(classFeesList.map((cf: any) => [cf.class_id.toString(), cf]));
+    const studentAssignmentsMap = new Map(studentAssignments.map((sa: any) => [sa.student_id.toString(), sa]));
+
+    const paymentsByStudentId = new Map<string, any[]>();
+    for (const p of allPayments) {
+      const sid = p.student_id.toString();
+      if (!paymentsByStudentId.has(sid)) paymentsByStudentId.set(sid, []);
+      paymentsByStudentId.get(sid)!.push(p);
+    }
+
+    const computedList = students
+      .map((s: any) => computeStudentFeeData(s, classFeesMap, studentAssignmentsMap, paymentsByStudentId))
+      .filter(Boolean);
 
     // 5. Apply status, due status and date range filters
     let filteredList = statusFilter
@@ -387,8 +484,9 @@ export async function GET(req: NextRequest) {
         },
       },
     });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to fetch fee data";
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }
 
@@ -463,7 +561,8 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ success: true, data: classFee }, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to save fee config";
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }

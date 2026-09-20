@@ -79,7 +79,8 @@ export default function FinanceReportPage() {
     setIsLoadingStudents(true);
     try {
       const params = new URLSearchParams({
-        limit: "10000",
+        // Cap at 1000 — sufficient for class/school-level summary; prevents large payloads
+        limit: "1000",
         class_id: selectedClass,
         status: selectedStatus
       });

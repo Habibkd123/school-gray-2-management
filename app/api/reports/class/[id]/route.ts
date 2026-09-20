@@ -22,7 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     }
 
     // 2. Fetch Students and Gender Split
-    const students = await Student.find({ class_id: classId, school_id: schoolId, is_active: true }).lean();
+    const students = await Student.find({ class_id: classId, school_id: schoolId, is_active: true }).select("gender").lean();
     const totalStudents = students.length;
     const boysCount = students.filter((s) => s.gender?.toLowerCase() === "male").length;
     const girlsCount = students.filter((s) => s.gender?.toLowerCase() === "female").length;
@@ -40,7 +40,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       type: "student",
       class_id: classId,
       date: { $gte: startOfDay, $lte: endOfDay }
-    }).lean();
+    }).select("records.status").lean();
 
     let present = 0;
     let absent = 0;
@@ -74,7 +74,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       type: "student",
       class_id: classId,
       date: { $gte: startOfMonth, $lte: endOfMonth }
-    }).lean();
+    }).select("records.status").lean();
 
     let monthlyTotalRecords = 0;
     let monthlyPresent = 0;
@@ -100,47 +100,57 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .sort({ test_date: -1 })
       .lean();
 
-    const formattedTests = await Promise.all(
-      classTests.map(async (test: any) => {
-        const marks = await ClassTestMark.find({ test_id: test._id }).lean();
-        const totalMarksEntered = marks.length;
+    const testIds = classTests.map((t: any) => t._id);
+    const allMarks = testIds.length > 0
+      ? await ClassTestMark.find({ test_id: { $in: testIds } }).select("test_id marks_obtained").lean()
+      : [];
 
-        let totalScore = 0;
-        let passCount = 0;
+    const marksByTest = new Map<string, any[]>();
+    allMarks.forEach((m: any) => {
+      const tid = m.test_id?.toString();
+      if (!marksByTest.has(tid)) marksByTest.set(tid, []);
+      marksByTest.get(tid)!.push(m);
+    });
 
-        marks.forEach((m: any) => {
-          totalScore += m.marks_obtained || 0;
-          if (m.marks_obtained >= (test.passing_marks || 0)) {
-            passCount++;
-          }
-        });
+    const formattedTests = classTests.map((test: any) => {
+      const marks = marksByTest.get(test._id.toString()) || [];
+      const totalMarksEntered = marks.length;
 
-        const classAverage = totalMarksEntered > 0
-          ? parseFloat((totalScore / totalMarksEntered).toFixed(1))
-          : 0;
+      let totalScore = 0;
+      let passCount = 0;
 
-        const classAveragePercent = totalMarksEntered > 0 && test.total_marks > 0
-          ? Math.round((classAverage / test.total_marks) * 100)
-          : 0;
+      marks.forEach((m: any) => {
+        totalScore += m.marks_obtained || 0;
+        if (m.marks_obtained >= (test.passing_marks || 0)) {
+          passCount++;
+        }
+      });
 
-        const passRate = totalMarksEntered > 0
-          ? Math.round((passCount / totalMarksEntered) * 100)
-          : 0;
+      const classAverage = totalMarksEntered > 0
+        ? parseFloat((totalScore / totalMarksEntered).toFixed(1))
+        : 0;
 
-        return {
-          testId: test._id,
-          title: test.title,
-          subject: test.subject_id?.name || "N/A",
-          testDate: test.test_date,
-          totalMarks: test.total_marks,
-          passingMarks: test.passing_marks,
-          status: test.status,
-          averageScore: classAverage,
-          averagePercentage: classAveragePercent,
-          passRate
-        };
-      })
-    );
+      const classAveragePercent = totalMarksEntered > 0 && test.total_marks > 0
+        ? Math.round((classAverage / test.total_marks) * 100)
+        : 0;
+
+      const passRate = totalMarksEntered > 0
+        ? Math.round((passCount / totalMarksEntered) * 100)
+        : 0;
+
+      return {
+        testId: test._id,
+        title: test.title,
+        subject: test.subject_id?.name || "N/A",
+        testDate: test.test_date,
+        totalMarks: test.total_marks,
+        passingMarks: test.passing_marks,
+        status: test.status,
+        averageScore: classAverage,
+        averagePercentage: classAveragePercent,
+        passRate
+      };
+    });
 
     const overallClassAveragePercent = formattedTests.length > 0
       ? Math.round(formattedTests.reduce((acc, t) => acc + t.averagePercentage, 0) / formattedTests.length)

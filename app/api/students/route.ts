@@ -25,6 +25,11 @@ function generateStudentLoginEmail(name: string, dob?: string): string {
   return `${firstName}${dobDay}.${slug}.myschoollife`;
 }
 
+// ─── Helper: escape special regex characters ─────────────────
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 
 // ─── GET /api/students — List all students for the school ──────────
 export async function GET(request: NextRequest) {
@@ -160,11 +165,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (search) {
+    if (search && search.trim()) {
+      const sanitized = search.trim();
+      const escaped = escapeRegex(sanitized);
+      const searchRegex = new RegExp(escaped, "i");
+
       filter.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { roll_no: { $regex: search, $options: "i" } },
-        { admission_no: { $regex: search, $options: "i" } },
+        { name: searchRegex },
+        { roll_no: searchRegex },
+        { admission_no: searchRegex },
       ];
     }
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -9,7 +9,7 @@ import { PrintService } from "@/app/lib/print-service";
 export default function FeesReportPage() {
   const { allocations, loading: allocLoading } = useFeeAllocations();
   const { masters, loading: mastersLoading } = useFeeMasters();
-  const { payments, loading: paymentsLoading } = useFeePayments();
+  const { payments, loading: paymentsLoading } = useFeePayments(undefined, { limit: 100 });
 
   const [dateRange, setDateRange] = useState("all");
 

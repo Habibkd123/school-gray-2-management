@@ -71,6 +71,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const rawLimit = parseInt(url.searchParams.get("limit") || "2000", 10);
+    const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 2000 : rawLimit), 5000);
+
     const payments = await StudentFeePayment.find(query)
       .populate({
         path: "student_id",
@@ -79,11 +82,13 @@ export async function GET(req: NextRequest) {
       })
       .populate("collected_by", "name username")
       .sort({ payment_date: -1 })
+      .limit(limit)
       .lean();
 
     return NextResponse.json({ success: true, data: { payments } });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to fetch payments";
+    return NextResponse.json({ success: false, message }, { status: 500 });
   }
 }
 
@@ -229,14 +234,15 @@ export async function POST(req: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { code?: number; keyPattern?: { receipt_number?: unknown }; message?: string };
     // Handle duplicate receipt_number at DB level (last safety net)
-    if (error.code === 11000 && error.keyPattern?.receipt_number) {
+    if (err.code === 11000 && err.keyPattern?.receipt_number) {
       return NextResponse.json(
         { success: false, message: "Receipt number conflict. Please try again." },
         { status: 409 }
       );
     }
-    return NextResponse.json({ success: false, message: error.message }, { status: 400 });
+    return NextResponse.json({ success: false, message: err.message || "Failed to record payment" }, { status: 400 });
   }
 }

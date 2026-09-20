@@ -408,7 +408,8 @@ export default function FeesPage() {
   const handleExport = useCallback(async (format: "csv" | "excel" | "pdf") => {
     try {
       const params = new URLSearchParams({
-        limit: "100000",
+        // Cap at 5000 for export — sufficient for any school; prevents memory spikes
+        limit: "5000",
         search,
         academic_year: academicYearFilter,
         class_id: classFilter,
@@ -699,8 +700,8 @@ export default function FeesPage() {
   const fetchReportsData = async () => {
     setIsReportsLoading(true);
     try {
-      // Get all students for stats
-      const studentsRes = await fetch(`/api/fees?limit=100000&academic_year=${academicYearFilter}`, {
+      // Cap at 2000 for reports stats — aggregation-level query, not full export
+      const studentsRes = await fetch(`/api/fees?limit=2000&academic_year=${academicYearFilter}`, {
         headers: getAuthHeaders()
       });
       const studentsData = await studentsRes.json();

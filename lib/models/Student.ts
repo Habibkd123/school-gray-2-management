@@ -126,6 +126,7 @@ studentSchema.index({ school_id: 1, name: 1 }, { name: "student_school_name_v1" 
 studentSchema.index({ school_id: 1, is_active: 1 }, { name: "student_school_is_active_v1" });
 studentSchema.index({ school_id: 1, academic_year: 1 }, { name: "student_school_academic_year_v1" });
 studentSchema.index({ school_id: 1, admission_no: 1 }, { name: "student_school_admission_no_v1" });
+studentSchema.index({ school_id: 1, roll_no: 1 }, { name: "student_school_roll_no_v1" });
 studentSchema.index({ name: 1 }, { name: "student_name_v1" });
 studentSchema.index({ parent_id: 1 }, { name: "student_parent_id_v1" });
 studentSchema.index({ user_id: 1 }, { name: "student_user_id_v1" });
@@ -134,6 +135,14 @@ studentSchema.index({ user_id: 1 }, { name: "student_user_id_v1" });
 studentSchema.index({ school_id: 1, class_id: 1, is_active: 1 }, { name: "student_school_class_active_v1" });
 // Dashboard & report pages: filter active students within an academic year
 studentSchema.index({ school_id: 1, academic_year: 1, is_active: 1 }, { name: "student_school_year_active_v1" });
+// Fast sorting by name for active students & class students
+studentSchema.index({ school_id: 1, is_active: 1, name: 1 }, { name: "student_school_active_name_v1" });
+studentSchema.index({ school_id: 1, class_id: 1, name: 1 }, { name: "student_school_class_name_v1" });
+// Full text search index
+studentSchema.index(
+  { name: "text", admission_no: "text", roll_no: "text" },
+  { name: "student_search_text_v1", weights: { name: 5, admission_no: 3, roll_no: 1 } }
+);
 
 const Student: Model<IStudent> =
   mongoose.models.Student || mongoose.model<IStudent>("Student", studentSchema);

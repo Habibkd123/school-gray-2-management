@@ -23,6 +23,11 @@ function generateTeacherLoginEmail(name: string, dob?: string): string {
   return `${firstName}${dobDay}.${slug}.myschoollife`;
 }
 
+// ─── Helper: escape special regex characters ─────────────────
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // GET: Fetch all teachers for the logged-in user's school
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
@@ -36,22 +41,25 @@ export async function GET(req: NextRequest) {
     const search = url.searchParams.get("search");
     const limitParam = url.searchParams.get("limit");
     const isAll = limitParam === "all";
-    const page = parseInt(url.searchParams.get("page") || "1");
-    const limit = isAll ? 100000 : parseInt(limitParam || "12");
+    const page = parseInt(url.searchParams.get("page") || "1", 10);
+    const limit = isAll ? 500 : Math.min(Math.max(1, parseInt(limitParam || "12", 10)), 500);
     const skip = isAll ? 0 : (page - 1) * limit;
 
     const query: any = { school_id: schoolId };
 
-    if (search) {
+    if (search && search.trim()) {
+      const sanitized = search.trim();
+      const escaped = escapeRegex(sanitized);
+      const searchRegex = new RegExp(escaped, "i");
       query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { employee_id: { $regex: search, $options: "i" } },
-        { email: { $regex: search, $options: "i" } },
-        { phone: { $regex: search, $options: "i" } },
-        { department: { $regex: search, $options: "i" } },
-        { designation: { $regex: search, $options: "i" } },
-        { qualification: { $regex: search, $options: "i" } },
-        { expertise: { $elemMatch: { $regex: search, $options: "i" } } },
+        { name: searchRegex },
+        { employee_id: searchRegex },
+        { email: searchRegex },
+        { phone: searchRegex },
+        { department: searchRegex },
+        { designation: searchRegex },
+        { qualification: searchRegex },
+        { expertise: { $elemMatch: { $regex: searchRegex } } },
       ];
     }
 

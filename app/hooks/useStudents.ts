@@ -176,7 +176,10 @@ export function useStudents(options?: { skip?: boolean }) {
       dateRange = p.dateRange ?? "";
       sort = p.sort ?? "";
       page = p.page ?? 1;
-      limit = p.limit ?? (p.page ? 10 : 100000);
+      // If caller explicitly passes limit, use it.
+      // If caller passes page (pagination mode), default to 10 per page.
+      // Otherwise cap at 500 — never fetch unbounded records.
+      limit = p.limit ?? (p.page ? 10 : 500);
       academic_year = p.academic_year ?? "";
       section = p.section ?? "";
       house = p.house ?? "";
@@ -184,7 +187,8 @@ export function useStudents(options?: { skip?: boolean }) {
     } else {
       search = (arg1 as string) ?? "";
       classId = arg2 ?? "";
-      limit = 100000; // Default to all for legacy calls
+      // Legacy string-path: cap at 500 to avoid unbounded fetches
+      limit = 500;
     }
 
     const isFiltered = !!(search || classId || (gender && gender !== "all") || (status && status !== "all") || (dateRange && dateRange !== "All Time") || sort || (section && section !== "all") || (house && house !== "all") || (admissionStatus && admissionStatus !== "all") || (isObject && (p.page || p.search || p.classId || p.streamId || p.sectionId || p.gender || p.status || p.section || p.house || p.admissionStatus)));
@@ -265,9 +269,9 @@ export function useStudents(options?: { skip?: boolean }) {
   useEffect(() => {
     if (options?.skip) return;
     if (!authReady) return; // Wait until the JWT token is in localStorage
-    // Default to 25 for contexts that only need summary data (e.g. dashboard).
-    // Pages that need all students call fetchStudents({ limit: <n> }) explicitly.
-    fetchStudents({ academic_year: academicYear, limit: 100000 });
+    // Default fetch: only load up to 500 students for initial render.
+    // Pages that need class-specific data must pass classId/limit explicitly.
+    fetchStudents({ academic_year: academicYear, limit: 500 });
   }, [fetchStudents, options?.skip, academicYear, authReady, mutationVersion]);
 
   // ─── Create student ─────────────────────────────────────────────

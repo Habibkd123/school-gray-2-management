@@ -20,7 +20,7 @@ function resolveId(field: { _id: string } | string | undefined): string {
 export default function ExaminationReportPage() {
   const { exams } = useExams();
   const { classes } = useClasses();
-  const { students } = useStudents();
+  const { students, fetchStudents } = useStudents({ skip: true });
 
   const [selectedYear, setSelectedYear] = useState("2026");
   const [selectedExamId, setSelectedExamId] = useState("");
@@ -72,6 +72,12 @@ export default function ExaminationReportPage() {
   useEffect(() => {
     fetchAllResults();
   }, [selectedExamId, selectedClassId]);
+
+  useEffect(() => {
+    if (selectedClassId) {
+      fetchStudents({ classId: selectedClassId, limit: 200 });
+    }
+  }, [selectedClassId, fetchStudents]);
 
   // Dynamic filter for students
   const classStudents = useMemo(() => {

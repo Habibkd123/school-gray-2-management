@@ -16,13 +16,10 @@ mongoose.set("autoIndex", false); // Disable autoIndex to prevent conflict error
 
 // ─── Global cache to reuse connection across hot reloads ──────────
 declare global {
-  // eslint-disable-next-line no-var
   var _mongooseCache: {
     conn: typeof mongoose | null;
     promise: Promise<typeof mongoose> | null;
   };
-  // eslint-disable-next-line no-var
-  var _indexesSynced: Promise<boolean> | undefined;
 }
 
 let cached = global._mongooseCache;
@@ -47,7 +44,8 @@ const MONGOOSE_OPTS: mongoose.ConnectOptions = {
 
 async function connectDB(): Promise<typeof mongoose> {
   // Reference models to prevent tree-shaking of registrations
-  const _ = models;
+  void models;
+
   if (cached.conn) {
     return cached.conn;
   }
@@ -58,61 +56,58 @@ async function connectDB(): Promise<typeof mongoose> {
 
   try {
     cached.conn = await cached.promise;
-    
-    // Database connection established successfully.
-    // Run index synchronization exactly once per application process lifetime
-    if (!global._indexesSynced) {
-      global._indexesSynced = (async () => {
-        console.log("🔄 Starting Mongoose schema index synchronization...");
-        try {
-          const modelNames = mongoose.modelNames();
-          for (const modelName of modelNames) {
-            const model = mongoose.model(modelName);
-            console.log(`  Syncing indexes for: ${modelName}`);
-
-            // Drop any indexes with the same keys but old/auto-generated names
-            try {
-              const dbIndexes = await model.collection.indexes();
-              const schemaIndexes = model.schema.indexes();
-
-              for (const [schemaKeys, schemaOptions] of schemaIndexes) {
-                const targetName = (schemaOptions as any).name;
-                if (!targetName) continue;
-
-                const matchingDbIndex = dbIndexes.find((dbIdx: any) => {
-                  const schemaKeyString = JSON.stringify(schemaKeys);
-                  const dbKeyString = JSON.stringify(dbIdx.key);
-                  return schemaKeyString === dbKeyString && dbIdx.name !== targetName;
-                });
-
-                if (matchingDbIndex) {
-                  console.log(`    Dropping old-named index ${matchingDbIndex.name} on ${modelName} to rename to ${targetName}`);
-                  await model.collection.dropIndex(matchingDbIndex.name!);
-                }
-              }
-            } catch (err: any) {
-              console.warn(`    ⚠️ Warning cleaning old indexes for ${modelName}:`, err.message);
-            }
-
-            const result = await model.syncIndexes() as any;
-            if (result && (Array.isArray(result) ? result.length > 0 : Object.keys(result).length > 0)) {
-              console.log(`    Synced ${modelName}: ${JSON.stringify(result)}`);
-            }
-          }
-          console.log("✅ All Mongoose schema indexes synchronized successfully.");
-          return true;
-        } catch (syncErr: any) {
-          console.error("❌ Schema index synchronization failed:", syncErr);
-          return false;
-        }
-      })();
-    }
   } catch (e) {
     cached.promise = null;
     throw e;
   }
 
   return cached.conn;
+}
+
+// ─── One-time index sync utility (run manually via env flag if needed) ─────
+// Usage: Set SYNC_INDEXES=true and restart ONCE to re-sync schema indexes.
+// After sync completes, remove the flag to keep startup fast.
+if (process.env.SYNC_INDEXES === "true") {
+  void (async () => {
+    try {
+      await connectDB();
+      console.log("🔄 [SYNC_INDEXES] Starting Mongoose schema index synchronization...");
+      const modelNames = mongoose.modelNames();
+      for (const modelName of modelNames) {
+        const model = mongoose.model(modelName);
+        console.log(`  Syncing indexes for: ${modelName}`);
+        try {
+          const dbIndexes = await model.collection.indexes() as Record<string, unknown>[];
+          const schemaIndexes = model.schema.indexes() as [Record<string, unknown>, Record<string, unknown>][];
+          for (const [schemaKeys, schemaOptions] of schemaIndexes) {
+            const targetName = schemaOptions["name"] as string | undefined;
+            if (!targetName) continue;
+            const matchingDbIndex = dbIndexes.find((dbIdx) => {
+              return (
+                JSON.stringify(schemaKeys) === JSON.stringify(dbIdx["key"]) &&
+                dbIdx["name"] !== targetName
+              );
+            });
+            if (matchingDbIndex) {
+              const idxName = matchingDbIndex["name"] as string;
+              console.log(`    Dropping old-named index ${idxName} on ${modelName}`);
+              await model.collection.dropIndex(idxName);
+            }
+          }
+        } catch (err: unknown) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.warn(`    ⚠️ Warning cleaning old indexes for ${modelName}:`, msg);
+        }
+        const result: unknown = await model.syncIndexes();
+        if (result && (Array.isArray(result) ? result.length > 0 : Object.keys(result as object).length > 0)) {
+          console.log(`    Synced ${modelName}: ${JSON.stringify(result)}`);
+        }
+      }
+      console.log("✅ [SYNC_INDEXES] All indexes synchronized. Remove SYNC_INDEXES from .env to keep startup fast.");
+    } catch (err) {
+      console.error("❌ [SYNC_INDEXES] Failed:", err);
+    }
+  })();
 }
 
 export default connectDB;

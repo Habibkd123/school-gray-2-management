@@ -25,7 +25,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const attendanceDocs = await Attendance.find({
       school_id: schoolId as string,
       type: "teacher"
-    }).lean();
+    })
+      .select("records.teacher_id records.status date")
+      .lean();
 
     let workingDays = 0;
     let presentCount = 0;

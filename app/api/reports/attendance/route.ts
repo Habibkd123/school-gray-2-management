@@ -28,26 +28,28 @@ export async function GET(req: NextRequest) {
       const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
       const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
 
-      // Query real student attendance for today
-      const attendanceRecords = await Attendance.find({
-        school_id: schoolId as string,
-        type: "student",
-        date: { $gte: startOfDay, $lte: endOfDay }
-      }).lean();
-
-      // Get all classes to ensure we list every class
       const classQuery: any = { school_id: schoolId };
       if (classId) classQuery._id = classId;
-      const allClasses = await Class.find(classQuery).lean();
 
-      // Get all students to know class totals
-      const allStudents = await Student.find({ school_id: schoolId, is_active: true }).lean();
+      const [attendanceRecords, allClasses, studentCounts] = await Promise.all([
+        Attendance.find({
+          school_id: schoolId as string,
+          type: "student",
+          date: { $gte: startOfDay, $lte: endOfDay }
+        }).select("class_id records.status date").lean(),
+        Class.find(classQuery).select("_id name section").lean(),
+        Student.aggregate([
+          { $match: { school_id: new mongoose.Types.ObjectId(schoolId as string), is_active: true } },
+          { $group: { _id: "$class_id", count: { $sum: 1 } } }
+        ])
+      ]);
+
+      const countMap = new Map<string, number>();
+      studentCounts.forEach((sc: any) => {
+        if (sc._id) countMap.set(sc._id.toString(), sc.count);
+      });
 
       const classStats = allClasses.map((cls) => {
-        const classStudents = allStudents.filter(
-          (s: any) => s.class_id?.toString() === cls._id.toString()
-        );
-
         // Find marked attendance for this class
         const attDoc = attendanceRecords.find(
           (r) => r.class_id?.toString() === cls._id.toString()
@@ -70,7 +72,7 @@ export async function GET(req: NextRequest) {
           });
         }
 
-        const totalStudents = classStudents.length;
+        const totalStudents = countMap.get(cls._id.toString()) || 0;
         const totalMarked = present + absent + late + leave + halfDay;
 
         // If no attendance was marked, count all as pending or default
@@ -102,23 +104,28 @@ export async function GET(req: NextRequest) {
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-      // Query monthly student attendance
-      const attendanceRecords = await Attendance.find({
-        school_id: schoolId as string,
-        type: "student",
-        date: { $gte: startDate, $lte: endDate }
-      }).lean();
-
       const classQuery: any = { school_id: schoolId };
       if (classId) classQuery._id = classId;
-      const allClasses = await Class.find(classQuery).lean();
-      const allStudents = await Student.find({ school_id: schoolId, is_active: true }).lean();
+
+      const [attendanceRecords, allClasses, studentCounts] = await Promise.all([
+        Attendance.find({
+          school_id: schoolId as string,
+          type: "student",
+          date: { $gte: startDate, $lte: endDate }
+        }).select("class_id records.status date").lean(),
+        Class.find(classQuery).select("_id name section").lean(),
+        Student.aggregate([
+          { $match: { school_id: new mongoose.Types.ObjectId(schoolId as string), is_active: true } },
+          { $group: { _id: "$class_id", count: { $sum: 1 } } }
+        ])
+      ]);
+
+      const countMap = new Map<string, number>();
+      studentCounts.forEach((sc: any) => {
+        if (sc._id) countMap.set(sc._id.toString(), sc.count);
+      });
 
       const monthlyStats = allClasses.map((cls: any) => {
-        const classStudents = allStudents.filter(
-          (s: any) => s.class_id?.toString() === cls._id.toString()
-        );
-
         // Filter attendance documents for this class
         const classAttDocs = attendanceRecords.filter(
           (r: any) => r.class_id?.toString() === cls._id.toString()
@@ -143,7 +150,7 @@ export async function GET(req: NextRequest) {
           }
         });
 
-        const studentCount = classStudents.length;
+        const studentCount = countMap.get(cls._id.toString()) || 0;
 
         return {
           classId: cls._id,
@@ -166,13 +173,14 @@ export async function GET(req: NextRequest) {
       const sevenDaysAgo = new Date();
       sevenDaysAgo.setDate(today.getDate() - 7);
 
-      const attendanceRecords = await Attendance.find({
-        school_id: schoolId as string,
-        type: "teacher",
-        date: { $gte: sevenDaysAgo, $lte: today }
-      }).sort({ date: 1 }).lean();
-
-      const allTeachers = await Teacher.find({ school_id: schoolId }).lean();
+      const [attendanceRecords, allTeachers] = await Promise.all([
+        Attendance.find({
+          school_id: schoolId as string,
+          type: "teacher",
+          date: { $gte: sevenDaysAgo, $lte: today }
+        }).select("date records.teacher_id records.status").sort({ date: 1 }).lean(),
+        Teacher.find({ school_id: schoolId }).select("_id name employee_id").lean()
+      ]);
 
       // Build map of date -> teacher status
       const teacherStats = allTeachers.map((teacher: any) => {

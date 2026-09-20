@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -12,7 +12,7 @@ import { PrintService } from "@/app/lib/print-service";
 
 export default function ClassReportPage() {
   const { classes, isLoading, fetchClasses } = useClasses();
-  const { students, fetchStudents } = useStudents();
+  const { students, fetchStudents } = useStudents({ skip: true });
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -104,7 +104,8 @@ export default function ClassReportPage() {
     };
 
     fetchClassStats();
-  }, [selectedClassId, selectedDate]);
+    fetchStudents({ classId: selectedClassId, limit: 200 });
+  }, [selectedClassId, selectedDate, fetchStudents]);
 
   const handleExport = (format: "csv" | "excel") => {
     if (sortedClasses.length === 0) {

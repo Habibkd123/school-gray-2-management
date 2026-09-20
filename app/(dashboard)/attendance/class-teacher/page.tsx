@@ -28,10 +28,10 @@ import {
 import { useClasses } from "@/app/hooks/useClasses";
 import { useTeachers } from "@/app/hooks/useTeachers";
 import { useTeacherAssignment, PopulatedTeacherAssignment } from "@/app/hooks/useTeacherAssignment";
-import { useStudents } from "@/app/hooks/useStudents";
 import { useAuth } from "@/app/context/auth";
 import { useAppState } from "@/app/context/store";
 import { PrintService } from "@/app/lib/print-service";
+import { getAuthHeaders } from "@/lib/utils/session";
 
 export default function ClassTeacherAssignmentPage() {
   const { user } = useAuth();
@@ -41,7 +41,7 @@ export default function ClassTeacherAssignmentPage() {
   const { classes, isLoading: loadingClasses, fetchClasses } = useClasses({ filterByYear: true });
   const { teachers, isLoading: loadingTeachers, fetchTeachers } = useTeachers({ skip: true });
   const { assignments, isLoading: loadingAssignments, fetchAssignments, createAssignment, updateAssignment, deleteAssignment } = useTeacherAssignment();
-  const { students, fetchStudents } = useStudents({ skip: true });
+  const [classStudentsCount, setClassStudentsCount] = React.useState(0);
 
   // Filters
   const [filterYear, setFilterYear] = useState(academicYear || "2026");
@@ -77,11 +77,10 @@ export default function ClassTeacherAssignmentPage() {
   // Active Report Tab State
   const [activeReportTab, setActiveReportTab] = useState<"list" | "workload" | "unassigned">("list");
 
-  // Load initial data
+  // Load initial data — students are fetched on-demand per class (see classStudentsCount below)
   useEffect(() => {
     fetchTeachers();
-    fetchStudents({ limit: 10000 });
-  }, [fetchTeachers, fetchStudents]);
+  }, [fetchTeachers]);
 
   // Load all assignments in the system for workload calculations and lists
   useEffect(() => {
@@ -327,15 +326,18 @@ export default function ClassTeacherAssignmentPage() {
     }
   };
 
-  // Compute student count of the selected assignment class
-  const classStudentsCount = useMemo(() => {
-    if (!selectedAssignmentDetails || !selectedAssignmentDetails.class_id) return 0;
+  // Fetch student count for the selected class on-demand (no bulk load needed)
+  useEffect(() => {
+    if (!selectedAssignmentDetails?.class_id?._id) {
+      setClassStudentsCount(0);
+      return;
+    }
     const cId = selectedAssignmentDetails.class_id._id;
-    return students.filter(s => {
-      const sClassId = typeof s.class_id === "object" ? s.class_id?._id : s.class_id;
-      return sClassId === cId;
-    }).length;
-  }, [selectedAssignmentDetails, students]);
+    fetch(`/api/students?class_id=${cId}&limit=1`, { headers: getAuthHeaders() })
+      .then(r => r.json())
+      .then(d => setClassStudentsCount(d?.data?.total ?? 0))
+      .catch(() => setClassStudentsCount(0));
+  }, [selectedAssignmentDetails]);
 
   // Export workload CSV report
   const handleExportWorkloadCSV = () => {

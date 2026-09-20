@@ -96,11 +96,6 @@ export default function MarksEntryPage() {
     }
   }, [selectedExamId, exams, classes]);
 
-  // Load all students and results on start
-  useEffect(() => {
-    fetchStudents({ limit: 10000 });
-  }, [fetchStudents]);
-
   // Resolve target class ID based on Class name + Section selection
   const resolvedClass = useMemo(() => {
     if (!selectedClassName || !selectedSection) return null;
@@ -108,6 +103,13 @@ export default function MarksEntryPage() {
   }, [classes, selectedClassName, selectedSection]);
 
   const resolvedClassId = resolvedClass?._id || "";
+
+  // Fetch students only when a specific class is selected — no upfront bulk load
+  useEffect(() => {
+    if (resolvedClassId) {
+      fetchStudents({ classId: resolvedClassId, limit: 500 });
+    }
+  }, [fetchStudents, resolvedClassId]);
 
   // Fetch subjects for the resolved class dynamically
   const { subjects, loading: loadingSubjects } = useSubjects(resolvedClassId || undefined);
@@ -151,7 +153,7 @@ export default function MarksEntryPage() {
     return Array.from(secs).sort();
   }, [classes, selectedClassName]);
 
-  // Filter students: strictly matching resolved class ID
+  // All students from hook are already class-filtered (fetched with classId above)
   const classStudents = useMemo(() => {
     if (!resolvedClassId) return [];
     return students.filter(s => resolveId(s.class_id) === resolvedClassId && s.is_active !== false);

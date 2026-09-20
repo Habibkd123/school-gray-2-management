@@ -69,10 +69,41 @@ export async function GET(req: NextRequest) {
         query.class_id = { $in: combinedClassIds };
       }
 
-      const attendanceRecords = await Attendance.find(query).lean();
+      const [attendanceRecords, studentCounts] = await Promise.all([
+        Attendance.find(query)
+          .select("class_id records.status records.student_id date")
+          .lean(),
+        Student.aggregate([
+          {
+            $match: {
+              school_id: new mongoose.Types.ObjectId(schoolId as string),
+              academic_year,
+              is_active: true,
+              ...(streamId && mongoose.Types.ObjectId.isValid(streamId)
+                ? { stream_id: new mongoose.Types.ObjectId(streamId) }
+                : {}),
+            },
+          },
+          {
+            $group: {
+              _id: "$class_id",
+              count: { $sum: 1 },
+            },
+          },
+        ]),
+      ]);
+
+      const classStudentCounts: Record<string, number> = {};
+      studentCounts.forEach((sc: any) => {
+        if (sc._id) {
+          classStudentCounts[sc._id.toString()] = sc.count;
+        }
+      });
+
       return NextResponse.json({
         success: true,
         data: attendanceRecords,
+        classStudentCounts,
       });
     }
 

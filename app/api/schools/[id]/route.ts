@@ -4,6 +4,8 @@ import School from "@/lib/models/School";
 import User from "@/lib/models/User";
 import mongoose from "mongoose";
 import { requireAuth } from "@/lib/utils/auth";
+import { invalidateSchoolThemeCache } from "@/lib/themes/getSchoolTheme";
+import { invalidateSchoolSlugCache } from "@/lib/themes/resolveSchool";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -43,10 +45,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     return NextResponse.json({ success: true, data: school });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[SCHOOL GET ERROR]", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch school";
     return NextResponse.json(
-      { success: false, message: error.message || "Failed to fetch school" },
+      { success: false, message },
       { status: 500 }
     );
   }
@@ -88,15 +91,22 @@ export async function PUT(request: NextRequest, context: RouteContext) {
 
     await school.save();
 
+    invalidateSchoolThemeCache(schoolId);
+    if (school.slug) {
+      invalidateSchoolSlugCache(school.slug);
+      invalidateSchoolThemeCache(school.slug);
+    }
+
     return NextResponse.json({
       success: true,
       message: "School updated successfully",
       data: school,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[SCHOOL UPDATE ERROR]", error);
+    const message = error instanceof Error ? error.message : "Failed to update school";
     return NextResponse.json(
-      { success: false, message: error.message || "Failed to update school" },
+      { success: false, message },
       { status: 500 }
     );
   }
@@ -140,14 +150,21 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
 
     await School.findByIdAndDelete(schoolId);
 
+    invalidateSchoolThemeCache(schoolId);
+    if (school.slug) {
+      invalidateSchoolSlugCache(school.slug);
+      invalidateSchoolThemeCache(school.slug);
+    }
+
     return NextResponse.json({
       success: true,
       message: "School deleted successfully",
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[SCHOOL DELETE ERROR]", error);
+    const message = error instanceof Error ? error.message : "Failed to delete school";
     return NextResponse.json(
-      { success: false, message: error.message || "Failed to delete school" },
+      { success: false, message },
       { status: 500 }
     );
   }

@@ -45,7 +45,8 @@ export async function GET(req: NextRequest) {
     const allocations = await FeeAllocation.find(query)
       .populate("student_id", "name admission_no roll_no")
       .populate("fee_group_id", "name description")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ success: true, data: { allocations } });
   } catch (error: any) {

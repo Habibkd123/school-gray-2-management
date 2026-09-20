@@ -8,7 +8,11 @@ import {
   PRESET_LABELS,
   type ThemePreset,
 } from "@/lib/themes/presets";
-import { getSchoolThemeById } from "@/lib/themes/getSchoolTheme";
+import {
+  getSchoolThemeById,
+  invalidateSchoolThemeCache,
+} from "@/lib/themes/getSchoolTheme";
+import { invalidateSchoolSlugCache } from "@/lib/themes/resolveSchool";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -101,6 +105,12 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
 
     await school.save();
+
+    invalidateSchoolThemeCache(schoolId);
+    if (school.slug) {
+      invalidateSchoolSlugCache(school.slug);
+      invalidateSchoolThemeCache(school.slug);
+    }
 
     const resolved = await getSchoolThemeById(schoolId);
     return NextResponse.json({

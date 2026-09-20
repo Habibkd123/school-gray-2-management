@@ -39,7 +39,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         school_id: schoolId as string,
         type: "student",
         class_id: classId
-      }).lean();
+      })
+        .select("records.student_id records.status date")
+        .lean();
 
       workingDays = attendanceDocs.length;
 
