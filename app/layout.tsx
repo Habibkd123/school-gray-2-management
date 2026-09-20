@@ -7,6 +7,7 @@ import { RootThemeProvider } from "./components/RootThemeProvider";
 import { ServerThemeStyles } from "./components/ServerThemeStyles";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://myschoollife.in"),
   title: "Portal | My School Life",
   description: "A premium, unified dashboard for managing school operations, attendance, grading, billing, and scheduling.",
 };
