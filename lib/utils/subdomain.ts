@@ -94,3 +94,35 @@ export async function resolveSchoolIdBySubdomain(
     return null;
   }
 }
+
+/**
+ * Returns the canonical host for a school subdomain.
+ * Prevents duplicate domains like "myschoollife.myschoollife.in".
+ *
+ * Examples:
+ * - "bajrang", isLocal=false -> "bajrang.myschoollife.in"
+ * - "bajrang", isLocal=true  -> "bajrang.localhost"
+ * - "myschoollife", isLocal=false -> "myschoollife.in"
+ * - "myschoollife", isLocal=true  -> "localhost"
+ */
+export function getSubdomainHost(
+  subdomain: string | null | undefined,
+  isLocal = false
+): string {
+  const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
+  const rootSlug = rootDomain.split(".")[0]?.toLowerCase();
+  const standaloneSlug = process.env.NEXT_PUBLIC_STANDALONE_SUBDOMAIN?.trim().toLowerCase();
+
+  const sub = subdomain?.trim().toLowerCase();
+
+  if (
+    !sub ||
+    sub === "www" ||
+    sub === rootSlug ||
+    (process.env.NEXT_PUBLIC_IS_STANDALONE === "true" && sub === standaloneSlug)
+  ) {
+    return isLocal ? "localhost" : rootDomain;
+  }
+
+  return isLocal ? `${sub}.localhost` : `${sub}.${rootDomain}`;
+}

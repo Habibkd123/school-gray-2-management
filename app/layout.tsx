@@ -7,6 +7,7 @@ import { ThemeProvider } from "./providers";
 import { RootThemeProvider } from "./components/RootThemeProvider";
 import { ServerThemeStyles } from "./components/ServerThemeStyles";
 import { resolveSchoolMeta } from "@/lib/themes/resolveSchool";
+import { getSubdomainHost } from "@/lib/utils/subdomain";
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
 const APP_URL     = process.env.NEXT_PUBLIC_APP_URL     || `https://www.${ROOT_DOMAIN}`;
@@ -37,11 +38,8 @@ export async function generateMetadata(): Promise<Metadata> {
 
   const sub     = headersList.get("x-subdomain")    ?? "";
   const custDom = headersList.get("x-custom-domain") ?? "";
-  const siteUrl = custDom
-    ? `https://${custDom}`
-    : sub
-    ? `https://${sub}.${ROOT_DOMAIN}`
-    : APP_URL;
+  const host    = custDom || getSubdomainHost(sub, false);
+  const siteUrl = `https://${host}`;
 
   const title       = school.meta_title || `${school.name} | Portal`;
   const description = school.meta_desc  || `Official ERP portal of ${school.name}.`;

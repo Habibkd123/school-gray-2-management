@@ -118,43 +118,33 @@ export function Header({ contact, admissions }: HeaderProps) {
           <div className="hidden lg:flex items-center gap-3">
             {isUserLoggedIn ? (
               <div className="relative">
-                <div className="flex items-center gap-2">
-                  <Link
-                    href={dashboardHref}
-                    className="px-4 py-2 rounded-sm bg-[var(--primary)] text-white font-bold text-[13px] shadow-md hover:bg-[var(--primary-hover)] hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wider flex items-center gap-1.5"
-                  >
-                    <LayoutDashboard className="w-3.5 h-3.5" />
-                    Dashboard
-                  </Link>
-
-                  <button
-                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center gap-2 p-1 pl-1.5 pr-2 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
-                    title={user.name}
-                  >
-                    <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--primary)]/10 flex-shrink-0 flex items-center justify-center border border-[var(--primary)]/20">
-                      <img
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "User")}&background=1E3A5F&color=fff&bold=true`}
-                        alt={user.name || "User"}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex flex-col text-left">
-                      <span className="text-[12px] font-bold text-[#231F20] leading-none max-w-[100px] truncate">
-                        {user.name}
-                      </span>
-                      <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider leading-tight">
-                        {user.role?.replace("_", " ")}
-                      </span>
-                    </div>
-                    <ChevronDown className="w-3 h-3 text-slate-400" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2.5 py-1 px-2.5 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all duration-200 cursor-pointer shadow-xs"
+                  title={user.name}
+                >
+                  <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--primary)]/10 flex-shrink-0 flex items-center justify-center border border-[var(--primary)]/20">
+                    <img
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "User")}&background=1E3A5F&color=fff&bold=true`}
+                      alt={user.name || "User"}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <span className="text-[12px] font-bold text-[#231F20] leading-none max-w-[120px] truncate">
+                      {user.name}
+                    </span>
+                    <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider leading-tight">
+                      {user.role?.replace("_", " ")}
+                    </span>
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isUserMenuOpen ? "rotate-180" : ""}`} />
+                </button>
 
                 {isUserMenuOpen && (
                   <>
                     <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
                       <div className="px-3.5 py-2.5 border-b border-slate-100">
                         <p className="text-[13px] font-bold text-slate-900 truncate">{user.name}</p>
                         <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
@@ -162,24 +152,26 @@ export function Header({ contact, admissions }: HeaderProps) {
                           {user.role?.replace("_", " ")}
                         </span>
                       </div>
-                      <Link
-                        href={dashboardHref}
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3.5 py-2.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[var(--primary)] transition-colors font-medium"
-                      >
-                        <LayoutDashboard className="w-4 h-4 text-slate-400" />
-                        Go to Dashboard
-                      </Link>
-                      <button
-                        onClick={() => {
-                          setIsUserMenuOpen(false);
-                          logout();
-                        }}
-                        className="w-full flex items-center gap-2 px-3.5 py-2.5 text-[13px] text-red-600 hover:bg-red-50 transition-colors font-medium text-left cursor-pointer"
-                      >
-                        <LogOut className="w-4 h-4 text-red-400" />
-                        Logout
-                      </button>
+                      <div className="p-1">
+                        <Link
+                          href={dashboardHref}
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[var(--primary)] rounded-lg transition-colors font-medium"
+                        >
+                          <LayoutDashboard className="w-4 h-4 text-slate-400" />
+                          Dashboard
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setIsUserMenuOpen(false);
+                            logout();
+                          }}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-red-600 hover:bg-red-50 rounded-lg transition-colors font-medium text-left cursor-pointer"
+                        >
+                          <LogOut className="w-4 h-4 text-red-400" />
+                          Logout
+                        </button>
+                      </div>
                     </div>
                   </>
                 )}
@@ -256,7 +248,7 @@ export function Header({ contact, admissions }: HeaderProps) {
                     className="w-full py-2.5 rounded-sm bg-[var(--primary)] text-white font-bold text-center text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm"
                   >
                     <LayoutDashboard className="w-4 h-4" />
-                    Go to Dashboard
+                    Dashboard
                   </Link>
                   <button
                     onClick={() => {

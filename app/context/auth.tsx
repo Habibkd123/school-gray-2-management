@@ -12,7 +12,7 @@ import {
   clearMustChangePassword,
   StoredUser,
 } from "@/lib/utils/session";
-import { getClientSubdomain, resolveSchoolIdBySubdomain } from "@/lib/utils/subdomain";
+import { getClientSubdomain, resolveSchoolIdBySubdomain, getSubdomainHost } from "@/lib/utils/subdomain";
 import { AlertCircle } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -184,16 +184,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const subdomain = getSubdomain();
     if (!subdomain) {
       // No subdomain in URL — check sm_subdomain cookie and redirect if not standalone
-      const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
       const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
       const cookieMatch = document.cookie.match(/(?:^|;\s*)sm_subdomain=([^;]+)/);
       const targetSub = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
       if (targetSub) {
-        const port = window.location.port ? `:${window.location.port}` : "";
-        const protocol = window.location.protocol;
-        const targetHost = isLocal ? `${targetSub}.localhost${port}` : `${targetSub}.${rootDomain}`;
-        window.location.href = `${protocol}//${targetHost}${window.location.pathname}${window.location.search}`;
-        return;
+        const expectedHost = getSubdomainHost(targetSub, isLocal);
+        const currentHost = window.location.hostname;
+        if (currentHost !== expectedHost) {
+          const port = window.location.port ? `:${window.location.port}` : "";
+          const protocol = window.location.protocol;
+          window.location.href = `${protocol}//${expectedHost}${port}${window.location.pathname}${window.location.search}`;
+          return;
+        }
       }
 
       clearSession();

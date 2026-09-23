@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import School from "@/lib/models/School";
+import { getSubdomainHost } from "@/lib/utils/subdomain";
 
 /**
  * GET /api/public/school-info?subdomain=bajrang
@@ -41,11 +42,9 @@ export async function GET(request: NextRequest) {
     }
 
     const meta = (school as any).meta_config ?? {};
-    const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
     const sub         = (school as any).subdomain || subdomain || "";
-    const siteUrl     = (school as any).custom_domain
-      ? `https://${(school as any).custom_domain}`
-      : `https://${sub}.${ROOT_DOMAIN}`;
+    const host        = (school as any).custom_domain || getSubdomainHost(sub, false);
+    const siteUrl     = `https://${host}`;
 
     return NextResponse.json({
       success: true,

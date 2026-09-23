@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { RefreshCcw, Building2, CheckCircle2, X, ArrowRight, Plus, Loader2, Globe } from "lucide-react";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { getSubdomainHost } from "@/lib/utils/subdomain";
 
 interface SuperAdminDashboardProps {
   user: any;
@@ -138,7 +139,7 @@ export default function SuperAdminDashboard({ user }: SuperAdminDashboardProps) 
                         <td className="px-5 py-3">
                           <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-amber-600 dark:text-amber-400">
                             <Globe className="w-3 h-3" />
-                            {sub}.{ROOT_DOMAIN}
+                            {getSubdomainHost(sub, false)}
                           </span>
                         </td>
                         <td className="px-5 py-3">

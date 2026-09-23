@@ -83,9 +83,16 @@ export function middleware(request: NextRequest) {
     );
 
     // Rule 1: School user is on main domain (subdomain is null) but accessing a protected route
-    // Redirect them to their school subdomain!
+    // Redirect them to their school subdomain (only for actual tenant subdomains, never for root domain school)!
+    const rootSlug = ROOT_DOMAIN.split(".")[0]?.toLowerCase();
+    const isRootSchool =
+      cookieSubdomain === rootSlug ||
+      cookieSubdomain === "www" ||
+      (IS_STANDALONE && cookieSubdomain === STANDALONE_SUB);
+
     if (
       cookieSubdomain &&
+      !isRootSchool &&
       cookieRole !== "super_admin" &&
       subdomain === null &&
       isProtectedRoute

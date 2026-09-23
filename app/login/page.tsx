@@ -15,7 +15,7 @@ const newsItems = [
   { title: "Summer Vacation Holiday Homework", desc: "The school will remain closed from April 20th to June 15th for summer..." },
 ];
 
-import { getClientSubdomain } from "@/lib/utils/subdomain";
+import { getClientSubdomain, getSubdomainHost } from "@/lib/utils/subdomain";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -116,11 +116,8 @@ export default function LoginPage() {
         currentHost === "127.0.0.1" ||
         currentHost.endsWith(".localhost");
 
-      // If user belongs to a school subdomain and is not already on it, navigate directly
-      if (targetSubdomain && targetSubdomain !== "www") {
-        const expectedHost = isLocal
-          ? `${targetSubdomain}.localhost`
-          : `${targetSubdomain}.${rootDomain}`;
+      if (targetSubdomain) {
+        const expectedHost = getSubdomainHost(targetSubdomain, isLocal);
         if (currentHost !== expectedHost) {
           const port = window.location.port ? `:${window.location.port}` : "";
           const protocol = window.location.protocol;

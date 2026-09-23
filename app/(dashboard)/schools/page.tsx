@@ -10,6 +10,7 @@ import {
   Globe, ExternalLink, Copy, Check, Search, Tag
 } from "lucide-react";
 import { Modal } from "../../components/ui/modal";
+import { getSubdomainHost } from "@/lib/utils/subdomain";
 
 interface SchoolData {
   _id: string;
@@ -135,7 +136,8 @@ export default function SchoolsPage() {
     if (school.custom_domain) {
       return `https://${school.custom_domain}/login`;
     }
-    return `https://${sub}.${ROOT_DOMAIN}/login`;
+    const host = getSubdomainHost(sub, false);
+    return `https://${host}/login`;
   };
 
   const handleCopyLink = (school: SchoolData) => {
