@@ -6,12 +6,19 @@ import { requireAuth } from "@/lib/utils/auth";
 
 // GET /api/landing — fetch this school's landing content
 export async function GET(request: NextRequest) {
-  const auth = requireAuth(request, ["school_admin", "teacher", "accountant"]);
+  const auth = requireAuth(request, ["school_admin", "super_admin", "teacher", "accountant"]);
   if (auth.error) return auth.error;
+
+  const url = new URL(request.url);
+  const targetSchoolId = auth.schoolId || (auth.user?.role === "super_admin" ? (url.searchParams.get("school_id") || null) : null);
+
+  if (!targetSchoolId) {
+    return NextResponse.json({ success: false, message: "School ID not resolved" }, { status: 400 });
+  }
 
   try {
     await connectDB();
-    const doc = await LandingContent.findOne({ school_id: auth.schoolId }).lean();
+    const doc = await LandingContent.findOne({ school_id: targetSchoolId }).lean();
 
     if (!doc) {
       // Return empty structure so client can render defaults
@@ -30,20 +37,26 @@ export async function GET(request: NextRequest) {
 
 // PUT /api/landing — upsert the school's landing content
 export async function PUT(request: NextRequest) {
-  const auth = requireAuth(request, ["school_admin"]);
+  const auth = requireAuth(request, ["school_admin", "super_admin"]);
   if (auth.error) return auth.error;
 
   try {
     await connectDB();
     const body = await request.json();
 
+    const targetSchoolId = auth.schoolId || (auth.user?.role === "super_admin" ? (body.school_id || null) : null);
+
+    if (!targetSchoolId) {
+      return NextResponse.json({ success: false, message: "School ID not resolved" }, { status: 400 });
+    }
+
     // Strip _id and school_id from body to avoid conflicts
     const { _id, school_id, __v, createdAt, updatedAt, ...updateData } = body;
 
     const doc = await LandingContent.findOneAndUpdate(
-      { school_id: auth.schoolId },
-      { $set: updateData, school_id: auth.schoolId },
-      { upsert: true, new: true, runValidators: false }
+      { school_id: targetSchoolId },
+      { $set: updateData, school_id: targetSchoolId },
+      { upsert: true, returnDocument: 'after', runValidators: false }
     );
 
     return NextResponse.json({ success: true, data: doc, message: "Saved successfully" });
@@ -58,13 +71,19 @@ export async function PUT(request: NextRequest) {
 
 // PATCH /api/landing — patch a single section (more efficient)
 export async function PATCH(request: NextRequest) {
-  const auth = requireAuth(request, ["school_admin"]);
+  const auth = requireAuth(request, ["school_admin", "super_admin"]);
   if (auth.error) return auth.error;
 
   try {
     await connectDB();
     const body = await request.json();
-    const { section, data } = body as { section: string; data: Record<string, unknown> };
+    const { section, data, school_id } = body as { section: string; data: Record<string, unknown>; school_id?: string };
+
+    const targetSchoolId = auth.schoolId || (auth.user?.role === "super_admin" ? (school_id || null) : null);
+
+    if (!targetSchoolId) {
+      return NextResponse.json({ success: false, message: "School ID not resolved" }, { status: 400 });
+    }
 
     if (!section || !data) {
       return NextResponse.json(
@@ -85,9 +104,9 @@ export async function PATCH(request: NextRequest) {
     }
 
     const doc = await LandingContent.findOneAndUpdate(
-      { school_id: auth.schoolId },
-      { $set: setPayload, $setOnInsert: { school_id: auth.schoolId } },
-      { upsert: true, new: true, runValidators: false }
+      { school_id: targetSchoolId },
+      { $set: setPayload, $setOnInsert: { school_id: targetSchoolId } },
+      { upsert: true, returnDocument: 'after', runValidators: false }
     );
 
     return NextResponse.json({ success: true, data: doc, message: "Section saved" });

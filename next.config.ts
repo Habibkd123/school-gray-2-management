@@ -81,6 +81,7 @@ const nextConfig: NextConfig = {
   // ── Redirects ────────────────────────────────────────────────────
   async redirects() {
     return [
+      { source: "/signup",          destination: "/register",                    permanent: true },
       { source: "/fees-collection", destination: "/fees-collection/collect-fees", permanent: false },
       { source: "/academic",        destination: "/academic/class-room",          permanent: false },
       { source: "/examination",     destination: "/examination/exam",             permanent: false },

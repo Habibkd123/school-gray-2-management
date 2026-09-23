@@ -28,8 +28,23 @@ export const saveSession = (
 };
 
 // ─── Load ─────────────────────────────────────────────────────────
-export const getAccessToken = (): string | null =>
-  localStorage.getItem(KEYS.ACCESS_TOKEN);
+export const getAccessToken = (): string | null => {
+  if (typeof window === "undefined") return null;
+  const token = localStorage.getItem(KEYS.ACCESS_TOKEN);
+  if (token) return token;
+
+  // Fallback to cookie (for cross-subdomain authentication)
+  try {
+    const match = document.cookie.match(/(?:^|;\s*)sm_token=([^;]+)/);
+    if (match && match[1]) {
+      const cookieToken = decodeURIComponent(match[1]);
+      localStorage.setItem(KEYS.ACCESS_TOKEN, cookieToken);
+      return cookieToken;
+    }
+  } catch {}
+
+  return null;
+};
 
 export const getRefreshToken = (): string | null =>
   localStorage.getItem(KEYS.REFRESH_TOKEN);
@@ -45,9 +60,24 @@ export const getStoredUser = (): StoredUser | null => {
 
 // ─── Clear ────────────────────────────────────────────────────────
 export const clearSession = () => {
-  localStorage.removeItem(KEYS.ACCESS_TOKEN);
-  localStorage.removeItem(KEYS.REFRESH_TOKEN);
-  localStorage.removeItem(KEYS.USER);
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(KEYS.ACCESS_TOKEN);
+    localStorage.removeItem(KEYS.REFRESH_TOKEN);
+    localStorage.removeItem(KEYS.USER);
+    try {
+      sessionStorage.removeItem("sm_active_subdomain");
+      sessionStorage.removeItem("sm_cached_permissions");
+      sessionStorage.removeItem("sm_cached_permissions_time");
+    } catch {}
+
+    // Clear cookies across root domain and current domain
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
+    const cookiesToClear = ["sm_token", "sm_subdomain", "sm_role"];
+    cookiesToClear.forEach((name) => {
+      document.cookie = `${name}=; path=/; max-age=0;`;
+      document.cookie = `${name}=; path=/; domain=.${rootDomain}; max-age=0;`;
+    });
+  }
 };
 
 // ─── Update must_change_password flag only ────────────────────────

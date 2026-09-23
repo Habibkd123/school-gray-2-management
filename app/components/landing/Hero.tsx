@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { ArrowRight, Play } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
@@ -29,6 +30,10 @@ interface HeroData {
   admissions?: {
     admission_open?: boolean;
     apply_url?: string;
+  };
+  gallery?: {
+    videos?: Array<{ url: string; title: string }>;
+    photos?: Array<{ url: string; caption: string }>;
   };
 }
 
@@ -122,18 +127,16 @@ export function Hero({ data }: { data?: HeroData | null }) {
               Apply For Admission <ArrowRight className="w-5 h-5" />
             </a>
           )}
-          {videoUrl && (
-            <a
-              href={videoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-8 py-4 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold text-base hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-3"
+          {(videoUrl || Boolean(data?.gallery?.videos?.length) || Boolean(data?.gallery?.photos?.length)) && (
+            <Link
+              href="/gallery"
+              className="px-8 py-4 rounded-lg bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold text-base hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-3 cursor-pointer"
             >
               <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
                 <Play className="w-4 h-4 text-white ml-1" fill="currentColor" />
               </div>
               Virtual Tour
-            </a>
+            </Link>
           )}
         </motion.div>
 

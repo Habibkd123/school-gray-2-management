@@ -12,6 +12,7 @@ import {
   clearMustChangePassword,
   StoredUser,
 } from "@/lib/utils/session";
+import { getClientSubdomain, resolveSchoolIdBySubdomain } from "@/lib/utils/subdomain";
 import { AlertCircle } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -21,7 +22,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   mustChangePassword: boolean;
-  login: (email: string, password: string, loginType?: string) => Promise<{ success: boolean; message: string }>;
+  login: (email: string, password: string, loginType?: string) => Promise<{ success: boolean; message: string; schoolSubdomain?: string | null }>;
   register: (data: RegisterData) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -47,15 +48,25 @@ let _activeRefreshPromise: Promise<boolean> | null = null;
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+
+  // Single source of truth from lib/utils/subdomain
+  const getSubdomain = (): string | null => {
+    return getClientSubdomain();
+  };
+
   const [user, setUser] = useState<StoredUser | null>(() => {
     if (typeof window !== "undefined") {
       const storedUser = getStoredUser();
       const token = getAccessToken();
       if (storedUser && token) {
-        const currentSchoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
-        if (storedUser.role === "super_admin" || storedUser.school_id === currentSchoolId) {
-          return storedUser;
-        }
+        if (storedUser.role === "super_admin") return storedUser;
+        const subdomain = getSubdomain();
+        const hostname = window.location.hostname;
+        const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
+        // On root domain (production without subdomain), non-super_admins have no school context
+        if (!subdomain && !isLocal) return null;
+        // school_id will be validated on mount via API
+        return storedUser;
       }
     }
     return null;
@@ -165,8 +176,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       queueMicrotask(() => setIsLoading(false));
       return;
     }
-    const currentSchoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
-    if (storedUser.role !== "super_admin" && storedUser.school_id !== currentSchoolId) {
+    if (storedUser.role === "super_admin") {
+      queueMicrotask(() => setIsLoading(false));
+      return;
+    }
+    // Validate that stored school_id matches current subdomain's school
+    const subdomain = getSubdomain();
+    if (!subdomain) {
+      // No subdomain in URL — check sm_subdomain cookie and redirect if not standalone
+      const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
+      const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      const cookieMatch = document.cookie.match(/(?:^|;\s*)sm_subdomain=([^;]+)/);
+      const targetSub = cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
+      if (targetSub) {
+        const port = window.location.port ? `:${window.location.port}` : "";
+        const protocol = window.location.protocol;
+        const targetHost = isLocal ? `${targetSub}.localhost${port}` : `${targetSub}.${rootDomain}`;
+        window.location.href = `${protocol}//${targetHost}${window.location.pathname}${window.location.search}`;
+        return;
+      }
+
       clearSession();
       queueMicrotask(() => {
         setUser(null);
@@ -174,7 +203,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       return;
     }
-    queueMicrotask(() => setIsLoading(false));
+
+    // Validate that storedUser's school_id matches the active school
+    resolveSchoolIdBySubdomain(subdomain)
+      .then((resolvedSchoolId) => {
+        if (resolvedSchoolId && storedUser.school_id && storedUser.school_id !== resolvedSchoolId) {
+          console.warn("[Auth] School mismatch. Stored school:", storedUser.school_id, "Current school:", resolvedSchoolId);
+          clearSession();
+          setUser(null);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        setIsLoading(false);
+      });
   }, []);
 
   // ─── Login ────────────────────────────────────────────────────
@@ -182,12 +224,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     username: string,
     password: string,
     loginType?: string
-  ): Promise<{ success: boolean; message: string }> => {
+  ): Promise<{ success: boolean; message: string; schoolSubdomain?: string | null }> => {
     try {
-      const schoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
+      // ── Resolve school_id from subdomain ──────────────────────
+      const subdomain = getSubdomain();
 
-      if (!schoolId || schoolId === "your_school_object_id_here") {
-        return { success: false, message: "School not configured. Set NEXT_PUBLIC_SCHOOL_ID in .env" };
+      let schoolId: string | null = null;
+
+      if (subdomain) {
+        // Resolve school_id from the subdomain visible in the browser URL
+        schoolId = await resolveSchoolIdBySubdomain(subdomain);
+        if (!schoolId) {
+          return { success: false, message: "School not found for this subdomain." };
+        }
+      } else {
+        // No subdomain — this login form should be on a school's subdomain
+        return { success: false, message: "Please open your school's URL to login (e.g. yourschool.myschoollife.in)." };
+      }
+
+      if (!schoolId) {
+        return { success: false, message: "School not found. Please check the URL." };
       }
 
       const res = await fetch("/api/auth/login", {
@@ -202,7 +258,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, message: data.message || "Login failed" };
       }
 
-      const { user: userData, access_token, refresh_token } = data.data;
+      const { user: userData, access_token, refresh_token, school_subdomain } = data.data;
 
       // Allow student and parent logins on this portal as requested
       const ADMIN_PORTAL_ROLES = ["super_admin", "school_admin", "accountant", "teacher", "student", "parent"];
@@ -225,7 +281,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
       // Set must_change_password state for forced modal
       setMustChangePassword(userData.must_change_password ?? false);
-      return { success: true, message: "Login successful" };
+      return { success: true, message: "Login successful", schoolSubdomain: school_subdomain };
     } catch {
       return { success: false, message: "Network error. Please try again." };
     }
@@ -236,10 +292,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     formData: RegisterData
   ): Promise<{ success: boolean; message: string }> => {
     try {
-      const schoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
+      // Resolve school_id from the current subdomain (same strategy as login)
+      const subdomain = getClientSubdomain();
+      let schoolId: string | null = null;
 
-      if (!schoolId || schoolId === "your_school_object_id_here") {
-        return { success: false, message: "School not configured. Set NEXT_PUBLIC_SCHOOL_ID in .env" };
+      if (subdomain) {
+        schoolId = await resolveSchoolIdBySubdomain(subdomain);
+      }
+
+      if (!schoolId) {
+        return { success: false, message: "School not found. Please open this page from your school's URL." };
       }
 
       const res = await fetch("/api/auth/register", {

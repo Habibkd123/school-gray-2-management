@@ -24,20 +24,13 @@ export async function GET(request: NextRequest) {
       const url = new URL(request.url);
       const requestedSchoolId = url.searchParams.get("school_id");
 
-      // Priority: explicit query param -> env override -> generic fallback
       if (requestedSchoolId) {
         const resolved = await getSchoolThemeById(requestedSchoolId);
         if (resolved) return NextResponse.json({ success: true, data: resolved });
         return NextResponse.json({ success: false, message: "School not found" }, { status: 404 });
       }
 
-      const envSchoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
-      if (envSchoolId) {
-        const resolvedEnv = await getSchoolThemeById(envSchoolId);
-        if (resolvedEnv) return NextResponse.json({ success: true, data: resolvedEnv });
-        return NextResponse.json({ success: false, message: "School not found" }, { status: 404 });
-      }
-
+      // No school_id param — return default super-admin theme
       const fallback = resolveThemeConfig(null);
       return NextResponse.json({
         success: true,

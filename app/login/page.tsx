@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/auth";
-import { User, Mail, Eye, EyeOff, ChevronRight, AlertCircle, Loader2 } from "lucide-react";
+import { User, Mail, Eye, EyeOff, ChevronRight, AlertCircle, Loader2, School } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const newsItems = [
   { title: "Summer Vacation Holiday Homework", desc: "The school will remain closed from April 20th to June 15th for summer..." },
@@ -14,9 +15,11 @@ const newsItems = [
   { title: "Summer Vacation Holiday Homework", desc: "The school will remain closed from April 20th to June 15th for summer..." },
 ];
 
+import { getClientSubdomain } from "@/lib/utils/subdomain";
+
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading: authLoading, user } = useAuth();
 
   type LoginRole = "admin" | "principal" | "teacher" | "student";
   const [activeTab, setActiveTab] = useState<LoginRole>("admin");
@@ -25,6 +28,49 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // ─── Auto-redirect if already logged in ───────────────────────
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && user) {
+      if (user.role === "student") {
+        router.replace("/student/dashboard");
+      } else {
+        router.replace("/dashboard");
+      }
+    }
+  }, [authLoading, isAuthenticated, user, router]);
+
+  // ─── Auto-detect school from subdomain ───────────────────────
+  const [schoolInfo, setSchoolInfo] = useState<{
+    id: string;
+    name: string;
+    subtitle?: string;
+    logo_url?: string;
+  } | null>(null);
+  const [schoolLoading, setSchoolLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSchool = async () => {
+      try {
+        const subdomain = getClientSubdomain();
+        if (!subdomain || subdomain === "www") {
+          setSchoolLoading(false);
+          return;
+        }
+
+        const res = await fetch(`/api/public/school-info?subdomain=${encodeURIComponent(subdomain)}`);
+        const data = await res.json();
+        if (res.ok && data.success) {
+          setSchoolInfo(data.data);
+        }
+      } catch {
+        // Silent fail — show generic login
+      } finally {
+        setSchoolLoading(false);
+      }
+    };
+    fetchSchool();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,12 +108,46 @@ export default function LoginPage() {
     const result = await login(trimmedUsername, password, activeTab);
 
     if (result.success) {
+      const targetSubdomain = result.schoolSubdomain;
+      const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
+      const currentHost = window.location.hostname;
+      const isLocal =
+        currentHost === "localhost" ||
+        currentHost === "127.0.0.1" ||
+        currentHost.endsWith(".localhost");
+
+      // If user belongs to a school subdomain and is not already on it, navigate directly
+      if (targetSubdomain && targetSubdomain !== "www") {
+        const expectedHost = isLocal
+          ? `${targetSubdomain}.localhost`
+          : `${targetSubdomain}.${rootDomain}`;
+        if (currentHost !== expectedHost) {
+          const port = window.location.port ? `:${window.location.port}` : "";
+          const protocol = window.location.protocol;
+          window.location.href = `${protocol}//${expectedHost}${port}/dashboard`;
+          return;
+        }
+      }
+
       router.push("/dashboard");
     } else {
       setError(result.message);
       setIsLoading(false);
     }
   };
+
+  if (authLoading || (isAuthenticated && user)) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-slate-900 font-sans">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+            {isAuthenticated ? "Redirecting to dashboard..." : "Loading portal..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full flex bg-white dark:bg-slate-900 font-sans">
@@ -97,18 +177,38 @@ export default function LoginPage() {
       {/* Right Side - Form */}
       <div className="flex-1 flex flex-col relative bg-white dark:bg-slate-900">
 
-        {/* Theme Toggle
-        {mounted && (
-          <button
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="absolute top-6 right-6 flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors z-50 shadow-sm"
-          >
-            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-        )} */}
-
         <div className="flex-1 flex flex-col justify-center items-center px-6 sm:px-12 lg:px-16 xl:px-24 pb-20 mt-10">
           <div className="w-full max-w-full sm:w-[420px] bg-white dark:bg-slate-900 border border-border/60 dark:border-slate-800 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8">
+
+            {/* School Info Banner */}
+            {schoolLoading ? (
+              <div className="flex items-center gap-2 mb-6 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span className="text-[12px] text-slate-500">Loading school info...</span>
+              </div>
+            ) : schoolInfo ? (
+              <div className="flex items-center gap-3 mb-6 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                {schoolInfo.logo_url ? (
+                  <Image
+                    src={schoolInfo.logo_url}
+                    alt={schoolInfo.name}
+                    width={36}
+                    height={36}
+                    className="rounded-md object-contain"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-md bg-primary/20 flex items-center justify-center">
+                    <School className="w-5 h-5 text-primary" />
+                  </div>
+                )}
+                <div>
+                  <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100 leading-tight">{schoolInfo.name}</p>
+                  {schoolInfo.subtitle && (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{schoolInfo.subtitle}</p>
+                  )}
+                </div>
+              </div>
+            ) : null}
 
             <div className="mb-6">
               <h1 className="text-[24px] font-bold text-slate-900 dark:text-slate-100 mb-1">Welcome Back</h1>

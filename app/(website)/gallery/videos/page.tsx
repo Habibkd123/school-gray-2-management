@@ -1,18 +1,10 @@
 import React from "react";
 import { Video } from "lucide-react";
-
-async function getVideos() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/public/landing`, { cache: "no-store" });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json.data?.gallery?.videos ?? [];
-  } catch { return []; }
-}
+import { getLandingData } from "@/lib/landing/getLandingData";
 
 export default async function VideosPage() {
-  const videos = await getVideos();
+  const data = await getLandingData();
+  const videos = data?.gallery?.videos ?? [];
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
       <h1 className="page-title font-serif mb-3">Campus Videos</h1>

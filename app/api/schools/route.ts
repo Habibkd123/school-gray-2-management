@@ -58,9 +58,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Process and validate subdomain
+    const subdomain = body.subdomain
+      ? body.subdomain.toLowerCase().trim()
+      : slug.replace(/[^a-z0-9-]/g, "");
+
+    if (subdomain) {
+      if (!/^[a-z0-9-]+$/.test(subdomain)) {
+        return NextResponse.json(
+          { success: false, message: "Subdomain can only contain lowercase letters, numbers, and hyphens." },
+          { status: 400 }
+        );
+      }
+      const existingSub = await School.findOne({ subdomain }).lean();
+      if (existingSub) {
+        return NextResponse.json(
+          { success: false, message: `Subdomain '${subdomain}' is already taken by another school.` },
+          { status: 409 }
+        );
+      }
+    }
+
+    const customDomain = body.custom_domain ? body.custom_domain.toLowerCase().trim() : undefined;
+
     const school = await School.create({
       name: body.name.trim(),
       slug,
+      subdomain: subdomain || undefined,
+      custom_domain: customDomain,
       address: body.address?.trim() || "",
       phone: body.phone?.trim() || "",
       email: body.email?.toLowerCase().trim() || "",

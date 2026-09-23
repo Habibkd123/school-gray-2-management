@@ -1,4 +1,5 @@
 import React from "react";
+import { getLandingData } from "@/lib/landing/getLandingData";
 
 const DEFAULT_IMGS = [
   { src: "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?q=80&w=800&auto=format&fit=crop", label: "School Campus" },
@@ -12,18 +13,8 @@ const DEFAULT_IMGS = [
   { src: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=800&auto=format&fit=crop", label: "Classrooms" },
 ];
 
-async function getLanding() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/public/landing`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch { return null; }
-}
-
 export default async function GalleryPage() {
-  const data = await getLanding();
+  const data = await getLandingData();
   const photos = data?.gallery?.photos ?? [];
   const videos = data?.gallery?.videos ?? [];
   const schoolName = process.env.NEXT_PUBLIC_SCHOOL_NAME || "Our School";
@@ -69,7 +60,7 @@ export default async function GalleryPage() {
 
       {/* Videos */}
       {videos.length > 0 && (
-        <section className="py-16 bg-white dark:bg-slate-900">
+        <section id="videos" className="py-16 bg-white dark:bg-slate-900 scroll-mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <h2 className="text-primary font-bold tracking-widest uppercase text-[12px] mb-3">Videos</h2>
             <h3 className="page-title font-serif mb-10">Campus Videos</h3>

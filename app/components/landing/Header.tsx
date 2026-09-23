@@ -2,8 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import { Menu, X, Phone, Mail } from "lucide-react";
+import { Menu, X, Phone, Mail, LayoutDashboard, LogOut, ChevronDown, User as UserIcon } from "lucide-react";
 import { usePublicSchoolInfo } from "@/app/hooks/usePublicSchoolInfo";
+import { useAuth } from "@/app/context/auth";
 
 interface ContactData {
   phone?: string;
@@ -32,13 +33,22 @@ const NAV_LINKS = [
 
 export function Header({ contact, admissions }: HeaderProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
+  const [mounted, setMounted] = React.useState(false);
   const { schoolInfo } = usePublicSchoolInfo();
+  const { user, isAuthenticated, logout } = useAuth();
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const phone = contact?.phone?.trim();
   const email = contact?.email?.trim();
   const admissionOpen = admissions?.admission_open;
 
   const hasTopBar = phone || email || admissionOpen;
+  const isUserLoggedIn = mounted && isAuthenticated && !!user;
+  const dashboardHref = user?.role === "student" ? "/student/dashboard" : "/dashboard";
 
   return (
     <>
@@ -104,14 +114,84 @@ export function Header({ contact, admissions }: HeaderProps) {
             ))}
           </div>
 
-          {/* CTA Button */}
+          {/* CTA / User Profile Area */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link
-              href="/login"
-              className="px-6 py-2.5 rounded-sm bg-[var(--primary)] text-white font-bold text-[13px] shadow-md hover:bg-[var(--primary-hover)] hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wider"
-            >
-              Login Portal
-            </Link>
+            {isUserLoggedIn ? (
+              <div className="relative">
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={dashboardHref}
+                    className="px-4 py-2 rounded-sm bg-[var(--primary)] text-white font-bold text-[13px] shadow-md hover:bg-[var(--primary-hover)] hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wider flex items-center gap-1.5"
+                  >
+                    <LayoutDashboard className="w-3.5 h-3.5" />
+                    Dashboard
+                  </Link>
+
+                  <button
+                    onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                    className="flex items-center gap-2 p-1 pl-1.5 pr-2 rounded-full border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-colors cursor-pointer"
+                    title={user.name}
+                  >
+                    <div className="w-8 h-8 rounded-full overflow-hidden bg-[var(--primary)]/10 flex-shrink-0 flex items-center justify-center border border-[var(--primary)]/20">
+                      <img
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "User")}&background=1E3A5F&color=fff&bold=true`}
+                        alt={user.name || "User"}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex flex-col text-left">
+                      <span className="text-[12px] font-bold text-[#231F20] leading-none max-w-[100px] truncate">
+                        {user.name}
+                      </span>
+                      <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider leading-tight">
+                        {user.role?.replace("_", " ")}
+                      </span>
+                    </div>
+                    <ChevronDown className="w-3 h-3 text-slate-400" />
+                  </button>
+                </div>
+
+                {isUserMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setIsUserMenuOpen(false)} />
+                    <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-100 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                      <div className="px-3.5 py-2.5 border-b border-slate-100">
+                        <p className="text-[13px] font-bold text-slate-900 truncate">{user.name}</p>
+                        <p className="text-[11px] text-slate-500 truncate">{user.email}</p>
+                        <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[var(--primary)]/10 text-[10px] font-bold text-[var(--primary)] uppercase tracking-wider">
+                          {user.role?.replace("_", " ")}
+                        </span>
+                      </div>
+                      <Link
+                        href={dashboardHref}
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-3.5 py-2.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[var(--primary)] transition-colors font-medium"
+                      >
+                        <LayoutDashboard className="w-4 h-4 text-slate-400" />
+                        Go to Dashboard
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          logout();
+                        }}
+                        className="w-full flex items-center gap-2 px-3.5 py-2.5 text-[13px] text-red-600 hover:bg-red-50 transition-colors font-medium text-left cursor-pointer"
+                      >
+                        <LogOut className="w-4 h-4 text-red-400" />
+                        Logout
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="px-6 py-2.5 rounded-sm bg-[var(--primary)] text-white font-bold text-[13px] shadow-md hover:bg-[var(--primary-hover)] hover:-translate-y-0.5 transition-all duration-300 uppercase tracking-wider"
+              >
+                Login Portal
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}
@@ -154,13 +234,51 @@ export function Header({ contact, admissions }: HeaderProps) {
               </div>
             )}
 
-            <Link
-              href="/login"
-              onClick={() => setIsOpen(false)}
-              className="mt-4 w-full py-3 rounded-sm bg-[var(--primary)] text-white font-bold text-center uppercase tracking-wider"
-            >
-              Login Portal
-            </Link>
+            {isUserLoggedIn ? (
+              <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 flex-shrink-0 border border-slate-200">
+                    <img
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || "User")}&background=1E3A5F&color=fff&bold=true`}
+                      alt={user.name || "User"}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-slate-900 truncate">{user.name}</p>
+                    <p className="text-xs text-slate-500 capitalize">{user.role?.replace("_", " ")}</p>
+                  </div>
+                </div>
+                <div className="mt-3 flex flex-col gap-2">
+                  <Link
+                    href={dashboardHref}
+                    onClick={() => setIsOpen(false)}
+                    className="w-full py-2.5 rounded-sm bg-[var(--primary)] text-white font-bold text-center text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Go to Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      logout();
+                    }}
+                    className="w-full py-2 rounded-sm border border-red-200 text-red-600 font-semibold text-center text-xs hover:bg-red-50 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="mt-4 w-full py-3 rounded-sm bg-[var(--primary)] text-white font-bold text-center uppercase tracking-wider"
+              >
+                Login Portal
+              </Link>
+            )}
           </div>
         )}
       </nav>

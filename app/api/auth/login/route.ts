@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       password?: string;
       school_id?: string;
       is_super_admin?: boolean;
-      login_type?: "admin" | "principal" | "teacher" | "student";
+      login_type?: "admin" | "principal" | "teacher" | "student" | "super_admin";
     };
 
     // Alias compatibility
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         username: usernameInput,
         role: "super_admin",
       }).select("+password_hash");
-
+      console.log(user, "user");
       if (!user) {
         return NextResponse.json(
           { success: false, message: "Invalid credentials." },
@@ -77,9 +77,11 @@ export async function POST(request: NextRequest) {
 
       const accessToken = generateAccessToken(tokenPayload);
       const refreshToken = generateRefreshToken(tokenPayload);
-      await User.findByIdAndUpdate(user._id, { last_login: new Date() });
+      const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
+      const isProduction = process.env.NODE_ENV === "production";
+      const cookieDomain = isProduction ? `.${ROOT_DOMAIN}` : undefined;
 
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         message: "Login successful",
         data: {
@@ -91,10 +93,38 @@ export async function POST(request: NextRequest) {
             school_id: null,
             must_change_password: user.must_change_password ?? false,
           },
+          school_subdomain: null,
           access_token: accessToken,
           refresh_token: refreshToken,
         },
       });
+
+      response.cookies.set("sm_role", "super_admin", {
+        domain: cookieDomain,
+        path: "/",
+        sameSite: "lax",
+        secure: isProduction,
+        maxAge: 7 * 24 * 60 * 60,
+      });
+
+      response.cookies.set("sm_token", accessToken, {
+        domain: cookieDomain,
+        path: "/",
+        sameSite: "lax",
+        secure: isProduction,
+        maxAge: 7 * 24 * 60 * 60,
+      });
+
+      // Clear any school subdomain cookie for super admin
+      response.cookies.set("sm_subdomain", "", {
+        domain: cookieDomain,
+        path: "/",
+        sameSite: "lax",
+        secure: isProduction,
+        maxAge: 0,
+      });
+
+      return response;
     }
 
     // ─── Step 2: Determine login mode ────────────────────────────
@@ -111,7 +141,7 @@ export async function POST(request: NextRequest) {
 
     // ─── Step 4: Validate the School (by ID, always available) ──────────
     const schoolDoc = await School.findById(school_id)
-      .select("is_active login_config")
+      .select("is_active login_config subdomain")
       .lean();
 
     if (!schoolDoc) {
@@ -251,7 +281,12 @@ export async function POST(request: NextRequest) {
 
     await User.findByIdAndUpdate(user._id, { last_login: new Date() });
 
-    return NextResponse.json(
+    const schoolSubdomain = (schoolDoc as any)?.subdomain || null;
+    const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieDomain = isProduction ? `.${ROOT_DOMAIN}` : undefined;
+
+    const response = NextResponse.json(
       {
         success: true,
         message: "Login successful",
@@ -264,12 +299,41 @@ export async function POST(request: NextRequest) {
             school_id: user.school_id,
             must_change_password: user.must_change_password ?? false,
           },
+          school_subdomain: schoolSubdomain,
           access_token: accessToken,
           refresh_token: refreshToken,
         },
       },
       { status: 200 }
     );
+
+    if (schoolSubdomain) {
+      response.cookies.set("sm_subdomain", schoolSubdomain, {
+        domain: cookieDomain,
+        path: "/",
+        sameSite: "lax",
+        secure: isProduction,
+        maxAge: 7 * 24 * 60 * 60,
+      });
+    }
+
+    response.cookies.set("sm_role", user.role, {
+      domain: cookieDomain,
+      path: "/",
+      sameSite: "lax",
+      secure: isProduction,
+      maxAge: 7 * 24 * 60 * 60,
+    });
+
+    response.cookies.set("sm_token", accessToken, {
+      domain: cookieDomain,
+      path: "/",
+      sameSite: "lax",
+      secure: isProduction,
+      maxAge: 7 * 24 * 60 * 60,
+    });
+
+    return response;
   } catch (error) {
     console.error("[LOGIN ERROR]", error);
     return NextResponse.json(

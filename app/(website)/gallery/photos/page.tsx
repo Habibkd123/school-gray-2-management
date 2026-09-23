@@ -1,14 +1,5 @@
 import React from "react";
-
-async function getGallery() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/public/landing`, { cache: "no-store" });
-    if (!res.ok) return { photos: [], videos: [] };
-    const json = await res.json();
-    return json.data?.gallery ?? { photos: [], videos: [] };
-  } catch { return { photos: [], videos: [] }; }
-}
+import { getLandingData } from "@/lib/landing/getLandingData";
 
 const DEFAULT_IMGS = [
   { src: "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?q=80&w=800", label: "School Campus" },
@@ -20,7 +11,8 @@ const DEFAULT_IMGS = [
 ];
 
 export default async function PhotosPage() {
-  const gallery = await getGallery();
+  const data = await getLandingData();
+  const gallery = data?.gallery ?? { photos: [], videos: [] };
   const photos = gallery.photos?.length
     ? gallery.photos.map((p: any) => ({ src: p.url, label: p.caption || p.album || "Photo" }))
     : DEFAULT_IMGS;

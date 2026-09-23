@@ -11,6 +11,7 @@ import {
   getAuthHeaders,
   StoredUser,
 } from "@/lib/utils/session";
+import { getClientSubdomain, resolveSchoolIdBySubdomain } from "@/lib/utils/subdomain";
 
 // ─── Types ──────────────────────────────────────────────────────────
 export interface StudentProfile {
@@ -62,32 +63,50 @@ export function StudentAuthProvider({ children }: { children: React.ReactNode })
     }
   }, []);
 
-  // ── Restore session on mount ─────────────────────────────────────
+  // ── Restore session on mount ───────────────────────────────────
   useEffect(() => {
     const storedUser = getStoredUser();
     const token = getAccessToken();
     if (storedUser && token && storedUser.role === "student") {
-      const currentSchoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
-      if (storedUser.school_id !== currentSchoolId) {
-        clearSession();
-        setUser(null);
-      } else {
-        setUser(storedUser);
-        fetchProfile();
+      // Validate session against the current subdomain's school
+      const subdomain = getClientSubdomain();
+      if (subdomain) {
+        // Async: resolve school_id from subdomain, clear session if mismatch
+        resolveSchoolIdBySubdomain(subdomain).then((resolvedId) => {
+          if (resolvedId && storedUser.school_id !== resolvedId) {
+            clearSession();
+            setUser(null);
+          } else {
+            setUser(storedUser);
+            fetchProfile();
+          }
+          setIsLoading(false);
+        }).catch(() => {
+          // If we can't resolve, let the session stand — API will 401 if invalid
+          setUser(storedUser);
+          fetchProfile();
+          setIsLoading(false);
+        });
+        return;
       }
+      setUser(storedUser);
+      fetchProfile();
     }
     setIsLoading(false);
   }, [fetchProfile]);
 
-  // ── Login ────────────────────────────────────────────────────────
+  // ── Login ────────────────────────────────────────────────
   const login = useCallback(async (
     username: string,
     password: string
   ): Promise<{ success: boolean; message: string }> => {
     try {
-      const schoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
-      if (!schoolId || schoolId === "your_school_object_id_here") {
-        return { success: false, message: "School not configured. Contact administrator." };
+      // Resolve school_id from the current subdomain
+      const subdomain = getClientSubdomain();
+      const schoolId = subdomain ? await resolveSchoolIdBySubdomain(subdomain) : null;
+
+      if (!schoolId) {
+        return { success: false, message: "School not found. Please open the student portal from your school's URL." };
       }
 
       const res = await fetch("/api/auth/login", {

@@ -76,12 +76,12 @@ const SECTIONS: Section[] = [
   },
   {
     id: "gallery",
-    label: "Gallery",
-    description: "Photo albums and video gallery for the school",
+    label: "Gallery & Virtual Tour",
+    description: "Photo albums and homepage Virtual Campus Tour videos",
     icon: <Image className="w-6 h-6" />,
     href: "/website/gallery",
     color: "from-cyan-500/20 to-cyan-600/10 border-cyan-500/30",
-    fields: ["Photo Albums", "Video Gallery"],
+    fields: ["Photo Albums", "Virtual Campus Tour Videos"],
   },
   {
     id: "contact",

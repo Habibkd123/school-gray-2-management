@@ -1,18 +1,10 @@
 import React from "react";
 import { Calendar } from "lucide-react";
-
-async function getAcademics() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/public/landing`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.success ? json.data?.academics : null;
-  } catch { return null; }
-}
+import { getLandingData } from "@/lib/landing/getLandingData";
 
 export default async function AcademicCalendarPage() {
-  const academics = await getAcademics();
+  const data = await getLandingData();
+  const academics = data?.academics;
   const cal = academics?.academic_calendar;
   return (
     <main className="py-20 px-4 md:px-8 max-w-5xl mx-auto min-h-[60vh]">

@@ -101,14 +101,21 @@ export default function GalleryPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="p-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5">
-          <div className="flex items-center gap-2 text-cyan-400 mb-1"><Camera className="w-4 h-4" /><span className="text-[11px] font-semibold uppercase tracking-wider">Photos</span></div>
-          <p className="text-2xl font-black text-white">{data.photos.length}</p>
-          <p className="text-slate-600 dark:text-slate-500 text-[11px] mt-1 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">{albums.length} albums</p>
+        <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/10 dark:bg-cyan-950/20">
+          <div className="flex items-center gap-2 text-cyan-700 dark:text-cyan-400 mb-1 font-bold">
+            <Camera className="w-4 h-4" />
+            <span className="text-[11px] uppercase tracking-wider">Photos</span>
+          </div>
+          <p className="text-3xl font-black text-slate-900 dark:text-white">{data.photos.length}</p>
+          <p className="text-slate-600 dark:text-slate-400 text-[12px] mt-1 font-medium">{albums.length} albums</p>
         </div>
-        <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-500/5">
-          <div className="flex items-center gap-2 text-rose-400 mb-1"><YoutubeIcon className="w-4 h-4" /><span className="text-[11px] font-semibold uppercase tracking-wider">Videos</span></div>
-          <p className="text-2xl font-black text-white">{data.videos.length}</p>
+        <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 dark:bg-rose-950/20">
+          <div className="flex items-center gap-2 text-rose-700 dark:text-rose-400 mb-1 font-bold">
+            <YoutubeIcon className="w-4 h-4" />
+            <span className="text-[11px] uppercase tracking-wider">Videos (Virtual Tour)</span>
+          </div>
+          <p className="text-3xl font-black text-slate-900 dark:text-white">{data.videos.length}</p>
+          <p className="text-slate-600 dark:text-slate-400 text-[12px] mt-1 font-medium">Campus Tour Videos</p>
         </div>
       </div>
 
@@ -129,7 +136,7 @@ export default function GalleryPage() {
         {(["photos", "videos"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`px-5 py-2 rounded-lg text-[13px] font-semibold transition-all capitalize ${tab === t ? "bg-primary text-white shadow" : "text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-white"}`}>
-            {t === "photos" ? `📷 Photos (${data.photos.length})` : `🎬 Videos (${data.videos.length})`}
+            {t === "photos" ? `📷 Photos (${data.photos.length})` : `🎬 Virtual Campus Tour (${data.videos.length})`}
           </button>
         ))}
       </div>
@@ -197,7 +204,10 @@ export default function GalleryPage() {
       {tab === "videos" && (
         <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 space-y-5">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
-            <h2 className="text-slate-900 dark:text-white font-bold text-[14px]">Video Gallery</h2>
+            <div>
+              <h2 className="text-slate-900 dark:text-white font-bold text-[14px]">Virtual Campus Tour Videos</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-[12px] mt-0.5">These videos appear on the homepage 'Virtual Campus Tour' section.</p>
+            </div>
             <button onClick={addVideo} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[12px] font-semibold hover:bg-primary/20 transition-colors">
               <Plus className="w-3.5 h-3.5" /> Add Video
             </button>

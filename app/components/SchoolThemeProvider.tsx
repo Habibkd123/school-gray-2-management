@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getAccessToken, getStoredUser } from "@/lib/utils/session";
+import { getClientSubdomain } from "@/lib/utils/subdomain";
 
 type ThemeSource = "auth" | "public" | "auto";
 
@@ -64,16 +65,20 @@ export function SchoolThemeProvider({
       try {
         let cssVars: Record<string, string> | null = null;
 
+        // Whether we have any school context on the client at all
+        const hasSubdomain = !!getClientSubdomain();
+        const serverInjected = !!document.getElementById("school-theme-vars");
+
         if (source === "public") {
-          cssVars = await fetchThemeEndpoint("/api/public/theme");
+          // Skip if: server already injected the theme OR no school context exists
+          if (!serverInjected && hasSubdomain) {
+            cssVars = await fetchThemeEndpoint("/api/public/theme");
+          }
         } else if (source === "auth") {
           const token = getAccessToken();
           const user = getStoredUser();
-          const currentSchoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
-          const isDifferentSchool = user && user.role !== "super_admin" && user.school_id !== currentSchoolId;
 
-          // If super_admin, allow viewing a specific school via localStorage key
-          // 'sm_view_school_id' which triggers /api/theme?school_id=xxxx
+          // super_admin viewing a specific school
           if (token && user?.role === "super_admin") {
             const viewId = typeof window !== "undefined" ? localStorage.getItem("sm_view_school_id") : null;
             if (viewId) {
@@ -83,22 +88,22 @@ export function SchoolThemeProvider({
             }
           }
 
-          if (!cssVars && token && !isDifferentSchool && user?.role !== "super_admin") {
+          if (!cssVars && token && user?.role !== "super_admin") {
             cssVars = await fetchThemeEndpoint("/api/theme", {
               Authorization: `Bearer ${token}`,
             });
           }
 
-          if (!cssVars) {
+          // Public fallback only if there's a subdomain context and server didn't inject
+          if (!cssVars && !serverInjected && hasSubdomain) {
             cssVars = await fetchThemeEndpoint("/api/public/theme");
           }
         } else {
           // auto: try auth first, then public
           const token = getAccessToken();
           const user = getStoredUser();
-          const currentSchoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
-          const isDifferentSchool = user && user.role !== "super_admin" && user.school_id !== currentSchoolId;
 
+          // super_admin viewing a specific school via localStorage
           if (token && user?.role === "super_admin") {
             const viewId = typeof window !== "undefined" ? localStorage.getItem("sm_view_school_id") : null;
             if (viewId) {
@@ -108,13 +113,15 @@ export function SchoolThemeProvider({
             }
           }
 
-          if (!cssVars && token && !isDifferentSchool && user?.role !== "super_admin") {
+          // Regular logged-in user — use their JWT's school theme
+          if (!cssVars && token && user?.role !== "super_admin") {
             cssVars = await fetchThemeEndpoint("/api/theme", {
               Authorization: `Bearer ${token}`,
             });
           }
 
-          if (!cssVars) {
+          // Public fallback: only if there's a subdomain AND server didn't already inject
+          if (!cssVars && !serverInjected && hasSubdomain) {
             cssVars = await fetchThemeEndpoint("/api/public/theme");
           }
         }

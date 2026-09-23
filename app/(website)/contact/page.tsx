@@ -1,18 +1,9 @@
 import React from "react";
 import { Contact } from "../../components/landing/Contact";
-
-async function getLanding() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/public/landing`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch { return null; }
-}
+import { getLandingData } from "@/lib/landing/getLandingData";
 
 export default async function ContactPage() {
-  const data = await getLanding();
+  const data = await getLandingData();
   return (
     <main className="w-full">
       {/* Hero */}

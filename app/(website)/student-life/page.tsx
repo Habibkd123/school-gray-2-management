@@ -1,19 +1,10 @@
 import React from "react";
 import { Trophy, Music, Users, Star, ChevronRight } from "lucide-react";
 import Link from "next/link";
-
-async function getLanding() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/public/landing`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch { return null; }
-}
+import { getLandingData } from "@/lib/landing/getLandingData";
 
 export default async function StudentLifePage() {
-  const data = await getLanding();
+  const data = await getLandingData();
   const sl = data?.student_life;
   const sports = sl?.sports;
   const sportsImage = sl?.sports_image_url;

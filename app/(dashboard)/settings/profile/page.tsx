@@ -9,7 +9,7 @@ import RolesPermissionsPage from "../roles/page";
 import {
   RefreshCw, Upload, Edit, EyeOff, Eye, Save, X,
   Loader2, CheckCircle2, AlertCircle, User, Lock, MapPin,
-  TrendingUp, ClipboardList, CreditCard, Users, Mail, MessageSquare, 
+  TrendingUp, ClipboardList, CreditCard, Users, Mail, MessageSquare,
   PieChart, Wallet, Book, Sparkles, ShieldCheck
 } from "lucide-react";
 
@@ -108,7 +108,7 @@ export default function ProfilePage() {
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   // Tab control
-  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login" | "upcoming">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login" | "seo" | "upcoming">("profile");
 
   // Profile state
   const [profile, setProfile] = useState<any | null>(null);
@@ -151,6 +151,68 @@ export default function ProfilePage() {
   const [savingLoginConfig, setSavingLoginConfig] = useState<"student" | "teacher" | null>(null);
   const [loginSuccessMsg, setLoginSuccessMsg] = useState("");
   const [loginErrorMsg, setLoginErrorMsg] = useState("");
+
+  // SEO / Meta config state
+  const [metaForm, setMetaForm] = useState({
+    meta_title: "",
+    meta_description: "",
+    meta_keywords: "",
+    og_image: "",
+    og_type: "website",
+    twitter_handle: "",
+    canonical_url: "",
+    favicon_url: "",
+  });
+  const [metaLoading, setMetaLoading] = useState(false);
+  const [metaSaving, setMetaSaving] = useState(false);
+  const [metaSuccess, setMetaSuccess] = useState("");
+  const [metaError, setMetaError] = useState("");
+
+  const loadMetaConfig = async () => {
+    if (!isAdmin) return;
+    setMetaLoading(true);
+    try {
+      const res = await fetch("/api/school/meta-config", { headers: getAuthHeaders() });
+      const json = await res.json();
+      if (json.success) setMetaForm({ ...metaForm, ...json.data });
+    } catch { /* silently fail */ } finally {
+      setMetaLoading(false);
+    }
+  };
+
+  const saveMetaConfig = async () => {
+    setMetaSaving(true);
+    setMetaSuccess("");
+    setMetaError("");
+    try {
+      const res = await fetch("/api/school/meta-config", {
+        method: "PUT",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify(metaForm),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setMetaSuccess("SEO settings saved successfully!");
+        setTimeout(() => setMetaSuccess(""), 3500);
+      } else {
+        setMetaError(json.message || "Failed to save.");
+        setTimeout(() => setMetaError(""), 4000);
+      }
+    } catch {
+      setMetaError("Network error.");
+      setTimeout(() => setMetaError(""), 4000);
+    } finally {
+      setMetaSaving(false);
+    }
+  };
+
+  // Load SEO config when tab opens
+  const prevTabRef = React.useRef(activeTab);
+  React.useEffect(() => {
+    if (activeTab === "seo" && prevTabRef.current !== "seo") loadMetaConfig();
+    prevTabRef.current = activeTab;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
 
   // ── Load profile ─────────────────────────────────────────────────
   const loadProfile = async () => {
@@ -397,7 +459,7 @@ export default function ProfilePage() {
       <div className="flex border-b border-border gap-6 overflow-x-auto no-scrollbar">
         <button
           onClick={() => setActiveTab("profile")}
-          className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${ activeTab === "profile" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
+          className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${activeTab === "profile" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
         >
           Profile
         </button>
@@ -405,22 +467,29 @@ export default function ProfilePage() {
           <>
             <button
               onClick={() => setActiveTab("roles")}
-              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${ activeTab === "roles" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${activeTab === "roles" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
             >
               Roles & Permissions
             </button>
             <button
               onClick={() => setActiveTab("academic")}
-              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${ activeTab === "academic" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${activeTab === "academic" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
             >
               Academic Settings
             </button>
             <button
               onClick={() => setActiveTab("login")}
-              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${ activeTab === "login" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${activeTab === "login" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
             >
               Login Settings
             </button>
+            {/* SEO Settings tab */}
+            {/* <button
+              onClick={() => setActiveTab("seo")}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${ activeTab === "seo" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
+            >
+              SEO Settings
+            </button> */}
             <a
               href="/settings/backup"
               className="pb-3 text-[14px] font-semibold border-b-2 border-transparent text-slate-500 hover:text-primary dark:hover:text-slate-300 dark:text-slate-400 whitespace-nowrap transition-all flex items-center gap-1.5"
@@ -431,7 +500,7 @@ export default function ProfilePage() {
         )}
         <button
           onClick={() => setActiveTab("upcoming")}
-          className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${ activeTab === "upcoming" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300" } dark:text-slate-400`}
+          className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${activeTab === "upcoming" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
         >
           <Sparkles className="w-4 h-4" /> Upcoming Features
         </button>
@@ -450,11 +519,11 @@ export default function ProfilePage() {
                     Coming Soon
                   </span>
                 </div>
-                
+
                 <h3 className="text-[16px] font-bold text-slate-800 dark:text-slate-100 mb-2">
                   {feature.name}
                 </h3>
-                
+
                 <p className="card-subtitle text-[13px] flex-1 leading-relaxed">
                   {feature.description}
                 </p>
@@ -464,6 +533,155 @@ export default function ProfilePage() {
         </div>
       ) : activeTab === "roles" && isAdmin ? (
         <RolesPermissionsPage />
+      ) : activeTab === "seo" && isAdmin ? (
+        /* ── SEO / Meta Settings Tab ─────────────────────────────── */
+        <div className="space-y-5 text-left max-w-2xl">
+          {metaSuccess && (
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400 rounded-lg px-4 py-3 text-sm font-medium">
+              <CheckCircle2 className="w-4 h-4 shrink-0" /> {metaSuccess}
+            </div>
+          )}
+          {metaError && (
+            <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 rounded-lg px-4 py-3 text-sm font-medium">
+              <AlertCircle className="w-4 h-4 shrink-0" /> {metaError}
+            </div>
+          )}
+
+          {metaLoading ? (
+            <div className="flex items-center gap-2 py-8"><Loader2 className="w-5 h-5 animate-spin text-primary" /> Loading SEO settings…</div>
+          ) : (
+            <>
+              {/* Basic SEO */}
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 space-y-4">
+                <h3 className="text-[15px] font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-md bg-blue-500/10 flex items-center justify-center">🔍</span>
+                  Basic SEO
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[12px] font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">Meta Title</label>
+                    <input
+                      id="seo-meta-title"
+                      type="text"
+                      placeholder="e.g. Bajrang Public School | Student Portal"
+                      value={metaForm.meta_title}
+                      onChange={e => setMetaForm(f => ({ ...f, meta_title: e.target.value }))}
+                      className="input w-full text-sm"
+                      maxLength={70}
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">{metaForm.meta_title.length}/70 characters — Recommended: 50–60 chars</p>
+                  </div>
+                  <div>
+                    <label className="block text-[12px] font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">Meta Description</label>
+                    <textarea
+                      id="seo-meta-description"
+                      placeholder="e.g. Official portal of Bajrang Public School, Jaipur. Manage attendance, fees, and more."
+                      value={metaForm.meta_description}
+                      onChange={e => setMetaForm(f => ({ ...f, meta_description: e.target.value }))}
+                      className="input w-full text-sm resize-none"
+                      rows={3}
+                      maxLength={160}
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">{metaForm.meta_description.length}/160 characters — Recommended: 120–155 chars</p>
+                  </div>
+                  <div>
+                    <label className="block text-[12px] font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">Keywords <span className="normal-case font-normal">(comma separated)</span></label>
+                    <input
+                      id="seo-meta-keywords"
+                      type="text"
+                      placeholder="bajrang school, jaipur school, cbse school"
+                      value={metaForm.meta_keywords}
+                      onChange={e => setMetaForm(f => ({ ...f, meta_keywords: e.target.value }))}
+                      className="input w-full text-sm"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">Comma-separated keywords for search engines</p>
+                  </div>
+                  <div>
+                    <label className="block text-[12px] font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">Canonical URL</label>
+                    <input
+                      id="seo-canonical-url"
+                      type="url"
+                      placeholder="https://bajrang.myschoollife.in"
+                      value={metaForm.canonical_url}
+                      onChange={e => setMetaForm(f => ({ ...f, canonical_url: e.target.value }))}
+                      className="input w-full text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Open Graph / Social */}
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 space-y-4">
+                <h3 className="text-[15px] font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-md bg-purple-500/10 flex items-center justify-center">📣</span>
+                  Open Graph &amp; Social Sharing
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[12px] font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">OG Image URL</label>
+                    <input
+                      id="seo-og-image"
+                      type="url"
+                      placeholder="https://res.cloudinary.com/.../school-banner.jpg"
+                      value={metaForm.og_image}
+                      onChange={e => setMetaForm(f => ({ ...f, og_image: e.target.value }))}
+                      className="input w-full text-sm"
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1">Image shown when shared on WhatsApp, Facebook, etc. (1200×630px ideal)</p>
+                    {metaForm.og_image && (
+                      <img src={metaForm.og_image} alt="OG Preview" className="mt-2 rounded-lg border border-border h-24 object-cover w-full" onError={e => (e.currentTarget.style.display = "none")} />
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-[12px] font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">Twitter / X Handle</label>
+                    <input
+                      id="seo-twitter-handle"
+                      type="text"
+                      placeholder="@bajrangschool"
+                      value={metaForm.twitter_handle}
+                      onChange={e => setMetaForm(f => ({ ...f, twitter_handle: e.target.value }))}
+                      className="input w-full text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Favicon */}
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 space-y-3">
+                <h3 className="text-[15px] font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center">⭐</span>
+                  Custom Favicon
+                </h3>
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-500 dark:text-slate-400 mb-1 uppercase tracking-wide">Favicon URL</label>
+                  <input
+                    id="seo-favicon-url"
+                    type="url"
+                    placeholder="https://res.cloudinary.com/.../favicon.png"
+                    value={metaForm.favicon_url}
+                    onChange={e => setMetaForm(f => ({ ...f, favicon_url: e.target.value }))}
+                    className="input w-full text-sm"
+                  />
+                  <p className="text-[11px] text-slate-400 mt-1">Leave blank to use the default My School Life favicon. Recommend 32×32 or 64×64 PNG.</p>
+                  {metaForm.favicon_url && (
+                    <img src={metaForm.favicon_url} alt="Favicon Preview" className="mt-2 rounded border border-border h-8 w-8 object-contain" onError={e => (e.currentTarget.style.display = "none")} />
+                  )}
+                </div>
+              </div>
+
+              {/* Save button */}
+              <button
+                id="seo-save-btn"
+                onClick={saveMetaConfig}
+                disabled={metaSaving}
+                className="btn btn-primary flex items-center gap-2"
+              >
+                {metaSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                {metaSaving ? "Saving…" : "Save SEO Settings"}
+              </button>
+            </>
+          )}
+        </div>
       ) : activeTab === "academic" && isAdmin ? (
         /* Academic Settings Tab */
         <div className="space-y-5 text-left max-w-lg">

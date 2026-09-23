@@ -45,7 +45,7 @@ export function VirtualCampusTour({ data }: { data?: GalleryData | null }) {
   };
 
   return (
-    <section className="py-24 bg-background relative overflow-hidden">
+    <section id="virtual-tour" className="py-24 bg-background relative overflow-hidden scroll-mt-20">
       
       {/* Background gradients */}
       <div className="absolute top-0 right-0 w-full h-full overflow-hidden pointer-events-none z-0">

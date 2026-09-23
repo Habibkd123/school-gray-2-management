@@ -1,16 +1,7 @@
 import React from "react";
 import { Calendar, FileText, Bell, Award, ChevronRight } from "lucide-react";
 import Link from "next/link";
-
-async function getLanding() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/public/landing`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.success ? json.data : null;
-  } catch { return null; }
-}
+import { getLandingData } from "@/lib/landing/getLandingData";
 
 const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   announcement: { label: "Announcement", color: "text-primary", bg: "bg-primary" },
@@ -28,7 +19,7 @@ const PLACEHOLDER_IMGS = [
 ];
 
 export default async function NewsPage() {
-  const data = await getLanding();
+  const data = await getLandingData();
   const all = (data?.news_notices ?? []).filter((n: any) => n.is_published);
 
   return (

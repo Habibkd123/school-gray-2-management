@@ -1,18 +1,10 @@
 import React from "react";
 import { CheckCircle2 } from "lucide-react";
-
-async function getAdmissions() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/public/landing`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.success ? json.data?.admissions : null;
-  } catch { return null; }
-}
+import { getLandingData } from "@/lib/landing/getLandingData";
 
 export default async function DocumentsPage() {
-  const admissions = await getAdmissions();
+  const data = await getLandingData();
+  const admissions = data?.admissions;
   const docs = admissions?.documents_required ?? [];
   return (
     <main className="py-20 px-4 md:px-8 max-w-5xl mx-auto min-h-[60vh]">

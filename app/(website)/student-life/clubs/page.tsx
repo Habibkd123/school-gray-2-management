@@ -1,19 +1,11 @@
 import React from "react";
 import { Users, Code, BookOpen, Compass, Heart } from "lucide-react";
 import Link from "next/link";
-
-async function getStudentLifeData() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/public/landing`, { cache: "no-store" });
-    if (!res.ok) return null;
-    const json = await res.json();
-    return json.success ? json.data?.student_life : null;
-  } catch { return null; }
-}
+import { getLandingData } from "@/lib/landing/getLandingData";
 
 export default async function StudentLifeClubsPage() {
-  const sl = await getStudentLifeData();
+  const data = await getLandingData();
+  const sl = data?.student_life;
   const clubsText = sl?.clubs_societies;
   const clubsImage = sl?.clubs_image_url;
   const heroImage = sl?.hero_image_url;

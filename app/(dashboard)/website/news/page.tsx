@@ -124,7 +124,7 @@ export default function NewsPage() {
                 {cfg.icon}
                 <span className="text-[11px] font-semibold uppercase tracking-wider">{cfg.label}s</span>
               </div>
-              <p className="text-2xl font-black text-white">{count}</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white">{count}</p>
             </div>
           );
         })}

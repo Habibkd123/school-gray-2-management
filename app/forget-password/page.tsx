@@ -45,7 +45,11 @@ export default function ForgetPasswordPage() {
     setIsLoading(true);
 
     try {
-      const schoolId = process.env.NEXT_PUBLIC_SCHOOL_ID;
+      const schoolId = await (async () => {
+        const { getClientSubdomain, resolveSchoolIdBySubdomain } = await import("@/lib/utils/subdomain");
+        const sub = getClientSubdomain();
+        return sub ? resolveSchoolIdBySubdomain(sub) : null;
+      })();
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

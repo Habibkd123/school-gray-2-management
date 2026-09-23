@@ -10,13 +10,16 @@ export async function ServerThemeStyles() {
   try {
     const headersList = await headers();
     schoolId = await resolveSchoolIdServer(headersList);
-  } catch (err) {
-    // headers() might throw in static environments
-    schoolId = process.env.NEXT_PUBLIC_SCHOOL_ID || null;
+  } catch {
+    // headers() not available in static environments — skip theme injection
   }
 
   if (!schoolId) {
-    console.warn("[ServerThemeStyles] schoolId not resolved");
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        "[ServerThemeStyles] schoolId not resolved — visit bajrang.localhost:3000 (or ?subdomain=bajrang) to test a school theme"
+      );
+    }
     return null;
   }
 

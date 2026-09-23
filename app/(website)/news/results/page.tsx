@@ -1,18 +1,10 @@
 import React from "react";
 import { Calendar, ChevronRight, Award } from "lucide-react";
-
-async function getNews() {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    const res = await fetch(`${baseUrl}/api/public/landing`, { cache: "no-store" });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return (json.data?.news_notices ?? []).filter((n: any) => n.is_published && n.type === "result");
-  } catch { return []; }
-}
+import { getLandingData } from "@/lib/landing/getLandingData";
 
 export default async function ResultsPage() {
-  const items = await getNews();
+  const data = await getLandingData();
+  const items = (data?.news_notices ?? []).filter((n: any) => n.is_published && n.type === "result");
   return (
     <main className="py-20 px-4 md:px-8 max-w-7xl mx-auto min-h-[60vh]">
       <h1 className="page-title font-serif mb-3">Results</h1>

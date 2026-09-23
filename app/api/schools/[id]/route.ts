@@ -89,12 +89,72 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     if (body.is_active !== undefined) school.is_active = !!body.is_active;
     if (body.timezone !== undefined) school.timezone = body.timezone.trim();
 
+    if (body.subdomain !== undefined) {
+      const rawSub = body.subdomain ? body.subdomain.toLowerCase().trim() : "";
+      if (rawSub) {
+        if (!/^[a-z0-9-]+$/.test(rawSub)) {
+          return NextResponse.json(
+            { success: false, message: "Subdomain can only contain lowercase letters, numbers, and hyphens." },
+            { status: 400 }
+          );
+        }
+        const existingSub = await School.findOne({
+          subdomain: rawSub,
+          _id: { $ne: school._id },
+        }).lean();
+        if (existingSub) {
+          return NextResponse.json(
+            { success: false, message: `Subdomain '${rawSub}' is already in use by another school.` },
+            { status: 409 }
+          );
+        }
+        school.subdomain = rawSub;
+      } else {
+        school.subdomain = undefined;
+      }
+    }
+
+    if (body.custom_domain !== undefined) {
+      const rawDom = body.custom_domain ? body.custom_domain.toLowerCase().trim() : "";
+      school.custom_domain = rawDom || undefined;
+    }
+
+    // Update SEO & Meta Config
+    if (body.meta_config !== undefined && typeof body.meta_config === "object") {
+      const allowed = [
+        "meta_title",
+        "meta_description",
+        "meta_keywords",
+        "og_image",
+        "og_type",
+        "twitter_handle",
+        "canonical_url",
+        "favicon_url",
+      ];
+      const existing = (school.meta_config as any) || {};
+      const updatedMeta: Record<string, string> = { ...existing };
+      for (const key of allowed) {
+        if (body.meta_config[key] !== undefined) {
+          updatedMeta[key] = typeof body.meta_config[key] === "string" ? body.meta_config[key].trim() : body.meta_config[key];
+        }
+      }
+      school.meta_config = updatedMeta as any;
+    }
+
     await school.save();
 
     invalidateSchoolThemeCache(schoolId);
     if (school.slug) {
       invalidateSchoolSlugCache(school.slug);
       invalidateSchoolThemeCache(school.slug);
+    }
+    if (school.subdomain) {
+      invalidateSchoolSlugCache(school.subdomain);
+      invalidateSchoolThemeCache(school.subdomain);
+    }
+    if (school.custom_domain) {
+      invalidateSchoolSlugCache(school.custom_domain);
+      invalidateSchoolThemeCache(school.custom_domain);
     }
 
     return NextResponse.json({
