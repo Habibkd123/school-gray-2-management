@@ -7,6 +7,7 @@ import {
   CheckCircle2, AlertCircle, User
 } from "lucide-react";
 import { FileUploadField } from "../../../components/ui/FileUploadField";
+import { WebsitePageHeader } from "../../../components/website/WebsitePageHeader";
 
 interface ManagementMember {
   _id?: string;
@@ -176,28 +177,16 @@ export default function AboutPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-white transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-            <Globe className="w-5 h-5 text-blue-400" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">About Us</h1>
-            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px]">School history, vision, mission & management team</p>
-          </div>
-        </div>
-        <button
-          onClick={save}
-          disabled={saving}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-60 transition-all"
-        >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
+      <WebsitePageHeader
+        title="About Us"
+        subtitle="School history, vision, mission & management team"
+        icon={<Globe className="w-5 h-5 text-blue-400" />}
+        iconBg="bg-blue-500/10 border-blue-500/20 text-blue-400"
+        previewPath="/about"
+        onSave={save}
+        saving={saving}
+        saveLabel="Save Changes"
+      />
 
       {/* Status Banner */}
       {status === "success" && (

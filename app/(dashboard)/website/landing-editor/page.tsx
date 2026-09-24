@@ -7,6 +7,7 @@ import {
   Plus, Trash2, Image, HelpCircle, Star, Sparkles, Trophy, Video
 } from "lucide-react";
 import { FileUploadField } from "../../../components/ui/FileUploadField";
+import { WebsitePageHeader } from "../../../components/website/WebsitePageHeader";
 
 interface HighlightItem {
   _id?: string;
@@ -221,28 +222,16 @@ export default function LandingEditorPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-white transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-            <Globe className="w-5 h-5 text-indigo-400" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Homepage Landing Editor</h1>
-            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px]">Manage all content displayed on your root landing page</p>
-          </div>
-        </div>
-        <button
-          onClick={save}
-          disabled={saving}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-60 transition-all shadow-md shadow-primary/10"
-        >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {saving ? "Saving..." : "Save All Changes"}
-        </button>
-      </div>
+      <WebsitePageHeader
+        title="Homepage Landing Editor"
+        subtitle="Manage all content displayed on your root landing page"
+        icon={<Globe className="w-5 h-5 text-indigo-400" />}
+        iconBg="bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
+        previewPath="/"
+        onSave={save}
+        saving={saving}
+        saveLabel="Save All Changes"
+      />
 
       {/* Alert Indicators */}
       {status === "success" && (

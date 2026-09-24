@@ -15,6 +15,7 @@ interface Section {
   description: string;
   icon: React.ReactNode;
   href: string;
+  previewPath: string;
   color: string;
   fields: string[];
 }
@@ -26,6 +27,7 @@ const SECTIONS: Section[] = [
     description: "Manage homepage main titles, taglines, stats highlights, features, facilities, testimonials, and FAQs",
     icon: <Globe className="w-6 h-6" />,
     href: "/website/landing-editor",
+    previewPath: "/",
     color: "from-indigo-500/20 to-indigo-600/10 border-indigo-500/30",
     fields: ["Hero Settings", "Highlights", "Why Choose Us", "Facilities", "Testimonials", "FAQs"],
   },
@@ -35,6 +37,7 @@ const SECTIONS: Section[] = [
     description: "School history, vision, mission, management team & infrastructure",
     icon: <Globe className="w-6 h-6" />,
     href: "/website/about",
+    previewPath: "/about",
     color: "from-blue-500/20 to-blue-600/10 border-blue-500/30",
     fields: ["History", "Vision & Mission", "Management Team", "Infrastructure"],
   },
@@ -44,6 +47,7 @@ const SECTIONS: Section[] = [
     description: "Curriculum overview, faculty, class structure & academic calendar",
     icon: <GraduationCap className="w-6 h-6" />,
     href: "/website/academics",
+    previewPath: "/academics",
     color: "from-emerald-500/20 to-emerald-600/10 border-emerald-500/30",
     fields: ["Curriculum", "Faculty Members", "Class Structure", "Academic Calendar"],
   },
@@ -53,6 +57,7 @@ const SECTIONS: Section[] = [
     description: "How to apply, fee structure, documents required & online form link",
     icon: <BookOpen className="w-6 h-6" />,
     href: "/website/admissions",
+    previewPath: "/admissions",
     color: "from-amber-500/20 to-amber-600/10 border-amber-500/30",
     fields: ["How to Apply", "Fee Structure", "Documents Required", "Online Form"],
   },
@@ -62,6 +67,7 @@ const SECTIONS: Section[] = [
     description: "Sports, cultural activities, clubs & school achievements",
     icon: <Trophy className="w-6 h-6" />,
     href: "/website/student-life",
+    previewPath: "/student-life",
     color: "from-purple-500/20 to-purple-600/10 border-purple-500/30",
     fields: ["Sports & Athletics", "Cultural Activities", "Clubs & Societies", "Achievements"],
   },
@@ -71,6 +77,7 @@ const SECTIONS: Section[] = [
     description: "School announcements, circulars, PDFs and result news",
     icon: <Newspaper className="w-6 h-6" />,
     href: "/website/news",
+    previewPath: "/news",
     color: "from-rose-500/20 to-rose-600/10 border-rose-500/30",
     fields: ["Announcements", "Circulars (PDF)", "Results News"],
   },
@@ -80,6 +87,7 @@ const SECTIONS: Section[] = [
     description: "Photo albums and homepage Virtual Campus Tour videos",
     icon: <Image className="w-6 h-6" />,
     href: "/website/gallery",
+    previewPath: "/gallery",
     color: "from-cyan-500/20 to-cyan-600/10 border-cyan-500/30",
     fields: ["Photo Albums", "Virtual Campus Tour Videos"],
   },
@@ -89,6 +97,7 @@ const SECTIONS: Section[] = [
     description: "School address, phone, email, map location & social links",
     icon: <Phone className="w-6 h-6" />,
     href: "/website/contact",
+    previewPath: "/contact",
     color: "from-indigo-500/20 to-indigo-600/10 border-indigo-500/30",
     fields: ["Address", "Phone & Email", "Map Location", "Social Links"],
   },
@@ -98,64 +107,91 @@ const SECTIONS: Section[] = [
     description: "Meta title, description, keywords, Google Search Console verification & Open Graph image for this school's subdomain",
     icon: <Search className="w-6 h-6" />,
     href: "/website/seo",
+    previewPath: "/",
     color: "from-teal-500/20 to-teal-600/10 border-teal-500/30",
     fields: ["Meta Title", "Meta Description", "Keywords", "Google Verification", "Analytics ID"],
   },
 ];
 
-function SectionCard({ section, completeness }: { section: Section; completeness: number }) {
+import { WebsitePreviewModal } from "../../components/website/WebsitePreviewModal";
+
+function SectionCard({
+  section,
+  completeness,
+  onPreview,
+}: {
+  section: Section;
+  completeness: number;
+  onPreview?: (path: string, label: string) => void;
+}) {
   const isComplete = completeness >= 80;
   const isPartial = completeness > 0 && completeness < 80;
 
   return (
-    <Link href={section.href} className="group block">
-      <div className={`relative rounded-2xl border bg-gradient-to-br ${section.color} p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-black/20`}>
-        {/* Status dot */}
-        <div className="absolute top-4 right-4">
-          {isComplete ? (
-            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-success bg-success/10 border border-success/20 px-2.5 py-1 rounded-full">
-              <CheckCircle2 className="w-3 h-3" /> Complete
-            </span>
-          ) : isPartial ? (
-            <span className="flex items-center gap-1.5 text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full">
-              <AlertCircle className="w-3 h-3" /> Partial
-            </span>
-          ) : (
-            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-500 bg-slate-500/10 border border-slate-500/20 px-2.5 py-1 rounded-full dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">
-              Empty
-            </span>
-          )}
-        </div>
-
-        {/* Icon */}
-        <div className="mb-4 w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-          {section.icon}
+    <div className={`group relative rounded-2xl border bg-gradient-to-br ${section.color} p-6 transition-all duration-300 hover:shadow-xl hover:shadow-black/20 flex flex-col justify-between`}>
+      <div>
+        {/* Top: Icon & Status / Preview */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+            {section.icon}
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onPreview?.(section.previewPath, section.label);
+              }}
+              className="flex items-center gap-1 text-[11px] font-semibold text-slate-700 dark:text-slate-300 bg-white/70 dark:bg-white/10 hover:bg-primary/20 hover:text-primary border border-slate-300 dark:border-white/10 px-2.5 py-1 rounded-full transition-all"
+              title={`Preview ${section.label} page`}
+            >
+              <Eye className="w-3 h-3" />
+              Preview
+            </button>
+            {isComplete ? (
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-success bg-success/10 border border-success/20 px-2.5 py-1 rounded-full">
+                <CheckCircle2 className="w-3 h-3" /> Complete
+              </span>
+            ) : isPartial ? (
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full">
+                <AlertCircle className="w-3 h-3" /> Partial
+              </span>
+            ) : (
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 bg-slate-500/10 border border-slate-500/20 px-2.5 py-1 rounded-full">
+                Empty
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Title & Desc */}
-        <h3 className="text-slate-900 dark:text-white font-bold text-[16px] mb-1.5 group-hover:text-primary">
-          {section.label}
-        </h3>
-        <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px] leading-relaxed mb-4">
+        <Link href={section.href} className="block group-hover:text-primary transition-colors">
+          <h3 className="text-slate-900 dark:text-white font-bold text-[16px] mb-1.5 hover:text-primary">
+            {section.label}
+          </h3>
+        </Link>
+        <p className="text-slate-600 dark:text-slate-400 text-[12px] leading-relaxed mb-4">
           {section.description}
         </p>
 
         {/* Fields */}
         <div className="flex flex-wrap gap-1.5 mb-5">
           {section.fields.map((f) => (
-            <span key={f} className="text-[10px] font-medium text-slate-600 dark:text-slate-500 dark:text-slate-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+            <span key={f} className="text-[10px] font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 px-2 py-0.5 rounded-full">
               {f}
             </span>
           ))}
         </div>
+      </div>
 
+      <div>
         {/* Progress bar */}
         <div className="mb-4">
-          <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-500 mb-1.5 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">
+          <div className="flex justify-between text-[11px] text-slate-500 mb-1.5">
             <span>Completeness</span>
-            <span className={isComplete ? "text-success" : isPartial ? "text-primary" : ""}>{completeness}%</span>
+            <span className={isComplete ? "text-success font-semibold" : isPartial ? "text-primary font-semibold" : ""}>{completeness}%</span>
           </div>
-          <div className="h-1.5 bg-slate-100 dark:bg-white/10 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-700 progress-fill ${isComplete ? "!bg-success" : isPartial ? "" : "!bg-slate-600"}`}
               style={{ width: `${completeness}%` }}
@@ -164,14 +200,25 @@ function SectionCard({ section, completeness }: { section: Section; completeness
         </div>
 
         {/* CTA */}
-        <div className="flex items-center justify-between">
-          <span className="text-[13px] font-semibold text-primary group-hover:text-primary-hover transition-colors">
-            Edit Section →
-          </span>
-          <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-500 group-hover:text-primary group-hover:translate-x-1 transition-all dark:text-slate-600 dark:text-slate-500 dark:text-slate-400" />
+        <div className="flex items-center justify-between pt-3 border-t border-slate-200/60 dark:border-white/5">
+          <button
+            type="button"
+            onClick={() => onPreview?.(section.previewPath, section.label)}
+            className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            Live Preview
+          </button>
+          <Link
+            href={section.href}
+            className="flex items-center gap-1 text-[13px] font-semibold text-primary hover:text-primary-hover transition-colors"
+          >
+            <span>Edit Section</span>
+            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-all" />
+          </Link>
         </div>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -243,6 +290,15 @@ export default function WebsitePage() {
   const { user } = useAuth();
   const [landingData, setLandingData] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewPath, setPreviewPath] = useState("/");
+  const [previewTitle, setPreviewTitle] = useState("Home Page");
+
+  const openPreview = (path: string, label: string) => {
+    setPreviewPath(path);
+    setPreviewTitle(label);
+    setPreviewOpen(true);
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("sm_access_token");
@@ -266,23 +322,33 @@ export default function WebsitePage() {
   return (
     <div className="space-y-8">
       {/* Page Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="section-title">Website Content Manager</h1>
-          <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[13px] mt-1">
+          <p className="text-slate-600 dark:text-slate-400 text-[13px] mt-1">
             Manage your school's public landing page — what visitors see when they visit your site.
           </p>
         </div>
-        <a
-          href="/"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 border border-primary/20 text-primary text-[13px] font-semibold hover:bg-primary/20 transition-colors"
-        >
-          <Eye className="w-4 h-4" />
-          Preview Site
-          <ExternalLink className="w-3 h-3" />
-        </a>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => openPreview("/", "Landing Page")}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-primary/90 transition-all shadow-sm shadow-primary/25 active:scale-[0.98]"
+          >
+            <Eye className="w-4 h-4" />
+            Live Preview
+          </button>
+          <a
+            href="/"
+            target="_blank"
+            rel="noreferrer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 transition-colors"
+            title="Open website in new browser tab"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">New Tab</span>
+          </a>
+        </div>
       </div>
 
       {/* Overall Progress */}
@@ -290,14 +356,14 @@ export default function WebsitePage() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-slate-900 dark:text-white font-bold text-[15px]">Overall Website Completeness</h2>
-            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px] mt-0.5">
+            <p className="text-slate-600 dark:text-slate-400 text-[12px] mt-0.5">
               Fill all sections to make your landing page fully informative.
             </p>
           </div>
           {loading ? (
-            <Loader2 className="w-5 h-5 text-slate-600 dark:text-slate-500 animate-spin dark:text-slate-600 dark:text-slate-500 dark:text-slate-400" />
+            <Loader2 className="w-5 h-5 text-slate-600 dark:text-slate-500 animate-spin dark:text-slate-400" />
           ) : (
-            <span className="text-3xl font-black text-white">{Math.round(overallCompleteness)}%</span>
+            <span className="text-3xl font-black text-slate-900 dark:text-white">{Math.round(overallCompleteness)}%</span>
           )}
         </div>
         <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -306,9 +372,9 @@ export default function WebsitePage() {
             style={{ width: loading ? "0%" : `${overallCompleteness}%` }}
           />
         </div>
-        <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-500 mt-2 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">
+        <div className="flex justify-between text-[11px] text-slate-600 dark:text-slate-400 mt-2">
           <span>0%</span>
-          <span className="text-slate-600 dark:text-slate-500 dark:text-slate-400">{SECTIONS.length} sections total</span>
+          <span className="text-slate-600 dark:text-slate-400">{SECTIONS.length} sections total</span>
           <span>100%</span>
         </div>
       </div>
@@ -318,7 +384,7 @@ export default function WebsitePage() {
         <div className="flex items-center justify-center py-16">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
-            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[13px]">Loading content...</p>
+            <p className="text-slate-600 dark:text-slate-400 text-[13px]">Loading content...</p>
           </div>
         </div>
       ) : (
@@ -331,6 +397,7 @@ export default function WebsitePage() {
                 landingData,
                 section.id
               )}
+              onPreview={openPreview}
             />
           ))}
         </div>
@@ -349,12 +416,20 @@ export default function WebsitePage() {
             { tip: "Add Gallery Photos", detail: "Visual content increases trust. Upload at least 6-10 school photos." },
           ].map((item) => (
             <div key={item.tip} className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-              <p className="text-white font-semibold text-[13px] mb-1">{item.tip}</p>
-              <p className="text-slate-600 dark:text-slate-500 text-[11px] leading-relaxed dark:text-slate-600 dark:text-slate-500 dark:text-slate-400">{item.detail}</p>
+              <p className="text-slate-900 dark:text-white font-semibold text-[13px] mb-1">{item.tip}</p>
+              <p className="text-slate-600 dark:text-slate-400 text-[11px] leading-relaxed">{item.detail}</p>
             </div>
           ))}
         </div>
       </div>
+
+      {/* Interactive Website Preview Modal */}
+      <WebsitePreviewModal
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        path={previewPath}
+        title={previewTitle}
+      />
     </div>
   );
 }

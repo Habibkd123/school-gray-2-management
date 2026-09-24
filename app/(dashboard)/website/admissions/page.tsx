@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 
 import { FileUploadField } from "../../../components/ui/FileUploadField";
+import { WebsitePageHeader } from "../../../components/website/WebsitePageHeader";
 
 interface FeeItem {
   class_name: string;
@@ -106,25 +107,17 @@ export default function AdmissionsPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-white transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
-            <BookOpen className="w-5 h-5 text-amber-400" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Admissions</h1>
-            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px]">How to apply, fee structure & required documents</p>
-          </div>
-        </div>
-        <button onClick={save} disabled={saving}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-60 transition-all">
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
+      {/* Header */}
+      <WebsitePageHeader
+        title="Admissions"
+        subtitle="How to apply, fee structure & required documents"
+        icon={<BookOpen className="w-5 h-5 text-amber-400" />}
+        iconBg="bg-amber-500/10 border-amber-500/20 text-amber-400"
+        previewPath="/admissions"
+        onSave={save}
+        saving={saving}
+        saveLabel="Save Changes"
+      />
 
       {status === "success" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[13px] font-medium"><CheckCircle2 className="w-4 h-4" /> Saved!</div>}
       {status === "error" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[13px] font-medium"><AlertCircle className="w-4 h-4" /> Failed to save.</div>}

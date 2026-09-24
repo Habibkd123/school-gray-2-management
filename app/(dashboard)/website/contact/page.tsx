@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Save, Loader2, Phone, CheckCircle2, AlertCircle, MapPin, Mail, Globe } from "lucide-react";
 import { FileUploadField } from "../../../components/ui/FileUploadField";
+import { WebsitePageHeader } from "../../../components/website/WebsitePageHeader";
 
 const YoutubeIcon = () => (
   <svg className="w-3.5 h-3.5 text-rose-400" fill="currentColor" viewBox="0 0 24 24">
@@ -103,20 +104,17 @@ export default function ContactPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center"><Phone className="w-5 h-5 text-indigo-400" /></div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Contact Us</h1>
-            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px]">School address, phone, email, map & social links</p>
-          </div>
-        </div>
-        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-60 transition-all">
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
+      {/* Header */}
+      <WebsitePageHeader
+        title="Contact Us"
+        subtitle="School address, phone, email, map & social links"
+        icon={<Phone className="w-5 h-5 text-indigo-400" />}
+        iconBg="bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
+        previewPath="/contact"
+        onSave={save}
+        saving={saving}
+        saveLabel="Save Changes"
+      />
 
       {status === "success" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[13px] font-medium"><CheckCircle2 className="w-4 h-4" /> Saved!</div>}
       {status === "error" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[13px] font-medium"><AlertCircle className="w-4 h-4" /> Failed.</div>}

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Save, Loader2, Plus, Trash2, Trophy, CheckCircle2, AlertCircle } from "lucide-react";
 import { FileUploadField } from "../../../components/ui/FileUploadField";
+import { WebsitePageHeader } from "../../../components/website/WebsitePageHeader";
 
 interface Achievement {
   _id?: string;
@@ -83,20 +84,17 @@ export default function StudentLifePage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
-          <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center"><Trophy className="w-5 h-5 text-purple-400" /></div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">Student Life</h1>
-            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px]">Sports, cultural activities, clubs & achievements</p>
-          </div>
-        </div>
-        <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-60 transition-all">
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
+      {/* Header */}
+      <WebsitePageHeader
+        title="Student Life"
+        subtitle="Sports, cultural activities, clubs & achievements"
+        icon={<Trophy className="w-5 h-5 text-purple-400" />}
+        iconBg="bg-purple-500/10 border-purple-500/20 text-purple-400"
+        previewPath="/student-life"
+        onSave={save}
+        saving={saving}
+        saveLabel="Save Changes"
+      />
 
       {status === "success" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[13px] font-medium"><CheckCircle2 className="w-4 h-4" /> Saved!</div>}
       {status === "error" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[13px] font-medium"><AlertCircle className="w-4 h-4" /> Failed.</div>}

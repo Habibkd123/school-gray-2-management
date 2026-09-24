@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Save, Loader2, Plus, Trash2, Newspaper, CheckCircle2, AlertCircle, FileText, Megaphone, Award } from "lucide-react";
 import { FileUploadField } from "../../../components/ui/FileUploadField";
+import { WebsitePageHeader } from "../../../components/website/WebsitePageHeader";
 
 type NewsType = "announcement" | "circular" | "result";
 
@@ -90,25 +91,27 @@ export default function NewsPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Link href="/website" className="p-2 rounded-lg hover:bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-500 hover:text-slate-900 dark:text-slate-600 dark:text-slate-500 dark:text-slate-400 dark:hover:text-white transition-colors"><ArrowLeft className="w-5 h-5" /></Link>
-          <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center"><Newspaper className="w-5 h-5 text-rose-400" /></div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white">News & Notices</h1>
-            <p className="text-slate-600 dark:text-slate-500 dark:text-slate-400 text-[12px]">Announcements, circulars (PDF) and result news</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button onClick={addItem} className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-200 dark:bg-slate-700 border border-slate-200 dark:border-slate-750 text-white text-[13px] font-semibold hover:bg-slate-700 transition-colors">
-            <Plus className="w-4 h-4" /> Add News
+      {/* Header */}
+      <WebsitePageHeader
+        title="News & Notices"
+        subtitle="Announcements, circulars (PDF) and result news"
+        icon={<Newspaper className="w-5 h-5 text-rose-400" />}
+        iconBg="bg-rose-500/10 border-rose-500/20 text-rose-400"
+        previewPath="/news"
+        onSave={save}
+        saving={saving}
+        saveLabel="Save All"
+        extraActions={
+          <button
+            type="button"
+            onClick={addItem}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-[13px] font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4 text-rose-500" />
+            <span>Add News</span>
           </button>
-          <button onClick={save} disabled={saving} className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-[13px] font-semibold hover:bg-primary/90 disabled:opacity-60 transition-all">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {saving ? "Saving..." : "Save All"}
-          </button>
-        </div>
-      </div>
+        }
+      />
 
       {status === "success" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[13px] font-medium"><CheckCircle2 className="w-4 h-4" /> Saved!</div>}
       {status === "error" && <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-[13px] font-medium"><AlertCircle className="w-4 h-4" /> Failed.</div>}
