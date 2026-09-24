@@ -130,6 +130,8 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         "twitter_handle",
         "canonical_url",
         "favicon_url",
+        "google_site_verification",
+        "google_analytics_id",
       ];
       const existing = (school.meta_config as any) || {};
       const updatedMeta: Record<string, string> = { ...existing };
@@ -144,16 +146,14 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     await school.save();
 
     invalidateSchoolThemeCache(schoolId);
+    invalidateSchoolSlugCache();
     if (school.slug) {
-      invalidateSchoolSlugCache(school.slug);
       invalidateSchoolThemeCache(school.slug);
     }
     if (school.subdomain) {
-      invalidateSchoolSlugCache(school.subdomain);
       invalidateSchoolThemeCache(school.subdomain);
     }
     if (school.custom_domain) {
-      invalidateSchoolSlugCache(school.custom_domain);
       invalidateSchoolThemeCache(school.custom_domain);
     }
 

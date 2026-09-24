@@ -62,24 +62,28 @@ export function Hero({ data }: { data?: HeroData | null }) {
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-sidebar">
       
-      {/* Background Image / Video */}
-      <div className="absolute inset-0 z-0">
+    {/* Background Image with permanent dark base — no blank flash */}
+      <div className="absolute inset-0 z-0 bg-[#0F2336]">
+        {/* Dark gradient rendered immediately — visible before image loads */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0F2336]/90 via-[#1E3A5F]/60 to-[#0F2336]/95 z-10" />
         <img
           src={imageUrl}
           alt="Campus"
+          fetchPriority="high"
+          loading="eager"
           className="w-full h-full object-cover opacity-60 scale-105"
         />
-        {/* Dynamic Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-sidebar/60 via-primary/40 to-sidebar/90" />
+        {/* Dynamic Gradient Overlay on top of image */}
+        <div className="absolute inset-0 bg-gradient-to-b from-sidebar/60 via-primary/40 to-sidebar/90 z-20" />
       </div>
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-24 md:py-32 flex flex-col items-center text-center">
         
         {showHeroBadge && (
           <motion.div 
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.3 }}
             className="inline-flex items-center gap-3 px-6 py-2 mb-8 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-xl"
           >
             {admissionOpen && (
@@ -94,9 +98,9 @@ export function Hero({ data }: { data?: HeroData | null }) {
         )}
 
         <motion.h1 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
+          transition={{ duration: 0.35, delay: 0.05 }}
           className="text-5xl md:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/90 to-white mb-6 leading-tight max-w-4xl drop-shadow-sm"
         >
           {tagline}
@@ -106,7 +110,7 @@ export function Hero({ data }: { data?: HeroData | null }) {
           <motion.p 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
             className="text-lg md:text-xl text-white/80 mb-12 max-w-2xl leading-relaxed font-light"
           >
             {description}
@@ -114,9 +118,9 @@ export function Hero({ data }: { data?: HeroData | null }) {
         )}
 
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.6 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
           className="flex flex-col sm:flex-row items-center gap-6 mb-16"
         >
           {admissionOpen && (
@@ -142,9 +146,9 @@ export function Hero({ data }: { data?: HeroData | null }) {
 
         {heroStats.length > 0 && (
           <motion.div 
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
+            transition={{ duration: 0.3 }}
             className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
           >
             {heroStats.slice(0,4).map((s, i) => (

@@ -21,6 +21,7 @@ import {
   Info,
   AlertTriangle,
 } from "lucide-react";
+import { getAuthHeaders } from "@/lib/utils/session";
 
 // ── Toast Types ──────────────────────────────────────────────────────────────
 type ToastVariant = "success" | "error" | "warning" | "info";
@@ -203,7 +204,7 @@ export default function SystemBackupPage() {
     try {
       const response = await fetch("/api/backup/export", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
         body: JSON.stringify({
           module: selectedModule,
           action,

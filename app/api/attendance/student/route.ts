@@ -7,6 +7,10 @@ import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
+// In-memory cache for class student counts (student enrollment counts per class don't change between date filters)
+const studentCountsCache = new Map<string, { counts: Record<string, number>; expiresAt: number }>();
+const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+
 export async function GET(req: NextRequest) {
   const { schoolId, userId, role, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
@@ -37,6 +41,31 @@ export async function GET(req: NextRequest) {
     const endOfDay = new Date(dateParam);
     endOfDay.setUTCHours(23, 59, 59, 999);
 
+    // ── Resolve teacher + class access ONCE for teacher role ──────────────────
+    let combinedClassIds: string[] = [];
+    if (role === "teacher") {
+      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
+      if (!teacher) {
+        return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
+      }
+
+      const [classTeacherIds, assignedClassIds] = await Promise.all([
+        Class.find({ school_id: schoolId, class_teacher_id: teacher._id }).distinct("_id"),
+        TeacherAssignment.find({
+          school_id: schoolId,
+          teacher_id: teacher._id,
+          academic_year,
+          is_deleted: false,
+          status: "Active",
+        }).distinct("class_id"),
+      ]);
+
+      combinedClassIds = Array.from(new Set([
+        ...classTeacherIds.map(id => id.toString()),
+        ...assignedClassIds.map(id => id?.toString()).filter(Boolean),
+      ]));
+    }
+
     if (!classId) {
       const query: any = {
         school_id: schoolId as string,
@@ -46,27 +75,29 @@ export async function GET(req: NextRequest) {
       };
 
       if (role === "teacher") {
-        const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
-        if (!teacher) {
-          return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
-        }
-        const classTeacherIds = await Class.find({
-          school_id: schoolId,
-          class_teacher_id: teacher._id
-        }).distinct("_id");
-        const assignedClassIds = await TeacherAssignment.find({
-          school_id: schoolId,
-          teacher_id: teacher._id,
-          academic_year,
-          is_deleted: false,
-          status: "Active"
-        }).distinct("class_id");
-
-        const combinedClassIds = Array.from(new Set([
-          ...classTeacherIds.map(id => id.toString()),
-          ...assignedClassIds.map(id => id?.toString()).filter(Boolean)
-        ]));
         query.class_id = { $in: combinedClassIds };
+      }
+
+      // Check student counts cache
+      const cacheKey = `${schoolId}:${academic_year}:${streamId || ""}`;
+      const cached = studentCountsCache.get(cacheKey);
+      const isCacheValid = cached && cached.expiresAt > Date.now();
+
+      let classStudentCounts: Record<string, number> = {};
+
+      if (isCacheValid) {
+        classStudentCounts = cached.counts;
+        const attendanceRecords = await Attendance.find(query)
+          .select("class_id records.status records.student_id date")
+          .lean();
+
+        return NextResponse.json({
+          success: true,
+          data: attendanceRecords,
+          classStudentCounts,
+        }, {
+          headers: { "Cache-Control": "private, no-cache, stale-while-revalidate=15" },
+        });
       }
 
       const [attendanceRecords, studentCounts] = await Promise.all([
@@ -93,45 +124,29 @@ export async function GET(req: NextRequest) {
         ]),
       ]);
 
-      const classStudentCounts: Record<string, number> = {};
       studentCounts.forEach((sc: any) => {
         if (sc._id) {
           classStudentCounts[sc._id.toString()] = sc.count;
         }
       });
 
+      studentCountsCache.set(cacheKey, {
+        counts: classStudentCounts,
+        expiresAt: Date.now() + CACHE_TTL_MS,
+      });
+
       return NextResponse.json({
         success: true,
         data: attendanceRecords,
         classStudentCounts,
+      }, {
+        headers: { "Cache-Control": "private, no-cache, stale-while-revalidate=15" },
       });
     }
 
-    // Verify teacher assignment for student attendance
+    // ── classId present — verify teacher access using already-resolved list ───
     if (role === "teacher") {
-      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
-      if (!teacher) {
-        return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
-      }
-      const classTeacherIds = await Class.find({
-        school_id: schoolId,
-        class_teacher_id: teacher._id
-      }).distinct("_id");
-      const assignedClassIds = await TeacherAssignment.find({
-        school_id: schoolId,
-        teacher_id: teacher._id,
-        academic_year,
-        is_deleted: false,
-        status: "Active"
-      }).distinct("class_id");
-
-      const combinedClassIds = Array.from(new Set([
-        ...classTeacherIds.map(id => id.toString()),
-        ...assignedClassIds.map(id => id?.toString()).filter(Boolean)
-      ]));
-
-      const hasAccess = combinedClassIds.includes(classId);
-      if (!hasAccess) {
+      if (!combinedClassIds.includes(classId)) {
         return NextResponse.json({ success: false, message: "You are not assigned to this class" }, { status: 403 });
       }
     }
@@ -156,11 +171,15 @@ export async function GET(req: NextRequest) {
       query.section_id = null;
     }
 
-    const attendanceRecord = await Attendance.findOne(query).populate("records.student_id", "name roll_no");
+    const attendanceRecord = await Attendance.findOne(query)
+      .populate("records.student_id", "name roll_no")
+      .lean();
 
     return NextResponse.json({
       success: true,
       data: attendanceRecord || null,
+    }, {
+      headers: { "Cache-Control": "private, no-cache, stale-while-revalidate=15" },
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Internal server error" }, { status: 500 });
@@ -188,31 +207,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid classId format" }, { status: 400 });
     }
 
-    // Verify teacher assignment for student attendance
+    // Verify teacher assignment — Class + TeacherAssignment queries run in parallel
     if (role === "teacher") {
       const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
       if (!teacher) {
         return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
       }
-      const classTeacherIds = await Class.find({
-        school_id: schoolId,
-        class_teacher_id: teacher._id
-      }).distinct("_id");
-      const assignedClassIds = await TeacherAssignment.find({
-        school_id: schoolId,
-        teacher_id: teacher._id,
-        academic_year,
-        is_deleted: false,
-        status: "Active"
-      }).distinct("class_id");
+
+      const [classTeacherIds, assignedClassIds] = await Promise.all([
+        Class.find({ school_id: schoolId, class_teacher_id: teacher._id }).distinct("_id"),
+        TeacherAssignment.find({
+          school_id: schoolId,
+          teacher_id: teacher._id,
+          academic_year,
+          is_deleted: false,
+          status: "Active",
+        }).distinct("class_id"),
+      ]);
 
       const combinedClassIds = Array.from(new Set([
         ...classTeacherIds.map(id => id.toString()),
-        ...assignedClassIds.map(id => id?.toString()).filter(Boolean)
+        ...assignedClassIds.map(id => id?.toString()).filter(Boolean),
       ]));
 
-      const hasAccess = combinedClassIds.includes(classId);
-      if (!hasAccess) {
+      if (!combinedClassIds.includes(classId)) {
         return NextResponse.json({ success: false, message: "You are not assigned to this class" }, { status: 403 });
       }
     }

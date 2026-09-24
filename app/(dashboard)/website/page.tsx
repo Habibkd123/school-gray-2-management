@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   Globe, BookOpen, GraduationCap, Users, Trophy,
   Newspaper, Image, Phone, ChevronRight, CheckCircle2,
-  AlertCircle, Loader2, ExternalLink, Eye
+  AlertCircle, Loader2, ExternalLink, Eye, Search
 } from "lucide-react";
 import { useAuth } from "../../context/auth";
 
@@ -91,6 +91,15 @@ const SECTIONS: Section[] = [
     href: "/website/contact",
     color: "from-indigo-500/20 to-indigo-600/10 border-indigo-500/30",
     fields: ["Address", "Phone & Email", "Map Location", "Social Links"],
+  },
+  {
+    id: "seo",
+    label: "SEO & Google Verification",
+    description: "Meta title, description, keywords, Google Search Console verification & Open Graph image for this school's subdomain",
+    icon: <Search className="w-6 h-6" />,
+    href: "/website/seo",
+    color: "from-teal-500/20 to-teal-600/10 border-teal-500/30",
+    fields: ["Meta Title", "Meta Description", "Keywords", "Google Verification", "Analytics ID"],
   },
 ];
 

@@ -44,8 +44,14 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     if (!isLoading && !isAuthenticated) {
       router.replace("/");
       return;
@@ -92,8 +98,8 @@ export default function DashboardLayout({
     }
   }, [isAuthenticated, isLoading, router, pathname, user, permissions]);
 
-  // Show spinner while checking auth
-  if (isLoading) {
+  // Show spinner while checking auth or before client mount to prevent SSR hydration mismatch
+  if (!mounted || isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">

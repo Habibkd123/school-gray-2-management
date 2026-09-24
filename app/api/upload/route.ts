@@ -21,15 +21,20 @@ export async function POST(req: NextRequest) {
       "image/png",
       "image/gif",
       "image/webp",
+      "image/x-icon",
+      "image/vnd.microsoft.icon",
+      "image/ico",
+      "image/svg+xml",
       "application/pdf",
       "video/mp4",
       "video/webm",
       "video/ogg",
       "video/quicktime"
     ];
-    if (!allowedTypes.includes(file.type)) {
+    const isIco = file.name?.toLowerCase().endsWith(".ico");
+    if (!allowedTypes.includes(file.type) && !isIco) {
       return NextResponse.json(
-        { success: false, message: "Invalid file type. Allowed: JPEG, PNG, GIF, WebP, PDF, MP4, WebM, OGG, MOV" },
+        { success: false, message: "Invalid file type. Allowed: JPEG, PNG, GIF, WebP, ICO, SVG, PDF, MP4, WebM" },
         { status: 400 }
       );
     }

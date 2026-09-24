@@ -40,8 +40,9 @@ export function middleware(request: NextRequest) {
   let subdomain: string | null = null;
 
   if (hostnameWithoutPort === "localhost" || hostnameWithoutPort === "127.0.0.1") {
-    // Local dev plain: use query param ?subdomain=bajrang for testing
-    subdomain = url.searchParams.get("subdomain") || null;
+    // Local dev plain: priority 1 = ?subdomain=, priority 2 = logged-in cookie, priority 3 = standalone default
+    const cookieSub = request.cookies.get("sm_subdomain")?.value;
+    subdomain = url.searchParams.get("subdomain") || cookieSub || null;
     // Standalone mode: treat main domain as the configured school
     if (!subdomain && IS_STANDALONE && STANDALONE_SUB) subdomain = STANDALONE_SUB;
   } else if (hostnameWithoutPort.endsWith(".localhost")) {
@@ -107,11 +108,15 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl);
     }
 
-    // Rule 2: Super Admin is on a school subdomain accessing super-admin pages
+    // Rule 2: Super Admin is on an actual school subdomain host accessing super-admin pages
     // Redirect them to main domain
+    const isMainHost = isLocalhost
+      ? (hostnameWithoutPort === "localhost" || hostnameWithoutPort === "127.0.0.1")
+      : (hostnameWithoutPort === ROOT_DOMAIN || hostnameWithoutPort === `www.${ROOT_DOMAIN}`);
+
     if (
       cookieRole === "super_admin" &&
-      subdomain !== null &&
+      !isMainHost &&
       (pathname.startsWith("/super-admin") || pathname.startsWith("/schools"))
     ) {
       const port = url.port ? `:${url.port}` : "";

@@ -2,8 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { Menu, X, Phone, Mail, LayoutDashboard, LogOut, ChevronDown, User as UserIcon } from "lucide-react";
-import { usePublicSchoolInfo } from "@/app/hooks/usePublicSchoolInfo";
+import { Menu, X, Phone, Mail, LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
 import { useAuth } from "@/app/context/auth";
 
 interface ContactData {
@@ -18,6 +17,12 @@ interface AdmissionsData {
 interface HeaderProps {
   contact?: ContactData | null;
   admissions?: AdmissionsData | null;
+  /** School name passed from server — no client fetch needed */
+  schoolName?: string | null;
+  /** School subtitle passed from server */
+  schoolSubtitle?: string | null;
+  /** School logo URL passed from server */
+  logoUrl?: string | null;
 }
 
 const NAV_LINKS = [
@@ -31,11 +36,10 @@ const NAV_LINKS = [
   { label: "Contact", href: "/contact" },
 ];
 
-export function Header({ contact, admissions }: HeaderProps) {
+export function Header({ contact, admissions, schoolName, schoolSubtitle, logoUrl }: HeaderProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = React.useState(false);
   const [mounted, setMounted] = React.useState(false);
-  const { schoolInfo } = usePublicSchoolInfo();
   const { user, isAuthenticated, logout } = useAuth();
 
   React.useEffect(() => {
@@ -45,6 +49,11 @@ export function Header({ contact, admissions }: HeaderProps) {
   const phone = contact?.phone?.trim();
   const email = contact?.email?.trim();
   const admissionOpen = admissions?.admission_open;
+
+  // Resolved school identity — always from server props (no client flash)
+  const displayName     = schoolName     || "School";
+  const displaySubtitle = schoolSubtitle || "Public School";
+  const displayLogo     = logoUrl        || "/logo.png";
 
   const hasTopBar = phone || email || admissionOpen;
   const isUserLoggedIn = mounted && isAuthenticated && !!user;
@@ -85,17 +94,17 @@ export function Header({ contact, admissions }: HeaderProps) {
       <nav className="sticky top-0 left-0 right-0 z-50 bg-[#FFFFFF] shadow-md border-b-4 border-[var(--primary)] transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
 
-          {/* Logo */}
+          {/* Logo — served from server props, zero flash */}
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[var(--primary)] flex items-center justify-center dark:bg-slate-900">
-              <img src="/logo.png" alt="School Logo" className="w-full h-full object-contain p-1" />
+              <img src={displayLogo} alt={`${displayName} Logo`} className="w-full h-full object-contain p-1" />
             </div>
             <div className="flex flex-col">
               <span className="text-[20px] font-black tracking-tight text-[#231F20] leading-none">
-                {schoolInfo.school_name}
+                {displayName}
               </span>
               <span className="text-[10px] font-bold tracking-widest text-[var(--primary)] uppercase">
-                {schoolInfo.school_subtitle}
+                {displaySubtitle}
               </span>
             </div>
           </div>

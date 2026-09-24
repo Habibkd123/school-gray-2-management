@@ -1,4 +1,5 @@
 import React from "react";
+import { headers } from "next/headers";
 import { Hero } from "../components/landing/Hero";
 import { Highlights } from "../components/landing/Highlights";
 import { AboutSchool } from "../components/landing/AboutSchool";
@@ -14,9 +15,59 @@ import { LatestNews } from "../components/landing/LatestNews";
 import { FAQ } from "../components/landing/FAQ";
 import { Contact } from "../components/landing/Contact";
 import { getLandingData } from "@/lib/landing/getLandingData";
+import { resolveSchoolMeta } from "@/lib/themes/resolveSchool";
 
 export default async function Home() {
-  const landingData = await getLandingData();
+  const headersList = await headers();
+
+  // Run both fetches in parallel — resolveSchoolMeta uses same cache as layout.tsx
+  const [landingData, school] = await Promise.all([
+    getLandingData(),
+    resolveSchoolMeta(headersList),
+  ]);
+
+  // ── Build Schema.org JSON-LD for this school ───────────────────────────────
+  const contact = landingData?.contact;
+  const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
+  const subdomain = headersList.get("x-subdomain") ?? "";
+  const customDomain = headersList.get("x-custom-domain") ?? "";
+  const hostname = headersList.get("host")?.split(":")[0] ?? "";
+  const isLocalhost = hostname === "localhost" || hostname.endsWith(".localhost");
+  const proto = isLocalhost ? "http" : "https";
+  let siteUrl = `https://${ROOT_DOMAIN}`;
+  if (customDomain) {
+    siteUrl = `${proto}://${customDomain}`;
+  } else if (subdomain && subdomain !== "www") {
+    siteUrl = isLocalhost
+      ? `${proto}://${subdomain}.localhost`
+      : `${proto}://${subdomain}.${ROOT_DOMAIN}`;
+  } else if (hostname) {
+    siteUrl = `${proto}://${hostname}`;
+  }
+
+  const jsonLd = school?.school_id
+    ? {
+        "@context": "https://schema.org",
+        "@type": ["EducationalOrganization", "School"],
+        name: school.name,
+        url: siteUrl,
+        ...(school.og_image && { logo: school.og_image }),
+        ...(contact?.address && { address: {
+          "@type": "PostalAddress",
+          streetAddress: contact.address,
+        }}),
+        ...(contact?.phone && { telephone: contact.phone }),
+        ...(contact?.email && { email: contact.email }),
+        ...(contact?.social?.facebook && {
+          sameAs: [
+            contact.social.facebook,
+            contact.social.twitter,
+            contact.social.instagram,
+            contact.social.youtube,
+          ].filter(Boolean),
+        }),
+      }
+    : null;
 
   const hasHero = Boolean(
     landingData?.about?.hero_tagline ||
@@ -88,6 +139,15 @@ export default async function Home() {
 
   return (
     <main className="w-full">
+      {/* Schema.org JSON-LD — enables Google rich snippets & local school Knowledge Panel */}
+      {jsonLd && (
+        <script
+          id="schema-json-ld"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          suppressHydrationWarning
+        />
+      )}
       {hasHero && <Hero data={landingData} />}
       {hasHighlights && <Highlights data={landingData} />}
       {hasAbout && <AboutSchool data={landingData?.about} />}

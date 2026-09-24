@@ -5,11 +5,18 @@ import { requireAuth } from "@/lib/utils/auth";
 
 // GET — fetch academic config for the school
 export async function GET(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
+  const { schoolId, role, error } = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
   if (error) return error;
 
   try {
     await connectToDatabase();
+    if (role === "super_admin" || !schoolId) {
+      return NextResponse.json({
+        success: true,
+        data: { enable_streams: false, enable_sections: false },
+      });
+    }
+
     const school = await School.findById(schoolId).select("academic_config").lean();
     if (!school) {
       return NextResponse.json({ success: false, message: "School not found" }, { status: 404 });

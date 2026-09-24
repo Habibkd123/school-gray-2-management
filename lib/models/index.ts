@@ -442,6 +442,7 @@ attendanceSchema.index(
 // Fast date-range queries (dashboard stats, reports)
 attendanceSchema.index({ school_id: 1, class_id: 1, date: 1 }, { name: "attendance_school_class_date_v1" });
 attendanceSchema.index({ school_id: 1, type: 1, date: 1 }, { name: "attendance_school_type_date_v1" });
+attendanceSchema.index({ school_id: 1, academic_year: 1, type: 1, date: 1 }, { name: "attendance_school_year_type_date_v1" });
 
 // ─── Homework ─────────────────────────────────────────────────────
 export interface IHomework extends Document {

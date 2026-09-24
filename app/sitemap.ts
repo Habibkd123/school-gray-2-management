@@ -1,8 +1,9 @@
 import type { MetadataRoute } from "next";
+import { headers } from "next/headers";
 import fs from "fs";
 import path from "path";
 
-const BASE_URL = "https://myschoollife.in";
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
 
 interface DiscoveredRoute {
   route: string;
@@ -65,7 +66,6 @@ function discoverWebsiteRoutes(dir: string, baseRoute = ""): DiscoveredRoute[] {
       }
     }
   } catch {
-    // Return empty if directory cannot be read
     return [];
   }
   return routes;
@@ -90,11 +90,48 @@ function getRouteMetadata(route: string): {
   return { changeFrequency: "monthly", priority: 0.7 };
 }
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Resolve the base URL dynamically from the incoming request host.
+// This ensures bajrang.myschoollife.in/sitemap.xml contains
+// https://bajrang.myschoollife.in/... URLs — not hardcoded main domain URLs.
+async function resolveBaseUrl(): Promise<string> {
+  try {
+    const headersList = await headers();
+    const customDomain = headersList.get("x-custom-domain") ?? "";
+    const subdomain    = headersList.get("x-subdomain") ?? "";
+    const hostname     = headersList.get("host")?.split(":")[0] ?? "";
+
+    // Detect localhost / dev environment
+    const isLocalhost =
+      hostname === "localhost" ||
+      hostname === "127.0.0.1" ||
+      hostname.endsWith(".localhost");
+    const proto = isLocalhost ? "http" : "https";
+
+    if (customDomain) return `${proto}://${customDomain}`;
+
+    if (subdomain && subdomain !== "www") {
+      const host = isLocalhost
+        ? `${subdomain}.localhost`
+        : `${subdomain}.${ROOT_DOMAIN}`;
+      return `${proto}://${host}`;
+    }
+
+    // Fallback: use the host header directly (production root or localhost)
+    if (hostname) return `${proto}://${hostname}`;
+  } catch {
+    // headers() throws outside a request context (e.g., static export)
+  }
+
+  return `https://${ROOT_DOMAIN}`;
+}
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const baseUrl = await resolveBaseUrl();
+
   const websiteDir = path.join(process.cwd(), "app", "(website)");
   const discovered = discoverWebsiteRoutes(websiteDir);
 
-  // Use discovered routes if found; fallback to verified list if filesystem scan returns empty
+  // Use discovered routes if found; fallback to verified list
   const routesToUse: DiscoveredRoute[] =
     discovered.length > 0
       ? discovered
@@ -119,7 +156,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   return sortedRoutes.map(([route, lastModified]) => {
     const meta = getRouteMetadata(route);
-    const cleanUrl = route === "/" ? BASE_URL : `${BASE_URL}${route}`;
+    const cleanUrl = route === "/" ? baseUrl : `${baseUrl}${route}`;
 
     return {
       url: cleanUrl,

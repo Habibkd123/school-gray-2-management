@@ -18,6 +18,8 @@ export interface IMetaConfig {
   twitter_handle?: string;   // e.g. "@bajrangschool"
   canonical_url?: string;    // e.g. "https://bajrang.myschoollife.in"
   favicon_url?: string;      // custom favicon per school
+  google_site_verification?: string; // Google Search Console verification token/tag
+  google_analytics_id?: string;      // Google Analytics Measurement ID (G-XXXXXXXXXX)
 }
 
 // ─── Login Config Sub-document ─────────────────────────────────────
@@ -104,8 +106,10 @@ const metaConfigSchema = new Schema<IMetaConfig>(
     og_image:         { type: String, default: "" },
     og_type:          { type: String, default: "website" },
     twitter_handle:   { type: String, trim: true, default: "" },
-    canonical_url:    { type: String, trim: true, default: "" },
-    favicon_url:      { type: String, default: "" },
+    canonical_url:            { type: String, trim: true, default: "" },
+    favicon_url:              { type: String, default: "" },
+    google_site_verification: { type: String, trim: true, default: "" },
+    google_analytics_id:      { type: String, trim: true, default: "" },
   },
   { _id: false }
 );

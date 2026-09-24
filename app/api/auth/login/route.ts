@@ -37,15 +37,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const isSuperAdmin = is_super_admin === true || usernameInput.startsWith("superadmin.");
+    const isSuperAdmin =
+      is_super_admin === true ||
+      login_type === "super_admin" ||
+      usernameInput.startsWith("superadmin.") ||
+      usernameInput.startsWith("superadmin@") ||
+      usernameInput === "superadmin" ||
+      usernameInput === "superadmin@myschoollife.com";
 
     // ─── Super Admin Fast Path ───────────────────────────────────
     if (isSuperAdmin) {
       const user = await User.findOne({
-        username: usernameInput,
+        $or: [
+          { username: usernameInput },
+          { email: usernameInput },
+          { username: `${usernameInput}.myschoollife` },
+          { email: `${usernameInput}@myschoollife.com` },
+        ],
         role: "super_admin",
       }).select("+password_hash");
-      console.log(user, "user");
+
       if (!user) {
         return NextResponse.json(
           { success: false, message: "Invalid credentials." },

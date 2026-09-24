@@ -38,17 +38,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
-        school_id:        (school as any)._id.toString(),
-        school_name:      (school as any).name,
-        subdomain:        (school as any).subdomain || "",
-        meta_title:       meta.meta_title       || "",
-        meta_description: meta.meta_description || "",
-        meta_keywords:    meta.meta_keywords    || "",
-        og_image:         meta.og_image         || "",
-        og_type:          meta.og_type          || "website",
-        twitter_handle:   meta.twitter_handle   || "",
-        canonical_url:    meta.canonical_url    || "",
-        favicon_url:      meta.favicon_url      || "",
+        school_id:                (school as any)._id.toString(),
+        school_name:              (school as any).name,
+        subdomain:                (school as any).subdomain || "",
+        meta_title:               meta.meta_title               || "",
+        meta_description:         meta.meta_description         || "",
+        meta_keywords:            meta.meta_keywords            || "",
+        og_image:                 meta.og_image                 || "",
+        og_type:                  meta.og_type                  || "website",
+        twitter_handle:           meta.twitter_handle           || "",
+        canonical_url:            meta.canonical_url            || "",
+        favicon_url:              meta.favicon_url              || "",
+        google_site_verification: meta.google_site_verification || "",
+        google_analytics_id:      meta.google_analytics_id      || "",
       },
     });
   } catch (err: any) {
@@ -87,6 +89,8 @@ export async function PUT(req: NextRequest) {
       "twitter_handle",
       "canonical_url",
       "favicon_url",
+      "google_site_verification",
+      "google_analytics_id",
     ];
 
     const update: Record<string, string> = {};
@@ -110,10 +114,8 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, message: "School not found" }, { status: 404 });
     }
 
-    // Invalidate cached metadata so new SEO tags reflect immediately
-    if ((school as any).slug) invalidateSchoolSlugCache((school as any).slug);
-    if ((school as any).subdomain) invalidateSchoolSlugCache((school as any).subdomain);
-    if ((school as any).custom_domain) invalidateSchoolSlugCache((school as any).custom_domain);
+    // Invalidate cached metadata so new SEO tags reflect immediately across all subdomains/slugs/routes
+    invalidateSchoolSlugCache();
 
     return NextResponse.json({
       success: true,

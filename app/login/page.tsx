@@ -77,22 +77,30 @@ export default function LoginPage() {
     setError("");
 
     const trimmedUsername = username.trim();
+    const isSuperAdminInput =
+      trimmedUsername.toLowerCase().startsWith("superadmin.") ||
+      trimmedUsername.toLowerCase().startsWith("superadmin@") ||
+      trimmedUsername.toLowerCase() === "superadmin" ||
+      trimmedUsername.toLowerCase() === "superadmin@myschoollife.com";
+
     if (activeTab === "admin") {
       if (!trimmedUsername) {
         setError("Please enter your Email Address.");
         return;
       }
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(trimmedUsername)) {
-        setError("Please enter a valid Email Address.");
-        return;
+      if (!isSuperAdminInput) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmedUsername)) {
+          setError("Please enter a valid Email Address.");
+          return;
+        }
       }
     } else {
       if (!trimmedUsername) {
         setError("Please enter your School Username.");
         return;
       }
-      if (!trimmedUsername.endsWith(".myschoollife") || trimmedUsername.includes(" ") || trimmedUsername.includes("@")) {
+      if (!isSuperAdminInput && (!trimmedUsername.endsWith(".myschoollife") || trimmedUsername.includes(" ") || trimmedUsername.includes("@"))) {
         setError("Please enter a valid School Username.");
         return;
       }
@@ -105,9 +113,13 @@ export default function LoginPage() {
 
     setIsLoading(true);
 
-    const result = await login(trimmedUsername, password, activeTab);
+    const result = await login(trimmedUsername, password, isSuperAdminInput ? "super_admin" : activeTab);
 
     if (result.success) {
+      if (isSuperAdminInput) {
+        window.location.href = "/dashboard";
+        return;
+      }
       const targetSubdomain = result.schoolSubdomain;
       const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
       const currentHost = window.location.hostname;
@@ -126,7 +138,7 @@ export default function LoginPage() {
         }
       }
 
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } else {
       setError(result.message);
       setIsLoading(false);
@@ -138,7 +150,7 @@ export default function LoginPage() {
       <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 dark:bg-slate-900 font-sans">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-[var(--primary)]" />
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+          <p className="text-sm font-medium text-slate-600 dark:text-slate-300" suppressHydrationWarning>
             {isAuthenticated ? "Redirecting to dashboard..." : "Loading portal..."}
           </p>
         </div>

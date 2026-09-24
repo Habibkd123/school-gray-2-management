@@ -228,12 +228,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loginType?: string
   ): Promise<{ success: boolean; message: string; schoolSubdomain?: string | null }> => {
     try {
+      const trimmedUser = username.trim().toLowerCase();
+      const isSuperAdminLogin =
+        loginType === "super_admin" ||
+        trimmedUser.startsWith("superadmin.") ||
+        trimmedUser.startsWith("superadmin@") ||
+        trimmedUser === "superadmin" ||
+        trimmedUser === "superadmin@myschoollife.com";
+
       // ── Resolve school_id from subdomain ──────────────────────
       const subdomain = getSubdomain();
 
       let schoolId: string | null = null;
 
-      if (subdomain) {
+      if (isSuperAdminLogin) {
+        schoolId = null;
+      } else if (subdomain) {
         // Resolve school_id from the subdomain visible in the browser URL
         schoolId = await resolveSchoolIdBySubdomain(subdomain);
         if (!schoolId) {
@@ -244,14 +254,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, message: "Please open your school's URL to login (e.g. yourschool.myschoollife.in)." };
       }
 
-      if (!schoolId) {
+      if (!isSuperAdminLogin && !schoolId) {
         return { success: false, message: "School not found. Please check the URL." };
       }
 
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, school_id: schoolId, login_type: loginType }),
+        body: JSON.stringify({
+          username,
+          password,
+          school_id: schoolId,
+          login_type: isSuperAdminLogin ? "super_admin" : loginType,
+          is_super_admin: isSuperAdminLogin,
+        }),
       });
 
       const data = await res.json();

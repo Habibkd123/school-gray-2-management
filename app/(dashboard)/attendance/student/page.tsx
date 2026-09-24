@@ -38,18 +38,26 @@ import { useTeacherAssignment } from "@/app/hooks/useTeacherAssignment";
 import { useAuth } from "@/app/context/auth";
 import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { useAppState } from "@/app/context/store";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { PrintService } from "@/app/lib/print-service";
 import { PageLayout } from "@/app/components/erp/PageLayout";
 import { PageHeader } from "@/app/components/erp/PageHeader";
 import { ContentCard } from "@/app/components/erp/ContentCard";
 import { PageToolbar } from "@/app/components/erp/PageToolbar";
 
+// Client-side cache for instant date navigation and fast back-and-forth toggles
+const _dailyAttendanceCache = new Map<
+  string,
+  { data: any[]; classStudentCounts: Record<string, number>; timestamp: number }
+>();
+const DAILY_CACHE_TTL_MS = 60_000;
+
 export default function StudentAttendancePage() {
   const router = useRouter();
   const { academicYear } = useAppState();
   const { enableStreams } = useAcademicConfig();
 
+  const authReady = useAuthReady();
   const {
     attendance,
     isLoading: loadingAttendance,
@@ -57,7 +65,7 @@ export default function StudentAttendancePage() {
     fetchAttendance,
     saveAttendance,
   } = useStudentAttendance();
-  const { classes } = useClasses({ filterByYear: true });
+  const { classes, isLoading: loadingClasses } = useClasses({ filterByYear: true });
   const { streams } = useStreams({ skip: !enableStreams });
   const {
     students,
@@ -160,7 +168,23 @@ export default function StudentAttendancePage() {
 
   const fetchDailyAttendances = useCallback(
     async (year: string, date: string, streamId?: string) => {
-      setLoadingDailyAttendances(true);
+      const cacheKey = `${year}_${date}_${streamId || ""}`;
+      const cached = _dailyAttendanceCache.get(cacheKey);
+      const isFresh = cached && (Date.now() - cached.timestamp < DAILY_CACHE_TTL_MS);
+
+      if (cached) {
+        setDailyAttendances(cached.data);
+        if (cached.classStudentCounts) {
+          setClassStudentCounts(cached.classStudentCounts);
+        }
+        if (isFresh) {
+          setLoadingDailyAttendances(false);
+          return;
+        }
+      } else {
+        setLoadingDailyAttendances(true);
+      }
+
       try {
         const qs = new URLSearchParams();
         qs.set("academic_year", year);
@@ -172,17 +196,23 @@ export default function StudentAttendancePage() {
         const data = await res.json();
         if (data.success && data.data) {
           setDailyAttendances(data.data);
-          if (data.classStudentCounts) {
-            setClassStudentCounts(data.classStudentCounts);
-          }
+          const counts = data.classStudentCounts || {};
+          setClassStudentCounts(counts);
+          _dailyAttendanceCache.set(cacheKey, {
+            data: data.data,
+            classStudentCounts: counts,
+            timestamp: Date.now(),
+          });
         } else {
           setDailyAttendances([]);
           setClassStudentCounts({});
         }
       } catch (err) {
         console.error("Failed to fetch daily attendances:", err);
-        setDailyAttendances([]);
-        setClassStudentCounts({});
+        if (!cached) {
+          setDailyAttendances([]);
+          setClassStudentCounts({});
+        }
       } finally {
         setLoadingDailyAttendances(false);
       }
@@ -191,6 +221,7 @@ export default function StudentAttendancePage() {
   );
 
   useEffect(() => {
+    if (!authReady) return;
     if (filterYear && filterDate) {
       fetchDailyAttendances(
         filterYear,
@@ -198,7 +229,7 @@ export default function StudentAttendancePage() {
         filterStreamId || undefined,
       );
     }
-  }, [filterYear, filterDate, filterStreamId, fetchDailyAttendances]);
+  }, [authReady, filterYear, filterDate, filterStreamId, fetchDailyAttendances]);
 
 
   // Fetch student registers when filters change
@@ -445,7 +476,9 @@ export default function StudentAttendancePage() {
     if (res.success) {
       setSuccessMsg("Attendance register successfully recorded!");
       setEditReason("");
-      fetchDailyAttendances(filterYear, filterDate);
+      _dailyAttendanceCache.delete(`${filterYear}_${filterDate}_${filterStreamId || ""}`);
+      _dailyAttendanceCache.delete(`${filterYear}_${filterDate}_`);
+      fetchDailyAttendances(filterYear, filterDate, filterStreamId || undefined);
 
       if (dateInfo.isToday) {
         router.push(
@@ -785,120 +818,151 @@ export default function StudentAttendancePage() {
 
         {/* DASHBOARD OVERVIEW VIEW */}
         {!filterClassId ? (
-          <div
-            className={`space-y-4 relative transition-opacity duration-200 ${(loadingDailyAttendances || loadingStudents) && !isInitialLoad.current ? "opacity-60 pointer-events-none" : ""}`}
-          >
-            {(loadingDailyAttendances || loadingStudents) &&
-              !isInitialLoad.current && (
-                <div className="absolute top-2 right-0 z-10 flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 bg-white/90 dark:bg-slate-900/90 px-2.5 py-1 rounded-md border border-border shadow-sm">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-                  <span>Syncing...</span>
-                </div>
-              )}
-            {(loadingDailyAttendances || loadingStudents) &&
-              isInitialLoad.current ? (
-              <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm gap-3 text-slate-400">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                <p className="text-xs font-bold">
-                  Compiling dynamic attendance metrics...
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 text-left">
-                {/* Total Classes */}
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-655 shrink-0">
-                    <GraduationCap className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
-                      {dashboardStats.totalClasses}
-                    </h3>
-                    <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
-                      Total Classes
-                    </p>
-                  </div>
-                </div>
-
-                {/* Attendance Completed */}
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-md bg-emerald-50 text-emerald-650 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
-                      {dashboardStats.completedClasses}
-                    </h3>
-                    <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
-                      Completed
-                    </p>
-                  </div>
-                </div>
-
-                {/* Attendance Pending */}
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-md bg-amber-50 text-amber-650 flex items-center justify-center shrink-0">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
-                      {dashboardStats.pendingClasses}
-                    </h3>
-                    <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
-                      Pending
-                    </p>
-                  </div>
-                </div>
-
-                {/* Attendance Percentage */}
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-md bg-indigo-50 text-indigo-650 flex items-center justify-center shrink-0">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
-                      {dashboardStats.attendancePercentage}%
-                    </h3>
-                    <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
-                      Attendance %
-                    </p>
-                  </div>
-                </div>
-
-                {/* Students Present */}
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-md bg-emerald-50 text-emerald-650 flex items-center justify-center shrink-0">
-                    <User className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
-                      {dashboardStats.studentsPresent}
-                    </h3>
-                    <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
-                      Present
-                    </p>
-                  </div>
-                </div>
-
-                {/* Students Absent */}
-                <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-md bg-rose-50 text-rose-650 flex items-center justify-center shrink-0">
-                    <XCircle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
-                      {dashboardStats.studentsAbsent}
-                    </h3>
-                    <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
-                      Absent
-                    </p>
-                  </div>
-                </div>
+          <div className="space-y-4 relative">
+            {loadingDailyAttendances && dailyAttendances.length > 0 && (
+              <div className="absolute top-2 right-0 z-10 flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 bg-white/90 dark:bg-slate-900/90 px-2.5 py-1 rounded-md border border-border shadow-sm">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                <span>Syncing...</span>
               </div>
             )}
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 text-left">
+              {/* Total Classes */}
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 shadow-sm flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-655 shrink-0">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <div>
+                  {loadingDailyAttendances && dailyAttendances.length === 0 ? (
+                    <div className="h-6 w-12 bg-slate-200 dark:bg-slate-800 animate-pulse rounded my-0.5" />
+                  ) : (
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
+                      {dashboardStats.totalClasses}
+                    </h3>
+                  )}
+                  <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
+                    Total Classes
+                  </p>
+                </div>
+              </div>
+
+              {/* Attendance Completed */}
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-emerald-50 text-emerald-650 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <div>
+                  {loadingDailyAttendances && dailyAttendances.length === 0 ? (
+                    <div className="h-6 w-12 bg-slate-200 dark:bg-slate-800 animate-pulse rounded my-0.5" />
+                  ) : (
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
+                      {dashboardStats.completedClasses}
+                    </h3>
+                  )}
+                  <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
+                    Completed
+                  </p>
+                </div>
+              </div>
+
+              {/* Attendance Pending */}
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-amber-50 text-amber-650 flex items-center justify-center shrink-0">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  {loadingDailyAttendances && dailyAttendances.length === 0 ? (
+                    <div className="h-6 w-12 bg-slate-200 dark:bg-slate-800 animate-pulse rounded my-0.5" />
+                  ) : (
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
+                      {dashboardStats.pendingClasses}
+                    </h3>
+                  )}
+                  <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
+                    Pending
+                  </p>
+                </div>
+              </div>
+
+              {/* Attendance Percentage */}
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-indigo-50 text-indigo-650 flex items-center justify-center shrink-0">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  {loadingDailyAttendances && dailyAttendances.length === 0 ? (
+                    <div className="h-6 w-12 bg-slate-200 dark:bg-slate-800 animate-pulse rounded my-0.5" />
+                  ) : (
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
+                      {dashboardStats.attendancePercentage}%
+                    </h3>
+                  )}
+                  <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
+                    Attendance %
+                  </p>
+                </div>
+              </div>
+
+              {/* Students Present */}
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-emerald-50 text-emerald-650 flex items-center justify-center shrink-0">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  {loadingDailyAttendances && dailyAttendances.length === 0 ? (
+                    <div className="h-6 w-12 bg-slate-200 dark:bg-slate-800 animate-pulse rounded my-0.5" />
+                  ) : (
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
+                      {dashboardStats.studentsPresent}
+                    </h3>
+                  )}
+                  <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
+                    Present
+                  </p>
+                </div>
+              </div>
+
+              {/* Students Absent */}
+              <div className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 shadow-sm flex items-center gap-3">
+                <div className="w-10 h-10 rounded-md bg-rose-50 text-rose-650 flex items-center justify-center shrink-0">
+                  <XCircle className="w-5 h-5" />
+                </div>
+                <div>
+                  {loadingDailyAttendances && dailyAttendances.length === 0 ? (
+                    <div className="h-6 w-12 bg-slate-200 dark:bg-slate-800 animate-pulse rounded my-0.5" />
+                  ) : (
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">
+                      {dashboardStats.studentsAbsent}
+                    </h3>
+                  )}
+                  <p className="text-[11.5px] text-slate-400 mt-1.5 font-bold uppercase tracking-wider">
+                    Absent
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Class List Cards Grid */}
-            {filteredClasses.length === 0 ? (
+            {loadingClasses ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left mb-5">
+                {[1, 2, 3, 4].map((i) => (
+                  <div
+                    key={i}
+                    className="bg-white dark:bg-slate-900 border border-border rounded-md p-5 animate-pulse space-y-4 shadow-sm"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                      <div className="space-y-2 flex-1">
+                        <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-2/3" />
+                        <div className="h-3 bg-slate-100 dark:bg-slate-850 rounded w-1/3" />
+                      </div>
+                    </div>
+                    <div className="h-14 bg-slate-100 dark:bg-slate-850 rounded-lg" />
+                    <div className="h-9 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                  </div>
+                ))}
+              </div>
+            ) : filteredClasses.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm gap-3 text-slate-400">
                 <GraduationCap className="w-12 h-12 opacity-20" />
                 <p className="text-xs font-bold">No active classes registered.</p>

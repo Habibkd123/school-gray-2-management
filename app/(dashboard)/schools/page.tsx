@@ -7,7 +7,7 @@ import { getAuthHeaders } from "@/lib/utils/session";
 import {
   Plus, RefreshCcw, Building2, ShieldCheck, Mail, Phone, MapPin,
   CheckCircle, XCircle, Edit, Trash2, Loader2, AlertCircle, Eye,
-  Globe, ExternalLink, Copy, Check, Search, Tag
+  Globe, ExternalLink, Copy, Check, Search, Tag, Upload
 } from "lucide-react";
 import { Modal } from "../../components/ui/modal";
 import { getSubdomainHost } from "@/lib/utils/subdomain";
@@ -57,7 +57,44 @@ export default function SchoolsPage() {
     meta_keywords: "",
     og_image: "",
     favicon_url: "",
+    google_site_verification: "",
+    google_analytics_id: "",
   });
+  const [uploadingOg, setUploadingOg] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
+
+  const handleUploadMetaImage = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    field: "og_image" | "favicon_url"
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (field === "og_image") setUploadingOg(true);
+    else setUploadingFavicon(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: formData,
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.url) {
+        setMetaForm((prev) => ({ ...prev, [field]: data.url }));
+      } else {
+        alert(data.message || "Failed to upload file.");
+      }
+    } catch {
+      alert("Failed to upload file. Please try again.");
+    } finally {
+      if (field === "og_image") setUploadingOg(false);
+      else setUploadingFavicon(false);
+      e.target.value = "";
+    }
+  };
 
   // Form inputs
   const [name, setName] = useState("");
@@ -280,6 +317,8 @@ export default function SchoolsPage() {
           meta_keywords: json.data.meta_keywords || `${school.name.toLowerCase()}, school portal, myschoollife`,
           og_image: json.data.og_image || "",
           favicon_url: json.data.favicon_url || "",
+          google_site_verification: json.data.google_site_verification || "",
+          google_analytics_id: json.data.google_analytics_id || "",
         });
       } else {
         setMetaForm({
@@ -288,6 +327,8 @@ export default function SchoolsPage() {
           meta_keywords: `${school.name.toLowerCase()}, school portal, myschoollife`,
           og_image: "",
           favicon_url: "",
+          google_site_verification: "",
+          google_analytics_id: "",
         });
       }
     } catch {
@@ -297,6 +338,8 @@ export default function SchoolsPage() {
         meta_keywords: `${school.name.toLowerCase()}, school portal, myschoollife`,
         og_image: "",
         favicon_url: "",
+        google_site_verification: "",
+        google_analytics_id: "",
       });
     } finally {
       setMetaLoading(false);
@@ -325,6 +368,8 @@ export default function SchoolsPage() {
           meta_keywords: metaForm.meta_keywords.trim(),
           og_image: metaForm.og_image.trim(),
           favicon_url: metaForm.favicon_url.trim(),
+          google_site_verification: metaForm.google_site_verification.trim(),
+          google_analytics_id: metaForm.google_analytics_id.trim(),
         }),
       });
 
@@ -1017,19 +1062,53 @@ export default function SchoolsPage() {
               )}
             </div>
 
-            {/* OG Image & Favicon URLs */}
+            {/* OG Image & Favicon Upload & URLs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              {/* OG Image */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-bold text-slate-700 dark:text-slate-300">
-                  Social Sharing Image (OG Image URL)
-                </label>
-                <input
-                  type="url"
-                  value={metaForm.og_image}
-                  onChange={(e) => setMetaForm({ ...metaForm, og_image: e.target.value })}
-                  placeholder="https://example.com/banner.jpg"
-                  className="w-full px-3.5 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-[13px] outline-none focus:border-indigo-500/50 transition-colors bg-white dark:bg-slate-900"
-                />
+                <div className="flex items-center justify-between">
+                  <label className="text-[13px] font-bold text-slate-700 dark:text-slate-300">
+                    Social Sharing Image (OG Image)
+                  </label>
+                  <label className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-md cursor-pointer transition-colors">
+                    {uploadingOg ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Image</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={uploadingOg}
+                      className="hidden"
+                      onChange={(e) => handleUploadMetaImage(e, "og_image")}
+                    />
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="url"
+                    value={metaForm.og_image}
+                    onChange={(e) => setMetaForm({ ...metaForm, og_image: e.target.value })}
+                    placeholder="Upload image or paste URL"
+                    className="w-full px-3.5 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-[13px] outline-none focus:border-indigo-500/50 transition-colors bg-white dark:bg-slate-900"
+                  />
+                  {metaForm.og_image && (
+                    <button
+                      type="button"
+                      onClick={() => setMetaForm({ ...metaForm, og_image: "" })}
+                      className="text-[11px] text-rose-500 hover:text-rose-600 shrink-0 font-medium px-1.5 py-1 cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
                 {metaForm.og_image && (
                   <div className="relative w-full h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1041,18 +1120,42 @@ export default function SchoolsPage() {
                     />
                   </div>
                 )}
+                <p className="text-[11px] text-slate-400">Recommended: 1200x630px. Shown on WhatsApp/Facebook sharing.</p>
               </div>
 
+              {/* Favicon */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[13px] font-bold text-slate-700 dark:text-slate-300">
-                  Custom Favicon URL
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-[13px] font-bold text-slate-700 dark:text-slate-300">
+                    Custom Favicon
+                  </label>
+                  <label className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 rounded-md cursor-pointer transition-colors">
+                    {uploadingFavicon ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Upload Icon</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*,.ico"
+                      disabled={uploadingFavicon}
+                      className="hidden"
+                      onChange={(e) => handleUploadMetaImage(e, "favicon_url")}
+                    />
+                  </label>
+                </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="url"
                     value={metaForm.favicon_url}
                     onChange={(e) => setMetaForm({ ...metaForm, favicon_url: e.target.value })}
-                    placeholder="https://example.com/favicon.ico"
+                    placeholder="Upload favicon or paste URL (.ico / .png)"
                     className="w-full px-3.5 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-[13px] outline-none focus:border-indigo-500/50 transition-colors bg-white dark:bg-slate-900"
                   />
                   {metaForm.favicon_url && (
@@ -1066,9 +1169,45 @@ export default function SchoolsPage() {
                       />
                     </div>
                   )}
+                  {metaForm.favicon_url && (
+                    <button
+                      type="button"
+                      onClick={() => setMetaForm({ ...metaForm, favicon_url: "" })}
+                      className="text-[11px] text-rose-500 hover:text-rose-600 shrink-0 font-medium px-1.5 py-1 cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  )}
                 </div>
+                <p className="text-[11px] text-slate-400">Browser tab icon (.ico, .png, or .svg).</p>
               </div>
             </div>
+
+            {/* Google Search Console */}
+            <div className="rounded-xl border border-indigo-200/50 dark:border-indigo-900/40 bg-indigo-50/40 dark:bg-indigo-950/20 p-4 space-y-4">
+              <div className="flex items-center gap-2 mb-1">
+                <ShieldCheck className="w-4 h-4 text-indigo-500" />
+                <span className="text-[13px] font-bold text-slate-700 dark:text-slate-300">Google Search Console</span>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-300">
+                  Google Site Verification Token (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={metaForm.google_site_verification}
+                  onChange={(e) => setMetaForm({ ...metaForm, google_site_verification: e.target.value.trim() })}
+                  placeholder='e.g. abc123XYZ (from <meta name="google-site-verification" content="...">)'
+                  className="w-full px-3.5 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-[13px] outline-none focus:border-indigo-500/50 transition-colors bg-white dark:bg-slate-900 font-mono"
+                />
+                <p className="text-[11px] text-slate-400">
+                  Optional. Paste only the token value from Google Search Console HTML meta tag verification.
+                </p>
+              </div>
+            </div>
+
+
 
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
               <button

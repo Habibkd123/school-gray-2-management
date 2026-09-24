@@ -129,10 +129,11 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
       ]
     },
     {
-      name: "Settings", icon: <Settings2 className="w-4 h-4" />, subItems: [
-        { name: "Profile & Config", href: "/settings/profile" },
-        { name: "Data Backup & PDF Export", href: "/settings/backup" }
-      ]
+      name: "Settings", href: "/settings/profile", icon: <Settings2 className="w-4 h-4" />,
+      // subItems: [
+      //   { name: "Profile & Config", href: "/settings/profile" },
+      //   { name: "Data Backup & PDF Export", href: "/settings/backup" }
+      // ]
     }
   ];
 

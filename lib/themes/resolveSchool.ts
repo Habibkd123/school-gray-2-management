@@ -10,19 +10,25 @@ interface SchoolCacheEntry {
   og_image:   string;
   favicon:    string;
   name:       string;
+  subtitle:   string;
+  logo_url:   string;
+  canonical_url: string;
+  google_site_verification: string;
+  google_analytics_id: string;
   expiresAt:  number;
 }
 
-// ─── In-memory cache: subdomain/slug → full school data (TTL: 10 min) ────────
-const CACHE_TTL_MS    = 10 * 60 * 1000; // 10 minutes for found entries
-const MISS_CACHE_MS   =      60 * 1000; // 1 minute for not-found (prevent hammering)
+// ─── In-memory cache: subdomain/slug → full school data (TTL: 2s dev, 10m prod) ────────
+const CACHE_TTL_MS    = process.env.NODE_ENV === "development" ? 2000 : 10 * 60 * 1000;
+const MISS_CACHE_MS   = process.env.NODE_ENV === "development" ? 1000 : 60 * 1000;
 
 const schoolCache = new Map<string, SchoolCacheEntry>();
 
 /** Invalidate cached entry for a specific subdomain/slug, or clear all */
 export function invalidateSchoolSlugCache(slug?: string): void {
-  if (!slug) { schoolCache.clear(); return; }
-  schoolCache.delete(slug.trim().toLowerCase());
+  // Always clear all cached entries so all variants (subdomain, slug, id, custom_domain)
+  // are refreshed immediately without any stale cache mismatch.
+  schoolCache.clear();
 }
 
 // ─── Core DB fetch (called only on cache miss) ────────────────────────────────
@@ -36,15 +42,16 @@ async function fetchSchoolBySlug(slugKey: string): Promise<SchoolCacheEntry> {
       { custom_domain: slugKey },
     ],
   })
-    .select("_id name meta_config")
+    .select("_id name subtitle logo_url meta_config")
     .lean();
 
   const now = Date.now();
 
   if (!school) {
     const miss: SchoolCacheEntry = {
-      school_id: null, name: "", meta_title: "", meta_desc: "",
-      meta_kw: "", og_image: "", favicon: "",
+      school_id: null, name: "", subtitle: "", logo_url: "", meta_title: "", meta_desc: "",
+      meta_kw: "", og_image: "", favicon: "", canonical_url: "",
+      google_site_verification: "", google_analytics_id: "",
       expiresAt: now + MISS_CACHE_MS,
     };
     schoolCache.set(slugKey, miss);
@@ -54,12 +61,17 @@ async function fetchSchoolBySlug(slugKey: string): Promise<SchoolCacheEntry> {
   const meta = (school as any).meta_config ?? {};
   const entry: SchoolCacheEntry = {
     school_id:  (school as any)._id.toString(),
-    name:       (school as any).name ?? "",
+    name:       (school as any).name     ?? "",
+    subtitle:   (school as any).subtitle ?? "",
+    logo_url:   (school as any).logo_url ?? "",
     meta_title: meta.meta_title       ?? "",
     meta_desc:  meta.meta_description ?? "",
     meta_kw:    meta.meta_keywords    ?? "",
     og_image:   meta.og_image         ?? "",
     favicon:    meta.favicon_url      ?? "",
+    canonical_url: meta.canonical_url ?? "",
+    google_site_verification: meta.google_site_verification ?? "",
+    google_analytics_id: meta.google_analytics_id ?? "",
     expiresAt:  now + CACHE_TTL_MS,
   };
   schoolCache.set(slugKey, entry);
@@ -146,18 +158,23 @@ export async function resolveSchoolMeta(
   if (schoolId) {
     // school_id given directly (rare) — try to find by _id
     await connectDB();
-    const school = await School.findById(schoolId).select("_id name subdomain meta_config").lean();
+    const school = await School.findById(schoolId).select("_id name subtitle logo_url subdomain meta_config").lean();
     if (!school) return null;
     const key  = (school as any).subdomain || (school as any)._id.toString();
     const meta = (school as any).meta_config ?? {};
     const entry: SchoolCacheEntry = {
       school_id:  (school as any)._id.toString(),
-      name:       (school as any).name ?? "",
+      name:       (school as any).name     ?? "",
+      subtitle:   (school as any).subtitle ?? "",
+      logo_url:   (school as any).logo_url ?? "",
       meta_title: meta.meta_title       ?? "",
       meta_desc:  meta.meta_description ?? "",
       meta_kw:    meta.meta_keywords    ?? "",
       og_image:   meta.og_image         ?? "",
       favicon:    meta.favicon_url      ?? "",
+      canonical_url: meta.canonical_url ?? "",
+      google_site_verification: meta.google_site_verification ?? "",
+      google_analytics_id: meta.google_analytics_id ?? "",
       expiresAt:  Date.now() + CACHE_TTL_MS,
     };
     schoolCache.set(key, entry);
