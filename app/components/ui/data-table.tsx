@@ -19,6 +19,9 @@ interface DataTableProps<T> {
   noDataMessage?: string;
   minWidth?: string;
   minHeight?: string;
+  virtualized?: boolean;
+  rowHeight?: number;
+  maxVirtualHeight?: number;
 }
 
 export function DataTable<T>({ 
@@ -29,9 +32,14 @@ export function DataTable<T>({
   selectionHeader,
   noDataMessage = "No records found.",
   minWidth = "1000px",
-  minHeight = "180px"
+  minHeight = "180px",
+  virtualized = false,
+  rowHeight = 52,
+  maxVirtualHeight = 550,
 }: DataTableProps<T>) {
   const [sortConfig, setSortConfig] = useState<{ key: keyof T, direction: 'asc' | 'desc' } | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   const handleSort = (key: keyof T) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -66,10 +74,53 @@ export function DataTable<T>({
     return sortableItems;
   }, [data, sortConfig]);
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (!virtualized) return;
+    setScrollTop(e.currentTarget.scrollTop);
+  };
+
+  const isVirtual = virtualized && sortedData.length > 20;
+  const colCount = columns.length + (selectionHeader ? 1 : 0);
+
+  const virtualCalculations = useMemo(() => {
+    if (!isVirtual) {
+      return {
+        visibleItems: sortedData.map((item, idx) => ({ item, originalIndex: idx })),
+        topSpacer: 0,
+        bottomSpacer: 0,
+      };
+    }
+
+    const total = sortedData.length;
+    const overscan = 5;
+    const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
+    const visibleCount = Math.ceil(maxVirtualHeight / rowHeight) + overscan * 2;
+    const endIndex = Math.min(total, startIndex + visibleCount);
+
+    const visibleItems = sortedData.slice(startIndex, endIndex).map((item, localIdx) => ({
+      item,
+      originalIndex: startIndex + localIdx,
+    }));
+
+    const topSpacer = startIndex * rowHeight;
+    const bottomSpacer = Math.max(0, (total - endIndex) * rowHeight);
+
+    return { visibleItems, topSpacer, bottomSpacer };
+  }, [isVirtual, sortedData, scrollTop, rowHeight, maxVirtualHeight]);
+
   return (
-    <div className="overflow-x-auto custom-scrollbar pb-10" style={{ minHeight }}>
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="overflow-x-auto custom-scrollbar pb-6"
+      style={{
+        minHeight,
+        maxHeight: isVirtual ? `${maxVirtualHeight}px` : undefined,
+        overflowY: isVirtual ? "auto" : undefined,
+      }}
+    >
       <table className="erp-table" style={{ minWidth }}>
-        <thead>
+        <thead className={isVirtual ? "sticky top-0 z-20 bg-white dark:bg-slate-900 shadow-sm" : ""}>
           <tr>
             {selectionHeader && <th className="w-12 text-center">{selectionHeader}</th>}
             {columns.map((col, idx) => (
@@ -93,29 +144,41 @@ export function DataTable<T>({
         <tbody>
           {sortedData.length === 0 ? (
             <tr>
-              <td colSpan={columns.length + (selectionHeader ? 1 : 0)} className="table-empty">
+              <td colSpan={colCount} className="table-empty">
                 {noDataMessage}
               </td>
             </tr>
           ) : (
-            sortedData.map((item, i) => (
-              <tr 
-                key={i} 
-                className={`${onRowClick ? 'cursor-pointer group' : ''}`}
-                onClick={() => onRowClick?.(item)}
-              >
-                {renderSelection && (
-                  <td className="text-center" onClick={(e) => e.stopPropagation()}>
-                    {renderSelection(item)}
-                  </td>
-                )}
-                {columns.map((col, idx) => (
-                  <td key={idx} className={col.className || ''}>
-                    {col.render ? col.render(item, i) : (col.accessorKey ? (item[col.accessorKey] as React.ReactNode) : null)}
-                  </td>
-                ))}
-              </tr>
-            ))
+            <>
+              {virtualCalculations.topSpacer > 0 && (
+                <tr style={{ height: `${virtualCalculations.topSpacer}px` }} aria-hidden="true">
+                  <td colSpan={colCount} className="p-0 border-0 pointer-events-none" />
+                </tr>
+              )}
+              {virtualCalculations.visibleItems.map(({ item, originalIndex }) => (
+                <tr 
+                  key={originalIndex} 
+                  className={`${onRowClick ? 'cursor-pointer group' : ''}`}
+                  onClick={() => onRowClick?.(item)}
+                >
+                  {renderSelection && (
+                    <td className="text-center" onClick={(e) => e.stopPropagation()}>
+                      {renderSelection(item)}
+                    </td>
+                  )}
+                  {columns.map((col, idx) => (
+                    <td key={idx} className={col.className || ''}>
+                      {col.render ? col.render(item, originalIndex) : (col.accessorKey ? (item[col.accessorKey] as React.ReactNode) : null)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+              {virtualCalculations.bottomSpacer > 0 && (
+                <tr style={{ height: `${virtualCalculations.bottomSpacer}px` }} aria-hidden="true">
+                  <td colSpan={colCount} className="p-0 border-0 pointer-events-none" />
+                </tr>
+              )}
+            </>
           )}
         </tbody>
       </table>

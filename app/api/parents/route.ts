@@ -137,6 +137,8 @@ export async function GET(request: NextRequest) {
           limit,
         }
       },
+    }, {
+      headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=30" }
     });
   } catch (err) {
     console.error("[GET /api/parents]", err);

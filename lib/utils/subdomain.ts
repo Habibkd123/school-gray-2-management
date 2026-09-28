@@ -76,20 +76,51 @@ export function getClientSubdomain(): string | null {
   return null;
 }
 
+const _schoolIdCache = new Map<string, string>();
+
 /**
  * Fetches the school's MongoDB _id by subdomain slug.
- * Uses the public school-info API endpoint which is already subdomain-aware.
+ * Uses the public school-info API endpoint with in-memory + sessionStorage caching.
  */
 export async function resolveSchoolIdBySubdomain(
   subdomain: string
 ): Promise<string | null> {
+  const normalized = subdomain.trim().toLowerCase();
+  if (!normalized) return null;
+
+  // 1. Instant In-Memory Cache (0ms)
+  if (_schoolIdCache.has(normalized)) {
+    return _schoolIdCache.get(normalized)!;
+  }
+
+  // 2. Browser sessionStorage Cache (0ms)
+  if (typeof window !== "undefined") {
+    try {
+      const cached = sessionStorage.getItem(`sm_school_id_${normalized}`);
+      if (cached) {
+        _schoolIdCache.set(normalized, cached);
+        return cached;
+      }
+    } catch {}
+  }
+
+  // 3. Network fetch (cached for subsequent calls)
   try {
     const res = await fetch(
-      `/api/public/school-info?subdomain=${encodeURIComponent(subdomain)}`
+      `/api/public/school-info?subdomain=${encodeURIComponent(normalized)}`
     );
     if (!res.ok) return null;
     const data = await res.json();
-    return data.success ? data.data?.id ?? null : null;
+    const id = data.success ? data.data?.id ?? null : null;
+    if (id) {
+      _schoolIdCache.set(normalized, id);
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem(`sm_school_id_${normalized}`, id);
+        } catch {}
+      }
+    }
+    return id;
   } catch {
     return null;
   }

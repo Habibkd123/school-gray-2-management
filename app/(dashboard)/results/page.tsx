@@ -20,13 +20,12 @@ import {
 } from "lucide-react";
 
 export default function ResultsPage() {
-  const { results, isLoading: resultsLoading, createResult } = useResults();
-  const { students } = useStudents();
-  const { classes } = useClasses();
-  const { exams } = useExams();
-  const { subjects } = useSubjects();
-
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const { results, isLoading: resultsLoading, createResult } = useResults();
+  const { students } = useStudents({ skip: !isAddOpen });
+  const { classes } = useClasses({ skip: !isAddOpen });
+  const { exams } = useExams(undefined, { skip: !isAddOpen });
+  const { subjects } = useSubjects(undefined, { skip: !isAddOpen });
   const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [selectedSubjectId, setSelectedSubjectId] = useState("");

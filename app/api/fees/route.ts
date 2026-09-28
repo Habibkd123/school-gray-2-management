@@ -401,6 +401,8 @@ export async function GET(req: NextRequest) {
             limit,
           },
         },
+      }, {
+        headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=30" }
       });
     }
 
@@ -483,6 +485,8 @@ export async function GET(req: NextRequest) {
           limit,
         },
       },
+    }, {
+      headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=30" }
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to fetch fee data";

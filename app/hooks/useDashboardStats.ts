@@ -25,25 +25,32 @@ interface UseDashboardStatsOptions {
   pollInterval?: number;
 }
 
+let _cachedDashboardStats: DashboardStats | null = null;
+let _cachedStatsTime = 0;
+const STATS_TTL = 30_000;
+
 export function useDashboardStats(opts: UseDashboardStatsOptions = {}) {
   const { skip = false, pollInterval = 60_000 } = opts;
 
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(!skip);
+  const [stats, setStats] = useState<DashboardStats | null>(_cachedDashboardStats);
+  const [isLoading, setIsLoading] = useState(!skip && !_cachedDashboardStats);
   const [error, setError] = useState<string | null>(null);
   const authReady = useAuthReady();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchStats = useCallback(async () => {
     try {
-      setIsLoading(true);
+      if (!_cachedDashboardStats) {
+        setIsLoading(true);
+      }
       setError(null);
       const res = await fetch("/api/dashboard/stats", {
         headers: getAuthHeaders(),
-        cache: "no-store",
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch");
+      _cachedDashboardStats = data.data;
+      _cachedStatsTime = Date.now();
       setStats(data.data);
     } catch (err: any) {
       setError(err.message || "Failed to load dashboard stats");

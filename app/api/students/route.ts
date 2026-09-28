@@ -6,6 +6,7 @@ import User from "@/lib/models/User";
 import Class from "@/lib/models/Class";
 import Admission from "@/lib/models/Admission";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendConditionalJson } from "@/lib/etag";
 
 // ─── Helper: generate student login email ──────────────────────
 const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG || "school";
@@ -70,12 +71,23 @@ export async function GET(request: NextRequest) {
       if (parentId) filter.parent_id = parentId;
     }
 
+    const section = searchParams.get("section");
+    const admissionStatus = searchParams.get("admission_status");
+
+    // Launch independent prerequisite lookups in parallel instead of sequential query waterfalls
+    const [sectionClasses, admissions] = await Promise.all([
+      section && section !== "all"
+        ? Class.find({ section, school_id: schoolId }).select("_id").lean()
+        : null,
+      admissionStatus && admissionStatus !== "all"
+        ? Admission.find({ status: admissionStatus as any, school_id: schoolId }).select("admission_no").lean()
+        : null,
+    ]);
+
     if (classId && classId !== "all") {
       filter.class_id = classId;
     } else if (academic_year) {
-      const classes = await Class.find({ academic_year, school_id: schoolId }).select("_id").lean();
-      const classIds = classes.map(c => c._id);
-      filter.class_id = { $in: classIds };
+      filter.academic_year = academic_year;
     }
 
     const gender = searchParams.get("gender");
@@ -93,16 +105,13 @@ export async function GET(request: NextRequest) {
       filter.section_id = sectionId;
     }
 
-    const section = searchParams.get("section");
-    if (section && section !== "all") {
-      // Fetch section classes in parallel with the academic_year fetch above when applicable
-      const classesWithSection = await Class.find({ section, school_id: schoolId }).select("_id").lean();
-      const classIds = classesWithSection.map(c => c._id);
+    if (sectionClasses) {
+      const classIds = (sectionClasses as any[]).map(c => c._id);
       if (filter.class_id) {
         if (filter.class_id.$in) {
-          filter.class_id.$in = filter.class_id.$in.filter((id: any) => classIds.some(cid => cid.toString() === id.toString()));
+          filter.class_id.$in = filter.class_id.$in.filter((id: any) => classIds.some((cid: any) => cid.toString() === id.toString()));
         } else {
-          const match = classIds.some(cid => cid.toString() === filter.class_id.toString());
+          const match = classIds.some((cid: any) => cid.toString() === filter.class_id.toString());
           filter.class_id = match ? filter.class_id : { $in: [] };
         }
       } else {
@@ -115,10 +124,8 @@ export async function GET(request: NextRequest) {
       filter.house = house;
     }
 
-    const admissionStatus = searchParams.get("admission_status");
-    if (admissionStatus && admissionStatus !== "all") {
-      const admissions = await Admission.find({ status: admissionStatus as any, school_id: schoolId }).select("admission_no").lean() as any[];
-      const admissionNos = admissions.map(a => a.admission_no).filter(Boolean);
+    if (admissions) {
+      const admissionNos = (admissions as any[]).map(a => a.admission_no).filter(Boolean);
       filter.admission_no = { $in: admissionNos };
     }
 
@@ -186,20 +193,35 @@ export async function GET(request: NextRequest) {
       sortObj = { createdAt: -1 };
     }
 
+    const isFull = searchParams.get("full") === "true";
+    const includeUser = searchParams.get("include_user") === "true";
+    let queryBuilder = Student.find(filter);
+
+    if (!isFull) {
+      queryBuilder = queryBuilder.select(
+        "_id school_id class_id name roll_no gender dob photo_url admission_date admission_no academic_year is_active createdAt house"
+      );
+    }
+
+    queryBuilder = queryBuilder
+      .populate("class_id", "name section")
+      .sort(sortObj)
+      .skip(skip)
+      .limit(limit);
+
+    if (isFull || includeUser) {
+      queryBuilder = queryBuilder.populate("user_id", "name email role is_active plain_password must_change_password");
+    }
+
     const [students, total] = await Promise.all([
-      Student.find(filter)
-        .populate("class_id", "name section")       // flat — no nested class_teacher_id for list view
-        .populate("user_id", "name email role is_active plain_password must_change_password")
-        .sort(sortObj)
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+      queryBuilder.lean(),
       Student.countDocuments(filter),
     ]);
 
-    return NextResponse.json(
+    return sendConditionalJson(
+      request,
       { success: true, data: { students, total, page, limit } },
-      { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } }
+      { cacheControl: "private, max-age=60, stale-while-revalidate=30" }
     );
   } catch (err) {
     console.error("[GET /api/students]", err);

@@ -348,6 +348,8 @@ const landingContentSchema = new Schema<ILandingContent>(
   { timestamps: true }
 );
 
+landingContentSchema.index({ school_id: 1 }, { unique: true, name: "school_id_1" });
+
 const LandingContent: Model<ILandingContent> =
   (mongoose.models.LandingContent as Model<ILandingContent>) ||
   mongoose.model<ILandingContent>("LandingContent", landingContentSchema);

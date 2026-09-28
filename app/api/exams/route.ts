@@ -18,8 +18,12 @@ export async function GET(req: NextRequest) {
 
     const exams = await Exam.find(query)
       .sort({ createdAt: -1 })
-      .populate("class_id", "name section");
-    return NextResponse.json({ success: true, data: { exams } });
+      .populate("class_id", "name section")
+      .lean();
+    return NextResponse.json(
+      { success: true, data: { exams } },
+      { headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" } }
+    );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

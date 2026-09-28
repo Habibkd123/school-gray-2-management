@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTeachers, ApiTeacher } from "../../hooks/useTeachers";
 import { useAppState } from "@/app/context/store";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
+import { getOptimizedAvatar } from "@/lib/utils/image";
 import { Loader2, AlertCircle } from "lucide-react";
 import { PaginationBar } from "@/app/components/ui/pagination-bar";
 import { LoginDetailsModal } from "../../components/modals/LoginDetailsModal";
@@ -39,9 +40,11 @@ import {
   CheckSquare
 } from "lucide-react";
 
-function getAvatar(name: string) {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=D2232A&color=fff&bold=true`;
+function getAvatar(name: string, photo_url?: string) {
+  return getOptimizedAvatar(photo_url, name, 64);
 }
+
+let _cachedTeacherFilters: any = null;
 
 export default function TeachersPage() {
   const router = useRouter();
@@ -93,7 +96,7 @@ export default function TeachersPage() {
     departments: string[];
     designations: string[];
     statuses: string[];
-  }>({
+  }>(_cachedTeacherFilters || {
     academicYears: [],
     departments: [],
     designations: [],
@@ -102,10 +105,12 @@ export default function TeachersPage() {
 
   // Fetch unique filter values from backend on mount
   useEffect(() => {
+    if (_cachedTeacherFilters) return;
     fetch("/api/teachers/filters", { headers: getAuthHeaders() })
       .then(res => res.json())
       .then(res => {
         if (res.success && res.data) {
+          _cachedTeacherFilters = res.data;
           setFilterOptions(res.data);
         }
       })
@@ -287,11 +292,54 @@ export default function TeachersPage() {
   const PAGE_SIZE = 12;
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
+  const handleOpenLoginDetails = async (t: any) => {
+    setActionMenuId(null);
+    if (t.user_id && typeof t.user_id === "object" && t.user_id._id) {
+      setSelectedTeacher(t as unknown as ApiTeacher);
+      setIsLoginDetailsOpen(true);
+    } else {
+      try {
+        const res = await fetch(`/api/teachers/${t.id}`, { headers: getAuthHeaders() });
+        const json = await res.json();
+        if (json.success && json.data) {
+          setSelectedTeacher(json.data);
+        } else {
+          setSelectedTeacher(t as unknown as ApiTeacher);
+        }
+      } catch {
+        setSelectedTeacher(t as unknown as ApiTeacher);
+      }
+      setIsLoginDetailsOpen(true);
+    }
+  };
+
+  const handleOpenResetPassword = async (t: any) => {
+    setActionMenuId(null);
+    let tUid = t.user_id && typeof t.user_id === "object" ? t.user_id._id : undefined;
+    let tEmail = t.user_id && typeof t.user_id === "object" ? t.user_id.email : t.email || "";
+
+    if (!tUid) {
+      try {
+        const res = await fetch(`/api/teachers/${t.id}`, { headers: getAuthHeaders() });
+        const json = await res.json();
+        if (json.success && json.data?.user_id) {
+          tUid = typeof json.data.user_id === "object" ? json.data.user_id._id : json.data.user_id;
+          tEmail = typeof json.data.user_id === "object" ? json.data.user_id.email : tEmail;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    setResetPassTarget({ userId: tUid, name: t.name, email: tEmail });
+    setIsResetPassModalOpen(true);
+  };
+
   const columns: ColumnDef<typeof tableData[0]>[] = [
     { header: "ID", accessorKey: "displayId", render: (t) => <span className="font-semibold text-primary cursor-pointer hover:underline">{t.displayId}</span> },
     { header: "Name", accessorKey: "name", render: (t) => (
         <div className="flex flex-wrap items-center gap-3">
-          <img src={t.photo_url || getAvatar(t.name)} className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={t.name} loading="lazy" decoding="async" />
+          <img src={getOptimizedAvatar(t.photo_url, t.name, 64)} className="w-8 h-8 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={t.name} loading="lazy" decoding="async" />
           <span className="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors cursor-pointer">{t.name}</span>
         </div>
     ) },
@@ -344,17 +392,10 @@ export default function TeachersPage() {
                 <button onClick={() => { router.push(`/teachers/${t.id}/edit`); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
                   <Edit className="w-4 h-4 text-foreground dark:text-slate-100" /> Edit
                 </button>
-                <button onClick={() => { setSelectedTeacher(t as unknown as ApiTeacher); setIsLoginDetailsOpen(true); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
+                <button onClick={() => handleOpenLoginDetails(t)} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
                   <Lock className="w-4 h-4 text-foreground dark:text-slate-100" /> Login Details
                 </button>
-                <button onClick={() => { 
-                  const teacherUser = t.user_id;
-                  const tUid = teacherUser && typeof teacherUser === "object" ? teacherUser._id : undefined;
-                  const tEmail = teacherUser && typeof teacherUser === "object" ? teacherUser.email : t.email || "";
-                  setResetPassTarget({ userId: tUid, name: t.name, email: tEmail }); 
-                  setIsResetPassModalOpen(true); 
-                  setActionMenuId(null); 
-                }} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
+                <button onClick={() => handleOpenResetPassword(t)} className="w-full px-4 py-2.5 text-[14px] text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium transition-colors">
                   <Lock className="w-4 h-4 text-foreground dark:text-slate-100" /> Reset Password
                 </button>
                 <button onClick={() => { handleDelete(t.id); setActionMenuId(null); }} className="w-full px-4 py-2.5 text-[14px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 font-medium transition-colors">
@@ -661,6 +702,7 @@ export default function TeachersPage() {
               <DataTable 
                 columns={columns} 
                 data={tableData} 
+                virtualized={tableData.length > 20}
                 onRowClick={(item) => router.push(`/teachers/${item.id}`)}
                 selectionHeader={
                   <input
@@ -791,7 +833,7 @@ export default function TeachersPage() {
 
                       {/* Avatar & Info */}
                       <div className="flex items-center gap-3 mb-4 cursor-pointer" onClick={() => router.push(`/teachers/${teacher._id}`)}>
-                        <img src={teacher.photo_url || getAvatar(teacher.name)} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={teacher.name} />
+                        <img src={getOptimizedAvatar(teacher.photo_url, teacher.name, 96)} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-slate-800" alt={teacher.name} loading="lazy" decoding="async" />
                         <div>
                           <h3 className="font-bold text-foreground dark:text-slate-100 text-[14px] group-hover:text-primary transition-colors">{teacher.name}</h3>
                           <p className="text-slate-500 dark:text-slate-400 text-[12px] font-medium">{getClassName(teacher)}</p>

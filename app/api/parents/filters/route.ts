@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
       Class.distinct("academic_year", { school_id: schoolId }),
       Class.find({ school_id: schoolId }).select("name section").lean(),
       Class.distinct("section", { school_id: schoolId }),
-      Student.find({ school_id: schoolId, is_active: true }).select("name").sort({ name: 1 }).lean(),
+      Student.find({ school_id: schoolId, is_active: true }).select("name").sort({ name: 1 }).limit(100).lean(),
       Parent.distinct("relation", { school_id: schoolId }),
     ]);
 
@@ -37,6 +37,8 @@ export async function GET(request: NextRequest) {
         })),
         guardianTypes: relations.filter(Boolean)
       }
+    }, {
+      headers: { "Cache-Control": "private, max-age=120, stale-while-revalidate=60" }
     });
   } catch (err: any) {
     console.error("[GET /api/parents/filters]", err);

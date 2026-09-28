@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db";
 import Class, { computeSortWeight } from "@/lib/models/Class";
 import Teacher from "@/lib/models/Teacher";
 import { TeacherAssignment, Student, Subject } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendConditionalJson } from "@/lib/etag";
 
 // GET: Fetch all classes for the school (DB-level pagination & sort_weight ordering)
 export async function GET(req: NextRequest) {
@@ -91,23 +93,50 @@ export async function GET(req: NextRequest) {
         .lean(),
     ]);
 
-    const classesWithStats = await Promise.all(
-      classes.map(async (c: any) => {
-        const [studentCount, subjectCount, sectionCount] = await Promise.all([
-          Student.countDocuments({ class_id: c._id, school_id: schoolId }),
-          Subject.countDocuments({ class_id: c._id, school_id: schoolId }),
-          Class.countDocuments({ name: c.name, academic_year: c.academic_year, school_id: schoolId })
-        ]);
-        return {
-          ...c,
-          studentCount,
-          subjectCount,
-          sectionCount
-        };
-      })
-    );
+    const includeStatsParam = url.searchParams.get("include_stats");
+    // Only compute stats if explicitly requested, or for paged table requests where stats are displayed
+    const shouldComputeStats =
+      includeStatsParam === "true" ||
+      (!isAll && includeStatsParam !== "false" && classes.length > 0);
 
-    return NextResponse.json(
+    let classesWithStats = classes;
+
+    if (shouldComputeStats && classes.length > 0) {
+      const classIds = classes.map((c: any) => c._id);
+      const classNames = Array.from(new Set(classes.map((c: any) => c.name)));
+      const schoolObjId = mongoose.Types.ObjectId.isValid(schoolId as string)
+        ? new mongoose.Types.ObjectId(schoolId as string)
+        : schoolId;
+
+      const [studentCounts, subjectCounts, sectionCounts] = await Promise.all([
+        Student.aggregate([
+          { $match: { school_id: schoolObjId, class_id: { $in: classIds } } },
+          { $group: { _id: "$class_id", count: { $sum: 1 } } }
+        ]),
+        Subject.aggregate([
+          { $match: { school_id: schoolObjId, class_id: { $in: classIds } } },
+          { $group: { _id: "$class_id", count: { $sum: 1 } } }
+        ]),
+        Class.aggregate([
+          { $match: { school_id: schoolObjId, name: { $in: classNames } } },
+          { $group: { _id: { name: "$name", academic_year: "$academic_year" }, count: { $sum: 1 } } }
+        ])
+      ]);
+
+      const studentCountMap = new Map(studentCounts.map((s: any) => [String(s._id), s.count]));
+      const subjectCountMap = new Map(subjectCounts.map((s: any) => [String(s._id), s.count]));
+      const sectionCountMap = new Map(sectionCounts.map((s: any) => [`${s._id.name}__${s._id.academic_year}`, s.count]));
+
+      classesWithStats = classes.map((c: any) => ({
+        ...c,
+        studentCount: studentCountMap.get(String(c._id)) || 0,
+        subjectCount: subjectCountMap.get(String(c._id)) || 0,
+        sectionCount: sectionCountMap.get(`${c.name}__${c.academic_year}`) || 0,
+      }));
+    }
+
+    return sendConditionalJson(
+      req,
       {
         success: true,
         data: {
@@ -118,7 +147,7 @@ export async function GET(req: NextRequest) {
           totalPages: Math.ceil(total / limit),
         },
       },
-      { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } }
+      { cacheControl: "private, max-age=60, stale-while-revalidate=60" }
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";

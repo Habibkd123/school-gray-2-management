@@ -40,9 +40,7 @@ export default function SubjectAssignmentPage() {
     deleteAssignment
   } = useSubjectAssignment();
 
-  const { subjects: subjectList } = useSubjectMaster({ limit: 1000 });
   const { classes } = useClasses({ filterByYear: false });
-  const { teachers } = useTeachers({ limit: "all" });
 
   // Filtering & Sorting State
   const [search, setSearch] = useState("");
@@ -76,6 +74,8 @@ export default function SubjectAssignmentPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const { subjects: subjectList } = useSubjectMaster({ skip: !isAddOpen && !isEditOpen, limit: 1000 });
+  const { teachers } = useTeachers({ skip: !isAddOpen && !isEditOpen, limit: "all" });
   const [selectedAssignment, setSelectedAssignment] = useState<PopulatedAssignment | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");

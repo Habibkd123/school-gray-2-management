@@ -113,7 +113,10 @@ export async function GET(req: NextRequest) {
       .populate("class_id", "name section")
       .sort({ name: 1 })
       .lean();
-    return NextResponse.json({ success: true, data: { subjects } });
+    return NextResponse.json(
+      { success: true, data: { subjects } },
+      { headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" } }
+    );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }

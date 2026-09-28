@@ -343,6 +343,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
                           <Link
                             key={sub.name}
                             href={sub.href}
+                            prefetch={false}
                             onClick={onClose}
                             className={`text-[12px] font-medium transition-colors py-1.5 ${isSubActive ? "text-primary" : "text-slate-500 dark:text-slate-400 hover:text-slate-300"
                               }`}
@@ -362,6 +363,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
               <Link
                 key={link.name}
                 href={(link as { href: string }).href}
+                prefetch={false}
                 onClick={onClose}
                 className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} ${isCollapsed ? 'px-0 py-3' : 'px-3 py-2.5'} text-[13px] rounded-lg transition-all duration-200 font-medium ${isActive
                   ? "bg-primary/10 text-primary"
@@ -386,6 +388,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
               <div className="absolute bottom-full left-4 right-4 mb-2 bg-slate-800 border border-slate-700 rounded-xl shadow-lg z-50 overflow-hidden py-1">
                 <Link
                   href="/settings/profile"
+                  prefetch={false}
                   onClick={() => { setIsProfileMenuOpen(false); onClose?.(); }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors cursor-pointer"
                 >

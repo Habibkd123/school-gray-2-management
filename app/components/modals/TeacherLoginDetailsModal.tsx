@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X, Lock, Loader2 } from "lucide-react";
 import { ApiTeacher } from "../../hooks/useTeachers";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { getOptimizedAvatar } from "@/lib/utils/image";
 
 interface TeacherLoginDetailsModalProps {
   isOpen: boolean;
@@ -16,7 +17,7 @@ export function TeacherLoginDetailsModal({ isOpen, onClose, teacher }: TeacherLo
 
   if (!teacher) return null;
 
-  const getAvatar = (name: string) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=F1F5F9&color=F59E0B&bold=true`;
+  const getAvatar = (name: string, photo?: string) => getOptimizedAvatar(photo, name, 80);
 
   const handleUpdatePassword = async () => {
     const teacherUser = teacher?.user_id;
@@ -78,7 +79,7 @@ export function TeacherLoginDetailsModal({ isOpen, onClose, teacher }: TeacherLo
 
           {/* Teacher Info Panel */}
           <div className="flex flex-col items-center gap-2 mb-6 text-center">
-            <img src={teacher.photo_url || getAvatar(teacher.name)} className="w-16 h-16 rounded-xl object-cover shadow-sm border border-border" alt="Teacher" />
+            <img src={getAvatar(teacher.name, teacher.photo_url)} className="w-16 h-16 rounded-xl object-cover shadow-sm border border-border" alt="Teacher" loading="lazy" decoding="async" />
             <div>
               <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">{teacher.name}</h3>
               <p className="text-[12px] text-slate-500 font-medium dark:text-slate-400">Employee ID: {teacher.employee_id || "—"}</p>

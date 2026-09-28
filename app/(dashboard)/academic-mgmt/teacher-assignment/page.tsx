@@ -43,11 +43,9 @@ export default function TeacherAssignmentPage() {
     deleteAssignment
   } = useTeacherAssignment();
 
-  // Load classes, subject assignments, and teachers globally using proper hooks
+  // Load classes globally using proper hooks
   const { classes } = useClasses({ filterByYear: false });
   const { assignments: subjectAssignments, fetchAssignments: fetchSubjectAssignments } = useSubjectAssignment();
-  const { teachers } = useTeachers({ limit: "all" });
-  const { subjects: subjectList } = useSubjectMaster({ limit: 1000 });
 
   // Filtering & Sorting State
   const [search, setSearch] = useState("");
@@ -82,6 +80,8 @@ export default function TeacherAssignmentPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const { teachers } = useTeachers({ skip: !isAddOpen && !isEditOpen, limit: "all" });
+  const { subjects: subjectList } = useSubjectMaster({ skip: !isAddOpen && !isEditOpen, limit: 1000 });
   const [isWorkloadWarningOpen, setIsWorkloadWarningOpen] = useState(false);
   const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
 
@@ -127,8 +127,10 @@ export default function TeacherAssignmentPage() {
   const authReady = useAuthReady();
   useEffect(() => {
     if (!authReady) return;
-    fetchSubjectAssignments({ limit: 1000, status: "Active" });
-  }, [fetchSubjectAssignments, authReady]);
+    if (isAddOpen || isEditOpen) {
+      fetchSubjectAssignments({ limit: 1000, status: "Active" });
+    }
+  }, [fetchSubjectAssignments, authReady, isAddOpen, isEditOpen]);
 
   const doFetch = useCallback(() => {
     fetchAssignments({

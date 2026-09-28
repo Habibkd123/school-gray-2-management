@@ -254,6 +254,8 @@ export async function GET(req: NextRequest) {
         page,
         totalPages: Math.ceil(total / limit)
       }
+    }, {
+      headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" }
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

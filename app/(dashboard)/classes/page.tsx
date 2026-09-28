@@ -21,18 +21,18 @@ export default function ClassesPage() {
   const { user } = useAuth();
   const { academicYear } = useAppState();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
+  // ── Modal / action states ──────────────────────────────────────────
+  const [isAddClassOpen, setIsAddClassOpen] = useState(false);
+  const [isEditClassOpen, setIsEditClassOpen] = useState(false);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
   const { classes, isLoading, error, total, totalPages, currentPage, fetchClasses, createClass, updateClass, deleteClass } = useClasses({ skip: true });
-  const { teachers } = useTeachers();
+  const { teachers } = useTeachers({ skip: !isAddClassOpen && !isEditClassOpen });
   const { config } = useAcademicConfig();
   const { sections, createSection } = useSections();
   const enableSections = config.enable_sections;
   const enableStreams = config.enable_streams;
   const { streams } = useStreams({ skip: !enableStreams });
-
-  // ── Modal / action states ──────────────────────────────────────────
-  const [isAddClassOpen, setIsAddClassOpen] = useState(false);
-  const [isEditClassOpen, setIsEditClassOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<ApiClass | null>(null);
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

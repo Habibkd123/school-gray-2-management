@@ -42,12 +42,12 @@ export function useResults(options?: { skip?: boolean }) {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   
-  const [activeFilters, setActiveFilters] = useState<{ exam_id?: string; student_id?: string; class_id?: string }>({});
-  const filtersRef = useRef<{ exam_id?: string; student_id?: string; class_id?: string }>({});
+  const [activeFilters, setActiveFilters] = useState<{ exam_id?: string; student_id?: string; class_id?: string; academic_year?: string }>({});
+  const filtersRef = useRef<{ exam_id?: string; student_id?: string; class_id?: string; academic_year?: string }>({});
 
   // ─── Fetch results ──────────────────────────────────────────────
   const fetchResults = useCallback(async (
-    params?: { exam_id?: string; student_id?: string; class_id?: string },
+    params?: { exam_id?: string; student_id?: string; class_id?: string; academic_year?: string },
     pNum = page,
     pSize = pageSize
   ) => {
@@ -65,6 +65,7 @@ export function useResults(options?: { skip?: boolean }) {
       if (finalParams?.exam_id) query.set("exam_id", finalParams.exam_id);
       if (finalParams?.student_id) query.set("student_id", finalParams.student_id);
       if (finalParams?.class_id) query.set("class_id", finalParams.class_id);
+      if (finalParams?.academic_year) query.set("academic_year", finalParams.academic_year);
       
       query.set("page", pNum.toString());
       query.set("limit", pSize.toString());

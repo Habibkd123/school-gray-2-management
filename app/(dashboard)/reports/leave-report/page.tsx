@@ -5,13 +5,9 @@ import {
   Search, List, Filter, ChevronDown, RefreshCw, Printer, Download, FileText, Calendar, Loader2
 } from "lucide-react";
 import { useLeave } from "../../../hooks/useLeave";
-import { useStudents } from "../../../hooks/useStudents";
-import { useTeachers } from "../../../hooks/useTeachers";
 
 export default function LeaveReportPage() {
   const { leaveRequests, loading } = useLeave();
-  const { students } = useStudents();
-  const { teachers } = useTeachers();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -21,27 +17,15 @@ export default function LeaveReportPage() {
   const [filterStatus, setFilterStatus] = useState("");
 
   const getUserDetails = (userId: string, populatedUser?: any) => {
-    const student = students.find(s => {
-      const sUid = typeof s.user_id === "object" && s.user_id ? s.user_id._id : s.user_id;
-      return sUid === userId || s._id === userId;
-    });
-    if (student) return { name: student.name, role: "Student", id: student.admission_no || student._id.slice(-6).toUpperCase() };
-
-    const teacher = teachers.find(t => {
-      const tUid = typeof t.user_id === "object" && t.user_id ? t.user_id._id : t.user_id;
-      return tUid === userId || t._id === userId;
-    });
-    if (teacher) return { name: teacher.name, role: "Teacher", id: teacher.employee_id || teacher._id.slice(-6).toUpperCase() };
-
     if (populatedUser && typeof populatedUser === "object") {
       const displayRole = populatedUser.role === "student" ? "Student" : populatedUser.role === "teacher" ? "Teacher" : populatedUser.role === "school_admin" ? "Admin" : populatedUser.role;
       return {
         name: populatedUser.name || "Unknown",
         role: displayRole || "—",
-        id: userId.slice(-6).toUpperCase()
+        id: (populatedUser._id || userId || "").toString().slice(-6).toUpperCase()
       };
     }
-    return { name: "Unknown", role: "—", id: userId.slice(-6).toUpperCase() };
+    return { name: "Unknown", role: "—", id: (userId || "").slice(-6).toUpperCase() };
   };
 
   const filteredLeaves = useMemo(() => {
@@ -55,7 +39,7 @@ export default function LeaveReportPage() {
       const matchStatus = !filterStatus || l.status === filterStatus;
       return matchSearch && matchType && matchStatus;
     });
-  }, [leaveRequests, searchTerm, filterType, filterStatus, students, teachers]);
+  }, [leaveRequests, searchTerm, filterType, filterStatus]);
 
   const stats = {
     total: leaveRequests.length,

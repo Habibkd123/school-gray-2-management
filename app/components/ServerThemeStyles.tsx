@@ -30,7 +30,6 @@ export async function ServerThemeStyles() {
     const resolved = await getSchoolThemeById(schoolId);
     if (resolved) {
       cssVars = resolved.css_vars;
-      console.log(`[ServerThemeStyles] ✓ Loaded theme for school: ${resolved.school_name}`);
     }
   } catch (err) {
     console.error("[ServerThemeStyles] DB error:", err instanceof Error ? err.message : String(err));

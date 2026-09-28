@@ -4,7 +4,7 @@ import { ApiClass } from "@/app/hooks/useClasses";
 let allClassesPromise: Promise<ApiClass[]> | null = null;
 let allClassesCache: ApiClass[] | null = null;
 let cacheTime = 0;
-const TTL = 5000; // 5 seconds cache to avoid duplicate fast calls
+const TTL = 60_000; // 60 seconds cache to avoid duplicate calls
 
 export const ClassService = {
   async getAllClasses(options?: { forceRefetch?: boolean; status?: string; academic_year?: string }): Promise<ApiClass[]> {
@@ -21,7 +21,7 @@ export const ClassService = {
     if (!allClassesPromise) {
       allClassesPromise = (async () => {
         try {
-          const res = await fetch("/api/classes?limit=all", {
+          const res = await fetch("/api/classes?limit=all&include_stats=false", {
             headers: getAuthHeaders(),
           });
           if (!res.ok) throw new Error("Failed to fetch classes from ClassService");

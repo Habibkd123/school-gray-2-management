@@ -107,7 +107,10 @@ export async function GET(req: NextRequest) {
       }
     );
 
-    return NextResponse.json({ success: true, data: { results, total, page, totalPages, limit } });
+    return NextResponse.json(
+      { success: true, data: { results, total, page, totalPages, limit } },
+      { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=30" } }
+    );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

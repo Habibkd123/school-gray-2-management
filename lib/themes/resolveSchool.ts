@@ -18,9 +18,9 @@ interface SchoolCacheEntry {
   expiresAt:  number;
 }
 
-// ─── In-memory cache: subdomain/slug → full school data (TTL: 2s dev, 10m prod) ────────
-const CACHE_TTL_MS    = process.env.NODE_ENV === "development" ? 2000 : 10 * 60 * 1000;
-const MISS_CACHE_MS   = process.env.NODE_ENV === "development" ? 1000 : 60 * 1000;
+// ─── In-memory cache: subdomain/slug → full school data (TTL: 5m dev, 15m prod) ────────
+const CACHE_TTL_MS    = process.env.NODE_ENV === "development" ? 5 * 60 * 1000 : 15 * 60 * 1000;
+const MISS_CACHE_MS   = process.env.NODE_ENV === "development" ? 60 * 1000 : 60 * 1000;
 
 const schoolCache = new Map<string, SchoolCacheEntry>();
 

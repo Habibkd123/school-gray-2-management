@@ -5,6 +5,7 @@ import Class from "@/lib/models/Class";
 import Student from "@/lib/models/Student";
 import Teacher from "@/lib/models/Teacher";
 import { Subject, SubjectMaster, Attendance } from "@/lib/models/index";
+import { sendConditionalJson } from "@/lib/etag";
 
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin", "teacher"]);
@@ -68,36 +69,40 @@ export async function GET(req: NextRequest) {
 
     const totalSubjectsUnified = Math.max(totalSubjects, totalSubjectMasters);
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        students: {
-          total: totalStudents,
-          active: activeStudents,
-          inactive: totalStudents - activeStudents,
-        },
-        teachers: {
-          total: totalTeachers,
-          active: activeTeachers,
-          inactive: totalTeachers - activeTeachers,
-        },
-        classes: {
-          total: totalClasses,
-        },
-        subjects: {
-          total: totalSubjectsUnified,
-        },
-        attendance: {
-          total: todayTotal,
-          present: todayPresent,
-          absent: todayAbsent,
-          late: todayLate,
-          leave: todayLeave,
-          percentage: attendancePct,
-          marked: todayTotal > 0,
+    return sendConditionalJson(
+      req,
+      {
+        success: true,
+        data: {
+          students: {
+            total: totalStudents,
+            active: activeStudents,
+            inactive: totalStudents - activeStudents,
+          },
+          teachers: {
+            total: totalTeachers,
+            active: activeTeachers,
+            inactive: totalTeachers - activeTeachers,
+          },
+          classes: {
+            total: totalClasses,
+          },
+          subjects: {
+            total: totalSubjectsUnified,
+          },
+          attendance: {
+            total: todayTotal,
+            present: todayPresent,
+            absent: todayAbsent,
+            late: todayLate,
+            leave: todayLeave,
+            percentage: attendancePct,
+            marked: todayTotal > 0,
+          },
         },
       },
-    });
+      { cacheControl: "private, max-age=30, stale-while-revalidate=30" }
+    );
   } catch (err: any) {
     console.error("[GET /api/dashboard/stats]", err);
     return NextResponse.json(

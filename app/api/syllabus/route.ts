@@ -23,6 +23,44 @@ export async function GET(req: NextRequest) {
     const subject_master_id = url.searchParams.get("subject_master_id") || "";
     const teacher_id = url.searchParams.get("teacher_id") || "";
     const teacher_assignment_id = url.searchParams.get("teacher_assignment_id") || "";
+    const mode = url.searchParams.get("mode") || "";
+
+    // Fast projected stats query without running heavy 6-collection $lookups
+    if (mode === "stats") {
+      const statsQuery: any = { school_id: new mongoose.Types.ObjectId(schoolId!) };
+      if (academic_year) statsQuery.academic_year = academic_year;
+      if (class_id && mongoose.Types.ObjectId.isValid(class_id)) statsQuery.class_id = new mongoose.Types.ObjectId(class_id);
+
+      const records = await Syllabus.find(statsQuery)
+        .select("_id class_id section_id stream_id subject_master_id teacher_id status updatedAt nodes")
+        .lean();
+
+      const statsData = records.map((s: any) => ({
+        _id: String(s._id),
+        class_id: s.class_id ? String(s.class_id) : null,
+        section_id: s.section_id ? String(s.section_id) : null,
+        stream_id: s.stream_id ? String(s.stream_id) : null,
+        subject_master_id: s.subject_master_id ? String(s.subject_master_id) : null,
+        teacher_id: s.teacher_id ? String(s.teacher_id) : null,
+        status: s.status || "Draft",
+        updatedAt: s.updatedAt,
+        chapters: (s.nodes || []).map((n: any, idx: number) => ({
+          _id: String(idx),
+          chapter_no: idx + 1,
+          chapter_name: n.title,
+          status: n.resources?.some((r: any) => r.url && r.url !== "#")
+            ? "Completed"
+            : (n.children?.length > 0 ? "In Progress" : "Not Started")
+        }))
+      }));
+
+      return NextResponse.json({
+        success: true,
+        data: statsData,
+      }, {
+        headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" }
+      });
+    }
 
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limitParam = url.searchParams.get("limit");
@@ -299,6 +337,8 @@ export async function GET(req: NextRequest) {
       total: finalTotal,
       totalPages: (class_id && academic_year) ? Math.ceil(finalTotal / limit) : Math.ceil(total / limit),
       page
+    }, {
+      headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" }
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

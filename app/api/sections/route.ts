@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import Section from "@/lib/models/Section";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendConditionalJson } from "@/lib/etag";
 
 // GET — list sections for school
 export async function GET(req: NextRequest) {
@@ -31,10 +32,14 @@ export async function GET(req: NextRequest) {
         .lean()
     ]);
 
-    return NextResponse.json({
-      success: true,
-      data: { sections, total, page, totalPages: Math.ceil(total / limit) },
-    });
+    return sendConditionalJson(
+      req,
+      {
+        success: true,
+        data: { sections, total, page, totalPages: Math.ceil(total / limit) },
+      },
+      { cacheControl: "private, max-age=120, stale-while-revalidate=60" }
+    );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }

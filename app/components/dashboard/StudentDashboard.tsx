@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { Clock, BookOpen, Percent, CheckCircle2, X, FileText, Award, TrendingUp, Calendar as CalendarIcon, Megaphone } from "lucide-react";
-import { useStudents } from "../../hooks/useStudents";
 import { useSchedules } from "../../hooks/useSchedules";
 import { useNotices } from "../../hooks/useNotices";
 import { useHolidays } from "../../hooks/useHolidays";
@@ -61,20 +60,25 @@ const StudentDashboard = React.memo(function StudentDashboard({ user, studentId,
   const theme = useThemeColors();
   const { academicYear } = useAppState();
 
-  const { students } = useStudents({ skip: !!studentId });
+  const [singleStudent, setSingleStudent] = useState<any>(null);
+
+  useEffect(() => {
+    if (studentId) return;
+    fetch("/api/student/profile", { headers: getAuthHeaders() })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data) setSingleStudent(data.data);
+      })
+      .catch(() => {});
+  }, [studentId]);
+
   const { notices } = useNotices();
   const { holidays } = useHolidays();
   const { results } = useResults();
   const { leaveRequests: leaves } = useLeave();
   const { homework } = useHomework(undefined);
 
-  const student = useMemo(() => {
-    if (studentId) return null;
-    return students.find((s) => {
-      const sUserId = typeof s.user_id === "object" && s.user_id ? s.user_id._id : s.user_id;
-      return sUserId === user?.id;
-    }) || null;
-  }, [students, user?.id, studentId]);
+  const student = studentId ? null : singleStudent;
 
   const displayStudentId = studentId || student?._id;
   const displayStudentClassId = classId || (typeof student?.class_id === "object" ? student?.class_id?._id : student?.class_id);

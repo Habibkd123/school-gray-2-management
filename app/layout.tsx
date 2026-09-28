@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "./context/store";
 import { AuthProvider } from "./context/auth";
@@ -8,6 +9,13 @@ import { RootThemeProvider } from "./components/RootThemeProvider";
 import { ServerThemeStyles } from "./components/ServerThemeStyles";
 import { resolveSchoolMeta } from "@/lib/themes/resolveSchool";
 import { getSubdomainHost } from "@/lib/utils/subdomain";
+
+const roboto = Roboto({
+  weight: ["400", "500", "700"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-roboto",
+});
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
 const APP_URL     = process.env.NEXT_PUBLIC_APP_URL     || `https://www.${ROOT_DOMAIN}`;
@@ -103,7 +111,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className="h-full antialiased"
+      className={`h-full antialiased ${roboto.variable}`}
       suppressHydrationWarning
     >
       <head>
@@ -113,13 +121,6 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href={faviconUrl} />
         {/* Theme CSS vars injected before any body content — zero FOUC */}
         <ServerThemeStyles />
-        {/* Roboto font — loaded at runtime via CDN so build is not blocked */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
-          rel="stylesheet"
-        />
         {/* DNS prefetch for CDNs used for uploaded images / avatars */}
         <link rel="dns-prefetch" href="//res.cloudinary.com" />
         <link rel="dns-prefetch" href="//ui-avatars.com" />

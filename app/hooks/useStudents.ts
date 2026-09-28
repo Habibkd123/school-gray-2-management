@@ -91,6 +91,7 @@ export interface CreateStudentInput {
 let _studentsCache: ApiStudent[] | null = null;
 let _cacheTimestamp = 0;
 const CACHE_TTL_MS = 60_000; // 60 seconds
+const _pagedQueryCache = new Map<string, { students: ApiStudent[]; total: number; timestamp: number }>();
 let _version = 0; // bumped after every mutation
 const _listeners = new Set<(students: ApiStudent[]) => void>();
 const _versionListeners = new Set<(v: number) => void>();
@@ -98,6 +99,7 @@ const _versionListeners = new Set<(v: number) => void>();
 function invalidateCache() {
   _studentsCache = null;
   _cacheTimestamp = 0;
+  _pagedQueryCache.clear();
 }
 
 function bumpVersion() {
@@ -227,13 +229,33 @@ export function useStudents(options?: { skip?: boolean }) {
       params.set("page", page.toString());
       params.set("limit", limit.toString());
 
-      const res = await fetch(`/api/students?${params.toString()}`, {
+      const cacheKey = params.toString();
+      const cachedQuery = _pagedQueryCache.get(cacheKey);
+      if (cachedQuery && (Date.now() - cachedQuery.timestamp) < CACHE_TTL_MS) {
+        setStudents(cachedQuery.students);
+        setTotal(cachedQuery.total);
+        setIsLoading(false);
+        return {
+          students: cachedQuery.students,
+          total: cachedQuery.total,
+          page,
+          limit,
+        };
+      }
+
+      const res = await fetch(`/api/students?${cacheKey}`, {
         headers: getAuthHeaders(),
         signal: controller.signal,
       });
 
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch");
+
+      _pagedQueryCache.set(cacheKey, {
+        students: data.data.students,
+        total: data.data.total ?? data.data.students.length,
+        timestamp: Date.now(),
+      });
 
       // Only cache the full unfiltered legacy list
       if (!isFiltered) {

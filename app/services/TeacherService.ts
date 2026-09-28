@@ -4,7 +4,7 @@ import { ApiTeacher } from "@/app/hooks/useTeachers";
 let allTeachersPromise: Promise<ApiTeacher[]> | null = null;
 let allTeachersCache: ApiTeacher[] | null = null;
 let cacheTime = 0;
-const TTL = 5000;
+const TTL = 60_000; // 60s cache
 
 export const TeacherService = {
   async getAllTeachers(options?: { forceRefetch?: boolean; status?: string }): Promise<ApiTeacher[]> {

@@ -44,10 +44,12 @@ let _cacheTimestamp = 0;
 const CACHE_TTL_MS = 60_000; // 60 seconds
 const _listeners = new Set<(classes: ApiClass[]) => void>();
 const _classesFetchPromises = new Map<string, Promise<{ classes: ApiClass[]; total: number; totalPages: number; currentPage: number }>>();
+const _classesQueryCache = new Map<string, { data: { classes: ApiClass[]; total: number; totalPages: number; currentPage: number }; timestamp: number }>();
 
 function invalidateCache() {
   _classesCache = null;
   _cacheTimestamp = 0;
+  _classesQueryCache.clear();
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────
@@ -117,6 +119,16 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
 
     const cacheKey = qs.toString();
 
+    const cachedQuery = _classesQueryCache.get(cacheKey);
+    if (cachedQuery && (Date.now() - cachedQuery.timestamp) < CACHE_TTL_MS) {
+      setClasses(cachedQuery.data.classes);
+      setTotal(cachedQuery.data.total);
+      setTotalPages(cachedQuery.data.totalPages);
+      setCurrentPage(cachedQuery.data.currentPage);
+      setIsLoading(false);
+      return;
+    }
+
     if (_classesFetchPromises.has(cacheKey)) {
       try {
         const cachedData = await _classesFetchPromises.get(cacheKey)!;
@@ -152,6 +164,11 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
 
     try {
       const data = await promise;
+      _classesQueryCache.set(cacheKey, {
+        data,
+        timestamp: Date.now(),
+      });
+
       // Only cache unfiltered ALL results
       if (isAll && !isFiltered) {
         _classesCache = data.classes;

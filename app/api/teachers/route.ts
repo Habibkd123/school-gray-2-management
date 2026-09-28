@@ -4,6 +4,7 @@ import Teacher from "@/lib/models/Teacher";
 import User from "@/lib/models/User";
 import { TeacherAssignment } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendConditionalJson } from "@/lib/etag";
 import mongoose from "mongoose";
 
 const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG || "school";
@@ -137,15 +138,29 @@ export async function GET(req: NextRequest) {
       sortObj = { updatedAt: -1 };
     }
 
+    const isFull = url.searchParams.get("full") === "true";
+    const includeUser = url.searchParams.get("include_user") === "true";
+    let queryBuilder = Teacher.find(query);
+
+    if (!isFull) {
+      queryBuilder = queryBuilder.select(
+        "_id school_id user_id class_id class_ids name employee_id gender phone email photo_url qualification expertise join_date is_active designation department createdAt"
+      );
+    }
+
+    queryBuilder = queryBuilder
+      .populate("class_id", "name section")
+      .populate("class_ids", "name section")
+      .sort(sortObj)
+      .skip(skip)
+      .limit(limit);
+
+    if (isFull || includeUser) {
+      queryBuilder = queryBuilder.populate("user_id", "name email role is_active plain_password");
+    }
+
     const [teachers, total] = await Promise.all([
-      Teacher.find(query)
-        .populate("user_id", "name email role is_active plain_password")
-        .populate("class_id", "name section")
-        .populate("class_ids", "name section")
-        .sort(sortObj)
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+      queryBuilder.lean(),
       Teacher.countDocuments(query),
     ]);
 
@@ -179,9 +194,10 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return NextResponse.json(
+    return sendConditionalJson(
+      req,
       { success: true, data: { teachers, total, page, limit } },
-      { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } }
+      { cacheControl: "private, max-age=60, stale-while-revalidate=30" }
     );
   } catch (error: any) {
     return NextResponse.json(

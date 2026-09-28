@@ -184,6 +184,7 @@ export interface CreateTeacherInput {
 let _teachersCache: ApiTeacher[] | null = null;
 let _cacheTimestamp = 0;
 const CACHE_TTL_MS = 60_000; // 60 seconds
+const _pagedTeacherQueryCache = new Map<string, { teachers: ApiTeacher[]; total: number; timestamp: number }>();
 let _version = 0; // bumped after every mutation
 const _listeners = new Set<(teachers: ApiTeacher[]) => void>();
 const _versionListeners = new Set<(v: number) => void>();
@@ -191,6 +192,7 @@ const _versionListeners = new Set<(v: number) => void>();
 function invalidateCache() {
   _teachersCache = null;
   _cacheTimestamp = 0;
+  _pagedTeacherQueryCache.clear();
 }
 
 function bumpVersion() {
@@ -332,13 +334,33 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
       params.set("page", page.toString());
       params.set("limit", limit.toString());
 
-      const res = await fetch(`/api/teachers?${params.toString()}`, {
+      const cacheKey = params.toString();
+      const cachedQuery = _pagedTeacherQueryCache.get(cacheKey);
+      if (cachedQuery && (Date.now() - cachedQuery.timestamp) < CACHE_TTL_MS) {
+        setTeachers(cachedQuery.teachers);
+        setTotal(cachedQuery.total);
+        setIsLoading(false);
+        return {
+          teachers: cachedQuery.teachers,
+          total: cachedQuery.total,
+          page,
+          limit,
+        };
+      }
+
+      const res = await fetch(`/api/teachers?${cacheKey}`, {
         headers: getAuthHeaders(),
         signal: controller.signal,
       });
 
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch");
+
+      _pagedTeacherQueryCache.set(cacheKey, {
+        teachers: data.data.teachers,
+        total: data.data.total ?? data.data.teachers.length,
+        timestamp: Date.now(),
+      });
 
       // Only cache unfiltered results
       if (!isFiltered) {

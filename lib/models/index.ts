@@ -154,6 +154,26 @@ teacherAssignmentSchema.index(
   { unique: true, partialFilterExpression: { class_group_id: { $gt: null }, is_deleted: false }, name: "teacher_assignment_group_unique_v2" }
 );
 
+teacherAssignmentSchema.index(
+  { school_id: 1, academic_year: 1, teacher_id: 1, is_deleted: 1 },
+  { name: "teacher_assignment_school_year_teacher_v1" }
+);
+
+teacherAssignmentSchema.index(
+  { school_id: 1, academic_year: 1, subject_master_id: 1, is_deleted: 1 },
+  { name: "teacher_assignment_school_year_subject_v1" }
+);
+
+teacherAssignmentSchema.index(
+  { school_id: 1, academic_year: 1, class_id: 1, is_deleted: 1 },
+  { name: "teacher_assignment_school_year_class_v1" }
+);
+
+teacherAssignmentSchema.index(
+  { school_id: 1, academic_year: 1, status: 1, is_deleted: 1 },
+  { name: "teacher_assignment_school_year_status_v1" }
+);
+
 
 // ─── Syllabus ──────────────────────────────────────────────────────
 export interface ISyllabusResource {
@@ -298,6 +318,8 @@ const syllabusSchema = new Schema<ISyllabus>(
 );
 
 syllabusSchema.index({ school_id: 1, academic_year: 1, class_id: 1, section_id: 1, subject_master_id: 1 }, { name: "syllabus_unique_lookup" });
+syllabusSchema.index({ school_id: 1, academic_year: 1, updatedAt: -1 }, { name: "syllabus_school_year_updated_v1" });
+syllabusSchema.index({ school_id: 1, academic_year: 1, status: 1 }, { name: "syllabus_school_year_status_v1" });
 
 // ─── Timetable ────────────────────────────────────────────────────
 export interface ITimetable extends Document {
@@ -804,7 +826,7 @@ roomSchema.index({ school_id: 1, room_no: 1 }, { unique: true, name: "room_schoo
 export const Subject: Model<ISubject> = mongoose.models.Subject || mongoose.model("Subject", subjectSchema);
 export const ClassGroup: Model<IClassGroup> = mongoose.models.ClassGroup || mongoose.model("ClassGroup", classGroupSchema);
 export const TeacherAssignment: Model<ITeacherAssignment> =
-  mongoose.models.TeacherAssignment && mongoose.models.TeacherAssignment.schema.indexes().some((idx: any) => idx[1]?.name === "teacher_assignment_unique_v3")
+  mongoose.models.TeacherAssignment && mongoose.models.TeacherAssignment.schema.indexes().some((idx: any) => idx[1]?.name === "teacher_assignment_school_year_teacher_v1")
     ? (mongoose.models.TeacherAssignment as Model<ITeacherAssignment>)
     : (() => {
         delete mongoose.models.TeacherAssignment;
@@ -814,7 +836,7 @@ export const TeacherAssignment: Model<ITeacherAssignment> =
         return mongoose.model<ITeacherAssignment>("TeacherAssignment", teacherAssignmentSchema);
       })();
 export const Syllabus: Model<ISyllabus> =
-  mongoose.models.Syllabus && Object.keys(mongoose.models.Syllabus.schema.paths).includes("nodes")
+  mongoose.models.Syllabus && mongoose.models.Syllabus.schema.indexes().some((idx: any) => idx[1]?.name === "syllabus_school_year_updated_v1")
     ? (mongoose.models.Syllabus as Model<ISyllabus>)
     : (() => {
         delete mongoose.models.Syllabus;
@@ -927,8 +949,31 @@ subjectAssignmentSchema.index(
   { unique: true, partialFilterExpression: { class_group_id: { $gt: null } }, name: "subject_assignment_group_unique_v1" }
 );
 
+subjectAssignmentSchema.index(
+  { school_id: 1, subject_master_id: 1 },
+  { name: "subject_assignment_school_subject_v1" }
+);
+
+subjectAssignmentSchema.index(
+  { school_id: 1, academic_year: 1, status: 1 },
+  { name: "subject_assignment_school_year_status_v1" }
+);
+
+subjectAssignmentSchema.index(
+  { school_id: 1, class_id: 1, academic_year: 1 },
+  { name: "subject_assignment_school_class_year_v1" }
+);
+
 export const SubjectAssignment: Model<ISubjectAssignment> =
-  mongoose.models.SubjectAssignment || mongoose.model<ISubjectAssignment>("SubjectAssignment", subjectAssignmentSchema);
+  mongoose.models.SubjectAssignment && mongoose.models.SubjectAssignment.schema.indexes().some((idx: any) => idx[1]?.name === "subject_assignment_school_subject_v1")
+    ? (mongoose.models.SubjectAssignment as Model<ISubjectAssignment>)
+    : (() => {
+        delete mongoose.models.SubjectAssignment;
+        if (mongoose.connection && (mongoose.connection as any).models && (mongoose.connection as any).models.SubjectAssignment) {
+          delete (mongoose.connection as any).models.SubjectAssignment;
+        }
+        return mongoose.model<ISubjectAssignment>("SubjectAssignment", subjectAssignmentSchema);
+      })();
 
 
 // ─── Transport Management ─────────────────────────────────────────

@@ -4,6 +4,7 @@ import { SubjectMaster } from "@/lib/models/index";
 import Stream from "@/lib/models/Stream";
 import { requireAuth } from "@/lib/utils/auth";
 
+import mongoose from "mongoose";
 import { SubjectAssignment, TeacherAssignment } from "@/lib/models/index";
 
 // GET — list subject masters
@@ -34,30 +35,43 @@ export async function GET(req: NextRequest) {
       query.status = { $ne: "Archived" };
     }
 
-    const total = await SubjectMaster.countDocuments(query);
-    const subjects = await SubjectMaster.find(query)
-      .sort({ name: 1 })
-      .skip(isAll ? 0 : (page - 1) * limit)
-      .limit(limit)
-      .lean();
+    const [total, subjects] = await Promise.all([
+      SubjectMaster.countDocuments(query),
+      SubjectMaster.find(query)
+        .sort({ name: 1 })
+        .skip(isAll ? 0 : (page - 1) * limit)
+        .limit(limit)
+        .lean(),
+    ]);
 
-    const subjectsWithStats = await Promise.all(
-      subjects.map(async (s: any) => {
-        const [classCount, teacherCount] = await Promise.all([
-          SubjectAssignment.countDocuments({ school_id: schoolId, subject_master_id: s._id }),
-          TeacherAssignment.countDocuments({ school_id: schoolId, subject_master_id: s._id, is_deleted: false })
-        ]);
-        return {
-          ...s,
-          classesCount: classCount,
-          teachersCount: teacherCount
-        };
-      })
-    );
+    const subjectIds = subjects.map((s: any) => s._id);
+
+    // Run 2 batch aggregations instead of 100 sequential/parallel countDocuments
+    const [classCountAgg, teacherCountAgg] = await Promise.all([
+      SubjectAssignment.aggregate([
+        { $match: { school_id: new mongoose.Types.ObjectId(schoolId as string), subject_master_id: { $in: subjectIds } } },
+        { $group: { _id: "$subject_master_id", count: { $sum: 1 } } }
+      ]),
+      TeacherAssignment.aggregate([
+        { $match: { school_id: new mongoose.Types.ObjectId(schoolId as string), is_deleted: false, subject_master_id: { $in: subjectIds } } },
+        { $group: { _id: "$subject_master_id", count: { $sum: 1 } } }
+      ])
+    ]);
+
+    const classCountMap = new Map(classCountAgg.map((item: any) => [String(item._id), item.count]));
+    const teacherCountMap = new Map(teacherCountAgg.map((item: any) => [String(item._id), item.count]));
+
+    const subjectsWithStats = subjects.map((s: any) => ({
+      ...s,
+      classesCount: classCountMap.get(String(s._id)) || 0,
+      teachersCount: teacherCountMap.get(String(s._id)) || 0,
+    }));
 
     return NextResponse.json({
       success: true,
       data: { subjects: subjectsWithStats, total, page, totalPages: Math.ceil(total / limit) },
+    }, {
+      headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" }
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

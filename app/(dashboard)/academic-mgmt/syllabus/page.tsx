@@ -44,6 +44,8 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+let _cachedSyllabiStats: Record<string, { total: number, completed: number, percent: number, updatedAt?: string, status?: string }> | null = null;
+
 export default function SyllabusClassListPage() {
   const { academicYear } = useAppState();
   const { user } = useAuth();
@@ -55,8 +57,8 @@ export default function SyllabusClassListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTeacherId, setFilterTeacherId] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [syllabiStats, setSyllabiStats] = useState<Record<string, { total: number, completed: number, percent: number, updatedAt?: string, status?: string }>>({});
-  const [loadingStats, setLoadingStats] = useState(false);
+  const [syllabiStats, setSyllabiStats] = useState<Record<string, { total: number, completed: number, percent: number, updatedAt?: string, status?: string }>>(_cachedSyllabiStats || {});
+  const [loadingStats, setLoadingStats] = useState(!_cachedSyllabiStats);
   const [expandedClasses, setExpandedClasses] = useState<Record<string, boolean>>({});
 
   const toggleExpand = (classId: string) => {
@@ -66,36 +68,40 @@ export default function SyllabusClassListPage() {
   useEffect(() => {
     async function fetchAllStats() {
       if (assignments.length === 0) return;
-      setLoadingStats(true);
+      if (!_cachedSyllabiStats) setLoadingStats(true);
       try {
-        const res = await fetch(`/api/syllabus`, { headers: getAuthHeaders() });
+        const res = await fetch(`/api/syllabus?mode=stats&academic_year=${encodeURIComponent(academicYear)}`, { headers: getAuthHeaders() });
         const data = await res.json();
         if (res.ok && data.success && data.data) {
           const statsMap: Record<string, any> = {};
 
-          data.data.forEach((syllabus: any) => {
-            const assignmentId = syllabus.teacher_assignment_id;
-            if (assignmentId) {
-              const chapters = syllabus.chapters || [];
+          assignments.forEach(a => {
+            const aClassId = typeof a.class_id === 'object' ? a.class_id?._id : a.class_id;
+            const aSubjId = typeof a.subject_master_id === 'object' ? a.subject_master_id?._id : a.subject_master_id;
+
+            const matchedSyllabus = data.data.find((s: any) => 
+              String(s.class_id) === String(aClassId) && 
+              String(s.subject_master_id) === String(aSubjId)
+            );
+
+            if (matchedSyllabus) {
+              const chapters = matchedSyllabus.chapters || [];
               const total = chapters.length;
               const completed = chapters.filter((c: any) => c.status === "Completed").length;
               const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
-              statsMap[assignmentId] = {
+              statsMap[a._id] = {
                 total,
                 completed,
                 percent,
-                updatedAt: syllabus.updatedAt,
-                status: syllabus.status || "Draft",   // ← capture status
+                updatedAt: matchedSyllabus.updatedAt,
+                status: matchedSyllabus.status || "Draft",
               };
-            }
-          });
-
-          assignments.forEach(a => {
-            if (!statsMap[a._id]) {
+            } else {
               statsMap[a._id] = { total: 0, completed: 0, percent: 0, status: "Not Started" };
             }
           });
 
+          _cachedSyllabiStats = statsMap;
           setSyllabiStats(statsMap);
         }
       } catch (e) {
@@ -106,7 +112,7 @@ export default function SyllabusClassListPage() {
     }
 
     fetchAllStats();
-  }, [assignments]);
+  }, [assignments, academicYear]);
 
   useEffect(() => {
     if (!assignments || assignments.length === 0) {

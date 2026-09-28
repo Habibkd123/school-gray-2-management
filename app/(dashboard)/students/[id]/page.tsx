@@ -19,6 +19,7 @@ import { getAuthHeaders } from "@/lib/utils/session";
 import { LoginDetailsModal } from "@/app/components/modals/LoginDetailsModal";
 import { ResetPasswordModal } from "@/app/components/modals/ResetPasswordModal";
 import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
+import { getOptimizedAvatar } from "@/lib/utils/image";
 
 function StudentViewContent() {
   const params = useParams();
@@ -385,7 +386,7 @@ function StudentViewContent() {
   const totalPaidAmount = payments.reduce((sum, p) => sum + p.amount_paid, 0);
   const totalPendingDues = Math.max(0, totalFeesAmount - totalPaidAmount);
 
-  const getAvatar = (name: string) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=F1F5F9&color=5D6BEE&bold=true`;
+  const getAvatar = (name: string, photo_url?: string) => getOptimizedAvatar(photo_url, name, 80);
   const getClassName = (cid: any) => {
     if (!cid) return "Not Assigned";
     if (typeof cid === "object") {
@@ -507,7 +508,7 @@ function StudentViewContent() {
           {/* Profile Card */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 card-shadow text-left relative overflow-hidden">
             <div className="flex items-center gap-4">
-              <img src={student.photo_url || getAvatar(student.name)} className="w-full sm:w-[60px] h-[60px] rounded-xl object-cover border border-slate-200 dark:border-slate-800" alt="Avatar" />
+              <img src={getAvatar(student.name, student.photo_url)} className="w-full sm:w-[60px] h-[60px] rounded-xl object-cover border border-slate-200 dark:border-slate-800" alt="Avatar" loading="lazy" decoding="async" />
               <div>
                 <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-bold bg-success/10 text-success mb-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-success" />
@@ -1757,11 +1758,10 @@ function TabItem({ icon, label, active, onClick }: { icon: React.ReactNode, labe
 }
 
 function ParentRow({ name, role, phone, email, hideBorder = false, onViewLogin, onResetPassword }: { name: string, role: string, phone: string, email: string, hideBorder?: boolean, onViewLogin?: () => void, onResetPassword?: () => void }) {
-  const getAvatar = (n: string) => `https://ui-avatars.com/api/?name=${encodeURIComponent(n)}&background=F1F5F9&color=5D6BEE&bold=true`;
   return (
     <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 ${hideBorder ? '' : 'border-b border-slate-100 dark:border-slate-800/50'}`}>
       <div className="flex items-center gap-3 w-48 text-left">
-        <img src={getAvatar(name)} className="w-10 h-10 rounded-lg object-cover" />
+        <img src={getOptimizedAvatar(null, name, 40)} className="w-10 h-10 rounded-lg object-cover" alt={name} loading="lazy" decoding="async" />
         <div>
           <p className="text-[12px] font-bold text-slate-900 dark:text-white mb-0.5">{name}</p>
           <p className="text-[11px] text-primary font-bold">{role}</p>

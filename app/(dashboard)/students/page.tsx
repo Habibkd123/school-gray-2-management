@@ -43,6 +43,7 @@ import {
   CheckSquare
 } from "lucide-react";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
+import { getOptimizedAvatar } from "@/lib/utils/image";
 import { PaginationBar } from "@/app/components/ui/pagination-bar";
 
 const StudentSkeletonCard = () => (
@@ -66,6 +67,8 @@ const StudentSkeletonCard = () => (
     <div className="h-8 w-24 bg-slate-200 dark:bg-slate-700 rounded mt-auto pt-2" />
   </div>
 );
+
+let _cachedStudentFilters: any = null;
 
 export default function StudentsPage() {
   const { academicYear } = useAppState();
@@ -98,7 +101,7 @@ export default function StudentsPage() {
     genders: string[];
     statuses: string[];
     admissionStatuses: string[];
-  }>({
+  }>(_cachedStudentFilters || {
     academicYears: [],
     sections: [],
     houses: [],
@@ -149,11 +152,13 @@ export default function StudentsPage() {
 
   // Load dynamic filter metadata
   React.useEffect(() => {
+    if (_cachedStudentFilters) return;
     async function loadFilters() {
       try {
         const res = await fetch("/api/students/filters", { headers: getAuthHeaders() });
         const json = await res.json();
         if (json.success) {
+          _cachedStudentFilters = json.data;
           setFilterMetadata(json.data);
         }
       } catch (err) {
@@ -373,9 +378,6 @@ export default function StudentsPage() {
 
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  const getAvatar = (name: string) => {
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=D2232A&color=fff&bold=true`;
-  };
   const formatDate = (dateString: string) => {
     if (!dateString) return "—";
     const date = new Date(dateString);
@@ -388,7 +390,7 @@ export default function StudentsPage() {
       ...student,
       id: student._id,
       displayId: student.admission_no || "—",
-      avatar: student.photo_url || getAvatar(student.name),
+      avatar: getOptimizedAvatar(student.photo_url, student.name, 64),
       classNameStr: getClassName(student),
       section: (typeof student.class_id === "object" ? student.class_id?.section : classes.find((c) => c._id === student.class_id)?.section) || "—",
       gender: student.gender || "—",
@@ -842,7 +844,7 @@ export default function StudentsPage() {
                 <DataTable
                   columns={columns}
                   data={tableData}
-                  // isLoading={isLoading}
+                  virtualized={tableData.length > 20}
                   noDataMessage="No students registered or matching filters."
                 />
               </div>
@@ -942,7 +944,7 @@ export default function StudentsPage() {
 
                       {/* Profile info */}
                       <div className="flex items-center gap-4 mb-5 cursor-pointer" onClick={() => router.push(`/students/${student._id}`)}>
-                        <img src={student.avatar} alt="Avatar" className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" />
+                        <img src={student.avatar} alt="Avatar" className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" loading="lazy" decoding="async" />
                         <div>
                           <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{student.name}</h3>
                           <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400">{student.classNameStr}</p>

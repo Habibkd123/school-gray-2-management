@@ -3,6 +3,7 @@ import { X, Lock, Copy, Check, Eye, EyeOff, KeyRound, Info, Loader2, RefreshCw }
 import { ApiStudent } from "../../hooks/useStudents";
 import { ApiTeacher } from "../../hooks/useTeachers";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { getOptimizedAvatar } from "@/lib/utils/image";
 
 export interface ApiParentForModal {
   _id: string;
@@ -104,8 +105,8 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
 
   if (!isOpen) return null;
 
-  const getAvatar = (name: string) =>
-    `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=F1F5F9&color=D2232A&bold=true`;
+  const getAvatar = (name: string, photo?: string) =>
+    getOptimizedAvatar(photo, name, 80);
 
   const getClassName = (cid: any) => {
     if (typeof cid === "object" && cid?.name) return `${cid.name} - ${cid.section || ""}`;
@@ -221,7 +222,7 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
     }
   }
 
-  const avatarUrl = photoUrl || getAvatar(name || "User");
+  const avatarUrl = getAvatar(name || "User", photoUrl);
   return (
     <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-opacity ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />

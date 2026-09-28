@@ -28,6 +28,8 @@ function formatDate(d?: string | Date) {
   return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+let _cachedParentFilters: any = null;
+
 export default function GuardiansPage() {
   const { user } = useAuth();
   const activeRole = user?.role;
@@ -68,7 +70,7 @@ export default function GuardiansPage() {
     sections: string[];
     students: { _id: string; name: string }[];
     guardianTypes: string[];
-  } | null>(null);
+  } | null>(_cachedParentFilters);
 
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -76,6 +78,7 @@ export default function GuardiansPage() {
   // Fetch filter options on mount
   useEffect(() => {
     if (activeRole === "parent" || activeRole === "student") return;
+    if (_cachedParentFilters) return;
     const loadFilterOptions = async () => {
       try {
         const res = await fetch("/api/parents/filters", {
@@ -83,6 +86,7 @@ export default function GuardiansPage() {
         });
         const data = await res.json();
         if (data.success) {
+          _cachedParentFilters = data.data;
           setFilterOptions(data.data);
         }
       } catch (err) {

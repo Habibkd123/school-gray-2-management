@@ -60,11 +60,13 @@ const TeacherDashboard = React.memo(function TeacherDashboard({ user }: TeacherD
   const theme = useThemeColors();
   const { academicYear } = useAppState();
 
-  const { teachers } = useTeachers();
+  const [profileTeacher, setProfileTeacher] = useState<any>(null);
+  const [needsAllTeachers, setNeedsAllTeachers] = useState(false);
+  const { teachers } = useTeachers({ skip: !needsAllTeachers });
   const { students, fetchStudents } = useStudents({ skip: true });
   const { classes } = useClasses();
   const { holidays } = useHolidays();
-  const { results } = useResults();
+  const { results, fetchResults } = useResults({ skip: true });
   const { leaveRequests: leaves } = useLeave();
   const { notices } = useNotices();
   const { assignments: teacherAssignments, fetchAssignments: fetchTeacherAssignments } = useTeacherAssignment();
@@ -72,22 +74,45 @@ const TeacherDashboard = React.memo(function TeacherDashboard({ user }: TeacherD
   const [teacherSyllabi, setTeacherSyllabi] = useState<any[]>([]);
   const [todaysAttendanceStatus, setTodaysAttendanceStatus] = useState<string>("—");
 
+  useEffect(() => {
+    let isMounted = true;
+    fetch("/api/teacher/profile", { headers: getAuthHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        if (isMounted) {
+          if (data.success && data.data) {
+            setProfileTeacher(data.data);
+          } else {
+            setNeedsAllTeachers(true);
+          }
+        }
+      })
+      .catch(() => {
+        if (isMounted) setNeedsAllTeachers(true);
+      });
+    return () => { isMounted = false; };
+  }, [user?.id]);
+
   const currentTeacherProfile = useMemo(() => {
+    if (profileTeacher) return profileTeacher;
     if (teachers.length === 0) return null;
     return teachers.find(t => {
       const tUserId = typeof t.user_id === "object" ? t.user_id?._id : t.user_id;
       return tUserId === user?.id;
     });
-  }, [teachers, user?.id]);
+  }, [profileTeacher, teachers, user?.id]);
 
   const { schedules } = useSchedules(undefined, currentTeacherProfile?._id);
 
   useEffect(() => {
     if (currentTeacherProfile) {
-      fetchTeacherAssignments({ teacher_id: currentTeacherProfile._id, academic_year: academicYear, limit: 500 });
-      fetchStudents({ academic_year: academicYear, limit: 1000 });
+      fetchTeacherAssignments({ teacher_id: currentTeacherProfile._id, academic_year: academicYear, limit: 100 });
+      fetchStudents({ academic_year: academicYear, limit: 200 });
+      if (academicYear) {
+        fetchResults({ academic_year: academicYear });
+      }
     }
-  }, [currentTeacherProfile, fetchTeacherAssignments, fetchStudents, academicYear]);
+  }, [currentTeacherProfile, fetchTeacherAssignments, fetchStudents, fetchResults, academicYear]);
 
   useEffect(() => {
     if (currentTeacherProfile) {

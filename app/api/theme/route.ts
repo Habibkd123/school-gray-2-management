@@ -3,6 +3,7 @@ import connectDB from "@/lib/db";
 import { requireAuth } from "@/lib/utils/auth";
 import { getSchoolThemeById } from "@/lib/themes/getSchoolTheme";
 import { resolveThemeConfig, themeColorsToCssVars } from "@/lib/themes/presets";
+import { sendConditionalJson } from "@/lib/etag";
 
 // GET /api/theme — theme for logged-in school (dashboard)
 export async function GET(request: NextRequest) {
@@ -26,13 +27,13 @@ export async function GET(request: NextRequest) {
 
       if (requestedSchoolId) {
         const resolved = await getSchoolThemeById(requestedSchoolId);
-        if (resolved) return NextResponse.json({ success: true, data: resolved });
+        if (resolved) return sendConditionalJson(request, { success: true, data: resolved });
         return NextResponse.json({ success: false, message: "School not found" }, { status: 404 });
       }
 
       // No school_id param — return default super-admin theme
       const fallback = resolveThemeConfig(null);
-      return NextResponse.json({
+      return sendConditionalJson(request, {
         success: true,
         data: {
           school_id: null,
@@ -54,7 +55,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: "School not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: resolved });
+    return sendConditionalJson(
+      request,
+      { success: true, data: resolved },
+      { cacheControl: "private, max-age=300, stale-while-revalidate=60" }
+    );
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to fetch theme";
     console.error("[THEME GET ERROR]", error);

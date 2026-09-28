@@ -3,11 +3,25 @@ import connectDB from "@/lib/db";
 import { RolePermission } from "@/lib/models";
 import { requireAuth } from "@/lib/utils/auth";
 import { ROLE_PERMISSIONS } from "@/lib/permissions";
+import { sendConditionalJson } from "@/lib/etag";
+
+const _permissionsCache = new Map<string, { data: any; expiresAt: number }>();
+const PERM_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 // ─── GET /api/settings/permissions — Fetch all permissions ─────────────────
 export async function GET(request: NextRequest) {
   const { schoolId, error } = requireAuth(request);
   if (error) return error;
+
+  const cacheKey = String(schoolId);
+  const cached = _permissionsCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return sendConditionalJson(
+      request,
+      { success: true, data: cached.data },
+      { cacheControl: "private, max-age=300, stale-while-revalidate=60" }
+    );
+  }
 
   try {
     await connectDB();
@@ -26,7 +40,16 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    return NextResponse.json({ success: true, data: mergedPerms });
+    _permissionsCache.set(cacheKey, {
+      data: mergedPerms,
+      expiresAt: Date.now() + PERM_CACHE_TTL_MS,
+    });
+
+    return sendConditionalJson(
+      request,
+      { success: true, data: mergedPerms },
+      { cacheControl: "private, max-age=300, stale-while-revalidate=60" }
+    );
   } catch (err) {
     console.error("[GET /api/settings/permissions]", err);
     return NextResponse.json({ success: false, message: "Failed to fetch permissions" }, { status: 500 });
@@ -51,6 +74,8 @@ export async function POST(request: NextRequest) {
       { $set: { permissions } },
       { new: true, upsert: true }
     );
+
+    _permissionsCache.delete(String(schoolId));
 
     return NextResponse.json({ success: true, message: "Permissions updated successfully", data: doc });
   } catch (err) {

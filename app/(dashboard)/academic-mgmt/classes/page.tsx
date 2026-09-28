@@ -31,7 +31,6 @@ export default function AcademicClassesPage() {
   const { academicYear } = useAppState();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
   const { classes, isLoading, error, total, totalPages, currentPage, fetchClasses, createClass, updateClass, deleteClass } = useClasses({ skip: true });
-  const { teachers } = useTeachers({ limit: "all" });
   const { config } = useAcademicConfig();
   const { sections, createSection } = useSections();
   const enableSections = config.enable_sections;
@@ -42,6 +41,7 @@ export default function AcademicClassesPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const { teachers } = useTeachers({ skip: !isAddOpen && !isEditOpen, limit: "all" });
   const [selectedClass, setSelectedClass] = useState<ApiClass | null>(null);
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);

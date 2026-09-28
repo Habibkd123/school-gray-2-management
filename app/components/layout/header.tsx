@@ -13,6 +13,8 @@ interface HeaderProps {
   onMenuClick?: () => void;
 }
 
+let _cachedAvailableYears: string[] | null = null;
+
 export function Header({ onMenuClick }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuth();
@@ -21,7 +23,7 @@ export function Header({ onMenuClick }: HeaderProps) {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isAcademicYearOpen, setIsAcademicYearOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [availableYears, setAvailableYears] = useState<string[]>([]);
+  const [availableYears, setAvailableYears] = useState<string[]>(_cachedAvailableYears || ["2026-2027"]);
 
   // Scroll detection
   useEffect(() => {
@@ -30,8 +32,9 @@ export function Header({ onMenuClick }: HeaderProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Fetch available academic years from actual DB data
+  // Fetch available academic years from actual DB data (cached across mounts)
   useEffect(() => {
+    if (_cachedAvailableYears && _cachedAvailableYears.length > 0) return;
     async function fetchYears() {
       // Always include fallback years so 2026-2027 is selectable even before DB has data
       const fallbackYears = ["2026-2027"];
@@ -41,9 +44,9 @@ export function Header({ onMenuClick }: HeaderProps) {
           const dbYears: string[] = Array.from(
             new Set<string>(classes.map((c) => c.academic_year))
           );
-          // Merge DB years with fallback years and filter to only allow 2026-2027
           const merged = Array.from(new Set([...dbYears, ...fallbackYears]))
             .filter(year => year === "2026-2027") as string[];
+          _cachedAvailableYears = merged;
           setAvailableYears(merged);
           // Auto-select if academicYear is completely empty or invalid
           if (!academicYear || !merged.includes(academicYear)) {

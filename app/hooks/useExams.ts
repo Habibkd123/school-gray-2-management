@@ -34,9 +34,9 @@ export interface ApiResult {
   attendance_status?: string;
 }
 
-export function useExams(classId?: string) {
+export function useExams(classId?: string, options?: { skip?: boolean }) {
   const [exams, setExams] = useState<ApiExam[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(options?.skip ? false : true);
 
   const { academicYear } = useAppState();
 
@@ -57,7 +57,11 @@ export function useExams(classId?: string) {
   }, [classId, academicYear]);
 
   const authReady = useAuthReady();
-  useEffect(() => { if (!authReady) return; fetchExams(); }, [fetchExams, authReady]);
+  useEffect(() => {
+    if (options?.skip) return;
+    if (!authReady) return;
+    fetchExams();
+  }, [fetchExams, authReady, options?.skip]);
 
   const createExam = useCallback(async (payload: Partial<ApiExam>) => {
     const res = await fetch("/api/exams", {

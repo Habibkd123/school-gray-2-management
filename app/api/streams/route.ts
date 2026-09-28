@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import Stream from "@/lib/models/Stream";
 import { requireAuth } from "@/lib/utils/auth";
-
 import Class from "@/lib/models/Class";
 import Student from "@/lib/models/Student";
+import { sendConditionalJson } from "@/lib/etag";
 
 // GET — list streams for school
 export async function GET(req: NextRequest) {
@@ -38,29 +38,41 @@ export async function GET(req: NextRequest) {
         .lean()
     ]);
 
-    const streamsWithStats = await Promise.all(
-      streams.map(async (s: any) => {
-        const matchedClasses = await Class.find({
-          school_id: schoolId,
-          name: { $regex: s.name, $options: "i" }
-        }).select("_id").lean();
-        const classIds = matchedClasses.map(c => c._id);
-        const studentCount = await Student.countDocuments({
-          school_id: schoolId,
-          class_id: { $in: classIds }
-        });
+    const includeStatsParam = url.searchParams.get("include_stats");
+    const shouldComputeStats = includeStatsParam === "true" || (!isAll && includeStatsParam !== "false" && streams.length > 0);
+
+    let streamsWithStats = streams;
+
+    if (shouldComputeStats && streams.length > 0) {
+      const classes = await Class.find({ school_id: schoolId }).select("_id name").lean();
+      const schoolObjId = (schoolId as any);
+
+      const studentCounts = await Student.aggregate([
+        { $match: { school_id: schoolObjId, class_id: { $in: classes.map((c: any) => c._id) } } },
+        { $group: { _id: "$class_id", count: { $sum: 1 } } }
+      ]);
+      const studentCountMap = new Map(studentCounts.map((sc: any) => [String(sc._id), sc.count]));
+
+      streamsWithStats = streams.map((s: any) => {
+        const streamRegex = new RegExp(s.name, "i");
+        const matchedClasses = classes.filter((c: any) => streamRegex.test(c.name));
+        const studentsCount = matchedClasses.reduce((sum: number, c: any) => sum + (studentCountMap.get(String(c._id)) || 0), 0);
         return {
           ...s,
           classesCount: matchedClasses.length,
-          studentsCount: studentCount
+          studentsCount,
         };
-      })
-    );
+      });
+    }
 
-    return NextResponse.json({
-      success: true,
-      data: { streams: streamsWithStats, total, page, totalPages: Math.ceil(total / limit) },
-    });
+    return sendConditionalJson(
+      req,
+      {
+        success: true,
+        data: { streams: streamsWithStats, total, page, totalPages: Math.ceil(total / limit) },
+      },
+      { cacheControl: "private, max-age=120, stale-while-revalidate=60" }
+    );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }
