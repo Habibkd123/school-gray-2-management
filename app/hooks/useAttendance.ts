@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { invalidateCache } from "@/lib/utils/cache-sync";
 
 export interface ApiAttendanceRecord {
   student_id: {
@@ -60,6 +61,7 @@ export function useAttendance() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to save attendance");
+      invalidateCache("attendance");
       return { success: true, message: data.message || "Saved successfully" };
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to save attendance";

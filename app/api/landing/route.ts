@@ -3,6 +3,9 @@ import connectDB from "@/lib/db";
 import LandingContent from "@/lib/models/LandingContent";
 import School from "@/lib/models/School";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendCompressedJson } from "@/lib/compression";
+import { revalidateTag } from "next/cache";
+
 
 // GET /api/landing — fetch this school's landing content
 export async function GET(request: NextRequest) {
@@ -25,7 +28,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: true, data: null });
     }
 
-    return NextResponse.json({ success: true, data: doc });
+    return sendCompressedJson(request, { success: true, data: doc }, {
+      cacheControl: "private, max-age=60, stale-while-revalidate=120"
+    });
   } catch (error: any) {
     console.error("[LANDING GET ERROR]", error);
     return NextResponse.json(
@@ -58,6 +63,11 @@ export async function PUT(request: NextRequest) {
       { $set: updateData, school_id: targetSchoolId },
       { upsert: true, returnDocument: 'after', runValidators: false }
     );
+
+    // Invalidate the website's unstable_cache so the public site reflects changes immediately.
+    // This tag is set in getLandingData.ts → fetchLandingDataForSchool().
+    // Second arg "max" = revalidate across all cache scopes.
+    revalidateTag(`landing-${targetSchoolId}`, "max");
 
     return NextResponse.json({ success: true, data: doc, message: "Saved successfully" });
   } catch (error: any) {
@@ -108,6 +118,9 @@ export async function PATCH(request: NextRequest) {
       { $set: setPayload, $setOnInsert: { school_id: targetSchoolId } },
       { upsert: true, returnDocument: 'after', runValidators: false }
     );
+
+    // Invalidate website cache so public visitors immediately see the new section.
+    revalidateTag(`landing-${targetSchoolId}`, "max");
 
     return NextResponse.json({ success: true, data: doc, message: "Section saved" });
   } catch (error: any) {

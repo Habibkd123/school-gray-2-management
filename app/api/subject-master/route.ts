@@ -3,9 +3,22 @@ import connectToDatabase from "@/lib/db";
 import { SubjectMaster } from "@/lib/models/index";
 import Stream from "@/lib/models/Stream";
 import { requireAuth } from "@/lib/utils/auth";
-
 import mongoose from "mongoose";
 import { SubjectAssignment, TeacherAssignment } from "@/lib/models/index";
+import { sendCompressedJson } from "@/lib/compression";
+
+// ─── Server-side cache ───────────────────────────────────────
+const gs = globalThis as any;
+if (!gs._subjectMasterCache) gs._subjectMasterCache = new Map<string, { data: any; expiresAt: number }>();
+const _cache: Map<string, { data: any; expiresAt: number }> = gs._subjectMasterCache;
+const TTL = 60_000;
+
+export function invalidateSubjectMasterCache(schoolId?: string) {
+  if (!schoolId) { _cache.clear(); return; }
+  for (const k of Array.from(_cache.keys())) {
+    if (k.startsWith(String(schoolId))) _cache.delete(k);
+  }
+}
 
 // GET — list subject masters
 export async function GET(req: NextRequest) {
@@ -15,6 +28,11 @@ export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
     const url = new URL(req.url);
+    const cacheKey = `${schoolId}:${url.searchParams.toString()}`;
+    const cached = _cache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=30, stale-while-revalidate=60" });
+    }
     const search = url.searchParams.get("search") || "";
     const status = url.searchParams.get("status") || "";
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
@@ -67,12 +85,9 @@ export async function GET(req: NextRequest) {
       teachersCount: teacherCountMap.get(String(s._id)) || 0,
     }));
 
-    return NextResponse.json({
-      success: true,
-      data: { subjects: subjectsWithStats, total, page, totalPages: Math.ceil(total / limit) },
-    }, {
-      headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" }
-    });
+    const responseData = { success: true, data: { subjects: subjectsWithStats, total, page, totalPages: Math.ceil(total / limit) } };
+    _cache.set(cacheKey, { data: responseData, expiresAt: Date.now() + TTL });
+    return sendCompressedJson(req, responseData, { cacheControl: "private, max-age=30, stale-while-revalidate=60" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }
@@ -128,6 +143,7 @@ export async function POST(req: NextRequest) {
       allowed_streams: finalAllowedStreams,
     });
 
+    invalidateSubjectMasterCache(String(schoolId));
     return NextResponse.json({ success: true, data: subject }, { status: 201 });
   } catch (err: any) {
     if (err.code === 11000) {

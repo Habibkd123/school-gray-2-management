@@ -4,6 +4,7 @@ import { SalaryPayment, Attendance } from "@/lib/models/index";
 import Teacher from "@/lib/models/Teacher";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
 
 // Helper: Calculate payroll fields dynamically
 async function calculatePayrollForTeacher(teacher: any, period: string, schoolId: string) {
@@ -83,6 +84,23 @@ async function calculatePayrollForTeacher(teacher: any, period: string, schoolId
   };
 }
 
+// Server cache & in-flight deduplication
+const _salariesServerCache = new Map<string, { data: any; expiresAt: number }>();
+const _salariesInFlight = new Map<string, Promise<any>>();
+const SALARIES_CACHE_TTL = 30_000;
+
+export function invalidateSalariesCache(schoolId?: string | null) {
+  if (schoolId) {
+    for (const key of _salariesServerCache.keys()) {
+      if (key.startsWith(`salaries_${schoolId}`)) {
+        _salariesServerCache.delete(key);
+      }
+    }
+  } else {
+    _salariesServerCache.clear();
+  }
+}
+
 // GET: Fetch salary history or reports
 export async function GET(req: NextRequest) {
   const { schoolId, role, userId, error } = requireAuth(req, ["school_admin", "super_admin", "teacher"]);
@@ -96,98 +114,144 @@ export async function GET(req: NextRequest) {
     const startDateParam = url.searchParams.get("start_date");
     const endDateParam = url.searchParams.get("end_date");
     const statusParam = url.searchParams.get("status");
-    
-    await connectToDatabase();
 
-    let query: any = { school_id: schoolId };
+    const cacheKey = `salaries_${schoolId}_${role}_${userId || ""}_${teacherId || "all"}_${period || "all"}_${year || "all"}_${startDateParam || ""}_${endDateParam || ""}_${statusParam || "all"}`;
 
-    // Security check: Teachers can only view their own salary history
-    if (role === "teacher") {
-      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
-      if (!teacher) {
-        return NextResponse.json({
-          success: true,
-          data: { payments: [], summary: { totalPaid: 0, totalPending: 0, pendingCount: 0, count: 0 } }
+    const cached = _salariesServerCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return sendCompressedJson(req, cached.data, {
+        cacheControl: "private, max-age=15, stale-while-revalidate=30"
+      });
+    }
+
+    const existingInFlight = _salariesInFlight.get(cacheKey);
+    if (existingInFlight) {
+      try {
+        const payload = await existingInFlight;
+        return sendCompressedJson(req, payload, {
+          cacheControl: "private, max-age=15, stale-while-revalidate=30"
+        });
+      } catch (err: any) {
+        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+      }
+    }
+
+    const queryPromise = (async () => {
+      await connectToDatabase();
+
+      let query: any = { school_id: schoolId };
+
+      // Security check: Teachers can only view their own salary history
+      if (role === "teacher") {
+        const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
+        if (!teacher) {
+          const emptyPayload = {
+            success: true,
+            data: { payments: [], summary: { totalPaid: 0, totalPending: 0, pendingCount: 0, count: 0 } }
+          };
+          _salariesServerCache.set(cacheKey, { data: emptyPayload, expiresAt: Date.now() + SALARIES_CACHE_TTL });
+          return emptyPayload;
+        }
+        query.teacher_id = teacher._id;
+      } else if (teacherId) {
+        if (!mongoose.Types.ObjectId.isValid(teacherId)) {
+          throw new Error("Invalid teacher ID");
+        }
+        query.teacher_id = teacherId;
+      }
+
+      if (startDateParam && endDateParam) {
+        const s = new Date(startDateParam + "T00:00:00.000Z");
+        const e = new Date(endDateParam + "T23:59:59.999Z");
+        query.payment_date = { $gte: s, $lte: e };
+      } else if (period) {
+        query.salary_period = period;
+      } else if (year) {
+        query.salary_period = new RegExp(`^${year}-`);
+      }
+
+      if (statusParam && statusParam !== "all") {
+        query.status = statusParam;
+      }
+
+      const payments = await SalaryPayment.find(query)
+        .populate("teacher_id", "name employee_id basic_salary subject department qualification designation")
+        .sort({ salary_period: -1, payment_date: -1 })
+        .lean();
+
+      // Aggregate reports summary
+      let totalPaid = 0;
+      payments.forEach((p: any) => {
+        if (p.status === "Paid") {
+          totalPaid += p.final_salary || 0;
+        }
+      });
+
+      // Calculate Pending/Draft Salary for the selected period
+      let totalPending = 0;
+      let pendingCount = 0;
+
+      if (role !== "teacher" && (period || (startDateParam && endDateParam))) {
+        // Find all active teachers with configured salary (basic_salary > 0)
+        const allTeachers = await Teacher.find({
+          school_id: schoolId,
+          is_active: true,
+          basic_salary: { $gt: 0 }
+        }).select("_id basic_salary").lean();
+
+        const paidTeacherIds = new Set(
+          payments
+            .filter((p: any) => p.status === "Paid")
+            .map((p: any) => p.teacher_id ? (p.teacher_id as any)._id?.toString() || p.teacher_id.toString() : "")
+        );
+
+        allTeachers.forEach((t: any) => {
+          if (!paidTeacherIds.has(t._id.toString())) {
+            totalPending += t.basic_salary || 0;
+            pendingCount++;
+          }
         });
       }
-      query.teacher_id = teacher._id;
-    } else if (teacherId) {
-      if (!mongoose.Types.ObjectId.isValid(teacherId)) {
-        return NextResponse.json({ success: false, message: "Invalid teacher ID" }, { status: 400 });
-      }
-      query.teacher_id = teacherId;
-    }
 
-    if (startDateParam && endDateParam) {
-      const s = new Date(startDateParam + "T00:00:00.000Z");
-      const e = new Date(endDateParam + "T23:59:59.999Z");
-      query.payment_date = { $gte: s, $lte: e };
-    } else if (period) {
-      query.salary_period = period;
-    } else if (year) {
-      query.salary_period = new RegExp(`^${year}-`);
-    }
-
-    if (statusParam && statusParam !== "all") {
-      query.status = statusParam;
-    }
-
-    const payments = await SalaryPayment.find(query)
-      .populate("teacher_id", "name employee_id basic_salary subject department qualification designation")
-      .sort({ salary_period: -1, payment_date: -1 });
-
-    // Aggregate reports summary
-    let totalPaid = 0;
-    payments.forEach(p => {
-      if (p.status === "Paid") {
-        totalPaid += p.final_salary || 0;
-      }
-    });
-
-    // Calculate Pending/Draft Salary for the selected period
-    let totalPending = 0;
-    let pendingCount = 0;
-
-    if (role !== "teacher" && (period || (startDateParam && endDateParam))) {
-      // Find all active teachers with configured salary (basic_salary > 0)
-      const allTeachers = await Teacher.find({
-        school_id: schoolId,
-        is_active: true,
-        basic_salary: { $gt: 0 }
-      });
-
-      const paidTeacherIds = new Set(
-        payments
-          .filter(p => p.status === "Paid")
-          .map(p => p.teacher_id ? (p.teacher_id as any)._id?.toString() || p.teacher_id.toString() : "")
-      );
-
-      allTeachers.forEach(t => {
-        if (!paidTeacherIds.has(t._id.toString())) {
-          totalPending += t.basic_salary || 0;
-          pendingCount++;
+      const responsePayload = {
+        success: true,
+        data: {
+          payments,
+          summary: {
+            totalPaid,
+            totalPending,
+            pendingCount,
+            count: payments.length
+          }
         }
-      });
-    }
+      };
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        payments,
-        summary: {
-          totalPaid,
-          totalPending,
-          pendingCount,
-          count: payments.length
-        }
-      }
+      _salariesServerCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + SALARIES_CACHE_TTL });
+      return responsePayload;
+    })();
+
+    _salariesInFlight.set(cacheKey, queryPromise);
+
+    const payload = await queryPromise;
+    return sendCompressedJson(req, payload, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30"
     });
 
   } catch (err: any) {
     return NextResponse.json(
       { success: false, message: err.message || "Internal server error" },
-      { status: 500 }
+      { status: err.message === "Invalid teacher ID" ? 400 : 500 }
     );
+  } finally {
+    const url = new URL(req.url);
+    const teacherId = url.searchParams.get("teacher_id");
+    const period = url.searchParams.get("period");
+    const year = url.searchParams.get("year");
+    const startDateParam = url.searchParams.get("start_date");
+    const endDateParam = url.searchParams.get("end_date");
+    const statusParam = url.searchParams.get("status");
+    const cacheKey = `salaries_${schoolId}_${role}_${userId || ""}_${teacherId || "all"}_${period || "all"}_${year || "all"}_${startDateParam || ""}_${endDateParam || ""}_${statusParam || "all"}`;
+    _salariesInFlight.delete(cacheKey);
   }
 }
 
@@ -216,6 +280,7 @@ export async function POST(req: NextRequest) {
         const result = await SalaryPayment.updateMany(reviewQuery, {
           status: "Under Review"
         });
+        invalidateSalariesCache(schoolId);
         return NextResponse.json({
           success: true,
           message: `Successfully submitted ${result.modifiedCount} payroll records for review.`
@@ -231,6 +296,7 @@ export async function POST(req: NextRequest) {
           status: "Approved",
           approved_by: new mongoose.Types.ObjectId(userId)
         });
+        invalidateSalariesCache(schoolId);
         return NextResponse.json({
           success: true,
           message: `Successfully approved ${result.modifiedCount} payroll records.`
@@ -262,6 +328,7 @@ export async function POST(req: NextRequest) {
           finalized_by: new mongoose.Types.ObjectId(userId),
           finalized_at: new Date()
         });
+        invalidateSalariesCache(schoolId);
         return NextResponse.json({
           success: true,
           message: `Successfully finalized and locked ${result.modifiedCount} payroll records.`
@@ -279,6 +346,7 @@ export async function POST(req: NextRequest) {
           payment_method: payment_method || "Bank Transfer",
           approved_by: new mongoose.Types.ObjectId(userId)
         });
+        invalidateSalariesCache(schoolId);
         return NextResponse.json({
           success: true,
           message: `Successfully paid/disbursed ${result.modifiedCount} payroll records.`
@@ -349,6 +417,7 @@ export async function POST(req: NextRequest) {
         generatedCount++;
       }
 
+      invalidateSalariesCache(schoolId);
       return NextResponse.json({
         success: true,
         message: `Successfully generated draft payroll for ${generatedCount} teachers.`
@@ -428,6 +497,7 @@ export async function POST(req: NextRequest) {
         existingPayment.approved_by = new mongoose.Types.ObjectId(userId);
 
         await existingPayment.save();
+        invalidateSalariesCache(schoolId);
 
         return NextResponse.json({
           success: true,
@@ -474,6 +544,7 @@ export async function POST(req: NextRequest) {
     });
 
     await payment.save();
+    invalidateSalariesCache(schoolId);
 
     return NextResponse.json({
       success: true,

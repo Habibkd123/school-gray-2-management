@@ -114,7 +114,12 @@ export default function ParentDetailPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const isFetchingParentRef = useRef(false);
+  const loadedChildrenKeyRef = useRef<string>("");
+
   const fetchParentDetails = async () => {
+    if (isFetchingParentRef.current) return;
+    isFetchingParentRef.current = true;
     try {
       const res = await fetch(`/api/parents/${parentId}`, {
         headers: getAuthHeaders(),
@@ -138,6 +143,7 @@ export default function ParentDetailPage() {
       console.error("Failed to fetch parent details:", err);
       setError(err.message || "Failed to load parent information");
     } finally {
+      isFetchingParentRef.current = false;
       setLoading(false);
     }
   };
@@ -152,38 +158,57 @@ export default function ParentDetailPage() {
   useEffect(() => {
     if (!parent?.children || parent.children.length === 0) return;
 
+    const childrenKey = parent.children.map((c: any) => c._id).sort().join(",");
+    if (loadedChildrenKeyRef.current === childrenKey) return;
+    loadedChildrenKeyRef.current = childrenKey;
+
     const loadStudentData = async () => {
       setAttendanceLoading(true);
       setFeesLoading(true);
       try {
-        // 1. Fetch Attendance (academic year range: 2026-06-01 to 2027-05-31)
-        const summary = await fetchSummary("2026-06-01", "2027-05-31", "student");
-        if (summary) {
-          setAttendanceSummaries(summary);
-        }
-
-        // 2. Fetch Fees and Payments
+        const attendanceMap: Record<string, any> = {};
         const feesObj: Record<string, any> = {};
         const allPayments: any[] = [];
 
         await Promise.all(
-          (parent.children || []).map(async (child) => {
-            // Fetch fee ledger summary
-            const feeRes = await fetch(`/api/fees?student_id=${child._id}`, { headers: getAuthHeaders() });
-            const feeData = await feeRes.json();
-            if (feeData.success && feeData.data?.students?.[0]) {
-              feesObj[child._id] = feeData.data.students[0];
+          (parent.children || []).map(async (child: any) => {
+            const classId = child.class_id?._id || (typeof child.class_id === "string" ? child.class_id : undefined);
+
+            // 1. Fetch Attendance summary for this child
+            try {
+              const summary = await fetchSummary("2026-06-01", "2027-05-31", "student", classId, child._id);
+              if (summary && summary[child._id]) {
+                attendanceMap[child._id] = summary[child._id];
+              }
+            } catch (attErr) {
+              console.warn("Attendance summary failed for child", child._id, attErr);
             }
 
-            // Fetch payment receipts history
-            const payRes = await fetch(`/api/fees/payments?student_id=${child._id}`, { headers: getAuthHeaders() });
-            const payData = await payRes.json();
-            if (payData.success && payData.data?.payments) {
-              allPayments.push(...payData.data.payments);
+            // 2. Fetch fee ledger summary
+            try {
+              const feeRes = await fetch(`/api/fees?student_id=${child._id}`, { headers: getAuthHeaders() });
+              const feeData = await feeRes.json();
+              if (feeData.success && feeData.data?.students?.[0]) {
+                feesObj[child._id] = feeData.data.students[0];
+              }
+            } catch (feeErr) {
+              console.warn("Fee fetch failed for child", child._id, feeErr);
+            }
+
+            // 3. Fetch payment receipts history
+            try {
+              const payRes = await fetch(`/api/fees/payments?student_id=${child._id}`, { headers: getAuthHeaders() });
+              const payData = await payRes.json();
+              if (payData.success && payData.data?.payments) {
+                allPayments.push(...payData.data.payments);
+              }
+            } catch (payErr) {
+              console.warn("Payments fetch failed for child", child._id, payErr);
             }
           })
         );
 
+        setAttendanceSummaries(attendanceMap);
         setFeesSummaries(feesObj);
         // Sort payments by date descending
         allPayments.sort((a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime());
@@ -197,7 +222,7 @@ export default function ParentDetailPage() {
     };
 
     loadStudentData();
-  }, [parent, fetchSummary]);
+  }, [parent?._id, parent?.children, fetchSummary]);
 
   const handlePhoneChange = (value: string) => {
     setFormPhone(value);

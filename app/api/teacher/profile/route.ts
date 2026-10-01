@@ -3,11 +3,21 @@ import connectDB from "@/lib/db";
 import Teacher from "@/lib/models/Teacher";
 import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendCompressedJson } from "@/lib/compression";
+
+// In-memory cache for teacher profiles (TTL 60s)
+const teacherProfileCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 60_000;
 
 // GET /api/teacher/profile — Get logged-in teacher's profile
 export async function GET(request: NextRequest) {
   const { userId, error } = requireAuth(request, ["teacher"]);
   if (error) return error;
+
+  const cached = teacherProfileCache.get(userId);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return sendCompressedJson(request, { success: true, data: cached.data }, { cacheControl: "private, max-age=60" });
+  }
 
   try {
     await connectDB();
@@ -17,7 +27,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Teacher profile not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: teacher });
+    teacherProfileCache.set(userId, { data: teacher, timestamp: Date.now() });
+    return sendCompressedJson(request, { success: true, data: teacher }, { cacheControl: "private, max-age=60" });
   } catch (err) {
     console.error("[GET /api/teacher/profile]", err);
     return NextResponse.json({ success: false, message: "Failed to fetch profile" }, { status: 500 });
@@ -40,18 +51,21 @@ export async function PATCH(request: NextRequest) {
       { user_id: userId },
       { $set: { name, phone, email, address, photo_url } },
       { new: true, runValidators: true }
-    );
+    ).lean();
 
     if (!updated) {
       return NextResponse.json({ success: false, message: "Teacher profile not found" }, { status: 404 });
     }
+
+    // Invalidate cache
+    teacherProfileCache.delete(userId);
 
     // Also update User model (name & email)
     await User.findByIdAndUpdate(userId, {
       $set: { name, email }
     });
 
-    return NextResponse.json({ success: true, message: "Profile updated", data: updated });
+    return sendCompressedJson(request, { success: true, message: "Profile updated", data: updated });
   } catch (err) {
     console.error("[PATCH /api/teacher/profile]", err);
     return NextResponse.json({ success: false, message: "Failed to update profile" }, { status: 500 });

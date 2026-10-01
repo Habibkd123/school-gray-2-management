@@ -4,8 +4,12 @@ import School from "@/lib/models/School";
 import { requireAuth } from "@/lib/utils/auth";
 import { sendConditionalJson } from "@/lib/etag";
 
-const _academicConfigCache = new Map<string, { data: any; expiresAt: number }>();
-const CONFIG_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const g = globalThis as unknown as {
+  _academicConfigCache?: Map<string, { data: any; expiresAt: number }>;
+};
+if (!g._academicConfigCache) g._academicConfigCache = new Map();
+const _academicConfigCache = g._academicConfigCache;
+const CONFIG_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 // GET — fetch academic config for the school
 export async function GET(req: NextRequest) {
@@ -19,7 +23,7 @@ export async function GET(req: NextRequest) {
         success: true,
         data: { enable_streams: false, enable_sections: false },
       },
-      { cacheControl: "private, max-age=300" }
+      { cacheControl: "private, no-cache" }
     );
   }
 
@@ -29,7 +33,7 @@ export async function GET(req: NextRequest) {
     return sendConditionalJson(
       req,
       { success: true, data: cached.data },
-      { cacheControl: "private, max-age=180, stale-while-revalidate=60" }
+      { cacheControl: "private, max-age=60, stale-while-revalidate=300" }
     );
   }
 
@@ -50,7 +54,7 @@ export async function GET(req: NextRequest) {
     return sendConditionalJson(
       req,
       { success: true, data: config },
-      { cacheControl: "private, max-age=180, stale-while-revalidate=60" }
+      { cacheControl: "private, max-age=60, stale-while-revalidate=300" }
     );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

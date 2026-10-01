@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import { requireAuth } from "@/lib/utils/auth";
 import GeneratedDocument from "@/lib/models/GeneratedDocument";
+import { sendCompressedJson } from "@/lib/compression";
 
 /**
  * GET /api/documents/generated
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
       GeneratedDocument.countDocuments(filter),
     ]);
 
-    return NextResponse.json({ success: true, data: { docs, total, page, limit } });
+    return sendCompressedJson(request, { success: true, data: { docs, total, page, limit } }, { cacheControl: "private, no-cache" });
 
   } catch (err: any) {
     console.error("[GET /api/documents/generated]", err);

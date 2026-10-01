@@ -3,6 +3,8 @@ import connectToDatabase from "@/lib/db";
 import { Notice } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import { paginateQuery } from "@/lib/utils/pagination";
+import { sendCompressedJson } from "@/lib/compression";
+
 
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin", "student", "parent"]);
@@ -24,9 +26,10 @@ export async function GET(req: NextRequest) {
       }
     );
 
-    return NextResponse.json(
+    return sendCompressedJson(
+      req,
       { success: true, data: { notices, total, page, totalPages, limit } },
-      { headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=120" } }
+      { cacheControl: "private, no-cache" }
     );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

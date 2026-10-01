@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 import { ClassService } from "@/app/services/ClassService";
+import { cacheSync, invalidateCache as syncInvalidateCache } from "@/lib/utils/cache-sync";
 
 // ─── Types ────────────────────────────────────────────────────────
 export interface ApiClass {
@@ -39,6 +40,8 @@ export interface FetchClassesParams {
 }
 
 // ─── Module-level cache (shared across all useClasses() instances) ──
+const SESSION_CLASSES_KEY = "sm_classes_cache";
+const SS_QUERY_PREFIX = "sm_classes_q_";
 let _classesCache: ApiClass[] | null = null;
 let _cacheTimestamp = 0;
 const CACHE_TTL_MS = 60_000; // 60 seconds
@@ -46,16 +49,60 @@ const _listeners = new Set<(classes: ApiClass[]) => void>();
 const _classesFetchPromises = new Map<string, Promise<{ classes: ApiClass[]; total: number; totalPages: number; currentPage: number }>>();
 const _classesQueryCache = new Map<string, { data: { classes: ApiClass[]; total: number; totalPages: number; currentPage: number }; timestamp: number }>();
 
+function getStoredClasses(): ApiClass[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SESSION_CLASSES_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Date.now() - parsed.timestamp < CACHE_TTL_MS && Array.isArray(parsed.classes)) {
+        return parsed.classes;
+      }
+    }
+  } catch {}
+  return null;
+}
+
+function readSessionQuery(key: string): { data: { classes: ApiClass[]; total: number; totalPages: number; currentPage: number }; timestamp: number } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SS_QUERY_PREFIX + key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp < CACHE_TTL_MS && parsed.data) {
+      return parsed;
+    }
+  } catch {}
+  return null;
+}
+
+function writeSessionQuery(key: string, data: { classes: ApiClass[]; total: number; totalPages: number; currentPage: number }) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(SS_QUERY_PREFIX + key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
+
+function clearSessionQueries() {
+  if (typeof window === "undefined") return;
+  try {
+    Object.keys(sessionStorage)
+      .filter(k => k.startsWith(SS_QUERY_PREFIX) || k === SESSION_CLASSES_KEY)
+      .forEach(k => sessionStorage.removeItem(k));
+  } catch {}
+}
+
 function invalidateCache() {
   _classesCache = null;
   _cacheTimestamp = 0;
   _classesQueryCache.clear();
+  clearSessionQueries();
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────
 export function useClasses(options?: { skip?: boolean; filterByYear?: boolean }) {
-  const [classes, setClasses] = useState<ApiClass[]>(_classesCache ?? []);
-  const [isLoading, setIsLoading] = useState(_classesCache === null);
+  const [classes, setClasses] = useState<ApiClass[]>(() => _classesCache ?? getStoredClasses() ?? []);
+  const [isLoading, setIsLoading] = useState(() => _classesCache === null && getStoredClasses() === null);
   const [error, setError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -72,9 +119,26 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
   const fetchClasses = useCallback(async (params: FetchClassesParams = {}) => {
     const isFiltered = !!(params.search || params.section || params.sort || params.page);
     const isAll = params.limit === "all" || !params.limit;
+    const isFresh = _classesCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
+
+    // Serve immediately from module cache for unfiltered requests requesting all classes
+    if (isFresh && isAll && !isFiltered) {
+      setClasses(_classesCache!);
+      setTotal(_classesCache!.length);
+      setIsLoading(false);
+      return;
+    }
 
     if (isAll && !isFiltered) {
-      setIsLoading(true);
+      // Preload from sessionStorage so there is 0ms delay while verifying with service
+      const stored = getStoredClasses();
+      if (stored && stored.length > 0) {
+        setClasses(stored);
+        setTotal(stored.length);
+        setIsLoading(false);
+      } else {
+        setIsLoading(true);
+      }
       setError(null);
       try {
         const data = await ClassService.getAllClasses({
@@ -82,6 +146,11 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
         });
         _classesCache = data;
         _cacheTimestamp = Date.now();
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(SESSION_CLASSES_KEY, JSON.stringify({ classes: data, timestamp: Date.now() }));
+          } catch {}
+        }
         _listeners.forEach(fn => fn(data));
         setClasses(data);
         setTotal(data.length);
@@ -92,16 +161,6 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       } finally {
         setIsLoading(false);
       }
-      return;
-    }
-
-    const isFresh = _classesCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
-
-    // Serve from cache for unfiltered requests requesting all classes
-    if (isFresh && isAll && !isFiltered) {
-      setClasses(_classesCache!);
-      setTotal(_classesCache!.length);
-      setIsLoading(false);
       return;
     }
 
@@ -119,14 +178,18 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
 
     const cacheKey = qs.toString();
 
-    const cachedQuery = _classesQueryCache.get(cacheKey);
-    if (cachedQuery && (Date.now() - cachedQuery.timestamp) < CACHE_TTL_MS) {
+    const cachedQuery = _classesQueryCache.get(cacheKey) ?? readSessionQuery(cacheKey);
+    const now = Date.now();
+    if (cachedQuery && (now - cachedQuery.timestamp) < CACHE_TTL_MS) {
       setClasses(cachedQuery.data.classes);
       setTotal(cachedQuery.data.total);
       setTotalPages(cachedQuery.data.totalPages);
       setCurrentPage(cachedQuery.data.currentPage);
       setIsLoading(false);
-      return;
+      // Return early if within fresh window (30s) to avoid unnecessary round-trips
+      if (now - cachedQuery.timestamp < 30_000) return;
+    } else {
+      setIsLoading(true);
     }
 
     if (_classesFetchPromises.has(cacheKey)) {
@@ -168,6 +231,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
         data,
         timestamp: Date.now(),
       });
+      writeSessionQuery(cacheKey, data);
 
       // Only cache unfiltered ALL results
       if (isAll && !isFiltered) {
@@ -199,6 +263,14 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
     fetchClasses(params);
   }, [fetchClasses, academicYear, options?.skip, options?.filterByYear, authReady]);
 
+  // Central cross-tab cache sync
+  useEffect(() => {
+    return cacheSync.subscribe("classes", () => {
+      invalidateCache();
+      fetchClasses();
+    });
+  }, [fetchClasses]);
+
   // ─── Create class ───────────────────────────────────────────────
   const createClass = async (
     input: CreateClassInput
@@ -219,6 +291,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       _classesCache = sorted;
       _cacheTimestamp = Date.now();
       _listeners.forEach(fn => fn(sorted));
+      syncInvalidateCache("classes");
 
       setClasses(sorted);
       return { success: true, message: "Class created successfully", data: data.data };
@@ -249,6 +322,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       } else {
         invalidateCache();
       }
+      syncInvalidateCache("classes");
 
       setClasses((prev) => prev.map((c) => (c._id === id ? data.data : c)));
       return { success: true, message: "Class updated successfully" };
@@ -275,6 +349,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       } else {
         invalidateCache();
       }
+      syncInvalidateCache("classes");
 
       setClasses((prev) => prev.filter((c) => c._id !== id));
       return { success: true, message: "Class deleted successfully" };

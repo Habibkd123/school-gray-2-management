@@ -33,6 +33,7 @@ import { getPersistedPageSize, PaginationBar } from "@/app/components/ui/paginat
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
+import { cacheSync } from "@/lib/utils/cache-sync";
 
 // ─── Status Config ───────────────────────────────────────────────
 const STATUS_CONFIG = {
@@ -114,16 +115,33 @@ export default function SalaryDashboardPage() {
     return selYear > currentYear || (selYear === currentYear && selMonth >= currentMonth);
   }, [selectedPeriod]);
 
-  // Backend Payments Data State
+  // Backend Payments Data State (0ms instant cache load)
   const [paymentsData, setPaymentsData] = useState<{
     payments: any[];
     summary: { totalPaid: number; totalPending: number; pendingCount: number; count: number };
-  }>({
-    payments: [],
-    summary: { totalPaid: 0, totalPending: 0, pendingCount: 0, count: 0 }
+  }>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const curPeriod = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
+        const cached = sessionStorage.getItem(`cache_salary_period_${curPeriod}`);
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return {
+      payments: [],
+      summary: { totalPaid: 0, totalPending: 0, pendingCount: 0, count: 0 }
+    };
   });
 
-  const [allPayments, setAllPayments] = useState<any[]>([]);
+  const [allPayments, setAllPayments] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem("cache_salary_all");
+        if (cached) return JSON.parse(cached);
+      } catch {}
+    }
+    return [];
+  });
   const [isPaymentsLoading, setIsPaymentsLoading] = useState(false);
 
   // Pagination State
@@ -181,44 +199,84 @@ export default function SalaryDashboardPage() {
   const [generateSlipId, setGenerateSlipId] = useState<string | null>(null);
   const [generateTeacherName, setGenerateTeacherName] = useState("");
 
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const curPeriod = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
+        const cachedPeriod = sessionStorage.getItem(`cache_salary_period_${curPeriod}`);
+        const cachedAll = sessionStorage.getItem("cache_salary_all");
+        if (cachedPeriod || cachedAll) return false;
+      } catch {}
+    }
+    return true;
+  });
+
   useEffect(() => {
     if (!isTeachersLoading && !isBulkLoading && !isPaymentsLoading && isInitialLoad) {
       setIsInitialLoad(false);
     }
-  }, [isTeachersLoading, isBulkLoading, isPaymentsLoading]);
+  }, [isTeachersLoading, isBulkLoading, isPaymentsLoading, isInitialLoad]);
 
   // ─── Fetch API Payments ─────────────────────────────────────────
-  const fetchPayments = useCallback(async () => {
-    setIsPaymentsLoading(true);
+  const fetchPayments = useCallback(async (background = false) => {
+    if (!background) setIsPaymentsLoading(true);
     try {
-      const res = await fetch(`/api/salaries?period=${selectedPeriod}&_t=${Date.now()}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/salaries?period=${selectedPeriod}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setPaymentsData(data.data);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(`cache_salary_period_${selectedPeriod}`, JSON.stringify(data.data));
+          } catch {}
+        }
       }
     } catch (err) {
       console.error("Error fetching payments:", err);
     } finally {
-      setIsPaymentsLoading(false);
+      if (!background) setIsPaymentsLoading(false);
     }
   }, [selectedPeriod]);
 
   const fetchAllPayments = useCallback(async () => {
     try {
-      const res = await fetch(`/api/salaries?_t=${Date.now()}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/salaries`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setAllPayments(data.data.payments);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("cache_salary_all", JSON.stringify(data.data.payments));
+          } catch {}
+        }
       }
     } catch (err) {
       console.error("Error fetching all payments:", err);
     }
   }, []);
 
+  // When period changes: immediately use cached period data if present, refresh in background
   useEffect(() => {
-    fetchPayments();
+    let hasLocal = false;
+    if (typeof window !== "undefined") {
+      try {
+        const cached = sessionStorage.getItem(`cache_salary_period_${selectedPeriod}`);
+        if (cached) {
+          setPaymentsData(JSON.parse(cached));
+          hasLocal = true;
+        }
+      } catch {}
+    }
+    fetchPayments(hasLocal);
     fetchAllPayments();
+  }, [selectedPeriod, fetchPayments, fetchAllPayments]);
+
+  // Real-time Cache synchronization across tabs and actions
+  useEffect(() => {
+    return cacheSync.subscribe("salaries", () => {
+      fetchPayments(true);
+      fetchAllPayments();
+    });
   }, [fetchPayments, fetchAllPayments]);
 
   // Compute Last Paid Date and current status for each teacher for the active month
@@ -340,7 +398,8 @@ export default function SalaryDashboardPage() {
       });
       const result = await res.json();
       if (result.success) {
-        await fetchPayments();
+        cacheSync.invalidate("salaries");
+        await fetchPayments(true);
         await fetchAllPayments();
       } else {
         alert(result.message || "Failed to generate draft.");
@@ -443,7 +502,8 @@ export default function SalaryDashboardPage() {
       });
       const data = await res.json();
       if (data.success) {
-        await fetchPayments();
+        cacheSync.invalidate("salaries");
+        await fetchPayments(true);
         await fetchAllPayments();
         setMarkPaidRecord(null);
         // Auto-open slip
@@ -497,7 +557,8 @@ export default function SalaryDashboardPage() {
       });
       const data = await res.json();
       if (data.success) {
-        await fetchPayments();
+        cacheSync.invalidate("salaries");
+        await fetchPayments(true);
         await fetchAllPayments();
       } else {
         alert(data.message || "Failed to update status.");
@@ -558,7 +619,8 @@ export default function SalaryDashboardPage() {
 
       const result = await res.json();
       if (result.success) {
-        await fetchPayments();
+        cacheSync.invalidate("salaries");
+        await fetchPayments(true);
         await fetchAllPayments();
         setEditPayrollRecord(null);
 
@@ -588,7 +650,8 @@ export default function SalaryDashboardPage() {
       });
       const data = await res.json();
       if (data.success) {
-        await fetchPayments();
+        cacheSync.invalidate("salaries");
+        await fetchPayments(true);
         await fetchAllPayments();
       } else {
         alert(data.message || "Failed to cancel payroll.");
@@ -632,7 +695,8 @@ export default function SalaryDashboardPage() {
       });
       const data = await res.json();
       alert(data.message || "Bulk operation completed.");
-      await fetchPayments();
+      cacheSync.invalidate("salaries");
+      await fetchPayments(true);
       await fetchAllPayments();
     } catch (err) {
       console.error(err);
@@ -648,7 +712,7 @@ export default function SalaryDashboardPage() {
     setIsHistoryLoading(true);
     setHistoryPayments([]);
     try {
-      const res = await fetch(`/api/salaries?teacher_id=${teacher.id}&_t=${Date.now()}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/salaries?teacher_id=${teacher.id}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setHistoryPayments(data.data.payments || data.data);

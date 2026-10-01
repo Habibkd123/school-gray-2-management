@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
 
     // ─── Step 4: Validate the School (by ID, always available) ──────────
     const schoolDoc = await School.findById(school_id)
-      .select("is_active login_config subdomain")
+      .select("is_active login_config subdomain name subtitle logo_url")
       .lean();
 
     if (!schoolDoc) {
@@ -310,6 +310,13 @@ export async function POST(request: NextRequest) {
             school_id: user.school_id,
             must_change_password: user.must_change_password ?? false,
           },
+          school: schoolDoc ? {
+            id: (schoolDoc as any)._id,
+            name: (schoolDoc as any).name?.trim(),
+            subtitle: (schoolDoc as any).subtitle?.trim(),
+            logo_url: (schoolDoc as any).logo_url,
+            subdomain: (schoolDoc as any).subdomain,
+          } : null,
           school_subdomain: schoolSubdomain,
           access_token: accessToken,
           refresh_token: refreshToken,

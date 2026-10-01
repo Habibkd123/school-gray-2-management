@@ -3,6 +3,11 @@ import connectDB from "@/lib/db";
 import School from "@/lib/models/School";
 import { requireAuth } from "@/lib/utils/auth";
 import { invalidateSchoolSlugCache } from "@/lib/themes/resolveSchool";
+import { sendCompressedJson } from "@/lib/compression";
+
+// In-memory cache for school meta configs (TTL 60s)
+const metaConfigCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 60_000;
 
 /**
  * GET /api/school/meta-config
@@ -14,17 +19,22 @@ export async function GET(req: NextRequest) {
   const { user, schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
 
+  const url = new URL(req.url);
+  const targetSchoolId = (user?.role === "super_admin" && url.searchParams.get("school_id"))
+    ? url.searchParams.get("school_id")
+    : schoolId;
+
+  if (!targetSchoolId) {
+    return NextResponse.json({ success: false, message: "School ID is required" }, { status: 400 });
+  }
+
+  const cached = metaConfigCache.get(targetSchoolId);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    return sendCompressedJson(req, { success: true, data: cached.data }, { cacheControl: "private, max-age=60" });
+  }
+
   try {
     await connectDB();
-    const url = new URL(req.url);
-    const targetSchoolId = (user?.role === "super_admin" && url.searchParams.get("school_id"))
-      ? url.searchParams.get("school_id")
-      : schoolId;
-
-    if (!targetSchoolId) {
-      return NextResponse.json({ success: false, message: "School ID is required" }, { status: 400 });
-    }
-
     const school = await School.findById(targetSchoolId)
       .select("name subtitle subdomain slug custom_domain meta_config")
       .lean();
@@ -35,24 +45,24 @@ export async function GET(req: NextRequest) {
 
     const meta = (school as any).meta_config ?? {};
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        school_id:                (school as any)._id.toString(),
-        school_name:              (school as any).name,
-        subdomain:                (school as any).subdomain || "",
-        meta_title:               meta.meta_title               || "",
-        meta_description:         meta.meta_description         || "",
-        meta_keywords:            meta.meta_keywords            || "",
-        og_image:                 meta.og_image                 || "",
-        og_type:                  meta.og_type                  || "website",
-        twitter_handle:           meta.twitter_handle           || "",
-        canonical_url:            meta.canonical_url            || "",
-        favicon_url:              meta.favicon_url              || "",
-        google_site_verification: meta.google_site_verification || "",
-        google_analytics_id:      meta.google_analytics_id      || "",
-      },
-    });
+    const data = {
+      school_id:                (school as any)._id.toString(),
+      school_name:              (school as any).name,
+      subdomain:                (school as any).subdomain || "",
+      meta_title:               meta.meta_title               || "",
+      meta_description:         meta.meta_description         || "",
+      meta_keywords:            meta.meta_keywords            || "",
+      og_image:                 meta.og_image                 || "",
+      og_type:                  meta.og_type                  || "website",
+      twitter_handle:           meta.twitter_handle           || "",
+      canonical_url:            meta.canonical_url            || "",
+      favicon_url:              meta.favicon_url              || "",
+      google_site_verification: meta.google_site_verification || "",
+      google_analytics_id:      meta.google_analytics_id      || "",
+    };
+
+    metaConfigCache.set(targetSchoolId, { data, timestamp: Date.now() });
+    return sendCompressedJson(req, { success: true, data }, { cacheControl: "private, max-age=60" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }
@@ -114,10 +124,11 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: false, message: "School not found" }, { status: 404 });
     }
 
-    // Invalidate cached metadata so new SEO tags reflect immediately across all subdomains/slugs/routes
+    // Invalidate caches
+    metaConfigCache.delete(targetSchoolId);
     invalidateSchoolSlugCache();
 
-    return NextResponse.json({
+    return sendCompressedJson(req, {
       success: true,
       message: "SEO metadata updated successfully",
       data: (school as any).meta_config,

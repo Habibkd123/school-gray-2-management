@@ -44,6 +44,7 @@ import { PageLayout } from "@/app/components/erp/PageLayout";
 import { PageHeader } from "@/app/components/erp/PageHeader";
 import { ContentCard } from "@/app/components/erp/ContentCard";
 import { PageToolbar } from "@/app/components/erp/PageToolbar";
+import { cacheSync } from "@/lib/utils/cache-sync";
 
 // Client-side cache for instant date navigation and fast back-and-forth toggles
 const _dailyAttendanceCache = new Map<
@@ -146,9 +147,35 @@ export default function StudentAttendancePage() {
   const [editReason, setEditReason] = useState("");
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
-  // Daily statistics and list
-  const [dailyAttendances, setDailyAttendances] = useState<any[]>([]);
-  const [classStudentCounts, setClassStudentCounts] = useState<Record<string, number>>({});
+  // Daily statistics and list (0ms instant cache load)
+  const [dailyAttendances, setDailyAttendances] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const yr = academicYear || "2026";
+        const raw = sessionStorage.getItem(`cache_student_att_${yr}_${today}_`);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.data) return parsed.data;
+        }
+      } catch {}
+    }
+    return [];
+  });
+  const [classStudentCounts, setClassStudentCounts] = useState<Record<string, number>>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const yr = academicYear || "2026";
+        const raw = sessionStorage.getItem(`cache_student_att_${yr}_${today}_`);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.classStudentCounts) return parsed.classStudentCounts;
+        }
+      } catch {}
+    }
+    return {};
+  });
   const [loadingDailyAttendances, setLoadingDailyAttendances] = useState(false);
 
   // Selected student rows for bulk operations
@@ -169,7 +196,18 @@ export default function StudentAttendancePage() {
   const fetchDailyAttendances = useCallback(
     async (year: string, date: string, streamId?: string) => {
       const cacheKey = `${year}_${date}_${streamId || ""}`;
-      const cached = _dailyAttendanceCache.get(cacheKey);
+      let cached = _dailyAttendanceCache.get(cacheKey);
+
+      if (!cached && typeof window !== "undefined") {
+        try {
+          const raw = sessionStorage.getItem(`cache_student_att_${cacheKey}`);
+          if (raw) {
+            cached = JSON.parse(raw);
+            if (cached) _dailyAttendanceCache.set(cacheKey, cached);
+          }
+        } catch {}
+      }
+
       const isFresh = cached && (Date.now() - cached.timestamp < DAILY_CACHE_TTL_MS);
 
       if (cached) {
@@ -198,11 +236,18 @@ export default function StudentAttendancePage() {
           setDailyAttendances(data.data);
           const counts = data.classStudentCounts || {};
           setClassStudentCounts(counts);
-          _dailyAttendanceCache.set(cacheKey, {
+
+          const entry = {
             data: data.data,
             classStudentCounts: counts,
             timestamp: Date.now(),
-          });
+          };
+          _dailyAttendanceCache.set(cacheKey, entry);
+          if (typeof window !== "undefined") {
+            try {
+              sessionStorage.setItem(`cache_student_att_${cacheKey}`, JSON.stringify(entry));
+            } catch {}
+          }
         } else {
           setDailyAttendances([]);
           setClassStudentCounts({});
@@ -230,6 +275,20 @@ export default function StudentAttendancePage() {
       );
     }
   }, [authReady, filterYear, filterDate, filterStreamId, fetchDailyAttendances]);
+
+  // Subscribe to real-time cache invalidations
+  useEffect(() => {
+    return cacheSync.subscribe("attendance", () => {
+      _dailyAttendanceCache.clear();
+      if (filterYear && filterDate) {
+        fetchDailyAttendances(
+          filterYear,
+          filterDate,
+          filterStreamId || undefined,
+        );
+      }
+    });
+  }, [filterYear, filterDate, filterStreamId, fetchDailyAttendances]);
 
 
   // Fetch student registers when filters change

@@ -5,6 +5,7 @@ import Class from "@/lib/models/Class";
 import Teacher from "@/lib/models/Teacher";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
 
 export async function GET(req: NextRequest) {
   const { schoolId, role, userId, error } = requireAuth(req, [
@@ -115,7 +116,8 @@ export async function GET(req: NextRequest) {
     if (type === "student") {
       if (classId) {
         query.class_id = classId;
-      } else if (recordId) {
+      }
+      if (recordId) {
         query["records.student_id"] = recordId;
       }
     }
@@ -168,10 +170,10 @@ export async function GET(req: NextRequest) {
       });
     });
 
-    return NextResponse.json({
+    return sendCompressedJson(req, {
       success: true,
       data: summary,
-    });
+    }, { cacheControl: "private, no-cache" });
   } catch (err: any) {
     console.error("Attendance Summary Error:", err);
     return NextResponse.json(

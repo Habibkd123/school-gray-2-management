@@ -3,8 +3,8 @@
 import React, { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTeachers } from "../../../hooks/useTeachers";
-import type { CreateTeacherInput } from "../../../hooks/useTeachers";
+import { useTeachers, getStoredTeacher } from "../../../hooks/useTeachers";
+import type { CreateTeacherInput, ApiTeacher } from "../../../hooks/useTeachers";
 import { useUpload } from "../../../hooks/useUpload";
 import { useClasses } from "../../../hooks/useClasses";
 import {
@@ -254,6 +254,7 @@ function AddTeacherContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
+  const cachedTeacher = editId ? getStoredTeacher(editId) : null;
   const { createTeacher, updateTeacher, getTeacher } = useTeachers({ skip: true });
   const { uploadFile } = useUpload();
   const { classes } = useClasses();
@@ -263,24 +264,31 @@ function AddTeacherContent() {
   const [valErrors, setValErrors] = useState<Record<string, string>>({});
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
-  // ── Form States ──────────────────────────────────
-  const [teacherId, setTeacherId] = useState("");          // auto-generated, display only
-  const [employeeCode, setEmployeeCode] = useState("");    // manual, unique
-  const [teacherName, setTeacherName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [gender, setGender] = useState("Select");
-  const [dob, setDob] = useState("");
-  const [joinDate, setJoinDate] = useState("");
-  const [qualification, setQualification] = useState("");
-  const [expertise, setExpertise] = useState<string[]>([]);
-  const [experienceYears, setExperienceYears] = useState("");
-  const [department, setDepartment] = useState("Academic");
-  const [designation, setDesignation] = useState("Teacher");
-  const [classId, setClassId] = useState("");
-  const [status, setStatus] = useState<"Active" | "Inactive">("Active");
-  const [address, setAddress] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
+  // ── Form States (prefilled from cache for instant 0ms render) ──────────────────
+  const [teacherId, setTeacherId] = useState(() => cachedTeacher?._id || "");
+  const [employeeCode, setEmployeeCode] = useState(() => cachedTeacher?.employee_id || "");
+  const [teacherName, setTeacherName] = useState(() => cachedTeacher?.name || "");
+  const [email, setEmail] = useState(() => cachedTeacher?.email || "");
+  const [phone, setPhone] = useState(() => cachedTeacher?.phone || "");
+  const [gender, setGender] = useState(() => cachedTeacher?.gender ? (cachedTeacher.gender.charAt(0).toUpperCase() + cachedTeacher.gender.slice(1)) : "Select");
+  const [dob, setDob] = useState(() => cachedTeacher?.dob ? new Date(cachedTeacher.dob).toISOString().split("T")[0] : "");
+  const [joinDate, setJoinDate] = useState(() => cachedTeacher?.join_date ? new Date(cachedTeacher.join_date).toISOString().split("T")[0] : "");
+  const [qualification, setQualification] = useState(() => cachedTeacher?.qualification || "");
+  const [expertise, setExpertise] = useState<string[]>(() => {
+    if (Array.isArray(cachedTeacher?.expertise) && cachedTeacher.expertise.length > 0) return cachedTeacher.expertise;
+    if (cachedTeacher?.subject_specialization) return [cachedTeacher.subject_specialization];
+    return [];
+  });
+  const [experienceYears, setExperienceYears] = useState(() => cachedTeacher?.experience_years != null ? String(cachedTeacher.experience_years) : "");
+  const [department, setDepartment] = useState(() => cachedTeacher?.department || "Academic");
+  const [designation, setDesignation] = useState(() => cachedTeacher?.designation || "Teacher");
+  const [classId, setClassId] = useState(() => {
+    const cid = typeof cachedTeacher?.class_id === "object" ? (cachedTeacher.class_id as any)?._id : cachedTeacher?.class_id;
+    return cid || "";
+  });
+  const [status, setStatus] = useState<"Active" | "Inactive">(() => cachedTeacher?.is_active === false ? "Inactive" : "Active");
+  const [address, setAddress] = useState(() => cachedTeacher?.address || "");
+  const [photoUrl, setPhotoUrl] = useState(() => cachedTeacher?.photo_url || "");
 
   // ── Login Credentials Popup ───────────────────────────────────
   const [showCredentials, setShowCredentials] = useState(false);
@@ -296,39 +304,40 @@ function AddTeacherContent() {
 
   // ── Load edit data ────────────────────────────────────────────
   useEffect(() => {
+    let isCurrent = true;
     async function loadData() {
       if (editId) {
         const teacher = await getTeacher(editId);
-        if (teacher) {
-          setTeacherName(teacher.name || "");
-          setTeacherId(teacher._id || "");
-          setEmployeeCode(teacher.employee_id || "");
-          setGender(teacher.gender ? (teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1)) : "Select");
-          setDob(teacher.dob ? new Date(teacher.dob).toISOString().split("T")[0] : "");
-          setPhone(teacher.phone || "");
-          setEmail(teacher.email || "");
-          setAddress(teacher.address || "");
-          setPhotoUrl(teacher.photo_url || "");
-          setQualification(teacher.qualification || "");
-          // Load expertise: prefer array, fall back to legacy string
-          const loadedExpertise = Array.isArray(teacher.expertise) && teacher.expertise.length > 0
-            ? teacher.expertise
-            : teacher.subject_specialization
-              ? [teacher.subject_specialization]
-              : [];
-          setExpertise(loadedExpertise);
-          setExperienceYears(teacher.experience_years != null ? teacher.experience_years.toString() : "");
-          setJoinDate(teacher.join_date ? new Date(teacher.join_date).toISOString().split("T")[0] : "");
-          setStatus(teacher.is_active ? "Active" : "Inactive");
-          setDepartment(teacher.department || "Academic");
-          setDesignation(teacher.designation || "Teacher");
-          const cid = typeof teacher.class_id === "object" ? teacher.class_id?._id : teacher.class_id;
-          setClassId(cid || "");
-        }
+        if (!isCurrent || !teacher) return;
+        setTeacherName(teacher.name || "");
+        setTeacherId(teacher._id || "");
+        setEmployeeCode(teacher.employee_id || "");
+        setGender(teacher.gender ? (teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1)) : "Select");
+        setDob(teacher.dob ? new Date(teacher.dob).toISOString().split("T")[0] : "");
+        setPhone(teacher.phone || "");
+        setEmail(teacher.email || "");
+        setAddress(teacher.address || "");
+        setPhotoUrl(teacher.photo_url || "");
+        setQualification(teacher.qualification || "");
+        // Load expertise: prefer array, fall back to legacy string
+        const loadedExpertise = Array.isArray(teacher.expertise) && teacher.expertise.length > 0
+          ? teacher.expertise
+          : teacher.subject_specialization
+            ? [teacher.subject_specialization]
+            : [];
+        setExpertise(loadedExpertise);
+        setExperienceYears(teacher.experience_years != null ? teacher.experience_years.toString() : "");
+        setJoinDate(teacher.join_date ? new Date(teacher.join_date).toISOString().split("T")[0] : "");
+        setStatus(teacher.is_active ? "Active" : "Inactive");
+        setDepartment(teacher.department || "Academic");
+        setDesignation(teacher.designation || "Teacher");
+        const cid = typeof teacher.class_id === "object" ? teacher.class_id?._id : teacher.class_id;
+        setClassId(cid || "");
       }
     }
     loadData();
-  }, [editId, getTeacher]);
+    return () => { isCurrent = false; };
+  }, [editId]);
 
   // ── Handle photo upload ───────────────────────────────────────
   const handlePhotoUpload = useCallback(async (file: File) => {

@@ -16,6 +16,7 @@ const newsItems = [
 ];
 
 import { getClientSubdomain, getSubdomainHost } from "@/lib/utils/subdomain";
+import { saveSchoolInfo } from "@/lib/utils/session";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -116,6 +117,9 @@ export default function LoginPage() {
     const result = await login(trimmedUsername, password, isSuperAdminInput ? "super_admin" : activeTab);
 
     if (result.success) {
+      if (schoolInfo) {
+        saveSchoolInfo(schoolInfo);
+      }
       if (isSuperAdminInput) {
         window.location.href = "/dashboard";
         return;

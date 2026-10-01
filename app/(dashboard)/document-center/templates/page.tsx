@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { Search, ChevronDown, Printer, Download, X, Loader2, User, FileText, CreditCard, Award, Edit3, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, Settings2, Save } from "lucide-react";
@@ -324,7 +324,7 @@ export default function DocumentBuilderPage() {
   const { teachers, fetchTeachers } = useTeachers({ skip: true });
 
   useEffect(() => {
-    fetchStudents({ limit: 1000 });
+    fetchStudents({ limit: 500 });
     fetchTeachers();
   }, [fetchStudents, fetchTeachers]);
 

@@ -18,6 +18,32 @@ import {
   User, Phone, Mail, FileText, Calendar, Clock, Edit, ChevronDown, CheckCircle, RefreshCcw, Check, X, Download, Briefcase, Copy, Plus, AlertTriangle, Lock
 } from "lucide-react";
 
+function getStoredTeacher(id: string): ApiTeacher | null {
+  if (typeof window === "undefined" || !id) return null;
+  try {
+    const direct = sessionStorage.getItem(`sm_teacher_detail_${id}`);
+    if (direct) return JSON.parse(direct);
+
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith("sm_paged_teachers_")) {
+        const val = sessionStorage.getItem(key);
+        if (val) {
+          const parsed = JSON.parse(val);
+          if (parsed.teachers && Array.isArray(parsed.teachers)) {
+            const match = parsed.teachers.find((t: any) => t._id === id);
+            if (match) {
+              sessionStorage.setItem(`sm_teacher_detail_${id}`, JSON.stringify(match));
+              return match;
+            }
+          }
+        }
+      }
+    }
+  } catch {}
+  return null;
+}
+
 export default function TeacherDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -25,8 +51,8 @@ export default function TeacherDetailsPage() {
   const { getTeacher } = useTeachers({ skip: true });
   const { classes } = useClasses();
 
-  const [teacher, setTeacher] = useState<ApiTeacher | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [teacher, setTeacher] = useState<ApiTeacher | null>(() => getStoredTeacher(teacherId));
+  const [loading, setLoading] = useState(() => !getStoredTeacher(teacherId));
 
   // Tab states
   const [activeMainTab, setActiveMainTab] = useState<string>("Teacher Details");
@@ -38,19 +64,23 @@ export default function TeacherDetailsPage() {
   const [isResetPasswordOpen, setIsResetPasswordOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
 
+  // Tab visibility flags to prevent overwhelming DB with unnecessary queries
+  const isRoutineTab = activeMainTab === "Routine";
+  const isLeaveAttendanceTab = activeMainTab === "Leave & Attendance";
+
   // Live assignments state
   const [assignments, setAssignments] = useState<any[]>([]);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
 
-  // Dynamic schedules & leaves
-  const { schedules, isLoading: schedulesLoading } = useSchedules(undefined, teacherId);
+  // Dynamic schedules & leaves (lazy loaded only on their respective tabs)
+  const { schedules, isLoading: schedulesLoading } = useSchedules(undefined, teacherId, { skip: !isRoutineTab });
 
   const teacherUserId = teacher
     ? (teacher.user_id && typeof teacher.user_id === "object"
       ? (teacher.user_id as any)._id
       : (typeof teacher.user_id === "string" ? teacher.user_id : undefined))
     : undefined;
-  const { leaveRequests, submitLeave, loading: leavesLoading } = useLeave(undefined, teacherUserId);
+  const { leaveRequests, submitLeave, loading: leavesLoading } = useLeave(undefined, teacherUserId, { skip: !isLeaveAttendanceTab });
 
   // Attendance summary & details state
   const { fetchSummary, fetchDetail } = useAttendanceSummary();
@@ -70,15 +100,46 @@ export default function TeacherDetailsPage() {
   // Fetch teacher details
   useEffect(() => {
     if (!teacherId) return;
+    let isCurrent = true;
     getTeacher(teacherId).then(t => {
-      setTeacher(t);
+      if (!isCurrent) return;
+      if (t) {
+        setTeacher(t);
+        try {
+          sessionStorage.setItem(`sm_teacher_detail_${teacherId}`, JSON.stringify(t));
+        } catch {}
+      }
       setLoading(false);
     });
-  }, [teacherId, getTeacher]);
+    return () => { isCurrent = false; };
+  }, [teacherId]);
 
-  // Fetch live assignments
+  // Fetch live assignments (only needed when on Teacher Details tab)
   useEffect(() => {
-    if (!teacherId) return;
+    if (!teacherId || activeMainTab !== "Teacher Details") return;
+
+    // Check sessionStorage cache first
+    const cacheKey = `sm_ta_${teacherId}`;
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        const { data, ts } = JSON.parse(cached);
+        if (Date.now() - ts < 30_000) {
+          setAssignments(data);
+          // Background refresh
+          fetch(`/api/teacher-assignment?teacher_id=${teacherId}&limit=all`, { headers: getAuthHeaders() })
+            .then(r => r.json())
+            .then(r => {
+              if (r.success && r.data) {
+                setAssignments(r.data.assignments || []);
+                sessionStorage.setItem(cacheKey, JSON.stringify({ data: r.data.assignments || [], ts: Date.now() }));
+              }
+            }).catch(() => {});
+          return;
+        }
+      }
+    } catch {}
+
     setAssignmentsLoading(true);
     fetch(`/api/teacher-assignment?teacher_id=${teacherId}&limit=all`, {
       headers: getAuthHeaders()
@@ -86,12 +147,14 @@ export default function TeacherDetailsPage() {
       .then(res => res.json())
       .then(res => {
         if (res.success && res.data) {
-          setAssignments(res.data.assignments || []);
+          const list = res.data.assignments || [];
+          setAssignments(list);
+          try { sessionStorage.setItem(cacheKey, JSON.stringify({ data: list, ts: Date.now() })); } catch {}
         }
       })
       .catch(err => console.error("Error fetching assignments:", err))
       .finally(() => setAssignmentsLoading(false));
-  }, [teacherId]);
+  }, [teacherId, activeMainTab]);
 
   // Sync leave duration calculation
   useEffect(() => {
@@ -104,9 +167,9 @@ export default function TeacherDetailsPage() {
     }
   }, [leaveFromDate, leaveToDate]);
 
-  // Load attendance data
+  // Load attendance data (only when user visits Leave & Attendance tab)
   useEffect(() => {
-    if (!teacher) return;
+    if (!teacher || !isLeaveAttendanceTab) return;
 
     const loadAttendance = async () => {
       setAttendanceLoading(true);
@@ -138,7 +201,7 @@ export default function TeacherDetailsPage() {
     };
 
     loadAttendance();
-  }, [teacher, selectedYear, fetchSummary, fetchDetail]);
+  }, [teacher, selectedYear, isLeaveAttendanceTab, fetchSummary, fetchDetail]);
 
   // Security Check (Part 12)
   const loggedInUser = getStoredUser();

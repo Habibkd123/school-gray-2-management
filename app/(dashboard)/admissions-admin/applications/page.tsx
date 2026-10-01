@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useClasses } from "@/app/hooks/useClasses";
@@ -30,8 +30,22 @@ const STATUSES = [
 ];
 
 export default function ApplicationsListPage() {
-  const [apps, setApps] = useState<Application[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [apps, setApps] = useState<Application[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = sessionStorage.getItem("sm_admissions_page1");
+      if (s) { const p = JSON.parse(s); if (Date.now() - p.ts < 30_000) return p.apps; }
+    } catch {}
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const s = sessionStorage.getItem("sm_admissions_page1");
+      if (s) { const p = JSON.parse(s); if (Date.now() - p.ts < 30_000) return false; }
+    } catch {}
+    return true;
+  });
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
@@ -49,19 +63,42 @@ export default function ApplicationsListPage() {
 
   const { classes } = useClasses();
 
+  const inFlightKeyRef = useRef<string>("");
+
   const fetchApplications = useCallback(async () => {
+    const params = new URLSearchParams({
+      page: String(currentPage),
+      limit: String(pageSize),
+      search: search.trim(),
+      status: statusFilter,
+      class_id: classFilter,
+      academic_year: academicYearFilter,
+    });
+    const key = params.toString();
+    if (inFlightKeyRef.current === key) return;
+    inFlightKeyRef.current = key;
+
+    const isDefaultView = currentPage === 1 && !search.trim() && statusFilter === "all" && classFilter === "all" && academicYearFilter === "all";
+    if (isDefaultView) {
+      try {
+        const s = sessionStorage.getItem("sm_admissions_page1");
+        if (s) {
+          const p = JSON.parse(s);
+          if (Date.now() - p.ts < 30_000) {
+            setApps(p.apps);
+            setTotalPages(p.totalPages || 1);
+            setTotalItems(p.totalItems || 0);
+            setLoading(false);
+            inFlightKeyRef.current = "";
+            return;
+          }
+        }
+      } catch {}
+    }
+
     setLoading(true);
     try {
-      const params = new URLSearchParams({
-        page: String(currentPage),
-        limit: String(pageSize),
-        search: search.trim(),
-        status: statusFilter,
-        class_id: classFilter,
-        academic_year: academicYearFilter,
-      });
-
-      const res = await fetch(`/api/admissions?${params}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/admissions?${key}`, { headers: getAuthHeaders() });
       const json = await res.json();
       if (json.success) {
         setApps(json.data);
@@ -69,10 +106,21 @@ export default function ApplicationsListPage() {
           setTotalPages(json.pagination.pages || 1);
           setTotalItems(json.pagination.total || 0);
         }
+        if (isDefaultView) {
+          try {
+            sessionStorage.setItem("sm_admissions_page1", JSON.stringify({
+              apps: json.data,
+              totalPages: json.pagination?.pages || 1,
+              totalItems: json.pagination?.total || 0,
+              ts: Date.now()
+            }));
+          } catch {}
+        }
       }
     } catch (err) {
       console.error(err);
     } finally {
+      inFlightKeyRef.current = "";
       setLoading(false);
     }
   }, [currentPage, search, statusFilter, classFilter, academicYearFilter]);

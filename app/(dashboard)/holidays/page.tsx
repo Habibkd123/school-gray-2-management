@@ -54,7 +54,7 @@ function getDateRangeDates(range: string): { from: Date | null; to: Date | null 
 }
 
 export default function HolidaysPage() {
-  const { holidays, isLoading, createHoliday, updateHoliday, deleteHoliday, fetchHolidays } = useHolidays();
+  const { holidays, isLoading, createHoliday, updateHoliday, deleteHoliday, fetchHolidays } = useHolidays({ initialPageSize: 1000 });
   const [searchTerm, setSearchTerm] = useState("");
   
   const [isExportOpen, setIsExportOpen] = useState(false);

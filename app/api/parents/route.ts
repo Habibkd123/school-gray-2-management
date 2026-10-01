@@ -4,7 +4,28 @@ import { Parent, Class } from "@/lib/models";
 import Student from "@/lib/models/Student";
 import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendConditionalJson } from "@/lib/etag";
 import mongoose from "mongoose";
+
+// ─── In-memory server cache ───────────────────────────────────────
+const g = globalThis as any;
+if (!g._parentsServerCache) g._parentsServerCache = new Map<string, { data: any; expiresAt: number }>();
+const _parentsServerCache: Map<string, { data: any; expiresAt: number }> = g._parentsServerCache;
+const PARENTS_CACHE_TTL = 30_000; // 30 seconds
+
+import { invalidateParentsFiltersCache } from "./filters/route";
+
+export function invalidateParentsServerCache(schoolId?: string) {
+  if (!schoolId) {
+    _parentsServerCache.clear();
+    invalidateParentsFiltersCache();
+    return;
+  }
+  for (const key of Array.from(_parentsServerCache.keys())) {
+    if (key.startsWith(schoolId)) _parentsServerCache.delete(key);
+  }
+  invalidateParentsFiltersCache(schoolId);
+}
 
 // ─── GET /api/parents — List all parents ──────────────────────────────
 export async function GET(request: NextRequest) {
@@ -26,6 +47,13 @@ export async function GET(request: NextRequest) {
     const student_id = searchParams.get("student_id");
     const guardian_type = searchParams.get("guardian_type");
     const status = searchParams.get("status");
+
+    // ─── Cache check ───────────────────────────────────────
+    const cacheKey = `${schoolId}:${searchParams.toString()}`;
+    const cached = _parentsServerCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return sendConditionalJson(request, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+    }
 
     const filter: Record<string, any> = { school_id: schoolId };
 
@@ -97,6 +125,8 @@ export async function GET(request: NextRequest) {
 
     const skip = isAll ? 0 : (page - 1) * limit;
 
+    // Run count + parents query in parallel, then immediately kick off children
+    // lookup as soon as we know parent IDs — all three overlap.
     const [total, parents] = await Promise.all([
       Parent.countDocuments(filter),
       Parent.find(filter)
@@ -104,6 +134,7 @@ export async function GET(request: NextRequest) {
         .sort({ name: 1 })
         .skip(skip)
         .limit(limit)
+        .select("-__v")
         .lean()
     ]);
 
@@ -111,6 +142,7 @@ export async function GET(request: NextRequest) {
     const childrenQuery: any = { parent_id: { $in: parentIds }, school_id: schoolId };
 
     const allChildren = await Student.find(childrenQuery)
+      .select("_id name roll_no class_id gender photo_url parent_id")
       .populate("class_id", "name section")
       .lean();
 
@@ -126,7 +158,7 @@ export async function GET(request: NextRequest) {
       children: childrenByParent[String(parent._id)] ?? [],
     }));
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: {
         parents: parentsWithChildren,
@@ -137,9 +169,16 @@ export async function GET(request: NextRequest) {
           limit,
         }
       },
-    }, {
-      headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=30" }
-    });
+    };
+
+    // Cache the result
+    _parentsServerCache.set(cacheKey, { data: responseData, expiresAt: Date.now() + PARENTS_CACHE_TTL });
+
+    return sendConditionalJson(
+      request,
+      responseData,
+      { cacheControl: "private, max-age=15, stale-while-revalidate=30" }
+    );
   } catch (err) {
     console.error("[GET /api/parents]", err);
     return NextResponse.json(
@@ -214,6 +253,7 @@ export async function POST(request: NextRequest) {
       .populate("class_id", "name section")
       .lean();
 
+    invalidateParentsServerCache(schoolId as string);
     return NextResponse.json(
       { success: true, message: "Parent created successfully", data: { ...parent.toJSON(), children } },
       { status: 201 }

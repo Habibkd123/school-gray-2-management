@@ -32,6 +32,7 @@ import { useAuth } from "@/app/context/auth";
 import { useAppState } from "@/app/context/store";
 import { PrintService } from "@/app/lib/print-service";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { cacheSync } from "@/lib/utils/cache-sync";
 
 export default function ClassTeacherAssignmentPage() {
   const { user } = useAuth();
@@ -39,7 +40,7 @@ export default function ClassTeacherAssignmentPage() {
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   const { classes, isLoading: loadingClasses, fetchClasses } = useClasses({ filterByYear: true });
-  const { teachers, isLoading: loadingTeachers, fetchTeachers } = useTeachers({ skip: true });
+  const { teachers, isLoading: loadingTeachers, fetchTeachers } = useTeachers();
   const { assignments, isLoading: loadingAssignments, fetchAssignments, createAssignment, updateAssignment, deleteAssignment } = useTeacherAssignment();
   const [classStudentsCount, setClassStudentsCount] = React.useState(0);
 
@@ -77,16 +78,20 @@ export default function ClassTeacherAssignmentPage() {
   // Active Report Tab State
   const [activeReportTab, setActiveReportTab] = useState<"list" | "workload" | "unassigned">("list");
 
-  // Load initial data — students are fetched on-demand per class (see classStudentsCount below)
-  useEffect(() => {
-    fetchTeachers();
-  }, [fetchTeachers]);
-
   // Load all assignments in the system for workload calculations and lists
   useEffect(() => {
     if (filterYear) {
-      fetchAssignments({ academic_year: filterYear, limit: 10000 });
+      fetchAssignments({ academic_year: filterYear, limit: 500 });
     }
+  }, [filterYear, fetchAssignments]);
+
+  // Real-time synchronization when assignments are modified
+  useEffect(() => {
+    return cacheSync.subscribe("teacher-assignment", () => {
+      if (filterYear) {
+        fetchAssignments({ academic_year: filterYear, limit: 500 });
+      }
+    });
   }, [filterYear, fetchAssignments]);
 
   const activeTeachers = useMemo(() => {
@@ -268,7 +273,7 @@ export default function ClassTeacherAssignmentPage() {
       if (res.success) {
         setToastSuccess("Class Teacher assignment updated successfully!");
         setIsFormOpen(false);
-        fetchAssignments({ academic_year: filterYear, limit: 10000 });
+        fetchAssignments({ academic_year: filterYear, limit: 500 });
         setTimeout(() => setToastSuccess(""), 3000);
       } else {
         setFormError(res.message || "Failed to update assignment.");
@@ -302,7 +307,7 @@ export default function ClassTeacherAssignmentPage() {
 
         setToastSuccess("Class Teacher assignment created successfully!");
         setIsFormOpen(false);
-        fetchAssignments({ academic_year: filterYear, limit: 10000 });
+        fetchAssignments({ academic_year: filterYear, limit: 500 });
         setTimeout(() => setToastSuccess(""), 3000);
       } else {
         setFormError(res.message || "Failed to create assignment.");
@@ -318,7 +323,7 @@ export default function ClassTeacherAssignmentPage() {
     const res = await deleteAssignment(id);
     if (res.success) {
       setToastSuccess("Assignment soft-deleted successfully!");
-      fetchAssignments({ academic_year: filterYear, limit: 10000 });
+      fetchAssignments({ academic_year: filterYear, limit: 500 });
       setTimeout(() => setToastSuccess(""), 3000);
     } else {
       setToastError(res.message || "Failed to delete assignment.");

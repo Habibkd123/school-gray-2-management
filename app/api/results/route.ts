@@ -5,6 +5,7 @@ import Student from "@/lib/models/Student";
 import Parent from "@/lib/models/Parent";
 import { requireAuth } from "@/lib/utils/auth";
 import { paginateQuery } from "@/lib/utils/pagination";
+import { sendCompressedJson } from "@/lib/compression";
 
 export async function GET(req: NextRequest) {
   const { schoolId, role, userId, error } = requireAuth(req, ["school_admin", "teacher", "student", "parent", "super_admin"]);
@@ -52,7 +53,7 @@ export async function GET(req: NextRequest) {
 
     if (studentId) {
       if (targetStudentIds && !targetStudentIds.includes(studentId)) {
-        return NextResponse.json({ success: true, data: { results: [], total: 0, page: 1, totalPages: 1, limit: 25 } });
+        return sendCompressedJson(req, { success: true, data: { results: [], total: 0, page: 1, totalPages: 1, limit: 25 } }, { cacheControl: "private, no-cache" });
       }
       query.student_id = studentId;
     } else if (targetStudentIds) {
@@ -61,7 +62,7 @@ export async function GET(req: NextRequest) {
 
     if (role === "student") {
       if (!studentProfile) {
-        return NextResponse.json({ success: true, data: { results: [], total: 0, page: 1, totalPages: 1, limit: 25 } });
+        return sendCompressedJson(req, { success: true, data: { results: [], total: 0, page: 1, totalPages: 1, limit: 25 } }, { cacheControl: "private, no-cache" });
       }
       if (studentId && studentId !== studentProfile._id.toString()) {
         return NextResponse.json({ success: false, message: "Access denied to student record" }, { status: 403 });
@@ -69,7 +70,7 @@ export async function GET(req: NextRequest) {
       query.student_id = studentProfile._id;
     } else if (role === "parent") {
       if (!parent) {
-        return NextResponse.json({ success: true, data: { results: [], total: 0, page: 1, totalPages: 1, limit: 25 } });
+        return sendCompressedJson(req, { success: true, data: { results: [], total: 0, page: 1, totalPages: 1, limit: 25 } }, { cacheControl: "private, no-cache" });
       }
       const children = await Student.find({ school_id: schoolId, parent_id: parent._id }).select("_id").lean();
       const childIds = children.map((c: any) => c._id.toString());
@@ -107,9 +108,10 @@ export async function GET(req: NextRequest) {
       }
     );
 
-    return NextResponse.json(
+    return sendCompressedJson(
+      req,
       { success: true, data: { results, total, page, totalPages, limit } },
-      { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=30" } }
+      { cacheControl: "private, no-cache" }
     );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

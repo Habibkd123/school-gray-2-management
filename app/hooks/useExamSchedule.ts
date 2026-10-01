@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
+import { cacheSync, invalidateCache } from "@/lib/utils/cache-sync";
 
 export interface ApiExamSchedule {
   _id: string;
@@ -40,6 +41,13 @@ export function useExamSchedule(examId?: string) {
     fetchSchedules(); 
   }, [fetchSchedules, authReady]);
 
+  // Synchronize exam schedules across tabs & components
+  useEffect(() => {
+    return cacheSync.subscribe("exam_schedule", () => {
+      fetchSchedules();
+    });
+  }, [fetchSchedules]);
+
   const createSchedule = useCallback(async (payload: Partial<ApiExamSchedule>) => {
     const res = await fetch("/api/exams/schedule", {
       method: "POST",
@@ -47,7 +55,10 @@ export function useExamSchedule(examId?: string) {
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (data.success) await fetchSchedules();
+    if (data.success) {
+      invalidateCache("exam_schedule");
+      await fetchSchedules();
+    }
     return data;
   }, [fetchSchedules]);
 
@@ -58,7 +69,10 @@ export function useExamSchedule(examId?: string) {
       body: JSON.stringify(payload),
     });
     const data = await res.json();
-    if (data.success) await fetchSchedules();
+    if (data.success) {
+      invalidateCache("exam_schedule");
+      await fetchSchedules();
+    }
     return data;
   }, [fetchSchedules]);
 
@@ -68,7 +82,10 @@ export function useExamSchedule(examId?: string) {
       headers: getAuthHeaders(),
     });
     const data = await res.json();
-    if (data.success) await fetchSchedules();
+    if (data.success) {
+      invalidateCache("exam_schedule");
+      await fetchSchedules();
+    }
     return data;
   }, [fetchSchedules]);
 

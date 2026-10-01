@@ -21,6 +21,32 @@ import { ResetPasswordModal } from "@/app/components/modals/ResetPasswordModal";
 import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
 import { getOptimizedAvatar } from "@/lib/utils/image";
 
+function getStoredStudent(id: string): ApiStudent | null {
+  if (typeof window === "undefined" || !id) return null;
+  try {
+    const direct = sessionStorage.getItem(`sm_student_detail_${id}`);
+    if (direct) return JSON.parse(direct);
+
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith("sm_paged_students_")) {
+        const val = sessionStorage.getItem(key);
+        if (val) {
+          const parsed = JSON.parse(val);
+          if (parsed.students && Array.isArray(parsed.students)) {
+            const match = parsed.students.find((s: any) => s._id === id);
+            if (match) {
+              sessionStorage.setItem(`sm_student_detail_${id}`, JSON.stringify(match));
+              return match;
+            }
+          }
+        }
+      }
+    }
+  } catch {}
+  return null;
+}
+
 function StudentViewContent() {
   const params = useParams();
   const router = useRouter();
@@ -29,8 +55,8 @@ function StudentViewContent() {
   const { getStudent } = useStudents({ skip: true });
   const { classes } = useClasses();
 
-  const [student, setStudent] = useState<ApiStudent | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [student, setStudent] = useState<ApiStudent | null>(() => getStoredStudent(studentId));
+  const [loading, setLoading] = useState(() => !getStoredStudent(studentId));
   const [bottomTab, setBottomTab] = useState<"Hostel" | "Transportation">("Hostel");
 
   // Tab states
@@ -45,22 +71,28 @@ function StudentViewContent() {
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
 
-  // Dynamic hooks integration
+  // Tab visibility flags to prevent overwhelming DB with 10+ concurrent queries
+  const isTimeTableTab = activeMainTab === "Time Table";
+  const isLeaveAttendanceTab = activeMainTab === "Leave & Attendance";
+  const isFeesTab = activeMainTab === "Fees" || isFeesModalOpen;
+  const isExamsTab = activeMainTab === "Exam & Results" || activeMainTab === "Report Card";
+
+  // Dynamic hooks integration (lazy loaded only when relevant tab is viewed)
   const studentClassId = student ? (typeof student.class_id === "object" ? student.class_id?._id : student.class_id) : undefined;
-  const { schedules, isLoading: schedulesLoading } = useSchedules(studentClassId);
+  const { schedules, isLoading: schedulesLoading } = useSchedules(studentClassId, undefined, { skip: !isTimeTableTab });
 
   const studentUserId = student ? (typeof student.user_id === "object" ? student.user_id?._id : student.user_id) : undefined;
-  const { leaveRequests, submitLeave, loading: leavesLoading } = useLeave(undefined, studentUserId);
+  const { leaveRequests, submitLeave, loading: leavesLoading } = useLeave(undefined, studentUserId, { skip: !isLeaveAttendanceTab });
 
   const { fetchSummary, fetchDetail } = useAttendanceSummary();
 
-  const { allocations, loading: allocationsLoading } = useFeeAllocations(studentId);
-  const { payments, loading: paymentsLoading } = useFeePayments(studentId);
-  const { masters, loading: mastersLoading } = useFeeMasters();
+  const { allocations, loading: allocationsLoading } = useFeeAllocations(studentId, { skip: !isFeesTab });
+  const { payments, loading: paymentsLoading } = useFeePayments(studentId, { skip: !isFeesTab });
+  const { masters, loading: mastersLoading } = useFeeMasters({ skip: !isFeesTab });
 
-  const { exams, loading: examsLoading } = useExams(studentClassId);
-  const { results, loading: resultsLoading, fetchResults } = useResults(undefined, studentId);
-  const { subjects } = useSubjects(studentClassId);
+  const { exams, loading: examsLoading } = useExams(studentClassId, { skip: !isExamsTab });
+  const { results, loading: resultsLoading, fetchResults } = useResults(undefined, studentId, { skip: !isExamsTab });
+  const { subjects } = useSubjects(studentClassId, { skip: !isExamsTab });
 
   // Custom states
   const [siblings, setSiblings] = useState<ApiStudent[]>([]);
@@ -198,10 +230,18 @@ function StudentViewContent() {
 
   useEffect(() => {
     if (!studentId) return;
+    let isCurrent = true;
     getStudent(studentId).then(s => {
-      setStudent(s);
+      if (!isCurrent) return;
+      if (s) {
+        setStudent(s);
+        try {
+          sessionStorage.setItem(`sm_student_detail_${studentId}`, JSON.stringify(s));
+        } catch {}
+      }
       setLoading(false);
     });
+    return () => { isCurrent = false; };
   }, [studentId]);
 
   // Sync leave duration calculation
@@ -215,9 +255,9 @@ function StudentViewContent() {
     }
   }, [leaveFromDate, leaveToDate]);
 
-  // Fetch Siblings Effect
+  // Fetch Siblings Effect (only needed for Student Details tab)
   useEffect(() => {
-    if (!student?.parent_id) return;
+    if (!student?.parent_id || activeMainTab !== "Student Details") return;
     const parentId = typeof student.parent_id === "object" ? student.parent_id._id : student.parent_id;
 
     fetch(`/api/students?parent_id=${parentId}`, { headers: getAuthHeaders() })
@@ -229,11 +269,11 @@ function StudentViewContent() {
         }
       })
       .catch(err => console.error("Error fetching siblings:", err));
-  }, [student]);
+  }, [student, activeMainTab]);
 
-  // Fetch Attendance Details Effect
+  // Fetch Attendance Details Effect (only executed when user visits Leave & Attendance tab)
   useEffect(() => {
-    if (!studentClassId || !student) return;
+    if (!studentClassId || !student || !isLeaveAttendanceTab) return;
 
     const loadAttendance = async () => {
       setAttendanceLoading(true);

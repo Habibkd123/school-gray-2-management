@@ -5,6 +5,25 @@ import Student from "@/lib/models/Student";
 import Parent from "@/lib/models/Parent";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
+import { invalidateFeesCache } from "../route";
+
+// Server cache & in-flight deduplication for payments
+const _feesPaymentsServerCache = new Map<string, { data: any; expiresAt: number }>();
+const _feesPaymentsInFlight = new Map<string, Promise<any>>();
+const PAYMENTS_CACHE_TTL = 30_000;
+
+export function invalidateFeesPaymentsCache(schoolId?: string | null) {
+  if (schoolId) {
+    for (const key of _feesPaymentsServerCache.keys()) {
+      if (key.startsWith(`pmt_${schoolId}`)) {
+        _feesPaymentsServerCache.delete(key);
+      }
+    }
+  } else {
+    _feesPaymentsServerCache.clear();
+  }
+}
 
 // ─── Atomic Receipt Counter ───────────────────────────────────────────────────
 // Uses a dedicated "counters" collection with findOneAndUpdate + $inc to
@@ -33,27 +52,50 @@ async function generateReceiptNumber(): Promise<string> {
 }
 
 export async function GET(req: NextRequest) {
-  try {
-    const { schoolId, role, userId, error } = requireAuth(req);
-    if (error) return error;
+  const { schoolId, role, userId, error } = requireAuth(req);
+  if (error) return error;
 
     const url = new URL(req.url);
     const student_id = url.searchParams.get("student_id");
+    const rawLimit = parseInt(url.searchParams.get("limit") || "2000", 10);
+    const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 2000 : rawLimit), 5000);
 
-    const query: any = { school_id: new mongoose.Types.ObjectId(schoolId as string) };
+    const cacheKey = `pmt_${schoolId}_${role}_${userId || ""}_${student_id || "all"}_${limit}`;
 
-    await connectDB();
+    const cached = _feesPaymentsServerCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return sendCompressedJson(req, cached.data, {
+        cacheControl: "private, max-age=15, stale-while-revalidate=30"
+      });
+    }
+
+    const existingInFlight = _feesPaymentsInFlight.get(cacheKey);
+    if (existingInFlight) {
+      try {
+        const payload = await existingInFlight;
+        return sendCompressedJson(req, payload, {
+          cacheControl: "private, max-age=15, stale-while-revalidate=30"
+        });
+      } catch (err: any) {
+        return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+      }
+    }
+
+    const queryPromise = (async () => {
+      const query: any = { school_id: new mongoose.Types.ObjectId(schoolId as string) };
+
+      await connectDB();
 
     if (role === "student") {
       const studentProfile = await Student.findOne({ school_id: schoolId, user_id: userId }).select("_id").lean();
       if (!studentProfile) {
-        return NextResponse.json({ success: true, data: { payments: [] } });
+        return sendCompressedJson(req, { success: true, data: { payments: [] } }, { cacheControl: "private, no-cache" });
       }
       query.student_id = studentProfile._id;
     } else if (role === "parent") {
       const parent = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
       if (!parent) {
-        return NextResponse.json({ success: true, data: { payments: [] } });
+        return sendCompressedJson(req, { success: true, data: { payments: [] } }, { cacheControl: "private, no-cache" });
       }
       const children = await Student.find({ school_id: schoolId, parent_id: parent._id }).select("_id").lean();
       const childIds = children.map((c: any) => c._id.toString());
@@ -71,9 +113,6 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const rawLimit = parseInt(url.searchParams.get("limit") || "2000", 10);
-    const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 2000 : rawLimit), 5000);
-
     const payments = await StudentFeePayment.find(query)
       .populate({
         path: "student_id",
@@ -85,10 +124,23 @@ export async function GET(req: NextRequest) {
       .limit(limit)
       .lean();
 
-    return NextResponse.json({ success: true, data: { payments } });
+    const responsePayload = { success: true, data: { payments } };
+    _feesPaymentsServerCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + PAYMENTS_CACHE_TTL });
+    return responsePayload;
+  })();
+
+  _feesPaymentsInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const responsePayload = await queryPromise;
+    return sendCompressedJson(req, responsePayload, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30"
+    });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Failed to fetch payments";
     return NextResponse.json({ success: false, message }, { status: 500 });
+  } finally {
+    _feesPaymentsInFlight.delete(cacheKey);
   }
 }
 
@@ -225,6 +277,9 @@ export async function POST(req: NextRequest) {
       .populate("student_id", "name admission_no class_id")
       .populate("collected_by", "name username")
       .lean();
+
+    invalidateFeesCache(schoolId);
+    invalidateFeesPaymentsCache(schoolId);
 
     return NextResponse.json(
       {

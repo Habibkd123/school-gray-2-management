@@ -4,24 +4,63 @@ import { Attendance } from "@/lib/models/index";
 import Teacher from "@/lib/models/Teacher";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
+
+// Server cache & in-flight deduplication
+const _teacherAttServerCache = new Map<string, { data: any; expiresAt: number }>();
+const _teacherAttInFlight = new Map<string, Promise<any>>();
+const TEACHER_ATT_CACHE_TTL = 30_000;
+
+export function invalidateTeacherAttendanceCache(schoolId?: string | null) {
+  if (schoolId) {
+    for (const key of _teacherAttServerCache.keys()) {
+      if (key.startsWith(`att_teacher_${schoolId}`)) {
+        _teacherAttServerCache.delete(key);
+      }
+    }
+  } else {
+    _teacherAttServerCache.clear();
+  }
+}
 
 export async function GET(req: NextRequest) {
-  const { schoolId, userId, role, error } = requireAuth(req, ["school_admin", "super_admin"]);
+  const { schoolId, role, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
 
-  try {
-    await connectToDatabase();
+  const url = new URL(req.url);
+  const academic_year = url.searchParams.get("academic_year");
+  const dateParam = url.searchParams.get("date"); // YYYY-MM-DD
 
-    const url = new URL(req.url);
-    const academic_year = url.searchParams.get("academic_year");
-    const dateParam = url.searchParams.get("date"); // YYYY-MM-DD
+  if (!academic_year || !dateParam) {
+    return NextResponse.json(
+      { success: false, message: "academic_year and date are required" },
+      { status: 400 }
+    );
+  }
 
-    if (!academic_year || !dateParam) {
-      return NextResponse.json(
-        { success: false, message: "academic_year and date are required" },
-        { status: 400 }
-      );
+  const cacheKey = `att_teacher_${schoolId}_${academic_year}_${dateParam}`;
+
+  const cached = _teacherAttServerCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return sendCompressedJson(req, cached.data, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30",
+    });
+  }
+
+  const existingInFlight = _teacherAttInFlight.get(cacheKey);
+  if (existingInFlight) {
+    try {
+      const payload = await existingInFlight;
+      return sendCompressedJson(req, payload, {
+        cacheControl: "private, max-age=15, stale-while-revalidate=30",
+      });
+    } catch (err: any) {
+      return NextResponse.json({ success: false, message: err.message }, { status: 500 });
     }
+  }
+
+  const queryPromise = (async () => {
+    await connectToDatabase();
 
     const startOfDay = new Date(dateParam);
     startOfDay.setUTCHours(0, 0, 0, 0);
@@ -70,21 +109,35 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({
+    const responsePayload = {
       success: true,
       data: {
         _id: attendanceRecord?._id || null,
         date: startOfDay,
         records: mergedRecords,
       },
+    };
+
+    _teacherAttServerCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + TEACHER_ATT_CACHE_TTL });
+    return responsePayload;
+  })();
+
+  _teacherAttInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const payload = await queryPromise;
+    return sendCompressedJson(req, payload, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30",
     });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Internal server error" }, { status: 500 });
+  } finally {
+    _teacherAttInFlight.delete(cacheKey);
   }
 }
 
 export async function POST(req: NextRequest) {
-  const { schoolId, userId, role, error } = requireAuth(req, ["school_admin", "super_admin"]);
+  const { schoolId, userId, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
 
   try {
@@ -140,6 +193,8 @@ export async function POST(req: NextRequest) {
       new: true,
       runValidators: true,
     });
+
+    invalidateTeacherAttendanceCache(schoolId);
 
     return NextResponse.json({
       success: true,

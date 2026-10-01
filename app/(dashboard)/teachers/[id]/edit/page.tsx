@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { useTeachers } from "../../../../hooks/useTeachers";
+import { useTeachers, getStoredTeacher } from "../../../../hooks/useTeachers";
 import { useClasses } from "../../../../hooks/useClasses";
 import { useUpload } from "../../../../hooks/useUpload";
 import { LoginDetailsModal } from "../../../../components/modals/LoginDetailsModal";
@@ -172,52 +172,58 @@ export default function EditTeacherPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
   const [valErrors, setValErrors] = useState<Record<string, string>>({});
-  const [teacherObj, setTeacherObj] = useState<any>(null);
+  const cachedTeacher = editId ? getStoredTeacher(editId) : null;
+  const [teacherObj, setTeacherObj] = useState<any>(() => cachedTeacher);
   const [isLoginDetailsOpen, setIsLoginDetailsOpen] = useState(false);
   const [isResetPassModalOpen, setIsResetPassModalOpen] = useState(false);
   const [resetPassTarget, setResetPassTarget] = useState<{ userId: string | undefined; name: string; email: string } | null>(null);
 
-  // Form States (matching Create form fields exactly)
-  const [employeeCode, setEmployeeCode] = useState("");
-  const [teacherName, setTeacherName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [gender, setGender] = useState("Select");
-  const [dob, setDob] = useState("");
-  const [joinDate, setJoinDate] = useState("");
-  const [qualification, setQualification] = useState("");
-  const [experienceYears, setExperienceYears] = useState("");
-  const [department, setDepartment] = useState("Academic");
-  const [designation, setDesignation] = useState("Teacher");
-  const [classId, setClassId] = useState("");
-  const [status, setStatus] = useState<"Active" | "Inactive">("Active");
-  const [address, setAddress] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
+  // Form States (matching Create form fields exactly, initialized from session cache for 0ms render)
+  const [employeeCode, setEmployeeCode] = useState(() => cachedTeacher?.employee_id || "");
+  const [teacherName, setTeacherName] = useState(() => cachedTeacher?.name || "");
+  const [email, setEmail] = useState(() => cachedTeacher?.email || "");
+  const [phone, setPhone] = useState(() => cachedTeacher?.phone || "");
+  const [gender, setGender] = useState(() => cachedTeacher?.gender ? (cachedTeacher.gender.charAt(0).toUpperCase() + cachedTeacher.gender.slice(1)) : "Select");
+  const [dob, setDob] = useState(() => cachedTeacher?.dob ? new Date(cachedTeacher.dob).toISOString().split("T")[0] : "");
+  const [joinDate, setJoinDate] = useState(() => cachedTeacher?.join_date ? new Date(cachedTeacher.join_date).toISOString().split("T")[0] : "");
+  const [qualification, setQualification] = useState(() => cachedTeacher?.qualification || "");
+  const [experienceYears, setExperienceYears] = useState(() => cachedTeacher?.experience_years ? String(cachedTeacher.experience_years) : "");
+  const [department, setDepartment] = useState(() => cachedTeacher?.department || "Academic");
+  const [designation, setDesignation] = useState(() => cachedTeacher?.designation || "Teacher");
+  const [classId, setClassId] = useState(() => {
+    if (!cachedTeacher) return "";
+    const cid = typeof cachedTeacher.class_id === "object" ? (cachedTeacher.class_id as any)?._id : cachedTeacher.class_id;
+    return cid || "";
+  });
+  const [status, setStatus] = useState<"Active" | "Inactive">(() => cachedTeacher?.is_active === false ? "Inactive" : "Active");
+  const [address, setAddress] = useState(() => cachedTeacher?.address || "");
+  const [photoUrl, setPhotoUrl] = useState(() => cachedTeacher?.photo_url || "");
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     if (!editId) return;
+    let isCurrent = true;
     getTeacher(editId).then((teacher) => {
-      if (teacher) {
-        setTeacherObj(teacher);
-        setTeacherName(teacher.name || "");
-        setEmployeeCode(teacher.employee_id || "");
-        setGender(teacher.gender ? teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1) : "Select");
-        setPhone(teacher.phone || "");
-        setEmail(teacher.email || "");
-        setAddress(teacher.address || "");
-        setPhotoUrl(teacher.photo_url || "");
-        setQualification(teacher.qualification || "");
-        setExperienceYears(teacher.experience_years ? String(teacher.experience_years) : "");
-        setJoinDate(teacher.join_date ? new Date(teacher.join_date).toISOString().split("T")[0] : "");
-        setStatus(teacher.is_active ? "Active" : "Inactive");
-        setDepartment(teacher.department || "Academic");
-        setDesignation(teacher.designation || "Teacher");
-        const cid = typeof teacher.class_id === "object" ? teacher.class_id?._id : teacher.class_id;
-        setClassId(cid || "");
-      }
+      if (!isCurrent || !teacher) return;
+      setTeacherObj(teacher);
+      setTeacherName(teacher.name || "");
+      setEmployeeCode(teacher.employee_id || "");
+      setGender(teacher.gender ? teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1) : "Select");
+      setPhone(teacher.phone || "");
+      setEmail(teacher.email || "");
+      setAddress(teacher.address || "");
+      setPhotoUrl(teacher.photo_url || "");
+      setQualification(teacher.qualification || "");
+      setExperienceYears(teacher.experience_years ? String(teacher.experience_years) : "");
+      setJoinDate(teacher.join_date ? new Date(teacher.join_date).toISOString().split("T")[0] : "");
+      setStatus(teacher.is_active ? "Active" : "Inactive");
+      setDepartment(teacher.department || "Academic");
+      setDesignation(teacher.designation || "Teacher");
+      const cid = typeof teacher.class_id === "object" ? teacher.class_id?._id : teacher.class_id;
+      setClassId(cid || "");
     });
+    return () => { isCurrent = false; };
   }, [editId]);
 
   const handlePhotoUpload = async (file: File) => {

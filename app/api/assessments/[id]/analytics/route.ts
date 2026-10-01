@@ -4,6 +4,7 @@ import { ClassTest, ClassTestMark } from "@/lib/models/index";
 import Student from "@/lib/models/Student";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
 
 // GET — Performance analytics for a test
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     });
 
     if (marks.length === 0) {
-      return NextResponse.json({
+      return sendCompressedJson(req, {
         success: true,
         data: {
           total_students: totalStudents,
@@ -45,7 +46,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           chapter: test.chapter || null,
           chapter_alert: null,
         },
-      });
+      }, { cacheControl: "private, no-cache" });
     }
 
     const marksArr = marks.map((m) => m.marks_obtained);
@@ -63,7 +64,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       chapterAlert = `Most students performed poorly in "${test.chapter}". Re-teaching this chapter is recommended.`;
     }
 
-    return NextResponse.json({
+    return sendCompressedJson(req, {
       success: true,
       data: {
         total_students: totalStudents,
@@ -80,7 +81,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         total_marks: test.total_marks,
         passing_marks: test.passing_marks,
       },
-    });
+    }, { cacheControl: "private, no-cache" });
   } catch (err: any) {
     console.error("[GET /api/assessments/[id]/analytics]", err);
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

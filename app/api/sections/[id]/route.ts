@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import Section from "@/lib/models/Section";
 import { requireAuth } from "@/lib/utils/auth";
+import { invalidateSectionsServerCache } from "../route";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -37,6 +38,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     ).lean();
 
     if (!section) return NextResponse.json({ success: false, message: "Section not found" }, { status: 404 });
+    invalidateSectionsServerCache(String(schoolId));
     return NextResponse.json({ success: true, data: section });
   } catch (err: any) {
     if (err.code === 11000) {
@@ -54,6 +56,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
     const section = await Section.findOneAndDelete({ _id: id, school_id: schoolId });
     if (!section) return NextResponse.json({ success: false, message: "Section not found" }, { status: 404 });
+    invalidateSectionsServerCache(String(schoolId));
     return NextResponse.json({ success: true, message: "Section deleted" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

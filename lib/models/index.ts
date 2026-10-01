@@ -318,6 +318,7 @@ const syllabusSchema = new Schema<ISyllabus>(
 );
 
 syllabusSchema.index({ school_id: 1, academic_year: 1, class_id: 1, section_id: 1, subject_master_id: 1 }, { name: "syllabus_unique_lookup" });
+syllabusSchema.index({ school_id: 1, class_id: 1, academic_year: 1 }, { name: "syllabus_school_class_year_v1" });
 syllabusSchema.index({ school_id: 1, academic_year: 1, updatedAt: -1 }, { name: "syllabus_school_year_updated_v1" });
 syllabusSchema.index({ school_id: 1, academic_year: 1, status: 1 }, { name: "syllabus_school_year_status_v1" });
 
@@ -355,6 +356,9 @@ const timetableSchema = new Schema<ITimetable>(
 timetableSchema.index({ school_id: 1, class_id: 1, day: 1, start_time: 1, end_time: 1 }, { name: "timetable_conflict_check" });
 timetableSchema.index({ school_id: 1, teacher_id: 1, day: 1, start_time: 1, end_time: 1 }, { name: "teacher_conflict_check" });
 timetableSchema.index({ school_id: 1, room: 1, day: 1, start_time: 1, end_time: 1 }, { name: "room_conflict_check" });
+timetableSchema.index({ school_id: 1, academic_year: 1 }, { name: "timetable_school_year_v1" });
+timetableSchema.index({ school_id: 1, academic_year: 1, class_id: 1 }, { name: "timetable_school_year_class_v1" });
+timetableSchema.index({ school_id: 1, academic_year: 1, teacher_id: 1 }, { name: "timetable_school_year_teacher_v1" });
 
 // ─── Attendance ───────────────────────────────────────────────────
 const attendanceRecordSchema = new Schema(

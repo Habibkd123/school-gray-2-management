@@ -3,6 +3,7 @@ import connectToDatabase from "@/lib/db";
 import { Exam } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { invalidateExamsCache } from "../route";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -22,6 +23,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       { new: true }
     );
     if (!exam) return NextResponse.json({ success: false, message: "Exam not found" }, { status: 404 });
+    invalidateExamsCache(schoolId);
     return NextResponse.json({ success: true, data: exam });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
@@ -39,6 +41,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
     const exam = await Exam.findOneAndDelete({ _id: id, school_id: schoolId });
     if (!exam) return NextResponse.json({ success: false, message: "Exam not found" }, { status: 404 });
+    invalidateExamsCache(schoolId);
     return NextResponse.json({ success: true, message: "Exam deleted" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

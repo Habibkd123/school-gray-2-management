@@ -29,10 +29,57 @@ function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// ─── Global server cache & in-flight deduplication (persists across HMR/Turbopack) ──
+const g = globalThis as unknown as {
+  _teachersServerQueryCache?: Map<string, { data: any; timestamp: number }>;
+  _teachersServerInFlight?: Map<string, Promise<any>>;
+  _teacherCountCache?: Map<string, { count: number; timestamp: number }>;
+};
+
+if (!g._teachersServerQueryCache) g._teachersServerQueryCache = new Map();
+if (!g._teachersServerInFlight) g._teachersServerInFlight = new Map();
+if (!g._teacherCountCache) g._teacherCountCache = new Map();
+
+const _teachersServerQueryCache = g._teachersServerQueryCache;
+const _teachersServerInFlight = g._teachersServerInFlight;
+const _teacherCountCache = g._teacherCountCache;
+
+const SERVER_CACHE_TTL_MS = 60_000; // 60 seconds
+const COUNT_CACHE_TTL_MS = 300_000; // 5 minutes
+
+export function invalidateTeachersServerCache() {
+  _teachersServerQueryCache.clear();
+  _teachersServerInFlight.clear();
+  _teacherCountCache.clear();
+}
+
 // GET: Fetch all teachers for the logged-in user's school
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
+
+  const cacheKey = `${schoolId}:${req.nextUrl.search}`;
+  const cached = _teachersServerQueryCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp) < SERVER_CACHE_TTL_MS) {
+    return sendConditionalJson(
+      req,
+      { success: true, data: cached.data },
+      { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
+    );
+  }
+
+  if (_teachersServerInFlight.has(cacheKey)) {
+    try {
+      const data = await _teachersServerInFlight.get(cacheKey)!;
+      return sendConditionalJson(
+        req,
+        { success: true, data },
+        { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
+      );
+    } catch {
+      // Fall through to query on error
+    }
+  }
 
   try {
     await connectToDatabase();
@@ -140,6 +187,7 @@ export async function GET(req: NextRequest) {
 
     const isFull = url.searchParams.get("full") === "true";
     const includeUser = url.searchParams.get("include_user") === "true";
+    const academic_year = url.searchParams.get("academic_year");
     let queryBuilder = Teacher.find(query);
 
     if (!isFull) {
@@ -148,9 +196,13 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    if (!academic_year) {
+      queryBuilder = queryBuilder
+        .populate("class_id", "name section")
+        .populate("class_ids", "name section");
+    }
+
     queryBuilder = queryBuilder
-      .populate("class_id", "name section")
-      .populate("class_ids", "name section")
       .sort(sortObj)
       .skip(skip)
       .limit(limit);
@@ -159,22 +211,37 @@ export async function GET(req: NextRequest) {
       queryBuilder = queryBuilder.populate("user_id", "name email role is_active plain_password");
     }
 
+    const countKey = `${schoolId}:${JSON.stringify(query)}`;
+    const cachedCount = _teacherCountCache.get(countKey);
+    let totalPromise: Promise<number>;
+    if (cachedCount && (Date.now() - cachedCount.timestamp) < COUNT_CACHE_TTL_MS) {
+      totalPromise = Promise.resolve(cachedCount.count);
+    } else {
+      totalPromise = Teacher.countDocuments(query).then((c) => {
+        _teacherCountCache.set(countKey, { count: c, timestamp: Date.now() });
+        return c;
+      });
+    }
+
     const [teachers, total] = await Promise.all([
       queryBuilder.lean(),
-      Teacher.countDocuments(query),
+      totalPromise,
     ]);
 
-    const academic_year = url.searchParams.get("academic_year");
-    if (academic_year) {
-      const teacherIds = teachers.map((t: any) => t._id);
+    if (academic_year && teachers.length > 0) {
+      const teacherIds = (teachers as any[]).map((t) => t._id);
       const assignments = await TeacherAssignment.find({
         school_id: schoolId,
         academic_year,
-        teacher_id: { $in: teacherIds }
-      }).populate("class_id", "name section").lean();
+        teacher_id: { $in: teacherIds },
+        is_deleted: false,
+      })
+        .populate("class_id", "name section")
+        .select("teacher_id class_id")
+        .lean();
 
       const classesByTeacher: Record<string, any[]> = {};
-      for (const assign of assignments) {
+      for (const assign of assignments as any[]) {
         const tid = String(assign.teacher_id);
         if (!classesByTeacher[tid]) {
           classesByTeacher[tid] = [];
@@ -194,10 +261,13 @@ export async function GET(req: NextRequest) {
       }
     }
 
+    const resultData = { teachers, total, page, limit };
+    _teachersServerQueryCache.set(cacheKey, { data: resultData, timestamp: Date.now() });
+
     return sendConditionalJson(
       req,
-      { success: true, data: { teachers, total, page, limit } },
-      { cacheControl: "private, max-age=60, stale-while-revalidate=30" }
+      { success: true, data: resultData },
+      { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
     );
   } catch (error: any) {
     return NextResponse.json(
@@ -340,6 +410,8 @@ export async function POST(req: NextRequest) {
         { class_teacher_id: teacher._id }
       );
     }
+
+    invalidateTeachersServerCache();
 
     return NextResponse.json(
       {

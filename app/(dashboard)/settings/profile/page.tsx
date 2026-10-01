@@ -5,6 +5,7 @@ import { useAuth } from "@/app/context/auth";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { useLoginConfig } from "@/app/hooks/useLoginConfig";
+import { cacheSync } from "@/lib/utils/cache-sync";
 import RolesPermissionsPage from "../roles/page";
 import {
   RefreshCw, Upload, Edit, EyeOff, Eye, Save, X,
@@ -110,20 +111,83 @@ export default function ProfilePage() {
   // Tab control
   const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login" | "seo" | "upcoming">("profile");
 
-  // Profile state
-  const [profile, setProfile] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Profile state with 0ms SWR instant initialization
+  const [profile, setProfile] = useState<any | null>(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      try {
+        const stored = sessionStorage.getItem(`sm_profile_${user.id}`);
+        if (stored) return JSON.parse(stored);
+      } catch {}
+    }
+    return null;
+  });
+  const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState("");
 
-  // Form fields
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [occupation, setOccupation] = useState("");
+  // Form fields initialized immediately without waiting for network
+  const [name, setName] = useState(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      try {
+        const stored = sessionStorage.getItem(`sm_profile_${user.id}`);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.name) return parsed.name;
+        }
+      } catch {}
+    }
+    return user?.name || "";
+  });
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      try {
+        const stored = sessionStorage.getItem(`sm_profile_${user.id}`);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.email) return parsed.email;
+        }
+      } catch {}
+    }
+    return user?.email || "";
+  });
+  const [phone, setPhone] = useState(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      try {
+        const stored = sessionStorage.getItem(`sm_profile_${user.id}`);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.phone) return parsed.phone;
+        }
+      } catch {}
+    }
+    return "";
+  });
+  const [address, setAddress] = useState(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      try {
+        const stored = sessionStorage.getItem(`sm_profile_${user.id}`);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.address) return parsed.address;
+        }
+      } catch {}
+    }
+    return "";
+  });
+  const [occupation, setOccupation] = useState(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      try {
+        const stored = sessionStorage.getItem(`sm_profile_${user.id}`);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.occupation) return parsed.occupation;
+        }
+      } catch {}
+    }
+    return "";
+  });
 
   // Password
   const [currentPassword, setCurrentPassword] = useState("");
@@ -137,7 +201,18 @@ export default function ProfilePage() {
 
   // Photo upload
   const fileRef = useRef<HTMLInputElement>(null);
-  const [photoUrl, setPhotoUrl] = useState("");
+  const [photoUrl, setPhotoUrl] = useState(() => {
+    if (typeof window !== "undefined" && user?.id) {
+      try {
+        const stored = sessionStorage.getItem(`sm_profile_${user.id}`);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed.photo_url) return parsed.photo_url;
+        }
+      } catch {}
+    }
+    return "";
+  });
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   // Academic configuration state
@@ -152,16 +227,35 @@ export default function ProfilePage() {
   const [loginSuccessMsg, setLoginSuccessMsg] = useState("");
   const [loginErrorMsg, setLoginErrorMsg] = useState("");
 
-  // SEO / Meta config state
-  const [metaForm, setMetaForm] = useState({
-    meta_title: "",
-    meta_description: "",
-    meta_keywords: "",
-    og_image: "",
-    og_type: "website",
-    twitter_handle: "",
-    canonical_url: "",
-    favicon_url: "",
+  interface MetaFormState {
+    meta_title: string;
+    meta_description: string;
+    meta_keywords: string;
+    og_image: string;
+    og_type: string;
+    twitter_handle: string;
+    canonical_url: string;
+    favicon_url: string;
+  }
+
+  // SEO / Meta config state with 0ms SWR caching
+  const [metaForm, setMetaForm] = useState<MetaFormState>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = sessionStorage.getItem("sm_school_meta_config");
+        if (stored) return JSON.parse(stored) as MetaFormState;
+      } catch {}
+    }
+    return {
+      meta_title: "",
+      meta_description: "",
+      meta_keywords: "",
+      og_image: "",
+      og_type: "website",
+      twitter_handle: "",
+      canonical_url: "",
+      favicon_url: "",
+    };
   });
   const [metaLoading, setMetaLoading] = useState(false);
   const [metaSaving, setMetaSaving] = useState(false);
@@ -170,11 +264,17 @@ export default function ProfilePage() {
 
   const loadMetaConfig = async () => {
     if (!isAdmin) return;
-    setMetaLoading(true);
     try {
       const res = await fetch("/api/school/meta-config", { headers: getAuthHeaders() });
       const json = await res.json();
-      if (json.success) setMetaForm({ ...metaForm, ...json.data });
+      if (json.success && json.data) {
+        setMetaForm(prev => ({ ...prev, ...json.data }));
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("sm_school_meta_config", JSON.stringify(json.data));
+          } catch {}
+        }
+      }
     } catch { /* silently fail */ } finally {
       setMetaLoading(false);
     }
@@ -192,6 +292,11 @@ export default function ProfilePage() {
       });
       const json = await res.json();
       if (json.success) {
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("sm_school_meta_config", JSON.stringify(metaForm));
+          } catch {}
+        }
         setMetaSuccess("SEO settings saved successfully!");
         setTimeout(() => setMetaSuccess(""), 3500);
       } else {
@@ -214,14 +319,13 @@ export default function ProfilePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
-  // ── Load profile ─────────────────────────────────────────────────
+  // ── Load profile (SWR background refresh) ─────────────────────────
   const loadProfile = async () => {
-    setLoading(true);
     try {
       if (isParent) {
         const res = await fetch("/api/parent/profile", { headers: getAuthHeaders() });
         const data = await res.json();
-        if (data.success) {
+        if (data.success && data.data) {
           setProfile(data.data);
           setName(data.data.name || "");
           setEmail(data.data.email || "");
@@ -229,17 +333,27 @@ export default function ProfilePage() {
           setAddress(data.data.address || "");
           setOccupation(data.data.occupation || "");
           setPhotoUrl(data.data.photo_url || "");
+          if (typeof window !== "undefined" && user?.id) {
+            try {
+              sessionStorage.setItem(`sm_profile_${user.id}`, JSON.stringify(data.data));
+            } catch {}
+          }
         }
       } else if (isTeacher) {
         const res = await fetch("/api/teacher/profile", { headers: getAuthHeaders() });
         const data = await res.json();
-        if (data.success) {
+        if (data.success && data.data) {
           setProfile(data.data);
           setName(data.data.name || "");
           setEmail(data.data.email || "");
           setPhone(data.data.phone || "");
           setAddress(data.data.address || "");
           setPhotoUrl(data.data.photo_url || "");
+          if (typeof window !== "undefined" && user?.id) {
+            try {
+              sessionStorage.setItem(`sm_profile_${user.id}`, JSON.stringify(data.data));
+            } catch {}
+          }
         }
       } else {
         // For other roles — use auth user data
@@ -248,14 +362,16 @@ export default function ProfilePage() {
       }
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
     loadProfile();
-  }, [user]);
+    const unsub = cacheSync.subscribe("profile", () => {
+      loadProfile();
+    });
+    return () => unsub();
+  }, [user?.id, isParent, isTeacher]);
 
   // ── Save profile ──────────────────────────────────────────────────
   const handleSave = async () => {
@@ -279,6 +395,12 @@ export default function ProfilePage() {
         setSaveSuccess(true);
         setProfile(data.data);
         setEditMode(false);
+        if (typeof window !== "undefined" && user?.id) {
+          try {
+            sessionStorage.setItem(`sm_profile_${user.id}`, JSON.stringify(data.data));
+          } catch {}
+        }
+        cacheSync.invalidate("profile");
         setTimeout(() => setSaveSuccess(false), 3000);
       } else {
         setSaveError(data.message || "Failed to save");
@@ -418,14 +540,6 @@ export default function ProfilePage() {
       refetchLoginConfig();
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-60">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">

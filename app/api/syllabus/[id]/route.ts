@@ -3,8 +3,25 @@ import connectToDatabase from "@/lib/db";
 import { Syllabus, TeacherAssignment, Student, Teacher } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { invalidateSyllabusServerCache } from "../route";
+import { sendCompressedJson } from "@/lib/compression";
 
 type RouteParams = { params: Promise<{ id: string }> };
+
+// ─── Server-side detail cache ─────────────────────────────────────────────────
+const gs = globalThis as any;
+if (!gs._syllabusDetailCache) gs._syllabusDetailCache = new Map<string, { data: any; expiresAt: number }>();
+const _detailCache: Map<string, { data: any; expiresAt: number }> = gs._syllabusDetailCache;
+const DETAIL_TTL = 30_000;
+
+export function invalidateSyllabusDetailCache(id?: string, schoolId?: string) {
+  if (!id) { _detailCache.clear(); return; }
+  for (const k of Array.from(_detailCache.keys())) {
+    if (k === id || k.endsWith(`:${id}`) || (schoolId && k.startsWith(`${schoolId}:`))) {
+      _detailCache.delete(k);
+    }
+  }
+}
 
 // GET: fetch single syllabus details
 export async function GET(req: NextRequest, { params }: RouteParams) {
@@ -14,6 +31,16 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return NextResponse.json({ success: false, message: "Invalid Syllabus ID" }, { status: 400 });
+  }
+
+  // Skip cache for student/parent roles (they need per-user access checks)
+  const canCache = user.role !== "student" && user.role !== "parent";
+  const cacheKey = `${schoolId}:${id}`;
+  if (canCache) {
+    const cached = _detailCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+    }
   }
 
   try {
@@ -90,7 +117,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
             chapters: [],
             isVirtual: true
           };
-          return NextResponse.json({ success: true, data: virtualSyllabus });
+          const responseData = { success: true, data: virtualSyllabus };
+          if (canCache) {
+            _detailCache.set(cacheKey, { data: responseData, expiresAt: Date.now() + DETAIL_TTL });
+          }
+          return sendCompressedJson(req, responseData, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
         }
       } else {
         return NextResponse.json({ success: false, message: "Syllabus not found" }, { status: 404 });
@@ -116,7 +147,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       }
     }
 
-    return NextResponse.json({ success: true, data: syllabus });
+    const responseData = { success: true, data: syllabus };
+    if (canCache) {
+      _detailCache.set(cacheKey, { data: responseData, expiresAt: Date.now() + DETAIL_TTL });
+    }
+    return sendCompressedJson(req, responseData, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Internal Server Error" }, { status: 500 });
   }
@@ -381,6 +416,8 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     syllabus.updated_by = new mongoose.Types.ObjectId(user.user_id as string);
     await syllabus.save();
 
+    invalidateSyllabusServerCache(String(schoolId));
+    invalidateSyllabusDetailCache(id, String(schoolId));
     return NextResponse.json({ success: true, data: syllabus });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Internal Server Error" }, { status: 500 });
@@ -414,6 +451,8 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     }
 
     await Syllabus.findOneAndDelete({ _id: id, school_id: schoolId });
+    invalidateSyllabusServerCache(String(schoolId));
+    invalidateSyllabusDetailCache(id, String(schoolId));
     return NextResponse.json({ success: true, message: "Syllabus deleted successfully" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Internal Server Error" }, { status: 500 });

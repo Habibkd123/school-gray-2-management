@@ -11,6 +11,7 @@ import {
   ClassGroup,
   SubjectMaster
 } from "@/lib/models/index";
+import { invalidateStreamsServerCache } from "../route";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -48,6 +49,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     ).lean();
 
     if (!stream) return NextResponse.json({ success: false, message: "Stream not found" }, { status: 404 });
+    invalidateStreamsServerCache(String(schoolId));
     return NextResponse.json({ success: true, data: stream });
   } catch (err: any) {
     if (err.code === 11000) {
@@ -112,6 +114,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     }
 
     await Stream.deleteOne({ _id: id });
+    invalidateStreamsServerCache(String(schoolId));
     return NextResponse.json({ success: true, message: "Stream deleted successfully" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

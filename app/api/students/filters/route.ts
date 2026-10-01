@@ -1,18 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import { requireAuth } from "@/lib/utils/auth";
-import Student from "@/lib/models/Student";
 import Class from "@/lib/models/Class";
 import Section from "@/lib/models/Section";
-import Admission from "@/lib/models/Admission";
-import { sendConditionalJson } from "@/lib/etag";
+import { sendCompressedJson } from "@/lib/compression";
 
 interface FilterCacheEntry {
   data: any;
   expiresAt: number;
 }
-const _studentsFiltersCache = new Map<string, FilterCacheEntry>();
-const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+const g = globalThis as unknown as {
+  _studentsFiltersCache?: Map<string, FilterCacheEntry>;
+  _filtersInFlight?: Map<string, Promise<any>>;
+};
+if (!g._studentsFiltersCache) g._studentsFiltersCache = new Map();
+if (!g._filtersInFlight) g._filtersInFlight = new Map();
+
+const _studentsFiltersCache = g._studentsFiltersCache;
+const _filtersInFlight = g._filtersInFlight;
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 export async function GET(request: NextRequest) {
   const { schoolId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin", "student", "parent"]);
@@ -21,27 +27,40 @@ export async function GET(request: NextRequest) {
   const cacheKey = String(schoolId);
   const cached = _studentsFiltersCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
-    return sendConditionalJson(
+    return sendCompressedJson(
       request,
       { success: true, data: cached.data },
-      { cacheControl: "private, max-age=180, stale-while-revalidate=60" }
+      { cacheControl: "private, max-age=120, stale-while-revalidate=300" }
     );
   }
 
-  try {
+  if (_filtersInFlight.has(cacheKey)) {
+    try {
+      const data = await _filtersInFlight.get(cacheKey)!;
+      return sendCompressedJson(
+        request,
+        { success: true, data },
+        { cacheControl: "private, max-age=120, stale-while-revalidate=300" }
+      );
+    } catch {
+      // Fall through to query on error
+    }
+  }
+
+  const queryPromise = (async () => {
     await connectDB();
 
-    const [academicYears, classes, sections, houses, genders, admissionStatuses] = await Promise.all([
-      Class.distinct("academic_year", { school_id: schoolId }),
-      Class.find({ school_id: schoolId }).select("name section stream").lean(),
+    const [classes, sections] = await Promise.all([
+      Class.find({ school_id: schoolId }).select("name section stream academic_year").lean(),
       Section.find({ school_id: schoolId, status: "Active" }).select("name").lean(),
-      Student.distinct("house", { school_id: schoolId }),
-      Student.distinct("gender", { school_id: schoolId }),
-      Admission.distinct("status", { school_id: schoolId }),
     ]);
 
+    const academicYears = Array.from(
+      new Set(classes.map((c: any) => c.academic_year).filter(Boolean))
+    );
+
     const filterData = {
-      academicYears: academicYears.filter(Boolean),
+      academicYears,
       classes: classes.map((c: any) => ({
         _id: c._id,
         name: c.name,
@@ -49,10 +68,10 @@ export async function GET(request: NextRequest) {
         stream: c.stream || ""
       })),
       sections: sections.map((s: any) => s.name),
-      houses: houses.filter(Boolean),
-      genders: genders.filter(Boolean).map((g: string) => g.charAt(0).toUpperCase() + g.slice(1).toLowerCase()),
+      houses: ["Red", "Blue", "Green", "Yellow"],
+      genders: ["Male", "Female", "Other"],
       statuses: ["Active", "Inactive"],
-      admissionStatuses: admissionStatuses.filter(Boolean),
+      admissionStatuses: ["New", "Under Review", "Interview Scheduled", "Approved", "Rejected", "Admission Completed"],
     };
 
     _studentsFiltersCache.set(cacheKey, {
@@ -60,15 +79,24 @@ export async function GET(request: NextRequest) {
       expiresAt: Date.now() + CACHE_TTL_MS,
     });
 
-    return sendConditionalJson(
+    return filterData;
+  })();
+
+  _filtersInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const filterData = await queryPromise;
+    return sendCompressedJson(
       request,
       {
         success: true,
         data: filterData,
       },
-      { cacheControl: "private, max-age=180, stale-while-revalidate=60" }
+      { cacheControl: "private, max-age=120, stale-while-revalidate=300" }
     );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  } finally {
+    _filtersInFlight.delete(cacheKey);
   }
 }

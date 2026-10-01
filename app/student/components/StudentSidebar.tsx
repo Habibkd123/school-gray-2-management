@@ -45,6 +45,20 @@ export function StudentSidebar({ isMobileOpen, onClose }: StudentSidebarProps) {
   const { user, studentProfile, logout } = useStudentAuth();
   const SHOW_FEES = !HIDE_FEES_FEATURE;
   const filteredNavItems = navItems.filter(item => SHOW_FEES || item.href !== "/student/fees");
+  const [schoolInfo, setSchoolInfo] = useState<{ name: string; subtitle?: string; logo_url?: string | null } | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("sm_school_info");
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const schoolName = schoolInfo?.name || process.env.NEXT_PUBLIC_SCHOOL_NAME || "School ERP";
+  const schoolSubtitle = schoolInfo?.subtitle || "Student Portal";
 
   const classInfo =
     studentProfile?.class_id &&
@@ -87,11 +101,13 @@ export function StudentSidebar({ isMobileOpen, onClose }: StudentSidebarProps) {
             >
               <GraduationCap className="w-5 h-5 text-white" />
             </div>
-            <div>
-              <p className="text-[13px] font-bold text-white leading-tight">
-                {process.env.NEXT_PUBLIC_SCHOOL_NAME || "School ERP"}
+            <div className="min-w-0 pr-1">
+              <p className="text-[13px] font-bold text-white leading-tight truncate max-w-[160px]" title={schoolName}>
+                {schoolName}
               </p>
-              <p className="text-[10px] text-indigo-300 font-medium">Student Portal</p>
+              <p className="text-[10px] text-indigo-300 font-medium truncate max-w-[160px]" title={schoolSubtitle}>
+                {schoolSubtitle}
+              </p>
             </div>
           </div>
           <button

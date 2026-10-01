@@ -21,6 +21,7 @@ function applyCssVars(vars: Record<string, string>) {
   }
 }
 
+const SESSION_THEME_KEY = "sm_school_theme_vars";
 const _themeCache = new Map<string, Record<string, string>>();
 const _themePromises = new Map<string, Promise<Record<string, string> | null>>();
 
@@ -35,12 +36,17 @@ async function fetchThemeEndpoint(endpoint: string, headers: HeadersInit = {}) {
 
   const promise = (async () => {
     try {
-      const res = await fetch(endpoint, { headers, cache: "no-store" });
+      const res = await fetch(endpoint, { headers });
       const json = await res.json();
       if (!res.ok || !json.success) return null;
       const cssVars = json.data?.css_vars ?? null;
       if (cssVars) {
         _themeCache.set(endpoint, cssVars);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(SESSION_THEME_KEY, JSON.stringify(cssVars));
+          } catch {}
+        }
       }
       return cssVars;
     } catch {
@@ -64,6 +70,16 @@ export function SchoolThemeProvider({
     async function loadTheme() {
       try {
         let cssVars: Record<string, string> | null = null;
+
+        // Instantly apply cached theme from sessionStorage for 0ms visual rendering
+        if (typeof window !== "undefined") {
+          try {
+            const stored = sessionStorage.getItem(SESSION_THEME_KEY);
+            if (stored) {
+              applyCssVars(JSON.parse(stored));
+            }
+          } catch {}
+        }
 
         // Whether we have any school context on the client at all
         const hasSubdomain = !!getClientSubdomain();

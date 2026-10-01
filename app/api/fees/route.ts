@@ -4,20 +4,69 @@ import { ClassFee, StudentFeePayment, StudentFeeAssignment } from "@/lib/models/
 import Student from "@/lib/models/Student";
 import Parent from "@/lib/models/Parent";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendCompressedJson } from "@/lib/compression";
 import mongoose from "mongoose";
+
+// Server cache & in-flight deduplication
+const _feesServerCache = new Map<string, { data: any; expiresAt: number }>();
+const _feesInFlight = new Map<string, Promise<any>>();
+const FEES_CACHE_TTL = 30_000;
+
+export function invalidateFeesCache(schoolId?: string | null) {
+  if (schoolId) {
+    for (const key of _feesServerCache.keys()) {
+      if (key.startsWith(`fees_${schoolId}`)) {
+        _feesServerCache.delete(key);
+      }
+    }
+  } else {
+    _feesServerCache.clear();
+  }
+}
 
 export async function GET(req: NextRequest) {
   const { schoolId, role, userId, error } = requireAuth(req, ["school_admin", "super_admin", "accountant", "teacher", "parent", "student"]);
   if (error) return error;
 
-  try {
-    await connectToDatabase();
-    const url = new URL(req.url);
-    const classId = url.searchParams.get("class_id");
-    const studentId = url.searchParams.get("student_id");
-    const configOnly = url.searchParams.get("config_only") === "true";
-    const academic_year = url.searchParams.get("academic_year") || "2026";
+  const url = new URL(req.url);
+  const classId = url.searchParams.get("class_id");
+  const studentId = url.searchParams.get("student_id");
+  const configOnly = url.searchParams.get("config_only") === "true";
+  const academic_year = url.searchParams.get("academic_year") || "2026";
+  const statusFilter = url.searchParams.get("status");
+  const dueStatusFilter = url.searchParams.get("due_status");
+  const feeTypeFilterName = url.searchParams.get("fee_type");
+  const dateFrom = url.searchParams.get("date_from");
+  const dateTo = url.searchParams.get("date_to");
+  const search = url.searchParams.get("search") || "";
+  const rawPage = parseInt(url.searchParams.get("page") || "1", 10);
+  const page = Math.max(1, isNaN(rawPage) ? 1 : rawPage);
+  const rawLimit = parseInt(url.searchParams.get("limit") || "10", 10);
+  const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 10 : rawLimit), 5000);
 
+  const cacheKey = `fees_${schoolId}_${role}_${userId || ""}_${studentId || "all"}_${classId || "all"}_${academic_year}_${statusFilter || "all"}_${dueStatusFilter || "all"}_${feeTypeFilterName || "all"}_${dateFrom || ""}_${dateTo || ""}_${page}_${limit}_${search}`;
+
+  // ── Serve from cache before touching DB ────────────────────────
+  const cached = _feesServerCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return sendCompressedJson(req, cached.data, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30"
+    });
+  }
+
+  const existingInFlight = _feesInFlight.get(cacheKey);
+  if (existingInFlight) {
+    try {
+      const payload = await existingInFlight;
+      return sendCompressedJson(req, payload, {
+        cacheControl: "private, max-age=15, stale-while-revalidate=30"
+      });
+    } catch (err: any) {
+      return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+    }
+  }
+
+  await connectToDatabase();
     // Strict role ownership bounds
     if (role === "student") {
       const studentProfile = await Student.findOne({ school_id: schoolId, user_id: userId }).select("_id").lean();
@@ -60,17 +109,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, data: classFee });
     }
 
-    const statusFilter = url.searchParams.get("status"); // Paid / Partial / Pending
-    const dueStatusFilter = url.searchParams.get("due_status"); // Overdue / Due / No Due
-    const feeTypeFilterName = url.searchParams.get("fee_type"); // e.g. "Tuition Fees"
-    const dateFrom = url.searchParams.get("date_from");
-    const dateTo = url.searchParams.get("date_to");
-    const search = url.searchParams.get("search") || "";
-    const rawPage = parseInt(url.searchParams.get("page") || "1", 10);
-    const page = Math.max(1, isNaN(rawPage) ? 1 : rawPage);
-    const rawLimit = parseInt(url.searchParams.get("limit") || "10", 10);
-    // Hard cap between 1 and 5000 (default: 10, reports: 2000, exports: up to 5000)
-    const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 10 : rawLimit), 5000);
+    const queryPromise = (async () => {
 
     // Teacher assignments restriction
     let allowedClassIds: string[] | null = null;
@@ -94,30 +133,35 @@ export async function GET(req: NextRequest) {
       ]));
 
       if (allowedClassIds.length === 0) {
-        return NextResponse.json({
+        return {
           success: true,
           data: {
             students: [],
             pagination: { totalItems: 0, totalPages: 0, currentPage: 1, limit }
           }
-        });
+        };
       }
     }
 
     // 1. Build Student Query
     const studentQuery: any = { school_id: schoolId, is_active: true };
-    if (academic_year) {
-      studentQuery.academic_year = academic_year;
-    }
     if (studentId) {
       studentQuery._id = studentId;
-    } else if (role === "parent") {
-      const parent = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
-      const children = await Student.find({ school_id: schoolId, parent_id: parent?._id }).select("_id").lean();
-      studentQuery._id = { $in: children.map(c => c._id) };
-    } else if (role === "student") {
-      const studentProfile = await Student.findOne({ school_id: schoolId, user_id: userId }).select("_id").lean();
-      studentQuery._id = studentProfile?._id || new mongoose.Types.ObjectId();
+      if (url.searchParams.has("academic_year")) {
+        studentQuery.academic_year = academic_year;
+      }
+    } else {
+      if (academic_year) {
+        studentQuery.academic_year = academic_year;
+      }
+      if (role === "parent") {
+        const parent = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
+        const children = await Student.find({ school_id: schoolId, parent_id: parent?._id }).select("_id").lean();
+        studentQuery._id = { $in: children.map(c => c._id) };
+      } else if (role === "student") {
+        const studentProfile = await Student.findOne({ school_id: schoolId, user_id: userId }).select("_id").lean();
+        studentQuery._id = studentProfile?._id || new mongoose.Types.ObjectId();
+      }
     }
 
     let classIdsToQuery: string[] | null = allowedClassIds;
@@ -390,7 +434,7 @@ export async function GET(req: NextRequest) {
         .map((s: any) => computeStudentFeeData(s, classFeesMap, studentAssignmentsMap, paymentsByStudentId))
         .filter(Boolean);
 
-      return NextResponse.json({
+      const fastPayload = {
         success: true,
         data: {
           students: computedList,
@@ -401,9 +445,10 @@ export async function GET(req: NextRequest) {
             limit,
           },
         },
-      }, {
-        headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=30" }
-      });
+      };
+
+      _feesServerCache.set(cacheKey, { data: fastPayload, expiresAt: Date.now() + FEES_CACHE_TTL });
+      return fastPayload;
     }
 
     // ─── Filtered / Aggregated Path (status, dueStatus, date range, fee type) ───
@@ -474,7 +519,7 @@ export async function GET(req: NextRequest) {
     const startIndex = (page - 1) * limit;
     const paginatedList = filteredList.slice(startIndex, startIndex + limit);
 
-    return NextResponse.json({
+    const responsePayload = {
       success: true,
       data: {
         students: paginatedList,
@@ -485,12 +530,24 @@ export async function GET(req: NextRequest) {
           limit,
         },
       },
-    }, {
-      headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=30" }
+    };
+
+    _feesServerCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + FEES_CACHE_TTL });
+    return responsePayload;
+  })();
+
+  _feesInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const responsePayload = await queryPromise;
+    return sendCompressedJson(req, responsePayload, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30"
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Failed to fetch fee data";
     return NextResponse.json({ success: false, message }, { status: 500 });
+  } finally {
+    _feesInFlight.delete(cacheKey);
   }
 }
 
@@ -533,6 +590,8 @@ export async function POST(req: NextRequest) {
         }
       );
 
+      invalidateFeesCache(schoolId);
+
       return NextResponse.json({ success: true, data: studentFee }, { status: 201 });
     }
 
@@ -563,6 +622,8 @@ export async function POST(req: NextRequest) {
         upsert: true,
       }
     );
+
+    invalidateFeesCache(schoolId);
 
     return NextResponse.json({ success: true, data: classFee }, { status: 201 });
   } catch (err: unknown) {

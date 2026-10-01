@@ -35,6 +35,7 @@ import { PrintButton } from "@/app/components/ui/PrintButton";
 import Link from "next/link";
 import { CollectFeesModal } from "../../components/modals/CollectFeesModal";
 import { SearchToolbar, ColumnSetting } from "@/app/components/ui/SearchToolbar";
+import { cacheSync } from "@/lib/utils/cache-sync";
 
 interface StudentFeeRow {
   _id: string;
@@ -55,6 +56,34 @@ interface StudentFeeRow {
   status: "Paid" | "Partial" | "Pending";
   dueStatus: "No Due" | "Overdue" | "Due";
   academic_year: string;
+}
+
+interface FeesCachePayload {
+  students: StudentFeeRow[];
+  totalItems: number;
+  totalPages: number;
+}
+const _feesLedgerCache = new Map<string, FeesCachePayload>();
+
+function getFeesCacheKey(year: string, cId: string, page: number): string {
+  return `fees_ledger_${year || "all"}_${cId || "all"}_${page}`;
+}
+
+function getStoredFees(key: string): FeesCachePayload | null {
+  const mem = _feesLedgerCache.get(key);
+  if (mem) return mem;
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(`cache_${key}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.students)) {
+        _feesLedgerCache.set(key, parsed);
+        return parsed;
+      }
+    }
+  } catch {}
+  return null;
 }
 
 interface FeeTypeItem {
@@ -82,13 +111,18 @@ export default function FeesPage() {
   const { academicYear } = useAppState();
 
   const [activeTab, setActiveTab] = useState<"ledger" | "reports">("ledger");
-  const [students, setStudents] = useState<StudentFeeRow[]>([]);
+
+  const initialCacheKey = getFeesCacheKey(academicYear || "2026", "", 1);
+  const initialFees = getStoredFees(initialCacheKey);
+
+  const [students, setStudents] = useState<StudentFeeRow[]>(initialFees?.students || []);
+  const [totalItems, setTotalItems] = useState(initialFees?.totalItems || 0);
+  const [totalPages, setTotalPages] = useState(initialFees?.totalPages || 1);
+  const [isLoading, setIsLoading] = useState(initialFees ? false : true);
+
   const [allStudentsForReports, setAllStudentsForReports] = useState<StudentFeeRow[]>([]);
   const [allPaymentsForReports, setAllPaymentsForReports] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isReportsLoading, setIsReportsLoading] = useState(false);
-  const [totalItems, setTotalItems] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Filters and search states
@@ -661,8 +695,10 @@ export default function FeesPage() {
   }, [columnSettings, students, classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter, dateFromFilter, dateToFilter, classes, teachers]);
 
   // Load students & totals with pagination & filters
-  const fetchStudents = useCallback(async () => {
-    setIsLoading(true);
+  const fetchStudents = useCallback(async (background = false) => {
+    if (!background && students.length === 0) {
+      setIsLoading(true);
+    }
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -680,20 +716,39 @@ export default function FeesPage() {
       });
       const res = await fetch(`/api/fees?${params.toString()}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      if (data.success) {
-        setStudents(data.data.students);
-        setTotalItems(data.data.pagination.totalItems);
-        setTotalPages(data.data.pagination.totalPages);
+      if (data.success && data.data?.students) {
+        const payload: FeesCachePayload = {
+          students: data.data.students,
+          totalItems: data.data.pagination.totalItems,
+          totalPages: data.data.pagination.totalPages
+        };
+        const key = getFeesCacheKey(academicYearFilter, classFilter, currentPage);
+        _feesLedgerCache.set(key, payload);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(`cache_${key}`, JSON.stringify(payload));
+          } catch {}
+        }
+        setStudents(payload.students);
+        setTotalItems(payload.totalItems);
+        setTotalPages(payload.totalPages);
       }
     } catch (e) {
       console.error("Error loading student fees", e);
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, search, academicYearFilter, classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter, dateFromFilter, dateToFilter]);
+  }, [currentPage, search, academicYearFilter, classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter, dateFromFilter, dateToFilter, students.length]);
 
   useEffect(() => {
-    fetchStudents();
+    fetchStudents(students.length > 0);
+  }, [fetchStudents]);
+
+  useEffect(() => {
+    return cacheSync.subscribe("fees", () => {
+      _feesLedgerCache.clear();
+      fetchStudents(true);
+    });
   }, [fetchStudents]);
 
   // Load all students and payments for reports tab

@@ -11,6 +11,9 @@ import {
   getAuthHeaders,
   clearMustChangePassword,
   StoredUser,
+  SchoolInfo,
+  saveSchoolInfo,
+  getStoredSchoolInfo,
 } from "@/lib/utils/session";
 import { getClientSubdomain, resolveSchoolIdBySubdomain, getSubdomainHost } from "@/lib/utils/subdomain";
 import { AlertCircle } from "lucide-react";
@@ -18,6 +21,7 @@ import { AlertCircle } from "lucide-react";
 // ─── Types ────────────────────────────────────────────────────────
 interface AuthContextType {
   user: StoredUser | null;
+  school: SchoolInfo | null;
   permissions: Record<string, Record<string, string[]>> | null;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -68,6 +72,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // school_id will be validated on mount via API
         return storedUser;
       }
+    }
+    return null;
+  });
+
+  const [school, setSchool] = useState<SchoolInfo | null>(() => {
+    if (typeof window !== "undefined") {
+      return getStoredSchoolInfo();
     }
     return null;
   });
@@ -213,12 +224,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.warn("[Auth] School mismatch. Stored school:", storedUser.school_id, "Current school:", resolvedSchoolId);
           clearSession();
           setUser(null);
+          setSchool(null);
         }
       })
       .catch(() => {})
       .finally(() => {
         setIsLoading(false);
       });
+
+    // Ensure school info is populated for logged-in user
+    if (storedUser.school_id) {
+      fetch(`/api/public/school-info?school_id=${encodeURIComponent(storedUser.school_id)}`)
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success && json.data) {
+            setSchool(json.data);
+            saveSchoolInfo(json.data);
+          }
+        })
+        .catch(() => {});
+    } else if (subdomain) {
+      fetch(`/api/public/school-info?subdomain=${encodeURIComponent(subdomain)}`)
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success && json.data) {
+            setSchool(json.data);
+            saveSchoolInfo(json.data);
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   // ─── Login ────────────────────────────────────────────────────
@@ -276,7 +311,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, message: data.message || "Login failed" };
       }
 
-      const { user: userData, access_token, refresh_token, school_subdomain } = data.data;
+      const { user: userData, school: schoolData, access_token, refresh_token, school_subdomain } = data.data;
 
       // Allow student and parent logins on this portal as requested
       const ADMIN_PORTAL_ROLES = ["super_admin", "school_admin", "accountant", "teacher", "student", "parent"];
@@ -287,16 +322,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
       }
 
-      saveSession(access_token, refresh_token, {
-        id: userData.id,
-        name: userData.name,
-        email: userData.email,
-        role: userData.role,
-        school_id: userData.school_id,
-        must_change_password: userData.must_change_password ?? false,
-      });
+      saveSession(
+        access_token,
+        refresh_token,
+        {
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role,
+          school_id: userData.school_id,
+          must_change_password: userData.must_change_password ?? false,
+        },
+        schoolData
+      );
 
       setUser(userData);
+      setSchool(schoolData || null);
       // Set must_change_password state for forced modal
       setMustChangePassword(userData.must_change_password ?? false);
       return { success: true, message: "Login successful", schoolSubdomain: school_subdomain };
@@ -367,6 +408,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       sessionStorage.removeItem(PERMISSIONS_CACHE_TIME_KEY);
     }
     setUser(null);
+    setSchool(null);
     setPermissions(null);
     setMustChangePassword(false);
     _permissionsFetchPromise = null;
@@ -499,6 +541,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await res.json();
       if (data.success) {
         setUser(data.data);
+        if (data.data.school) {
+          setSchool(data.data.school);
+          saveSchoolInfo(data.data.school);
+        }
       }
     } catch {
       // Silent fail
@@ -542,6 +588,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const contextValue = useMemo(() => ({
     user,
+    school,
     permissions,
     isLoading,
     isAuthenticated: !!user,
@@ -554,6 +601,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     clearMustChangePasswordFlag,
   }), [
     user,
+    school,
     permissions,
     isLoading,
     mustChangePassword,
@@ -584,4 +632,9 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
+}
+
+export function useCurrentSchool() {
+  const { school } = useAuth();
+  return school;
 }

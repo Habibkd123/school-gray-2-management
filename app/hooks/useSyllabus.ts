@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { cacheSync, invalidateCache } from "@/lib/utils/cache-sync";
 
 export interface SyllabusResource {
   title: string;
@@ -66,6 +67,59 @@ export interface SyllabusData {
   updatedAt?: string;
 }
 
+// ─── Module-level Cache & sessionStorage Backup ─────────────────────
+interface SyllabusListCacheEntry {
+  syllabi: SyllabusData[];
+  total: number;
+  totalPages: number;
+  page: number;
+  timestamp: number;
+}
+const _syllabusCache = new Map<string, SyllabusListCacheEntry>();
+const _syllabusDetailCache = new Map<string, { data: SyllabusData; timestamp: number }>();
+const CACHE_TTL_MS = 30_000;
+const SS_PREFIX = "sm_syl_";
+const SS_DETAIL_PREFIX = "sm_syld_";
+
+function readSessionCacheSyl(key: string): SyllabusListCacheEntry | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SS_PREFIX + key);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (Date.now() - p.timestamp < CACHE_TTL_MS) return p;
+  } catch {}
+  return null;
+}
+
+function writeSessionCacheSyl(key: string, entry: SyllabusListCacheEntry) {
+  try { sessionStorage.setItem(SS_PREFIX + key, JSON.stringify(entry)); } catch {}
+}
+
+function readSessionCacheDetail(id: string): { data: SyllabusData; timestamp: number } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SS_DETAIL_PREFIX + id);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (Date.now() - p.timestamp < CACHE_TTL_MS) return p;
+  } catch {}
+  return null;
+}
+
+function writeSessionCacheDetail(id: string, entry: { data: SyllabusData; timestamp: number }) {
+  try { sessionStorage.setItem(SS_DETAIL_PREFIX + id, JSON.stringify(entry)); } catch {}
+}
+
+function clearSessionCacheSyl() {
+  if (typeof window === "undefined") return;
+  try {
+    Object.keys(sessionStorage)
+      .filter(k => k.startsWith(SS_PREFIX) || k.startsWith(SS_DETAIL_PREFIX))
+      .forEach(k => sessionStorage.removeItem(k));
+  } catch {}
+}
+
 export function useSyllabus() {
   const [syllabus, setSyllabus] = useState<SyllabusData | null>(null);
   const [syllabi, setSyllabi] = useState<SyllabusData[]>([]);
@@ -88,36 +142,100 @@ export function useSyllabus() {
     limit?: number;
     teacher_assignment_id?: string;
   }) => {
-    setIsLoading(true);
+    let url = "/api/syllabus";
+    let cacheKey = "";
+    if (typeof params === "string") {
+      url = `/api/syllabus?teacher_assignment_id=${params}`;
+      cacheKey = `ta_${params}`;
+    } else if (params) {
+      const qs = new URLSearchParams();
+      Object.entries(params).forEach(([key, val]) => {
+        if (val !== undefined && val !== null && val !== "") {
+          qs.set(key, String(val));
+        }
+      });
+      qs.sort();
+      cacheKey = qs.toString();
+      url = `/api/syllabus?${cacheKey}`;
+    }
+
+    const cached = _syllabusCache.get(cacheKey) ?? readSessionCacheSyl(cacheKey);
+    const now = Date.now();
+    if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+      setSyllabi(cached.syllabi);
+      setTotal(cached.total);
+      setTotalPages(cached.totalPages);
+      setCurrentPage(cached.page);
+      setIsLoading(false);
+      if (now - cached.timestamp < 15_000) return;
+    } else {
+      setIsLoading(true);
+    }
+
     setError(null);
     try {
-      let url = "/api/syllabus";
-      if (typeof params === "string") {
-        url = `/api/syllabus?teacher_assignment_id=${params}`;
-      } else if (params) {
-        const qs = new URLSearchParams();
-        Object.entries(params).forEach(([key, val]) => {
-          if (val !== undefined && val !== null && val !== "") {
-            qs.set(key, String(val));
-          }
-        });
-        url = `/api/syllabus?${qs.toString()}`;
-      }
-
       const res = await fetch(url, { headers: getAuthHeaders() });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch syllabus data.");
 
       if (Array.isArray(data.data)) {
-        setSyllabi(data.data);
-        setTotal(data.total ?? data.data.length);
-        setTotalPages(data.totalPages ?? 1);
-        setCurrentPage(data.page ?? 1);
+        const fetchedSyllabi = data.data;
+        const fetchedTotal = data.total ?? data.data.length;
+        const fetchedTotalPages = data.totalPages ?? 1;
+        const fetchedPage = data.page ?? 1;
+
+        const entry: SyllabusListCacheEntry = {
+          syllabi: fetchedSyllabi,
+          total: fetchedTotal,
+          totalPages: fetchedTotalPages,
+          page: fetchedPage,
+          timestamp: Date.now()
+        };
+        _syllabusCache.set(cacheKey, entry);
+        writeSessionCacheSyl(cacheKey, entry);
+
+        // Pre-seed detail cache so sub-pages load instantaneously (0ms)
+        fetchedSyllabi.forEach((item: any) => {
+          if (item && item._id) {
+            const detailEntry = { data: item, timestamp: Date.now() };
+            _syllabusDetailCache.set(item._id, detailEntry);
+            writeSessionCacheDetail(item._id, detailEntry);
+          }
+        });
+
+        setSyllabi(fetchedSyllabi);
+        setTotal(fetchedTotal);
+        setTotalPages(fetchedTotalPages);
+        setCurrentPage(fetchedPage);
       } else if (data.data && data.data.syllabi) {
-        setSyllabi(data.data.syllabi);
-        setTotal(data.data.total ?? 0);
-        setTotalPages(data.data.totalPages ?? 1);
-        setCurrentPage(data.data.page ?? 1);
+        const fetchedSyllabi = data.data.syllabi;
+        const fetchedTotal = data.data.total ?? 0;
+        const fetchedTotalPages = data.data.totalPages ?? 1;
+        const fetchedPage = data.data.page ?? 1;
+
+        const entry: SyllabusListCacheEntry = {
+          syllabi: fetchedSyllabi,
+          total: fetchedTotal,
+          totalPages: fetchedTotalPages,
+          page: fetchedPage,
+          timestamp: Date.now()
+        };
+        _syllabusCache.set(cacheKey, entry);
+        writeSessionCacheSyl(cacheKey, entry);
+
+        // Pre-seed detail cache so sub-pages load instantaneously (0ms)
+        fetchedSyllabi.forEach((item: any) => {
+          if (item && item._id) {
+            const detailEntry = { data: item, timestamp: Date.now() };
+            _syllabusDetailCache.set(item._id, detailEntry);
+            writeSessionCacheDetail(item._id, detailEntry);
+          }
+        });
+
+        setSyllabi(fetchedSyllabi);
+        setTotal(fetchedTotal);
+        setTotalPages(fetchedTotalPages);
+        setCurrentPage(fetchedPage);
       } else {
         // Single Syllabus record returned
         setSyllabus(data.data);
@@ -129,13 +247,37 @@ export function useSyllabus() {
     }
   }, []);
 
+  // Synchronize across tabs and components
+  useEffect(() => {
+    return cacheSync.subscribe("syllabus", () => {
+      _syllabusCache.clear();
+      _syllabusDetailCache.clear();
+      clearSessionCacheSyl();
+    });
+  }, []);
+
   const getSyllabusDetails = useCallback(async (id: string) => {
-    setIsLoading(true);
+    const memCached = _syllabusDetailCache.get(id);
+    const ssCached = readSessionCacheDetail(id);
+    const cached = memCached ?? (ssCached ? { data: ssCached.data, timestamp: ssCached.timestamp } : null);
+    const now = Date.now();
+
+    if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+      setSyllabus(cached.data);
+      if (!memCached && ssCached) _syllabusDetailCache.set(id, { data: ssCached.data, timestamp: ssCached.timestamp });
+      if (now - cached.timestamp < 15_000) return cached.data;
+    } else {
+      setIsLoading(true);
+    }
+
     setError(null);
     try {
       const res = await fetch(`/api/syllabus/${id}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to load syllabus details.");
+      const entry = { data: data.data, timestamp: Date.now() };
+      _syllabusDetailCache.set(id, entry);
+      writeSessionCacheDetail(id, entry);
       setSyllabus(data.data);
       return data.data;
     } catch (err) {
@@ -145,6 +287,13 @@ export function useSyllabus() {
       setIsLoading(false);
     }
   }, []);
+
+  const clearAllSyllabusCaches = () => {
+    _syllabusCache.clear();
+    _syllabusDetailCache.clear();
+    clearSessionCacheSyl();
+    invalidateCache("syllabus");
+  };
 
   const saveSyllabus = async (idOrData: string | Partial<SyllabusData>, rawChaptersFallback?: any) => {
     try {
@@ -159,6 +308,7 @@ export function useSyllabus() {
         });
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message || "Failed to save syllabus");
+        clearAllSyllabusCaches();
         setSyllabus(data.data);
         return { success: true, message: "Syllabus saved successfully", data: data.data };
       }
@@ -171,6 +321,7 @@ export function useSyllabus() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to save syllabus");
+      clearAllSyllabusCaches();
       setSyllabus(data.data);
       return { success: true, message: "Syllabus saved successfully", data: data.data };
     } catch (err: any) {
@@ -192,6 +343,7 @@ export function useSyllabus() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to update syllabus");
+      clearAllSyllabusCaches();
       setSyllabus(data.data);
       return { success: true, message: "Syllabus updated successfully", data: data.data };
     } catch (err: any) {
@@ -212,6 +364,7 @@ export function useSyllabus() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to delete syllabus");
+      clearAllSyllabusCaches();
       setSyllabus(null);
       setSyllabi(prev => prev.filter(s => s._id !== id));
       return { success: true, message: "Syllabus deleted successfully" };
@@ -234,6 +387,7 @@ export function useSyllabus() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to duplicate syllabus");
+      clearAllSyllabusCaches();
       return { success: true, message: "Syllabus duplicated successfully", data: data.data };
     } catch (err: any) {
       setError(err.message || "Network error");
@@ -254,6 +408,7 @@ export function useSyllabus() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to restore syllabus version");
+      clearAllSyllabusCaches();
       setSyllabus(data.data);
       return { success: true, message: `Restored to Version ${version} successfully`, data: data.data };
     } catch (err: any) {

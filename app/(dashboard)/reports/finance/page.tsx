@@ -41,6 +41,50 @@ interface TeacherSalaryRow {
   remarks?: string;
 }
 
+// ─── Module Cache Helpers ──────────────────────────────────────────
+const SS_FINANCE_FEES_PREFIX = "sm_rep_fin_fees_";
+const SS_FINANCE_SALARIES_PREFIX = "sm_rep_fin_sal_";
+
+function getStoredFinanceFees(key: string): any[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SS_FINANCE_FEES_PREFIX + key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp < 60_000 && Array.isArray(parsed.data)) {
+      return parsed.data;
+    }
+  } catch {}
+  return null;
+}
+
+function setStoredFinanceFees(key: string, data: any[]) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(SS_FINANCE_FEES_PREFIX + key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
+
+function getStoredFinanceSalaries(key: string): { payments: any[]; teachers: any[] } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SS_FINANCE_SALARIES_PREFIX + key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp < 60_000 && parsed.data) {
+      return parsed.data;
+    }
+  } catch {}
+  return null;
+}
+
+function setStoredFinanceSalaries(key: string, data: { payments: any[]; teachers: any[] }) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(SS_FINANCE_SALARIES_PREFIX + key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
+
 export default function FinanceReportPage() {
   const { classes, isLoading: isClassesLoading } = useClasses();
 
@@ -53,14 +97,17 @@ export default function FinanceReportPage() {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
 
+  const cachedFees = getStoredFinanceFees("all");
+  const cachedSal = getStoredFinanceSalaries("all");
+
   // Student Dues raw & aggregated stats
-  const [studentsList, setStudentsList] = useState<any[]>([]);
-  const [isLoadingStudents, setIsLoadingStudents] = useState(true);
+  const [studentsList, setStudentsList] = useState<any[]>(() => cachedFees ?? []);
+  const [isLoadingStudents, setIsLoadingStudents] = useState(() => cachedFees === null);
 
   // Teacher Salary logs
-  const [salariesList, setSalariesList] = useState<any[]>([]);
-  const [teachersList, setTeachersList] = useState<any[]>([]);
-  const [isLoadingSalaries, setIsLoadingSalaries] = useState(true);
+  const [salariesList, setSalariesList] = useState<any[]>(() => cachedSal?.payments ?? []);
+  const [teachersList, setTeachersList] = useState<any[]>(() => cachedSal?.teachers ?? []);
+  const [isLoadingSalaries, setIsLoadingSalaries] = useState(() => cachedSal === null);
 
   const [isExportOpen, setIsExportOpen] = useState(false);
 
@@ -76,50 +123,73 @@ export default function FinanceReportPage() {
 
   // Load all student fees data (fetch large limit to compute summaries locally)
   const fetchStudentFees = useCallback(async () => {
-    setIsLoadingStudents(true);
+    const cacheKey = `${selectedClass}_${selectedStatus}`;
+    const cached = getStoredFinanceFees(cacheKey) ?? getStoredFinanceFees("all");
+    if (cached && cached.length > 0) {
+      setStudentsList(cached);
+      setIsLoadingStudents(false);
+    } else if (studentsList.length === 0) {
+      setIsLoadingStudents(true);
+    }
+
     try {
       const params = new URLSearchParams({
-        // Cap at 1000 — sufficient for class/school-level summary; prevents large payloads
         limit: "1000",
         class_id: selectedClass,
-        status: selectedStatus
+        status: selectedStatus,
       });
       const res = await fetch(`/api/fees?${params.toString()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setStudentsList(data.data.students);
+        setStoredFinanceFees(cacheKey, data.data.students);
+        if (!selectedClass && !selectedStatus) {
+          setStoredFinanceFees("all", data.data.students);
+        }
       }
     } catch (e) {
       console.error(e);
     } finally {
       setIsLoadingStudents(false);
     }
-  }, [selectedClass, selectedStatus]);
+  }, [selectedClass, selectedStatus, studentsList.length]);
 
   // Load salaries history & teachers list
   const fetchTeacherSalaries = useCallback(async () => {
-    setIsLoadingSalaries(true);
+    const cacheKey = `${startDate}_${endDate}`;
+    const cached = getStoredFinanceSalaries(cacheKey) ?? getStoredFinanceSalaries("all");
+    if (cached) {
+      setSalariesList(cached.payments);
+      setTeachersList(cached.teachers);
+      setIsLoadingSalaries(false);
+    } else if (salariesList.length === 0) {
+      setIsLoadingSalaries(true);
+    }
+
     try {
       const params = new URLSearchParams();
       if (startDate && endDate) {
         params.set("start_date", startDate);
         params.set("end_date", endDate);
       }
-      const salRes = await fetch(`/api/salaries?${params.toString()}`, { headers: getAuthHeaders() });
+      const [salRes, teachers] = await Promise.all([
+        fetch(`/api/salaries?${params.toString()}`, { headers: getAuthHeaders() }),
+        TeacherService.getAllTeachers(),
+      ]);
       const salData = await salRes.json();
-      if (salData.success) {
-        setSalariesList(salData.data?.payments || salData.data || []);
-      }
-
-      // Also get teachers list to sum contract salaries for "Pending Salary"
-      const teachers = await TeacherService.getAllTeachers();
+      const payments = salData.success ? (salData.data?.payments || salData.data || []) : [];
+      setSalariesList(payments);
       setTeachersList(teachers);
+      setStoredFinanceSalaries(cacheKey, { payments, teachers });
+      if (!startDate && !endDate) {
+        setStoredFinanceSalaries("all", { payments, teachers });
+      }
     } catch (e) {
       console.error(e);
     } finally {
       setIsLoadingSalaries(false);
     }
-  }, [startDate, endDate]);
+  }, [startDate, endDate, salariesList.length]);
 
   useEffect(() => {
     if (activeTab === "student_fees") {

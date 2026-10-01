@@ -5,6 +5,7 @@ import Stream from "@/lib/models/Stream";
 import Teacher from "@/lib/models/Teacher";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { invalidateTaCache } from "../route";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -238,6 +239,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       );
     }
 
+    invalidateTaCache(schoolId as string);
     return NextResponse.json({ success: true, data: updated });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
@@ -294,6 +296,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     // Hard-delete syllabus mapping as before
     await Syllabus.deleteOne({ teacher_assignment_id: id, school_id: schoolId });
 
+    invalidateTaCache(schoolId as string);
     return NextResponse.json({ success: true, message: "Teacher assignment soft-deleted and syllabus cleaned" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

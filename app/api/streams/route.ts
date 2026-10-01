@@ -6,6 +6,19 @@ import Class from "@/lib/models/Class";
 import Student from "@/lib/models/Student";
 import { sendConditionalJson } from "@/lib/etag";
 
+// ─── Server-side cache ───────────────────────────────────────
+const gs = globalThis as any;
+if (!gs._streamsServerCache) gs._streamsServerCache = new Map<string, { data: any; expiresAt: number }>();
+const _cache: Map<string, { data: any; expiresAt: number }> = gs._streamsServerCache;
+const TTL = 60_000;
+
+export function invalidateStreamsServerCache(schoolId?: string) {
+  if (!schoolId) { _cache.clear(); return; }
+  for (const k of Array.from(_cache.keys())) {
+    if (k.startsWith(String(schoolId))) _cache.delete(k);
+  }
+}
+
 // GET — list streams for school
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
@@ -14,6 +27,11 @@ export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
     const url = new URL(req.url);
+    const cacheKey = `${schoolId}:${url.searchParams.toString()}`;
+    const cached = _cache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return sendConditionalJson(req, cached.data, { cacheControl: "private, max-age=30, stale-while-revalidate=60" });
+    }
     const search = url.searchParams.get("search") || "";
     const status = url.searchParams.get("status") || "";
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
@@ -65,14 +83,9 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return sendConditionalJson(
-      req,
-      {
-        success: true,
-        data: { streams: streamsWithStats, total, page, totalPages: Math.ceil(total / limit) },
-      },
-      { cacheControl: "private, max-age=120, stale-while-revalidate=60" }
-    );
+    const responseData = { success: true, data: { streams: streamsWithStats, total, page, totalPages: Math.ceil(total / limit) } };
+    _cache.set(cacheKey, { data: responseData, expiresAt: Date.now() + TTL });
+    return sendConditionalJson(req, responseData, { cacheControl: "private, max-age=30, stale-while-revalidate=60" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }
@@ -97,6 +110,7 @@ export async function POST(req: NextRequest) {
       status: status || "Active",
     });
 
+    if (stream) invalidateStreamsServerCache(String(schoolId));
     return NextResponse.json({ success: true, data: stream }, { status: 201 });
   } catch (err: any) {
     if (err.code === 11000) {

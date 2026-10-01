@@ -4,6 +4,24 @@ import { Admission } from "@/lib/models/index";
 import Class from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
+
+import { invalidateAdmissionsStatsCache } from "./stats/route";
+import { invalidateAdmissionsReportsCache } from "./reports/route";
+
+// ─── Server-side cache ────────────────────────────────────────
+const gx = globalThis as any;
+if (!gx._admissionsListCache) gx._admissionsListCache = new Map<string, { data: any; expiresAt: number }>();
+const _admissionsListCache: Map<string, { data: any; expiresAt: number }> = gx._admissionsListCache;
+const ADMISSIONS_CACHE_TTL = 30_000;
+
+export function invalidateAdmissionsCache(schoolId?: string) {
+  if (!schoolId) { _admissionsListCache.clear(); return; }
+  for (const k of Array.from(_admissionsListCache.keys())) {
+    if (k.startsWith(schoolId)) _admissionsListCache.delete(k);
+  }
+}
+
 
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin"]);
@@ -15,12 +33,18 @@ export async function GET(req: NextRequest) {
     void [Class.modelName];
 
     const url = new URL(req.url);
+    const cacheKey = `${schoolId}:${url.searchParams.toString()}`;
+    const cached = _admissionsListCache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+    }
+
     const search = url.searchParams.get("search") || "";
     const status = url.searchParams.get("status") || "all";
     const classId = url.searchParams.get("class_id") || "all";
     const academicYear = url.searchParams.get("academic_year") || "all";
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
-    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get("limit") || "10")));
+    const limit = Math.min(1000, Math.max(1, parseInt(url.searchParams.get("limit") || "10")));
     const skip = (page - 1) * limit;
 
     const query: Record<string, any> = { school_id: schoolId };
@@ -59,7 +83,7 @@ export async function GET(req: NextRequest) {
       Admission.countDocuments(query),
     ]);
 
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: admissions,
       pagination: {
@@ -68,7 +92,9 @@ export async function GET(req: NextRequest) {
         limit,
         pages: Math.ceil(total / limit),
       },
-    });
+    };
+    _admissionsListCache.set(cacheKey, { data: responseData, expiresAt: Date.now() + ADMISSIONS_CACHE_TTL });
+    return sendCompressedJson(req, responseData, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
   } catch (err: any) {
     console.error("[GET /api/admissions]", err);
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
@@ -173,6 +199,9 @@ export async function POST(req: NextRequest) {
       ],
     });
 
+    invalidateAdmissionsCache(schoolId as string);
+    invalidateAdmissionsStatsCache(schoolId as string);
+    invalidateAdmissionsReportsCache(schoolId as string);
     return NextResponse.json({ success: true, data: admission }, { status: 201 });
   } catch (err: any) {
     console.error("[POST /api/admissions]", err);

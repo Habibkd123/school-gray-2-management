@@ -3,9 +3,29 @@ import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db";
 import Class, { computeSortWeight } from "@/lib/models/Class";
 import Teacher from "@/lib/models/Teacher";
-import { TeacherAssignment, Student, Subject } from "@/lib/models/index";
+import { TeacherAssignment, Student, Subject, SubjectAssignment } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import { sendConditionalJson } from "@/lib/etag";
+
+// ─── Server-side cache on globalThis ──────────────────────────────
+const gs = globalThis as any;
+if (!gs._classesServerCache) gs._classesServerCache = new Map<string, { data: any; expiresAt: number }>();
+if (!gs._classesInFlight) gs._classesInFlight = new Map<string, Promise<any>>();
+const _serverClassesCache: Map<string, { data: any; expiresAt: number }> = gs._classesServerCache;
+const _classesInFlight: Map<string, Promise<any>> = gs._classesInFlight;
+const CLASSES_CACHE_TTL_MS = 60_000; // 60 seconds
+
+export function invalidateServerClassesCache(schoolId?: string) {
+  if (!schoolId) {
+    _serverClassesCache.clear();
+    return;
+  }
+  for (const key of Array.from(_serverClassesCache.keys())) {
+    if (key.startsWith(String(schoolId))) {
+      _serverClassesCache.delete(key);
+    }
+  }
+}
 
 // GET: Fetch all classes for the school (DB-level pagination & sort_weight ordering)
 export async function GET(req: NextRequest) {
@@ -13,10 +33,35 @@ export async function GET(req: NextRequest) {
   if (authResult.error) return authResult.error;
   const { schoolId, user } = authResult;
 
-  try {
+  const url = new URL(req.url);
+  const sortedParams = new URLSearchParams(url.searchParams);
+  sortedParams.sort();
+  const cacheKey = `${schoolId}__${user.role === "teacher" ? user.user_id : "all"}__${sortedParams.toString()}`;
+  const cached = _serverClassesCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return sendConditionalJson(
+      req,
+      cached.data,
+      { cacheControl: "private, max-age=60, stale-while-revalidate=120" }
+    );
+  }
+
+  if (_classesInFlight.has(cacheKey)) {
+    try {
+      const data = await _classesInFlight.get(cacheKey)!;
+      return sendConditionalJson(
+        req,
+        data,
+        { cacheControl: "private, max-age=60, stale-while-revalidate=120" }
+      );
+    } catch {
+      // Fall through to retry on error
+    }
+  }
+
+  const queryPromise = (async () => {
     await connectToDatabase();
 
-    const url           = new URL(req.url);
     const search        = url.searchParams.get("search") || "";
     const academic_year = url.searchParams.get("academic_year") || "";
     const section       = url.searchParams.get("section") || "";
@@ -57,10 +102,7 @@ export async function GET(req: NextRequest) {
         });
       } else {
         // No teacher record → return empty result immediately
-        return NextResponse.json(
-          { success: true, data: { classes: [], total: 0, page, limit, totalPages: 0 } },
-          { headers: { "Cache-Control": "no-store, max-age=0, must-revalidate" } }
-        );
+        return { classes: [], total: 0, page, limit, totalPages: 0 };
       }
     }
 
@@ -110,15 +152,15 @@ export async function GET(req: NextRequest) {
 
       const [studentCounts, subjectCounts, sectionCounts] = await Promise.all([
         Student.aggregate([
-          { $match: { school_id: schoolObjId, class_id: { $in: classIds } } },
+          { $match: { school_id: { $in: [schoolObjId, String(schoolId)] }, class_id: { $in: classIds } } },
           { $group: { _id: "$class_id", count: { $sum: 1 } } }
         ]),
-        Subject.aggregate([
-          { $match: { school_id: schoolObjId, class_id: { $in: classIds } } },
+        SubjectAssignment.aggregate([
+          { $match: { school_id: { $in: [schoolObjId, String(schoolId)] }, class_id: { $in: classIds } } },
           { $group: { _id: "$class_id", count: { $sum: 1 } } }
         ]),
         Class.aggregate([
-          { $match: { school_id: schoolObjId, name: { $in: classNames } } },
+          { $match: { school_id: schoolObjId, name: { $in: classNames }, academic_year: academic_year || { $exists: true } } },
           { $group: { _id: { name: "$name", academic_year: "$academic_year" }, count: { $sum: 1 } } }
         ])
       ]);
@@ -135,23 +177,39 @@ export async function GET(req: NextRequest) {
       }));
     }
 
+    const responsePayload = {
+      success: true,
+      data: {
+        classes: classesWithStats,
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+
+    _serverClassesCache.set(cacheKey, {
+      data: responsePayload,
+      expiresAt: Date.now() + CLASSES_CACHE_TTL_MS,
+    });
+
+    return responsePayload;
+  })();
+
+  _classesInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const responsePayload = await queryPromise;
     return sendConditionalJson(
       req,
-      {
-        success: true,
-        data: {
-          classes: classesWithStats,
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        },
-      },
-      { cacheControl: "private, max-age=60, stale-while-revalidate=60" }
+      responsePayload,
+      { cacheControl: "private, max-age=60, stale-while-revalidate=120" }
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ success: false, message }, { status: 500 });
+  } finally {
+    _classesInFlight.delete(cacheKey);
   }
 }
 
@@ -186,6 +244,8 @@ export async function POST(req: NextRequest) {
     });
 
     const populated = await newClass.populate("class_teacher_id", "name employee_id");
+
+    invalidateServerClassesCache(String(schoolId));
 
     return NextResponse.json({ success: true, data: populated }, { status: 201 });
   } catch (err: unknown) {

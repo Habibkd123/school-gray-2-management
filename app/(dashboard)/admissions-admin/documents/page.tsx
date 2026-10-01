@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { getAuthHeaders } from "@/lib/utils/session";
 import {
@@ -22,8 +22,31 @@ export default function DocumentsListPage() {
   const [docs, setDocs] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const isFetchingRef = useRef(false);
 
-  const fetchDocuments = useCallback(async () => {
+  const SESSION_KEY = "sm_admissions_docs";
+
+  const fetchDocuments = useCallback(async (force = false) => {
+    if (isFetchingRef.current) return;
+
+    // Serve from sessionStorage cache if fresh
+    if (!force) {
+      try {
+        const s = sessionStorage.getItem(SESSION_KEY);
+        if (s) {
+          const p = JSON.parse(s);
+          if (Date.now() - p.ts < 60_000) {
+            setDocs(p.docs);
+            setLoading(false);
+            // Background refresh
+            setTimeout(() => fetchDocuments(true), 100);
+            return;
+          }
+        }
+      } catch {}
+    }
+
+    isFetchingRef.current = true;
     setLoading(true);
     try {
       // Query first 100 applications to aggregate document lists
@@ -50,10 +73,12 @@ export default function DocumentsListPage() {
           });
         });
         setDocs(list);
+        try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ docs: list, ts: Date.now() })); } catch {}
       }
     } catch (err) {
       console.error(err);
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
     }
   }, []);
@@ -81,7 +106,7 @@ export default function DocumentsListPage() {
           <p className="text-[12px] text-slate-500 mt-1 font-normal">Review and manage all uploaded documents from applicants</p>
         </div>
         <button
-          onClick={fetchDocuments}
+          onClick={() => fetchDocuments(true)}
           className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center"
         >
           <RefreshCw className="w-4 h-4" />

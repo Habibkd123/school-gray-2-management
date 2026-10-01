@@ -21,7 +21,7 @@ const PROTECTED_PREFIXES = [
   "/student/",
 ];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const url = request.nextUrl.clone();
   const hostname = request.headers.get("host") || "";
   const pathname = url.pathname;
@@ -38,8 +38,14 @@ export function middleware(request: NextRequest) {
     hostnameWithoutPort.endsWith(".localhost");
 
   let subdomain: string | null = null;
+  const isForcePlatform =
+    url.searchParams.get("platform") === "true" ||
+    url.searchParams.get("view") === "platform" ||
+    url.searchParams.get("saas") === "true";
 
-  if (hostnameWithoutPort === "localhost" || hostnameWithoutPort === "127.0.0.1") {
+  if (isForcePlatform) {
+    subdomain = null;
+  } else if (hostnameWithoutPort === "localhost" || hostnameWithoutPort === "127.0.0.1") {
     // Local dev plain: priority 1 = ?subdomain=, priority 2 = logged-in cookie, priority 3 = standalone default
     const cookieSub = request.cookies.get("sm_subdomain")?.value;
     subdomain = url.searchParams.get("subdomain") || cookieSub || null;
@@ -143,6 +149,9 @@ export function middleware(request: NextRequest) {
     // No NEXT_PUBLIC_SCHOOL_ID fallback — tenant is resolved purely from hostname/subdomain
   }
   requestHeaders.set("x-hostname", hostname);
+  if (isForcePlatform) {
+    requestHeaders.set("x-platform-view", "true");
+  }
 
   const response = NextResponse.next({
     request: {
@@ -158,9 +167,9 @@ export function middleware(request: NextRequest) {
   return response;
 }
 
-// Run middleware on all routes except Next.js internals and static files
+// Run middleware on all routes except Next.js internals, static files, images, and fonts
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
+    "/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|sitemap\\.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico|bmp|tiff|woff|woff2|ttf|eot|css|js|map|mp4|webm|pdf|aco|sketchpalette)).*)",
   ],
 };

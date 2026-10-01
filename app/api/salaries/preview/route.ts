@@ -4,6 +4,7 @@ import { Attendance } from "@/lib/models/index";
 import Teacher from "@/lib/models/Teacher";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
 
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
@@ -142,7 +143,7 @@ export async function GET(req: NextRequest) {
 
     const isMonthEnded = new Date() >= endDate;
 
-    return NextResponse.json({
+    return sendCompressedJson(req, {
       success: true,
       data: {
         teacherId: teacher._id,
@@ -166,7 +167,7 @@ export async function GET(req: NextRequest) {
         hasAttendance: attendanceRecordsCount > 0,
         isMonthEnded,
       },
-    });
+    }, { cacheControl: "private, no-cache" });
   } catch (err: any) {
     return NextResponse.json(
       { success: false, message: err.message || "Internal server error" },

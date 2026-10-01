@@ -28,10 +28,21 @@ interface SidebarProps {
 
 export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user, logout, school } = useAuth();
   const activeRole = mapRole(user?.role);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const { enableStreams, enableSections } = useAcademicConfig();
+
+  const isSuperAdmin = user?.role === "super_admin";
+  const schoolName = isSuperAdmin
+    ? "MySchoolLife"
+    : (school?.name?.trim() || "MySchoolLife");
+  const schoolSubtitle = isSuperAdmin
+    ? "Management"
+    : (school?.subtitle?.trim() || "Management");
+  const schoolLogo = isSuperAdmin
+    ? "/logo.png"
+    : (school?.logo_url?.trim() || "/logo.png");
 
   const superAdminLinks = [
     { name: "Overview", href: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -269,19 +280,30 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         {/* Branding */}
         <div className={`h-16 flex items-center ${isCollapsed ? 'justify-center px-0' : 'justify-between px-4'} border-b border-slate-800/50 mt-2`}>
           {(!isCollapsed || isMobileOpen) && (
-            <div className="flex items-center gap-3 pl-2 md:pl-0">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden bg-white shrink-0 dark:bg-slate-900">
-                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain p-1" />
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-3 pl-2 md:pl-0 min-w-0 flex-1 group overflow-hidden"
+              title={schoolName}
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden bg-white shrink-0 dark:bg-slate-900 border border-slate-700/50 shadow-sm group-hover:scale-105 transition-transform">
+                <img
+                  src={schoolLogo}
+                  alt={schoolName}
+                  className="w-full h-full object-contain p-1"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/logo.png";
+                  }}
+                />
               </div>
-              <div className="flex flex-col">
-                <span className="font-bold text-white tracking-tight text-[15px]">
-                  MySchoolLife
+              <div className="flex flex-col min-w-0 pr-1">
+                <span className="font-bold text-white tracking-tight text-[15px] truncate">
+                  {schoolName}
                 </span>
-                <span className="text-[10px] text-slate-400 dark:text-slate-500 tracking-wider uppercase">
-                  Management
+                <span className="text-[10px] text-slate-400 dark:text-slate-500 tracking-wider uppercase truncate">
+                  {schoolSubtitle}
                 </span>
               </div>
-            </div>
+            </Link>
           )}
 
           {/* Collapse toggle for desktop, close button for mobile */}

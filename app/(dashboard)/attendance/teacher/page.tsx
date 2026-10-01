@@ -21,12 +21,13 @@ import { useTeacherAttendance } from "@/app/hooks/useTeacherAttendance";
 import { useTeachers } from "@/app/hooks/useTeachers";
 import { useAppState } from "@/app/context/store";
 import { PrintService } from "@/app/lib/print-service";
+import { cacheSync } from "@/lib/utils/cache-sync";
 
 export default function TeacherAttendancePage() {
   const { academicYear } = useAppState();
 
   const { attendance, isLoading: loadingAttendance, error, fetchAttendance, saveAttendance } = useTeacherAttendance();
-  const { teachers, fetchTeachers, isLoading: loadingTeachers } = useTeachers({ skip: true });
+  const { teachers, fetchTeachers, isLoading: loadingTeachers } = useTeachers();
 
   // Filters
   const [filterYear, setFilterYear] = useState(academicYear || "2026");
@@ -35,7 +36,7 @@ export default function TeacherAttendancePage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [deptFilter, setDeptFilter] = useState("");
 
-  // Attendance State
+  // Attendance State (0ms instant cache load)
   const [attendanceRecords, setAttendanceRecords] = useState<
     Record<string, {
       status: string;
@@ -45,10 +46,41 @@ export default function TeacherAttendancePage() {
       working_hours: number;
       late_minutes: number;
     }>
-  >({});
+  >(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const yr = academicYear || "2026";
+        const raw = sessionStorage.getItem(`cache_ta_${yr}_${today}`);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed.data?.records) {
+            const records: any = {};
+            parsed.data.records.forEach((r: any) => {
+              const tId = typeof r.teacher_id === "object" && r.teacher_id ? r.teacher_id._id : r.teacher_id;
+              if (tId) {
+                records[tId.toString()] = {
+                  status: r.status || "present",
+                  note: r.note || "",
+                  check_in: r.check_in || "09:00",
+                  check_out: r.check_out || "17:00",
+                  working_hours: r.working_hours ?? 8,
+                  late_minutes: r.late_minutes ?? 0,
+                };
+              }
+            });
+            return records;
+          }
+        }
+      } catch {}
+    }
+    return {};
+  });
+
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-  const isInitialLoad = useRef(true);
+  const isInitialLoad = useRef(teachers.length === 0 && Object.keys(attendanceRecords).length === 0);
+
   useEffect(() => {
     if (!loadingAttendance && !loadingTeachers && isInitialLoad.current) {
       isInitialLoad.current = false;
@@ -58,19 +90,26 @@ export default function TeacherAttendancePage() {
   // Bulk Selection State
   const [selectedTeacherIds, setSelectedTeacherIds] = useState<string[]>([]);
 
-  // Fetch all active teachers on load
-  useEffect(() => {
-    fetchTeachers(); // skip: true means we fetch manually. It retrieves all active teachers.
-  }, [fetchTeachers]);
-
   // Fetch existing attendance records
   useEffect(() => {
     if (filterDate && filterYear) {
       fetchAttendance({
         academic_year: filterYear,
         date: filterDate,
-      });
+      }, Object.keys(attendanceRecords).length > 0);
     }
+  }, [filterYear, filterDate, fetchAttendance]);
+
+  // Real-time Cache synchronization
+  useEffect(() => {
+    return cacheSync.subscribe("attendance", () => {
+      if (filterDate && filterYear) {
+        fetchAttendance({
+          academic_year: filterYear,
+          date: filterDate,
+        }, true);
+      }
+    });
   }, [filterYear, filterDate, fetchAttendance]);
 
   // Sync internal state when teachers list or fetched records change

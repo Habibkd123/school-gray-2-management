@@ -4,6 +4,7 @@ import { Timetable, Subject, Teacher } from "@/lib/models/index";
 import Class from "@/lib/models/Class"; 
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { invalidateSchedulesCache } from "../route";
 
 // Helper: convert time string "09:30 AM" or "13:30" → minutes since midnight
 function parseTimeToMinutes(t: string): number {
@@ -175,6 +176,8 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       .populate("subject_id", "name")
       .populate("teacher_id", "name photo_url");
 
+    invalidateSchedulesCache(schoolId);
+
     return NextResponse.json({
       success: true,
       message: "Schedule updated successfully",
@@ -207,6 +210,8 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     if (!timetable) {
       return NextResponse.json({ success: false, message: "Schedule not found" }, { status: 404 });
     }
+
+    invalidateSchedulesCache(schoolId);
 
     return NextResponse.json({
       success: true,

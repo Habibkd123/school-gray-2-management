@@ -9,6 +9,28 @@ import { useExams } from "../../../hooks/useExams";
 import { useStudents } from "../../../hooks/useStudents";
 import { useClasses } from "../../../hooks/useClasses";
 
+const SS_GRADE_REP_PREFIX = "sm_rep_grade_";
+
+function getStoredGradeRep(key: string): any[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SS_GRADE_REP_PREFIX + key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp < 60_000 && Array.isArray(parsed.data)) {
+      return parsed.data;
+    }
+  } catch {}
+  return null;
+}
+
+function setStoredGradeRep(key: string, data: any[]) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(SS_GRADE_REP_PREFIX + key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
+
 export default function GradeReportPage() {
   const { results, isLoading: resultsLoading, fetchResults } = useResults({ skip: true });
   const { exams } = useExams();
@@ -23,6 +45,9 @@ export default function GradeReportPage() {
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
 
+  const cacheKey = `${selectedClass || "all"}_${selectedExam || "all"}`;
+  const cachedResults = getStoredGradeRep(cacheKey) ?? getStoredGradeRep("all_all");
+
   // Reset page to 1 on filters or search change
   React.useEffect(() => {
     setPage(1);
@@ -35,6 +60,18 @@ export default function GradeReportPage() {
       exam_id: selectedExam || undefined
     });
   }, [selectedClass, selectedExam, fetchResults]);
+
+  React.useEffect(() => {
+    if (results.length > 0) {
+      setStoredGradeRep(cacheKey, results);
+      if (!selectedClass && !selectedExam) {
+        setStoredGradeRep("all_all", results);
+      }
+    }
+  }, [results, cacheKey, selectedClass, selectedExam]);
+
+  const effectiveResults = results.length > 0 ? results : (cachedResults ?? []);
+  const isDisplayLoading = resultsLoading && (!cachedResults || cachedResults.length === 0);
 
   const getStudentName = (sid: any) => {
     if (sid && typeof sid === "object" && sid.name) {
@@ -56,7 +93,7 @@ export default function GradeReportPage() {
   };
 
   const filteredResults = useMemo(() => {
-    return results.filter(r => {
+    return effectiveResults.filter(r => {
       const studentObj = r.student_id && typeof r.student_id === "object" ? r.student_id : null;
       const studentName = studentObj?.name || "";
       const rollNo = studentObj?.roll_no || "";
@@ -67,7 +104,7 @@ export default function GradeReportPage() {
 
       return matchSearch;
     });
-  }, [results, searchTerm]);
+  }, [effectiveResults, searchTerm]);
 
   const totalPages = Math.ceil(filteredResults.length / PAGE_SIZE);
 
@@ -144,7 +181,7 @@ export default function GradeReportPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {resultsLoading ? (
+              {isDisplayLoading ? (
                 <tr><td colSpan={7} className="px-6 py-10 text-center text-slate-400"><Loader2 className="w-5 h-5 animate-spin inline" /></td></tr>
               ) : paginatedResults.length === 0 ? (
                 <tr><td colSpan={7} className="px-6 py-10 text-center text-slate-400">No results found.</td></tr>

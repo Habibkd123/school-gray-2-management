@@ -11,7 +11,7 @@ import ReportTabs from "../ReportTabs";
 
 export default function StudentDayWiseReportPage() {
   const { classes, isLoading: classesLoading } = useClasses();
-  const { students } = useStudents();
+  const { students } = useStudents({ skip: true });
   const { user } = useAuth();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 

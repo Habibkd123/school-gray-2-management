@@ -8,18 +8,59 @@ import Parent from "@/lib/models/Parent";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 import { paginateQuery } from "@/lib/utils/pagination";
+import { sendCompressedJson } from "@/lib/compression";
+
+// Server cache & in-flight deduplication
+const _homeworkServerCache = new Map<string, { data: any; expiresAt: number }>();
+const _homeworkInFlight = new Map<string, Promise<any>>();
+const HOMEWORK_CACHE_TTL = 30_000; // 30 seconds
+
+export function invalidateHomeworkCache(schoolId?: string | null) {
+  if (schoolId) {
+    for (const key of _homeworkServerCache.keys()) {
+      if (key.startsWith(`hw_${schoolId}`)) {
+        _homeworkServerCache.delete(key);
+      }
+    }
+  } else {
+    _homeworkServerCache.clear();
+  }
+}
 
 // GET: Fetch homeworks for the logged-in user's school
 export async function GET(req: NextRequest) {
   const { schoolId, role, userId, error } = requireAuth(req, ["school_admin", "teacher", "student", "parent", "super_admin"]);
   if (error) return error;
 
-  try {
-    await connectToDatabase();
+  const url = new URL(req.url);
+  const classId = url.searchParams.get("classId");
+  const academic_year = url.searchParams.get("academic_year");
+  const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+  const limit = Math.max(1, parseInt(url.searchParams.get("limit") || "25"));
 
-    const url = new URL(req.url);
-    const classId = url.searchParams.get("classId");
-    const academic_year = url.searchParams.get("academic_year");
+  const cacheKey = `hw_${schoolId}_${role}_${userId || ""}_${classId || "all"}_${academic_year || "all"}_${page}_${limit}`;
+
+  const cached = _homeworkServerCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return sendCompressedJson(req, cached.data, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30",
+    });
+  }
+
+  const existingInFlight = _homeworkInFlight.get(cacheKey);
+  if (existingInFlight) {
+    try {
+      const payload = await existingInFlight;
+      return sendCompressedJson(req, payload, {
+        cacheControl: "private, max-age=15, stale-while-revalidate=30",
+      });
+    } catch (err: any) {
+      return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
+    }
+  }
+
+  const queryPromise = (async () => {
+    await connectToDatabase();
 
     const query: any = { school_id: schoolId };
 
@@ -119,15 +160,27 @@ export async function GET(req: NextRequest) {
       }
     );
 
-    return NextResponse.json({
-      success: true,
-      data: { homeworks, total, page, totalPages, limit },
-    });
+    const responsePayload = { success: true, data: { homeworks, total, page, totalPages, limit } };
+    _homeworkServerCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + HOMEWORK_CACHE_TTL });
+    return responsePayload;
+  })();
+
+  _homeworkInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const responsePayload = await queryPromise;
+    return sendCompressedJson(
+      req,
+      responsePayload,
+      { cacheControl: "private, max-age=15, stale-while-revalidate=30" }
+    );
   } catch (err: any) {
     return NextResponse.json(
       { success: false, message: err.message || "Internal server error" },
       { status: 500 }
     );
+  } finally {
+    _homeworkInFlight.delete(cacheKey);
   }
 }
 
@@ -208,6 +261,8 @@ export async function POST(req: NextRequest) {
       status: status || "published",
       submissions: [],
     });
+
+    invalidateHomeworkCache(schoolId);
 
     return NextResponse.json({
       success: true,

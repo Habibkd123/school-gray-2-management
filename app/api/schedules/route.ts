@@ -4,6 +4,8 @@ import { Timetable, Subject, Teacher, Student, Parent } from "@/lib/models/index
 import Class from "@/lib/models/Class"; 
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
+
 
 // Helper: convert time string "09:30 AM" or "13:30" → minutes since midnight
 function parseTimeToMinutes(t: string): number {
@@ -32,22 +34,52 @@ function parseTimeToMinutes(t: string): number {
   return 0;
 }
 
+// ─── Server-side Cache & In-Flight Dedup ─────────────────────────
+const gs = globalThis as any;
+if (!gs._schedulesServerCache) gs._schedulesServerCache = new Map<string, { data: any; expiresAt: number }>();
+if (!gs._schedulesInFlight) gs._schedulesInFlight = new Map<string, Promise<any>>();
+const _schedulesServerCache: Map<string, { data: any; expiresAt: number }> = gs._schedulesServerCache;
+const _schedulesInFlight: Map<string, Promise<any>> = gs._schedulesInFlight;
+const SCHEDULES_CACHE_TTL = 30_000;
+
+export function invalidateSchedulesCache(schoolId?: string | null) {
+  if (!schoolId) {
+    _schedulesServerCache.clear();
+    return;
+  }
+  for (const k of Array.from(_schedulesServerCache.keys())) {
+    if (k.startsWith(String(schoolId))) _schedulesServerCache.delete(k);
+  }
+}
+
 // GET: Fetch all routine/timetable entries for the school, optionally filtered by class/teacher/search
 export async function GET(req: NextRequest) {
   const authResult = requireAuth(req, ["school_admin", "teacher", "student", "parent", "super_admin"]);
   if (authResult.error) return authResult.error;
   const { schoolId, user } = authResult;
 
-  try {
-    await connectToDatabase();
-    const url = new URL(req.url);
+  const url = new URL(req.url);
+  const cacheKey = `${schoolId}:${user.role}:${user.user_id}:${url.searchParams.toString()}`;
+  const cached = _schedulesServerCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+  }
 
-    const classId = url.searchParams.get("classId") || "";
-    const teacherId = url.searchParams.get("teacherId") || "";
-    const academic_year = url.searchParams.get("academic_year") || "";
+  if (_schedulesInFlight.has(cacheKey)) {
+    try {
+      const data = await _schedulesInFlight.get(cacheKey)!;
+      return sendCompressedJson(req, data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+    } catch {}
+  }
+
+  const queryPromise = (async () => {
+    await connectToDatabase();
+    const classId = url.searchParams.get("classId") || url.searchParams.get("class_id") || "";
+    const teacherId = url.searchParams.get("teacherId") || url.searchParams.get("teacher_id") || "";
+    const academic_year = url.searchParams.get("academic_year") || url.searchParams.get("academicYear") || "";
     const day = url.searchParams.get("day") || "";
     const status = url.searchParams.get("status") || "";
-    const search = url.searchParams.get("search") || "";
+    const search = (url.searchParams.get("search") || "").trim();
 
     const query: any = { school_id: new mongoose.Types.ObjectId(schoolId!) };
     const andFilters: any[] = [];
@@ -98,71 +130,95 @@ export async function GET(req: NextRequest) {
       query.$and = andFilters;
     }
 
-    // Lookup & Aggregation to support deep population and search matches
-    const pipeline: any[] = [
-      { $match: query },
-      {
-        $lookup: {
-          from: "classes",
-          localField: "class_id",
-          foreignField: "_id",
-          as: "class_info"
-        }
-      },
-      { $unwind: { path: "$class_info", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "subjects",
-          localField: "subject_id",
-          foreignField: "_id",
-          as: "subject_info"
-        }
-      },
-      { $unwind: { path: "$subject_info", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "teachers",
-          localField: "teacher_id",
-          foreignField: "_id",
-          as: "teacher_info"
-        }
-      },
-      { $unwind: { path: "$teacher_info", preserveNullAndEmptyArrays: true } }
-    ];
+    let formattedSchedules: any[] = [];
 
-    if (search.trim()) {
-      const searchRegex = new RegExp(search.trim(), "i");
-      pipeline.push({
-        $match: {
-          $or: [
-            { "class_info.name": searchRegex },
-            { "class_info.section": searchRegex },
-            { "subject_info.name": searchRegex },
-            { "teacher_info.name": searchRegex },
-            { day: searchRegex }
-          ]
+    if (!search) {
+      const docs = await Timetable.find(query)
+        .populate("class_id", "name section")
+        .populate("subject_id", "name")
+        .populate("teacher_id", "name photo_url")
+        .lean();
+
+      formattedSchedules = docs.map((s: any) => ({
+        _id: String(s._id),
+        school_id: String(s.school_id),
+        class_id: s.class_id && typeof s.class_id === "object" ? { _id: String(s.class_id._id), name: s.class_id.name, section: s.class_id.section } : String(s.class_id),
+        subject_id: s.subject_id && typeof s.subject_id === "object" ? { _id: String(s.subject_id._id), name: s.subject_id.name } : String(s.subject_id),
+        teacher_id: s.teacher_id && typeof s.teacher_id === "object" ? { _id: String(s.teacher_id._id), name: s.teacher_id.name, photo_url: s.teacher_id.photo_url } : String(s.teacher_id),
+        day: s.day,
+        start_time: s.start_time,
+        end_time: s.end_time,
+        period_no: s.period_no,
+        room: s.room || "",
+        academic_year: s.academic_year || "",
+        status: s.status || "Active",
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt
+      }));
+    } else {
+      // Lookup & Aggregation to support deep population and search matches
+      const searchRegex = new RegExp(search, "i");
+      const pipeline: any[] = [
+        { $match: query },
+        {
+          $lookup: {
+            from: "classes",
+            localField: "class_id",
+            foreignField: "_id",
+            as: "class_info"
+          }
+        },
+        { $unwind: { path: "$class_info", preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: "subjects",
+            localField: "subject_id",
+            foreignField: "_id",
+            as: "subject_info"
+          }
+        },
+        { $unwind: { path: "$subject_info", preserveNullAndEmptyArrays: true } },
+        {
+          $lookup: {
+            from: "teachers",
+            localField: "teacher_id",
+            foreignField: "_id",
+            as: "teacher_info"
+          }
+        },
+        { $unwind: { path: "$teacher_info", preserveNullAndEmptyArrays: true } },
+        {
+          $match: {
+            $or: [
+              { "class_info.name": searchRegex },
+              { "class_info.section": searchRegex },
+              { "subject_info.name": searchRegex },
+              { "teacher_info.name": searchRegex },
+              { day: searchRegex }
+            ]
+          }
         }
-      });
+      ];
+
+      const rawSchedules = await Timetable.aggregate(pipeline);
+
+      formattedSchedules = rawSchedules.map((s: any) => ({
+        _id: String(s._id),
+        school_id: String(s.school_id),
+        class_id: s.class_info ? { _id: String(s.class_info._id), name: s.class_info.name, section: s.class_info.section } : String(s.class_id),
+        subject_id: s.subject_info ? { _id: String(s.subject_info._id), name: s.subject_info.name } : String(s.subject_id),
+        teacher_id: s.teacher_info ? { _id: String(s.teacher_info._id), name: s.teacher_info.name, photo_url: s.teacher_info.photo_url } : String(s.teacher_id),
+        day: s.day,
+        start_time: s.start_time,
+        end_time: s.end_time,
+        period_no: s.period_no,
+        room: s.room || "",
+        academic_year: s.academic_year || "",
+        status: s.status || "Active",
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt
+      }));
     }
-
-    const rawSchedules = await Timetable.aggregate(pipeline);
-
-    const formattedSchedules = rawSchedules.map((s: any) => ({
-      _id: String(s._id),
-      school_id: String(s.school_id),
-      class_id: s.class_info ? { _id: String(s.class_info._id), name: s.class_info.name, section: s.class_info.section } : String(s.class_id),
-      subject_id: s.subject_info ? { _id: String(s.subject_info._id), name: s.subject_info.name } : String(s.subject_id),
-      teacher_id: s.teacher_info ? { _id: String(s.teacher_info._id), name: s.teacher_info.name, photo_url: s.teacher_info.photo_url } : String(s.teacher_id),
-      day: s.day,
-      start_time: s.start_time,
-      end_time: s.end_time,
-      period_no: s.period_no,
-      room: s.room || "",
-      academic_year: s.academic_year || "",
-      status: s.status || "Active",
-      createdAt: s.createdAt,
-      updatedAt: s.updatedAt
-    }));
 
     // Sort by day order and start time
     const dayOrder = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
@@ -173,12 +229,24 @@ export async function GET(req: NextRequest) {
       return parseTimeToMinutes(a.start_time) - parseTimeToMinutes(b.start_time);
     });
 
-    return NextResponse.json({
-      success: true,
-      data: formattedSchedules,
-    });
+    const responsePayload = { success: true, data: formattedSchedules };
+    _schedulesServerCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + SCHEDULES_CACHE_TTL });
+    return responsePayload;
+  })();
+
+  _schedulesInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const responsePayload = await queryPromise;
+    return sendCompressedJson(
+      req,
+      responsePayload,
+      { cacheControl: "private, max-age=15, stale-while-revalidate=30" }
+    );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
+  } finally {
+    _schedulesInFlight.delete(cacheKey);
   }
 }
 
@@ -314,6 +382,8 @@ export async function POST(req: NextRequest) {
       .populate("class_id", "name section")
       .populate("subject_id", "name")
       .populate("teacher_id", "name photo_url");
+
+    invalidateSchedulesCache(schoolId);
 
     return NextResponse.json({
       success: true,

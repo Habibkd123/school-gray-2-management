@@ -3,6 +3,7 @@ import connectToDatabase from "@/lib/db";
 import { SalaryPayment } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { invalidateSalariesCache } from "../route";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -127,6 +128,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
 
     await payment.save();
+    invalidateSalariesCache(schoolId);
 
     return NextResponse.json({
       success: true,
@@ -159,6 +161,8 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     if (!deleted) {
       return NextResponse.json({ success: false, message: "Salary record not found" }, { status: 404 });
     }
+
+    invalidateSalariesCache(schoolId);
 
     return NextResponse.json({
       success: true,

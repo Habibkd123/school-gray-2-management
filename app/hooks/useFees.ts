@@ -1,8 +1,24 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getAuthHeaders } from "@/lib/utils/session";
+import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
+import { cacheSync, invalidateCache } from "@/lib/utils/cache-sync";
+
+// ─── Shared cache constants ────────────────────────────────────────
+const FEE_CACHE_TTL_MS = 60_000;
+
+// ─── Fee Groups module-level cache ────────────────────────────────
+let _feeGroupsCache: ApiFeeGroup[] | null = null;
+let _feeGroupsCacheTime = 0;
+let _feeGroupsInFlight: Promise<ApiFeeGroup[]> | null = null;
+const _feeGroupsListeners = new Set<(groups: ApiFeeGroup[]) => void>();
+
+// ─── Fee Types module-level cache ─────────────────────────────────
+let _feeTypesCache: ApiFeeType[] | null = null;
+let _feeTypesCacheTime = 0;
+let _feeTypesInFlight: Promise<ApiFeeType[]> | null = null;
+const _feeTypesListeners = new Set<(types: ApiFeeType[]) => void>();
 
 export interface ApiFeeGroup {
   _id: string;
@@ -44,38 +60,85 @@ export interface ApiFeePayment {
 }
 
 export function useFeeGroups() {
-  const [groups, setGroups] = useState<ApiFeeGroup[]>([]);
-  const [loading, setLoading] = useState(true);
+  const isFresh = _feeGroupsCache !== null && (Date.now() - _feeGroupsCacheTime) < FEE_CACHE_TTL_MS;
+  const [groups, setGroups] = useState<ApiFeeGroup[]>(_feeGroupsCache ?? []);
+  const [loading, setLoading] = useState(!isFresh);
+  const authReady = useAuthReady();
 
-  const fetchGroups = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/fees/groups", { headers: getAuthHeaders() });
-      const data = await res.json();
-      if (data.success) setGroups(data.data.groups);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    const listener = (data: ApiFeeGroup[]) => setGroups(data);
+    _feeGroupsListeners.add(listener);
+    return () => { _feeGroupsListeners.delete(listener); };
   }, []);
 
-  useEffect(() => { fetchGroups(); }, [fetchGroups]);
+  const fetchGroups = useCallback(async () => {
+    // Serve from cache if fresh
+    if (_feeGroupsCache !== null && (Date.now() - _feeGroupsCacheTime) < FEE_CACHE_TTL_MS) {
+      setGroups(_feeGroupsCache);
+      setLoading(false);
+      return;
+    }
+    // Dedup in-flight requests
+    if (_feeGroupsInFlight) {
+      setLoading(true);
+      try {
+        const data = await _feeGroupsInFlight;
+        setGroups(data);
+      } catch (e) { console.error(e); } finally { setLoading(false); }
+      return;
+    }
+    setLoading(true);
+    const promise = (async (): Promise<ApiFeeGroup[]> => {
+      const res = await fetch("/api/fees/groups", { headers: getAuthHeaders() });
+      const data = await res.json();
+      const list: ApiFeeGroup[] = data.success ? (data.data.groups || []) : [];
+      _feeGroupsCache = list;
+      _feeGroupsCacheTime = Date.now();
+      _feeGroupsInFlight = null;
+      _feeGroupsListeners.forEach((fn) => fn(list));
+      return list;
+    })();
+    _feeGroupsInFlight = promise;
+    try {
+      const list = await promise;
+      setGroups(list);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    if (!authReady) return;
+    fetchGroups();
+  }, [fetchGroups, authReady]);
+
+  useEffect(() => {
+    const unsub = cacheSync.subscribe("fees", () => {
+      _feeGroupsCache = null;
+      _feeGroupsCacheTime = 0;
+      fetchGroups();
+    });
+    return unsub;
+  }, [fetchGroups]);
 
   const createGroup = async (payload: any) => {
     const res = await fetch("/api/fees/groups", { method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() }, body: JSON.stringify(payload) });
+    _feeGroupsCache = null;
+    invalidateCache("fees");
     if (res.ok) fetchGroups();
     return res.json();
   };
 
   const updateGroup = async (id: string, payload: any) => {
     const res = await fetch(`/api/fees/groups/${id}`, { method: "PUT", headers: { "Content-Type": "application/json", ...getAuthHeaders() }, body: JSON.stringify(payload) });
+    _feeGroupsCache = null;
+    invalidateCache("fees");
     if (res.ok) fetchGroups();
     return res.json();
   };
 
   const deleteGroup = async (id: string) => {
     const res = await fetch(`/api/fees/groups/${id}`, { method: "DELETE", headers: getAuthHeaders() });
+    _feeGroupsCache = null;
+    invalidateCache("fees");
     if (res.ok) fetchGroups();
     return res.json();
   };
@@ -84,38 +147,83 @@ export function useFeeGroups() {
 }
 
 export function useFeeTypes() {
-  const [types, setTypes] = useState<ApiFeeType[]>([]);
-  const [loading, setLoading] = useState(true);
+  const isFresh = _feeTypesCache !== null && (Date.now() - _feeTypesCacheTime) < FEE_CACHE_TTL_MS;
+  const [types, setTypes] = useState<ApiFeeType[]>(_feeTypesCache ?? []);
+  const [loading, setLoading] = useState(!isFresh);
+  const authReady = useAuthReady();
 
-  const fetchTypes = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/fees/types", { headers: getAuthHeaders() });
-      const data = await res.json();
-      if (data.success) setTypes(data.data.types);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
+  useEffect(() => {
+    const listener = (data: ApiFeeType[]) => setTypes(data);
+    _feeTypesListeners.add(listener);
+    return () => { _feeTypesListeners.delete(listener); };
   }, []);
 
-  useEffect(() => { fetchTypes(); }, [fetchTypes]);
+  const fetchTypes = useCallback(async () => {
+    if (_feeTypesCache !== null && (Date.now() - _feeTypesCacheTime) < FEE_CACHE_TTL_MS) {
+      setTypes(_feeTypesCache);
+      setLoading(false);
+      return;
+    }
+    if (_feeTypesInFlight) {
+      setLoading(true);
+      try {
+        const data = await _feeTypesInFlight;
+        setTypes(data);
+      } catch (e) { console.error(e); } finally { setLoading(false); }
+      return;
+    }
+    setLoading(true);
+    const promise = (async (): Promise<ApiFeeType[]> => {
+      const res = await fetch("/api/fees/types", { headers: getAuthHeaders() });
+      const data = await res.json();
+      const list: ApiFeeType[] = data.success ? (data.data.types || []) : [];
+      _feeTypesCache = list;
+      _feeTypesCacheTime = Date.now();
+      _feeTypesInFlight = null;
+      _feeTypesListeners.forEach((fn) => fn(list));
+      return list;
+    })();
+    _feeTypesInFlight = promise;
+    try {
+      const list = await promise;
+      setTypes(list);
+    } catch (e) { console.error(e); } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    if (!authReady) return;
+    fetchTypes();
+  }, [fetchTypes, authReady]);
+
+  useEffect(() => {
+    const unsub = cacheSync.subscribe("fees", () => {
+      _feeTypesCache = null;
+      _feeTypesCacheTime = 0;
+      fetchTypes();
+    });
+    return unsub;
+  }, [fetchTypes]);
 
   const createType = async (payload: any) => {
     const res = await fetch("/api/fees/types", { method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() }, body: JSON.stringify(payload) });
+    _feeTypesCache = null;
+    invalidateCache("fees");
     if (res.ok) fetchTypes();
     return res.json();
   };
 
   const updateType = async (id: string, payload: any) => {
     const res = await fetch(`/api/fees/types/${id}`, { method: "PUT", headers: { "Content-Type": "application/json", ...getAuthHeaders() }, body: JSON.stringify(payload) });
+    _feeTypesCache = null;
+    invalidateCache("fees");
     if (res.ok) fetchTypes();
     return res.json();
   };
 
   const deleteType = async (id: string) => {
     const res = await fetch(`/api/fees/types/${id}`, { method: "DELETE", headers: getAuthHeaders() });
+    _feeTypesCache = null;
+    invalidateCache("fees");
     if (res.ok) fetchTypes();
     return res.json();
   };
@@ -123,9 +231,9 @@ export function useFeeTypes() {
   return { types, loading, fetchTypes, createType, updateType, deleteType };
 }
 
-export function useFeeMasters() {
+export function useFeeMasters(options?: { skip?: boolean }) {
   const [masters, setMasters] = useState<ApiFeeMaster[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(options?.skip ? false : true);
 
   const fetchMasters = useCallback(async (groupId?: string) => {
     setLoading(true);
@@ -141,7 +249,10 @@ export function useFeeMasters() {
     }
   }, []);
 
-  useEffect(() => { fetchMasters(); }, [fetchMasters]);
+  useEffect(() => {
+    if (options?.skip) return;
+    fetchMasters();
+  }, [fetchMasters, options?.skip]);
 
   const createMaster = async (payload: any) => {
     const res = await fetch("/api/fees/master", { method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() }, body: JSON.stringify(payload) });
@@ -164,9 +275,9 @@ export function useFeeMasters() {
   return { masters, loading, fetchMasters, createMaster, updateMaster, deleteMaster };
 }
 
-export function useFeeAllocations(studentId?: string) {
+export function useFeeAllocations(studentId?: string, options?: { skip?: boolean }) {
   const [allocations, setAllocations] = useState<ApiFeeAllocation[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(options?.skip ? false : true);
 
   const fetchAllocations = useCallback(async (sId?: string) => {
     setLoading(true);
@@ -182,7 +293,10 @@ export function useFeeAllocations(studentId?: string) {
     }
   }, []);
 
-  useEffect(() => { fetchAllocations(studentId); }, [fetchAllocations, studentId]);
+  useEffect(() => {
+    if (options?.skip) return;
+    fetchAllocations(studentId);
+  }, [fetchAllocations, studentId, options?.skip]);
 
   const allocateFees = async (payload: { fee_group_id: string; student_ids: string[]; unassign_student_ids?: string[] }) => {
     const res = await fetch("/api/fees/allocations", { method: "POST", headers: { "Content-Type": "application/json", ...getAuthHeaders() }, body: JSON.stringify(payload) });
@@ -270,6 +384,13 @@ export function useFees() {
     fetchAll();
   }, [fetchAll]);
 
+  useEffect(() => {
+    const unsub = cacheSync.subscribe("fees", () => {
+      fetchAll();
+    });
+    return unsub;
+  }, [fetchAll]);
+
   const createFeeStructure = async (payload: any) => {
     try {
       const res = await fetch("/api/fees", {
@@ -281,6 +402,7 @@ export function useFees() {
         body: JSON.stringify(payload),
       });
       if (res.ok) {
+        invalidateCache("fees");
         fetchAll();
       }
       return res.json();
@@ -374,6 +496,7 @@ export function useFees() {
         body: JSON.stringify(bodyPayload),
       });
       if (res.ok) {
+        invalidateCache("fees");
         fetchAll();
       }
       return res.json();

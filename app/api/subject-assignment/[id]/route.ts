@@ -5,6 +5,7 @@ import Stream from "@/lib/models/Stream";
 import Teacher from "@/lib/models/Teacher";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { invalidateSubjectAssignmentCache } from "../route";
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -108,6 +109,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       });
     }
 
+    invalidateSubjectAssignmentCache(String(schoolId));
     return NextResponse.json({ success: true, data: updated });
   } catch (err: any) {
     if (err.code === 11000) {
@@ -143,6 +145,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       subject_master_id: deleted.subject_master_id
     });
 
+    invalidateSubjectAssignmentCache(String(schoolId));
     return NextResponse.json({ success: true, message: "Subject assignment removed" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

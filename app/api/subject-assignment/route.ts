@@ -7,6 +7,20 @@ import Teacher from "@/lib/models/Teacher";
 import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
+
+// ─── Server-side cache ───────────────────────────────────────
+const gs = globalThis as any;
+if (!gs._subjectAssignmentCache) gs._subjectAssignmentCache = new Map<string, { data: any; expiresAt: number }>();
+const _cache: Map<string, { data: any; expiresAt: number }> = gs._subjectAssignmentCache;
+const TTL = 30_000;
+
+export function invalidateSubjectAssignmentCache(schoolId?: string) {
+  if (!schoolId) { _cache.clear(); return; }
+  for (const k of Array.from(_cache.keys())) {
+    if (k.startsWith(String(schoolId))) _cache.delete(k);
+  }
+}
 
 // Ensure all models are registered in Mongoose
 const registerModels = () => {
@@ -23,6 +37,12 @@ export async function GET(req: NextRequest) {
     registerModels();
 
     const url = new URL(req.url);
+    const cacheKey = `${schoolId}:${url.searchParams.toString()}`;
+    const cached = _cache.get(cacheKey);
+    if (cached && cached.expiresAt > Date.now()) {
+      return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+    }
+
     const search = url.searchParams.get("search") || "";
     const academic_year = url.searchParams.get("academic_year") || "";
     const class_id = url.searchParams.get("class_id") || "";
@@ -32,11 +52,9 @@ export async function GET(req: NextRequest) {
     const sort = url.searchParams.get("sort") || "CreatedDateDesc";
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
     const limitParam = url.searchParams.get("limit");
-    const isAll = limitParam === "all";
+    const isAll = limitParam === "all" || (limitParam && parseInt(limitParam) >= 500);
     const limit = isAll ? 100000 : Math.min(500, Math.max(1, parseInt(limitParam || "10")));
     const skip = isAll ? 0 : (page - 1) * limit;
-
-    const pipeline: any[] = [];
 
     // Match initial school_id & basic filters
     const matchStage: any = { school_id: new mongoose.Types.ObjectId(schoolId as string) };
@@ -54,6 +72,66 @@ export async function GET(req: NextRequest) {
       matchStage.status = status;
     }
 
+    // Fast indexed path when no cross-table search or cross-table sort is needed
+    if (!search && !sort.includes("Teacher") && !sort.includes("Class") && !sort.includes("Subject")) {
+      let sortStage: any = { createdAt: -1 };
+      if (sort === "CreatedDateAsc") sortStage = { createdAt: 1 };
+      else if (sort === "CreatedDateDesc") sortStage = { createdAt: -1 };
+      else if (sort === "StatusAsc") sortStage = { status: 1 };
+      else if (sort === "StatusDesc") sortStage = { status: -1 };
+
+      const [total, rawAssignments] = await Promise.all([
+        SubjectAssignment.countDocuments(matchStage),
+        SubjectAssignment.find(matchStage)
+          .sort(sortStage)
+          .skip(skip)
+          .limit(limit)
+          .populate("class_id", "name section class_code")
+          .populate("subject_master_id", "name subject_code description")
+          .populate("teacher_id", "name employee_id")
+          .populate("created_by", "name")
+          .lean()
+      ]);
+
+      const assignments = rawAssignments.map((a: any) => ({
+        _id: String(a._id),
+        school_id: String(a.school_id),
+        academic_year: a.academic_year,
+        class_id: a.class_id && typeof a.class_id === "object" ? {
+          _id: String(a.class_id._id),
+          name: a.class_id.name,
+          section: a.class_id.section,
+          class_code: a.class_id.class_code
+        } : null,
+        stream_id: a.stream_id ? String(a.stream_id) : null,
+        subject_master_id: a.subject_master_id && typeof a.subject_master_id === "object" ? {
+          _id: String(a.subject_master_id._id),
+          name: a.subject_master_id.name,
+          subject_code: a.subject_master_id.subject_code,
+          description: a.subject_master_id.description
+        } : null,
+        teacher_id: a.teacher_id && typeof a.teacher_id === "object" ? {
+          _id: String(a.teacher_id._id),
+          name: a.teacher_id.name,
+          employee_id: a.teacher_id.employee_id
+        } : null,
+        weekly_periods: a.weekly_periods || 0,
+        description: a.description || "",
+        status: a.status || "Active",
+        created_by: a.created_by && typeof a.created_by === "object" ? {
+          _id: String(a.created_by._id),
+          name: a.created_by.name
+        } : null,
+        createdAt: a.createdAt,
+        updatedAt: a.updatedAt
+      }));
+
+      const responseData = { success: true, data: { assignments, total, page, totalPages: Math.ceil(total / limit) } };
+      _cache.set(cacheKey, { data: responseData, expiresAt: Date.now() + TTL });
+      return sendCompressedJson(req, responseData, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+    }
+
+    const pipeline: any[] = [];
     pipeline.push({ $match: matchStage });
 
     // Lookup Class info
@@ -182,17 +260,9 @@ export async function GET(req: NextRequest) {
       updatedAt: a.updatedAt
     }));
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        assignments,
-        total,
-        page,
-        totalPages: Math.ceil(total / limit)
-      }
-    }, {
-      headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" }
-    });
+    const responseData = { success: true, data: { assignments, total, page, totalPages: Math.ceil(total / limit) } };
+    _cache.set(cacheKey, { data: responseData, expiresAt: Date.now() + TTL });
+    return sendCompressedJson(req, responseData, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }

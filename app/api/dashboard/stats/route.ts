@@ -7,11 +7,38 @@ import Teacher from "@/lib/models/Teacher";
 import { Subject, SubjectMaster, Attendance } from "@/lib/models/index";
 import { sendConditionalJson } from "@/lib/etag";
 
+const STATS_CACHE_TTL = 10_000; // 10 seconds TTL
+const _statsCache = new Map<string, { data: any; timestamp: number }>();
+const _statsInFlight = new Map<string, Promise<any>>();
+
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin", "teacher"]);
   if (error) return error;
 
-  try {
+  const schoolKey = String(schoolId);
+  const cached = _statsCache.get(schoolKey);
+  if (cached && (Date.now() - cached.timestamp) < STATS_CACHE_TTL) {
+    return sendConditionalJson(
+      req,
+      { success: true, data: cached.data },
+      { cacheControl: "private, no-cache" }
+    );
+  }
+
+  if (_statsInFlight.has(schoolKey)) {
+    try {
+      const data = await _statsInFlight.get(schoolKey)!;
+      return sendConditionalJson(
+        req,
+        { success: true, data },
+        { cacheControl: "private, no-cache" }
+      );
+    } catch {
+      // Fall through to retry on error
+    }
+  }
+
+  const queryPromise = (async () => {
     await connectDB();
 
     // Today's date boundaries (UTC midnight-to-midnight)
@@ -69,39 +96,48 @@ export async function GET(req: NextRequest) {
 
     const totalSubjectsUnified = Math.max(totalSubjects, totalSubjectMasters);
 
+    return {
+      students: {
+        total: totalStudents,
+        active: activeStudents,
+        inactive: totalStudents - activeStudents,
+      },
+      teachers: {
+        total: totalTeachers,
+        active: activeTeachers,
+        inactive: totalTeachers - activeTeachers,
+      },
+      classes: {
+        total: totalClasses,
+      },
+      subjects: {
+        total: totalSubjectsUnified,
+      },
+      attendance: {
+        total: todayTotal,
+        present: todayPresent,
+        absent: todayAbsent,
+        late: todayLate,
+        leave: todayLeave,
+        percentage: attendancePct,
+        marked: todayTotal > 0,
+      },
+    };
+  })();
+
+  _statsInFlight.set(schoolKey, queryPromise);
+
+  try {
+    const data = await queryPromise;
+    _statsCache.set(schoolKey, { data, timestamp: Date.now() });
+
     return sendConditionalJson(
       req,
       {
         success: true,
-        data: {
-          students: {
-            total: totalStudents,
-            active: activeStudents,
-            inactive: totalStudents - activeStudents,
-          },
-          teachers: {
-            total: totalTeachers,
-            active: activeTeachers,
-            inactive: totalTeachers - activeTeachers,
-          },
-          classes: {
-            total: totalClasses,
-          },
-          subjects: {
-            total: totalSubjectsUnified,
-          },
-          attendance: {
-            total: todayTotal,
-            present: todayPresent,
-            absent: todayAbsent,
-            late: todayLate,
-            leave: todayLeave,
-            percentage: attendancePct,
-            marked: todayTotal > 0,
-          },
-        },
+        data,
       },
-      { cacheControl: "private, max-age=30, stale-while-revalidate=30" }
+      { cacheControl: "private, no-cache" }
     );
   } catch (err: any) {
     console.error("[GET /api/dashboard/stats]", err);
@@ -109,5 +145,7 @@ export async function GET(req: NextRequest) {
       { success: false, message: err.message || "Failed to fetch dashboard stats" },
       { status: 500 }
     );
+  } finally {
+    _statsInFlight.delete(schoolKey);
   }
 }

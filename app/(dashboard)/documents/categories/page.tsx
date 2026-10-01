@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Plus, Edit3, Trash2, Search, X } from "lucide-react";
 import {
   getCategories, saveCategory, deleteCategory, BUILT_IN_CATEGORIES
 } from "@/app/components/document-builder/store";
+import { cacheSync } from "@/lib/utils/cache-sync";
 import type { DocumentCategory } from "@/app/components/document-builder/types";
 import {
   GraduationCap, Users, Award, CreditCard, ClipboardList,
@@ -48,7 +49,9 @@ const COLOR_MAP: Record<string, string> = {
 };
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<DocumentCategory[]>([]);
+  const [categories, setCategories] = useState<DocumentCategory[]>(() =>
+    typeof window !== "undefined" ? getCategories() : BUILT_IN_CATEGORIES
+  );
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCat, setEditingCat] = useState<DocumentCategory | null>(null);
@@ -58,13 +61,22 @@ export default function CategoriesPage() {
   useEffect(() => {
     setMounted(true);
     setCategories(getCategories());
+    const unsub = cacheSync.subscribe("document_categories", () => {
+      setCategories(getCategories());
+    });
+    return () => unsub();
   }, []);
 
   const refresh = () => setCategories(getCategories());
 
-  const filtered = categories.filter((c) =>
-    !search || c.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    if (!search.trim()) return categories;
+    const q = search.trim().toLowerCase();
+    return categories.filter((c) =>
+      c.name.toLowerCase().includes(q) ||
+      (c.description && c.description.toLowerCase().includes(q))
+    );
+  }, [categories, search]);
 
   const openCreate = () => {
     setEditingCat(null);
@@ -98,8 +110,6 @@ export default function CategoriesPage() {
     deleteCategory(id);
     refresh();
   };
-
-  if (!mounted) return null;
 
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">

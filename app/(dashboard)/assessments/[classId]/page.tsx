@@ -86,6 +86,18 @@ interface Test {
   computedStatus: string;
 }
 
+function getInitialClassTests(classId: string): Test[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = sessionStorage.getItem(`cache_assessments_${classId}`);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+  return [];
+}
+
 export default function AssessmentsPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -97,8 +109,9 @@ export default function AssessmentsPage() {
   const params = useParams<{ classId: string }>();
   const routeClassId = params?.classId || "all";
 
-  const [tests, setTests] = useState<Test[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const initialTests = getInitialClassTests(routeClassId);
+  const [tests, setTests] = useState<Test[]>(initialTests);
+  const [isLoading, setIsLoading] = useState(initialTests.length === 0);
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState(routeClassId);
   const [sectionFilter, setSectionFilter] = useState("all");
@@ -174,8 +187,10 @@ export default function AssessmentsPage() {
     setTimeout(() => setToastMsg(null), 3500);
   };
 
-  const fetchTests = useCallback(async () => {
-    setIsLoading(true);
+  const fetchTests = useCallback(async (background = false) => {
+    if (!background && tests.length === 0) {
+      setIsLoading(true);
+    }
     try {
       const params = new URLSearchParams({ limit: "1000" });
       if (search.trim()) params.set("search", search.trim());
@@ -185,18 +200,25 @@ export default function AssessmentsPage() {
 
       const res = await fetch(`/api/assessments?${params}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.data)) {
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(`cache_assessments_${routeClassId}`, JSON.stringify(data.data));
+          } catch {}
+        }
         setTests(data.data);
       }
     } catch {
-      showToast("error", "Failed to load tests");
+      if (tests.length === 0) {
+        showToast("error", "Failed to load tests");
+      }
     } finally {
       setIsLoading(false);
     }
-  }, [search, statusFilter, classFilter, subjectFilter]);
+  }, [search, statusFilter, classFilter, subjectFilter, tests.length, routeClassId]);
 
   useEffect(() => {
-    fetchTests();
+    fetchTests(tests.length > 0);
   }, [fetchTests]);
 
   // Reset section and subject filter when class selection changes

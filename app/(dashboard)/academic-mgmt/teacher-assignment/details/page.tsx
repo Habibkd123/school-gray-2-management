@@ -91,11 +91,53 @@ export default function TeacherAssignmentDetailsPage() {
   const teacherId = searchParams.get("teacherId") || "";
   const year = searchParams.get("year") || "";
 
-  const [loading, setLoading] = useState(true);
+  const ssKey = `sm_tadetail_${teacherId}_${year}`;
+
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const raw = sessionStorage.getItem(`sm_tadetail_${teacherId}_${year}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.timestamp < 60_000) return false;
+      }
+    } catch {}
+    return true;
+  });
   const [error, setError] = useState<string | null>(null);
-  const [teacher, setTeacher] = useState<TeacherDetail | null>(null);
-  const [assignments, setAssignments] = useState<ClassSubjectAssignment[]>([]);
-  const [timetable, setTimetable] = useState<TimetableEntry[]>([]);
+  const [teacher, setTeacher] = useState<TeacherDetail | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const raw = sessionStorage.getItem(`sm_tadetail_${teacherId}_${year}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.timestamp < 60_000) return parsed.teacher || null;
+      }
+    } catch {}
+    return null;
+  });
+  const [assignments, setAssignments] = useState<ClassSubjectAssignment[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = sessionStorage.getItem(`sm_tadetail_${teacherId}_${year}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.timestamp < 60_000) return parsed.assignments || [];
+      }
+    } catch {}
+    return [];
+  });
+  const [timetable, setTimetable] = useState<TimetableEntry[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = sessionStorage.getItem(`sm_tadetail_${teacherId}_${year}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.timestamp < 60_000) return parsed.timetable || [];
+      }
+    } catch {}
+    return [];
+  });
 
   const fetchData = async () => {
     if (!teacherId || !year) {
@@ -103,39 +145,69 @@ export default function TeacherAssignmentDetailsPage() {
       setLoading(false);
       return;
     }
-    setLoading(true);
+
+    // Check if fresh cache exists to avoid spinner
+    try {
+      const raw = sessionStorage.getItem(ssKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.timestamp < 15_000) {
+          setTeacher(parsed.teacher);
+          setAssignments(parsed.assignments);
+          setTimetable(parsed.timetable);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch {}
+
     setError(null);
     try {
-      // Fetch Teacher Details
-      const teacherRes = await fetch(`/api/teachers/${teacherId}`, { headers: getAuthHeaders() });
-      const teacherData = await teacherRes.json();
+      // Fetch Teacher Details, Teacher Assignments, and Schedules all in parallel
+      const [teacherRes, assignRes, scheduleRes] = await Promise.all([
+        fetch(`/api/teachers/${encodeURIComponent(teacherId)}`, { headers: getAuthHeaders() }),
+        fetch(
+          `/api/teacher-assignment?teacher_id=${encodeURIComponent(teacherId)}&academic_year=${encodeURIComponent(year)}&limit=200`,
+          { headers: getAuthHeaders() }
+        ),
+        fetch(
+          `/api/schedules?teacherId=${encodeURIComponent(teacherId)}`,
+          { headers: getAuthHeaders() }
+        )
+      ]);
+
+      const [teacherData, assignData, scheduleData] = await Promise.all([
+        teacherRes.json(),
+        assignRes.json(),
+        scheduleRes.json()
+      ]);
+
       if (!teacherRes.ok || !teacherData.success) {
         throw new Error(teacherData.message || "Failed to fetch teacher profile.");
       }
-
-      // Fetch Teacher Assignments
-      const assignRes = await fetch(
-        `/api/teacher-assignment?teacher_id=${teacherId}&academic_year=${year}&limit=200`,
-        { headers: getAuthHeaders() }
-      );
-      const assignData = await assignRes.json();
       if (!assignRes.ok || !assignData.success) {
         throw new Error(assignData.message || "Failed to fetch teacher assignments.");
       }
-
-      // Fetch Timetable/Schedules
-      const scheduleRes = await fetch(
-        `/api/schedules?teacherId=${teacherId}`,
-        { headers: getAuthHeaders() }
-      );
-      const scheduleData = await scheduleRes.json();
       if (!scheduleRes.ok || !scheduleData.success) {
         throw new Error(scheduleData.message || "Failed to fetch teacher schedules.");
       }
 
-      setTeacher(teacherData.data);
-      setAssignments(assignData.data.assignments || []);
-      setTimetable(scheduleData.data || []);
+      const fetchedTeacher = teacherData.data;
+      const fetchedAssignments = assignData.data?.assignments || [];
+      const fetchedTimetable = scheduleData.data || [];
+
+      try {
+        sessionStorage.setItem(ssKey, JSON.stringify({
+          teacher: fetchedTeacher,
+          assignments: fetchedAssignments,
+          timetable: fetchedTimetable,
+          timestamp: Date.now()
+        }));
+      } catch {}
+
+      setTeacher(fetchedTeacher);
+      setAssignments(fetchedAssignments);
+      setTimetable(fetchedTimetable);
     } catch (err: any) {
       setError(err.message || "An error occurred while loading details.");
     } finally {

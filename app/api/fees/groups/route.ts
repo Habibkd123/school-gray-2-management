@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import { FeeGroup } from "@/lib/models";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendCompressedJson } from "@/lib/compression";
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest) {
 
     await connectDB();
     const groups = await FeeGroup.find({ school_id: schoolId }).sort({ name: 1 }).lean();
-    return NextResponse.json({ success: true, data: { groups } });
+    return sendCompressedJson(req, { success: true, data: { groups } }, { cacheControl: "private, no-cache" });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }

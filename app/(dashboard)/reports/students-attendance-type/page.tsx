@@ -10,7 +10,7 @@ import ReportTabs from "../ReportTabs";
 
 export default function StudentsAttendanceTypePage() {
   const { classes, isLoading: classesLoading } = useClasses();
-  const { students } = useStudents();
+  const { students } = useStudents({ skip: true });
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClass, setSelectedClass] = useState("");

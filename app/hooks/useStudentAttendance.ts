@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { cacheSync, invalidateCache } from "@/lib/utils/cache-sync";
 
 export interface StudentAttendanceRecord {
   student_id: { _id: string; name: string; roll_no?: string };
@@ -22,10 +23,28 @@ export interface StudentAttendanceData {
   updatedAt?: string;
 }
 
+const _studentAttClientCache = new Map<string, { data: StudentAttendanceData | null; timestamp: number }>();
+const CLIENT_CACHE_TTL = 45_000;
+const SS_PREFIX = "cache_sa_";
+
 export function useStudentAttendance() {
   const [attendance, setAttendance] = useState<StudentAttendanceData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Cross-tab and module cache sync
+  useEffect(() => {
+    return cacheSync.subscribe("attendance", () => {
+      _studentAttClientCache.clear();
+      if (typeof window !== "undefined") {
+        try {
+          Object.keys(sessionStorage)
+            .filter((k) => k.startsWith(SS_PREFIX))
+            .forEach((k) => sessionStorage.removeItem(k));
+        } catch {}
+      }
+    });
+  }, []);
 
   const fetchAttendance = useCallback(async (params: {
     academic_year: string;
@@ -33,10 +52,34 @@ export function useStudentAttendance() {
     classId: string;
     streamId?: string;
     sectionId?: string;
-  }) => {
-    setIsLoading(true);
-    setError(null);
-    setAttendance(null);
+  }, background = false) => {
+    const cacheKey = `${params.academic_year}_${params.date}_${params.classId}_${params.streamId || ""}_${params.sectionId || ""}`;
+    const mem = _studentAttClientCache.get(cacheKey);
+    const now = Date.now();
+
+    if (mem && (now - mem.timestamp < CLIENT_CACHE_TTL)) {
+      setAttendance(mem.data);
+      if (now - mem.timestamp < 15_000) return; // Super fresh
+      background = true;
+    } else if (typeof window !== "undefined") {
+      try {
+        const raw = sessionStorage.getItem(SS_PREFIX + cacheKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (now - parsed.timestamp < CLIENT_CACHE_TTL) {
+            setAttendance(parsed.data);
+            _studentAttClientCache.set(cacheKey, parsed);
+            background = true;
+          }
+        }
+      } catch {}
+    }
+
+    if (!background) {
+      setIsLoading(true);
+      setError(null);
+    }
+
     try {
       const qs = new URLSearchParams();
       qs.set("academic_year", params.academic_year);
@@ -50,15 +93,22 @@ export function useStudentAttendance() {
 
       if (!res.ok) throw new Error(data.message || "Failed to fetch");
 
-      if (data.success && data.data) {
-        setAttendance(data.data);
-      } else {
-        setAttendance(null);
+      const finalData = data.success && data.data ? data.data : null;
+      setAttendance(finalData);
+
+      const entry = { data: finalData, timestamp: Date.now() };
+      _studentAttClientCache.set(cacheKey, entry);
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem(SS_PREFIX + cacheKey, JSON.stringify(entry));
+        } catch {}
       }
     } catch (err: any) {
       setError(err.message || "Network error");
     } finally {
-      setIsLoading(false);
+      if (!background) {
+        setIsLoading(false);
+      }
     }
   }, []);
 
@@ -84,6 +134,10 @@ export function useStudentAttendance() {
         throw new Error(data.message || "Failed to save attendance");
       }
       setAttendance(data.data);
+
+      _studentAttClientCache.clear();
+      invalidateCache("attendance");
+
       return { success: true, message: "Attendance saved successfully" };
     } catch (err: any) {
       setError(err.message || "Network error");

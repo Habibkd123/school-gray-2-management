@@ -69,6 +69,28 @@ const StudentSkeletonCard = () => (
 );
 
 let _cachedStudentFilters: any = null;
+let _studentFiltersPromise: Promise<any> | null = null;
+
+function getInitialFilterMetadata() {
+  if (_cachedStudentFilters) return _cachedStudentFilters;
+  if (typeof window !== "undefined") {
+    try {
+      const stored = sessionStorage.getItem("sm_student_filters");
+      if (stored) {
+        _cachedStudentFilters = JSON.parse(stored);
+        return _cachedStudentFilters;
+      }
+    } catch {}
+  }
+  return {
+    academicYears: [],
+    sections: [],
+    houses: [],
+    genders: [],
+    statuses: [],
+    admissionStatuses: [],
+  };
+}
 
 export default function StudentsPage() {
   const { academicYear } = useAppState();
@@ -101,14 +123,7 @@ export default function StudentsPage() {
     genders: string[];
     statuses: string[];
     admissionStatuses: string[];
-  }>(_cachedStudentFilters || {
-    academicYears: [],
-    sections: [],
-    houses: [],
-    genders: [],
-    statuses: [],
-    admissionStatuses: [],
-  });
+  }>(getInitialFilterMetadata);
 
   const [academicYearFilter, setAcademicYearFilter] = useState("all");
   const [sectionFilter, setSectionFilter] = useState("all");
@@ -150,19 +165,31 @@ export default function StudentsPage() {
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Load dynamic filter metadata
+  // Load dynamic filter metadata (deduped in-flight & background revalidated)
   React.useEffect(() => {
-    if (_cachedStudentFilters) return;
     async function loadFilters() {
-      try {
-        const res = await fetch("/api/students/filters", { headers: getAuthHeaders() });
-        const json = await res.json();
-        if (json.success) {
-          _cachedStudentFilters = json.data;
-          setFilterMetadata(json.data);
-        }
-      } catch (err) {
-        console.error("Failed to load filter metadata:", err);
+      if (!_studentFiltersPromise) {
+        _studentFiltersPromise = (async () => {
+          try {
+            const res = await fetch("/api/students/filters", { headers: getAuthHeaders() });
+            const json = await res.json();
+            if (json.success) {
+              _cachedStudentFilters = json.data;
+              try {
+                sessionStorage.setItem("sm_student_filters", JSON.stringify(json.data));
+              } catch {}
+              return json.data;
+            }
+          } catch (err) {
+            console.error("Failed to load filter metadata:", err);
+            _studentFiltersPromise = null;
+          }
+          return null;
+        })();
+      }
+      const data = await _studentFiltersPromise;
+      if (data) {
+        setFilterMetadata(data);
       }
     }
     loadFilters();

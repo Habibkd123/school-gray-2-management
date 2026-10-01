@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -11,7 +11,7 @@ import ReportTabs from "../ReportTabs";
 import { PrintService } from "@/app/lib/print-service";
 
 export default function StudentReportPage() {
-  const { students, isLoading, fetchStudents } = useStudents();
+  const { students, isLoading, fetchStudents } = useStudents({ skip: true });
   const { classes } = useClasses();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -105,8 +105,25 @@ export default function StudentReportPage() {
       return;
     }
 
-    const fetchDetail = async () => {
+    const cached = (() => {
+      if (typeof window === "undefined") return null;
+      try {
+        const raw = sessionStorage.getItem(`sm_rep_stud_detail_${selectedStudentId}`);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.timestamp < 120_000 && parsed.data) return parsed.data;
+      } catch {}
+      return null;
+    })();
+
+    if (cached) {
+      setStudentDetail(cached);
+      setDetailLoading(false);
+    } else {
       setDetailLoading(true);
+    }
+
+    const fetchDetail = async () => {
       try {
         const res = await fetch(`/api/reports/student/${selectedStudentId}`, {
           headers: getAuthHeaders()
@@ -114,6 +131,12 @@ export default function StudentReportPage() {
         const data = await res.json();
         if (data.success) {
           setStudentDetail(data.data);
+          try {
+            sessionStorage.setItem(
+              `sm_rep_stud_detail_${selectedStudentId}`,
+              JSON.stringify({ data: data.data, timestamp: Date.now() })
+            );
+          } catch {}
         }
       } catch (err) {
         console.error(err);

@@ -19,6 +19,28 @@ function resolveName(field: { name: string } | string | undefined, fallback = ""
   return typeof field === "object" ? field.name : fallback;
 }
 
+const SS_MERIT_PREFIX = "sm_merit_list_";
+
+function getStoredMerit(key: string): any[] | null {
+  if (typeof window === "undefined" || !key) return null;
+  try {
+    const raw = sessionStorage.getItem(SS_MERIT_PREFIX + key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp < 120_000 && Array.isArray(parsed.data)) {
+      return parsed.data;
+    }
+  } catch {}
+  return null;
+}
+
+function setStoredMerit(key: string, data: any[]) {
+  if (typeof window === "undefined" || !key) return;
+  try {
+    sessionStorage.setItem(SS_MERIT_PREFIX + key, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
+
 export default function MeritListPage() {
   const { exams } = useExams();
   const { classes } = useClasses();
@@ -38,7 +60,9 @@ export default function MeritListPage() {
     }
   }, [selectedExamId, selectedClassId, fetchStudents, fetchResults]);
 
-  const isLoadingAll = isLoading || studentsLoading;
+  const meritKey = selectedExamId && selectedClassId ? `${selectedExamId}_${selectedClassId}` : "";
+  const cachedMerit = getStoredMerit(meritKey);
+  const isLoadingAll = (isLoading || studentsLoading) && (!cachedMerit || cachedMerit.length === 0);
 
   // Group and rank students based on selected Exam and Class
   const rankedStudents = useMemo(() => {
@@ -101,7 +125,7 @@ export default function MeritListPage() {
 
     // Assign ranks
     let currentRank = 1;
-    return arr.map((s, idx) => {
+    const finalRanked = arr.map((s, idx) => {
       // If same marks as previous, same rank. Otherwise, rank = index + 1
       if (idx > 0) {
         const prev = arr[idx - 1];
@@ -112,14 +136,21 @@ export default function MeritListPage() {
       return { ...s, rank: currentRank };
     });
 
-  }, [results, selectedExamId, selectedClassId, students]);
+    if (finalRanked.length > 0 && meritKey) {
+      setStoredMerit(meritKey, finalRanked);
+    }
+
+    return finalRanked;
+  }, [results, selectedExamId, selectedClassId, students, meritKey]);
+
+  const effectiveRanked = rankedStudents.length > 0 ? rankedStudents : (cachedMerit ?? []);
 
   const filteredData = useMemo(() => {
-    return rankedStudents.filter(s => 
+    return effectiveRanked.filter(s => 
       s.studentName.toLowerCase().includes(searchTerm.toLowerCase()) || 
       s.rollNo.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [rankedStudents, searchTerm]);
+  }, [effectiveRanked, searchTerm]);
 
   const getRankBadge = (rank: number, hasFailed: boolean) => {
     if (hasFailed) return <span className="text-slate-400 font-medium">—</span>;

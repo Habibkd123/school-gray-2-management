@@ -15,10 +15,10 @@ import {
   ShieldAlert, UserCheck, AlertCircle
 } from "lucide-react";
 import { PaginationBar } from "@/app/components/ui/pagination-bar";
+import { getOptimizedAvatar } from "@/lib/utils/image";
 
 function getAvatar(name: string, photo_url?: string) {
-  if (photo_url) return photo_url;
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || "User")}&background=E11D48&color=fff&bold=true`;
+  return getOptimizedAvatar(photo_url, name, 64);
 }
 
 function formatDate(d?: string | Date) {
@@ -29,6 +29,7 @@ function formatDate(d?: string | Date) {
 }
 
 let _cachedParentFilters: any = null;
+let _parentFiltersPromise: Promise<any> | null = null;
 
 export default function GuardiansPage() {
   const { user } = useAuth();
@@ -75,22 +76,49 @@ export default function GuardiansPage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
-  // Fetch filter options on mount
+  // Fetch filter options on mount (deduped in-flight + sessionStorage cache)
   useEffect(() => {
     if (activeRole === "parent" || activeRole === "student") return;
-    if (_cachedParentFilters) return;
-    const loadFilterOptions = async () => {
-      try {
-        const res = await fetch("/api/parents/filters", {
-          headers: getAuthHeaders()
-        });
-        const data = await res.json();
-        if (data.success) {
-          _cachedParentFilters = data.data;
-          setFilterOptions(data.data);
+    if (_cachedParentFilters) {
+      setFilterOptions(_cachedParentFilters);
+      return;
+    }
+    // Try sessionStorage first
+    try {
+      const stored = sessionStorage.getItem("sm_parent_filters");
+      if (stored) {
+        const { data, ts } = JSON.parse(stored);
+        if (Date.now() - ts < 60_000) {
+          _cachedParentFilters = data;
+          setFilterOptions(data);
+          return;
         }
-      } catch (err) {
-        console.error("Failed to fetch parent filters", err);
+      }
+    } catch {}
+
+    const loadFilterOptions = async () => {
+      if (!_parentFiltersPromise) {
+        _parentFiltersPromise = (async () => {
+          try {
+            const res = await fetch("/api/parents/filters", {
+              headers: getAuthHeaders()
+            });
+            const data = await res.json();
+            if (data.success) {
+              _cachedParentFilters = data.data;
+              try { sessionStorage.setItem("sm_parent_filters", JSON.stringify({ data: data.data, ts: Date.now() })); } catch {}
+              return data.data;
+            }
+          } catch (err) {
+            console.error("Failed to fetch parent filters", err);
+            _parentFiltersPromise = null;
+          }
+          return null;
+        })();
+      }
+      const data = await _parentFiltersPromise;
+      if (data) {
+        setFilterOptions(data);
       }
     };
     loadFilterOptions();
@@ -120,8 +148,7 @@ export default function GuardiansPage() {
     sectionFilter,
     studentFilter,
     guardianTypeFilter,
-    statusFilter,
-    activeRole
+    statusFilter
   ]);
 
   // Add / Edit Forms
@@ -525,7 +552,77 @@ export default function GuardiansPage() {
               <span>Syncing...</span>
             </div>
           )}
-          {parents.length === 0 ? (
+          {/* ── Initial load skeleton ─────────────────────────────── */}
+          {isInitialLoad && isLoading ? (
+            <table className="erp-table text-[13px] whitespace-nowrap w-full">
+              <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
+                <tr>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">ID</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Parent Name</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Guardian Type</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Father of</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Mother of</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Students Count</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Primary Mobile</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Email</th>
+                  <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Status</th>
+                  <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <tr key={i} className="animate-pulse">
+                    {/* ID */}
+                    <td className="px-4 py-4">
+                      <div className="h-4 w-16 bg-slate-200 dark:bg-slate-700 rounded" />
+                    </td>
+                    {/* Parent Name with avatar */}
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex-shrink-0" />
+                        <div className="space-y-1.5">
+                          <div className="h-3.5 w-28 bg-slate-200 dark:bg-slate-700 rounded" />
+                          <div className="h-2.5 w-20 bg-slate-100 dark:bg-slate-800 rounded" />
+                        </div>
+                      </div>
+                    </td>
+                    {/* Guardian Type badge */}
+                    <td className="px-4 py-4">
+                      <div className="h-5 w-16 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                    </td>
+                    {/* Father of */}
+                    <td className="px-4 py-4">
+                      <div className="h-3.5 w-24 bg-slate-200 dark:bg-slate-700 rounded" />
+                    </td>
+                    {/* Mother of */}
+                    <td className="px-4 py-4">
+                      <div className="h-3.5 w-24 bg-slate-200 dark:bg-slate-700 rounded" />
+                    </td>
+                    {/* Students Count */}
+                    <td className="px-4 py-4">
+                      <div className="h-5 w-8 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto" style={{ marginLeft: 0 }} />
+                    </td>
+                    {/* Mobile */}
+                    <td className="px-4 py-4">
+                      <div className="h-3.5 w-28 bg-slate-200 dark:bg-slate-700 rounded" />
+                    </td>
+                    {/* Email */}
+                    <td className="px-4 py-4">
+                      <div className="h-3.5 w-36 bg-slate-200 dark:bg-slate-700 rounded" />
+                    </td>
+                    {/* Status badge */}
+                    <td className="px-4 py-4">
+                      <div className="h-5 w-14 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                    </td>
+                    {/* Actions */}
+                    <td className="px-4 py-4 text-center">
+                      <div className="h-7 w-7 bg-slate-200 dark:bg-slate-700 rounded-lg mx-auto" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : parents.length === 0 ? (
             <div className="text-center py-20 text-slate-400">
               <Users className="w-12 h-12 mx-auto mb-3 opacity-30 text-rose-500" />
               <p className="text-[14px] font-semibold text-slate-800 dark:text-slate-200">No parent records found</p>

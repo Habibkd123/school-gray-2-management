@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { Room } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendCompressedJson } from "@/lib/compression";
 
 // GET: Fetch all rooms for the school
 export async function GET(req: NextRequest) {
@@ -11,7 +12,7 @@ export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
     const rooms = await Room.find({ school_id: schoolId }).sort({ room_no: 1 }).lean();
-    return NextResponse.json({ success: true, data: { rooms } });
+    return sendCompressedJson(req, { success: true, data: { rooms } }, { cacheControl: "private, no-cache" });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ success: false, message }, { status: 500 });

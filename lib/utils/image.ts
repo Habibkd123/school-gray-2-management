@@ -18,14 +18,50 @@ export function getOptimizedImageUrl(url?: string | null, size: number = 80): st
   return url;
 }
 
+const AVATAR_PALETTE = [
+  "#4F46E5", // Indigo
+  "#0284C7", // Sky
+  "#059669", // Emerald
+  "#D97706", // Amber
+  "#7C3AED", // Violet
+  "#E11D48", // Rose
+  "#0D9488", // Teal
+  "#2563EB", // Blue
+  "#D2232A", // Brand Crimson
+  "#475569", // Slate
+];
+
+function getColorForName(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % AVATAR_PALETTE.length;
+  return AVATAR_PALETTE[index];
+}
+
+function toBase64(str: string): string {
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(str, "utf-8").toString("base64");
+  }
+  if (typeof btoa !== "undefined") {
+    try {
+      return btoa(unescape(encodeURIComponent(str)));
+    } catch {
+      return btoa(str);
+    }
+  }
+  return "";
+}
+
 /**
  * Generates an instant zero-network inline SVG avatar.
  * Requires 0 HTTP roundtrips to external third-party services.
  */
 export function getInitialAvatarDataUrl(
   name: string,
-  backgroundColor: string = "D2232A",
-  textColor: string = "FFFFFF"
+  backgroundColor?: string,
+  textColor: string = "#FFFFFF"
 ): string {
   const cleanName = (name || "User").trim();
   const parts = cleanName.split(/\s+/).filter(Boolean);
@@ -37,12 +73,18 @@ export function getInitialAvatarDataUrl(
     initials = parts[0].slice(0, 2).toUpperCase();
   }
 
-  // Sanitize colors for SVG URL
-  const bg = backgroundColor.replace("#", "");
-  const fg = textColor.replace("#", "");
+  const bg = backgroundColor
+    ? (backgroundColor.startsWith("#") ? backgroundColor : `#${backgroundColor}`)
+    : getColorForName(cleanName);
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><rect width="100%" height="100%" fill="%23${bg}" rx="32"/><text x="50%" y="54%" font-family="system-ui, -apple-system, sans-serif" font-size="23" font-weight="700" fill="%23${fg}" dominant-baseline="middle" text-anchor="middle">${initials}</text></svg>`;
+  const fg = textColor.startsWith("#") ? textColor : `#${textColor}`;
 
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="${bg}"/><text x="50%" y="54%" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="700" fill="${fg}" dominant-baseline="middle" text-anchor="middle">${initials}</text></svg>`;
+
+  const b64 = toBase64(svg);
+  if (b64) {
+    return `data:image/svg+xml;base64,${b64}`;
+  }
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
 
@@ -58,3 +100,4 @@ export function getOptimizedAvatar(photoUrl?: string | null, name: string = "Use
   }
   return getInitialAvatarDataUrl(name);
 }
+

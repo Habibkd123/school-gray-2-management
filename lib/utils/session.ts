@@ -5,6 +5,7 @@ const KEYS = {
   ACCESS_TOKEN: "sm_access_token",
   REFRESH_TOKEN: "sm_refresh_token",
   USER: "sm_user",
+  SCHOOL_INFO: "sm_school_info",
 } as const;
 
 export interface StoredUser {
@@ -16,15 +17,46 @@ export interface StoredUser {
   must_change_password?: boolean;
 }
 
+export interface SchoolInfo {
+  id: string;
+  name: string;
+  subtitle?: string;
+  logo_url?: string | null;
+  subdomain?: string;
+}
+
 // ─── Save ─────────────────────────────────────────────────────────
 export const saveSession = (
   accessToken: string,
   refreshToken: string,
-  user: StoredUser
+  user: StoredUser,
+  school?: SchoolInfo | null
 ) => {
   localStorage.setItem(KEYS.ACCESS_TOKEN, accessToken);
   localStorage.setItem(KEYS.REFRESH_TOKEN, refreshToken);
   localStorage.setItem(KEYS.USER, JSON.stringify(user));
+  if (school) {
+    localStorage.setItem(KEYS.SCHOOL_INFO, JSON.stringify(school));
+  }
+};
+
+export const saveSchoolInfo = (school: SchoolInfo | null) => {
+  if (typeof window === "undefined") return;
+  if (school) {
+    localStorage.setItem(KEYS.SCHOOL_INFO, JSON.stringify(school));
+  } else {
+    localStorage.removeItem(KEYS.SCHOOL_INFO);
+  }
+};
+
+export const getStoredSchoolInfo = (): SchoolInfo | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(KEYS.SCHOOL_INFO);
+    return raw ? (JSON.parse(raw) as SchoolInfo) : null;
+  } catch {
+    return null;
+  }
 };
 
 // ─── Load ─────────────────────────────────────────────────────────
@@ -64,6 +96,7 @@ export const clearSession = () => {
     localStorage.removeItem(KEYS.ACCESS_TOKEN);
     localStorage.removeItem(KEYS.REFRESH_TOKEN);
     localStorage.removeItem(KEYS.USER);
+    localStorage.removeItem(KEYS.SCHOOL_INFO);
     try {
       sessionStorage.removeItem("sm_active_subdomain");
       sessionStorage.removeItem("sm_cached_permissions");
@@ -108,24 +141,28 @@ export function useAuthReady(): boolean {
   });
 
   useEffect(() => {
-    if (ready) return; // Already confirmed — no polling needed.
+    if (ready) return; // Already confirmed — no listener needed.
 
-    // Poll every 50 ms until the token appears (handles SSR hydration gap).
-    const id = setInterval(() => {
-      if (localStorage.getItem(KEYS.ACCESS_TOKEN)) {
+    // Listen for the storage event (fires when saveSession writes the token).
+    // This is instant — no polling delay.
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === KEYS.ACCESS_TOKEN && e.newValue) {
         setReady(true);
-        clearInterval(id);
       }
-    }, 50);
+    };
+    window.addEventListener("storage", onStorage);
 
-    // Give up after 5 s to avoid infinite polling on unauthenticated pages.
-    const timeout = setTimeout(() => {
-      clearInterval(id);
-      setReady(true); // Let hooks run anyway — they'll get a 401 and handle it.
-    }, 5000);
+    // Also do a single immediate check in case the token was written before
+    // this effect ran (e.g., token already present from a previous tab).
+    if (localStorage.getItem(KEYS.ACCESS_TOKEN)) {
+      setReady(true);
+    }
+
+    // Safety fallback: give up after 5 s so hooks can run (will get 401).
+    const timeout = setTimeout(() => setReady(true), 5000);
 
     return () => {
-      clearInterval(id);
+      window.removeEventListener("storage", onStorage);
       clearTimeout(timeout);
     };
   }, [ready]);

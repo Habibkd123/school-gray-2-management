@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
+import { cacheSync, invalidateCache } from "@/lib/utils/cache-sync";
 
 export interface ApiGrade {
   _id: string;
@@ -43,6 +44,13 @@ export function useGrades() {
     fetchGrades();
   }, [fetchGrades, authReady]);
 
+  // Synchronize grades across tabs & components
+  useEffect(() => {
+    return cacheSync.subscribe("grades", () => {
+      fetchGrades();
+    });
+  }, [fetchGrades]);
+
   const createGrade = async (payload: Partial<ApiGrade>) => {
     try {
       const res = await fetch("/api/grades", {
@@ -52,6 +60,7 @@ export function useGrades() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to create grade");
+      invalidateCache("grades");
       await fetchGrades();
       return { success: true, data: data.data };
     } catch (err: any) {
@@ -68,6 +77,7 @@ export function useGrades() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to update grade");
+      invalidateCache("grades");
       await fetchGrades();
       return { success: true, data: data.data };
     } catch (err: any) {
@@ -83,6 +93,7 @@ export function useGrades() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to delete grade");
+      invalidateCache("grades");
       await fetchGrades();
       return { success: true };
     } catch (err: any) {

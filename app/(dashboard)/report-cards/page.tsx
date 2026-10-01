@@ -11,7 +11,12 @@ import type { ReportCardBatch } from "@/app/components/document-builder/store";
 import { TEMPLATE_DEFINITIONS } from "@/app/components/document-builder/templates-data";
 
 export default function ReportCardsDashboard() {
-  const [batches, setBatches] = useState<ReportCardBatch[]>([]);
+  const [batches, setBatches] = useState<ReportCardBatch[]>(() => {
+    if (typeof window !== "undefined") {
+      return getReportCardBatches();
+    }
+    return [];
+  });
 
   useEffect(() => {
     setBatches(getReportCardBatches());

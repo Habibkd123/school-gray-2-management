@@ -4,6 +4,7 @@ import connectDB from "@/lib/db";
 import { Attendance, Parent } from "@/lib/models";
 import Student from "@/lib/models/Student";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
 
 export async function GET(request: NextRequest) {
   try {
@@ -58,10 +59,10 @@ export async function GET(request: NextRequest) {
       };
     }).sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-    return NextResponse.json({
+    return sendCompressedJson(request, {
       success: true,
       data: studentRecords
-    });
+    }, { cacheControl: "private, no-cache" });
   } catch (error: any) {
     console.error("Error fetching student attendance:", error);
     return NextResponse.json(

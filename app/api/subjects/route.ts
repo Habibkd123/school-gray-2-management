@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { Subject, Timetable } from "@/lib/models/index";
+import { Subject, Timetable, SubjectAssignment } from "@/lib/models/index";
 import Class from "@/lib/models/Class";
 import Teacher from "@/lib/models/Teacher";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
+
 
 // GET: Fetch all subjects for the school
 export async function GET(req: NextRequest) {
@@ -20,8 +22,6 @@ export async function GET(req: NextRequest) {
 
     // Self-healing sync: Ensure all SubjectAssignment entries exist in Subject collection
     if (classId && mongoose.Types.ObjectId.isValid(classId)) {
-      const { SubjectAssignment } = require("@/lib/models/index");
-      
       const assignments = await SubjectAssignment.find({
         school_id: schoolId,
         class_id: classId
@@ -113,11 +113,13 @@ export async function GET(req: NextRequest) {
       .populate("class_id", "name section")
       .sort({ name: 1 })
       .lean();
-    return NextResponse.json(
+    return sendCompressedJson(
+      req,
       { success: true, data: { subjects } },
-      { headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" } }
+      { cacheControl: "private, no-cache" }
     );
   } catch (err: any) {
+    console.error("[GET /api/subjects]", err);
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }
 }

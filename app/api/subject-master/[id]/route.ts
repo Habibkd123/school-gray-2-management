@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { SubjectMaster, SubjectAssignment, TeacherAssignment } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
+import { invalidateSubjectMasterCache } from "../route";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -40,6 +41,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     ).lean();
 
     if (!subject) return NextResponse.json({ success: false, message: "Subject not found" }, { status: 404 });
+    invalidateSubjectMasterCache(String(schoolId));
     return NextResponse.json({ success: true, data: subject });
   } catch (err: any) {
     if (err.code === 11000) {
@@ -82,6 +84,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     }
 
     await SubjectMaster.deleteOne({ _id: id });
+    invalidateSubjectMasterCache(String(schoolId));
     return NextResponse.json({ success: true, message: "Subject deleted successfully" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

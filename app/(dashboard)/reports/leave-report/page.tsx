@@ -7,7 +7,7 @@ import {
 import { useLeave } from "../../../hooks/useLeave";
 
 export default function LeaveReportPage() {
-  const { leaveRequests, loading } = useLeave();
+  const { leaveRequests, loading } = useLeave(undefined, undefined, { initialPageSize: 500 });
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isExportOpen, setIsExportOpen] = useState(false);

@@ -44,7 +44,24 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-let _cachedSyllabiStats: Record<string, { total: number, completed: number, percent: number, updatedAt?: string, status?: string }> | null = null;
+const SS_STATS_PREFIX = "sm_syl_raw_stats_";
+
+function readSessionRawStats(year: string): any[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SS_STATS_PREFIX + year);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (Date.now() - p.timestamp < 60_000) return p.data;
+  } catch {}
+  return null;
+}
+
+function writeSessionRawStats(year: string, data: any[]) {
+  try {
+    sessionStorage.setItem(SS_STATS_PREFIX + year, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
 
 export default function SyllabusClassListPage() {
   const { academicYear } = useAppState();
@@ -57,68 +74,101 @@ export default function SyllabusClassListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTeacherId, setFilterTeacherId] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [syllabiStats, setSyllabiStats] = useState<Record<string, { total: number, completed: number, percent: number, updatedAt?: string, status?: string }>>(_cachedSyllabiStats || {});
-  const [loadingStats, setLoadingStats] = useState(!_cachedSyllabiStats);
+  const [rawStats, setRawStats] = useState<any[]>(() => readSessionRawStats(academicYear) || []);
+  const [loadingStats, setLoadingStats] = useState(() => !readSessionRawStats(academicYear));
   const [expandedClasses, setExpandedClasses] = useState<Record<string, boolean>>({});
 
   const toggleExpand = (classId: string) => {
     setExpandedClasses(prev => ({ ...prev, [classId]: !prev[classId] }));
   };
 
+  // 1. Fetch raw stats immediately on mount in parallel with assignments
   useEffect(() => {
-    async function fetchAllStats() {
-      if (assignments.length === 0) return;
-      if (!_cachedSyllabiStats) setLoadingStats(true);
+    let isCancelled = false;
+    async function fetchStats() {
+      const cached = readSessionRawStats(academicYear);
+      if (cached) {
+        setRawStats(cached);
+        setLoadingStats(false);
+      } else {
+        setLoadingStats(true);
+      }
+
       try {
         const res = await fetch(`/api/syllabus?mode=stats&academic_year=${encodeURIComponent(academicYear)}`, { headers: getAuthHeaders() });
         const data = await res.json();
-        if (res.ok && data.success && data.data) {
-          const statsMap: Record<string, any> = {};
-
-          assignments.forEach(a => {
-            const aClassId = typeof a.class_id === 'object' ? a.class_id?._id : a.class_id;
-            const aSubjId = typeof a.subject_master_id === 'object' ? a.subject_master_id?._id : a.subject_master_id;
-
-            const matchedSyllabus = data.data.find((s: any) => 
-              String(s.class_id) === String(aClassId) && 
-              String(s.subject_master_id) === String(aSubjId)
-            );
-
-            if (matchedSyllabus) {
-              const chapters = matchedSyllabus.chapters || [];
-              const total = chapters.length;
-              const completed = chapters.filter((c: any) => c.status === "Completed").length;
-              const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
-              statsMap[a._id] = {
-                total,
-                completed,
-                percent,
-                updatedAt: matchedSyllabus.updatedAt,
-                status: matchedSyllabus.status || "Draft",
-              };
-            } else {
-              statsMap[a._id] = { total: 0, completed: 0, percent: 0, status: "Not Started" };
-            }
-          });
-
-          _cachedSyllabiStats = statsMap;
-          setSyllabiStats(statsMap);
+        if (!isCancelled && res.ok && data.success && Array.isArray(data.data)) {
+          writeSessionRawStats(academicYear, data.data);
+          setRawStats(data.data);
         }
       } catch (e) {
         console.error("Error fetching syllabi stats:", e);
       } finally {
-        setLoadingStats(false);
+        if (!isCancelled) setLoadingStats(false);
       }
     }
 
-    fetchAllStats();
-  }, [assignments, academicYear]);
+    fetchStats();
+    return () => { isCancelled = true; };
+  }, [academicYear]);
 
+  // 2. Fetch assignments immediately on mount filtered by academic year
   useEffect(() => {
-    if (!assignments || assignments.length === 0) {
-      fetchAssignments({ limit: "all" });
+    fetchAssignments({ limit: "all", academic_year: academicYear });
+  }, [academicYear, fetchAssignments]);
+
+  // 3. Compute stats map reactively using O(1) Map lookup
+  const syllabiStats = useMemo(() => {
+    if (!assignments || assignments.length === 0) return {};
+
+    const statsLookup = new Map<string, any>();
+    if (rawStats && rawStats.length > 0) {
+      rawStats.forEach((s: any) => {
+        if (s.class_id && s.subject_master_id) {
+          statsLookup.set(`${String(s.class_id)}:${String(s.subject_master_id)}`, s);
+        }
+      });
     }
-  }, [assignments, fetchAssignments]);
+
+    const statsMap: Record<string, { total: number, completed: number, percent: number, updatedAt?: string, status: string }> = {};
+    assignments.forEach(a => {
+      const aClassId = typeof a.class_id === 'object' ? a.class_id?._id : a.class_id;
+      const aSubjId = typeof a.subject_master_id === 'object' ? a.subject_master_id?._id : a.subject_master_id;
+      const key = `${String(aClassId)}:${String(aSubjId)}`;
+      const matchedSyllabus = statsLookup.get(key);
+
+      if (matchedSyllabus) {
+        const chapters = matchedSyllabus.chapters || [];
+        const total = chapters.length;
+        const completed = chapters.filter((c: any) => c.status === "Completed").length;
+        const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
+        statsMap[a._id] = {
+          total,
+          completed,
+          percent,
+          updatedAt: matchedSyllabus.updatedAt,
+          status: matchedSyllabus.status || "Draft",
+        };
+      } else {
+        statsMap[a._id] = { total: 0, completed: 0, percent: 0, status: "Not Started" };
+      }
+    });
+
+    return statsMap;
+  }, [assignments, rawStats]);
+
+  const handleRefresh = () => {
+    fetchAssignments({ limit: "all", academic_year: academicYear });
+    fetch(`/api/syllabus?mode=stats&academic_year=${encodeURIComponent(academicYear)}`, { headers: getAuthHeaders() })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.data)) {
+          writeSessionRawStats(academicYear, data.data);
+          setRawStats(data.data);
+        }
+      })
+      .catch(() => {});
+  };
 
   const classGroups = useMemo(() => {
     const groups: Record<string, { classId: string, className: string, section?: string, classTeacherName?: string, assignments: any[] }> = {};
@@ -211,7 +261,7 @@ export default function SyllabusClassListPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={() => fetchAssignments({ limit: "all" })} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
+          <button onClick={handleRefresh} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
           <div className="px-4 py-2 bg-white dark:bg-slate-900 border border-border rounded-lg text-[13px] font-bold text-slate-700 dark:text-slate-350 shadow-sm font-sans">

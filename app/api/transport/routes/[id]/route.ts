@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
-import { Route } from "@/lib/models";
+import { Route, Bus } from "@/lib/models";
 import mongoose from "mongoose";
+import { invalidateRoutesCache } from "../route";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -19,7 +20,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Route not found" }, { status: 404 });
     }
 
-    const { Bus } = require("@/lib/models");
     if (oldRoute && oldRoute.assignedBus !== updated.assignedBus) {
       if (oldRoute.assignedBus && oldRoute.assignedBus !== "Not Assigned") {
         await Bus.findOneAndUpdate(
@@ -46,6 +46,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       );
     }
 
+    invalidateRoutesCache();
+
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
     if (error.code === 11000) {
@@ -69,13 +71,14 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       return NextResponse.json({ success: false, error: "Route not found" }, { status: 404 });
     }
 
-    const { Bus } = require("@/lib/models");
     if (deleted.assignedBus && deleted.assignedBus !== "Not Assigned") {
       await Bus.findOneAndUpdate(
         { school_id: deleted.school_id, busNumber: deleted.assignedBus, assignedRoute: deleted.routeName },
         { assignedRoute: "Not Assigned" }
       );
     }
+
+    invalidateRoutesCache();
 
     return NextResponse.json({ success: true, data: deleted });
   } catch (error: any) {

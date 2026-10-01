@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search, Plus, Grid3X3, List, Star, Filter, SlidersHorizontal,
@@ -13,7 +13,8 @@ import {
   duplicateTemplate, toggleFavourite, exportTemplate, importTemplate,
   useTemplate, getCategories,
 } from "@/app/components/document-builder/store";
-import type { TemplateMeta } from "@/app/components/document-builder/types";
+import { cacheSync } from "@/lib/utils/cache-sync";
+import type { TemplateMeta, DocumentCategory } from "@/app/components/document-builder/types";
 import { useAuth } from "@/app/context/auth";
 
 // ── Live Canvas Thumbnail ─────────────────────────────────────────────────────
@@ -407,7 +408,7 @@ function UseTemplateModal({
 }
 
 // ── Template Card (Grid) ──────────────────────────────────────────────────────
-function TemplateCard({
+const TemplateCard = React.memo(function TemplateCard({
   template, categories, onView, onEdit, onDuplicate, onDelete,
   onRestore, onExport, onFav, onUse,
 }: {
@@ -577,10 +578,10 @@ function TemplateCard({
       </div>
     </div>
   );
-}
+});
 
 // ── Template Row (List view) ──────────────────────────────────────────────────
-function TemplateRow({
+const TemplateRow = React.memo(function TemplateRow({
   template, categories, onView, onEdit, onDuplicate, onDelete,
   onRestore, onExport, onFav, onUse,
 }: Parameters<typeof TemplateCard>[0]) {
@@ -646,7 +647,7 @@ function TemplateRow({
       </td>
     </tr>
   );
-}
+});
 
 // ── Skeleton Card ─────────────────────────────────────────────────────────────
 function SkeletonCard() {
@@ -693,10 +694,10 @@ type SortKey = "newest" | "oldest" | "updated" | "alpha" | "usage";
 export default function TemplatesPage() {
   const router     = useRouter();
   const { user }   = useAuth();
-  const categories = getCategories();
 
-  const [templates,    setTemplates]    = useState<TemplateMeta[]>([]);
-  const [isLoading,    setIsLoading]    = useState(true);
+  const [categories,   setCategories]   = useState<DocumentCategory[]>(() => typeof window !== "undefined" ? getCategories() : []);
+  const [templates,    setTemplates]    = useState<TemplateMeta[]>(() => typeof window !== "undefined" ? getTemplates(true) : []);
+  const [isLoading,    setIsLoading]    = useState<boolean>(false);
   const [viewMode,     setViewMode]     = useState<"grid" | "list">("grid");
   const [search,       setSearch]       = useState("");
   const [catFilter,    setCatFilter]    = useState("all");
@@ -714,41 +715,56 @@ export default function TemplatesPage() {
 
   const load = useCallback(() => {
     setTemplates(getTemplates(true));
+    setCategories(getCategories());
     setIsLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    const unsubT = cacheSync.subscribe("templates", () => {
+      setTemplates(getTemplates(true));
+    });
+    const unsubC = cacheSync.subscribe("document_categories", () => {
+      setCategories(getCategories());
+    });
+    return () => {
+      unsubT();
+      unsubC();
+    };
+  }, [load]);
 
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // ── Filter & Sort ─────────────────────────────────────────────────────────
-  const filtered = templates
-    .filter((t) => trashMode ? !!t.deletedAt : !t.deletedAt)
-    .filter((t) => catFilter    === "all" || t.categoryId  === catFilter)
-    .filter((t) => orientFilter === "all" || t.orientation === orientFilter)
-    .filter((t) => statusFilter === "all" || t.status      === statusFilter)
-    .filter((t) => !favFilter   || t.favourite)
-    .filter((t) => {
-      if (!search) return true;
-      const q = search.toLowerCase();
-      return t.name.toLowerCase().includes(q)
-        || t.description.toLowerCase().includes(q)
-        || categories.find((c) => c.id === t.categoryId)?.name.toLowerCase().includes(q);
-    })
-    .sort((a, b) => {
-      if (sort === "newest")  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-      if (sort === "oldest")  return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      if (sort === "updated") return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-      if (sort === "alpha")   return a.name.localeCompare(b.name);
-      if (sort === "usage")   return (b.usageCount || 0) - (a.usageCount || 0);
-      return 0;
-    });
+  // ── Filter & Sort (Memoized for 0ms responsiveness) ─────────────────────────
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return templates
+      .filter((t) => trashMode ? !!t.deletedAt : !t.deletedAt)
+      .filter((t) => catFilter    === "all" || t.categoryId  === catFilter)
+      .filter((t) => orientFilter === "all" || t.orientation === orientFilter)
+      .filter((t) => statusFilter === "all" || t.status      === statusFilter)
+      .filter((t) => !favFilter   || t.favourite)
+      .filter((t) => {
+        if (!q) return true;
+        return t.name.toLowerCase().includes(q)
+          || t.description.toLowerCase().includes(q)
+          || categories.find((c) => c.id === t.categoryId)?.name.toLowerCase().includes(q);
+      })
+      .sort((a, b) => {
+        if (sort === "newest")  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        if (sort === "oldest")  return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        if (sort === "updated") return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        if (sort === "alpha")   return a.name.localeCompare(b.name);
+        if (sort === "usage")   return (b.usageCount || 0) - (a.usageCount || 0);
+        return 0;
+      });
+  }, [templates, trashMode, catFilter, orientFilter, statusFilter, favFilter, search, categories, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
-  const paginated  = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+  const paginated  = useMemo(() => filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE), [filtered, page]);
 
   // Reset to page 1 when filters change
   useEffect(() => { setPage(1); }, [search, catFilter, orientFilter, statusFilter, favFilter, sort, trashMode]);

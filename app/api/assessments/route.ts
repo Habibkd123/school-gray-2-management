@@ -5,6 +5,7 @@ import Class from "@/lib/models/Class";
 import Teacher from "@/lib/models/Teacher";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
 
 // ── Compute live status from stored fields ────────────────────────────────────
 function computeStatus(test: any): string {
@@ -29,6 +30,23 @@ function computeStatus(test: any): string {
   return "scheduled";
 }
 
+// Server cache & in-flight deduplication
+const _assessmentsServerCache = new Map<string, { data: any; expiresAt: number }>();
+const _assessmentsInFlight = new Map<string, Promise<any>>();
+const ASSESSMENTS_CACHE_TTL = 30_000;
+
+export function invalidateAssessmentsCache(schoolId?: string) {
+  if (schoolId) {
+    for (const key of _assessmentsServerCache.keys()) {
+      if (key.startsWith(`ass_${schoolId}`)) {
+        _assessmentsServerCache.delete(key);
+      }
+    }
+  } else {
+    _assessmentsServerCache.clear();
+  }
+}
+
 // GET — List all tests (school-scoped, paginated)
 export async function GET(req: NextRequest) {
   const { schoolId, role, userId, error } = requireAuth(req, [
@@ -37,19 +55,40 @@ export async function GET(req: NextRequest) {
   if (error) return error;
   if (!schoolId) return NextResponse.json({ success: false, message: "No school context" }, { status: 400 });
 
-  try {
+  const url = new URL(req.url);
+  const class_id = url.searchParams.get("class_id");
+  const subject_id = url.searchParams.get("subject_id");
+  const status = url.searchParams.get("status");
+  const search = url.searchParams.get("search");
+  const academic_year = url.searchParams.get("academic_year");
+  const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+  const limit = Math.min(5000, parseInt(url.searchParams.get("limit") || "20"));
+
+  const cacheKey = `ass_${schoolId}_${role}_${userId || ""}_${class_id || "all"}_${subject_id || "all"}_${status || "all"}_${academic_year || "all"}_${page}_${limit}_${search || ""}`;
+
+  const cached = _assessmentsServerCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return sendCompressedJson(req, cached.data, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30",
+    });
+  }
+
+  const existingInFlight = _assessmentsInFlight.get(cacheKey);
+  if (existingInFlight) {
+    try {
+      const payload = await existingInFlight;
+      return sendCompressedJson(req, payload, {
+        cacheControl: "private, max-age=15, stale-while-revalidate=30",
+      });
+    } catch (err: any) {
+      return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
+    }
+  }
+
+  const queryPromise = (async () => {
     await connectDB();
     // ensure models registered
     void [Class.modelName, Teacher.modelName];
-
-    const url = new URL(req.url);
-    const class_id = url.searchParams.get("class_id");
-    const subject_id = url.searchParams.get("subject_id");
-    const status = url.searchParams.get("status");
-    const search = url.searchParams.get("search");
-    const academic_year = url.searchParams.get("academic_year");
-    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
-    const limit = Math.min(50, parseInt(url.searchParams.get("limit") || "20"));
 
     const query: any = { school_id: schoolId };
 
@@ -81,14 +120,28 @@ export async function GET(req: NextRequest) {
       ? enriched.filter((t) => t.computedStatus === status)
       : enriched;
 
-    return NextResponse.json({
+    const payload = {
       success: true,
       data: filtered,
       pagination: { total, page, limit, pages: Math.ceil(total / limit) },
+    };
+
+    _assessmentsServerCache.set(cacheKey, { data: payload, expiresAt: Date.now() + ASSESSMENTS_CACHE_TTL });
+    return payload;
+  })();
+
+  _assessmentsInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const payload = await queryPromise;
+    return sendCompressedJson(req, payload, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30",
     });
   } catch (err: any) {
     console.error("[GET /api/assessments]", err);
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  } finally {
+    _assessmentsInFlight.delete(cacheKey);
   }
 }
 
@@ -148,6 +201,8 @@ export async function POST(req: NextRequest) {
       assessment_type: assessment_type || "Class Test",
       is_published: false,
     });
+
+    invalidateAssessmentsCache(schoolId);
 
     return NextResponse.json({ success: true, data: test }, { status: 201 });
   } catch (err: any) {

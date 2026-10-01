@@ -23,29 +23,57 @@ interface DailyClassStat {
   rate: number;
 }
 
+const SS_DAILY_ATT_PREFIX = "sm_rep_daily_att_";
+
+function getStoredDailyAtt(date: string): DailyClassStat[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SS_DAILY_ATT_PREFIX + date);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp < 60_000 && Array.isArray(parsed.data)) {
+      return parsed.data;
+    }
+  } catch {}
+  return null;
+}
+
+function setStoredDailyAtt(date: string, data: DailyClassStat[]) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(SS_DAILY_ATT_PREFIX + date, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
+
 export default function DailyAttendanceReportPage() {
   const { classes } = useClasses();
-  const [stats, setStats] = useState<DailyClassStat[]>([]);
-  const [loading, setLoading] = useState(true);
+  const initialDate = new Date().toISOString().split("T")[0];
+  const [selectedDate, setSelectedDate] = useState(initialDate);
+  const [stats, setStats] = useState<DailyClassStat[]>(() => getStoredDailyAtt(initialDate) ?? []);
+  const [loading, setLoading] = useState(() => getStoredDailyAtt(initialDate) === null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [filterClass, setFilterClass] = useState("");
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
 
-  const fetchStats = async () => {
-    setLoading(true);
+  const fetchStats = async (date = selectedDate) => {
+    const cached = getStoredDailyAtt(date);
+    if (cached && cached.length > 0) {
+      setStats(cached);
+      setLoading(false);
+    } else if (stats.length === 0) {
+      setLoading(true);
+    }
     try {
       const res = await fetch(
-        `/api/reports/attendance?type=daily&date=${selectedDate}`,
+        `/api/reports/attendance?type=daily&date=${date}`,
         { headers: getAuthHeaders() }
       );
       const json = await res.json();
       if (json.success) {
         setStats(json.data);
+        setStoredDailyAtt(date, json.data);
       }
     } catch (e) {
       console.error(e);
@@ -55,7 +83,7 @@ export default function DailyAttendanceReportPage() {
   };
 
   useEffect(() => {
-    fetchStats();
+    fetchStats(selectedDate);
   }, [selectedDate]);
 
   const filteredStats = useMemo(() => {
@@ -154,7 +182,7 @@ export default function DailyAttendanceReportPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={fetchStats}
+            onClick={() => fetchStats()}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary transition-colors shadow-sm cursor-pointer dark:text-slate-400"
           >
             <RefreshCw className="w-4 h-4" />

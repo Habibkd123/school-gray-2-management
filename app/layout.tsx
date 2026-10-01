@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
 import { Roboto } from "next/font/google";
 import "./globals.css";
@@ -11,14 +11,24 @@ import { resolveSchoolMeta } from "@/lib/themes/resolveSchool";
 import { getSubdomainHost } from "@/lib/utils/subdomain";
 
 const roboto = Roboto({
-  weight: ["400", "500", "700"],
   subsets: ["latin"],
+  weight: ["300", "400", "500", "700", "900"],
   display: "swap",
   variable: "--font-roboto",
 });
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
 const APP_URL     = process.env.NEXT_PUBLIC_APP_URL     || `https://www.${ROOT_DOMAIN}`;
+
+// ─── Viewport (mobile-first, proper scaling) ──────────────────────────────────
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)",  color: "#0f172a" },
+  ],
+  width: "device-width",
+  initialScale: 1,
+};
 
 // ─── Dynamic Metadata per Subdomain ──────────────────────────────────────────
 // resolveSchoolMeta() uses a 10-min in-memory cache shared with resolveSchoolIdServer()
@@ -121,11 +131,18 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" href={faviconUrl} />
         {/* Theme CSS vars injected before any body content — zero FOUC */}
         <ServerThemeStyles />
-        {/* DNS prefetch for CDNs used for uploaded images / avatars */}
-        <link rel="dns-prefetch" href="//res.cloudinary.com" />
+        {/* Preconnect: establish early connections to critical third-party origins. */}
+        <link rel="preconnect" href="https://res.cloudinary.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap"
+          rel="stylesheet"
+        />
         <link rel="dns-prefetch" href="//ui-avatars.com" />
+        <link rel="dns-prefetch" href="//i.pravatar.cc" />
       </head>
-      <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
+      <body className={`${roboto.className} min-h-full flex flex-col font-sans`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" enableSystem={false}>
           <RootThemeProvider>
             <AuthProvider>

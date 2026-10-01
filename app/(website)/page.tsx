@@ -16,15 +16,32 @@ import { FAQ } from "../components/landing/FAQ";
 import { Contact } from "../components/landing/Contact";
 import { getLandingData } from "@/lib/landing/getLandingData";
 import { resolveSchoolMeta } from "@/lib/themes/resolveSchool";
+import { SaaSPlatformHome } from "../components/saas/SaaSPlatformHome";
+import { getPartnerSchools } from "@/lib/landing/getPartnerSchools";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
   const headersList = await headers();
+  const params = searchParams ? await searchParams : {};
+  const isPlatformForced =
+    params.platform === "true" ||
+    params.view === "platform" ||
+    params.saas === "true";
 
   // Run both fetches in parallel — resolveSchoolMeta uses same cache as layout.tsx
   const [landingData, school] = await Promise.all([
     getLandingData(),
     resolveSchoolMeta(headersList),
   ]);
+
+  // ── No school context or platform view explicitly requested: render SaaS Platform Homepage ──
+  if (!school || !school.school_id || isPlatformForced) {
+    const partnerSchools = await getPartnerSchools();
+    return <SaaSPlatformHome partnerSchools={partnerSchools} />;
+  }
 
   // ── Build Schema.org JSON-LD for this school ───────────────────────────────
   const contact = landingData?.contact;

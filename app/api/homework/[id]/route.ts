@@ -6,6 +6,7 @@ import Teacher from "@/lib/models/Teacher";
 import Student from "@/lib/models/Student";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { invalidateHomeworkCache } from "../route";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -208,6 +209,8 @@ export async function PUT(
       .populate("teacher_id", "name")
       .lean();
 
+    invalidateHomeworkCache(schoolId);
+
     return NextResponse.json({
       success: true,
       message: "Homework updated successfully",
@@ -264,6 +267,8 @@ export async function DELETE(
     }
 
     await Homework.deleteOne({ _id: id });
+
+    invalidateHomeworkCache(schoolId);
 
     return NextResponse.json({
       success: true,

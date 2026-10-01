@@ -6,8 +6,17 @@ import User from "@/lib/models/User";
 import Class from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { invalidateStudentsServerCache } from "../route";
+import { sendConditionalJson } from "@/lib/etag";
 
 type RouteParams = { params: Promise<{ id: string }> };
+
+const g = globalThis as unknown as {
+  _singleStudentCache?: Map<string, { data: any; expiresAt: number }>;
+};
+if (!g._singleStudentCache) g._singleStudentCache = new Map();
+const _singleStudentCache = g._singleStudentCache;
+const SINGLE_STUDENT_TTL = 60_000; // 60 seconds
 
 // ─── GET /api/students/[id] — Single student detail ───────────────
 export async function GET(request: NextRequest, { params }: RouteParams) {
@@ -20,6 +29,17 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json(
       { success: false, message: "Invalid student ID" },
       { status: 400 }
+    );
+  }
+
+  const isAdminOrTeacher = ["school_admin", "teacher", "super_admin"].includes(role);
+  const cacheKey = isAdminOrTeacher ? `${schoolId}:${id}` : `${schoolId}:${id}:${userId}:${role}`;
+  const cached = _singleStudentCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return sendConditionalJson(
+      request,
+      { success: true, data: cached.data },
+      { cacheControl: "private, max-age=15, stale-while-revalidate=60" }
     );
   }
 
@@ -64,7 +84,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         }
       }
 
-      return NextResponse.json({ success: true, data: student });
+      _singleStudentCache.set(cacheKey, {
+        data: student,
+        expiresAt: Date.now() + SINGLE_STUDENT_TTL,
+      });
+
+      return sendConditionalJson(
+        request,
+        { success: true, data: student },
+        { cacheControl: "private, max-age=15, stale-while-revalidate=60" }
+      );
     } catch (err) {
       console.error(`[GET /api/students/[id]] attempt ${attempt}`, err);
       if (attempt < 2) {
@@ -267,6 +296,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    _singleStudentCache.clear();
+    invalidateStudentsServerCache();
+
     return NextResponse.json({
       success: true,
       message: "Student updated successfully",
@@ -317,6 +349,9 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         { status: 404 }
       );
     }
+
+    _singleStudentCache.clear();
+    invalidateStudentsServerCache();
 
     return NextResponse.json({
       success: true,

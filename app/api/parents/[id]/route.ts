@@ -5,6 +5,8 @@ import Student from "@/lib/models/Student";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 import User from "@/lib/models/User";
+import { sendCompressedJson } from "@/lib/compression";
+import { invalidateParentsServerCache } from "../route";
 
 // ─── GET /api/parents/[id] — Get a single parent ──────────────────────
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -38,12 +40,14 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .populate("class_id", "name section")
       .lean();
 
-    return NextResponse.json({
+    return sendCompressedJson(request, {
       success: true,
       data: {
         ...parent,
         children
       }
+    }, {
+      cacheControl: "private, no-cache"
     });
   } catch (err) {
     console.error("[GET /api/parents/[id]]", err);
@@ -75,6 +79,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       .populate("class_id", "name section")
       .lean();
 
+    invalidateParentsServerCache(schoolId as string);
     return NextResponse.json({ success: true, message: "Parent updated", data: { ...parent.toJSON(), children } });
   } catch (err) {
     console.error("[PUT /api/parents/[id]]", err);
@@ -102,6 +107,7 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       { $set: { parent_id: null } }
     );
 
+    invalidateParentsServerCache(schoolId as string);
     return NextResponse.json({ success: true, message: "Parent deleted successfully" });
   } catch (err) {
     console.error("[DELETE /api/parents/[id]]", err);

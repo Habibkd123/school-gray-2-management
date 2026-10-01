@@ -9,8 +9,16 @@ interface TeacherFilterCacheEntry {
   data: any;
   expiresAt: number;
 }
-const _teacherFiltersCache = new Map<string, TeacherFilterCacheEntry>();
-const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+const g = globalThis as unknown as {
+  _teacherFiltersCache?: Map<string, TeacherFilterCacheEntry>;
+  _teacherFiltersInFlight?: Map<string, Promise<any>>;
+};
+if (!g._teacherFiltersCache) g._teacherFiltersCache = new Map();
+if (!g._teacherFiltersInFlight) g._teacherFiltersInFlight = new Map();
+
+const _teacherFiltersCache = g._teacherFiltersCache;
+const _teacherFiltersInFlight = g._teacherFiltersInFlight;
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
 
 export async function GET(request: NextRequest) {
   const { schoolId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin", "student", "parent"]);
@@ -22,11 +30,24 @@ export async function GET(request: NextRequest) {
     return sendConditionalJson(
       request,
       { success: true, data: cached.data },
-      { cacheControl: "private, max-age=180, stale-while-revalidate=60" }
+      { cacheControl: "private, max-age=120, stale-while-revalidate=300" }
     );
   }
 
-  try {
+  if (_teacherFiltersInFlight.has(cacheKey)) {
+    try {
+      const data = await _teacherFiltersInFlight.get(cacheKey)!;
+      return sendConditionalJson(
+        request,
+        { success: true, data },
+        { cacheControl: "private, max-age=120, stale-while-revalidate=300" }
+      );
+    } catch {
+      // Fall through to query on error
+    }
+  }
+
+  const queryPromise = (async () => {
     await connectDB();
 
     const [academicYears, departments, designations] = await Promise.all([
@@ -47,12 +68,21 @@ export async function GET(request: NextRequest) {
       expiresAt: Date.now() + CACHE_TTL_MS,
     });
 
+    return filterData;
+  })();
+
+  _teacherFiltersInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const filterData = await queryPromise;
     return sendConditionalJson(
       request,
       { success: true, data: filterData },
-      { cacheControl: "private, max-age=180, stale-while-revalidate=60" }
+      { cacheControl: "private, max-age=120, stale-while-revalidate=300" }
     );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  } finally {
+    _teacherFiltersInFlight.delete(cacheKey);
   }
 }

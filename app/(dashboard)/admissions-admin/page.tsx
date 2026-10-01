@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { getAuthHeaders } from "@/lib/utils/session";
 import {
@@ -33,44 +33,59 @@ interface RecentApp {
 }
 
 export default function AdmissionsDashboard() {
-  const [stats, setStats] = useState<Stats | null>(null);
-  const [recents, setRecents] = useState<RecentApp[]>([]);
-  const [loading, setLoading] = useState(true);
+  const SESSION_KEY = "sm_admissions_stats";
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
+  const [stats, setStats] = useState<Stats | null>(() => {
+    if (typeof window === "undefined") return null;
     try {
-      // Fetch all admissions to compute stats dynamically
-      const res = await fetch("/api/admissions?limit=1000", { headers: getAuthHeaders() });
+      const s = sessionStorage.getItem(SESSION_KEY);
+      if (s) { const p = JSON.parse(s); if (Date.now() - p.ts < 60_000) return p.stats; }
+    } catch {}
+    return null;
+  });
+  const [recents, setRecents] = useState<RecentApp[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const s = sessionStorage.getItem(SESSION_KEY);
+      if (s) { const p = JSON.parse(s); if (Date.now() - p.ts < 60_000) return p.recents || []; }
+    } catch {}
+    return [];
+  });
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const s = sessionStorage.getItem(SESSION_KEY);
+      if (s) { const p = JSON.parse(s); if (Date.now() - p.ts < 60_000) return false; }
+    } catch {}
+    return true;
+  });
+  const isFetchingRef = useRef(false);
+
+  const fetchDashboardData = async (force = false) => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+    if (force) setLoading(true);
+    try {
+      const res = await fetch("/api/admissions/stats", { headers: getAuthHeaders() });
       const json = await res.json();
-      if (json.success) {
-        const apps: any[] = json.data;
-        const now = new Date();
-        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-
-        const total = apps.length;
-        const newApps = apps.filter(a => a.status === "New").length;
-        const approved = apps.filter(a => a.status === "Approved" || a.status === "Admission Completed").length;
-        const rejected = apps.filter(a => a.status === "Rejected").length;
-        const review = apps.filter(a => a.status === "Under Review" || a.status === "Documents Pending" || a.status === "Interview Scheduled").length;
-
-        const today = apps.filter(a => new Date(a.submission_date).getTime() >= startOfToday).length;
-        const thisMonth = apps.filter(a => new Date(a.submission_date).getTime() >= startOfMonth).length;
-        const rate = total > 0 ? Math.round((approved / total) * 100) : 0;
-
-        setStats({ total, newApps, approved, rejected, review, today, thisMonth, rate });
-        setRecents(apps.slice(0, 5));
+      if (json.success && json.data) {
+        setStats(json.data.stats);
+        setRecents(json.data.recents || []);
+        try {
+          sessionStorage.setItem(SESSION_KEY, JSON.stringify({ stats: json.data.stats, recents: json.data.recents || [], ts: Date.now() }));
+        } catch {}
       }
     } catch (err) {
-      console.error(err);
+      console.error("Failed to load admissions dashboard stats:", err);
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    // If we have cached data, refresh in background; otherwise fetch and show loading
+    fetchDashboardData(stats === null);
   }, []);
 
   const cardStyle = "bg-white dark:bg-slate-900 border border-border rounded-2xl p-5 shadow-sm flex items-center gap-4 text-left";
@@ -84,7 +99,7 @@ export default function AdmissionsDashboard() {
           <p className="text-[12px] text-slate-500 mt-1 font-normal">Manage and track student admissions enquiries and applications</p>
         </div>
         <button
-          onClick={fetchDashboardData}
+          onClick={() => fetchDashboardData(true)}
           className="btn btn-outline flex items-center gap-2"
         >
           <RefreshCw className="w-4 h-4" /> Refresh Data

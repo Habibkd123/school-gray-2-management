@@ -4,6 +4,7 @@ import { ClassTest, ClassTestMark } from "@/lib/models/index";
 import Student from "@/lib/models/Student";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
 
 // GET — Paginated results for a test (published check for students)
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -83,7 +84,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       };
     });
 
-    return NextResponse.json({
+    return sendCompressedJson(req, {
       success: true,
       data: {
         test: {
@@ -99,7 +100,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         rows,
         pagination: { total, page, limit, pages: Math.ceil(total / limit) },
       },
-    });
+    }, { cacheControl: "private, no-cache" });
   } catch (err: any) {
     console.error("[GET /api/assessments/[id]/results]", err);
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

@@ -35,6 +35,13 @@ parentSchema.index({ school_id: 1, name: 1 }, { name: "parent_school_name_v1" })
 parentSchema.index({ email: 1 }, { name: "parent_email_v1" });
 parentSchema.index({ phone: 1 }, { name: "parent_phone_v1" });
 parentSchema.index({ user_id: 1 }, { name: "parent_user_id_v1" });
+// ── Compound indexes for high-frequency queries ────────────────────────────
+// Parent list pages: always filter by school + sort by name
+parentSchema.index({ school_id: 1, is_active: 1, name: 1 }, { name: "parent_school_active_name_v1" });
+// Status-filtered parent queries
+parentSchema.index({ school_id: 1, is_active: 1 }, { name: "parent_school_active_v1" });
+// Relation (guardian_type) filter
+parentSchema.index({ school_id: 1, relation: 1 }, { name: "parent_school_relation_v1" });
 
 const Parent: Model<IParent> =
   mongoose.models.Parent || mongoose.model<IParent>("Parent", parentSchema);

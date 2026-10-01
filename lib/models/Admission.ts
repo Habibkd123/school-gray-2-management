@@ -138,6 +138,12 @@ admissionSchema.index(
   { name: "admission_text_search_v1" }
 );
 
+admissionSchema.index({ school_id: 1, status: 1 });
+admissionSchema.index({ school_id: 1, class_id: 1 });
+admissionSchema.index({ school_id: 1, submission_date: -1 });
+admissionSchema.index({ school_id: 1, academic_year: 1 });
+
+
 const Admission: Model<IAdmission> =
   mongoose.models.Admission || mongoose.model<IAdmission>("Admission", admissionSchema);
 

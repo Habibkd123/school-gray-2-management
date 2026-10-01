@@ -6,60 +6,77 @@ import Teacher from "@/lib/models/Teacher";
 import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
 
 // Ensure all models are registered in Mongoose
 const registerModels = () => {
   return [Class.modelName, Stream.modelName, Teacher.modelName, User.modelName];
 };
 
+let _indexesMigrated = false;
+
+// ─── In-memory GET cache & In-flight dedup ────────────────────────
+const g = globalThis as any;
+if (!g._taCache) g._taCache = new Map<string, { data: any; expiresAt: number }>();
+if (!g._taInFlight) g._taInFlight = new Map<string, Promise<any>>();
+
+const _taCache: Map<string, { data: any; expiresAt: number }> = g._taCache;
+const _taInFlight: Map<string, Promise<any>> = g._taInFlight;
+const TA_CACHE_TTL = 30_000; // 30 seconds
+
+function invalidateTaCache(schoolId?: string, teacherId?: string) {
+  if (!schoolId && !teacherId) {
+    _taCache.clear();
+    return;
+  }
+  for (const key of Array.from(_taCache.keys())) {
+    if ((schoolId && key.includes(schoolId)) || (teacherId && key.includes(teacherId))) {
+      _taCache.delete(key);
+    }
+  }
+}
+export { invalidateTaCache };
+
 // GET — list teacher assignments (DB-level lookup, search, sort, and pagination)
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
   if (error) return error;
 
-  try {
+  const url = new URL(req.url);
+  const search = url.searchParams.get("search") || "";
+  const academic_year = url.searchParams.get("academic_year") || "";
+  const class_id = url.searchParams.get("class_id") || "";
+  const subject_id = url.searchParams.get("subject_id") || "";
+  const teacher_id = url.searchParams.get("teacher_id") || "";
+  const status = url.searchParams.get("status") || "";
+  const assignment_type = url.searchParams.get("assignment_type") || "";
+  const sort = url.searchParams.get("sort") || "CreatedDateDesc";
+  const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+  const limitParam = url.searchParams.get("limit");
+  const isAll = limitParam === "all" || (limitParam && parseInt(limitParam) >= 500);
+  const limit = isAll ? 100000 : Math.min(500, Math.max(1, parseInt(limitParam || "10")));
+  const skip = isAll ? 0 : (page - 1) * limit;
+
+  // ─── Cache check ────────────────────────────────────────
+  const cacheKey = `${schoolId}:${teacher_id}:${class_id}:${subject_id}:${academic_year}:${assignment_type}:${status}:${sort}:${page}:${limitParam}:${search}`;
+  const cached = _taCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+  }
+
+  // Deduplicate concurrent in-flight requests
+  if (_taInFlight.has(cacheKey)) {
+    try {
+      const data = await _taInFlight.get(cacheKey)!;
+      return sendCompressedJson(req, data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+    } catch {
+      // Fall through to retry
+    }
+  }
+
+  const queryPromise = (async () => {
     await connectToDatabase();
     registerModels();
-
-    // Auto-migrate index to support Class Teacher assignments and multiple teachers per subject
-    try {
-      const db = mongoose.connection.db;
-      if (db) {
-        const collection = db.collection("teacherassignments");
-        const indexes = await collection.indexes();
-        const oldIndexNames = [
-          "school_id_1_academic_year_1_class_id_1_stream_id_1_section_id_1_subject_master_id_1",
-          "teacher_assignment_unique_v2",
-          "school_id_1_academic_year_1_class_id_1_stream_id_1_section_id_1_subject_master_id_1_assignment_type_1"
-        ];
-        for (const idxName of oldIndexNames) {
-          if (indexes.some(idx => idx.name === idxName)) {
-            await collection.dropIndex(idxName);
-          }
-        }
-        // Force model index creation
-        await TeacherAssignment.createIndexes();
-      }
-    } catch (e) {
-      console.error("Index migration warning:", e);
-    }
-
-    const url = new URL(req.url);
-    const search = url.searchParams.get("search") || "";
-    const academic_year = url.searchParams.get("academic_year") || "";
-    const class_id = url.searchParams.get("class_id") || "";
-    const subject_id = url.searchParams.get("subject_id") || "";
-    const teacher_id = url.searchParams.get("teacher_id") || "";
-    const status = url.searchParams.get("status") || "";
-    const assignment_type = url.searchParams.get("assignment_type") || "";
-    const sort = url.searchParams.get("sort") || "CreatedDateDesc";
-    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
-    const limitParam = url.searchParams.get("limit");
-    const isAll = limitParam === "all";
-    const limit = isAll ? 100000 : Math.min(500, Math.max(1, parseInt(limitParam || "10")));
-    const skip = isAll ? 0 : (page - 1) * limit;
-
-    const pipeline: any[] = [];
 
     // Match school_id & basic filters (non-deleted only)
     const matchStage: any = { 
@@ -83,6 +100,83 @@ export async function GET(req: NextRequest) {
       matchStage.status = status;
     }
 
+    // Fast indexed path when no cross-table search or cross-table sort is needed
+    if (!search && !sort.includes("Teacher") && !sort.includes("Class") && !sort.includes("Subject")) {
+      let sortStage: any = { createdAt: -1 };
+      if (sort === "TypeAsc") sortStage = { assignment_type: 1 };
+      else if (sort === "TypeDesc") sortStage = { assignment_type: -1 };
+      else if (sort === "CreatedDateAsc") sortStage = { createdAt: 1 };
+      else if (sort === "CreatedDateDesc") sortStage = { createdAt: -1 };
+      else if (sort === "StatusAsc") sortStage = { status: 1 };
+      else if (sort === "StatusDesc") sortStage = { status: -1 };
+
+      const [total, rawAssignments] = await Promise.all([
+        TeacherAssignment.countDocuments(matchStage),
+        TeacherAssignment.find(matchStage)
+          .sort(sortStage)
+          .skip(skip)
+          .limit(limit)
+          .populate("class_id", "name section class_code")
+          .populate("subject_master_id", "name subject_code description")
+          .populate("teacher_id", "name employee_id photo_url designation is_active")
+          .populate("created_by", "name")
+          .lean()
+      ]);
+
+      const assignments = rawAssignments.map((a: any) => ({
+        _id: String(a._id),
+        school_id: String(a.school_id),
+        academic_year: a.academic_year,
+        class_id: a.class_id && typeof a.class_id === "object" ? {
+          _id: String(a.class_id._id),
+          name: a.class_id.name,
+          section: a.class_id.section,
+          class_code: a.class_id.class_code
+        } : null,
+        stream_id: a.stream_id ? String(a.stream_id) : null,
+        subject_master_id: a.subject_master_id && typeof a.subject_master_id === "object" ? {
+          _id: String(a.subject_master_id._id),
+          name: a.subject_master_id.name,
+          subject_code: a.subject_master_id.subject_code,
+          description: a.subject_master_id.description
+        } : null,
+        teacher_id: a.teacher_id && typeof a.teacher_id === "object" ? {
+          _id: String(a.teacher_id._id),
+          name: a.teacher_id.name,
+          employee_id: a.teacher_id.employee_id,
+          photo_url: a.teacher_id.photo_url,
+          designation: a.teacher_id.designation,
+          is_active: a.teacher_id.is_active
+        } : null,
+        assignment_type: a.assignment_type || "Subject Teacher",
+        effective_date: a.effective_date,
+        status: a.status || "Active",
+        remarks: a.remarks || "",
+        weekly_periods: a.weekly_periods || 0,
+        created_by: a.created_by && typeof a.created_by === "object" ? {
+          _id: String(a.created_by._id),
+          name: a.created_by.name
+        } : null,
+        history: a.history || [],
+        createdAt: a.createdAt,
+        updatedAt: a.updatedAt
+      }));
+
+      const responsePayload = {
+        success: true,
+        data: {
+          assignments,
+          total,
+          page,
+          totalPages: Math.ceil(total / limit)
+        }
+      };
+
+      _taCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + TA_CACHE_TTL });
+      return responsePayload;
+    }
+
+    const pipeline: any[] = [];
     pipeline.push({ $match: matchStage });
 
     // Lookup Class info
@@ -135,32 +229,6 @@ export async function GET(req: NextRequest) {
         }
       },
       { $unwind: { path: "$creator_info", preserveNullAndEmptyArrays: true } }
-    );
-
-    // Lookup matching SubjectAssignment to pull weekly_periods
-    pipeline.push(
-      {
-        $lookup: {
-          from: "subjectassignments",
-          let: { c_id: "$class_id", s_id: "$subject_master_id", yr: "$academic_year", sch: "$school_id" },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    { $eq: ["$class_id", "$$c_id"] },
-                    { $eq: ["$subject_master_id", "$$s_id"] },
-                    { $eq: ["$academic_year", "$$yr"] },
-                    { $eq: ["$school_id", "$$sch"] }
-                  ]
-                }
-              }
-            }
-          ],
-          as: "subject_assignment_info"
-        }
-      },
-      { $unwind: { path: "$subject_assignment_info", preserveNullAndEmptyArrays: true } }
     );
 
     // Apply Search Filter across looked up name/code/id values
@@ -236,7 +304,7 @@ export async function GET(req: NextRequest) {
       effective_date: a.effective_date,
       status: a.status || "Active",
       remarks: a.remarks || "",
-      weekly_periods: a.subject_assignment_info?.weekly_periods || 0,
+      weekly_periods: a.weekly_periods || 0,
       created_by: a.creator_info ? {
         _id: String(a.creator_info._id),
         name: a.creator_info.name
@@ -246,7 +314,7 @@ export async function GET(req: NextRequest) {
       updatedAt: a.updatedAt
     }));
 
-    return NextResponse.json({
+    const responsePayload = {
       success: true,
       data: {
         assignments,
@@ -254,11 +322,23 @@ export async function GET(req: NextRequest) {
         page,
         totalPages: Math.ceil(total / limit)
       }
-    }, {
-      headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" }
-    });
+    };
+
+    // Cache the result
+    _taCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + TA_CACHE_TTL });
+
+    return responsePayload;
+  })();
+
+  _taInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const responsePayload = await queryPromise;
+    return sendCompressedJson(req, responsePayload, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
+  } finally {
+    _taInFlight.delete(cacheKey);
   }
 }
 
@@ -395,6 +475,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      invalidateTaCache(schoolId as string);
       return NextResponse.json({ success: true, count: 1, data: [newAssignment] }, { status: 201 });
     }
 
@@ -455,6 +536,7 @@ export async function POST(req: NextRequest) {
       createdAssignments.push(newAssignment);
     }
 
+    invalidateTaCache(schoolId as string);
     return NextResponse.json({ success: true, count: createdAssignments.length, data: createdAssignments }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

@@ -25,12 +25,31 @@ interface Test {
   computedStatus: string;
 }
 
+let _assessmentsPageCache: Test[] | null = null;
+
+function getInitialAssessments(): Test[] {
+  if (_assessmentsPageCache) return _assessmentsPageCache;
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = sessionStorage.getItem("cache_assessments_page");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        _assessmentsPageCache = parsed;
+        return parsed;
+      }
+    }
+  } catch {}
+  return [];
+}
+
 export default function AssessmentsClassListPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
-  const [tests, setTests] = useState<Test[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const initialData = getInitialAssessments();
+  const [tests, setTests] = useState<Test[]>(initialData);
+  const [isLoading, setIsLoading] = useState(initialData.length === 0);
   const [search, setSearch] = useState("");
   const [toastMsg, setToastMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -41,24 +60,34 @@ export default function AssessmentsClassListPage() {
     setTimeout(() => setToastMsg(null), 3500);
   };
 
-  const fetchTests = useCallback(async () => {
-    setIsLoading(true);
+  const fetchTests = useCallback(async (background = false) => {
+    if (!background && tests.length === 0) {
+      setIsLoading(true);
+    }
     try {
       const params = new URLSearchParams({ limit: "5000" });
       const res = await fetch(`/api/assessments?${params}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && Array.isArray(data.data)) {
+        _assessmentsPageCache = data.data;
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem("cache_assessments_page", JSON.stringify(data.data));
+          } catch {}
+        }
         setTests(data.data);
       }
     } catch {
-      showToast("error", "Failed to load tests");
+      if (tests.length === 0) {
+        showToast("error", "Failed to load tests");
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [tests.length]);
 
   useEffect(() => {
-    fetchTests();
+    fetchTests(tests.length > 0);
   }, [fetchTests]);
 
   const classGroups = useMemo(() => {

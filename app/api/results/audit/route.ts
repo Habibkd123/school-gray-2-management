@@ -4,6 +4,7 @@ import { ResultAudit } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import User from "@/lib/models/User";
 import Student from "@/lib/models/Student";
+import { sendCompressedJson } from "@/lib/compression";
 
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
@@ -30,7 +31,7 @@ export async function GET(req: NextRequest) {
       .limit(100)
       .lean();
 
-    return NextResponse.json({ success: true, data: logs });
+    return sendCompressedJson(req, { success: true, data: logs }, { cacheControl: "private, no-cache" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

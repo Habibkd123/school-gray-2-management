@@ -11,11 +11,29 @@ export const ClassService = {
     if (options?.forceRefetch) {
       allClassesCache = null;
       allClassesPromise = null;
+      if (typeof window !== "undefined") {
+        try { sessionStorage.removeItem("sm_classes_cache"); } catch {}
+      }
     }
 
     const now = Date.now();
     if (allClassesCache && (now - cacheTime < TTL)) {
       return this.filterAndSortClasses(allClassesCache, options);
+    }
+
+    // Try reading from sessionStorage (shared across components and fast page navigation)
+    if (!allClassesCache && typeof window !== "undefined") {
+      try {
+        const raw = sessionStorage.getItem("sm_classes_cache");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (now - parsed.timestamp < TTL && Array.isArray(parsed.classes)) {
+            allClassesCache = parsed.classes;
+            cacheTime = parsed.timestamp;
+            return this.filterAndSortClasses(allClassesCache!, options);
+          }
+        }
+      } catch {}
     }
 
     if (!allClassesPromise) {
@@ -29,6 +47,11 @@ export const ClassService = {
           if (!json.success) throw new Error(json.message || "Failed to fetch classes");
           allClassesCache = json.data.classes || [];
           cacheTime = Date.now();
+          if (typeof window !== "undefined") {
+            try {
+              sessionStorage.setItem("sm_classes_cache", JSON.stringify({ classes: allClassesCache, timestamp: cacheTime }));
+            } catch {}
+          }
           return allClassesCache!;
         } catch (err) {
           allClassesPromise = null;
@@ -50,6 +73,9 @@ export const ClassService = {
     allClassesCache = null;
     allClassesPromise = null;
     cacheTime = 0;
+    if (typeof window !== "undefined") {
+      try { sessionStorage.removeItem("sm_classes_cache"); } catch {}
+    }
   },
 
   filterAndSortClasses(classes: ApiClass[], options?: { status?: string; academic_year?: string }): ApiClass[] {

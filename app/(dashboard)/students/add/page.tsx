@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense, useRef, useCallback } from "react
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useClasses } from "../../../hooks/useClasses";
-import { useStudents } from "../../../hooks/useStudents";
+import { useStudents, getStoredStudent } from "../../../hooks/useStudents";
 import { useUpload } from "../../../hooks/useUpload";
 import {
   Upload, User, MapPin, Users,
@@ -160,23 +160,31 @@ function AddStudentContent() {
 
   const classOptions = apiClasses.map(c => ({ label: c.section ? `${c.name} - ${c.section}` : c.name, value: c._id }));
 
-  // ── Personal Info ──────────────────────────────────────────────
-  const [photoPreview, setPhotoPreview] = useState("");
-  const [name, setName] = useState("");
-  const [classId, setClassId] = useState("");
-  const [rollNo, setRollNo] = useState("");
-  const [email, setEmail] = useState("");
-  const [gender, setGender] = useState("Select");
-  const [dob, setDob] = useState("");
-  const [admissionNo, setAdmissionNo] = useState("");
-  const [admissionDate, setAdmissionDate] = useState("");
-  const [religion, setReligion] = useState("Select");
-  const [category, setCategory] = useState("Select");
-  const [primaryPhone, setPrimaryPhone] = useState("");
-  const [section, setSection] = useState("Select");
-  const [academicYear, setAcademicYear] = useState("June 2025 - 2026");
-  const [aadhaarNo, setAadhaarNo] = useState("");
-  const [address, setAddress] = useState("");
+  const cachedStudent = editId ? getStoredStudent(editId) : null;
+  const parentObj = cachedStudent?.parent_id && typeof cachedStudent.parent_id === "object" ? cachedStudent.parent_id : null;
+
+  // ── Personal Info (instant initial values from local session cache) ──
+  const [photoPreview, setPhotoPreview] = useState(() => cachedStudent?.photo_url || "");
+  const [name, setName] = useState(() => cachedStudent?.name || "");
+  const [classId, setClassId] = useState(() => cachedStudent ? (typeof cachedStudent.class_id === "object" ? cachedStudent.class_id._id : cachedStudent.class_id || "") : "");
+  const [rollNo, setRollNo] = useState(() => cachedStudent?.roll_no || "");
+  const [email, setEmail] = useState(() => cachedStudent?.email || "");
+  const [gender, setGender] = useState(() => cachedStudent?.gender ? (cachedStudent.gender.charAt(0).toUpperCase() + cachedStudent.gender.slice(1)) : "Select");
+  const [dob, setDob] = useState(() => cachedStudent?.dob ? new Date(cachedStudent.dob).toISOString().split("T")[0] : "");
+  const [admissionNo, setAdmissionNo] = useState(() => cachedStudent?.admission_no || "");
+  const [admissionDate, setAdmissionDate] = useState(() => cachedStudent?.admission_date ? new Date(cachedStudent.admission_date).toISOString().split("T")[0] : "");
+  const [religion, setReligion] = useState(() => cachedStudent?.religion || "Select");
+  const [category, setCategory] = useState(() => cachedStudent?.category || "Select");
+  const [primaryPhone, setPrimaryPhone] = useState(() => cachedStudent?.phone || "");
+  const [section, setSection] = useState(() => {
+    if (cachedStudent?.class_id && typeof cachedStudent.class_id === "object" && cachedStudent.class_id.section) {
+      return cachedStudent.class_id.section;
+    }
+    return "Select";
+  });
+  const [academicYear, setAcademicYear] = useState(() => cachedStudent?.academic_year || "June 2025 - 2026");
+  const [aadhaarNo, setAadhaarNo] = useState(() => cachedStudent?.aadhaar_no || "");
+  const [address, setAddress] = useState(() => cachedStudent?.address || "");
 
   // ── Login Credentials Popup ────────────────────────────────────
   const [showCredentials, setShowCredentials] = useState(false);
@@ -191,82 +199,83 @@ function AddStudentContent() {
   };
 
   // ── Parents ────────────────────────────────────────────────────
-  const [fatherName, setFatherName] = useState("");
-  const [fatherPhone, setFatherPhone] = useState("");
-  const [fatherEmail, setFatherEmail] = useState("");
-  const [fatherOccupation, setFatherOccupation] = useState("");
+  const [fatherName, setFatherName] = useState(() => cachedStudent?.father_name || parentObj?.name || "");
+  const [fatherPhone, setFatherPhone] = useState(() => cachedStudent?.father_phone || parentObj?.phone || "");
+  const [fatherEmail, setFatherEmail] = useState(() => cachedStudent?.father_email || parentObj?.email || "");
+  const [fatherOccupation, setFatherOccupation] = useState(() => cachedStudent?.father_occupation || parentObj?.occupation || "");
 
   // ── Guardian Details ───────────────────────────────────────────
-  const [guardianPhoto, setGuardianPhoto] = useState("");
-  const [guardianName, setGuardianName] = useState("");
-  const [guardianRelation, setGuardianRelation] = useState("");
-  const [guardianPhone, setGuardianPhone] = useState("");
-  const [guardianEmail, setGuardianEmail] = useState("");
-  const [guardianOccupation, setGuardianOccupation] = useState("");
-  const [guardianAddress, setGuardianAddress] = useState("");
-  const [guardianType, setGuardianType] = useState("father");
+  const [guardianPhoto, setGuardianPhoto] = useState(() => cachedStudent?.guardian_photo || parentObj?.photo_url || "");
+  const [guardianName, setGuardianName] = useState(() => cachedStudent?.guardian_name || parentObj?.name || "");
+  const [guardianRelation, setGuardianRelation] = useState(() => cachedStudent?.guardian_relation || parentObj?.relation || "");
+  const [guardianPhone, setGuardianPhone] = useState(() => cachedStudent?.guardian_phone || parentObj?.phone || "");
+  const [guardianEmail, setGuardianEmail] = useState(() => cachedStudent?.guardian_email || parentObj?.email || "");
+  const [guardianOccupation, setGuardianOccupation] = useState(() => cachedStudent?.guardian_occupation || parentObj?.occupation || "");
+  const [guardianAddress, setGuardianAddress] = useState(() => cachedStudent?.guardian_address || parentObj?.address || "");
+  const [guardianType, setGuardianType] = useState(() => cachedStudent?.guardian_type || (parentObj?.relation?.toLowerCase() === "father" ? "father" : parentObj?.relation?.toLowerCase() === "mother" ? "mother" : "father"));
 
   // ── Load edit data ─────────────────────────────────────────────
   useEffect(() => {
+    let isCurrent = true;
     async function loadData() {
       if (editId) {
         const student = await getStudent(editId);
-        if (student) {
-          setName(student.name || "");
-          setClassId(typeof student.class_id === "object" ? student.class_id._id : student.class_id || "");
-          setRollNo(student.roll_no || "");
-          setEmail(student.email || "");
-          if (student.photo_url) setPhotoPreview(student.photo_url);
-          if (student.gender) setGender(student.gender.charAt(0).toUpperCase() + student.gender.slice(1));
-          if (student.dob) setDob(new Date(student.dob).toISOString().split("T")[0]);
-          if (student.admission_no) setAdmissionNo(student.admission_no);
-          if (student.admission_date) setAdmissionDate(new Date(student.admission_date).toISOString().split("T")[0]);
-          if (student.academic_year) setAcademicYear(student.academic_year);
-          if (student.religion) setReligion(student.religion);
-          if (student.category) setCategory(student.category);
-          if (student.phone) setPrimaryPhone(student.phone);
-          if (student.address) setAddress(student.address);
-          if (student.aadhaar_no) setAadhaarNo(student.aadhaar_no);
+        if (!isCurrent || !student) return;
+        setName(student.name || "");
+        setClassId(typeof student.class_id === "object" ? student.class_id._id : student.class_id || "");
+        setRollNo(student.roll_no || "");
+        setEmail(student.email || "");
+        if (student.photo_url) setPhotoPreview(student.photo_url);
+        if (student.gender) setGender(student.gender.charAt(0).toUpperCase() + student.gender.slice(1));
+        if (student.dob) setDob(new Date(student.dob).toISOString().split("T")[0]);
+        if (student.admission_no) setAdmissionNo(student.admission_no);
+        if (student.admission_date) setAdmissionDate(new Date(student.admission_date).toISOString().split("T")[0]);
+        if (student.academic_year) setAcademicYear(student.academic_year);
+        if (student.religion) setReligion(student.religion);
+        if (student.category) setCategory(student.category);
+        if (student.phone) setPrimaryPhone(student.phone);
+        if (student.address) setAddress(student.address);
+        if (student.aadhaar_no) setAadhaarNo(student.aadhaar_no);
 
-          // Father Details
-          if (student.parent_id && typeof student.parent_id === "object") {
-            const p = student.parent_id;
-            setFatherName(student.father_name || p.name || "");
-            setFatherPhone(student.father_phone || p.phone || "");
-            setFatherEmail(student.father_email || p.email || "");
-            setFatherOccupation(student.father_occupation || p.occupation || "");
-          } else {
-            setFatherName(student.father_name || "");
-            setFatherPhone(student.father_phone || "");
-            setFatherEmail(student.father_email || "");
-            setFatherOccupation(student.father_occupation || "");
-          }
+        // Father Details
+        if (student.parent_id && typeof student.parent_id === "object") {
+          const p = student.parent_id;
+          setFatherName(student.father_name || p.name || "");
+          setFatherPhone(student.father_phone || p.phone || "");
+          setFatherEmail(student.father_email || p.email || "");
+          setFatherOccupation(student.father_occupation || p.occupation || "");
+        } else {
+          setFatherName(student.father_name || "");
+          setFatherPhone(student.father_phone || "");
+          setFatherEmail(student.father_email || "");
+          setFatherOccupation(student.father_occupation || "");
+        }
 
-          // Parent / guardian details
-          if (student.parent_id && typeof student.parent_id === "object") {
-            const p = student.parent_id;
-            setGuardianName(student.guardian_name || p.name || "");
-            setGuardianPhone(student.guardian_phone || p.phone || "");
-            setGuardianEmail(student.guardian_email || p.email || "");
-            setGuardianRelation(student.guardian_relation || p.relation || "");
-            setGuardianPhoto(student.guardian_photo || p.photo_url || "");
-            setGuardianOccupation(student.guardian_occupation || p.occupation || "");
-            setGuardianAddress(student.guardian_address || p.address || "");
-            setGuardianType(student.guardian_type || (p.relation?.toLowerCase() === "father" ? "father" : p.relation?.toLowerCase() === "mother" ? "mother" : "other"));
-          } else {
-            setGuardianName(student.guardian_name || "");
-            setGuardianPhone(student.guardian_phone || "");
-            setGuardianEmail(student.guardian_email || "");
-            setGuardianRelation(student.guardian_relation || "");
-            setGuardianPhoto(student.guardian_photo || "");
-            setGuardianOccupation(student.guardian_occupation || "");
-            setGuardianAddress(student.guardian_address || "");
-            setGuardianType(student.guardian_type || "father");
-          }
+        // Parent / guardian details
+        if (student.parent_id && typeof student.parent_id === "object") {
+          const p = student.parent_id;
+          setGuardianName(student.guardian_name || p.name || "");
+          setGuardianPhone(student.guardian_phone || p.phone || "");
+          setGuardianEmail(student.guardian_email || p.email || "");
+          setGuardianRelation(student.guardian_relation || p.relation || "");
+          setGuardianPhoto(student.guardian_photo || p.photo_url || "");
+          setGuardianOccupation(student.guardian_occupation || p.occupation || "");
+          setGuardianAddress(student.guardian_address || p.address || "");
+          setGuardianType(student.guardian_type || (p.relation?.toLowerCase() === "father" ? "father" : p.relation?.toLowerCase() === "mother" ? "mother" : "father"));
+        } else {
+          setGuardianName(student.guardian_name || "");
+          setGuardianPhone(student.guardian_phone || "");
+          setGuardianEmail(student.guardian_email || "");
+          setGuardianRelation(student.guardian_relation || "");
+          setGuardianPhoto(student.guardian_photo || "");
+          setGuardianOccupation(student.guardian_occupation || "");
+          setGuardianAddress(student.guardian_address || "");
+          setGuardianType(student.guardian_type || "father");
         }
       }
     }
     loadData();
+    return () => { isCurrent = false; };
   }, [editId]);
 
   // Keep guardian in sync with selected parent

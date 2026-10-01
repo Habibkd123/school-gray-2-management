@@ -15,11 +15,6 @@ export async function ServerThemeStyles() {
   }
 
   if (!schoolId) {
-    if (process.env.NODE_ENV === "development") {
-      console.warn(
-        "[ServerThemeStyles] schoolId not resolved — visit bajrang.localhost:3000 (or ?subdomain=bajrang) to test a school theme"
-      );
-    }
     return null;
   }
 

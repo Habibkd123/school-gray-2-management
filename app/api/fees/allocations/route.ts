@@ -4,6 +4,7 @@ import { FeeAllocation } from "@/lib/models";
 import Student from "@/lib/models/Student";
 import Parent from "@/lib/models/Parent";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendCompressedJson } from "@/lib/compression";
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,13 +21,13 @@ export async function GET(req: NextRequest) {
     if (role === "student") {
       const studentProfile = await Student.findOne({ school_id: schoolId, user_id: userId }).select("_id").lean();
       if (!studentProfile) {
-        return NextResponse.json({ success: true, data: { allocations: [] } });
+        return sendCompressedJson(req, { success: true, data: { allocations: [] } }, { cacheControl: "private, no-cache" });
       }
       query.student_id = studentProfile._id;
     } else if (role === "parent") {
       const parent = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
       if (!parent) {
-        return NextResponse.json({ success: true, data: { allocations: [] } });
+        return sendCompressedJson(req, { success: true, data: { allocations: [] } }, { cacheControl: "private, no-cache" });
       }
       const children = await Student.find({ school_id: schoolId, parent_id: parent._id }).select("_id").lean();
       const childIds = children.map((c: any) => c._id.toString());
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
       .sort({ createdAt: -1 })
       .lean();
 
-    return NextResponse.json({ success: true, data: { allocations } });
+    return sendCompressedJson(req, { success: true, data: { allocations } }, { cacheControl: "private, no-cache" });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }

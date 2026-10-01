@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { ExamSchedule } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendCompressedJson } from "@/lib/compression";
 
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
       .populate("subject_id", "name code")
       .sort({ date: 1, start_time: 1 });
 
-    return NextResponse.json({ success: true, data: schedules });
+    return sendCompressedJson(req, { success: true, data: schedules }, { cacheControl: "private, no-cache" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

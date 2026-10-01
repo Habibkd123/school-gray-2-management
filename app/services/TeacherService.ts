@@ -11,11 +11,29 @@ export const TeacherService = {
     if (options?.forceRefetch) {
       allTeachersCache = null;
       allTeachersPromise = null;
+      if (typeof window !== "undefined") {
+        try { sessionStorage.removeItem("sm_teachers_all"); } catch {}
+      }
     }
 
     const now = Date.now();
     if (allTeachersCache && (now - cacheTime < TTL)) {
       return this.filterAndSortTeachers(allTeachersCache, options);
+    }
+
+    // Try reading from sessionStorage (shared across components and fast page navigation)
+    if (!allTeachersCache && typeof window !== "undefined") {
+      try {
+        const raw = sessionStorage.getItem("sm_teachers_all");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (now - parsed.timestamp < TTL && Array.isArray(parsed.teachers)) {
+            allTeachersCache = parsed.teachers;
+            cacheTime = parsed.timestamp;
+            return this.filterAndSortTeachers(allTeachersCache!, options);
+          }
+        }
+      } catch {}
     }
 
     if (!allTeachersPromise) {
@@ -29,6 +47,11 @@ export const TeacherService = {
           if (!json.success) throw new Error(json.message || "Failed to fetch teachers");
           allTeachersCache = json.data.teachers || [];
           cacheTime = Date.now();
+          if (typeof window !== "undefined") {
+            try {
+              sessionStorage.setItem("sm_teachers_all", JSON.stringify({ teachers: allTeachersCache, timestamp: cacheTime }));
+            } catch {}
+          }
           return allTeachersCache!;
         } catch (err) {
           allTeachersPromise = null;
@@ -50,6 +73,9 @@ export const TeacherService = {
     allTeachersCache = null;
     allTeachersPromise = null;
     cacheTime = 0;
+    if (typeof window !== "undefined") {
+      try { sessionStorage.removeItem("sm_teachers_all"); } catch {}
+    }
   },
 
   filterAndSortTeachers(teachers: ApiTeacher[], options?: { status?: string }): ApiTeacher[] {

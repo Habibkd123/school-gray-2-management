@@ -20,30 +20,60 @@ interface MonthlyClassStat {
   rate: number;
 }
 
+const SS_MONTHLY_ATT_PREFIX = "sm_rep_monthly_att_";
+
+function getStoredMonthlyAtt(month: string): MonthlyClassStat[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = sessionStorage.getItem(SS_MONTHLY_ATT_PREFIX + month);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (Date.now() - parsed.timestamp < 60_000 && Array.isArray(parsed.data)) {
+      return parsed.data;
+    }
+  } catch {}
+  return null;
+}
+
+function setStoredMonthlyAtt(month: string, data: MonthlyClassStat[]) {
+  if (typeof window === "undefined") return;
+  try {
+    sessionStorage.setItem(SS_MONTHLY_ATT_PREFIX + month, JSON.stringify({ data, timestamp: Date.now() }));
+  } catch {}
+}
+
 export default function AttendanceReportPage() {
   const { classes } = useClasses();
-  const [stats, setStats] = useState<MonthlyClassStat[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isExportOpen, setIsExportOpen] = useState(false);
-  const [filterMonth, setFilterMonth] = useState(() => {
+  const initialMonth = useMemo(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-  });
+  }, []);
+  const [filterMonth, setFilterMonth] = useState(initialMonth);
+  const [stats, setStats] = useState<MonthlyClassStat[]>(() => getStoredMonthlyAtt(initialMonth) ?? []);
+  const [loading, setLoading] = useState(() => getStoredMonthlyAtt(initialMonth) === null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const [filterClass, setFilterClass] = useState("");
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
 
-  const fetchStats = async () => {
-    setLoading(true);
+  const fetchStats = async (month = filterMonth) => {
+    const cached = getStoredMonthlyAtt(month);
+    if (cached && cached.length > 0) {
+      setStats(cached);
+      setLoading(false);
+    } else if (stats.length === 0) {
+      setLoading(true);
+    }
     try {
       const res = await fetch(
-        `/api/reports/attendance?type=monthly&month=${filterMonth}`,
+        `/api/reports/attendance?type=monthly&month=${month}`,
         { headers: getAuthHeaders() }
       );
       const json = await res.json();
       if (json.success) {
         setStats(json.data);
+        setStoredMonthlyAtt(month, json.data);
       }
     } catch (e) {
       console.error(e);
@@ -53,7 +83,7 @@ export default function AttendanceReportPage() {
   };
 
   useEffect(() => {
-    fetchStats();
+    fetchStats(filterMonth);
   }, [filterMonth]);
 
   const filteredStats = useMemo(() => {
@@ -133,7 +163,7 @@ export default function AttendanceReportPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button
-            onClick={fetchStats}
+            onClick={() => fetchStats()}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary transition-colors shadow-sm cursor-pointer dark:text-slate-400"
           >
             <RefreshCw className="w-4 h-4" />

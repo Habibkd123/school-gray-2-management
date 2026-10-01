@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { getAuthHeaders, useAuthReady } from "@/lib/utils/session";
 import { getPersistedPageSize } from "@/app/components/ui/pagination-bar";
+import { cacheSync, invalidateCache } from "@/lib/utils/cache-sync";
 
 // ─── Types ────────────────────────────────────────────────────────
 export interface ApiResult {
@@ -31,6 +32,19 @@ export interface CreateResultInput {
   remarks?: string;
 }
 
+// ─── In-memory Query Cache ─────────────────────────────────────────
+interface CachedResultQuery {
+  results: ApiResult[];
+  total: number;
+  totalPages: number;
+  timestamp: number;
+}
+const _resultsQueryCache = new Map<string, CachedResultQuery>();
+
+function flushResultsCache() {
+  _resultsQueryCache.clear();
+}
+
 // ─── Hook ─────────────────────────────────────────────────────────
 export function useResults(options?: { skip?: boolean }) {
   const [results, setResults] = useState<ApiResult[]>([]);
@@ -44,21 +58,42 @@ export function useResults(options?: { skip?: boolean }) {
   
   const [activeFilters, setActiveFilters] = useState<{ exam_id?: string; student_id?: string; class_id?: string; academic_year?: string }>({});
   const filtersRef = useRef<{ exam_id?: string; student_id?: string; class_id?: string; academic_year?: string }>({});
+  const activeParamsRef = useRef({ page, pageSize });
+  activeParamsRef.current = { page, pageSize };
 
   // ─── Fetch results ──────────────────────────────────────────────
   const fetchResults = useCallback(async (
     params?: { exam_id?: string; student_id?: string; class_id?: string; academic_year?: string },
     pNum = page,
-    pSize = pageSize
+    pSize = pageSize,
+    bypassCache = false
   ) => {
-    setIsLoading(true);
-    setError(null);
-
     const finalParams = params !== undefined ? params : filtersRef.current;
     if (params !== undefined) {
       filtersRef.current = params;
       setActiveFilters(params);
     }
+
+    const cacheKey = JSON.stringify({
+      params: finalParams,
+      pNum,
+      pSize
+    });
+
+    if (!bypassCache && _resultsQueryCache.has(cacheKey)) {
+      const cached = _resultsQueryCache.get(cacheKey)!;
+      // Stale check (cache valid for max 30s in-memory, immediately busted on any mutation)
+      if (Date.now() - cached.timestamp < 30_000) {
+        setResults(cached.results);
+        setTotal(cached.total);
+        setTotalPages(cached.totalPages);
+        setIsLoading(false);
+        return;
+      }
+    }
+
+    setIsLoading(true);
+    setError(null);
 
     try {
       const query = new URLSearchParams();
@@ -75,15 +110,36 @@ export function useResults(options?: { skip?: boolean }) {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch results");
-      setResults(data.data.results);
-      setTotal(data.data.total);
-      setTotalPages(data.data.totalPages);
+      
+      const newResults = data.data.results || [];
+      const newTotal = data.data.total || 0;
+      const newTotalPages = data.data.totalPages || 1;
+
+      setResults(newResults);
+      setTotal(newTotal);
+      setTotalPages(newTotalPages);
+
+      _resultsQueryCache.set(cacheKey, {
+        results: newResults,
+        total: newTotal,
+        totalPages: newTotalPages,
+        timestamp: Date.now()
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load results");
     } finally {
       setIsLoading(false);
     }
   }, [page, pageSize]);
+
+  // Listen to cache synchronization events across tabs & components
+  useEffect(() => {
+    const unsub = cacheSync.subscribe("results", () => {
+      flushResultsCache();
+      fetchResults(filtersRef.current, activeParamsRef.current.page, activeParamsRef.current.pageSize, true);
+    });
+    return unsub;
+  }, [fetchResults]);
 
   const authReady = useAuthReady();
   useEffect(() => {
@@ -102,12 +158,23 @@ export function useResults(options?: { skip?: boolean }) {
       });
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to create" };
-      await fetchResults(undefined, page, pageSize);
+      
+      // Flush cache and broadcast across tabs & mounted components
+      flushResultsCache();
+      invalidateCache("results");
+      
+      // Fetch immediate fresh view
+      await fetchResults(undefined, page, pageSize, true);
       return { success: true, message: "Result saved successfully" };
     } catch {
       return { success: false, message: "Network error" };
     }
   };
+
+  const refetch = useCallback(() => {
+    flushResultsCache();
+    return fetchResults(undefined, page, pageSize, true);
+  }, [fetchResults, page, pageSize]);
 
   return {
     results,
@@ -122,6 +189,7 @@ export function useResults(options?: { skip?: boolean }) {
     activeFilters,
     setActiveFilters,
     fetchResults,
-    createResult
+    createResult,
+    refetch,
   };
 }

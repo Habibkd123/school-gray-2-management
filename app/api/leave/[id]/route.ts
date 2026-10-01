@@ -3,6 +3,7 @@ import connectToDatabase from "@/lib/db";
 import { LeaveRequest } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { invalidateLeaveCache } from "../route";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -30,6 +31,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       { new: true }
     );
     if (!leave) return NextResponse.json({ success: false, message: "Leave request not found" }, { status: 404 });
+    invalidateLeaveCache(schoolId);
     return NextResponse.json({ success: true, data: leave });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
@@ -51,6 +53,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     }
     const leave = await LeaveRequest.findOneAndDelete(query);
     if (!leave) return NextResponse.json({ success: false, message: "Leave request not found or unauthorized" }, { status: 404 });
+    invalidateLeaveCache(schoolId);
     return NextResponse.json({ success: true, message: "Leave request deleted" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

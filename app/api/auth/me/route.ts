@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import User from "@/lib/models/User";
+import School from "@/lib/models/School";
 import { requireAuth } from "@/lib/utils/auth";
 
 export async function GET(request: NextRequest) {
@@ -23,6 +24,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    let schoolData = null;
+    if (dbUser.school_id) {
+      const schoolDoc = await School.findById(dbUser.school_id)
+        .select("name subtitle logo_url subdomain")
+        .lean();
+      if (schoolDoc) {
+        schoolData = {
+          id: (schoolDoc as any)._id,
+          name: (schoolDoc as any).name?.trim(),
+          subtitle: (schoolDoc as any).subtitle?.trim(),
+          logo_url: (schoolDoc as any).logo_url,
+          subdomain: (schoolDoc as any).subdomain,
+        };
+      }
+    }
+
     return NextResponse.json(
       {
         success: true,
@@ -33,6 +50,7 @@ export async function GET(request: NextRequest) {
           username: dbUser.username,
           role: dbUser.role,
           school_id: dbUser.school_id,
+          school: schoolData,
           is_active: dbUser.is_active,
           last_login: dbUser.last_login,
           createdAt: dbUser.createdAt,

@@ -5,36 +5,79 @@ import Class from "@/lib/models/Class";
 import Teacher from "@/lib/models/Teacher";
 import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendCompressedJson } from "@/lib/compression";
 import mongoose from "mongoose";
 
-// In-memory cache for class student counts (student enrollment counts per class don't change between date filters)
+// In-memory cache for class student counts and attendance results
 const studentCountsCache = new Map<string, { counts: Record<string, number>; expiresAt: number }>();
-const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
+const _studentAttServerCache = new Map<string, { data: any; expiresAt: number }>();
+const _studentAttInFlight = new Map<string, Promise<any>>();
+const ATTENDANCE_CACHE_TTL = 30_000;
+const COUNTS_CACHE_TTL_MS = 3 * 60 * 1000;
+
+export function invalidateStudentAttendanceCache(schoolId?: string | null) {
+  if (schoolId) {
+    for (const key of _studentAttServerCache.keys()) {
+      if (key.startsWith(`att_student_${schoolId}`)) {
+        _studentAttServerCache.delete(key);
+      }
+    }
+    for (const key of studentCountsCache.keys()) {
+      if (key.startsWith(schoolId)) {
+        studentCountsCache.delete(key);
+      }
+    }
+  } else {
+    _studentAttServerCache.clear();
+    studentCountsCache.clear();
+  }
+}
 
 export async function GET(req: NextRequest) {
   const { schoolId, userId, role, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
 
-  try {
+  const url = new URL(req.url);
+  const academic_year = url.searchParams.get("academic_year");
+  const dateParam = url.searchParams.get("date"); // YYYY-MM-DD
+  const classId = url.searchParams.get("classId");
+  const streamId = url.searchParams.get("streamId");
+  const sectionId = url.searchParams.get("sectionId");
+
+  if (!academic_year || !dateParam) {
+    return NextResponse.json(
+      { success: false, message: "academic_year and date are required" },
+      { status: 400 }
+    );
+  }
+
+  if (classId && !mongoose.Types.ObjectId.isValid(classId)) {
+    return NextResponse.json({ success: false, message: "Invalid classId format" }, { status: 400 });
+  }
+
+  const cacheKey = `att_student_${schoolId}_${role}_${userId || ""}_${academic_year}_${dateParam}_${classId || "all"}_${streamId || "all"}_${sectionId || "all"}`;
+
+  const cached = _studentAttServerCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return sendCompressedJson(req, cached.data, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30"
+    });
+  }
+
+  const existingInFlight = _studentAttInFlight.get(cacheKey);
+  if (existingInFlight) {
+    try {
+      const payload = await existingInFlight;
+      return sendCompressedJson(req, payload, {
+        cacheControl: "private, max-age=15, stale-while-revalidate=30"
+      });
+    } catch (err: any) {
+      return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+    }
+  }
+
+  const queryPromise = (async () => {
     await connectToDatabase();
-
-    const url = new URL(req.url);
-    const academic_year = url.searchParams.get("academic_year");
-    const dateParam = url.searchParams.get("date"); // YYYY-MM-DD
-    const classId = url.searchParams.get("classId");
-    const streamId = url.searchParams.get("streamId");
-    const sectionId = url.searchParams.get("sectionId");
-
-    if (!academic_year || !dateParam) {
-      return NextResponse.json(
-        { success: false, message: "academic_year and date are required" },
-        { status: 400 }
-      );
-    }
-
-    if (classId && !mongoose.Types.ObjectId.isValid(classId)) {
-      return NextResponse.json({ success: false, message: "Invalid classId format" }, { status: 400 });
-    }
 
     const startOfDay = new Date(dateParam);
     startOfDay.setUTCHours(0, 0, 0, 0);
@@ -46,7 +89,7 @@ export async function GET(req: NextRequest) {
     if (role === "teacher") {
       const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
       if (!teacher) {
-        return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
+        throw new Error("Teacher record not found");
       }
 
       const [classTeacherIds, assignedClassIds] = await Promise.all([
@@ -79,25 +122,25 @@ export async function GET(req: NextRequest) {
       }
 
       // Check student counts cache
-      const cacheKey = `${schoolId}:${academic_year}:${streamId || ""}`;
-      const cached = studentCountsCache.get(cacheKey);
-      const isCacheValid = cached && cached.expiresAt > Date.now();
+      const countsKey = `${schoolId}:${academic_year}:${streamId || ""}`;
+      const cachedCounts = studentCountsCache.get(countsKey);
+      const isCountsValid = cachedCounts && cachedCounts.expiresAt > Date.now();
 
       let classStudentCounts: Record<string, number> = {};
 
-      if (isCacheValid) {
-        classStudentCounts = cached.counts;
+      if (isCountsValid) {
+        classStudentCounts = cachedCounts.counts;
         const attendanceRecords = await Attendance.find(query)
           .select("class_id records.status records.student_id date")
           .lean();
 
-        return NextResponse.json({
+        const responsePayload = {
           success: true,
           data: attendanceRecords,
           classStudentCounts,
-        }, {
-          headers: { "Cache-Control": "private, no-cache, stale-while-revalidate=15" },
-        });
+        };
+        _studentAttServerCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + ATTENDANCE_CACHE_TTL });
+        return responsePayload;
       }
 
       const [attendanceRecords, studentCounts] = await Promise.all([
@@ -130,24 +173,24 @@ export async function GET(req: NextRequest) {
         }
       });
 
-      studentCountsCache.set(cacheKey, {
+      studentCountsCache.set(countsKey, {
         counts: classStudentCounts,
-        expiresAt: Date.now() + CACHE_TTL_MS,
+        expiresAt: Date.now() + COUNTS_CACHE_TTL_MS,
       });
 
-      return NextResponse.json({
+      const responsePayload = {
         success: true,
         data: attendanceRecords,
         classStudentCounts,
-      }, {
-        headers: { "Cache-Control": "private, no-cache, stale-while-revalidate=15" },
-      });
+      };
+      _studentAttServerCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + ATTENDANCE_CACHE_TTL });
+      return responsePayload;
     }
 
     // ── classId present — verify teacher access using already-resolved list ───
     if (role === "teacher") {
       if (!combinedClassIds.includes(classId)) {
-        return NextResponse.json({ success: false, message: "You are not assigned to this class" }, { status: 403 });
+        throw new Error("You are not assigned to this class");
       }
     }
 
@@ -175,14 +218,26 @@ export async function GET(req: NextRequest) {
       .populate("records.student_id", "name roll_no")
       .lean();
 
-    return NextResponse.json({
+    const responsePayload = {
       success: true,
       data: attendanceRecord || null,
-    }, {
-      headers: { "Cache-Control": "private, no-cache, stale-while-revalidate=15" },
+    };
+    _studentAttServerCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + ATTENDANCE_CACHE_TTL });
+    return responsePayload;
+  })();
+
+  _studentAttInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const payload = await queryPromise;
+    return sendCompressedJson(req, payload, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30",
     });
   } catch (err: any) {
-    return NextResponse.json({ success: false, message: err.message || "Internal server error" }, { status: 500 });
+    const status = err.message === "Teacher record not found" || err.message === "You are not assigned to this class" ? 403 : 500;
+    return NextResponse.json({ success: false, message: err.message || "Internal server error" }, { status });
+  } finally {
+    _studentAttInFlight.delete(cacheKey);
   }
 }
 
@@ -372,6 +427,8 @@ export async function POST(req: NextRequest) {
       new: true,
       runValidators: true,
     });
+
+    invalidateStudentAttendanceCache(schoolId);
 
     return NextResponse.json({
       success: true,

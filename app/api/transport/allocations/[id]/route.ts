@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import { TransportAllocation } from "@/lib/models";
 import mongoose from "mongoose";
+import { invalidateAllocationsCache } from "../route";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -22,6 +23,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!updated) {
       return NextResponse.json({ success: false, error: "Allocation not found" }, { status: 404 });
     }
+
+    invalidateAllocationsCache();
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
@@ -45,6 +48,8 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     if (!deleted) {
       return NextResponse.json({ success: false, error: "Allocation not found" }, { status: 404 });
     }
+
+    invalidateAllocationsCache();
 
     return NextResponse.json({ success: true, data: deleted });
   } catch (error: any) {

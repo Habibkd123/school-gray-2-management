@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import { Admission } from "@/lib/models/index";
 import { resolveSchoolIdServer } from "@/lib/themes/resolveSchool";
+import { invalidateAdmissionsCache } from "../../admissions/route";
+import { invalidateAdmissionsStatsCache } from "../../admissions/stats/route";
+import { invalidateAdmissionsReportsCache } from "../../admissions/reports/route";
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -107,6 +111,10 @@ export async function POST(req: NextRequest) {
         },
       ],
     });
+
+    invalidateAdmissionsCache(String(schoolId));
+    invalidateAdmissionsStatsCache(String(schoolId));
+    invalidateAdmissionsReportsCache(String(schoolId));
 
     return NextResponse.json({
       success: true,

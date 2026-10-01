@@ -1,21 +1,53 @@
-// ─── Document Builder — localStorage Store ────────────────────────────────────
+// ─── Document Builder — In-Memory & localStorage Store with Instant Sync ──────
 
 import type { DocumentMeta, DocumentCategory, TemplateMeta, CanvasPage } from "./types";
 import { TEMPLATE_DEFINITIONS } from "./templates-data";
+import { cacheSync } from "@/lib/utils/cache-sync";
 
-const DOCS_KEY      = "erp_documents";
-const CATS_KEY      = "erp_doc_categories";
-const TMPLS_KEY     = "erp_templates";
+const DOCS_KEY       = "erp_documents";
+const CATS_KEY       = "erp_doc_categories";
+const TMPLS_KEY      = "erp_templates";
+const RC_BATCHES_KEY = "erp_report_card_batches";
 
+// ─── In-Memory Module Caches for 0ms Perceived Response Times ─────────────────
+let _cachedDocs: DocumentMeta[] | null = null;
+let _cachedCategories: DocumentCategory[] | null = null;
+let _cachedTemplates: TemplateMeta[] | null = null;
+let _cachedUserTemplates: TemplateMeta[] | null = null;
+let _builtInTemplatesCache: TemplateMeta[] | null = null;
+let _cachedBatches: ReportCardBatch[] | null = null;
+
+// Cross-tab storage listener to keep in-memory caches synchronized
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (e) => {
+    if (e.key === DOCS_KEY) {
+      _cachedDocs = null;
+      cacheSync.invalidate("documents");
+    } else if (e.key === CATS_KEY) {
+      _cachedCategories = null;
+      cacheSync.invalidate("document_categories");
+    } else if (e.key === TMPLS_KEY) {
+      _cachedUserTemplates = null;
+      _cachedTemplates = null;
+      cacheSync.invalidate("templates");
+    } else if (e.key === RC_BATCHES_KEY) {
+      _cachedBatches = null;
+      cacheSync.invalidate("report_card_batches");
+    }
+  });
+}
 
 // ─── Documents ───────────────────────────────────────────────────────────────
 
 export function getDocuments(): DocumentMeta[] {
+  if (_cachedDocs) return _cachedDocs;
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(DOCS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    _cachedDocs = raw ? JSON.parse(raw) : [];
+    return _cachedDocs!;
   } catch {
+    _cachedDocs = [];
     return [];
   }
 }
@@ -25,7 +57,7 @@ export function getDocument(id: string): DocumentMeta | null {
 }
 
 export function saveDocument(doc: DocumentMeta): DocumentMeta {
-  const docs = getDocuments();
+  const docs = [...getDocuments()];
   const idx = docs.findIndex((d) => d.id === doc.id);
   const updated = { ...doc, updatedAt: new Date().toISOString() };
   if (idx >= 0) {
@@ -33,13 +65,25 @@ export function saveDocument(doc: DocumentMeta): DocumentMeta {
   } else {
     docs.unshift(updated);
   }
-  localStorage.setItem(DOCS_KEY, JSON.stringify(docs));
+  _cachedDocs = docs;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(DOCS_KEY, JSON.stringify(docs));
+    } catch {}
+  }
+  cacheSync.invalidate("documents");
   return updated;
 }
 
 export function deleteDocument(id: string): void {
   const docs = getDocuments().filter((d) => d.id !== id);
-  localStorage.setItem(DOCS_KEY, JSON.stringify(docs));
+  _cachedDocs = docs;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(DOCS_KEY, JSON.stringify(docs));
+    } catch {}
+  }
+  cacheSync.invalidate("documents");
 }
 
 export function duplicateDocument(id: string): DocumentMeta | null {
@@ -109,13 +153,16 @@ export const BUILT_IN_CATEGORIES: DocumentCategory[] = [
 ];
 
 export function getCategories(): DocumentCategory[] {
+  if (_cachedCategories) return _cachedCategories;
   const builtIn = BUILT_IN_CATEGORIES;
   if (typeof window === "undefined") return builtIn;
   try {
     const raw = localStorage.getItem(CATS_KEY);
     const custom: DocumentCategory[] = raw ? JSON.parse(raw) : [];
-    return [...builtIn, ...custom];
+    _cachedCategories = [...builtIn, ...custom];
+    return _cachedCategories;
   } catch {
+    _cachedCategories = builtIn;
     return builtIn;
   }
 }
@@ -126,19 +173,24 @@ export function saveCategory(cat: DocumentCategory): void {
   const idx = custom.findIndex((c) => c.id === cat.id);
   if (idx >= 0) custom[idx] = cat;
   else custom.push({ ...cat, isCustom: true });
-  localStorage.setItem(CATS_KEY, JSON.stringify(custom));
+  try {
+    localStorage.setItem(CATS_KEY, JSON.stringify(custom));
+  } catch {}
+  _cachedCategories = [...BUILT_IN_CATEGORIES, ...custom];
+  cacheSync.invalidate("document_categories");
 }
 
 export function deleteCategory(id: string): void {
   if (typeof window === "undefined") return;
-  const custom = getCategories()
-    .filter((c) => c.isCustom && c.id !== id);
-  localStorage.setItem(CATS_KEY, JSON.stringify(custom));
+  const custom = getCategories().filter((c) => c.isCustom && c.id !== id);
+  try {
+    localStorage.setItem(CATS_KEY, JSON.stringify(custom));
+  } catch {}
+  _cachedCategories = [...BUILT_IN_CATEGORIES, ...custom];
+  cacheSync.invalidate("document_categories");
 }
 
 // ─── Report Card Batches ──────────────────────────────────────────────────────
-
-const RC_BATCHES_KEY = "erp_report_card_batches";
 
 export interface ReportCardBatch {
   id: string;
@@ -159,11 +211,16 @@ export interface ReportCardBatch {
 }
 
 export function getReportCardBatches(): ReportCardBatch[] {
+  if (_cachedBatches) return _cachedBatches;
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(RC_BATCHES_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+    _cachedBatches = raw ? JSON.parse(raw) : [];
+    return _cachedBatches!;
+  } catch {
+    _cachedBatches = [];
+    return [];
+  }
 }
 
 export function getReportCardBatch(id: string): ReportCardBatch | null {
@@ -171,17 +228,29 @@ export function getReportCardBatch(id: string): ReportCardBatch | null {
 }
 
 export function saveReportCardBatch(batch: ReportCardBatch): ReportCardBatch {
-  const all = getReportCardBatches();
+  const all = [...getReportCardBatches()];
   const idx = all.findIndex((b) => b.id === batch.id);
   if (idx >= 0) all[idx] = batch;
   else all.unshift(batch);
-  localStorage.setItem(RC_BATCHES_KEY, JSON.stringify(all));
+  _cachedBatches = all;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(RC_BATCHES_KEY, JSON.stringify(all));
+    } catch {}
+  }
+  cacheSync.invalidate("report_card_batches");
   return batch;
 }
 
 export function deleteReportCardBatch(id: string): void {
   const all = getReportCardBatches().filter((b) => b.id !== id);
-  localStorage.setItem(RC_BATCHES_KEY, JSON.stringify(all));
+  _cachedBatches = all;
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(RC_BATCHES_KEY, JSON.stringify(all));
+    } catch {}
+  }
+  cacheSync.invalidate("report_card_batches");
 }
 
 export function publishReportCardBatch(id: string): ReportCardBatch | null {
@@ -195,7 +264,8 @@ export function publishReportCardBatch(id: string): ReportCardBatch | null {
 
 /** Convert the static TemplateDefinition list to TemplateMeta objects (read-only built-ins). */
 function builtInTemplates(): TemplateMeta[] {
-  return TEMPLATE_DEFINITIONS.map((td) => ({
+  if (_builtInTemplatesCache) return _builtInTemplatesCache;
+  _builtInTemplatesCache = TEMPLATE_DEFINITIONS.map((td) => ({
     id:          td.id,
     name:        td.name,
     description: td.description,
@@ -214,33 +284,48 @@ function builtInTemplates(): TemplateMeta[] {
     createdAt:   "2025-01-01T00:00:00Z",
     updatedAt:   "2025-01-01T00:00:00Z",
   }));
+  return _builtInTemplatesCache;
 }
 
 function getUserTemplates(): TemplateMeta[] {
+  if (_cachedUserTemplates) return _cachedUserTemplates;
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(TMPLS_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+    _cachedUserTemplates = raw ? JSON.parse(raw) : [];
+    return _cachedUserTemplates!;
+  } catch {
+    _cachedUserTemplates = [];
+    return [];
+  }
 }
 
 function setUserTemplates(templates: TemplateMeta[]): void {
-  localStorage.setItem(TMPLS_KEY, JSON.stringify(templates));
+  _cachedUserTemplates = templates;
+  _cachedTemplates = null; // bust combined templates cache
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(TMPLS_KEY, JSON.stringify(templates));
+    } catch {}
+  }
 }
 
 /** Returns all templates: built-ins first, then user-created.
  *  Excludes soft-deleted items unless `includeDeleted` is true. */
 export function getTemplates(includeDeleted = false): TemplateMeta[] {
-  const builtIn    = builtInTemplates();
-  const user       = getUserTemplates();
+  if (!_cachedTemplates) {
+    const builtIn    = builtInTemplates();
+    const user       = getUserTemplates();
 
-  // Merge: user overrides (e.g. favourite toggle on built-ins) keyed by id
-  const overrides  = new Map(user.map((t) => [t.id, t]));
+    // Merge: user overrides (e.g. favourite toggle on built-ins) keyed by id
+    const overrides  = new Map(user.map((t) => [t.id, t]));
 
-  const merged = builtIn.map((t) => overrides.has(t.id) ? { ...t, ...overrides.get(t.id)! } : t);
-  const userOnly = user.filter((t) => !builtIn.some((b) => b.id === t.id));
+    const merged = builtIn.map((t) => overrides.has(t.id) ? { ...t, ...overrides.get(t.id)! } : t);
+    const userOnly = user.filter((t) => !builtIn.some((b) => b.id === t.id));
 
-  return [...merged, ...userOnly].filter((t) => includeDeleted || !t.deletedAt);
+    _cachedTemplates = [...merged, ...userOnly];
+  }
+  return _cachedTemplates.filter((t) => includeDeleted || !t.deletedAt);
 }
 
 export function getTemplate(id: string): TemplateMeta | null {
@@ -248,13 +333,14 @@ export function getTemplate(id: string): TemplateMeta | null {
 }
 
 export function saveTemplate(template: TemplateMeta): TemplateMeta {
-  const user  = getUserTemplates();
+  const user  = [...getUserTemplates()];
   const idx   = user.findIndex((t) => t.id === template.id);
   const now   = new Date().toISOString();
   const saved: TemplateMeta = { ...template, updatedAt: now };
   if (idx >= 0) user[idx] = saved;
   else user.unshift(saved);
   setUserTemplates(user);
+  cacheSync.invalidate("templates");
   return saved;
 }
 
@@ -276,6 +362,7 @@ export function hardDeleteTemplate(id: string): void {
   if (typeof window === "undefined") return;
   const user = getUserTemplates().filter((t) => t.id !== id);
   setUserTemplates(user);
+  cacheSync.invalidate("templates");
 }
 
 export function duplicateTemplate(id: string): TemplateMeta | null {
@@ -353,4 +440,3 @@ export function importTemplate(json: string, importedBy: string): TemplateMeta |
     return null;
   }
 }
-

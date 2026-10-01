@@ -8,17 +8,32 @@ export interface AcademicConfig {
   enable_sections: boolean;
 }
 
+const CONFIG_STORAGE_KEY = "sm_academic_config";
+
+function getCachedAcademicConfig(): AcademicConfig {
+  if (_configCache) return _configCache;
+  if (typeof window !== "undefined") {
+    try {
+      const stored = sessionStorage.getItem(CONFIG_STORAGE_KEY);
+      if (stored) {
+        _configCache = JSON.parse(stored);
+        _cacheTimestamp = Date.now();
+        return _configCache!;
+      }
+    } catch {}
+  }
+  return { enable_streams: false, enable_sections: false };
+}
+
 let _configCache: AcademicConfig | null = null;
 let _cacheTimestamp = 0;
-const CACHE_TTL_MS = 120_000; // 2 minutes
+const CACHE_TTL_MS = 300_000; // 5 minutes
 const _listeners = new Set<(config: AcademicConfig) => void>();
 let _fetchPromise: Promise<AcademicConfig> | null = null;
 
 export function useAcademicConfig() {
-  const [config, setConfig] = useState<AcademicConfig>(
-    _configCache ?? { enable_streams: false, enable_sections: false }
-  );
-  const [isLoading, setIsLoading] = useState(_configCache === null);
+  const [config, setConfig] = useState<AcademicConfig>(getCachedAcademicConfig);
+  const [isLoading, setIsLoading] = useState(() => _configCache === null && !getCachedAcademicConfig().enable_streams);
   const authReady = useAuthReady();
 
   useEffect(() => {
@@ -56,6 +71,9 @@ export function useAcademicConfig() {
       const data = await _fetchPromise;
       _configCache = data;
       _cacheTimestamp = Date.now();
+      try {
+        sessionStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(data));
+      } catch {}
       _listeners.forEach(fn => fn(data));
       setConfig(data);
     } catch {

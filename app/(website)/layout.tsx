@@ -43,17 +43,19 @@ export async function generateMetadata(): Promise<Metadata> {
     : "https";
   const siteUrl = `${proto}://${canonicalHost}`;
 
-  // ── No school found for this subdomain (main domain or unregistered) ───────
+  // ── No school found for this subdomain (main domain or platform SaaS) ───────
   if (!school || !school.school_id) {
     return {
       metadataBase: new URL(`https://${ROOT_DOMAIN}`),
-      title: "MySchoolLife - Best School Management Software & ERP in India",
+      title: "My School Life (MSL) - SaaS Digital School Ecosystem",
       description:
-        "MySchoolLife provides complete school management software, ERP, student portals, online fees, and exam management across India.",
+        "Centralized multi-tenant EdTech platform providing customized subdomains, automated admissions, academic grading, student portals, and financial tracking for modern institutions.",
       keywords: [
         "School Management Software India",
-        "School ERP India",
-        "Student Portal",
+        "Multi-Tenant School ERP",
+        "School ERP SaaS",
+        "Dedicated School Subdomain",
+        "Student & Parent Portal",
         "Online Fee Payment",
         "Exam Management System",
         "myschoollife",
@@ -61,19 +63,19 @@ export async function generateMetadata(): Promise<Metadata> {
       robots: { index: true, follow: true },
       alternates: { canonical: `https://${ROOT_DOMAIN}` },
       openGraph: {
-        title: "MySchoolLife - Best School Management Software & ERP in India",
+        title: "My School Life (MSL) - SaaS Digital School Ecosystem",
         description:
-          "MySchoolLife provides complete school management software, ERP, student portals, online fees, and exam management across India.",
+          "Centralized multi-tenant EdTech platform providing customized subdomains, automated admissions, academic grading, student portals, and financial tracking for modern institutions.",
         url: `https://${ROOT_DOMAIN}`,
-        siteName: "MySchoolLife",
+        siteName: "My School Life",
         locale: "en_IN",
         type: "website",
       },
       twitter: {
         card: "summary_large_image",
-        title: "MySchoolLife - Best School Management Software & ERP in India",
+        title: "My School Life (MSL) - SaaS Digital School Ecosystem",
         description:
-          "MySchoolLife provides complete school management software, ERP, student portals, online fees, and exam management across India.",
+          "Centralized multi-tenant EdTech platform providing customized subdomains, automated admissions, academic grading, student portals, and financial tracking for modern institutions.",
       },
       icons: {
         icon: "/favicon.ico",
@@ -159,6 +161,16 @@ export default async function WebsiteLayout({
     resolveSchoolMeta(await headers()),
   ]);
 
+  // ── No school context (Main domain / SaaS Platform Homepage) ───────────
+  if (!school || !school.school_id) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased selection:bg-indigo-600 selection:text-white">
+        {children}
+      </div>
+    );
+  }
+
+  // ── School Tenant Website Layout ─────────────────────────────────────────
   return (
     <div className="min-h-screen bg-white flex flex-col dark:bg-slate-900">
       <Header

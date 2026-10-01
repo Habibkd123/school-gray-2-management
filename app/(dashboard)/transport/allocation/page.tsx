@@ -39,7 +39,7 @@ export default function AllocationPage() {
   const { students, fetchStudents } = useStudents({ skip: true });
 
   useEffect(() => {
-    fetchStudents({ limit: 1000 });
+    fetchStudents({ limit: 500 });
   }, [fetchStudents]);
 
   const dynamicRoutesMap = useMemo(() => {

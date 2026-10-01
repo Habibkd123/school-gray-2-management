@@ -90,6 +90,11 @@ function extractSlug(
   headersList: { get: (name: string) => string | null },
   urlStr?: string
 ): { schoolId: string | null; slug: string | null } {
+  // If platform view is requested explicitly, bypass school resolution
+  if (headersList.get("x-platform-view") === "true") {
+    return { schoolId: null, slug: null };
+  }
+
   // Priority 0: x-school-id — set by middleware when no subdomain (plain localhost)
   const directId = headersList.get("x-school-id");
   if (directId) return { schoolId: directId, slug: null };

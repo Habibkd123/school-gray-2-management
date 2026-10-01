@@ -4,6 +4,9 @@ import { Admission } from "@/lib/models/index";
 import Class from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { invalidateAdmissionsCache } from "../route";
+import { invalidateAdmissionsStatsCache } from "../stats/route";
+import { invalidateAdmissionsReportsCache } from "../reports/route";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -69,6 +72,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     await admission.save();
 
+    invalidateAdmissionsCache(schoolId as string);
+    invalidateAdmissionsStatsCache(schoolId as string);
+    invalidateAdmissionsReportsCache(schoolId as string);
     return NextResponse.json({ success: true, data: admission });
   } catch (err: any) {
     console.error("[PUT /api/admissions/[id]]", err);
@@ -94,6 +100,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return NextResponse.json({ success: false, message: "Application not found" }, { status: 404 });
     }
 
+    invalidateAdmissionsCache(schoolId as string);
+    invalidateAdmissionsStatsCache(schoolId as string);
+    invalidateAdmissionsReportsCache(schoolId as string);
     return NextResponse.json({ success: true, message: "Application deleted successfully" });
   } catch (err: any) {
     console.error("[DELETE /api/admissions/[id]]", err);

@@ -3,6 +3,23 @@ import connectToDatabase from "@/lib/db";
 import { Syllabus, TeacherAssignment, Student, Teacher } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
+import { invalidateSyllabusDetailCache } from "./[id]/route";
+
+// ─── Server-side cache ───────────────────────────────────────
+const gs = globalThis as any;
+if (!gs._syllabusServerCache) gs._syllabusServerCache = new Map<string, { data: any; expiresAt: number }>();
+const _cache: Map<string, { data: any; expiresAt: number }> = gs._syllabusServerCache;
+if (!gs._syllabusInFlight) gs._syllabusInFlight = new Map<string, Promise<any>>();
+const _syllabusInFlight: Map<string, Promise<any>> = gs._syllabusInFlight;
+const TTL = 30_000;
+
+export function invalidateSyllabusServerCache(schoolId?: string) {
+  if (!schoolId) { _cache.clear(); return; }
+  for (const k of Array.from(_cache.keys())) {
+    if (k.startsWith(String(schoolId))) _cache.delete(k);
+  }
+}
 
 // GET: fetch syllabi list or single syllabus with advanced filters & role restrictions
 export async function GET(req: NextRequest) {
@@ -12,6 +29,7 @@ export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
     const url = new URL(req.url);
+    url.searchParams.sort();
 
     // Advanced search parameters
     const search = url.searchParams.get("search") || "";
@@ -24,6 +42,24 @@ export async function GET(req: NextRequest) {
     const teacher_id = url.searchParams.get("teacher_id") || "";
     const teacher_assignment_id = url.searchParams.get("teacher_assignment_id") || "";
     const mode = url.searchParams.get("mode") || "";
+
+    const cacheKey = `${schoolId}:${url.searchParams.toString()}`;
+    const canCache = user.role !== "student" && user.role !== "parent" && !teacher_assignment_id;
+    if (canCache) {
+      const cached = _cache.get(cacheKey);
+      if (cached && cached.expiresAt > Date.now()) {
+        return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+      }
+      const inFlight = _syllabusInFlight.get(cacheKey);
+      if (inFlight) {
+        try {
+          const payload = await inFlight;
+          return sendCompressedJson(req, payload, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+        } catch (err: any) {
+          return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+        }
+      }
+    }
 
     // Fast projected stats query without running heavy 6-collection $lookups
     if (mode === "stats") {
@@ -54,12 +90,14 @@ export async function GET(req: NextRequest) {
         }))
       }));
 
-      return NextResponse.json({
+      const statsResponse = {
         success: true,
         data: statsData,
-      }, {
-        headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" }
-      });
+      };
+      if (canCache) {
+        _cache.set(cacheKey, { data: statsResponse, expiresAt: Date.now() + TTL });
+      }
+      return sendCompressedJson(req, statsResponse, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
     }
 
     const page = parseInt(url.searchParams.get("page") || "1", 10);
@@ -130,103 +168,57 @@ export async function GET(req: NextRequest) {
       query.status = status;
     }
 
-    // Build lookup & aggregation pipeline to resolve references
-    const pipeline: any[] = [{ $match: query }];
-
     // Filter text search matching Title, Description or inner elements
     if (search.trim()) {
       const searchRegex = new RegExp(search.trim(), "i");
-      pipeline.push({
-        $match: {
-          $or: [
-            { title: searchRegex },
-            { description: searchRegex },
-            { "nodes.title": searchRegex },
-            { "nodes.description": searchRegex }
-          ]
-        }
-      });
+      query.$or = [
+        { title: searchRegex },
+        { description: searchRegex },
+        { "nodes.title": searchRegex },
+        { "nodes.description": searchRegex }
+      ];
     }
 
-    // Resolve population references
-    pipeline.push(
-      {
-        $lookup: {
-          from: "classes",
-          localField: "class_id",
-          foreignField: "_id",
-          as: "class_info"
-        }
-      },
-      { $unwind: { path: "$class_info", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "sections",
-          localField: "section_id",
-          foreignField: "_id",
-          as: "section_info"
-        }
-      },
-      { $unwind: { path: "$section_info", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "streams",
-          localField: "stream_id",
-          foreignField: "_id",
-          as: "stream_info"
-        }
-      },
-      { $unwind: { path: "$stream_info", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "subjectmasters",
-          localField: "subject_master_id",
-          foreignField: "_id",
-          as: "subject_info"
-        }
-      },
-      { $unwind: { path: "$subject_info", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "teachers",
-          localField: "teacher_id",
-          foreignField: "_id",
-          as: "teacher_info"
-        }
-      },
-      { $unwind: { path: "$teacher_info", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "users",
-          localField: "updated_by",
-          foreignField: "_id",
-          as: "updater_info"
-        }
-      },
-      { $unwind: { path: "$updater_info", preserveNullAndEmptyArrays: true } }
-    );
-
-    // Apply paging
-    pipeline.push({
-      $facet: {
-        metadata: [{ $count: "total" }],
-        data: [{ $sort: { updatedAt: -1 } }, { $skip: skip }, { $limit: limit }]
-      }
-    });
-
-    const result = await Syllabus.aggregate(pipeline);
-    const total = result[0]?.metadata[0]?.total || 0;
-    const rawSyllabi = result[0]?.data || [];
+    // Execute syllabus count, populated syllabi, and matching teacher assignments in parallel
+    const [total, rawSyllabi, assignments] = await Promise.all([
+      Syllabus.countDocuments(query),
+      Syllabus.find(query)
+        .populate("class_id", "name section")
+        .populate("section_id", "name")
+        .populate("stream_id", "name")
+        .populate("subject_master_id", "name subject_code description")
+        .populate("teacher_id", "name employee_id designation photo_url")
+        .populate("updated_by", "name")
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      (class_id && academic_year && mongoose.Types.ObjectId.isValid(class_id))
+        ? TeacherAssignment.find({
+            school_id: new mongoose.Types.ObjectId(schoolId!),
+            class_id: new mongoose.Types.ObjectId(class_id),
+            academic_year,
+            status: "Active",
+            is_deleted: false
+          })
+          .populate("class_id", "name section")
+          .populate("section_id", "name")
+          .populate("stream_id", "name")
+          .populate("subject_master_id", "name subject_code description code")
+          .populate("teacher_id", "name employee_id designation photo_url")
+          .lean()
+        : Promise.resolve([])
+    ]);
 
     const syllabi = rawSyllabi.map((s: any) => ({
       _id: String(s._id),
       school_id: String(s.school_id),
       academic_year: s.academic_year,
-      class_id: s.class_info ? { _id: String(s.class_info._id), name: s.class_info.name, section: s.class_info.section } : null,
-      section_id: s.section_info ? { _id: String(s.section_info._id), name: s.section_info.name } : null,
-      stream_id: s.stream_info ? { _id: String(s.stream_info._id), name: s.stream_info.name } : null,
-      subject_master_id: s.subject_info ? { _id: String(s.subject_info._id), name: s.subject_info.name, subject_code: s.subject_info.subject_code, description: s.subject_info.description } : null,
-      teacher_id: s.teacher_info ? { _id: String(s.teacher_info._id), name: s.teacher_info.name, employee_id: s.teacher_info.employee_id, designation: s.teacher_info.designation, photo_url: s.teacher_info.photo_url } : null,
+      class_id: s.class_id ? { _id: String(s.class_id._id || s.class_id), name: s.class_id.name, section: s.class_id.section } : null,
+      section_id: s.section_id ? { _id: String(s.section_id._id || s.section_id), name: s.section_id.name } : null,
+      stream_id: s.stream_id ? { _id: String(s.stream_id._id || s.stream_id), name: s.stream_id.name } : null,
+      subject_master_id: s.subject_master_id ? { _id: String(s.subject_master_id._id || s.subject_master_id), name: s.subject_master_id.name, subject_code: s.subject_master_id.subject_code, description: s.subject_master_id.description } : null,
+      teacher_id: s.teacher_id ? { _id: String(s.teacher_id._id || s.teacher_id), name: s.teacher_id.name, employee_id: s.teacher_id.employee_id, designation: s.teacher_id.designation, photo_url: s.teacher_id.photo_url } : null,
       title: s.title,
       description: s.description || "",
       version: s.version || 1,
@@ -238,11 +230,11 @@ export async function GET(req: NextRequest) {
       nodes: s.nodes || [],
       history: s.history || [],
       created_by: s.created_by,
-      updated_by: s.updater_info ? { _id: String(s.updater_info._id), name: s.updater_info.name } : null,
+      updated_by: s.updated_by ? { _id: String(s.updated_by._id || s.updated_by), name: s.updated_by.name } : null,
       createdAt: s.createdAt,
       updatedAt: s.updatedAt,
       // Backward compatibility fields for legacy views
-      teacher_assignment_id: s._id,
+      teacher_assignment_id: String(s._id),
       chapters: (s.nodes || []).map((n: any, idx: number) => ({
         _id: String(idx),
         chapter_no: idx + 1,
@@ -258,21 +250,7 @@ export async function GET(req: NextRequest) {
     let mergedSyllabi = [...syllabi];
 
     // If query by class_id and academic_year, check for and merge virtual syllabi for assigned subjects
-    if (class_id && academic_year && mongoose.Types.ObjectId.isValid(class_id)) {
-      const assignments = await TeacherAssignment.find({
-        school_id: new mongoose.Types.ObjectId(schoolId!),
-        class_id: new mongoose.Types.ObjectId(class_id),
-        academic_year,
-        status: "Active",
-        is_deleted: false
-      })
-      .populate("class_id", "name section")
-      .populate("section_id", "name")
-      .populate("stream_id", "name")
-      .populate("subject_master_id", "name subject_code description code")
-      .populate("teacher_id", "name employee_id designation photo_url")
-      .lean();
-
+    if (assignments && assignments.length > 0) {
       assignments.forEach((assignment: any) => {
         if (!assignment.subject_master_id) return;
         const subjectIdStr = String(assignment.subject_master_id._id || assignment.subject_master_id);
@@ -330,16 +308,17 @@ export async function GET(req: NextRequest) {
     }
 
     const finalTotal = (class_id && academic_year) ? mergedSyllabi.length : total;
-
-    return NextResponse.json({
+    const responseData = {
       success: true,
       data: mergedSyllabi,
       total: finalTotal,
       totalPages: (class_id && academic_year) ? Math.ceil(finalTotal / limit) : Math.ceil(total / limit),
       page
-    }, {
-      headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" }
-    });
+    };
+    if (canCache) {
+      _cache.set(cacheKey, { data: responseData, expiresAt: Date.now() + TTL });
+    }
+    return sendCompressedJson(req, responseData, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }
@@ -509,6 +488,8 @@ export async function POST(req: NextRequest) {
       await syllabusRecord.save();
     }
 
+    invalidateSyllabusServerCache(schoolId || undefined);
+    invalidateSyllabusDetailCache(String(syllabusRecord._id), schoolId || undefined);
     return NextResponse.json({ success: true, data: syllabusRecord });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

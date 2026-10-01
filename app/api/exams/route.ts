@@ -2,16 +2,56 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { Exam } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendCompressedJson } from "@/lib/compression";
+
+// Server cache & in-flight deduplication
+const _examsServerCache = new Map<string, { data: any; expiresAt: number }>();
+const _examsInFlight = new Map<string, Promise<any>>();
+const EXAMS_CACHE_TTL = 30_000;
+
+export function invalidateExamsCache(schoolId?: string | null) {
+  if (schoolId) {
+    for (const key of _examsServerCache.keys()) {
+      if (key.startsWith(`exam_${schoolId}`)) {
+        _examsServerCache.delete(key);
+      }
+    }
+  } else {
+    _examsServerCache.clear();
+  }
+}
 
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
 
-  try {
+  const url = new URL(req.url);
+  const classId = url.searchParams.get("class_id");
+  const academic_year = url.searchParams.get("academic_year");
+
+  const cacheKey = `exam_${schoolId}_${classId || "all"}_${academic_year || "all"}`;
+
+  const cached = _examsServerCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return sendCompressedJson(req, cached.data, {
+      cacheControl: "private, max-age=15, stale-while-revalidate=30",
+    });
+  }
+
+  const existingInFlight = _examsInFlight.get(cacheKey);
+  if (existingInFlight) {
+    try {
+      const payload = await existingInFlight;
+      return sendCompressedJson(req, payload, {
+        cacheControl: "private, max-age=15, stale-while-revalidate=30",
+      });
+    } catch (err: any) {
+      return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+    }
+  }
+
+  const queryPromise = (async () => {
     await connectToDatabase();
-    const url = new URL(req.url);
-    const classId = url.searchParams.get("class_id");
-    const academic_year = url.searchParams.get("academic_year");
     const query: any = { school_id: schoolId };
     if (classId) query.class_id = classId;
     if (academic_year) query.academic_year = academic_year;
@@ -20,12 +60,25 @@ export async function GET(req: NextRequest) {
       .sort({ createdAt: -1 })
       .populate("class_id", "name section")
       .lean();
-    return NextResponse.json(
-      { success: true, data: { exams } },
-      { headers: { "Cache-Control": "private, max-age=60, stale-while-revalidate=60" } }
+
+    const payload = { success: true, data: { exams } };
+    _examsServerCache.set(cacheKey, { data: payload, expiresAt: Date.now() + EXAMS_CACHE_TTL });
+    return payload;
+  })();
+
+  _examsInFlight.set(cacheKey, queryPromise);
+
+  try {
+    const payload = await queryPromise;
+    return sendCompressedJson(
+      req,
+      payload,
+      { cacheControl: "private, max-age=15, stale-while-revalidate=30" }
     );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  } finally {
+    _examsInFlight.delete(cacheKey);
   }
 }
 
@@ -66,6 +119,8 @@ export async function POST(req: NextRequest) {
       });
       createdExams.push(exam);
     }
+
+    invalidateExamsCache(schoolId);
 
     return NextResponse.json({ success: true, data: createdExams[0], all: createdExams }, { status: 201 });
   } catch (err: any) {

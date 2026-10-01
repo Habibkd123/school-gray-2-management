@@ -32,10 +32,56 @@ function escapeRegex(str: string): string {
 }
 
 
+// ─── Global server cache & in-flight deduplication (persists across HMR/Turbopack) ──
+const g = globalThis as unknown as {
+  _studentsServerQueryCache?: Map<string, { data: any; timestamp: number }>;
+  _studentsServerInFlight?: Map<string, Promise<any>>;
+  _countCache?: Map<string, { count: number; timestamp: number }>;
+};
+
+if (!g._studentsServerQueryCache) g._studentsServerQueryCache = new Map();
+if (!g._studentsServerInFlight) g._studentsServerInFlight = new Map();
+if (!g._countCache) g._countCache = new Map();
+
+const _studentsServerQueryCache = g._studentsServerQueryCache;
+const _studentsServerInFlight = g._studentsServerInFlight;
+const _countCache = g._countCache;
+const SERVER_CACHE_TTL_MS = 60_000; // 60 seconds
+const COUNT_CACHE_TTL_MS = 300_000; // 5 minutes
+
+export function invalidateStudentsServerCache() {
+  _studentsServerQueryCache.clear();
+  _studentsServerInFlight.clear();
+  _countCache.clear();
+}
+
 // ─── GET /api/students — List all students for the school ──────────
 export async function GET(request: NextRequest) {
   const { schoolId, role, userId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin", "student", "parent"]);
   if (error) return error;
+
+  const cacheKey = `${schoolId}:${request.nextUrl.search}`;
+  const cached = _studentsServerQueryCache.get(cacheKey);
+  if (cached && (Date.now() - cached.timestamp) < SERVER_CACHE_TTL_MS) {
+    return sendConditionalJson(
+      request,
+      { success: true, data: cached.data },
+      { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
+    );
+  }
+
+  if (_studentsServerInFlight.has(cacheKey)) {
+    try {
+      const data = await _studentsServerInFlight.get(cacheKey)!;
+      return sendConditionalJson(
+        request,
+        { success: true, data },
+        { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
+      );
+    } catch {
+      // Fall through to query on error
+    }
+  }
 
   try {
     await connectDB();
@@ -213,15 +259,30 @@ export async function GET(request: NextRequest) {
       queryBuilder = queryBuilder.populate("user_id", "name email role is_active plain_password must_change_password");
     }
 
+    const countKey = `${schoolId}:${JSON.stringify(filter)}`;
+    const cachedCount = _countCache.get(countKey);
+    let totalPromise: Promise<number>;
+    if (cachedCount && (Date.now() - cachedCount.timestamp) < COUNT_CACHE_TTL_MS) {
+      totalPromise = Promise.resolve(cachedCount.count);
+    } else {
+      totalPromise = Student.countDocuments(filter).then((c) => {
+        _countCache.set(countKey, { count: c, timestamp: Date.now() });
+        return c;
+      });
+    }
+
     const [students, total] = await Promise.all([
       queryBuilder.lean(),
-      Student.countDocuments(filter),
+      totalPromise,
     ]);
+
+    const resultData = { students, total, page, limit };
+    _studentsServerQueryCache.set(cacheKey, { data: resultData, timestamp: Date.now() });
 
     return sendConditionalJson(
       request,
-      { success: true, data: { students, total, page, limit } },
-      { cacheControl: "private, max-age=60, stale-while-revalidate=30" }
+      { success: true, data: resultData },
+      { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
     );
   } catch (err) {
     console.error("[GET /api/students]", err);
@@ -512,6 +573,8 @@ export async function POST(request: NextRequest) {
         studentPassword = `${day}${month}${yy}`;
       }
     }
+
+    invalidateStudentsServerCache();
 
     return NextResponse.json(
       {

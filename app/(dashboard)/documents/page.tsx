@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import {
@@ -14,7 +14,8 @@ import {
   getDocuments, deleteDocument, duplicateDocument, saveDocument,
   getCategories, BUILT_IN_CATEGORIES, createDocument
 } from "@/app/components/document-builder/store";
-import type { DocumentMeta, DocumentStatus, TemplateDefinition, DocumentElement } from "@/app/components/document-builder/types";
+import { cacheSync } from "@/lib/utils/cache-sync";
+import type { DocumentMeta, DocumentCategory, DocumentStatus, TemplateDefinition, DocumentElement } from "@/app/components/document-builder/types";
 import { useAuth } from "@/app/context/auth";
 
 const STATUS_BADGE: Record<DocumentStatus, { bg: string; text: string; dot: string }> = {
@@ -33,7 +34,8 @@ export default function DocumentsPage() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const [docs, setDocs] = useState<DocumentMeta[]>([]);
+  const [docs, setDocs] = useState<DocumentMeta[]>(() => typeof window !== "undefined" ? getDocuments() : []);
+  const [categories, setCategories] = useState<DocumentCategory[]>(() => typeof window !== "undefined" ? getCategories() : BUILT_IN_CATEGORIES);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -73,22 +75,44 @@ export default function DocumentsPage() {
     setActiveDropdown(id);
   };
 
-  const categories = BUILT_IN_CATEGORIES;
-
   useEffect(() => {
     setMounted(true);
     setDocs(getDocuments());
+    setCategories(getCategories());
+    const unsubDocs = cacheSync.subscribe("documents", () => {
+      setDocs(getDocuments());
+    });
+    const unsubCats = cacheSync.subscribe("document_categories", () => {
+      setCategories(getCategories());
+    });
+    return () => {
+      unsubDocs();
+      unsubCats();
+    };
   }, []);
 
-  const refresh = () => setDocs(getDocuments());
+  const refresh = () => {
+    setDocs(getDocuments());
+    setCategories(getCategories());
+  };
 
-  // ── Filters ───────────────────────────────────────────────────────────────
-  const filtered = docs.filter((d) => {
-    const matchSearch = !search || d.title.toLowerCase().includes(search.toLowerCase());
-    const matchCat    = categoryFilter === "all" || d.categoryId === categoryFilter;
-    const matchStatus = statusFilter === "all" || d.status === statusFilter;
-    return matchSearch && matchCat && matchStatus;
-  });
+  // ── Filters & Stats (Memoized for 0ms responsiveness) ────────────────────────
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return docs.filter((d) => {
+      const matchSearch = !q || d.title.toLowerCase().includes(q) || (d.recordName && d.recordName.toLowerCase().includes(q));
+      const matchCat    = categoryFilter === "all" || d.categoryId === categoryFilter;
+      const matchStatus = statusFilter === "all" || d.status === statusFilter;
+      return matchSearch && matchCat && matchStatus;
+    });
+  }, [docs, search, categoryFilter, statusFilter]);
+
+  const stats = useMemo(() => ({
+    total: docs.length,
+    draft: docs.filter((d) => d.status === "draft").length,
+    published: docs.filter((d) => d.status === "published").length,
+    archived: docs.filter((d) => d.status === "archived").length,
+  }), [docs]);
 
   const { page, setPage, pageSize, totalPages, totalItems, paged } = usePagination(filtered, 10);
 
@@ -282,14 +306,6 @@ export default function DocumentsPage() {
     router.push(`/documents/builder/${doc.id}`);
   };
 
-  if (!mounted) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6" onClick={() => setActiveDropdown(null)}>
 
@@ -324,10 +340,10 @@ export default function DocumentsPage() {
       {/* ── Stats Row ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total Documents", value: docs.length, color: "text-primary" },
-          { label: "Draft", value: docs.filter((d) => d.status === "draft").length, color: "text-amber-600" },
-          { label: "Published", value: docs.filter((d) => d.status === "published").length, color: "text-emerald-600" },
-          { label: "Archived", value: docs.filter((d) => d.status === "archived").length, color: "text-slate-400" },
+          { label: "Total Documents", value: stats.total, color: "text-primary" },
+          { label: "Draft", value: stats.draft, color: "text-amber-600" },
+          { label: "Published", value: stats.published, color: "text-emerald-600" },
+          { label: "Archived", value: stats.archived, color: "text-slate-400" },
         ].map((stat) => (
           <div key={stat.label} className="bg-white dark:bg-slate-900 rounded-xl border border-border card-shadow p-4">
             <p className="text-[12px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">{stat.label}</p>

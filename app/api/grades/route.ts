@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { Grade } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
+import { sendCompressedJson } from "@/lib/compression";
 
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin", "teacher"]);
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
     const grades = await Grade.find({ school_id: schoolId }).sort({ grade_points: -1 });
-    return NextResponse.json({ success: true, data: grades });
+    return sendCompressedJson(req, { success: true, data: grades }, { cacheControl: "private, no-cache" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

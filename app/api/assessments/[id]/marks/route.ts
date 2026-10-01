@@ -6,6 +6,7 @@ import Teacher from "@/lib/models/Teacher";
 import Class from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
 
 // GET — List all students for the test's class with their marks (if entered)
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -148,7 +149,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       };
     }
 
-    return NextResponse.json({
+    return sendCompressedJson(req, {
       success: true,
       data: {
         test: {
@@ -164,7 +165,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         rows,
         diagnostics,
       },
-    });
+    }, { cacheControl: "private, no-cache" });
   } catch (err: any) {
     console.error("[GET /api/assessments/[id]/marks]", err);
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

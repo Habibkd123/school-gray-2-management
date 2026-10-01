@@ -86,8 +86,26 @@ export default function ClassReportPage() {
       return;
     }
 
-    const fetchClassStats = async () => {
+    const cacheKey = `sm_rep_class_detail_${selectedClassId}_${selectedDate}`;
+    const cached = (() => {
+      if (typeof window === "undefined") return null;
+      try {
+        const raw = sessionStorage.getItem(cacheKey);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.timestamp < 120_000 && parsed.data) return parsed.data;
+      } catch {}
+      return null;
+    })();
+
+    if (cached) {
+      setClassDetail(cached);
+      setDetailLoading(false);
+    } else {
       setDetailLoading(true);
+    }
+
+    const fetchClassStats = async () => {
       try {
         const res = await fetch(`/api/reports/class/${selectedClassId}?date=${selectedDate}`, {
           headers: getAuthHeaders()
@@ -95,6 +113,9 @@ export default function ClassReportPage() {
         const data = await res.json();
         if (data.success) {
           setClassDetail(data.data);
+          try {
+            sessionStorage.setItem(cacheKey, JSON.stringify({ data: data.data, timestamp: Date.now() }));
+          } catch {}
         }
       } catch (err) {
         console.error(err);

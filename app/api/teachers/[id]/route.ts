@@ -4,8 +4,17 @@ import Teacher from "@/lib/models/Teacher";
 import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { invalidateTeachersServerCache } from "../route";
+import { sendConditionalJson } from "@/lib/etag";
 
 type RouteParams = { params: Promise<{ id: string }> };
+
+const g = globalThis as unknown as {
+  _singleTeacherCache?: Map<string, { data: any; expiresAt: number }>;
+};
+if (!g._singleTeacherCache) g._singleTeacherCache = new Map();
+const _singleTeacherCache = g._singleTeacherCache;
+const SINGLE_TEACHER_TTL = 60_000; // 60 seconds
 
 // GET: Fetch a single teacher by ID
 export async function GET(
@@ -17,12 +26,21 @@ export async function GET(
 
   const { id } = await params;
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid teacher ID" }, { status: 400 });
+  }
+
+  const cacheKey = role === "super_admin" ? `super:${id}` : `${schoolId}:${id}`;
+  const cached = _singleTeacherCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return sendConditionalJson(
+      req,
+      { success: true, data: cached.data },
+      { cacheControl: "private, max-age=15, stale-while-revalidate=60" }
+    );
+  }
+
   try {
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ success: false, message: "Invalid teacher ID" }, { status: 400 });
-    }
-
     await connectToDatabase();
     
     const query: any = { _id: id };
@@ -39,7 +57,16 @@ export async function GET(
       return NextResponse.json({ success: false, message: "Teacher not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: teacher });
+    _singleTeacherCache.set(cacheKey, {
+      data: teacher,
+      expiresAt: Date.now() + SINGLE_TEACHER_TTL,
+    });
+
+    return sendConditionalJson(
+      req,
+      { success: true, data: teacher },
+      { cacheControl: "private, max-age=15, stale-while-revalidate=60" }
+    );
   } catch (error: any) {
     console.error("[GET /api/teachers/[id]] handler caught error:", error);
     return NextResponse.json(
@@ -144,6 +171,9 @@ export async function PUT(
       );
     }
 
+    _singleTeacherCache.clear();
+    invalidateTeachersServerCache();
+
     return NextResponse.json({ success: true, data: teacher });
   } catch (error: any) {
     if (error.code === 11000) {
@@ -187,6 +217,9 @@ export async function DELETE(
     if (!teacher) {
       return NextResponse.json({ success: false, message: "Teacher not found" }, { status: 404 });
     }
+
+    _singleTeacherCache.clear();
+    invalidateTeachersServerCache();
 
     return NextResponse.json({ success: true, message: "Teacher deleted successfully" });
   } catch (error: any) {

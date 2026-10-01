@@ -3,6 +3,8 @@ import connectToDatabase from "@/lib/db";
 import { Syllabus, SubjectMaster } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
+
 
 /**
  * GET /api/syllabus-by-class?class_id=...&subject_name=...
@@ -57,13 +59,11 @@ export async function GET(req: NextRequest) {
       status: "Not Started"
     }));
 
-    return NextResponse.json({
-      success: true,
-      data: {
-        _id: String(syllabus._id),
-        chapters
-      },
-    });
+    return sendCompressedJson(
+      req,
+      { success: true, data: { _id: String(syllabus._id), chapters } },
+      { cacheControl: "private, no-cache" }
+    );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }

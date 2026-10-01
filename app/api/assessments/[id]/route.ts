@@ -6,6 +6,8 @@ import Teacher from "@/lib/models/Teacher";
 import Student from "@/lib/models/Student";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
+import { sendCompressedJson } from "@/lib/compression";
+import { invalidateAssessmentsCache } from "../route";
 
 function computeStatus(test: any): string {
   if (test.status === "draft") return "draft";
@@ -56,7 +58,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const marksEntered = await ClassTestMark.countDocuments({ test_id: id });
     const pendingMarks = Math.max(0, totalStudents - marksEntered);
 
-    return NextResponse.json({
+    return sendCompressedJson(req, {
       success: true,
       data: {
         ...test,
@@ -65,7 +67,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         marksEntered,
         pendingMarks,
       },
-    });
+    }, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
   } catch (err: any) {
     console.error("[GET /api/assessments/[id]]", err);
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
@@ -112,6 +114,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     await test.save();
 
+    invalidateAssessmentsCache(schoolId);
+
     return NextResponse.json({ success: true, data: test });
   } catch (err: any) {
     console.error("[PUT /api/assessments/[id]]", err);
@@ -138,6 +142,8 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
     // Also remove all marks for this test
     await ClassTestMark.deleteMany({ test_id: id });
+
+    invalidateAssessmentsCache(schoolId);
 
     return NextResponse.json({ success: true, message: "Test deleted successfully" });
   } catch (err: any) {

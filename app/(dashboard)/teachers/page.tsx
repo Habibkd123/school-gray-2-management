@@ -45,6 +45,26 @@ function getAvatar(name: string, photo_url?: string) {
 }
 
 let _cachedTeacherFilters: any = null;
+let _teacherFiltersPromise: Promise<any> | null = null;
+
+function getInitialTeacherFilters() {
+  if (_cachedTeacherFilters) return _cachedTeacherFilters;
+  if (typeof window !== "undefined") {
+    try {
+      const stored = sessionStorage.getItem("sm_teacher_filters");
+      if (stored) {
+        _cachedTeacherFilters = JSON.parse(stored);
+        return _cachedTeacherFilters;
+      }
+    } catch {}
+  }
+  return {
+    academicYears: [],
+    departments: [],
+    designations: [],
+    statuses: []
+  };
+}
 
 export default function TeachersPage() {
   const router = useRouter();
@@ -59,10 +79,10 @@ export default function TeachersPage() {
     fetchTeachers
   } = useTeachers({ skip: true });
 
-  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
+  const [isInitialLoad, setIsInitialLoad] = React.useState(() => teachers.length === 0);
   React.useEffect(() => {
-    if (!isLoading && isInitialLoad) setIsInitialLoad(false);
-  }, [isLoading]);
+    if (teachers.length > 0 || !isLoading) setIsInitialLoad(false);
+  }, [teachers.length, isLoading]);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -96,25 +116,40 @@ export default function TeachersPage() {
     departments: string[];
     designations: string[];
     statuses: string[];
-  }>(_cachedTeacherFilters || {
-    academicYears: [],
-    departments: [],
-    designations: [],
-    statuses: []
-  });
+  }>(getInitialTeacherFilters);
 
-  // Fetch unique filter values from backend on mount
+  // Fetch unique filter values from backend on mount (deduped in-flight & background revalidated)
   useEffect(() => {
-    if (_cachedTeacherFilters) return;
-    fetch("/api/teachers/filters", { headers: getAuthHeaders() })
-      .then(res => res.json())
-      .then(res => {
-        if (res.success && res.data) {
-          _cachedTeacherFilters = res.data;
-          setFilterOptions(res.data);
-        }
-      })
-      .catch(err => console.error("Error loading filters:", err));
+    const initial = getInitialTeacherFilters();
+    if (initial.departments.length > 0) {
+      setFilterOptions(initial);
+    }
+    const loadFilters = async () => {
+      if (!_teacherFiltersPromise) {
+        _teacherFiltersPromise = (async () => {
+          try {
+            const res = await fetch("/api/teachers/filters", { headers: getAuthHeaders() });
+            const json = await res.json();
+            if (json.success && json.data) {
+              _cachedTeacherFilters = json.data;
+              try {
+                sessionStorage.setItem("sm_teacher_filters", JSON.stringify(json.data));
+              } catch {}
+              return json.data;
+            }
+          } catch (err) {
+            console.error("Error loading filters:", err);
+            _teacherFiltersPromise = null;
+          }
+          return null;
+        })();
+      }
+      const data = await _teacherFiltersPromise;
+      if (data) {
+        setFilterOptions(data);
+      }
+    };
+    loadFilters();
   }, []);
 
   // Debounce search input to limit API calls

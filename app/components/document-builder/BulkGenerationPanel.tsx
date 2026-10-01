@@ -77,7 +77,7 @@ export function BulkGenerationPanel() {
   useEffect(() => {
     if (!selectedClassId) { setStudents([]); setSelectedStudents([]); return; }
     setStudentsLoading(true);
-    fetch(`/api/students?class_id=${selectedClassId}&limit=200`, { headers: getAuthHeaders() })
+    fetch(`/api/students?class_id=${selectedClassId}&limit=100`, { headers: getAuthHeaders() })
       .then(r => r.json())
       .then(d => {
         const list = d.data?.students || d.students || d.data || [];

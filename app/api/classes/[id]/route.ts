@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import Class, { computeSortWeight } from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
+import { invalidateServerClassesCache } from "../route";
 import {
   Student,
   Attendance,
@@ -77,6 +78,8 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     if (!updated) {
       return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
     }
+
+    invalidateServerClassesCache(String(schoolId));
 
     return NextResponse.json({ success: true, data: updated });
   } catch (err: unknown) {
@@ -154,6 +157,8 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     if (!deleted) {
       return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
     }
+
+    invalidateServerClassesCache(String(schoolId));
 
     return NextResponse.json({ success: true, message: "Class deleted successfully" });
   } catch (err: unknown) {

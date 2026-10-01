@@ -47,10 +47,42 @@ export default function SubjectAssignmentDetailsPage() {
   const streamId = searchParams.get("streamId") || "";
   const year = searchParams.get("year") || "";
 
-  const [loading, setLoading] = useState(true);
+  const ssKey = `sm_sadetail_${classId}_${year}_${streamId}`;
+
+  const [loading, setLoading] = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      const raw = sessionStorage.getItem(`sm_sadetail_${classId}_${year}_${streamId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.timestamp < 60_000) return false;
+      }
+    } catch {}
+    return true;
+  });
   const [error, setError] = useState<string | null>(null);
-  const [subjects, setSubjects] = useState<SubjectDetail[]>([]);
-  const [teacherAssignments, setTeacherAssignments] = useState<TeacherAssignment[]>([]);
+  const [subjects, setSubjects] = useState<SubjectDetail[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = sessionStorage.getItem(`sm_sadetail_${classId}_${year}_${streamId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.timestamp < 60_000) return parsed.subjects || [];
+      }
+    } catch {}
+    return [];
+  });
+  const [teacherAssignments, setTeacherAssignments] = useState<TeacherAssignment[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const raw = sessionStorage.getItem(`sm_sadetail_${classId}_${year}_${streamId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.timestamp < 60_000) return parsed.teacherAssignments || [];
+      }
+    } catch {}
+    return [];
+  });
 
   const fetchData = async () => {
     if (!classId || !year) {
@@ -58,31 +90,48 @@ export default function SubjectAssignmentDetailsPage() {
       setLoading(false);
       return;
     }
-    setLoading(true);
+    
+    // Check if fresh cache exists to avoid spinner
+    try {
+      const raw = sessionStorage.getItem(ssKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Date.now() - parsed.timestamp < 15_000) {
+          setSubjects(parsed.subjects);
+          setTeacherAssignments(parsed.teacherAssignments);
+          setLoading(false);
+          return;
+        }
+      }
+    } catch {}
+
     setError(null);
     try {
-      // Fetch Subject Assignments
-      const subjRes = await fetch(
-        `/api/subject-assignment?class_id=${classId}&academic_year=${year}&limit=200`,
-        { headers: getAuthHeaders() }
-      );
-      const subjData = await subjRes.json();
+      // Fetch Subject Assignments and Teacher Assignments in parallel
+      const [subjRes, teacherRes] = await Promise.all([
+        fetch(
+          `/api/subject-assignment?class_id=${encodeURIComponent(classId)}&academic_year=${encodeURIComponent(year)}&limit=200`,
+          { headers: getAuthHeaders() }
+        ),
+        fetch(
+          `/api/teacher-assignment?class_id=${encodeURIComponent(classId)}&academic_year=${encodeURIComponent(year)}&limit=200`,
+          { headers: getAuthHeaders() }
+        )
+      ]);
+
+      const [subjData, teacherData] = await Promise.all([
+        subjRes.json(),
+        teacherRes.json()
+      ]);
+
       if (!subjRes.ok || !subjData.success) {
         throw new Error(subjData.message || "Failed to fetch subject assignments.");
       }
-
-      // Fetch Teacher Assignments
-      const teacherRes = await fetch(
-        `/api/teacher-assignment?class_id=${classId}&academic_year=${year}&limit=200`,
-        { headers: getAuthHeaders() }
-      );
-      const teacherData = await teacherRes.json();
       if (!teacherRes.ok || !teacherData.success) {
         throw new Error(teacherData.message || "Failed to fetch teacher assignments.");
       }
 
-      const allSubjects: SubjectDetail[] = subjData.data.assignments || [];
-      // Filter by Stream if streamId parameter is provided
+      const allSubjects: SubjectDetail[] = subjData.data?.assignments || [];
       const filteredSubjects = streamId
         ? allSubjects.filter(
           (s) =>
@@ -91,8 +140,18 @@ export default function SubjectAssignmentDetailsPage() {
         )
         : allSubjects;
 
+      const fetchedTeacherAssignments = teacherData.data?.assignments || [];
+
+      try {
+        sessionStorage.setItem(ssKey, JSON.stringify({
+          subjects: filteredSubjects,
+          teacherAssignments: fetchedTeacherAssignments,
+          timestamp: Date.now()
+        }));
+      } catch {}
+
       setSubjects(filteredSubjects);
-      setTeacherAssignments(teacherData.data.assignments || []);
+      setTeacherAssignments(fetchedTeacherAssignments);
     } catch (err: any) {
       setError(err.message || "An error occurred while loading details.");
     } finally {
