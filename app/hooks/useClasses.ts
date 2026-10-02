@@ -9,7 +9,7 @@ import { cacheSync, invalidateCache as syncInvalidateCache } from "@/lib/utils/c
 // ─── Types ────────────────────────────────────────────────────────
 export interface ApiClass {
   _id: string;
-  school_id?: string;
+  school_id?: string | { _id: string; name: string };
   name: string;
   section: string;
   class_code?: string;

@@ -34,7 +34,7 @@ function setStoredGradeRep(key: string, data: any[]) {
 export default function GradeReportPage() {
   const { results, isLoading: resultsLoading, fetchResults } = useResults({ skip: true });
   const { exams } = useExams();
-  const { students } = useStudents({ skip: true });
+  const { students, fetchStudents } = useStudents({ skip: true });
   const { classes } = useClasses();
 
   const [searchTerm, setSearchTerm] = useState("");
