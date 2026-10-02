@@ -7,12 +7,34 @@ import {
 import { useClasses } from "../../../hooks/useClasses";
 import { useStudents } from "../../../hooks/useStudents";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { useAuth } from "@/app/context/auth";
 import ReportTabs from "../ReportTabs";
 import { PrintService } from "@/app/lib/print-service";
 
 export default function ClassReportPage() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
   const { classes, isLoading, fetchClasses } = useClasses();
   const { students, fetchStudents } = useStudents({ skip: true });
+
+  const [globalSchoolId, setGlobalSchoolId] = useState("all");
+  const [topLevelSchools, setTopLevelSchools] = useState<{_id: string, name: string}[]>([]);
+
+  useEffect(() => {
+    fetchClasses({ school_id: globalSchoolId });
+    fetchStudents({ school_id: globalSchoolId, limit: 500 });
+
+    if (isSuperAdmin) {
+      fetch("/api/schools", { headers: getAuthHeaders() })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setTopLevelSchools(data.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [fetchClasses, fetchStudents, isSuperAdmin, globalSchoolId]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -30,10 +52,23 @@ export default function ClassReportPage() {
   const [activeTab, setActiveTab] = useState<"overview" | "roster" | "tests">("overview");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
 
+  const [filterSchool, setFilterSchool] = useState("");
+
   const sections = useMemo(() => {
     const list = new Set(classes.map((c) => c.section).filter(Boolean));
     return Array.from(list) as string[];
   }, [classes]);
+
+  const schools = useMemo(() => {
+    if (!isSuperAdmin) return [];
+    const map = new Map();
+    classes.forEach((c) => {
+      if (c.school_id && typeof c.school_id === 'object' && c.school_id._id) {
+        map.set(c.school_id._id, c.school_id.name);
+      }
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ _id: id, name }));
+  }, [classes, isSuperAdmin]);
 
   const getStudentsInClass = (classId: string) =>
     students.filter((s) => {
@@ -48,9 +83,10 @@ export default function ClassReportPage() {
         c.section.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c._id.toLowerCase().includes(searchTerm.toLowerCase());
       const matchSection = !filterSection || c.section === filterSection;
-      return matchSearch && matchSection;
+      const matchSchool = !filterSchool || (typeof c.school_id === 'object' ? c.school_id._id === filterSchool : c.school_id === filterSchool);
+      return matchSearch && matchSection && matchSchool;
     });
-  }, [classes, searchTerm, filterSection]);
+  }, [classes, searchTerm, filterSection, filterSchool]);
 
   const sortedClasses = useMemo(() => {
     const list = [...filteredClasses];
@@ -75,8 +111,8 @@ export default function ClassReportPage() {
   const modalStudents = selectedClassId ? getStudentsInClass(selectedClassId) : [];
 
   const handleRefresh = () => {
-    fetchClasses();
-    fetchStudents();
+    fetchClasses({ school_id: globalSchoolId });
+    fetchStudents({ school_id: globalSchoolId, limit: 500 });
   };
 
   // Fetch detailed class statistics from database
@@ -181,6 +217,18 @@ export default function ClassReportPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          {isSuperAdmin && topLevelSchools.length > 0 && (
+            <select
+              value={globalSchoolId}
+              onChange={(e) => setGlobalSchoolId(e.target.value)}
+              className="px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg outline-none cursor-pointer"
+            >
+              <option value="all">All Schools</option>
+              {topLevelSchools.map((sch) => (
+                <option key={sch._id} value={sch._id}>{sch.name}</option>
+              ))}
+            </select>
+          )}
           <button
             onClick={handleRefresh}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer"
@@ -261,6 +309,26 @@ export default function ClassReportPage() {
                       <h3 className="text-[15px] font-bold text-foreground dark:text-slate-100">Filter</h3>
                     </div>
                     <div className="p-4 space-y-4">
+                      {isSuperAdmin && (
+                        <div className="space-y-1.5">
+                          <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">School</label>
+                          <select
+                            value={filterSchool}
+                            onChange={(e) => {
+                              setFilterSchool(e.target.value);
+                              setPage(1);
+                            }}
+                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer"
+                          >
+                            <option value="">All Schools</option>
+                            {schools.map((sch) => (
+                              <option key={sch._id} value={sch._id}>
+                                {sch.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                       <div className="space-y-1.5">
                         <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Section</label>
                         <select
@@ -360,6 +428,9 @@ export default function ClassReportPage() {
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">ID</th>
+                {isSuperAdmin && (
+                  <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">School</th>
+                )}
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Section</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">No of Students</th>
@@ -369,13 +440,13 @@ export default function ClassReportPage() {
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-slate-400">
+                  <td colSpan={isSuperAdmin ? 6 : 5} className="px-6 py-10 text-center text-slate-400">
                     <Loader2 className="w-5 h-5 animate-spin inline" />
                   </td>
                 </tr>
               ) : paginatedClasses.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-10 text-center text-slate-400">
+                  <td colSpan={isSuperAdmin ? 6 : 5} className="px-6 py-10 text-center text-slate-400">
                     No classes found.
                   </td>
                 </tr>
@@ -386,6 +457,11 @@ export default function ClassReportPage() {
                     className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors"
                   >
                     <td className="px-6 py-4 font-semibold text-primary">{cls._id.slice(-6).toUpperCase()}</td>
+                    {isSuperAdmin && (
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                        {typeof cls.school_id === 'object' ? cls.school_id?.name : "—"}
+                      </td>
+                    )}
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-bold">{cls.name}</td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{cls.section}</td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-semibold">

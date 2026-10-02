@@ -62,6 +62,10 @@ export default function GradeReportPage() {
   }, [selectedClass, selectedExam, fetchResults]);
 
   React.useEffect(() => {
+    fetchStudents({ school_id: "all", limit: 500 });
+  }, [fetchStudents]);
+
+  React.useEffect(() => {
     if (results.length > 0) {
       setStoredGradeRep(cacheKey, results);
       if (!selectedClass && !selectedExam) {

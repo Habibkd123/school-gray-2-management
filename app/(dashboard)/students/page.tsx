@@ -8,13 +8,14 @@ import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { useAppState } from "@/app/context/store";
 import { Modal } from "@/app/components/ui/modal";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/app/context/auth";
 import { CollectFeesModal } from "@/app/components/modals/CollectFeesModal";
 import { HIDE_FEES_FEATURE } from "@/lib/permissions";
 import { LoginDetailsModal } from "@/app/components/modals/LoginDetailsModal";
 import { ResetPasswordModal } from "@/app/components/modals/ResetPasswordModal";
 import { ConfirmModal } from "@/app/components/modals/ConfirmModal";
-import { Loader2, AlertCircle, Lock } from "lucide-react";
+import { Loader2, AlertCircle, Lock, Building2 } from "lucide-react";
 import {
   Search,
   Plus,
@@ -93,9 +94,37 @@ function getInitialFilterMetadata() {
 }
 
 export default function StudentsPage() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
+  const searchParams = useSearchParams();
+  const paramSchoolId = searchParams?.get("school_id") || "all";
+
   const { academicYear } = useAppState();
   const { enableSections } = useAcademicConfig();
   const { students, total, isLoading, error, createStudent, updateStudent: updateStudentApi, deleteStudent: deleteStudentApi, fetchStudents } = useStudents({ skip: true });
+
+  const [schools, setSchools] = useState<any[]>([]);
+  const [schoolFilter, setSchoolFilter] = useState<string>(paramSchoolId);
+
+  // Sync if URL query param changes
+  React.useEffect(() => {
+    const q = searchParams?.get("school_id");
+    if (q) setSchoolFilter(q);
+  }, [searchParams]);
+
+  // Fetch schools list for Super Admin
+  React.useEffect(() => {
+    if (isSuperAdmin) {
+      fetch("/api/schools", { headers: getAuthHeaders() })
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success && Array.isArray(json.data)) {
+            setSchools(json.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [isSuperAdmin]);
 
   const [isInitialLoad, setIsInitialLoad] = React.useState(true);
 
@@ -108,7 +137,7 @@ export default function StudentsPage() {
   const { classes } = useClasses({ filterByYear: true });
 
   const router = useRouter();
-  const activeRole = "admin";
+  const activeRole = isSuperAdmin ? "super_admin" : "admin";
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -210,8 +239,9 @@ export default function StudentsPage() {
       section: sectionFilter,
       house: houseFilter,
       admissionStatus: admissionStatusFilter,
+      school_id: schoolFilter !== "all" ? schoolFilter : undefined,
     });
-  }, [fetchStudents, debouncedSearch, classFilter, genderFilter, statusFilter, selectedDateRange, selectedSort, page, academicYear, academicYearFilter, sectionFilter, houseFilter, admissionStatusFilter]);
+  }, [fetchStudents, debouncedSearch, classFilter, genderFilter, statusFilter, selectedDateRange, selectedSort, page, academicYear, academicYearFilter, sectionFilter, houseFilter, admissionStatusFilter, schoolFilter]);
 
   const handleClassFilterChange = (val: string) => {
     setClassFilter(val);
@@ -441,6 +471,19 @@ export default function StudentsPage() {
         </div>
       )
     },
+    ...(isSuperAdmin ? [{
+      header: "School / Campus",
+      accessorKey: "school_id" as any,
+      render: (s: any) => {
+        const schoolName = typeof s.school_id === "object" ? s.school_id?.name : "Campus";
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+            <Building2 className="w-3 h-3 text-amber-500 shrink-0" />
+            <span className="truncate max-w-[130px]">{schoolName}</span>
+          </span>
+        );
+      }
+    }] : []),
     { header: "Class", accessorKey: "classNameStr" },
     ...(enableSections ? [{ header: "Section", accessorKey: "section" as const }] : []),
     { header: "Gender", accessorKey: "gender" },
@@ -543,13 +586,13 @@ export default function StudentsPage() {
   }
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6" onClick={() => setActiveDropdown(null)}>
+    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 font-roboto" onClick={() => setActiveDropdown(null)}>
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Students List</h1>
+          <h1 className="page-title">{isSuperAdmin ? "Network Students Directory" : "Students List"}</h1>
           <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
-            <span>Dashboard</span>
+            <span>{isSuperAdmin ? "Super Admin" : "Dashboard"}</span>
             <span>/</span>
             <span>Student Management</span>
             <span>/</span>
@@ -572,6 +615,7 @@ export default function StudentsPage() {
               section: sectionFilter,
               house: houseFilter,
               admissionStatus: admissionStatusFilter,
+              school_id: schoolFilter !== "all" ? schoolFilter : undefined,
             })}
             className="btn btn-outline p-2 w-9 h-9"
             title="Refresh List"
@@ -606,6 +650,48 @@ export default function StudentsPage() {
         </div>
       </div>
 
+      {/* Super Admin Multi-Campus Banner */}
+      {isSuperAdmin && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-transparent border border-amber-500/25 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
+          <div className="flex items-center gap-3.5">
+            <div className="p-3 bg-amber-500/15 text-amber-500 rounded-xl shrink-0">
+              <Building2 className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">
+                  Multi-Campus Student Network
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-700 dark:text-amber-400">
+                  Global Overview
+                </span>
+              </div>
+              <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Monitoring student records across all institutions. Filter by campus or view total global enrollment.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0 bg-white/70 dark:bg-slate-900/80 p-1.5 rounded-xl border border-amber-500/20">
+            <span className="text-[12px] font-bold text-slate-600 dark:text-slate-300 pl-2">School:</span>
+            <select
+              value={schoolFilter}
+              onChange={(e) => {
+                setSchoolFilter(e.target.value);
+                setPage(1);
+              }}
+              className="px-3 py-1.5 text-[13px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 outline-none cursor-pointer focus:ring-2 focus:ring-amber-500/20"
+            >
+              <option value="all">🌐 All Schools ({total} Students)</option>
+              {schools.map((s) => (
+                <option key={s._id} value={s._id}>
+                  🏫 {s.name} {typeof s.studentsCount === "number" ? `(${s.studentsCount})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
 
       {/* Directory Table Card */}
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow text-left">
@@ -968,6 +1054,18 @@ export default function StudentsPage() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Campus Badge for Super Admin */}
+                      {isSuperAdmin && (
+                        <div className="mb-3">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                            <Building2 className="w-3 h-3 text-amber-500 shrink-0" />
+                            <span className="truncate max-w-[200px]">
+                              {typeof student.school_id === "object" ? (student.school_id as any)?.name : "Campus"}
+                            </span>
+                          </span>
+                        </div>
+                      )}
 
                       {/* Profile info */}
                       <div className="flex items-center gap-4 mb-5 cursor-pointer" onClick={() => router.push(`/students/${student._id}`)}>

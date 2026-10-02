@@ -173,7 +173,26 @@ const BACKUP_MODULES: BackupModule[] = [
 ];
 
 // ── Page ─────────────────────────────────────────────────────────────────────
+import { useAuth } from "@/app/context/auth";
+
 export default function SystemBackupPage() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
+  const [globalSchoolId, setGlobalSchoolId] = useState("all");
+  const [topLevelSchools, setTopLevelSchools] = useState<{_id: string, name: string}[]>([]);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetch("/api/schools", { headers: getAuthHeaders() })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setTopLevelSchools(data.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [isSuperAdmin]);
   const [selectedModule, setSelectedModule] = useState<string>("full_backup");
   const [recipientEmail, setRecipientEmail]  = useState<string>("");
   const [academicYear, setAcademicYear]       = useState<string>("2026-2027");
@@ -210,6 +229,7 @@ export default function SystemBackupPage() {
           action,
           email: recipientEmail,
           academicYear,
+          school_id: globalSchoolId !== "all" ? globalSchoolId : undefined
         }),
       });
 
@@ -292,6 +312,20 @@ export default function SystemBackupPage() {
               Generate instantly formatted PDF backup reports for any school module. Select a category —
               if no records exist you&apos;ll be notified immediately. Download or send to email with one click.
             </p>
+            {isSuperAdmin && topLevelSchools.length > 0 && (
+              <div className="pt-2">
+                <select
+                  value={globalSchoolId}
+                  onChange={(e) => setGlobalSchoolId(e.target.value)}
+                  className="px-3 py-2 bg-slate-800/80 border border-slate-700 text-slate-200 text-[13px] font-medium rounded-lg outline-none cursor-pointer w-48"
+                >
+                  <option value="all">All Schools</option>
+                  {topLevelSchools.map((sch) => (
+                    <option key={sch._id} value={sch._id}>{sch.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 

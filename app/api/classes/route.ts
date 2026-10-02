@@ -73,7 +73,16 @@ export async function GET(req: NextRequest) {
     const limit         = isAll ? 100000 : Math.min(500, Math.max(1, parseInt(limitParam || "10")));
     const skip          = isAll ? 0 : (page - 1) * limit;
 
-    const query: Record<string, any> = { school_id: schoolId as string };
+    const query: Record<string, any> = {};
+    if (user.role === "super_admin") {
+      const paramSchoolId = url.searchParams.get("school_id");
+      if (paramSchoolId && paramSchoolId !== "all") {
+        query.school_id = paramSchoolId;
+      }
+    } else {
+      query.school_id = schoolId as string;
+    }
+    
     const andFilters: any[] = [];
 
     // Teacher role: restrict to classes where they are the class teacher OR assigned as Subject/Co-class teacher
@@ -128,6 +137,7 @@ export async function GET(req: NextRequest) {
     const [total, classes] = await Promise.all([
       Class.countDocuments(query),
       Class.find(query)
+        .populate("school_id", "name slug")
         .populate("class_teacher_id", "name employee_id photo_url designation department status is_active")
         .sort({ sort_weight: sortOrder, section: 1 })  // DB-level custom school order
         .skip(skip)
@@ -136,6 +146,21 @@ export async function GET(req: NextRequest) {
     ]);
 
     const includeStatsParam = url.searchParams.get("include_stats");
+    // Fast return if no stats requested
+    if (includeStatsParam === "false") {
+      _classesInFlight.delete(cacheKey);
+      const resData = {
+        success: true,
+        data: { classes, total, page, limit, totalPages: Math.ceil(total / limit) }
+      };
+      _serverClassesCache.set(cacheKey, { data: resData, expiresAt: Date.now() + CLASSES_CACHE_TTL_MS });
+      return sendConditionalJson(
+        req,
+        resData,
+        { cacheControl: "private, max-age=60, stale-while-revalidate=120" }
+      );
+    }
+
     // Only compute stats if explicitly requested, or for paged table requests where stats are displayed
     const shouldComputeStats =
       includeStatsParam === "true" ||

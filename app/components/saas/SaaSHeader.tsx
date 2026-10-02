@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { GraduationCap, LogIn, Menu, X, ArrowRight, Sparkles } from "lucide-react";
+import { GraduationCap, Menu, X, ArrowRight, Sparkles } from "lucide-react";
 
 interface SaaSHeaderProps {
   onOpenDemo: () => void;
@@ -100,14 +100,6 @@ export function SaaSHeader({ onOpenDemo }: SaaSHeaderProps) {
 
             {/* Desktop Actions */}
             <div className="hidden sm:flex items-center gap-3">
-              <Link
-                href="/login"
-                className="px-3.5 py-2 text-xs font-semibold text-slate-200 hover:text-white border border-slate-700/80 hover:border-slate-500 rounded-xl transition-all flex items-center gap-1.5 bg-slate-900/80 hover:bg-slate-900"
-              >
-                <LogIn className="w-3.5 h-3.5 text-amber-400" />
-                <span>Portal Login</span>
-              </Link>
-
               <button
                 onClick={onOpenDemo}
                 className="px-4 py-2 text-xs font-bold text-slate-950 bg-amber-400 hover:bg-amber-300 rounded-xl shadow-md shadow-amber-400/10 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer flex items-center gap-1.5"
@@ -179,13 +171,6 @@ export function SaaSHeader({ onOpenDemo }: SaaSHeaderProps) {
             </nav>
 
             <div className="pt-3 border-t border-slate-800 flex flex-col gap-2">
-              <Link
-                href="/login"
-                className="w-full py-2.5 px-4 text-center text-sm font-medium text-slate-200 border border-slate-700 rounded-xl bg-slate-900 flex items-center justify-center gap-2"
-              >
-                <LogIn className="w-4 h-4 text-amber-400" />
-                <span>Portal Login</span>
-              </Link>
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);

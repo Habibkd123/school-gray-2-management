@@ -71,11 +71,6 @@ export function SaaSFooter() {
                   Subscription Plans
                 </a>
               </li>
-              <li>
-                <Link href="/login" className="hover:text-amber-400 transition-colors">
-                  School Staff Login
-                </Link>
-              </li>
             </ul>
           </div>
 

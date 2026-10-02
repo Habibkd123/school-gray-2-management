@@ -85,7 +85,13 @@ function setStoredFinanceSalaries(key: string, data: { payments: any[]; teachers
   } catch {}
 }
 
+import { useAuth } from "@/app/context/auth";
+
 export default function FinanceReportPage() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
+  const [globalSchoolId, setGlobalSchoolId] = useState("all");
+  const [topLevelSchools, setTopLevelSchools] = useState<{_id: string, name: string}[]>([]);
   const { classes, isLoading: isClassesLoading } = useClasses();
 
   // Active Tab: student_fees / teacher_salary
@@ -138,6 +144,9 @@ export default function FinanceReportPage() {
         class_id: selectedClass,
         status: selectedStatus,
       });
+      if (globalSchoolId && globalSchoolId !== "all") {
+        params.set("school_id", globalSchoolId);
+      }
       const res = await fetch(`/api/fees?${params.toString()}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
@@ -172,9 +181,12 @@ export default function FinanceReportPage() {
         params.set("start_date", startDate);
         params.set("end_date", endDate);
       }
+      if (globalSchoolId && globalSchoolId !== "all") {
+        params.set("school_id", globalSchoolId);
+      }
       const [salRes, teachers] = await Promise.all([
         fetch(`/api/salaries?${params.toString()}`, { headers: getAuthHeaders() }),
-        TeacherService.getAllTeachers(),
+        fetch(`/api/teachers${globalSchoolId !== "all" ? `?school_id=${globalSchoolId}` : ""}`, { headers: getAuthHeaders() }).then(res => res.json()).then(d => d.data || []),
       ]);
       const salData = await salRes.json();
       const payments = salData.success ? (salData.data?.payments || salData.data || []) : [];
@@ -197,7 +209,20 @@ export default function FinanceReportPage() {
     } else {
       fetchTeacherSalaries();
     }
-  }, [activeTab, fetchStudentFees, fetchTeacherSalaries]);
+  }, [activeTab, fetchStudentFees, fetchTeacherSalaries, globalSchoolId]);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetch("/api/schools", { headers: getAuthHeaders() })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setTopLevelSchools(data.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [isSuperAdmin]);
 
   // Student Fees aggregates (filtered locally by date if selected)
   const studentDuesAggregates = useMemo(() => {
@@ -363,6 +388,18 @@ export default function FinanceReportPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {isSuperAdmin && topLevelSchools.length > 0 && (
+            <select
+              value={globalSchoolId}
+              onChange={(e) => setGlobalSchoolId(e.target.value)}
+              className="px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg outline-none cursor-pointer"
+            >
+              <option value="all">All Schools</option>
+              {topLevelSchools.map((sch) => (
+                <option key={sch._id} value={sch._id}>{sch.name}</option>
+              ))}
+            </select>
+          )}
           <button
             onClick={() => {
               if (activeTab === "student_fees") fetchStudentFees();

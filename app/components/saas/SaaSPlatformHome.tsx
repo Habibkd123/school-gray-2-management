@@ -21,12 +21,12 @@ export function SaaSPlatformHome({ partnerSchools }: SaaSPlatformHomeProps) {
   const [demoModalOpen, setDemoModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-indigo-600 selection:text-white overflow-x-hidden">
       {/* Header & Announcement Ribbon */}
       <SaaSHeader onOpenDemo={() => setDemoModalOpen(true)} />
 
       {/* Main SaaS Content */}
-      <main>
+      <main className="overflow-x-hidden">
         {/* Hero Section */}
         <SaaSHero onOpenDemo={() => setDemoModalOpen(true)} />
         {/* Live Role Portal Showcase */}

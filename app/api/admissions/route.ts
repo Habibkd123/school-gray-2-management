@@ -24,16 +24,20 @@ export function invalidateAdmissionsCache(schoolId?: string) {
 
 
 export async function GET(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin"]);
+  const { schoolId, role, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
-  if (!schoolId) return NextResponse.json({ success: false, message: "No school context" }, { status: 400 });
+
+  const url = new URL(req.url);
+  const targetSchoolId = schoolId || url.searchParams.get("school_id");
+  if (!targetSchoolId && role !== "super_admin") {
+    return NextResponse.json({ success: false, message: "No school context" }, { status: 400 });
+  }
 
   try {
     await connectDB();
     void [Class.modelName];
 
-    const url = new URL(req.url);
-    const cacheKey = `${schoolId}:${url.searchParams.toString()}`;
+    const cacheKey = `${targetSchoolId || "super_all"}:${url.searchParams.toString()}`;
     const cached = _admissionsListCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
       return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
@@ -47,7 +51,10 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(1000, Math.max(1, parseInt(url.searchParams.get("limit") || "10")));
     const skip = (page - 1) * limit;
 
-    const query: Record<string, any> = { school_id: schoolId };
+    const query: Record<string, any> = {};
+    if (targetSchoolId) {
+      query.school_id = targetSchoolId;
+    }
 
     if (status && status !== "all") {
       query.status = status;

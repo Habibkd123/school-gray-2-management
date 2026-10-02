@@ -46,7 +46,20 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
 
   const superAdminLinks = [
     { name: "Overview", href: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
+    { name: "Network Directory", href: "/network-directory", icon: <Layers className="w-4 h-4" /> },
     { name: "All Schools", href: "/schools", icon: <Building2 className="w-4 h-4" /> },
+    { name: "All Students", href: "/students", icon: <GraduationCap className="w-4 h-4" /> },
+    { name: "All Teachers", href: "/teachers", icon: <Users className="w-4 h-4" /> },
+    { name: "Admissions", href: "/admissions-admin", icon: <ClipboardList className="w-4 h-4" /> },
+    {
+      name: "Reports", icon: <BarChart className="w-4 h-4" />, subItems: [
+        { name: "Student Reports", href: "/reports/student-report" },
+        { name: "Teacher Reports", href: "/reports/teacher-report" },
+        { name: "Class Reports", href: "/reports/class-report" },
+        { name: "Finance Reports", href: "/reports/finance" },
+        { name: "Backup & Export", href: "/settings/backup" },
+      ]
+    },
   ];
 
   const adminLinks = [

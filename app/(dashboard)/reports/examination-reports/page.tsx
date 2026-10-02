@@ -22,6 +22,10 @@ export default function ExaminationReportPage() {
   const { classes } = useClasses();
   const { students, fetchStudents } = useStudents({ skip: true });
 
+  React.useEffect(() => {
+    if(fetchStudents) fetchStudents({ school_id: "all", limit: 500 });
+  }, [fetchStudents]);
+
   const [selectedYear, setSelectedYear] = useState("2026");
   const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");

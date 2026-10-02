@@ -17,12 +17,20 @@ export function invalidateAdmissionsStatsCache(schoolId?: string) {
 }
 
 export async function GET(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin"]);
+  const { schoolId, role, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
-  if (!schoolId) return NextResponse.json({ success: false, message: "No school context" }, { status: 400 });
+
+  let targetSchoolId = req.nextUrl.searchParams.get("school_id");
+  if (role !== "super_admin") {
+    targetSchoolId = schoolId as string;
+  }
+  
+  if (!targetSchoolId && role !== "super_admin") {
+    return NextResponse.json({ success: false, message: "No school context" }, { status: 400 });
+  }
 
   // Cache check
-  const cacheKey = String(schoolId);
+  const cacheKey = targetSchoolId ? String(targetSchoolId) : "super_all";
   const cached = _statsCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=30, stale-while-revalidate=60" });
@@ -35,23 +43,23 @@ export async function GET(req: NextRequest) {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const schoolObjectId = new mongoose.Types.ObjectId(schoolId);
+    const schoolFilter: any = targetSchoolId ? { school_id: new mongoose.Types.ObjectId(targetSchoolId) } : {};
 
     const [statusGroups, totalCount, todayCount, thisMonthCount, recents] = await Promise.all([
       Admission.aggregate([
-        { $match: { school_id: schoolObjectId } },
+        ...(targetSchoolId ? [{ $match: schoolFilter }] : []),
         { $group: { _id: "$status", count: { $sum: 1 } } }
       ]),
-      Admission.countDocuments({ school_id: schoolObjectId }),
+      Admission.countDocuments(schoolFilter),
       Admission.countDocuments({
-        school_id: schoolObjectId,
+        ...schoolFilter,
         submission_date: { $gte: startOfToday }
       }),
       Admission.countDocuments({
-        school_id: schoolObjectId,
+        ...schoolFilter,
         submission_date: { $gte: startOfMonth }
       }),
-      Admission.find({ school_id: schoolObjectId })
+      Admission.find(schoolFilter)
         .select("_id application_no student_name phone submission_date status")
         .sort({ submission_date: -1, createdAt: -1 })
         .limit(5)

@@ -8,7 +8,7 @@ import { cacheSync, invalidateCache as syncInvalidateCache } from "@/lib/utils/c
 // ─── Types ────────────────────────────────────────────────────────
 export interface ApiStudent {
   _id: string;
-  school_id: string;
+  school_id: { _id: string; name: string; subdomain?: string; slug?: string; logo_url?: string } | string;
   class_id: { _id: string; name: string; section: string } | string;
   name: string;
   roll_no?: string;
@@ -243,6 +243,7 @@ export function useStudents(options?: { skip?: boolean }) {
       section?: string;
       house?: string;
       admissionStatus?: string;
+      school_id?: string;
     },
     arg2?: string
   ) => {
@@ -260,6 +261,7 @@ export function useStudents(options?: { skip?: boolean }) {
     let section = "";
     let house = "";
     let admissionStatus = "";
+    let school_id = "";
 
     const isObject = arg1 && typeof arg1 === "object";
     const p = (isObject ? arg1 : {}) as any;
@@ -282,6 +284,7 @@ export function useStudents(options?: { skip?: boolean }) {
       section = p.section ?? "";
       house = p.house ?? "";
       admissionStatus = p.admissionStatus ?? "";
+      school_id = p.school_id ?? "";
     } else {
       search = (arg1 as string) ?? "";
       classId = arg2 ?? "";
@@ -291,7 +294,7 @@ export function useStudents(options?: { skip?: boolean }) {
 
     // academic_year alone does NOT count as a filter — it's the default context key.
     // Only real search/filter params should bypass the module-level cache.
-    const isFiltered = !!(search || classId || streamId || sectionId ||
+    const isFiltered = !!(search || classId || streamId || sectionId || school_id ||
       (gender && gender !== "all") ||
       (status && status !== "all") ||
       (dateRange && dateRange !== "All Time") ||
@@ -299,7 +302,7 @@ export function useStudents(options?: { skip?: boolean }) {
       (section && section !== "all") ||
       (house && house !== "all") ||
       (admissionStatus && admissionStatus !== "all") ||
-      (isObject && (p.page || p.search || p.classId || p.streamId || p.sectionId || p.gender || p.status || p.section || p.house || p.admissionStatus)));
+      (isObject && (p.page || p.search || p.classId || p.streamId || p.sectionId || p.gender || p.status || p.section || p.house || p.admissionStatus || p.school_id)));
     const isFresh = _studentsCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
 
     // Use cache only for unfiltered legacy fetch
@@ -311,6 +314,7 @@ export function useStudents(options?: { skip?: boolean }) {
     }
 
     const params = new URLSearchParams();
+    if (school_id && school_id !== "all") params.set("school_id", school_id);
     if (search) params.set("search", search);
     if (classId && classId !== "all") params.set("class_id", classId);
     if (streamId) params.set("stream_id", streamId);

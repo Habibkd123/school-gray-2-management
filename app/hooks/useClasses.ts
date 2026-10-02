@@ -37,6 +37,7 @@ export interface FetchClassesParams {
   sort?: "asc" | "desc";
   page?: number;
   limit?: number | "all";
+  school_id?: string;
 }
 
 // ─── Module-level cache (shared across all useClasses() instances) ──
@@ -117,7 +118,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
 
   // ─── Fetch all classes ──────────────────────────────────────────
   const fetchClasses = useCallback(async (params: FetchClassesParams = {}) => {
-    const isFiltered = !!(params.search || params.section || params.sort || params.page);
+    const isFiltered = !!(params.search || params.section || params.sort || params.page || (params.school_id && params.school_id !== "all"));
     const isAll = params.limit === "all" || !params.limit;
     const isFresh = _classesCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
 
@@ -167,7 +168,6 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
     setIsLoading(true);
     setError(null);
 
-    // Build unique query string as the cache key
     const qs = new URLSearchParams();
     if (params.search)        qs.set("search", params.search);
     if (params.academic_year) qs.set("academic_year", params.academic_year);
@@ -175,6 +175,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
     if (params.sort)          qs.set("sort", params.sort);
     if (params.page)          qs.set("page", String(params.page));
     if (params.limit)         qs.set("limit", String(params.limit));
+    if (params.school_id)     qs.set("school_id", String(params.school_id));
 
     const cacheKey = qs.toString();
 

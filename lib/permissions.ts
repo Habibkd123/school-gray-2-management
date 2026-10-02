@@ -27,7 +27,7 @@ export type PermissionModule =
   | "assessments";
 
 export type AppRole =
-  // | "super_admin"
+  | "super_admin"
   | "school_admin"
   | "accountant"
   | "teacher"
@@ -39,25 +39,27 @@ export type RolePermissions = Partial<Record<PermissionModule, PermissionAction[
 
 // ─── Master Permission Map ────────────────────────────────────────────────
 export const ROLE_PERMISSIONS: Record<AppRole, RolePermissions> = {
-  // ── Super Admin: everything ──────────────────────────────────────────────
-  // super_admin: {
-  //   dashboard:   ["view"],
-  //   students:    ["view", "create", "edit", "delete"],
-  //   teachers:    ["view", "create", "edit", "delete"],
-  //   parents:     ["view", "create", "edit", "delete"],
-  //   classes:     ["view", "create", "edit", "delete"],
-  //   academic:    ["view", "create", "edit", "delete"],
-  //   examination: ["view", "create", "edit", "delete"],
-  //   attendance:  ["view", "create", "edit", "delete"],
-  //   fees:        ["view", "create", "edit", "delete"],
-  //   transport:   ["view", "create", "edit", "delete"],
-  //   reports:     ["view"],
-  //   notices:     ["view", "create", "edit", "delete"],
-  //   settings:    ["view", "edit"],
-  //   leaves:      ["view", "create", "approve", "delete"],
-  //   homework:    ["view", "create", "edit", "delete"],
-  //   results:     ["view", "create", "edit", "delete"],
-  // },
+  // ── Super Admin: unrestricted access to all modules ───────────────────────
+  super_admin: {
+    dashboard:   ["view"],
+    students:    ["view", "create", "edit", "delete"],
+    teachers:    ["view", "create", "edit", "delete"],
+    parents:     ["view", "create", "edit", "delete"],
+    classes:     ["view", "create", "edit", "delete"],
+    academic:    ["view", "create", "edit", "delete"],
+    examination: ["view", "create", "edit", "delete"],
+    attendance:  ["view", "create", "edit", "delete"],
+    fees:        ["view", "create", "edit", "delete"],
+    transport:   ["view", "create", "edit", "delete"],
+    reports:     ["view"],
+    notices:     ["view", "create", "edit", "delete"],
+    settings:    ["view", "edit"],
+    leaves:      ["view", "create", "approve", "delete"],
+    homework:    ["view", "create", "edit", "delete"],
+    results:     ["view", "create", "edit", "delete"],
+    salary:      ["view", "create", "edit", "delete"],
+    assessments: ["view", "create", "edit", "delete"],
+  },
 
   // ── Principal / Admin (school_admin): full school access ─────────────────
   school_admin: {
@@ -140,6 +142,7 @@ export function hasPermission(
   module: PermissionModule,
   action: PermissionAction
 ): boolean {
+  if (role === "super_admin") return true;
   if (HIDE_FEES_FEATURE && module === "fees") return false;
   const roleKey = role as AppRole;
   const rolePerms = ROLE_PERMISSIONS[roleKey];
@@ -174,13 +177,13 @@ export interface RoleMeta {
 }
 
 export const ROLE_META: Record<AppRole, RoleMeta> = {
-  // super_admin: {
-  //   label: "Super Admin",
-  //   description: "Manages multiple schools. Has unrestricted access to everything.",
-  //   color: "red",
-  //   badgeBg: "bg-red-500/20",
-  //   badgeText: "text-red-400",
-  // },
+  super_admin: {
+    label: "Super Admin",
+    description: "Manages multiple schools. Has unrestricted access to everything.",
+    color: "amber",
+    badgeBg: "bg-amber-500/20",
+    badgeText: "text-amber-400",
+  },
   school_admin: {
     label: "Principal / Admin",
     description: "Full access to all school modules — students, staff, fees, reports.",

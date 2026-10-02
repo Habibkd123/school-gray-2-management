@@ -413,7 +413,7 @@ export function SaaSPortalPreview() {
 
               {/* 11 Screens Horizontal Pill Ribbon Navigator */}
               <div className="mb-6 relative z-10">
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none touch-pan-x overscroll-x-contain scroll-smooth">
                   {slides.map((s, idx) => {
                     const Icon = s.icon;
                     const isActive = currentSlide === idx;
@@ -421,7 +421,7 @@ export function SaaSPortalPreview() {
                       <button
                         key={s.id}
                         onClick={() => setCurrentSlide(idx)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer ${
+                        className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap flex items-center gap-1.5 transition-all cursor-pointer shrink-0 ${
                           isActive
                             ? "bg-amber-400 text-slate-950 font-bold shadow-lg shadow-amber-400/30 scale-105"
                             : "bg-white/10 hover:bg-white/20 text-white/90 border border-white/15"
@@ -440,6 +440,8 @@ export function SaaSPortalPreview() {
                     );
                   })}
                 </div>
+                {/* Subtle right-edge scroll hint for mobile */}
+                <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-blue-900/60 to-transparent rounded-r-xl block sm:hidden" />
               </div>
 
               {/* Dynamic 3D Mockup Container for the Active Slide (Zoom Workplace Layout) */}

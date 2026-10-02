@@ -4,6 +4,10 @@ import School from "@/lib/models/School";
 import { requireAuth } from "@/lib/utils/auth";
 import { validate } from "@/lib/utils/validate";
 
+import Student from "@/lib/models/Student";
+import Teacher from "@/lib/models/Teacher";
+import Class from "@/lib/models/Class";
+
 // GET /api/schools - List all schools for Super Admin
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request, ["super_admin"]);
@@ -13,9 +17,29 @@ export async function GET(request: NextRequest) {
     await connectDB();
     const schools = await School.find({}).sort({ createdAt: -1 }).lean();
 
+    // Aggregate counts for students, teachers, and classes per school in parallel
+    const [studentCounts, teacherCounts, classCounts] = await Promise.all([
+      Student.aggregate([{ $group: { _id: "$school_id", count: { $sum: 1 } } }]),
+      Teacher.aggregate([{ $group: { _id: "$school_id", count: { $sum: 1 } } }]),
+      Class.aggregate([{ $group: { _id: "$school_id", count: { $sum: 1 } } }]),
+    ]);
+
+    const enrichedSchools = schools.map((s: any) => {
+      const sId = s._id.toString();
+      const studentsCount = studentCounts.find((c: any) => c._id && c._id.toString() === sId)?.count || 0;
+      const teachersCount = teacherCounts.find((c: any) => c._id && c._id.toString() === sId)?.count || 0;
+      const classesCount = classCounts.find((c: any) => c._id && c._id.toString() === sId)?.count || 0;
+      return {
+        ...s,
+        studentsCount,
+        teachersCount,
+        classesCount,
+      };
+    });
+
     return NextResponse.json({
       success: true,
-      data: schools,
+      data: enrichedSchools,
     });
   } catch (error: any) {
     console.error("[SCHOOLS GET ERROR]", error);

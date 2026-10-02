@@ -14,7 +14,7 @@ import { useAuth } from "@/app/context/auth";
 
 // ─── Role Icon Map ────────────────────────────────────────────────────────
 const roleIcons: Record<AppRole, React.ReactNode> = {
-  // super_admin:  <Shield className="w-5 h-5" />,
+  super_admin: <Shield className="w-5 h-5" />,
   school_admin: <Users className="w-5 h-5" />,
   accountant: <DollarSign className="w-5 h-5" />,
   teacher: <BookOpen className="w-5 h-5" />,
@@ -24,7 +24,7 @@ const roleIcons: Record<AppRole, React.ReactNode> = {
 
 // ─── Color palette per role ───────────────────────────────────────────────
 const roleGradients: Record<AppRole, string> = {
-  // super_admin:  "from-red-50 dark:from-red-500/20 to-red-100/50 dark:to-red-600/10 border-red-200 dark:border-red-500/30",
+  super_admin: "from-amber-50 dark:from-amber-500/20 to-amber-100/50 dark:to-amber-600/10 border-amber-200 dark:border-amber-500/30",
   school_admin: "from-blue-50 dark:from-blue-500/20 to-blue-100/50 dark:to-blue-600/10 border-blue-200 dark:border-blue-500/30",
   accountant: "from-yellow-50 dark:from-yellow-500/20 to-yellow-100/50 dark:to-yellow-600/10 border-yellow-200 dark:border-yellow-500/30",
   teacher: "from-emerald-50 dark:from-emerald-500/20 to-emerald-100/50 dark:to-emerald-600/10 border-emerald-200 dark:border-emerald-500/30",
@@ -33,7 +33,7 @@ const roleGradients: Record<AppRole, string> = {
 };
 
 const roleIconBg: Record<AppRole, string> = {
-  // super_admin:  "bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400",
+  super_admin: "bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400",
   school_admin: "bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400",
   accountant: "bg-yellow-100 dark:bg-yellow-500/20 text-yellow-600 dark:text-yellow-400",
   teacher: "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400",

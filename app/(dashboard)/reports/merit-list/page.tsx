@@ -47,6 +47,10 @@ export default function MeritListPage() {
   const { results, fetchResults, isLoading } = useResults({ skip: true });
   const { students, isLoading: studentsLoading, fetchStudents } = useStudents({ skip: true });
 
+  React.useEffect(() => {
+    if(fetchStudents) fetchStudents({ school_id: "all", limit: 500 });
+  }, [fetchStudents]);
+
   const [selectedExamId, setSelectedExamId] = useState("");
   const [selectedClassId, setSelectedClassId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");

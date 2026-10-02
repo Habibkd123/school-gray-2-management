@@ -71,7 +71,7 @@ export function SaaSPartnerSchools({ schools }: SaaSPartnerSchoolsProps) {
 
                     <span className="text-xs font-medium text-slate-400 flex items-center gap-1.5 font-mono">
                       <Users className="w-3.5 h-3.5 text-indigo-400" />
-                      <span>{school.studentsCount} Students</span>
+                      <span>{school.studentsCount.includes("Students") ? school.studentsCount : `${school.studentsCount} Students`}</span>
                     </span>
                   </div>
 

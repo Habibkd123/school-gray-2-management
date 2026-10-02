@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Student from "@/lib/models/Student";
+import School from "@/lib/models/School";
 import { Parent } from "@/lib/models";
 import User from "@/lib/models/User";
 import Class from "@/lib/models/Class";
@@ -60,7 +61,8 @@ export async function GET(request: NextRequest) {
   const { schoolId, role, userId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin", "student", "parent"]);
   if (error) return error;
 
-  const cacheKey = `${schoolId}:${request.nextUrl.search}`;
+  const paramSchool = request.nextUrl.searchParams.get("school_id") || "all";
+  const cacheKey = `${role}:${schoolId || paramSchool}:${request.nextUrl.search}`;
   const cached = _studentsServerQueryCache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp) < SERVER_CACHE_TTL_MS) {
     return sendConditionalJson(
@@ -99,7 +101,16 @@ export async function GET(request: NextRequest) {
     const skip = isAll ? 0 : (page - 1) * limit;
 
     // Build filter
-    const filter: Record<string, any> = { school_id: schoolId };
+    const filter: Record<string, any> = {};
+
+    if (role === "super_admin") {
+      const paramSchoolId = searchParams.get("school_id");
+      if (paramSchoolId && paramSchoolId !== "all") {
+        filter.school_id = paramSchoolId;
+      }
+    } else {
+      filter.school_id = schoolId;
+    }
 
     if (role === "student") {
       filter.user_id = userId;
@@ -120,13 +131,18 @@ export async function GET(request: NextRequest) {
     const section = searchParams.get("section");
     const admissionStatus = searchParams.get("admission_status");
 
+    // Scope prerequisites to school if specific school is selected
+    const prereqSchoolFilter = role === "super_admin"
+      ? (filter.school_id ? { school_id: filter.school_id } : {})
+      : { school_id: schoolId };
+
     // Launch independent prerequisite lookups in parallel instead of sequential query waterfalls
     const [sectionClasses, admissions] = await Promise.all([
       section && section !== "all"
-        ? Class.find({ section, school_id: schoolId }).select("_id").lean()
+        ? Class.find({ section, ...prereqSchoolFilter }).select("_id").lean()
         : null,
       admissionStatus && admissionStatus !== "all"
-        ? Admission.find({ status: admissionStatus as any, school_id: schoolId }).select("admission_no").lean()
+        ? Admission.find({ status: admissionStatus as any, ...prereqSchoolFilter }).select("admission_no").lean()
         : null,
     ]);
 
@@ -251,6 +267,7 @@ export async function GET(request: NextRequest) {
 
     queryBuilder = queryBuilder
       .populate("class_id", "name section")
+      .populate("school_id", "name subdomain slug logo_url")
       .sort(sortObj)
       .skip(skip)
       .limit(limit);
@@ -259,7 +276,7 @@ export async function GET(request: NextRequest) {
       queryBuilder = queryBuilder.populate("user_id", "name email role is_active plain_password must_change_password");
     }
 
-    const countKey = `${schoolId}:${JSON.stringify(filter)}`;
+    const countKey = `${role}:${schoolId || paramSchool}:${JSON.stringify(filter)}`;
     const cachedCount = _countCache.get(countKey);
     let totalPromise: Promise<number>;
     if (cachedCount && (Date.now() - cachedCount.timestamp) < COUNT_CACHE_TTL_MS) {

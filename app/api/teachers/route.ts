@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import Teacher from "@/lib/models/Teacher";
+import School from "@/lib/models/School";
 import User from "@/lib/models/User";
 import { TeacherAssignment } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
@@ -55,10 +56,11 @@ export function invalidateTeachersServerCache() {
 
 // GET: Fetch all teachers for the logged-in user's school
 export async function GET(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
+  const { schoolId, role, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
 
-  const cacheKey = `${schoolId}:${req.nextUrl.search}`;
+  const paramSchool = req.nextUrl.searchParams.get("school_id") || "all";
+  const cacheKey = `${role}:${schoolId || paramSchool}:${req.nextUrl.search}`;
   const cached = _teachersServerQueryCache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp) < SERVER_CACHE_TTL_MS) {
     return sendConditionalJson(
@@ -93,7 +95,15 @@ export async function GET(req: NextRequest) {
     const limit = isAll ? 500 : Math.min(Math.max(1, parseInt(limitParam || "12", 10)), 500);
     const skip = isAll ? 0 : (page - 1) * limit;
 
-    const query: any = { school_id: schoolId };
+    const query: any = {};
+    if (role === "super_admin") {
+      const pSchool = url.searchParams.get("school_id");
+      if (pSchool && pSchool !== "all") {
+        query.school_id = pSchool;
+      }
+    } else {
+      query.school_id = schoolId;
+    }
 
     if (search && search.trim()) {
       const sanitized = search.trim();
@@ -199,7 +209,8 @@ export async function GET(req: NextRequest) {
     if (!academic_year) {
       queryBuilder = queryBuilder
         .populate("class_id", "name section")
-        .populate("class_ids", "name section");
+        .populate("class_ids", "name section")
+        .populate("school_id", "name subdomain slug");
     }
 
     queryBuilder = queryBuilder
@@ -211,7 +222,7 @@ export async function GET(req: NextRequest) {
       queryBuilder = queryBuilder.populate("user_id", "name email role is_active plain_password");
     }
 
-    const countKey = `${schoolId}:${JSON.stringify(query)}`;
+    const countKey = `${role}:${schoolId || paramSchool}:${JSON.stringify(query)}`;
     const cachedCount = _teacherCountCache.get(countKey);
     let totalPromise: Promise<number>;
     if (cachedCount && (Date.now() - cachedCount.timestamp) < COUNT_CACHE_TTL_MS) {

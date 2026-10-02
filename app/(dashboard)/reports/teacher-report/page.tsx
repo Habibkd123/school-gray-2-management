@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useTeachers } from "../../../hooks/useTeachers";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { useAuth } from "@/app/context/auth";
 import ReportTabs from "../ReportTabs";
 import { PrintService } from "@/app/lib/print-service";
 
@@ -14,7 +15,26 @@ interface TeacherRecentAttendanceMap {
 }
 
 export default function TeacherReportPage() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
+  const [globalSchoolId, setGlobalSchoolId] = useState("all");
+  const [topLevelSchools, setTopLevelSchools] = useState<{_id: string, name: string}[]>([]);
   const { teachers, isLoading, fetchTeachers } = useTeachers({ skip: true });
+
+  React.useEffect(() => {
+    if(fetchTeachers) fetchTeachers({ school_id: globalSchoolId, limit: 500 });
+    
+    if (isSuperAdmin) {
+      fetch("/api/schools", { headers: getAuthHeaders() })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setTopLevelSchools(data.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [fetchTeachers, isSuperAdmin, globalSchoolId]);
   const [attendanceMap, setAttendanceMap] = useState<TeacherRecentAttendanceMap>({});
   const [attendanceLoading, setAttendanceLoading] = useState(true);
 
@@ -187,7 +207,7 @@ export default function TeacherReportPage() {
   };
 
   const handleRefresh = () => {
-    fetchTeachers();
+    fetchTeachers({ school_id: globalSchoolId, limit: 500 });
     fetchAttendance();
   };
 
@@ -210,6 +230,18 @@ export default function TeacherReportPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          {isSuperAdmin && topLevelSchools.length > 0 && (
+            <select
+              value={globalSchoolId}
+              onChange={(e) => setGlobalSchoolId(e.target.value)}
+              className="px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg outline-none cursor-pointer"
+            >
+              <option value="all">All Schools</option>
+              {topLevelSchools.map((sch) => (
+                <option key={sch._id} value={sch._id}>{sch.name}</option>
+              ))}
+            </select>
+          )}
           <button
             onClick={handleRefresh}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer dark:text-slate-400"

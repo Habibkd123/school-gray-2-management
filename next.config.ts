@@ -151,6 +151,8 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       { source: "/signup",          destination: "/register",                     permanent: true  },
+      { source: "/admin-sign-up",   destination: "/register",                     permanent: false },
+      { source: "/admin-signup",    destination: "/register",                     permanent: false },
       { source: "/fees-collection", destination: "/fees-collection/collect-fees", permanent: false },
       { source: "/academic",        destination: "/academic/class-room",           permanent: false },
       { source: "/examination",     destination: "/examination/exam",              permanent: false },

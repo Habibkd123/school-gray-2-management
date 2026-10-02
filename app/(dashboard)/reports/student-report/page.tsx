@@ -7,12 +7,33 @@ import {
 import { useStudents } from "../../../hooks/useStudents";
 import { useClasses } from "../../../hooks/useClasses";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { useAuth } from "@/app/context/auth";
 import ReportTabs from "../ReportTabs";
 import { PrintService } from "@/app/lib/print-service";
 
 export default function StudentReportPage() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
   const { students, isLoading, fetchStudents } = useStudents({ skip: true });
   const { classes } = useClasses();
+
+  const [globalSchoolId, setGlobalSchoolId] = useState("all");
+  const [topLevelSchools, setTopLevelSchools] = useState<{_id: string, name: string}[]>([]);
+
+  useEffect(() => {
+    fetchStudents({ school_id: globalSchoolId, limit: 500 });
+    
+    if (isSuperAdmin) {
+      fetch("/api/schools", { headers: getAuthHeaders() })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setTopLevelSchools(data.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [fetchStudents, isSuperAdmin, globalSchoolId]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -22,12 +43,24 @@ export default function StudentReportPage() {
   const [filterSection, setFilterSection] = useState("");
   const [filterGender, setFilterGender] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterSchool, setFilterSchool] = useState("");
   const [joinStartDate, setJoinStartDate] = useState("");
   const [joinEndDate, setJoinEndDate] = useState("");
   const [sortOption, setSortOption] = useState<"name" | "roll" | "join">("name");
 
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
+
+  const schools = useMemo(() => {
+    if (!isSuperAdmin) return [];
+    const map = new Map();
+    students.forEach((s) => {
+      if (s.school_id && typeof s.school_id === 'object' && s.school_id._id) {
+        map.set(s.school_id._id, s.school_id.name);
+      }
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ _id: id, name }));
+  }, [students, isSuperAdmin]);
 
   // Student Details Modal States
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
@@ -61,6 +94,7 @@ export default function StudentReportPage() {
       const matchSection = !filterSection || (cls && cls.section === filterSection);
       const matchGender = !filterGender || (s.gender || "").toLowerCase() === filterGender.toLowerCase();
       const matchStatus = !filterStatus || (filterStatus === "active" ? s.is_active : !s.is_active);
+      const matchSchool = !filterSchool || (typeof s.school_id === 'object' ? s.school_id?._id === filterSchool : s.school_id === filterSchool);
 
       // Date Range Filter on Join Date
       let matchJoinDate = true;
@@ -76,7 +110,7 @@ export default function StudentReportPage() {
         matchJoinDate = false;
       }
 
-      return matchSearch && matchClass && matchSection && matchGender && matchStatus && matchJoinDate;
+      return matchSearch && matchClass && matchSection && matchGender && matchStatus && matchJoinDate && matchSchool;
     });
 
     // Sorting
@@ -220,8 +254,20 @@ export default function StudentReportPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          {isSuperAdmin && topLevelSchools.length > 0 && (
+            <select
+              value={globalSchoolId}
+              onChange={(e) => setGlobalSchoolId(e.target.value)}
+              className="px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg outline-none cursor-pointer"
+            >
+              <option value="all">All Schools</option>
+              {topLevelSchools.map((sch) => (
+                <option key={sch._id} value={sch._id}>{sch.name}</option>
+              ))}
+            </select>
+          )}
           <button
-            onClick={() => fetchStudents()}
+            onClick={() => fetchStudents({ school_id: globalSchoolId, limit: 500 })}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer"
           >
             <RefreshCw className="w-4 h-4" />
@@ -302,6 +348,26 @@ export default function StudentReportPage() {
                       <h3 className="text-[15px] font-bold text-foreground dark:text-slate-100">Filter</h3>
                     </div>
                     <div className="p-4 space-y-4">
+                      {isSuperAdmin && (
+                        <div className="space-y-1.5">
+                          <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">School</label>
+                          <select
+                            value={filterSchool}
+                            onChange={(e) => {
+                              setFilterSchool(e.target.value);
+                              setPage(1);
+                            }}
+                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
+                          >
+                            <option value="">All Schools</option>
+                            {schools.map((sch) => (
+                              <option key={sch._id} value={sch._id}>
+                                {sch.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class</label>
@@ -487,6 +553,9 @@ export default function StudentReportPage() {
             <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
               <tr>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Admission No</th>
+                {isSuperAdmin && (
+                  <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">School</th>
+                )}
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Roll No</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Name</th>
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
@@ -499,13 +568,13 @@ export default function StudentReportPage() {
             <tbody className="divide-y divide-border">
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-10 text-center text-slate-400">
+                  <td colSpan={isSuperAdmin ? 9 : 8} className="px-6 py-10 text-center text-slate-400">
                     <Loader2 className="w-5 h-5 animate-spin inline" />
                   </td>
                 </tr>
               ) : paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-10 text-center text-slate-400">
+                  <td colSpan={isSuperAdmin ? 9 : 8} className="px-6 py-10 text-center text-slate-400">
                     No students found.
                   </td>
                 </tr>
@@ -518,6 +587,11 @@ export default function StudentReportPage() {
                     <td className="px-6 py-4 font-semibold text-primary">
                       {s.admission_no || s._id.slice(-6).toUpperCase()}
                     </td>
+                    {isSuperAdmin && (
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                        {typeof s.school_id === 'object' ? s.school_id?.name : "—"}
+                      </td>
+                    )}
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{s.roll_no || "—"}</td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap items-center gap-3">

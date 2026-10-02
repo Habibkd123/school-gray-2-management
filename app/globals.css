@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 @theme {
+  --font-roboto: 'Roboto', var(--font-roboto), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-sans: 'Roboto', var(--font-roboto), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-heading: 'Roboto', var(--font-roboto), system-ui, sans-serif;
 }
@@ -10,7 +11,7 @@
 /* ═══════════════════════════════════════════════════
    MODERN SAAS DESIGN & TYPOGRAPHY UTILITIES (ROBOTO)
    ═══════════════════════════════════════════════════ */
-html, body {
+html, body, button, input, optgroup, select, textarea {
   font-family: 'Roboto', var(--font-roboto), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

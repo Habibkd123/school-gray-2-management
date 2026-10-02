@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/app/context/auth";
 import { useTeachers, ApiTeacher } from "../../hooks/useTeachers";
 import { useAppState } from "@/app/context/store";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
 import { getOptimizedAvatar } from "@/lib/utils/image";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Building2 } from "lucide-react";
 import { PaginationBar } from "@/app/components/ui/pagination-bar";
 import { LoginDetailsModal } from "../../components/modals/LoginDetailsModal";
 import { ResetPasswordModal } from "../../components/modals/ResetPasswordModal";
@@ -68,6 +69,11 @@ function getInitialTeacherFilters() {
 
 export default function TeachersPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
+  const searchParams = useSearchParams();
+  const paramSchoolId = searchParams?.get("school_id") || "all";
+
   const { academicYear } = useAppState();
   const {
     teachers,
@@ -78,6 +84,29 @@ export default function TeachersPage() {
     updateTeacher,
     fetchTeachers
   } = useTeachers({ skip: true });
+
+  const [schools, setSchools] = useState<any[]>([]);
+  const [schoolFilter, setSchoolFilter] = useState<string>(paramSchoolId);
+
+  // Sync if URL query param changes
+  useEffect(() => {
+    const q = searchParams?.get("school_id");
+    if (q) setSchoolFilter(q);
+  }, [searchParams]);
+
+  // Fetch schools list for Super Admin
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetch("/api/schools", { headers: getAuthHeaders() })
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success && Array.isArray(json.data)) {
+            setSchools(json.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [isSuperAdmin]);
 
   const [isInitialLoad, setIsInitialLoad] = React.useState(() => teachers.length === 0);
   React.useEffect(() => {
@@ -108,7 +137,7 @@ export default function TeachersPage() {
   const [page, setPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkSelectMode, setBulkSelectMode] = useState(false);
-  const activeRole = "admin" as "admin" | "teacher" | "student";
+  const activeRole = isSuperAdmin ? "super_admin" : ("admin" as "admin" | "teacher" | "student");
 
   // Dynamic filter options state
   const [filterOptions, setFilterOptions] = useState<{
@@ -173,8 +202,9 @@ export default function TeachersPage() {
       academic_year: academicYearFilter === "all" ? academicYear : academicYearFilter,
       department: deptFilter,
       designation: desgFilter,
+      school_id: schoolFilter !== "all" ? schoolFilter : undefined,
     });
-  }, [fetchTeachers, debouncedSearch, statusFilter, selectedDateRange, selectedSort, page, academicYear, deptFilter, desgFilter, academicYearFilter]);
+  }, [fetchTeachers, debouncedSearch, statusFilter, selectedDateRange, selectedSort, page, academicYear, deptFilter, desgFilter, academicYearFilter, schoolFilter]);
 
   const handleDateRangeChange = (val: string) => {
     setSelectedDateRange(val);
@@ -378,6 +408,19 @@ export default function TeachersPage() {
           <span className="font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors cursor-pointer">{t.name}</span>
         </div>
     ) },
+    ...(isSuperAdmin ? [{
+      header: "School / Campus",
+      accessorKey: "school_id" as any,
+      render: (t: any) => {
+        const schoolName = typeof t.school_id === "object" ? t.school_id?.name : "Campus";
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+            <Building2 className="w-3 h-3 text-amber-500 shrink-0" />
+            <span className="truncate max-w-[130px]">{schoolName}</span>
+          </span>
+        );
+      }
+    }] : []),
     { header: "Class", accessorKey: "classNameStr" },
     { header: "Qualification", accessorKey: "qualificationStr", render: (t: any) => (
       <div className="flex flex-col gap-1">
@@ -466,23 +509,23 @@ export default function TeachersPage() {
   }
 
   return (
-    <div className="space-y-6 -m-6 p-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen">
+    <div className="space-y-6 -m-6 p-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen font-roboto">
       {/* Header */}
       <div className="page-header">
         <div>
-          <h1 className="page-title">Teacher List</h1>
+          <h1 className="page-title">{isSuperAdmin ? "Network Faculty Directory" : "Teacher List"}</h1>
           <div className="flex items-center gap-2 text-[14px] leading-[21px] text-[#68718a] mt-1 font-normal">
-            <span>Dashboard</span>
+            <span>{isSuperAdmin ? "Super Admin" : "Dashboard"}</span>
             <span>/</span>
             <span>Peoples</span>
             <span>/</span>
-            <span className="text-foreground dark:text-slate-100">Teacher List</span>
+            <span className="text-foreground dark:text-slate-100">{isSuperAdmin ? "All Teachers" : "Teacher List"}</span>
           </div>
         </div>
 
-        {activeRole === "admin" && (
+        {(activeRole === "admin" || activeRole === "super_admin") && (
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={() => fetchTeachers({ academic_year: academicYearFilter === "all" ? academicYear : academicYearFilter, department: deptFilter, designation: desgFilter, status: statusFilter })} className="btn btn-outline p-2 w-9 h-9">
+            <button onClick={() => fetchTeachers({ academic_year: academicYearFilter === "all" ? academicYear : academicYearFilter, department: deptFilter, designation: desgFilter, status: statusFilter, school_id: schoolFilter !== "all" ? schoolFilter : undefined })} className="btn btn-outline p-2 w-9 h-9">
               <RefreshCcw className="w-4 h-4" />
             </button>
             <button className="btn btn-outline p-2 w-9 h-9">
@@ -523,6 +566,49 @@ export default function TeachersPage() {
           </div>
         )}
       </div>
+
+      {/* Super Admin Multi-Campus Faculty Banner */}
+      {isSuperAdmin && (
+        <div className="bg-gradient-to-r from-indigo-500/10 via-amber-500/10 to-transparent border border-indigo-500/25 rounded-2xl p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
+          <div className="flex items-center gap-3.5">
+            <div className="p-3 bg-indigo-500/15 text-indigo-500 rounded-xl shrink-0">
+              <Building2 className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">
+                  Multi-Campus Faculty Network
+                </h3>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-700 dark:text-indigo-400">
+                  Global Overview
+                </span>
+              </div>
+              <p className="text-[12.5px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Monitoring teachers and staff records across all registered schools. Filter by campus or view total faculty.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0 bg-white/70 dark:bg-slate-900/80 p-1.5 rounded-xl border border-indigo-500/20">
+            <span className="text-[12px] font-bold text-slate-600 dark:text-slate-300 pl-2">School:</span>
+            <select
+              value={schoolFilter}
+              onChange={(e) => {
+                setSchoolFilter(e.target.value);
+                setPage(1);
+              }}
+              className="px-3 py-1.5 text-[13px] font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/20"
+            >
+              <option value="all">🌐 All Schools ({total} Faculty)</option>
+              {schools.map((s) => (
+                <option key={s._id} value={s._id}>
+                  🏫 {s.name} {typeof s.teachersCount === "number" ? `(${s.teachersCount})` : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
 
       {/* Directory Table Card */}
       <div className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow text-left p-5">

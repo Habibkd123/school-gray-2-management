@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/auth";
 import { getAuthHeaders } from "@/lib/utils/session";
 import {
   Plus, RefreshCcw, Building2, ShieldCheck, Mail, Phone, MapPin,
   CheckCircle, XCircle, Edit, Trash2, Loader2, AlertCircle, Eye,
-  Globe, ExternalLink, Copy, Check, Search, Tag, Upload
+  Globe, ExternalLink, Copy, Check, Search, Tag, Upload,
+  GraduationCap, Users, ChevronRight, Sparkles, X, Filter
 } from "lucide-react";
+import Link from "next/link";
 import { Modal } from "../../components/ui/modal";
 import { getSubdomainHost } from "@/lib/utils/subdomain";
 
@@ -24,6 +26,9 @@ interface SchoolData {
   timezone: string;
   is_active: boolean;
   createdAt: string;
+  studentsCount?: number;
+  teachersCount?: number;
+  classesCount?: number;
 }
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || "myschoollife.in";
@@ -36,6 +41,8 @@ export default function SchoolsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
   // Form/Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -400,9 +407,32 @@ export default function SchoolsPage() {
 
   const activeSchools = schools.filter((s) => s.is_active).length;
   const inactiveSchools = schools.length - activeSchools;
+  const totalNetworkStudents = schools.reduce((acc, s) => acc + (s.studentsCount || 0), 0);
+  const totalFaculty = schools.reduce((acc, s) => acc + (s.teachersCount || 0), 0);
+
+  const filteredSchools = useMemo(() => {
+    return schools.filter((s) => {
+      const q = searchQuery.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        s.name.toLowerCase().includes(q) ||
+        (s.subdomain && s.subdomain.toLowerCase().includes(q)) ||
+        (s.slug && s.slug.toLowerCase().includes(q)) ||
+        (s.address && s.address.toLowerCase().includes(q)) ||
+        (s.email && s.email.toLowerCase().includes(q)) ||
+        (s.phone && s.phone.toLowerCase().includes(q));
+
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && s.is_active) ||
+        (statusFilter === "inactive" && !s.is_active);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [schools, searchQuery, statusFilter]);
 
   return (
-    <div className="space-y-6 max-w-full sm:w-[1600px] mx-auto">
+    <div className="space-y-6 max-w-full sm:w-[1600px] mx-auto font-roboto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div>
@@ -412,7 +442,7 @@ export default function SchoolsPage() {
           <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1">
             <span>Super Admin</span>
             <span>/</span>
-            <span className="text-slate-700 dark:text-slate-200">Schools</span>
+            <span className="text-slate-700 dark:text-slate-200">Schools Directory</span>
           </div>
         </div>
 
@@ -438,60 +468,166 @@ export default function SchoolsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 text-left">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-amber-500/10 text-amber-500 rounded-xl">
-            <Building2 className="w-6 h-6" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
+        {/* Total Campuses */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Total Campuses
+            </span>
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+              <Building2 className="w-5 h-5" />
+            </div>
           </div>
-          <div>
-            <h3 className="section-title">{schools.length}</h3>
-            <p className="card-subtitle text-[13px] mt-0.5">Total Schools</p>
+          <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            {schools.length}
           </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-emerald-500/10 text-emerald-500 rounded-xl">
-            <CheckCircle className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="section-title">{activeSchools}</h3>
-            <p className="card-subtitle text-[13px] mt-0.5">Active Institutions</p>
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-xl">
-            <Globe className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="section-title">{schools.filter((s) => !!s.subdomain).length}</h3>
-            <p className="card-subtitle text-[13px] mt-0.5">Subdomains Active</p>
+          <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{activeSchools} Active</span>
+            <span>•</span>
+            <span className={inactiveSchools > 0 ? "text-rose-500 font-semibold" : "text-slate-400"}>
+              {inactiveSchools} Inactive
+            </span>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl p-5 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-rose-500/10 text-rose-500 rounded-xl">
-            <XCircle className="w-6 h-6" />
+        {/* Enrolled Students */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Enrolled Students
+            </span>
+            <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-500 flex items-center justify-center">
+              <GraduationCap className="w-5 h-5" />
+            </div>
           </div>
-          <div>
-            <h3 className="section-title">{inactiveSchools}</h3>
-            <p className="card-subtitle text-[13px] mt-0.5">Suspended / Inactive</p>
+          <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            {totalNetworkStudents.toLocaleString()}
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
+            Combined multi-tenant enrollment
+          </div>
+        </div>
+
+        {/* Active Faculty */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Active Faculty
+            </span>
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+              <Users className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            {totalFaculty.toLocaleString()}
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-medium">
+            Verified academic instructors
+          </div>
+        </div>
+
+        {/* Network Operations Rate */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Network Operations
+            </span>
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            {schools.length > 0 ? `${Math.round((activeSchools / schools.length) * 100)}%` : "100%"}
+          </div>
+          <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-medium flex items-center gap-1">
+            <CheckCircle className="w-3.5 h-3.5" />
+            <span>Multi-tenant routes operational</span>
           </div>
         </div>
       </div>
 
-      {/* Schools Table */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/50 rounded-xl shadow-sm overflow-hidden text-left">
-        <div className="p-5 border-b border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
-          <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Registered Institutions & Subdomains</h3>
-          <span className="text-[12px] text-slate-500 dark:text-slate-400">
-            Root: <code className="font-mono text-amber-600 dark:text-amber-400">.{ROOT_DOMAIN}</code>
-          </span>
+      {/* Schools Table Card */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden text-left">
+        {/* Table Top Header */}
+        <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Building2 className="w-5 h-5 text-amber-500" />
+              <span>Registered Institutions &amp; Subdomains</span>
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Live portal routing, faculty assignment, and tenant domain mapping
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Root Domain:</span>
+            <span className="px-2.5 py-1 rounded-lg font-mono text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-amber-600 dark:text-amber-400 border border-slate-200 dark:border-slate-700">
+              .{ROOT_DOMAIN}
+            </span>
+          </div>
+        </div>
+
+        {/* Search & Filter Toolbar */}
+        <div className="p-4 bg-slate-50/60 dark:bg-slate-900/60 border-b border-slate-100 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by school name, subdomain, address, or email..."
+              className="w-full pl-9 pr-8 py-2 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 text-slate-900 dark:text-white placeholder:text-slate-400 transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Status Tabs */}
+          <div className="flex items-center gap-1.5 self-start md:self-auto">
+            <button
+              onClick={() => setStatusFilter("all")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                statusFilter === "all"
+                  ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+              }`}
+            >
+              All ({schools.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter("active")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                statusFilter === "active"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+              }`}
+            >
+              Active ({activeSchools})
+            </button>
+            <button
+              onClick={() => setStatusFilter("inactive")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                statusFilter === "inactive"
+                  ? "bg-rose-600 text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800"
+              }`}
+            >
+              Inactive ({inactiveSchools})
+            </button>
+          </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20 gap-3 text-slate-400">
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-5 h-5 animate-spin text-amber-500" />
             <span className="text-[14px] font-medium">Loading schools...</span>
           </div>
         ) : error ? (
@@ -508,140 +644,209 @@ export default function SchoolsPage() {
         ) : schools.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-2 text-slate-400">
             <Building2 className="w-8 h-8 opacity-40" />
-            <p className="text-[14px] font-medium">No schools found</p>
+            <p className="text-[14px] font-medium">No schools registered yet</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="erp-table">
+            <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-                  <th className="px-6 py-4 text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">School Details</th>
-                  <th className="px-6 py-4 text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Subdomain & Live URL</th>
-                  <th className="px-6 py-4 text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Contact Info</th>
-                  <th className="px-6 py-4 text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Status</th>
-                  <th className="px-6 py-4 text-[12px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right">Actions</th>
+                <tr className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <th className="py-3.5 px-6 min-w-[280px]">Institution</th>
+                  <th className="py-3.5 px-6 min-w-[320px]">Subdomain &amp; Live URL</th>
+                  <th className="py-3.5 px-6 min-w-[220px]">Enrollment &amp; Staff</th>
+                  <th className="py-3.5 px-6 min-w-[200px]">Contact Info</th>
+                  <th className="py-3.5 px-6 min-w-[120px]">Status</th>
+                  <th className="py-3.5 px-6 min-w-[100px] text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                {schools.map((school) => {
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                {filteredSchools.map((school) => {
                   const sub = school.subdomain || school.slug;
                   const liveUrl = getSchoolLoginUrl(school);
                   const isCopied = copiedId === school._id;
+                  const initial = (school.name || "S").trim().charAt(0).toUpperCase();
 
                   return (
-                    <tr key={school._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                      {/* Name & Address */}
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-900 dark:text-white text-[14px]">
-                            {school.name}
-                          </span>
-                          <span className="text-[11px] text-slate-400 font-mono mt-0.5">
-                            ID: {school._id}
-                          </span>
-                          {school.address && (
-                            <span className="text-[12px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
-                              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                              {school.address}
-                            </span>
-                          )}
+                    <tr
+                      key={school._id}
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors"
+                    >
+                      {/* School Details */}
+                      <td className="py-4 px-6 align-middle">
+                        <div className="flex items-center gap-3.5">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center font-bold text-base shrink-0 shadow-xs">
+                            {initial}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-[14px] text-slate-900 dark:text-white capitalize truncate max-w-[220px]">
+                              {school.name}
+                            </div>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <span className="font-mono text-[10.5px] px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
+                                slug: {school.slug}
+                              </span>
+                            </div>
+                            {school.address && (
+                              <div
+                                className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1 truncate max-w-[240px]"
+                                title={school.address}
+                              >
+                                <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                                <span className="truncate">{school.address}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
 
                       {/* Subdomain & Live URL */}
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex items-center gap-2">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                              <Globe className="w-3 h-3" />
-                              {sub}.{ROOT_DOMAIN}
-                            </span>
-                            {school.custom_domain && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
-                                {school.custom_domain}
-                              </span>
-                            )}
+                      <td className="py-4 px-6 align-middle">
+                        <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700/80 rounded-xl p-2.5 w-full min-w-[280px] space-y-2">
+                          {/* Full domain row */}
+                          <div className="flex items-center gap-1.5 text-xs font-mono">
+                            <Globe className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            <span className="whitespace-nowrap"><span className="font-bold text-slate-900 dark:text-white">{sub}</span><span className="text-slate-400">.{ROOT_DOMAIN}</span></span>
                           </div>
 
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <button
-                              onClick={() => handleCopyLink(school)}
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 transition-colors cursor-pointer"
-                              title="Copy Login URL"
-                            >
-                              {isCopied ? (
-                                <>
-                                  <Check className="w-3.5 h-3.5 text-emerald-500" />
-                                  <span className="text-emerald-500">Copied!</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="w-3.5 h-3.5" />
-                                  <span>Copy Link</span>
-                                </>
-                              )}
-                            </button>
+                          {/* Custom domain if exists */}
+                          {school.custom_domain && (
+                            <div className="flex items-center gap-1 text-[11px] font-mono text-indigo-600 dark:text-indigo-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
+                              <span className="truncate">{school.custom_domain}</span>
+                            </div>
+                          )}
 
-                            <span className="text-slate-300 dark:text-slate-700">•</span>
-
+                          {/* Action Buttons Row */}
+                          <div className="flex items-center gap-2 pt-1.5 border-t border-slate-200/60 dark:border-slate-700/50">
                             <a
                               href={liveUrl}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 hover:text-amber-700 dark:text-amber-400 hover:underline cursor-pointer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/25 transition-colors cursor-pointer"
                             >
                               <span>Open Portal</span>
                               <ExternalLink className="w-3 h-3" />
                             </a>
+
+                            <button
+                              onClick={() => handleCopyLink(school)}
+                              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
+                              title="Copy portal login URL"
+                            >
+                              {isCopied ? (
+                                <>
+                                  <Check className="w-3 h-3 text-emerald-500" />
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Copied!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3 h-3" />
+                                  <span>Copy URL</span>
+                                </>
+                              )}
+                            </button>
                           </div>
                         </div>
                       </td>
 
+                      {/* Enrolled Students & Faculty */}
+                      <td className="py-4 px-6 align-middle">
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-3.5">
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-6 h-6 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+                                <GraduationCap className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="font-bold text-[13px] text-slate-900 dark:text-white">
+                                {(school.studentsCount ?? 0).toLocaleString()}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-medium">Students</span>
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                              <div className="w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                                <Users className="w-3.5 h-3.5" />
+                              </div>
+                              <span className="font-bold text-[13px] text-slate-900 dark:text-white">
+                                {(school.teachersCount ?? 0).toLocaleString()}
+                              </span>
+                              <span className="text-[11px] text-slate-400 font-medium">Faculty</span>
+                            </div>
+                          </div>
+
+                          <Link
+                            href={`/students?school_id=${school._id}`}
+                            className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 hover:underline group"
+                          >
+                            <span>View Students Directory</span>
+                            <ChevronRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
+                          </Link>
+                        </div>
+                      </td>
+
                       {/* Contact details */}
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col gap-1 text-[12px] text-slate-600 dark:text-slate-300">
-                          {school.email && (
-                            <span className="flex items-center gap-1.5">
-                              <Mail className="w-3.5 h-3.5 text-slate-400" />
-                              {school.email}
-                            </span>
-                          )}
-                          {school.phone && (
-                            <span className="flex items-center gap-1.5">
-                              <Phone className="w-3.5 h-3.5 text-slate-400" />
-                              {school.phone}
-                            </span>
+                      <td className="py-4 px-6 align-middle">
+                        <div className="flex flex-col gap-1 text-slate-600 dark:text-slate-300">
+                          {school.email ? (
+                            <a
+                              href={`mailto:${school.email}`}
+                              className="flex items-center gap-1.5 text-[11.5px] hover:text-amber-600 transition-colors truncate max-w-[190px]"
+                              title={school.email}
+                            >
+                              <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span className="truncate">{school.email}</span>
+                            </a>
+                          ) : null}
+
+                          {school.phone ? (
+                            <a
+                              href={`tel:${school.phone}`}
+                              className="flex items-center gap-1.5 text-[11.5px] hover:text-amber-600 transition-colors"
+                            >
+                              <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                              <span>{school.phone}</span>
+                            </a>
+                          ) : null}
+
+                          {!school.email && !school.phone && (
+                            <span className="text-slate-400 text-xs italic">—</span>
                           )}
                         </div>
                       </td>
 
                       {/* Status */}
-                      <td className="px-6 py-4">
+                      <td className="py-4 px-6 align-middle">
                         <button
                           onClick={() => toggleStatus(school)}
-                          className={`px-3 py-1 rounded-full text-[11px] font-semibold tracking-wider cursor-pointer transition-all ${
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10.5px] font-bold tracking-wider uppercase transition-all cursor-pointer border ${
                             school.is_active
-                              ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/25 hover:bg-emerald-500/25"
-                              : "bg-rose-500/15 text-rose-500 border border-rose-500/25 hover:bg-rose-500/25"
+                              ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/60 hover:bg-emerald-100"
+                              : "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/60 hover:bg-rose-100"
                           }`}
+                          title="Click to toggle school status"
                         >
-                          {school.is_active ? "ACTIVE" : "INACTIVE"}
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              school.is_active ? "bg-emerald-500 animate-pulse" : "bg-rose-500"
+                            }`}
+                          />
+                          <span>{school.is_active ? "Active" : "Inactive"}</span>
                         </button>
                       </td>
 
                       {/* Actions */}
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                      <td className="py-4 px-6 align-middle text-right">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleOpenMeta(school)}
-                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 hover:border-indigo-400 dark:hover:border-indigo-500 transition-all cursor-pointer bg-white dark:bg-slate-900 shadow-sm"
-                            title="Manage SEO & Meta Keywords"
+                            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 hover:border-indigo-300 transition-all cursor-pointer bg-white dark:bg-slate-900 shadow-2xs"
+                            title="SEO, Social & Search Keywords"
                           >
-                            <Search className="w-4 h-4" />
+                            <Sparkles className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleOpenEdit(school)}
-                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-600 hover:text-amber-500 hover:border-amber-500 transition-all cursor-pointer bg-white dark:bg-slate-900 shadow-sm dark:text-slate-300"
+                            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:border-amber-300 transition-all cursor-pointer bg-white dark:bg-slate-900 shadow-2xs"
                             title="Edit School & Subdomain"
                           >
                             <Edit className="w-4 h-4" />
@@ -653,6 +858,27 @@ export default function SchoolsPage() {
                 })}
               </tbody>
             </table>
+
+            {filteredSchools.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-center text-slate-400">
+                <Building2 className="w-8 h-8 opacity-40 mb-2" />
+                <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                  No campuses match your filter
+                </p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Try searching with a different term or clear the filter
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setStatusFilter("all");
+                  }}
+                  className="mt-3 px-3 py-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-lg cursor-pointer"
+                >
+                  Clear Search Filter
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

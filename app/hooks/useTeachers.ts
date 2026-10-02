@@ -10,7 +10,7 @@ export interface ApiTeacher {
   _id: string;
   /** @deprecated use _id */
   id?: string;
-  school_id: string;
+  school_id: string | { _id: string; name: string; subdomain?: string; slug?: string };
   user_id?: string | { _id: string; name: string; email: string; role: string; is_active: boolean } | null;
   name: string;
   employee_id?: string;
@@ -357,6 +357,7 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
       academic_year?: string;
       department?: string;
       designation?: string;
+      school_id?: string;
     }
   ) => {
     let search = "";
@@ -368,6 +369,7 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
     let academic_year = "";
     let department = "";
     let designation = "";
+    let school_id = "";
 
     const isObject = arg1 && typeof arg1 === "object";
     const p = (isObject ? arg1 : {}) as any;
@@ -382,12 +384,13 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
       academic_year = p.academic_year ?? "";
       department = p.department ?? "";
       designation = p.designation ?? "";
+      school_id = p.school_id ?? "";
     } else {
       search = (arg1 as string) ?? "";
       limit = "all"; // Legacy string-path / dropdowns: default to all teachers
     }
 
-    const isFiltered = !!(search || (status && status !== "all") || (dateRange && dateRange !== "All Time") || sort || (isObject && (p.page || p.search || p.status || p.department || p.designation)));
+    const isFiltered = !!(search || (status && status !== "all") || (dateRange && dateRange !== "All Time") || sort || (school_id && school_id !== "all") || (isObject && (p.page || p.search || p.status || p.department || p.designation || p.school_id)));
     const isAll = limit === "all";
 
     if (isAll && !isFiltered) {
@@ -443,6 +446,7 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
     if (academic_year) params.set("academic_year", academic_year);
     if (department && department !== "all") params.set("department", department);
     if (designation && designation !== "all") params.set("designation", designation);
+    if (school_id && school_id !== "all") params.set("school_id", school_id);
     params.set("page", page.toString());
     params.set("limit", limit.toString());
 

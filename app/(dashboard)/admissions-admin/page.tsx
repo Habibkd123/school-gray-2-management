@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { useAuth } from "@/app/context/auth";
 import {
   ClipboardList, CheckCircle, XCircle, AlertCircle, Calendar, Users,
   TrendingUp, ArrowRight, Loader2, RefreshCw, BarChart2
@@ -33,32 +34,30 @@ interface RecentApp {
 }
 
 export default function AdmissionsDashboard() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
+  const [globalSchoolId, setGlobalSchoolId] = useState("all");
+  const [topLevelSchools, setTopLevelSchools] = useState<{_id: string, name: string}[]>([]);
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetch("/api/schools", { headers: getAuthHeaders() })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.data) {
+            setTopLevelSchools(data.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [isSuperAdmin]);
+
   const SESSION_KEY = "sm_admissions_stats";
 
-  const [stats, setStats] = useState<Stats | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const s = sessionStorage.getItem(SESSION_KEY);
-      if (s) { const p = JSON.parse(s); if (Date.now() - p.ts < 60_000) return p.stats; }
-    } catch {}
-    return null;
-  });
-  const [recents, setRecents] = useState<RecentApp[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const s = sessionStorage.getItem(SESSION_KEY);
-      if (s) { const p = JSON.parse(s); if (Date.now() - p.ts < 60_000) return p.recents || []; }
-    } catch {}
-    return [];
-  });
-  const [loading, setLoading] = useState(() => {
-    if (typeof window === "undefined") return true;
-    try {
-      const s = sessionStorage.getItem(SESSION_KEY);
-      if (s) { const p = JSON.parse(s); if (Date.now() - p.ts < 60_000) return false; }
-    } catch {}
-    return true;
-  });
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [recents, setRecents] = useState<RecentApp[]>([]);
+  const [loading, setLoading] = useState(true);
+  
   const isFetchingRef = useRef(false);
 
   const fetchDashboardData = async (force = false) => {
@@ -66,7 +65,8 @@ export default function AdmissionsDashboard() {
     isFetchingRef.current = true;
     if (force) setLoading(true);
     try {
-      const res = await fetch("/api/admissions/stats", { headers: getAuthHeaders() });
+      const qs = globalSchoolId !== "all" ? `?school_id=${globalSchoolId}` : "";
+      const res = await fetch(`/api/admissions/stats${qs}`, { headers: getAuthHeaders() });
       const json = await res.json();
       if (json.success && json.data) {
         setStats(json.data.stats);
@@ -86,7 +86,7 @@ export default function AdmissionsDashboard() {
   useEffect(() => {
     // If we have cached data, refresh in background; otherwise fetch and show loading
     fetchDashboardData(stats === null);
-  }, []);
+  }, [globalSchoolId]);
 
   const cardStyle = "bg-white dark:bg-slate-900 border border-border rounded-2xl p-5 shadow-sm flex items-center gap-4 text-left";
 
@@ -98,12 +98,26 @@ export default function AdmissionsDashboard() {
           <h1 className="page-title">Admissions Dashboard</h1>
           <p className="text-[12px] text-slate-500 mt-1 font-normal">Manage and track student admissions enquiries and applications</p>
         </div>
-        <button
-          onClick={() => fetchDashboardData(true)}
-          className="btn btn-outline flex items-center gap-2"
-        >
-          <RefreshCw className="w-4 h-4" /> Refresh Data
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          {isSuperAdmin && topLevelSchools.length > 0 && (
+            <select
+              value={globalSchoolId}
+              onChange={(e) => setGlobalSchoolId(e.target.value)}
+              className="px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg outline-none cursor-pointer"
+            >
+              <option value="all">All Schools</option>
+              {topLevelSchools.map((sch) => (
+                <option key={sch._id} value={sch._id}>{sch.name}</option>
+              ))}
+            </select>
+          )}
+          <button
+            onClick={() => fetchDashboardData(true)}
+            className="btn btn-outline flex items-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4" /> Refresh Data
+          </button>
+        </div>
       </div>
 
       {loading ? (
