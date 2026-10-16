@@ -81,7 +81,7 @@ function getInitialFilterMetadata() {
         _cachedStudentFilters = JSON.parse(stored);
         return _cachedStudentFilters;
       }
-    } catch {}
+    } catch { }
   }
   return {
     academicYears: [],
@@ -200,13 +200,14 @@ export default function StudentsPage() {
       if (!_studentFiltersPromise) {
         _studentFiltersPromise = (async () => {
           try {
-            const res = await fetch("/api/students/filters", { headers: getAuthHeaders() });
+            const res = await fetch("/api/students/filters", { headers: getAuthHeaders(), cache: "no-store" });
             const json = await res.json();
+
             if (json.success) {
               _cachedStudentFilters = json.data;
               try {
                 sessionStorage.setItem("sm_student_filters", JSON.stringify(json.data));
-              } catch {}
+              } catch { }
               return json.data;
             }
           } catch (err) {
@@ -555,7 +556,7 @@ export default function StudentsPage() {
         </div>
       )
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   ], [enableSections, activeDropdown, router]);
 
   if (isLoading && isInitialLoad) {
@@ -926,686 +927,692 @@ export default function StudentsPage() {
 
         {/* Search Row */}
         <div className="px-5 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border">
-            <div className="card-subtitle text-[13px]">
-              Showing{" "}
-              <span className="font-bold text-slate-700 dark:text-slate-200">
-                {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)}` : "0"}
-              </span>{" "}of{" "}
-              <span className="font-bold text-slate-700 dark:text-slate-200">{total}</span>{" "}students
+          <div className="card-subtitle text-[13px]">
+            Showing{" "}
+            <span className="font-bold text-slate-700 dark:text-slate-200">
+              {total > 0 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, total)}` : "0"}
+            </span>{" "}of{" "}
+            <span className="font-bold text-slate-700 dark:text-slate-200">{total}</span>{" "}students
+          </div>
+          <div className="relative w-full sm:w-72">
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5" />
+            <input
+              type="text"
+              placeholder="Search name, ID, class..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-9 pr-3.5 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900"
+            />
+          </div>
+        </div>
+
+        {viewMode === "list" ? (
+          <div className={`relative transition-opacity duration-200 ${isLoading && tableData.length > 0 ? "opacity-60 pointer-events-none" : ""}`}>
+            {isLoading && tableData.length > 0 && (
+              <div className="absolute top-2 right-4 z-10 flex items-center gap-2 text-[12px] font-medium text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 rounded-md border border-border shadow-sm">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                <span>Syncing...</span>
+              </div>
+            )}
+            <div className="erp-table-wrap">
+              <DataTable
+                columns={columns}
+                data={tableData}
+                virtualized={tableData.length > 20}
+                noDataMessage="No students registered or matching filters."
+              />
             </div>
-            <div className="relative w-full sm:w-72">
-              <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5" />
+            <PaginationBar
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={total}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+            />
+          </div>
+        ) : (
+          <div className={`p-6 bg-slate-50/50 dark:bg-slate-900/20 min-h-[400px] relative transition-opacity duration-200 ${isLoading && tableData.length > 0 ? "opacity-60 pointer-events-none" : ""}`}>
+            {isLoading && tableData.length > 0 && (
+              <div className="absolute top-2 right-4 z-10 flex items-center gap-2 text-[12px] font-medium text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 rounded-md border border-border shadow-sm">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                <span>Syncing...</span>
+              </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {isLoading && tableData.length === 0 ? (
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <StudentSkeletonCard key={`skeleton-${idx}`} />
+                ))
+              ) : tableData.length === 0 ? (
+                <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400 font-medium">
+                  No students registered or matching filters.
+                </div>
+              ) : (
+                tableData.map((student) => (
+                  <div key={student._id} className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 relative group flex flex-col hover:border-primary/50 transition-colors">
+                    {/* Top Row */}
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {bulkSelectMode && (
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(student._id)}
+                            onChange={() => {
+                              setSelectedIds(prev =>
+                                prev.includes(student._id)
+                                  ? prev.filter(id => id !== student._id)
+                                  : [...prev, student._id]
+                              );
+                            }}
+                            className="rounded border-slate-300 w-3.5 h-3.5 accent-primary cursor-pointer"
+                          />
+                        )}
+                        <span className="text-[13px] font-bold text-primary">{student.displayId}</span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${student.is_active ? "bg-success/10 text-success dark:bg-[#1D7F2C]/20 dark:text-success" : "bg-danger/10 text-danger dark:bg-danger/20"}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${student.is_active ? "bg-success" : "bg-danger"}`} /> {student.is_active ? "Active" : "Inactive"}
+                        </span>
+                        <div className="relative">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === student._id ? null : student._id); }}
+                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                          >
+                            <MoreVertical className="w-4 h-4" />
+                          </button>
+                          {activeDropdown === student._id && (
+                            <div className="absolute right-0 top-6 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-border py-2 z-50">
+                              <button onClick={() => { router.push(`/students/${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                <FileText className="w-4 h-4 text-slate-400" /> View Student
+                              </button>
+                              <button onClick={() => { router.push(`/students/add?edit=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                <Edit className="w-4 h-4 text-slate-400" /> Edit
+                              </button>
+                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setLoginModalTarget("student"); setIsLoginDetailsOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                <User className="w-4 h-4 text-slate-400" /> Login Details
+                              </button>
+                              <button onClick={() => {
+                                const studentUser = student.user_id;
+                                const sUid = studentUser && typeof studentUser === "object" ? studentUser._id : undefined;
+                                const sEmail = studentUser && typeof studentUser === "object" ? studentUser.email : student.email || "";
+                                setResetPassTarget({ userId: sUid, name: student.name, email: sEmail });
+                                setIsResetPassModalOpen(true);
+                                setActiveDropdown(null);
+                              }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                <Lock className="w-4 h-4 text-slate-400" /> Reset Password
+                              </button>
+                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDisableOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                <XCircle className="w-4 h-4 text-slate-400" /> Disable
+                              </button>
+                              <button onClick={() => { router.push(`/students/student-promotion?studentId=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
+                                <GraduationCap className="w-4 h-4 text-slate-400" /> Promote Student
+                              </button>
+                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDeleteOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3">
+                                <Trash2 className="w-4 h-4 text-rose-400" /> Delete
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Campus Badge for Super Admin */}
+                    {isSuperAdmin && (
+                      <div className="mb-3">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                          <Building2 className="w-3 h-3 text-amber-500 shrink-0" />
+                          <span className="truncate max-w-[200px]">
+                            {typeof student.school_id === "object" ? (student.school_id as any)?.name : "Campus"}
+                          </span>
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Profile info */}
+                    <div className="flex items-center gap-4 mb-5 cursor-pointer" onClick={() => router.push(`/students/${student._id}`)}>
+                      <img src={student.avatar} alt="Avatar" className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" loading="lazy" decoding="async" />
+                      <div>
+                        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{student.name}</h3>
+                        <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400">{student.classNameStr}</p>
+                      </div>
+                    </div>
+
+                    {/* Details grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-5 border-t border-b border-slate-100 dark:border-slate-700/50 py-4">
+                      <div>
+                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Roll No</p>
+                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.roll_no || "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Gender</p>
+                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.gender}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Joined On</p>
+                        <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.joinDateStr}</p>
+                      </div>
+                    </div>
+
+                    {/* Footer buttons */}
+                    <div className="flex items-center justify-end mt-auto">
+                      {!HIDE_FEES_FEATURE && (
+                        <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsCollectFeesOpen(true); }} className="px-3 py-1.5 rounded bg-[#F1F5F9] dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                          Add Fees
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <PaginationBar
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={total}
+              pageSize={PAGE_SIZE}
+              onPageChange={setPage}
+              className="mt-4 border-t-0"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ----------------------------------------------------
+          REGISTER MODAL
+          ---------------------------------------------------- */}
+      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Register Student">
+        <form onSubmit={handleAddSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Full Name</label>
               <input
+                required
                 type="text"
-                placeholder="Search name, ID, class..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3.5 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Alex Rivera"
+                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Email Address</label>
+              <input
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="e.g. alex@gmail.com"
+                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
               />
             </div>
           </div>
 
-          {viewMode === "list" ? (
-            <div className={`relative transition-opacity duration-200 ${isLoading && tableData.length > 0 ? "opacity-60 pointer-events-none" : ""}`}>
-              {isLoading && tableData.length > 0 && (
-                <div className="absolute top-2 right-4 z-10 flex items-center gap-2 text-[12px] font-medium text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 rounded-md border border-border shadow-sm">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-                  <span>Syncing...</span>
-                </div>
-              )}
-              <div className="erp-table-wrap">
-                <DataTable
-                  columns={columns}
-                  data={tableData}
-                  virtualized={tableData.length > 20}
-                  noDataMessage="No students registered or matching filters."
-                />
-              </div>
-              <PaginationBar
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={total}
-                pageSize={PAGE_SIZE}
-                onPageChange={setPage}
-              />
-            </div>
-          ) : (
-            <div className={`p-6 bg-slate-50/50 dark:bg-slate-900/20 min-h-[400px] relative transition-opacity duration-200 ${isLoading && tableData.length > 0 ? "opacity-60 pointer-events-none" : ""}`}>
-              {isLoading && tableData.length > 0 && (
-                <div className="absolute top-2 right-4 z-10 flex items-center gap-2 text-[12px] font-medium text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 rounded-md border border-border shadow-sm">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
-                  <span>Syncing...</span>
-                </div>
-              )}
-              <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
-                {isLoading && tableData.length === 0 ? (
-                  Array.from({ length: 6 }).map((_, idx) => (
-                    <StudentSkeletonCard key={`skeleton-${idx}`} />
-                  ))
-                ) : tableData.length === 0 ? (
-                  <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400 font-medium">
-                    No students registered or matching filters.
-                  </div>
-                ) : (
-                  tableData.map((student) => (
-                    <div key={student._id} className="bg-white dark:bg-slate-800 rounded-xl border border-border shadow-sm p-5 relative group flex flex-col hover:border-primary/50 transition-colors">
-                      {/* Top Row */}
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex flex-wrap items-center gap-2">
-                          {bulkSelectMode && (
-                            <input
-                              type="checkbox"
-                              checked={selectedIds.includes(student._id)}
-                              onChange={() => {
-                                setSelectedIds(prev =>
-                                  prev.includes(student._id)
-                                    ? prev.filter(id => id !== student._id)
-                                    : [...prev, student._id]
-                                );
-                              }}
-                              className="rounded border-slate-300 w-3.5 h-3.5 accent-primary cursor-pointer"
-                            />
-                          )}
-                          <span className="text-[13px] font-bold text-primary">{student.displayId}</span>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${student.is_active ? "bg-success/10 text-success dark:bg-[#1D7F2C]/20 dark:text-success" : "bg-danger/10 text-danger dark:bg-danger/20"}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${student.is_active ? "bg-success" : "bg-danger"}`} /> {student.is_active ? "Active" : "Inactive"}
-                          </span>
-                          <div className="relative">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === student._id ? null : student._id); }}
-                              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                            >
-                              <MoreVertical className="w-4 h-4" />
-                            </button>
-                            {activeDropdown === student._id && (
-                              <div className="absolute right-0 top-6 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-border py-2 z-50">
-                                <button onClick={() => { router.push(`/students/${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                  <FileText className="w-4 h-4 text-slate-400" /> View Student
-                                </button>
-                                <button onClick={() => { router.push(`/students/add?edit=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                  <Edit className="w-4 h-4 text-slate-400" /> Edit
-                                </button>
-                                <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setLoginModalTarget("student"); setIsLoginDetailsOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                  <User className="w-4 h-4 text-slate-400" /> Login Details
-                                </button>
-                                <button onClick={() => {
-                                  const studentUser = student.user_id;
-                                  const sUid = studentUser && typeof studentUser === "object" ? studentUser._id : undefined;
-                                  const sEmail = studentUser && typeof studentUser === "object" ? studentUser.email : student.email || "";
-                                  setResetPassTarget({ userId: sUid, name: student.name, email: sEmail });
-                                  setIsResetPassModalOpen(true);
-                                  setActiveDropdown(null);
-                                }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                  <Lock className="w-4 h-4 text-slate-400" /> Reset Password
-                                </button>
-                                <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDisableOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                  <XCircle className="w-4 h-4 text-slate-400" /> Disable
-                                </button>
-                                <button onClick={() => { router.push(`/students/student-promotion?studentId=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                  <GraduationCap className="w-4 h-4 text-slate-400" /> Promote Student
-                                </button>
-                                <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDeleteOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3">
-                                  <Trash2 className="w-4 h-4 text-rose-400" /> Delete
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Campus Badge for Super Admin */}
-                      {isSuperAdmin && (
-                        <div className="mb-3">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
-                            <Building2 className="w-3 h-3 text-amber-500 shrink-0" />
-                            <span className="truncate max-w-[200px]">
-                              {typeof student.school_id === "object" ? (student.school_id as any)?.name : "Campus"}
-                            </span>
-                          </span>
-                        </div>
-                      )}
-
-                      {/* Profile info */}
-                      <div className="flex items-center gap-4 mb-5 cursor-pointer" onClick={() => router.push(`/students/${student._id}`)}>
-                        <img src={student.avatar} alt="Avatar" className="w-12 h-12 rounded-full object-cover shadow-sm border border-border" loading="lazy" decoding="async" />
-                        <div>
-                          <h3 className="text-[15px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{student.name}</h3>
-                          <p className="text-[12px] font-medium text-slate-500 dark:text-slate-400">{student.classNameStr}</p>
-                        </div>
-                      </div>
-
-                      {/* Details grid */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-5 border-t border-b border-slate-100 dark:border-slate-700/50 py-4">
-                        <div>
-                          <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Roll No</p>
-                          <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.roll_no || "—"}</p>
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Gender</p>
-                          <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.gender}</p>
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-slate-500 mb-1 dark:text-slate-400">Joined On</p>
-                          <p className="text-[12px] font-bold text-slate-900 dark:text-white">{student.joinDateStr}</p>
-                        </div>
-                      </div>
-
-                      {/* Footer buttons */}
-                      <div className="flex items-center justify-end mt-auto">
-                        {!HIDE_FEES_FEATURE && (
-                          <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsCollectFeesOpen(true); }} className="px-3 py-1.5 rounded bg-[#F1F5F9] dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
-                            Add Fees
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              <PaginationBar
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={total}
-                pageSize={PAGE_SIZE}
-                onPageChange={setPage}
-                className="mt-4 border-t-0"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* ----------------------------------------------------
-          REGISTER MODAL
-          ---------------------------------------------------- */}
-        <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Register Student">
-          <form onSubmit={handleAddSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Full Name</label>
-                <input
-                  required
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Alex Rivera"
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Email Address</label>
-                <input
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. alex@gmail.com"
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Assign Class</label>
-                <select
-                  value={classId}
-                  onChange={(e) => setClassId(e.target.value)}
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
-                >
-                  {classes.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.name}{enableSections && c.section ? ` - ${c.section}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Roll Number</label>
-                <input
-                  required
-                  type="text"
-                  value={rollNo}
-                  onChange={(e) => setRollNo(e.target.value)}
-                  placeholder="e.g. 05"
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="w-full h-px bg-border my-2" />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent/Guardian Name</label>
-                <input
-                  required
-                  type="text"
-                  value={parentName}
-                  onChange={(e) => setParentName(e.target.value)}
-                  placeholder="e.g. Robert Watson"
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent Contact Info</label>
-                <input
-                  required
-                  type="text"
-                  value={parentContact}
-                  onChange={(e) => setParentContact(e.target.value)}
-                  placeholder="e.g. +1 (555) 123-4567"
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4">
-              <button
-                type="button"
-                onClick={() => setIsAddOpen(false)}
-                className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-primary hover:bg-primary/90 text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
-              >
-                Register Student
-              </button>
-            </div>
-          </form>
-        </Modal>
-
-        {/* ----------------------------------------------------
-          EDIT MODAL
-          ---------------------------------------------------- */}
-        <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Modify Student Info">
-          <form onSubmit={handleEditSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Full Name</label>
-                <input
-                  required
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Email Address</label>
-                <input
-                  required
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Assign Class</label>
-                <select
-                  value={classId}
-                  onChange={(e) => setClassId(e.target.value)}
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
-                >
-                  {classes.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.name}{enableSections && c.section ? ` - ${c.section}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Roll Number</label>
-                <input
-                  required
-                  type="text"
-                  value={rollNo}
-                  onChange={(e) => setRollNo(e.target.value)}
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent/Guardian Name</label>
-                <input
-                  required
-                  type="text"
-                  value={parentName}
-                  onChange={(e) => setParentName(e.target.value)}
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                />
-              </div>
-              <div className="flex flex-col gap-1.5 text-left">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent Contact Info</label>
-                <input
-                  required
-                  type="text"
-                  value={parentContact}
-                  onChange={(e) => setParentContact(e.target.value)}
-                  className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
-                />
-              </div>
-            </div>
-
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5 text-left">
-              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Enrollment Status</label>
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Assign Class</label>
               <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value as "Active" | "Inactive")}
+                value={classId}
+                onChange={(e) => setClassId(e.target.value)}
                 className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
               >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                {classes.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name}{enableSections && c.section ? ` - ${c.section}` : ""}
+                  </option>
+                ))}
               </select>
             </div>
-
-            <div className="flex justify-end gap-3 pt-4">
-              <button
-                type="button"
-                onClick={() => setIsEditOpen(false)}
-                className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-primary hover:bg-primary/90 text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
-              >
-                Save Changes
-              </button>
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Roll Number</label>
+              <input
+                required
+                type="text"
+                value={rollNo}
+                onChange={(e) => setRollNo(e.target.value)}
+                placeholder="e.g. 05"
+                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+              />
             </div>
-          </form>
-        </Modal>
+          </div>
 
-        {/* ----------------------------------------------------
+          <div className="w-full h-px bg-border my-2" />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent/Guardian Name</label>
+              <input
+                required
+                type="text"
+                value={parentName}
+                onChange={(e) => setParentName(e.target.value)}
+                placeholder="e.g. Robert Watson"
+                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent Contact Info</label>
+              <input
+                required
+                type="text"
+                value={parentContact}
+                onChange={(e) => setParentContact(e.target.value)}
+                placeholder="e.g. +1 (555) 123-4567"
+                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => setIsAddOpen(false)}
+              className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-primary hover:bg-primary/90 text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
+            >
+              Register Student
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ----------------------------------------------------
+          EDIT MODAL
+          ---------------------------------------------------- */}
+      <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Modify Student Info">
+        <form onSubmit={handleEditSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Full Name</label>
+              <input
+                required
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Email Address</label>
+              <input
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Assign Class</label>
+              <select
+                value={classId}
+                onChange={(e) => setClassId(e.target.value)}
+                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
+              >
+                {classes.map((c) => (
+                  <option key={c._id} value={c._id}>
+                    {c.name}{enableSections && c.section ? ` - ${c.section}` : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Roll Number</label>
+              <input
+                required
+                type="text"
+                value={rollNo}
+                onChange={(e) => setRollNo(e.target.value)}
+                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent/Guardian Name</label>
+              <input
+                required
+                type="text"
+                value={parentName}
+                onChange={(e) => setParentName(e.target.value)}
+                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5 text-left">
+              <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Parent Contact Info</label>
+              <input
+                required
+                type="text"
+                value={parentContact}
+                onChange={(e) => setParentContact(e.target.value)}
+                className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5 text-left">
+            <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Enrollment Status</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as "Active" | "Inactive")}
+              className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-medium text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
+            </select>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={() => setIsEditOpen(false)}
+              className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-primary hover:bg-primary/90 text-[13px] font-semibold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ----------------------------------------------------
           STUDENT DETAIL TAB VIEW MODAL
           ---------------------------------------------------- */}
-        <Modal
-          isOpen={isViewOpen}
-          onClose={() => setIsViewOpen(false)}
-          title={selectedStudent ? `${selectedStudent.name}'s Profile` : "Student Profile"}
-          size="lg"
-        >
-          {selectedStudent && (
-            <div className="space-y-6">
-              {/* Header Tabs */}
-              <div className="flex border-b border-border">
-                <button
-                  onClick={() => setActiveTab("profile")}
-                  className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "profile"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
-                    }`}
-                >
-                  Profile Details
-                </button>
-                <button
-                  onClick={() => setActiveTab("academics")}
-                  className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "academics"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
-                    }`}
-                >
-                  Academics & Grades
-                </button>
-                {!HIDE_FEES_FEATURE && (
-                  <button
-                    onClick={() => setActiveTab("billing")}
-                    className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "billing"
-                      ? "border-primary text-primary"
-                      : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
-                      }`}
-                  >
-                    Invoices & Billing
-                  </button>
-                )}
-              </div>
-
-              {/* TAB: PROFILE */}
-              {activeTab === "profile" && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                          <GraduationCap className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Class Cohort</p>
-                          <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
-                            {getClassName(selectedStudent)} (Roll #{selectedStudent.roll_no || "N/A"})
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                          <Mail className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Email Address</p>
-                          <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
-                            {selectedStudent.guardian_email || selectedStudent.phone || "N/A"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                          <Calendar className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Enrollment Date</p>
-                          <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
-                            {formatDate(selectedStudent.admission_date || selectedStudent.createdAt || "")}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                          <User className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Parent/Guardian</p>
-                          <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
-                            {selectedStudent.guardian_name || "N/A"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
-                          <Phone className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Emergency Contact</p>
-                          <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
-                            {selectedStudent.guardian_phone || "N/A"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB: ACADEMICS */}
-              {activeTab === "academics" && (
-                <div className="space-y-4 text-left">
-                  <h4 className="text-[14px] font-semibold text-slate-900 dark:text-white">Report Card (Recent Term Results)</h4>
-                  <div className="border border-border rounded-xl overflow-hidden shadow-sm">
-                    <table className="erp-table text-[13px]">
-                      <thead>
-                        <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
-                          <th className="px-5 py-3.5">Subject</th>
-                          <th className="px-5 py-3.5">Exam Term</th>
-                          <th className="px-5 py-3.5">Score Achieved</th>
-                          <th className="px-5 py-3.5">Grade Rating</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border bg-white dark:bg-slate-900">
-                        <tr>
-                          <td colSpan={4} className="px-5 py-8 text-center text-slate-500 dark:text-slate-400">
-                            No grade records posted for this student.
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB: BILLING */}
-              {activeTab === "billing" && !HIDE_FEES_FEATURE && (
-                <div className="space-y-4 text-left">
-                  <h4 className="text-[14px] font-semibold text-slate-900 dark:text-white">Financial Invoices</h4>
-                  <div className="border border-border rounded-xl overflow-hidden shadow-sm">
-                    <table className="erp-table text-[13px]">
-                      <thead>
-                        <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
-                          <th className="px-5 py-3.5">Invoice Description</th>
-                          <th className="px-5 py-3.5">Due Date</th>
-                          <th className="px-5 py-3.5">Amount Due</th>
-                          <th className="px-5 py-3.5">Payment Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border bg-white dark:bg-slate-900">
-                        <tr>
-                          <td colSpan={4} className="px-5 py-8 text-center text-slate-500 dark:text-slate-400">
-                            No billing invoice data exists.
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-
-
-              <div className="flex justify-end pt-4 border-t border-border">
-                <button
-                  type="button"
-                  onClick={() => setIsViewOpen(false)}
-                  className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
-                >
-                  Close Profile
-                </button>
-              </div>
-            </div>
-          )}
-        </Modal>
-
-
-
-        <LoginDetailsModal
-          isOpen={isLoginDetailsOpen}
-          onClose={() => setIsLoginDetailsOpen(false)}
-          student={selectedStudent}
-          target={loginModalTarget}
-        />
-
-        <ResetPasswordModal
-          isOpen={isResetPassModalOpen}
-          onClose={() => setIsResetPassModalOpen(false)}
-          userId={resetPassTarget?.userId}
-          userName={resetPassTarget?.name || ""}
-          userEmail={resetPassTarget?.email || ""}
-          onSuccess={() => fetchStudents({ search: debouncedSearch, classId: classFilter, gender: genderFilter, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 12, academic_year: academicYear })}
-        />
-
-        <ConfirmModal
-          isOpen={isDisableOpen}
-          onClose={() => setIsDisableOpen(false)}
-          title="Disable Student"
-          message={`Are you sure you want to disable ${selectedStudent?.name}? They will no longer be able to log in.`}
-          confirmText="Disable Student"
-          onConfirm={async () => {
-            if (selectedStudent) {
-              await updateStudentApi(selectedStudent._id, { is_active: false });
-              setIsDisableOpen(false);
-            }
-          }}
-        />
-
-        <ConfirmModal
-          isOpen={isDeleteOpen}
-          onClose={() => setIsDeleteOpen(false)}
-          title="Delete Student"
-          message={`Are you sure you want to remove ${selectedStudent?.name}? They will be deactivated.`}
-          confirmText="Delete"
-          onConfirm={async () => {
-            if (selectedStudent) {
-              await deleteStudentApi(selectedStudent._id);
-              setIsDeleteOpen(false);
-            }
-          }}
-        />
-
-        {/* Floating Bulk Actions Bar */}
-        {
-          selectedIds.length > 0 && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-[60] backdrop-blur-md border border-slate-700/60 transition-all duration-300 animate-in slide-in-from-bottom-5">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                <span className="text-[14px] font-bold tracking-wide">{selectedIds.length} Selected</span>
-              </div>
-
-              <div className="h-4 w-px bg-slate-700" />
-
-              <div className="flex items-center gap-2.5">
-                <button
-                  onClick={handleExport}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Export CSV</span>
-                </button>
-                <button
-                  onClick={() => handleBulkStatusChange(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
-                >
-                  <span>Activate</span>
-                </button>
-                <button
-                  onClick={() => handleBulkStatusChange(false)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
-                >
-                  <span>Deactivate</span>
-                </button>
-                <button
-                  onClick={handleBulkDelete}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  <span>Delete</span>
-                </button>
-              </div>
-
-              <div className="h-4 w-px bg-slate-700" />
-
+      <Modal
+        isOpen={isViewOpen}
+        onClose={() => setIsViewOpen(false)}
+        title={selectedStudent ? `${selectedStudent.name}'s Profile` : "Student Profile"}
+        size="lg"
+      >
+        {selectedStudent && (
+          <div className="space-y-6">
+            {/* Header Tabs */}
+            <div className="flex border-b border-border">
               <button
-                onClick={() => setSelectedIds([])}
-                className="text-[13px] text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
+                onClick={() => setActiveTab("profile")}
+                className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "profile"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
+                  }`}
               >
-                Clear
+                Profile Details
+              </button>
+              <button
+                onClick={() => setActiveTab("academics")}
+                className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "academics"
+                  ? "border-primary text-primary"
+                  : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
+                  }`}
+              >
+                Academics & Grades
+              </button>
+              {!HIDE_FEES_FEATURE && (
+                <button
+                  onClick={() => setActiveTab("billing")}
+                  className={`px-4 py-3 text-[13px] font-bold border-b-2 -mb-px transition-all cursor-pointer ${activeTab === "billing"
+                    ? "border-primary text-primary"
+                    : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:text-slate-200"
+                    }`}
+                >
+                  Invoices & Billing
+                </button>
+              )}
+            </div>
+
+            {/* TAB: PROFILE */}
+            {activeTab === "profile" && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                        <GraduationCap className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Class Cohort</p>
+                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
+                          {getClassName(selectedStudent)} (Roll #{selectedStudent.roll_no || "N/A"})
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                        <Mail className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Email Address</p>
+                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
+                          {selectedStudent.guardian_email || selectedStudent.phone || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                        <Calendar className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Enrollment Date</p>
+                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
+                          {formatDate(selectedStudent.admission_date || selectedStudent.createdAt || "")}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Parent/Guardian</p>
+                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
+                          {selectedStudent.guardian_name || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800">
+                        <Phone className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Emergency Contact</p>
+                        <p className="text-[14px] font-bold text-slate-900 dark:text-white mt-0.5">
+                          {selectedStudent.guardian_phone || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: ACADEMICS */}
+            {activeTab === "academics" && (
+              <div className="space-y-4 text-left">
+                <h4 className="text-[14px] font-semibold text-slate-900 dark:text-white">Report Card (Recent Term Results)</h4>
+                <div className="border border-border rounded-xl overflow-hidden shadow-sm">
+                  <table className="erp-table text-[13px]">
+                    <thead>
+                      <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                        <th className="px-5 py-3.5">Subject</th>
+                        <th className="px-5 py-3.5">Exam Term</th>
+                        <th className="px-5 py-3.5">Score Achieved</th>
+                        <th className="px-5 py-3.5">Grade Rating</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-white dark:bg-slate-900">
+                      <tr>
+                        <td colSpan={4} className="px-5 py-8 text-center text-slate-500 dark:text-slate-400">
+                          No grade records posted for this student.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: BILLING */}
+            {activeTab === "billing" && !HIDE_FEES_FEATURE && (
+              <div className="space-y-4 text-left">
+                <h4 className="text-[14px] font-semibold text-slate-900 dark:text-white">Financial Invoices</h4>
+                <div className="border border-border rounded-xl overflow-hidden shadow-sm">
+                  <table className="erp-table text-[13px]">
+                    <thead>
+                      <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-border text-[11px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                        <th className="px-5 py-3.5">Invoice Description</th>
+                        <th className="px-5 py-3.5">Due Date</th>
+                        <th className="px-5 py-3.5">Amount Due</th>
+                        <th className="px-5 py-3.5">Payment Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-white dark:bg-slate-900">
+                      <tr>
+                        <td colSpan={4} className="px-5 py-8 text-center text-slate-500 dark:text-slate-400">
+                          No billing invoice data exists.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+
+
+            <div className="flex justify-end pt-4 border-t border-border">
+              <button
+                type="button"
+                onClick={() => setIsViewOpen(false)}
+                className="px-4 py-2 border border-border text-[13px] font-bold rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200 transition-colors shadow-sm cursor-pointer"
+              >
+                Close Profile
               </button>
             </div>
-          )
-        }
-      </div >
+          </div>
+        )}
+      </Modal>
+
+
+
+      <CollectFeesModal
+        isOpen={isCollectFeesOpen}
+        onClose={() => setIsCollectFeesOpen(false)}
+        student={selectedStudent}
+      />
+
+      <LoginDetailsModal
+        isOpen={isLoginDetailsOpen}
+        onClose={() => setIsLoginDetailsOpen(false)}
+        student={selectedStudent}
+        target={loginModalTarget}
+      />
+
+      <ResetPasswordModal
+        isOpen={isResetPassModalOpen}
+        onClose={() => setIsResetPassModalOpen(false)}
+        userId={resetPassTarget?.userId}
+        userName={resetPassTarget?.name || ""}
+        userEmail={resetPassTarget?.email || ""}
+        onSuccess={() => fetchStudents({ search: debouncedSearch, classId: classFilter, gender: genderFilter, status: statusFilter, dateRange: selectedDateRange, sort: selectedSort, page, limit: 12, academic_year: academicYear })}
+      />
+
+      <ConfirmModal
+        isOpen={isDisableOpen}
+        onClose={() => setIsDisableOpen(false)}
+        title="Disable Student"
+        message={`Are you sure you want to disable ${selectedStudent?.name}? They will no longer be able to log in.`}
+        confirmText="Disable Student"
+        onConfirm={async () => {
+          if (selectedStudent) {
+            await updateStudentApi(selectedStudent._id, { is_active: false });
+            setIsDisableOpen(false);
+          }
+        }}
+      />
+
+      <ConfirmModal
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        title="Delete Student"
+        message={`Are you sure you want to remove ${selectedStudent?.name}? They will be deactivated.`}
+        confirmText="Delete"
+        onConfirm={async () => {
+          if (selectedStudent) {
+            await deleteStudentApi(selectedStudent._id);
+            setIsDeleteOpen(false);
+          }
+        }}
+      />
+
+      {/* Floating Bulk Actions Bar */}
+      {
+        selectedIds.length > 0 && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 z-[60] backdrop-blur-md border border-slate-700/60 transition-all duration-300 animate-in slide-in-from-bottom-5">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+              <span className="text-[14px] font-bold tracking-wide">{selectedIds.length} Selected</span>
+            </div>
+
+            <div className="h-4 w-px bg-slate-700" />
+
+            <div className="flex items-center gap-2.5">
+              <button
+                onClick={handleExport}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Export CSV</span>
+              </button>
+              <button
+                onClick={() => handleBulkStatusChange(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+              >
+                <span>Activate</span>
+              </button>
+              <button
+                onClick={() => handleBulkStatusChange(false)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+              >
+                <span>Deactivate</span>
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-[13px] font-semibold transition-colors cursor-pointer shadow-sm"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete</span>
+              </button>
+            </div>
+
+            <div className="h-4 w-px bg-slate-700" />
+
+            <button
+              onClick={() => setSelectedIds([])}
+              className="text-[13px] text-slate-400 hover:text-slate-200 transition-colors font-medium cursor-pointer"
+            >
+              Clear
+            </button>
+          </div>
+        )
+      }
+    </div >
   );
 }

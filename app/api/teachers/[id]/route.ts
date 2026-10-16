@@ -33,10 +33,9 @@ export async function GET(
   const cacheKey = role === "super_admin" ? `super:${id}` : `${schoolId}:${id}`;
   const cached = _singleTeacherCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
-    return sendConditionalJson(
-      req,
+    return NextResponse.json(
       { success: true, data: cached.data },
-      { cacheControl: "private, max-age=15, stale-while-revalidate=60" }
+      { headers: { "Cache-Control": "no-store" } }
     );
   }
 
@@ -62,10 +61,9 @@ export async function GET(
       expiresAt: Date.now() + SINGLE_TEACHER_TTL,
     });
 
-    return sendConditionalJson(
-      req,
+    return NextResponse.json(
       { success: true, data: teacher },
-      { cacheControl: "private, max-age=15, stale-while-revalidate=60" }
+      { headers: { "Cache-Control": "no-store" } }
     );
   } catch (error: any) {
     console.error("[GET /api/teachers/[id]] handler caught error:", error);

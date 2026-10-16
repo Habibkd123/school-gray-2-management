@@ -114,7 +114,7 @@ function getPagedQueryCache(key: string): { students: ApiStudent[]; total: numbe
           return parsed;
         }
       }
-    } catch {}
+    } catch { }
   }
   return null;
 }
@@ -134,7 +134,7 @@ function invalidateCache(singleId?: string) {
           sessionStorage.removeItem(k);
         }
       });
-    } catch {}
+    } catch { }
   }
 }
 
@@ -165,7 +165,7 @@ export function getStoredStudent(id: string): ApiStudent | null {
         }
       }
     }
-  } catch {}
+  } catch { }
   return null;
 }
 
@@ -192,7 +192,7 @@ export function useStudents(options?: { skip?: boolean }) {
             }
           }
         }
-      } catch {}
+      } catch { }
     }
     return [];
   });
@@ -370,7 +370,9 @@ export function useStudents(options?: { skip?: boolean }) {
         const res = await fetch(`/api/students?${cacheKey}`, {
           headers: getAuthHeaders(),
           signal: controller.signal,
+          cache: "no-store",
         });
+
 
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch");
@@ -384,7 +386,7 @@ export function useStudents(options?: { skip?: boolean }) {
         if (typeof window !== "undefined") {
           try {
             sessionStorage.setItem(SESSION_STUDENTS_PREFIX + cacheKey, JSON.stringify(queryEntry));
-          } catch {}
+          } catch { }
         }
 
         // Only cache the full unfiltered legacy list
@@ -509,7 +511,7 @@ export function useStudents(options?: { skip?: boolean }) {
       if (typeof window !== "undefined" && updatedStudent) {
         try {
           sessionStorage.setItem(SESSION_STUDENT_DETAIL_PREFIX + id, JSON.stringify(updatedStudent));
-        } catch {}
+        } catch { }
       }
 
       return { success: true, message: "Student updated successfully", data: updatedStudent };
@@ -575,7 +577,7 @@ export function useStudents(options?: { skip?: boolean }) {
       if (typeof window !== "undefined") {
         try {
           sessionStorage.setItem(SESSION_STUDENT_DETAIL_PREFIX + id, JSON.stringify(data.data));
-        } catch {}
+        } catch { }
       }
       return data.data;
     } catch {

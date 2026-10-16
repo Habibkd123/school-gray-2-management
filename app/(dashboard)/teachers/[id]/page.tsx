@@ -22,22 +22,10 @@ function getStoredTeacher(id: string): ApiTeacher | null {
   if (typeof window === "undefined" || !id) return null;
   try {
     const direct = sessionStorage.getItem(`sm_teacher_detail_${id}`);
-    if (direct) return JSON.parse(direct);
-
-    for (let i = 0; i < sessionStorage.length; i++) {
-      const key = sessionStorage.key(i);
-      if (key && key.startsWith("sm_paged_teachers_")) {
-        const val = sessionStorage.getItem(key);
-        if (val) {
-          const parsed = JSON.parse(val);
-          if (parsed.teachers && Array.isArray(parsed.teachers)) {
-            const match = parsed.teachers.find((t: any) => t._id === id);
-            if (match) {
-              sessionStorage.setItem(`sm_teacher_detail_${id}`, JSON.stringify(match));
-              return match;
-            }
-          }
-        }
+    if (direct) {
+      const parsed = JSON.parse(direct);
+      if (parsed && (parsed.dob || parsed.address || parsed.experience_years !== undefined)) {
+        return parsed;
       }
     }
   } catch {}
@@ -101,16 +89,27 @@ export default function TeacherDetailsPage() {
   useEffect(() => {
     if (!teacherId) return;
     let isCurrent = true;
-    getTeacher(teacherId).then(t => {
-      if (!isCurrent) return;
-      if (t) {
-        setTeacher(t);
-        try {
-          sessionStorage.setItem(`sm_teacher_detail_${teacherId}`, JSON.stringify(t));
-        } catch {}
-      }
-      setLoading(false);
-    });
+    
+    // Fetch full, up-to-date teacher document
+    fetch(`/api/teachers/${teacherId}`, {
+      headers: getAuthHeaders(),
+      cache: "no-store",
+    })
+      .then(res => res.json())
+      .then(res => {
+        if (!isCurrent) return;
+        if (res.success && res.data) {
+          setTeacher(res.data);
+          try {
+            sessionStorage.setItem(`sm_teacher_detail_${teacherId}`, JSON.stringify(res.data));
+          } catch {}
+        }
+      })
+      .catch(err => console.error("Error loading teacher details:", err))
+      .finally(() => {
+        if (isCurrent) setLoading(false);
+      });
+
     return () => { isCurrent = false; };
   }, [teacherId]);
 
@@ -208,7 +207,7 @@ export default function TeacherDetailsPage() {
   const isTeacherSelf = loggedInUser?.role === "teacher" && teacher && String(teacherUserId) === String(loggedInUser.id);
   const isAuthorized = loggedInUser?.role !== "teacher" || isTeacherSelf;
 
-  // Derivations from live assignments
+  // Derivations from live assignments or teacher profile
   const assignedClasses = useMemo(() => {
     const list: string[] = [];
     assignments.forEach(a => {
@@ -217,8 +216,24 @@ export default function TeacherDetailsPage() {
         if (!list.includes(clsName)) list.push(clsName);
       }
     });
+    // Fallback to teacher's class_ids / class_id if no timetable periods assigned yet
+    if (list.length === 0 && teacher) {
+      const cids = (teacher as any).class_ids?.length ? (teacher as any).class_ids : (teacher.class_id ? [teacher.class_id] : []);
+      cids.forEach((c: any) => {
+        if (typeof c === "object" && c?.name) {
+          const name = c.section ? `${c.name} - ${c.section}` : c.name;
+          if (!list.includes(name)) list.push(name);
+        } else if (c) {
+          const found = classes.find(item => String(item._id) === String(c));
+          if (found) {
+            const name = found.section ? `${found.name} - ${found.section}` : found.name;
+            if (!list.includes(name)) list.push(name);
+          }
+        }
+      });
+    }
     return list;
-  }, [assignments]);
+  }, [assignments, teacher, classes]);
 
   const assignedSubjects = useMemo(() => {
     const list: string[] = [];
@@ -228,8 +243,39 @@ export default function TeacherDetailsPage() {
         if (!list.includes(subName)) list.push(subName);
       }
     });
+    // Fallback to teacher's expertise / subject_specialization if no timetable periods assigned yet
+    if (list.length === 0 && teacher) {
+      if (Array.isArray((teacher as any).expertise) && (teacher as any).expertise.length > 0) {
+        (teacher as any).expertise.forEach((exp: string) => {
+          if (exp && !list.includes(exp)) list.push(exp);
+        });
+      } else if (teacher.subject_specialization) {
+        list.push(teacher.subject_specialization);
+      }
+    }
     return list;
-  }, [assignments]);
+  }, [assignments, teacher]);
+
+  const classTeacherDisplay = useMemo(() => {
+    if (!teacher) return "Not Assigned";
+    // 1. Check teacher.class_id
+    if (teacher.class_id) {
+      if (typeof teacher.class_id === "object" && (teacher.class_id as any).name) {
+        const c = teacher.class_id as any;
+        return `${c.name} ${c.section || ""}`.trim();
+      }
+      const cid = typeof teacher.class_id === "object" ? (teacher.class_id as any)._id : teacher.class_id;
+      const found = classes.find(c => String(c._id) === String(cid));
+      if (found) return `${found.name} ${found.section || ""}`.trim();
+    }
+    // 2. Check classes where class_teacher_id matches this teacher
+    const foundByTeacher = classes.find(c => {
+      const ctid = typeof c.class_teacher_id === "object" ? (c.class_teacher_id as any)?._id : c.class_teacher_id;
+      return String(ctid) === String(teacher._id);
+    });
+    if (foundByTeacher) return `${foundByTeacher.name} ${foundByTeacher.section || ""}`.trim();
+    return "Not Assigned";
+  }, [teacher, classes]);
 
   const currentWorkload = useMemo(() => {
     return assignments.reduce((acc, a) => acc + (Number(a.weekly_periods) || 0), 0);
@@ -494,6 +540,17 @@ export default function TeacherDetailsPage() {
               <div>
                 <h2 className="text-[16px] leading-[19.2px] font-medium text-foreground dark:text-slate-100">{teacher.name}</h2>
                 <p className="text-[12px] text-primary font-bold mt-0.5">{teacher.employee_id || "No ID"}</p>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${teacher.is_active ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400" : "bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400"}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${teacher.is_active ? "bg-emerald-500" : "bg-rose-500"}`} />
+                    {teacher.is_active ? "Active" : "Inactive"}
+                  </span>
+                  {teacher.qualification && (
+                    <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 rounded text-[10px] font-bold">
+                      {teacher.qualification}
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-[#68718a] font-medium mt-1">Joined : {formatDate(teacher.join_date)}</p>
               </div>
             </div>
@@ -506,7 +563,7 @@ export default function TeacherDetailsPage() {
               <div className="space-y-3.5">
                 <InfoRow label="Department" value={teacher.department || "Academic"} />
                 <InfoRow label="Designation" value={teacher.designation || "Teacher"} />
-                <InfoRow label="Class Teacher Of" value={getClassName(teacher.classId || teacher.class_id || "")} />
+                <InfoRow label="Class Teacher Of" value={classTeacherDisplay} />
                 <InfoRow label="Assigned Classes" value={assignedClasses.join(", ") || "None"} />
                 <InfoRow label="Assigned Subjects" value={assignedSubjects.join(", ") || "None"} />
                 <InfoRow label="Current Workload" value={`${currentWorkload} periods/week`} />
@@ -580,7 +637,7 @@ export default function TeacherDetailsPage() {
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Experience</p>
-                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.experience_years} Years</p>
+                    <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">{teacher.experience_years != null ? `${teacher.experience_years} Years` : "Not Specified"}</p>
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-slate-900 dark:text-white mb-1">Joining Date</p>

@@ -177,6 +177,7 @@ export function useParents(options?: { skip?: boolean; filterByYear?: boolean })
       try {
         const res = await fetch(`/api/parents?${cacheKey}`, {
           headers: getAuthHeaders(),
+          cache: "no-store",
         });
         const data = await res.json();
         if (data.success && data.data) {

@@ -876,7 +876,7 @@ export default function TeachersPage() {
                 <span>Syncing...</span>
               </div>
             )}
-            <div className="grid gap-6" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {teachers.length === 0 ? (
                 <div className="col-span-full py-12 text-center text-slate-500 dark:text-slate-400 font-medium">
                   No faculty records matching filter.

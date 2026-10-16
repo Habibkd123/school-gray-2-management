@@ -670,33 +670,17 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
       local = getStoredTeacher(id);
     }
 
-    // 3. If we have cached data, return it immediately and refresh in background
-    if (local) {
-      // Background refresh — update cache silently without blocking the caller
-      fetch(`/api/teachers/${id}`, { headers: getAuthHeaders() })
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data?.success && data.data) {
-            // Update sessionStorage with fresh data
-            if (typeof window !== "undefined") {
-              try {
-                sessionStorage.setItem(SESSION_TEACHER_DETAIL_PREFIX + id, JSON.stringify(data.data));
-              } catch {}
-            }
-            // Update module cache if present
-            if (_teachersCache) {
-              _teachersCache = _teachersCache.map(t => t._id === id ? data.data : t);
-            }
-          }
-        })
-        .catch(() => {});
+    // 3. Only return cached if it is a complete detail object
+    const isComplete = local && (local.dob || local.address || local.experience_years !== undefined);
+    if (isComplete) {
       return local;
     }
 
-    // 4. No cache — must fetch and wait
+    // 4. No complete cache — must fetch fresh details
     try {
       const res = await fetch(`/api/teachers/${id}`, {
         headers: getAuthHeaders(),
+        cache: "no-store",
       });
       const data = await res.json();
       if (!res.ok || !data.success) return null;

@@ -59,10 +59,7 @@ export default function GuardiansPage() {
     deleteParent
   } = useParents({ skip: true }); // skip default effect to fetch manually with dependencies
 
-  const [isInitialLoad, setIsInitialLoad] = React.useState(true);
-  useEffect(() => {
-    if (!isLoading && isInitialLoad) setIsInitialLoad(false);
-  }, [isLoading]);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(() => parents.length > 0);
 
   // Dynamic filters state
   const [filterOptions, setFilterOptions] = useState<{
@@ -137,6 +134,8 @@ export default function GuardiansPage() {
       student_id: studentFilter === "all" ? undefined : studentFilter,
       guardian_type: guardianTypeFilter === "all" ? undefined : guardianTypeFilter,
       status: statusFilter === "all" ? undefined : statusFilter
+    }).finally(() => {
+      setHasLoadedOnce(true);
     });
   }, [
     fetchParents,
@@ -148,7 +147,8 @@ export default function GuardiansPage() {
     sectionFilter,
     studentFilter,
     guardianTypeFilter,
-    statusFilter
+    statusFilter,
+    activeRole
   ]);
 
   // Add / Edit Forms
@@ -540,20 +540,20 @@ export default function GuardiansPage() {
             <span>entries</span>
           </div>
           <div>
-            Showing {(page - 1) * limit + 1} to {Math.min(page * limit, totalParents)} of {totalParents} records
+            Showing {totalParents === 0 ? 0 : (page - 1) * limit + 1} to {Math.min(page * limit, totalParents)} of {totalParents} records
           </div>
         </div>
 
         {/* Dynamic Table Layout (Part 2) */}
-        <div className={`custom-page-table-wrap overflow-x-auto min-h-[300px] relative transition-opacity duration-200 ${isLoading && !isInitialLoad ? "opacity-60 pointer-events-none" : ""}`}>
-          {isLoading && !isInitialLoad && (
+        <div className={`custom-page-table-wrap overflow-x-auto min-h-[300px] relative transition-opacity duration-200 ${isLoading && parents.length > 0 ? "opacity-70 pointer-events-none" : ""}`}>
+          {isLoading && parents.length > 0 && (
             <div className="absolute top-2 right-4 z-10 flex items-center gap-2 text-[12px] font-medium text-slate-500 bg-white/80 dark:bg-slate-900/80 px-2.5 py-1 rounded-md border border-border shadow-sm">
               <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
               <span>Syncing...</span>
             </div>
           )}
           {/* ── Initial load skeleton ─────────────────────────────── */}
-          {isInitialLoad && isLoading ? (
+          {(!hasLoadedOnce && parents.length === 0) || (isLoading && parents.length === 0) ? (
             <table className="erp-table text-[13px] whitespace-nowrap w-full">
               <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
                 <tr>

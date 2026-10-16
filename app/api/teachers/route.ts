@@ -202,7 +202,7 @@ export async function GET(req: NextRequest) {
 
     if (!isFull) {
       queryBuilder = queryBuilder.select(
-        "_id school_id user_id class_id class_ids name employee_id gender phone email photo_url qualification expertise join_date is_active designation department createdAt"
+        "_id school_id user_id class_id class_ids name employee_id gender dob phone email address photo_url qualification expertise experience_years subject_specialization join_date is_active designation department resume_url joining_letter_url createdAt"
       );
     }
 

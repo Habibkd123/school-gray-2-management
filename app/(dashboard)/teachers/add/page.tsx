@@ -455,12 +455,12 @@ function AddTeacherContent() {
         {/* 1. Professional Information */}
         <SectionCard icon={<GraduationCap className="w-4 h-4" />} title="Professional Information">
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-5 text-left">
-            <InputGroup
+            {/* <InputGroup
               label="Teacher ID"
               value={editId ? teacherId : "Auto Generated"}
               disabled
               hint="Automatically assigned by the system"
-            />
+            /> */}
             <InputGroup
               label="Employee Code"
               placeholder="e.g. EMP-001"
@@ -506,7 +506,7 @@ function AddTeacherContent() {
               onChange={e => setClassId(e.target.value)}
               options={[
                 { label: "Select Class", value: "" },
-                ...classes.map(c => ({ label: `${c.name} - ${c.section}`, value: c._id }))
+                ...classes.map(c => ({ label: `${c.name} ${c.section ? `(${c.section})` : ""}`, value: c._id }))
               ]}
             />
           </div>

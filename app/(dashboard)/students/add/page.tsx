@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 
 import { validateSequential } from "@/lib/utils/formValidation";
+import { useAppState } from "@/app/context/store";
 
 // ─── Types ─────────────────────────────────────────────────────────
 interface DocFile { name: string; url: string; }
@@ -148,6 +149,7 @@ function AddStudentContent() {
   const { classes: apiClasses } = useClasses();
   const { createStudent, updateStudent, getStudent } = useStudents({ skip: true });
   const { uploadFile } = useUpload();
+  const { academicYear: activeAcademicYear } = useAppState();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submittingRef = useRef(false);
@@ -159,6 +161,7 @@ function AddStudentContent() {
   const [uploadingGuardianPhoto, setUploadingGuardianPhoto] = useState(false);
 
   const classOptions = apiClasses.map(c => ({ label: c.section ? `${c.name} - ${c.section}` : c.name, value: c._id }));
+  const yearOptions = Array.from(new Set(["2024-2025", "2025-2026", "2026-2027", "2027-2028", activeAcademicYear].filter(Boolean)));
 
   const cachedStudent = editId ? getStoredStudent(editId) : null;
   const parentObj = cachedStudent?.parent_id && typeof cachedStudent.parent_id === "object" ? cachedStudent.parent_id : null;
@@ -182,7 +185,13 @@ function AddStudentContent() {
     }
     return "Select";
   });
-  const [academicYear, setAcademicYear] = useState(() => cachedStudent?.academic_year || "June 2025 - 2026");
+  const [academicYear, setAcademicYear] = useState(() => cachedStudent?.academic_year || activeAcademicYear || "2026-2027");
+
+  useEffect(() => {
+    if (!editId && activeAcademicYear && !cachedStudent) {
+      setAcademicYear(activeAcademicYear);
+    }
+  }, [editId, activeAcademicYear, cachedStudent]);
   const [aadhaarNo, setAadhaarNo] = useState(() => cachedStudent?.aadhaar_no || "");
   const [address, setAddress] = useState(() => cachedStudent?.address || "");
 
@@ -521,7 +530,7 @@ function AddStudentContent() {
               />
               {/* Form Grid */}
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-5 text-left">
-                <InputGroup label="Academic Year" type="select" value={academicYear} onChange={e => setAcademicYear(e.target.value)} options={["June 2024 - 2025", "June 2025 - 2026", "June 2026 - 2027"]} required error={valErrors.academicYear} id="academicYear" />
+                <InputGroup label="Academic Year" type="select" value={academicYear} onChange={e => setAcademicYear(e.target.value)} options={yearOptions} required error={valErrors.academicYear} id="academicYear" />
                 <InputGroup label="Admission Number" placeholder="Enter Admission Number" value={admissionNo} onChange={e => setAdmissionNo(e.target.value)} required error={valErrors.admissionNo} id="admissionNo" />
                 <InputGroup label="Admission Date" type="date" value={admissionDate} onChange={e => setAdmissionDate(e.target.value)} required error={valErrors.admissionDate} id="admissionDate" />
                 <InputGroup label="Class" type="select" value={classId} onChange={e => setClassId(e.target.value)} options={[{ label: "Select", value: "" }, ...classOptions]} required error={valErrors.classId} id="classId" />

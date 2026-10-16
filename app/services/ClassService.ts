@@ -12,7 +12,7 @@ export const ClassService = {
       allClassesCache = null;
       allClassesPromise = null;
       if (typeof window !== "undefined") {
-        try { sessionStorage.removeItem("sm_classes_cache"); } catch {}
+        try { sessionStorage.removeItem("sm_classes_cache"); } catch { }
       }
     }
 
@@ -33,7 +33,7 @@ export const ClassService = {
             return this.filterAndSortClasses(allClassesCache!, options);
           }
         }
-      } catch {}
+      } catch { }
     }
 
     if (!allClassesPromise) {
@@ -41,6 +41,7 @@ export const ClassService = {
         try {
           const res = await fetch("/api/classes?limit=all&include_stats=false", {
             headers: getAuthHeaders(),
+            cache: "no-store",
           });
           if (!res.ok) throw new Error("Failed to fetch classes from ClassService");
           const json = await res.json();
@@ -50,7 +51,7 @@ export const ClassService = {
           if (typeof window !== "undefined") {
             try {
               sessionStorage.setItem("sm_classes_cache", JSON.stringify({ classes: allClassesCache, timestamp: cacheTime }));
-            } catch {}
+            } catch { }
           }
           return allClassesCache!;
         } catch (err) {
@@ -74,7 +75,7 @@ export const ClassService = {
     allClassesPromise = null;
     cacheTime = 0;
     if (typeof window !== "undefined") {
-      try { sessionStorage.removeItem("sm_classes_cache"); } catch {}
+      try { sessionStorage.removeItem("sm_classes_cache"); } catch { }
     }
   },
 

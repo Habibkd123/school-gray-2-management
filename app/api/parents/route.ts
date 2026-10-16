@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
     const cacheKey = `${schoolId}:${searchParams.toString()}`;
     const cached = _parentsServerCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
-      return sendConditionalJson(request, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+      return NextResponse.json(cached.data, { headers: { "Cache-Control": "no-store" } });
     }
 
     const filter: Record<string, any> = { school_id: schoolId };
@@ -174,10 +174,9 @@ export async function GET(request: NextRequest) {
     // Cache the result
     _parentsServerCache.set(cacheKey, { data: responseData, expiresAt: Date.now() + PARENTS_CACHE_TTL });
 
-    return sendConditionalJson(
-      request,
+    return NextResponse.json(
       responseData,
-      { cacheControl: "private, max-age=15, stale-while-revalidate=30" }
+      { headers: { "Cache-Control": "no-store" } }
     );
   } catch (err) {
     console.error("[GET /api/parents]", err);
