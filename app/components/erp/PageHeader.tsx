@@ -21,31 +21,31 @@ export interface PageHeaderProps {
  */
 export function PageHeader({ title, breadcrumbs, actions }: PageHeaderProps) {
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-roboto w-full">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">
+        <h1 className="text-xl font-bold text-slate-900 dark:text-white">
           {title}
         </h1>
         {breadcrumbs && breadcrumbs.length > 0 && (
-          <nav className="flex items-center gap-1.5 text-xs font-bold">
+          <nav className="flex items-center gap-2 text-[13px] text-slate-500 dark:text-slate-400">
             {breadcrumbs.map((crumb, index) => {
               const isLast = index === breadcrumbs.length - 1;
               return (
-                <div key={index} className="flex items-center gap-1.5">
+                <div key={index} className="flex items-center gap-2">
                   {crumb.href && !isLast ? (
                     <Link
                       href={crumb.href}
-                      className="text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-colors"
+                      className="hover:text-primary transition-colors"
                     >
                       {crumb.label}
                     </Link>
                   ) : (
-                    <span className="text-slate-800 dark:text-slate-200">
+                    <span className={isLast ? "text-slate-900 dark:text-white font-medium" : "text-slate-500 dark:text-slate-400"}>
                       {crumb.label}
                     </span>
                   )}
                   {!isLast && (
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="text-slate-400 dark:text-slate-600">/</span>
                   )}
                 </div>
               );

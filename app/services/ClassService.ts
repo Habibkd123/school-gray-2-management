@@ -17,7 +17,7 @@ export const ClassService = {
     }
 
     const now = Date.now();
-    if (allClassesCache && (now - cacheTime < TTL)) {
+    if (allClassesCache && allClassesCache.length > 0 && (now - cacheTime < TTL)) {
       return this.filterAndSortClasses(allClassesCache, options);
     }
 
@@ -27,7 +27,7 @@ export const ClassService = {
         const raw = sessionStorage.getItem("sm_classes_cache");
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (now - parsed.timestamp < TTL && Array.isArray(parsed.classes)) {
+          if (now - parsed.timestamp < TTL && Array.isArray(parsed.classes) && parsed.classes.length > 0) {
             allClassesCache = parsed.classes;
             cacheTime = parsed.timestamp;
             return this.filterAndSortClasses(allClassesCache!, options);
@@ -48,7 +48,7 @@ export const ClassService = {
           if (!json.success) throw new Error(json.message || "Failed to fetch classes");
           allClassesCache = json.data.classes || [];
           cacheTime = Date.now();
-          if (typeof window !== "undefined") {
+          if (allClassesCache && allClassesCache.length > 0 && typeof window !== "undefined") {
             try {
               sessionStorage.setItem("sm_classes_cache", JSON.stringify({ classes: allClassesCache, timestamp: cacheTime }));
             } catch { }

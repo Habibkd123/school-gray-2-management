@@ -158,7 +158,7 @@ export default function StudentAttendancePage() {
           const parsed = JSON.parse(raw);
           if (parsed.data) return parsed.data;
         }
-      } catch {}
+      } catch { }
     }
     return [];
   });
@@ -172,7 +172,7 @@ export default function StudentAttendancePage() {
           const parsed = JSON.parse(raw);
           if (parsed.classStudentCounts) return parsed.classStudentCounts;
         }
-      } catch {}
+      } catch { }
     }
     return {};
   });
@@ -205,7 +205,7 @@ export default function StudentAttendancePage() {
             cached = JSON.parse(raw);
             if (cached) _dailyAttendanceCache.set(cacheKey, cached);
           }
-        } catch {}
+        } catch { }
       }
 
       const isFresh = cached && (Date.now() - cached.timestamp < DAILY_CACHE_TTL_MS);
@@ -246,7 +246,7 @@ export default function StudentAttendancePage() {
           if (typeof window !== "undefined") {
             try {
               sessionStorage.setItem(`cache_student_att_${cacheKey}`, JSON.stringify(entry));
-            } catch {}
+            } catch { }
           }
         } else {
           setDailyAttendances([]);
@@ -629,8 +629,8 @@ export default function StudentAttendancePage() {
             </div>
           }
           breadcrumbs={[
-            { label: "Dashboard" },
-            { label: "Attendance" },
+            { label: "Dashboard", href: "/dashboard" },
+            { label: "Attendance", href: "/attendance" },
             { label: "Student Attendance" }
           ]}
           actions={

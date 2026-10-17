@@ -101,6 +101,7 @@ export const clearSession = () => {
       sessionStorage.removeItem("sm_active_subdomain");
       sessionStorage.removeItem("sm_cached_permissions");
       sessionStorage.removeItem("sm_cached_permissions_time");
+      sessionStorage.removeItem("sm_classes_cache");
     } catch {}
 
     // Clear cookies across root domain and current domain
@@ -137,14 +138,19 @@ export function useAuthReady(): boolean {
   const [ready, setReady] = useState<boolean>(() => {
     // On the server this is always false; on the client we can check immediately.
     if (typeof window === "undefined") return false;
-    return !!localStorage.getItem(KEYS.ACCESS_TOKEN);
+    return !!getAccessToken();
   });
 
   useEffect(() => {
     if (ready) return; // Already confirmed — no listener needed.
 
+    // Immediate check via getAccessToken
+    if (getAccessToken()) {
+      setReady(true);
+      return;
+    }
+
     // Listen for the storage event (fires when saveSession writes the token).
-    // This is instant — no polling delay.
     const onStorage = (e: StorageEvent) => {
       if (e.key === KEYS.ACCESS_TOKEN && e.newValue) {
         setReady(true);
@@ -152,17 +158,23 @@ export function useAuthReady(): boolean {
     };
     window.addEventListener("storage", onStorage);
 
-    // Also do a single immediate check in case the token was written before
-    // this effect ran (e.g., token already present from a previous tab).
-    if (localStorage.getItem(KEYS.ACCESS_TOKEN)) {
-      setReady(true);
-    }
+    // Fast interval check in case token is set in cookies or storage slightly later
+    const interval = setInterval(() => {
+      if (getAccessToken()) {
+        setReady(true);
+        clearInterval(interval);
+      }
+    }, 50);
 
-    // Safety fallback: give up after 5 s so hooks can run (will get 401).
-    const timeout = setTimeout(() => setReady(true), 5000);
+    // Safety fallback: give up after 2s
+    const timeout = setTimeout(() => {
+      setReady(true);
+      clearInterval(interval);
+    }, 2000);
 
     return () => {
       window.removeEventListener("storage", onStorage);
+      clearInterval(interval);
       clearTimeout(timeout);
     };
   }, [ready]);

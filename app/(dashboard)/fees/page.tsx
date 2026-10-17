@@ -82,7 +82,7 @@ function getStoredFees(key: string): FeesCachePayload | null {
         return parsed;
       }
     }
-  } catch {}
+  } catch { }
   return null;
 }
 
@@ -318,7 +318,7 @@ export default function FeesPage() {
         setClassFilter(val);
         setCurrentPage(1);
       },
-      options: classes.map(c => ({ label: `${c.name} - ${c.section}`, value: c._id }))
+      options: classes.map(c => ({ label: `${c.name}  ${c.section && `-${c.section}`}`, value: c._id }))
     },
     {
       id: "section",
@@ -727,7 +727,7 @@ export default function FeesPage() {
         if (typeof window !== "undefined") {
           try {
             sessionStorage.setItem(`cache_${key}`, JSON.stringify(payload));
-          } catch {}
+          } catch { }
         }
         setStudents(payload.students);
         setTotalItems(payload.totalItems);
@@ -1186,42 +1186,84 @@ export default function FeesPage() {
   const classWiseCollections = useMemo(() => {
     const map = new Map<string, { className: string; teacherName: string; invoiced: number; paid: number; balance: number }>();
 
-    // Seed classes
+    // 1. Seed classes from classes list
     classes.forEach(c => {
-      map.set(c._id, {
-        className: `${c.name} - ${c.section}`,
-        teacherName: c.class_teacher_id?.name || "Unassigned",
+      const id = String(c._id);
+      const teacherName = typeof c.class_teacher_id === "object" && c.class_teacher_id !== null && (c.class_teacher_id as any).name
+        ? (c.class_teacher_id as any).name
+        : (teachers.find(t => String(t._id) === String(c.class_teacher_id))?.name || "Unassigned");
+
+      map.set(id, {
+        className: c.section ? `${c.name} - ${c.section}` : c.name,
+        teacherName,
         invoiced: 0,
         paid: 0,
         balance: 0
       });
     });
 
+    // 2. Aggregate students data into classes
     allStudentsForReports.forEach(s => {
-      const cid = s.class_id;
-      if (map.has(cid)) {
-        const item = map.get(cid)!;
-        item.invoiced += s.totalFees;
-        item.paid += s.totalPaid;
-        item.balance += s.balanceAmount;
+      const cid = typeof s.class_id === "object" && s.class_id !== null
+        ? String((s.class_id as any)._id || (s.class_id as any).id || "")
+        : String(s.class_id || "");
+
+      const targetClass = classes.find(c => {
+        const cId = String(c._id);
+        return (cid && cId === cid) || (s.class_name && (c.name === s.class_name || `${c.name} - ${c.section}` === s.class_name || c.name === s.class_name.split(" - ")[0]));
+      });
+
+      const matchedId = targetClass ? String(targetClass._id) : (cid || s.class_name);
+
+      if (matchedId && map.has(matchedId)) {
+        const item = map.get(matchedId)!;
+        item.invoiced += (s.totalFees || 0);
+        item.paid += (s.totalPaid || 0);
+        item.balance += (s.balanceAmount || 0);
+        if (targetClass?.class_teacher_id) {
+          item.teacherName = typeof targetClass.class_teacher_id === "object" && (targetClass.class_teacher_id as any).name
+            ? (targetClass.class_teacher_id as any).name
+            : (teachers.find(t => String(t._id) === String(targetClass.class_teacher_id))?.name || item.teacherName);
+        }
+      } else if (matchedId) {
+        // Fallback for classes not in main list
+        const cleanName = s.class_name ? s.class_name.replace(/\s*-\s*$/, "") : "Unknown Class";
+        const teacherName = targetClass?.class_teacher_id
+          ? (typeof targetClass.class_teacher_id === "object" && (targetClass.class_teacher_id as any).name
+              ? (targetClass.class_teacher_id as any).name
+              : (teachers.find(t => String(t._id) === String(targetClass.class_teacher_id))?.name || "Unassigned"))
+          : "Unassigned";
+
+        map.set(matchedId, {
+          className: cleanName,
+          teacherName,
+          invoiced: s.totalFees || 0,
+          paid: s.totalPaid || 0,
+          balance: s.balanceAmount || 0
+        });
       }
     });
 
-    return Array.from(map.values()).sort((a, b) => a.className.localeCompare(b.className));
-  }, [classes, allStudentsForReports]);
+    return Array.from(map.values()).sort((a, b) => a.className.localeCompare(b.className, undefined, { numeric: true, sensitivity: 'base' }));
+  }, [classes, allStudentsForReports, teachers]);
 
   // Teacher-wise collections stats
   const teacherWiseCollections = useMemo(() => {
     const map = new Map<string, { teacherName: string; className: string; invoiced: number; paid: number; balance: number }>();
 
+    // Seed teachers from classes
     classes.forEach(c => {
       if (c.class_teacher_id) {
-        const tid = c.class_teacher_id._id;
-        const tname = c.class_teacher_id.name;
-        if (!map.has(tid)) {
+        const teacherObj = c.class_teacher_id;
+        const tid = typeof teacherObj === "object" && teacherObj !== null ? String((teacherObj as any)._id || "") : String(teacherObj);
+        const tname = typeof teacherObj === "object" && teacherObj !== null && (teacherObj as any).name
+          ? (teacherObj as any).name
+          : (teachers.find(t => String(t._id) === tid)?.name || "Teacher");
+
+        if (tid && !map.has(tid)) {
           map.set(tid, {
             teacherName: tname,
-            className: `${c.name} - ${c.section}`,
+            className: c.section ? `${c.name} - ${c.section}` : c.name,
             invoiced: 0,
             paid: 0,
             balance: 0
@@ -1230,20 +1272,42 @@ export default function FeesPage() {
       }
     });
 
+    // Aggregate fees by assigned teacher
     allStudentsForReports.forEach(s => {
-      const cid = s.class_id;
-      const targetClass = classes.find(c => c._id === cid);
+      const cid = typeof s.class_id === "object" && s.class_id !== null
+        ? String((s.class_id as any)._id || (s.class_id as any).id || "")
+        : String(s.class_id || "");
+
+      const targetClass = classes.find(c => {
+        const cId = String(c._id);
+        return (cid && cId === cid) || (s.class_name && (c.name === s.class_name || `${c.name} - ${c.section}` === s.class_name || c.name === s.class_name.split(" - ")[0]));
+      });
+
       if (targetClass && targetClass.class_teacher_id) {
-        const tid = targetClass.class_teacher_id._id;
+        const teacherObj = targetClass.class_teacher_id;
+        const tid = typeof teacherObj === "object" && teacherObj !== null ? String((teacherObj as any)._id || "") : String(teacherObj);
+        const tname = typeof teacherObj === "object" && teacherObj !== null && (teacherObj as any).name
+          ? (teacherObj as any).name
+          : (teachers.find(t => String(t._id) === tid)?.name || "Teacher");
+
+        if (!map.has(tid)) {
+          map.set(tid, {
+            teacherName: tname,
+            className: targetClass.section ? `${targetClass.name} - ${targetClass.section}` : targetClass.name,
+            invoiced: 0,
+            paid: 0,
+            balance: 0
+          });
+        }
         const item = map.get(tid)!;
-        item.invoiced += s.totalFees;
-        item.paid += s.totalPaid;
-        item.balance += s.balanceAmount;
+        item.invoiced += (s.totalFees || 0);
+        item.paid += (s.totalPaid || 0);
+        item.balance += (s.balanceAmount || 0);
       }
     });
 
     return Array.from(map.values()).sort((a, b) => a.teacherName.localeCompare(b.teacherName));
-  }, [classes, allStudentsForReports]);
+  }, [classes, allStudentsForReports, teachers]);
 
   // Setup total fees configuration sum
   const totalConfiguredFees = feeTypes.filter(f => f.is_enabled).reduce((sum, f) => sum + f.amount, 0);
@@ -1666,23 +1730,31 @@ export default function FeesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {classWiseCollections.map((c, idx) => {
-                        const pct = c.invoiced > 0 ? ((c.paid / c.invoiced) * 100).toFixed(1) : "0.0";
-                        return (
-                          <tr key={idx}>
-                            <td className="font-bold text-slate-800 dark:text-slate-100">{c.className}</td>
-                            <td className="font-semibold text-slate-655">{c.teacherName}</td>
-                            <td className="col-right font-sans font-bold text-slate-700 dark:text-slate-300">{money(c.invoiced)}</td>
-                            <td className="col-right font-sans font-bold text-emerald-600">{money(c.paid)}</td>
-                            <td className="col-right font-sans font-bold text-rose-500">{money(c.balance)}</td>
-                            <td className="col-center">
-                              <span className="px-2 py-0.5 rounded bg-blue-50 text-[10px] font-black text-blue-700">
-                                {pct}%
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {classWiseCollections.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="text-center py-8 text-slate-400 font-medium text-xs">
+                            No class collections data available
+                          </td>
+                        </tr>
+                      ) : (
+                        classWiseCollections.map((c, idx) => {
+                          const pct = c.invoiced > 0 ? ((c.paid / c.invoiced) * 100).toFixed(1) : "0.0";
+                          return (
+                            <tr key={idx}>
+                              <td className="font-bold text-slate-800 dark:text-slate-100">{c.className}</td>
+                              <td className="font-semibold text-slate-655">{c.teacherName}</td>
+                              <td className="col-right font-sans font-bold text-slate-700 dark:text-slate-300">{money(c.invoiced)}</td>
+                              <td className="col-right font-sans font-bold text-emerald-600">{money(c.paid)}</td>
+                              <td className="col-right font-sans font-bold text-rose-500">{money(c.balance)}</td>
+                              <td className="col-center">
+                                <span className="px-2 py-0.5 rounded bg-blue-50 text-[10px] font-black text-blue-700">
+                                  {pct}%
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1706,23 +1778,31 @@ export default function FeesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {teacherWiseCollections.map((t, idx) => {
-                        const pct = t.invoiced > 0 ? ((t.paid / t.invoiced) * 100).toFixed(1) : "0.0";
-                        return (
-                          <tr key={idx}>
-                            <td className="font-bold text-slate-800 dark:text-slate-100">{t.teacherName}</td>
-                            <td className="font-semibold text-slate-655">{t.className}</td>
-                            <td className="col-right font-sans font-bold text-slate-700 dark:text-slate-300">{money(t.invoiced)}</td>
-                            <td className="col-right font-sans font-bold text-emerald-650">{money(t.paid)}</td>
-                            <td className="col-right font-sans font-bold text-rose-500">{money(t.balance)}</td>
-                            <td className="col-center">
-                              <span className="px-2 py-0.5 rounded bg-violet-50 text-[10px] font-black text-violet-700">
-                                {pct}%
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {teacherWiseCollections.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="text-center py-8 text-slate-400 font-medium text-xs">
+                            No teacher collections data available
+                          </td>
+                        </tr>
+                      ) : (
+                        teacherWiseCollections.map((t, idx) => {
+                          const pct = t.invoiced > 0 ? ((t.paid / t.invoiced) * 100).toFixed(1) : "0.0";
+                          return (
+                            <tr key={idx}>
+                              <td className="font-bold text-slate-800 dark:text-slate-100">{t.teacherName}</td>
+                              <td className="font-semibold text-slate-655">{t.className}</td>
+                              <td className="col-right font-sans font-bold text-slate-700 dark:text-slate-300">{money(t.invoiced)}</td>
+                              <td className="col-right font-sans font-bold text-emerald-650">{money(t.paid)}</td>
+                              <td className="col-right font-sans font-bold text-rose-500">{money(t.balance)}</td>
+                              <td className="col-center">
+                                <span className="px-2 py-0.5 rounded bg-violet-50 text-[10px] font-black text-violet-700">
+                                  {pct}%
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -1867,25 +1947,22 @@ export default function FeesPage() {
                 {feeTypes.map((ft, index) => (
                   <div
                     key={index}
-                    className={`grid grid-cols-12 gap-3 items-center px-3 py-2 border border-border/50 rounded-xl transition-all ${
-                      ft.is_enabled
-                        ? "bg-white dark:bg-slate-900 border-border"
-                        : "bg-slate-50/40 dark:bg-slate-950/20 border-transparent opacity-60"
-                    }`}
+                    className={`grid grid-cols-12 gap-3 items-center px-3 py-2 border border-border/50 rounded-xl transition-all ${ft.is_enabled
+                      ? "bg-white dark:bg-slate-900 border-border"
+                      : "bg-slate-50/40 dark:bg-slate-950/20 border-transparent opacity-60"
+                      }`}
                   >
                     {/* Toggle + Name */}
                     <div className="col-span-4 flex items-center gap-3">
                       <button
                         type="button"
                         onClick={() => handleToggleFeeType(index)}
-                        className={`w-8 h-4.5 rounded-full relative cursor-pointer transition-colors focus:outline-none shrink-0 ${
-                          ft.is_enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"
-                        }`}
+                        className={`w-8 h-4.5 rounded-full relative cursor-pointer transition-colors focus:outline-none shrink-0 ${ft.is_enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-800"
+                          }`}
                       >
                         <div
-                          className={`w-3.5 h-3.5 bg-white dark:bg-slate-900 rounded-full absolute top-0.5 shadow-sm transition-transform ${
-                            ft.is_enabled ? "left-[14px]" : "left-0.5"
-                          }`}
+                          className={`w-3.5 h-3.5 bg-white dark:bg-slate-900 rounded-full absolute top-0.5 shadow-sm transition-transform ${ft.is_enabled ? "left-[14px]" : "left-0.5"
+                            }`}
                         />
                       </button>
                       <span className="text-xs font-bold truncate text-slate-800 dark:text-slate-250" title={ft.name}>

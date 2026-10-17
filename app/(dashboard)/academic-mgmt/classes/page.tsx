@@ -4,7 +4,7 @@ import React, { useState, useCallback } from "react";
 import {
   Plus, Search, RefreshCcw, Printer, Download, ChevronDown,
   MoreVertical, Edit, Trash2, Filter, ArrowUpDown, FileText,
-  Loader2, AlertCircle, BookOpen
+  Loader2, AlertCircle, BookOpen, RotateCcw
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
@@ -64,17 +64,18 @@ export default function AcademicClassesPage() {
     fetchClasses({
       search: overrides.search ?? searchQuery,
       sort: overrides.sort ?? sortOrder,
+      status: overrides.status !== undefined ? overrides.status : (filterStatus || undefined),
       page: overrides.p ?? page,
       limit: PAGE_SIZE,
       academic_year: academicYear,
     });
-  }, [fetchClasses, searchQuery, sortOrder, page, academicYear]);
+  }, [fetchClasses, searchQuery, sortOrder, filterStatus, page, academicYear]);
 
   const authReady = useAuthReady();
 
   React.useEffect(() => {
     if (!authReady) return;
-    fetchClasses({ search: searchQuery, sort: sortOrder, page: 1, limit: PAGE_SIZE, academic_year: academicYear });
+    fetchClasses({ search: searchQuery, sort: sortOrder, status: filterStatus || undefined, page: 1, limit: PAGE_SIZE, academic_year: academicYear });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchClasses, academicYear, authReady]);
 
@@ -82,13 +83,13 @@ export default function AcademicClassesPage() {
     setSearchQuery(val); setPage(1);
     clearTimeout(searchRef.current);
     searchRef.current = setTimeout(() => {
-      fetchClasses({ search: val, sort: sortOrder, page: 1, limit: PAGE_SIZE, academic_year: academicYear });
+      fetchClasses({ search: val, sort: sortOrder, status: filterStatus || undefined, page: 1, limit: PAGE_SIZE, academic_year: academicYear });
     }, 400);
   };
 
   const handlePageChange = (p: number) => {
     setPage(p);
-    fetchClasses({ search: searchQuery, sort: sortOrder, page: p, limit: PAGE_SIZE, academic_year: academicYear });
+    fetchClasses({ search: searchQuery, sort: sortOrder, status: filterStatus || undefined, page: p, limit: PAGE_SIZE, academic_year: academicYear });
   };
 
   // Form state
@@ -286,9 +287,12 @@ export default function AcademicClassesPage() {
   };
 
   const StatusBadge = ({ status }: { status?: string }) => (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${status === "Inactive"
-      ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-      : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+      status === "Archived"
+        ? "bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200/60 dark:border-purple-800/40"
+        : status === "Inactive"
+        ? "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+        : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
       }`}>
       {status || "Active"}
     </span>
@@ -328,13 +332,28 @@ export default function AcademicClassesPage() {
         className: "text-center",
         render: (c) => (
           <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center gap-1">
-            <button
-              onClick={() => openEdit(c)}
-              title="Edit Class"
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:text-slate-400 dark:hover:text-amber-400 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
-            >
-              <Edit className="w-4 h-4" />
-            </button>
+            {(c as any).status === "Archived" ? (
+              <button
+                onClick={async () => {
+                  if (confirm(`Restore "${c.name}" to Active?`)) {
+                    await updateClass(c._id, { status: "Active" });
+                    doFetch();
+                  }
+                }}
+                title="Restore / Unarchive Class"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-950/40 transition-colors cursor-pointer"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={() => openEdit(c)}
+                title="Edit Class"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:text-slate-400 dark:hover:text-amber-400 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={() => openDelete(c)}
               title="Delete Class"
@@ -404,6 +423,57 @@ export default function AcademicClassesPage() {
             Classes List {!isLoading && <span className="ml-2 text-[13px] font-normal text-slate-400">({total})</span>}
           </h3>
           <div className="flex flex-wrap items-center gap-3">
+            {/* Status Filter */}
+            <div className="relative">
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-[13px] font-medium shadow-sm transition-colors cursor-pointer ${
+                  filterStatus === "Archived"
+                    ? "border-purple-300 bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-300 dark:border-purple-800"
+                    : filterStatus
+                    ? "border-primary/50 bg-primary/5 text-primary dark:bg-primary/10"
+                    : "border-border bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                }`}
+              >
+                <Filter className="w-4 h-4 text-slate-400" />
+                <span>
+                  Status: {filterStatus === "Archived" ? "Archived" : filterStatus === "all" ? "All" : filterStatus === "Inactive" ? "Inactive" : "Active"}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </button>
+              {isFilterOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-1.5 text-left">
+                    {[
+                      { label: "Active", value: "" },
+                      { label: "Archived", value: "Archived" },
+                      { label: "Inactive", value: "Inactive" },
+                      { label: "All Classes", value: "all" },
+                    ].map(st => (
+                      <button
+                        key={st.value}
+                        onClick={() => {
+                          setFilterStatus(st.value);
+                          setPage(1);
+                          setIsFilterOpen(false);
+                          doFetch({ status: st.value, p: 1 });
+                        }}
+                        className={`w-full px-4 py-2.5 text-[13px] text-left transition-colors font-medium flex items-center justify-between cursor-pointer ${
+                          filterStatus === st.value
+                            ? "bg-primary text-white"
+                            : "text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                        }`}
+                      >
+                        <span>{st.label}</span>
+                        {filterStatus === st.value && <span className="text-[11px] font-bold">✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* Sort */}
             <div className="relative">
               <button onClick={() => setIsSortOpen(!isSortOpen)}

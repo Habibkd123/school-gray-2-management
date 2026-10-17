@@ -35,6 +35,7 @@ export interface FetchClassesParams {
   academic_year?: string;
   section?: string;
   sort?: "asc" | "desc";
+  status?: string;
   page?: number;
   limit?: number | "all";
   school_id?: string;
@@ -56,7 +57,7 @@ function getStoredClasses(): ApiClass[] | null {
     const raw = sessionStorage.getItem(SESSION_CLASSES_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Date.now() - parsed.timestamp < CACHE_TTL_MS && Array.isArray(parsed.classes)) {
+      if (Date.now() - parsed.timestamp < CACHE_TTL_MS && Array.isArray(parsed.classes) && parsed.classes.length > 0) {
         return parsed.classes;
       }
     }
@@ -118,9 +119,9 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
 
   // ─── Fetch all classes ──────────────────────────────────────────
   const fetchClasses = useCallback(async (params: FetchClassesParams = {}) => {
-    const isFiltered = !!(params.search || params.section || params.sort || params.page || (params.school_id && params.school_id !== "all"));
+    const isFiltered = !!(params.search || params.academic_year || params.section || params.sort || params.page || (params.school_id && params.school_id !== "all") || (params.status && params.status !== "" && params.status !== "Active"));
     const isAll = params.limit === "all" || !params.limit;
-    const isFresh = _classesCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
+    const isFresh = _classesCache !== null && _classesCache.length > 0 && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
 
     // Serve immediately from module cache for unfiltered requests requesting all classes
     if (isFresh && isAll && !isFiltered) {
@@ -142,15 +143,15 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       }
       setError(null);
       try {
-        const data = await ClassService.getAllClasses({
-          academic_year: params.academic_year
-        });
-        _classesCache = data;
-        _cacheTimestamp = Date.now();
-        if (typeof window !== "undefined") {
-          try {
-            sessionStorage.setItem(SESSION_CLASSES_KEY, JSON.stringify({ classes: data, timestamp: Date.now() }));
-          } catch {}
+        const data = await ClassService.getAllClasses();
+        if (data && data.length > 0) {
+          _classesCache = data;
+          _cacheTimestamp = Date.now();
+          if (typeof window !== "undefined") {
+            try {
+              sessionStorage.setItem(SESSION_CLASSES_KEY, JSON.stringify({ classes: data, timestamp: Date.now() }));
+            } catch {}
+          }
         }
         _listeners.forEach(fn => fn(data));
         setClasses(data);
@@ -173,6 +174,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
     if (params.academic_year) qs.set("academic_year", params.academic_year);
     if (params.section)       qs.set("section", params.section);
     if (params.sort)          qs.set("sort", params.sort);
+    if (params.status)        qs.set("status", params.status);
     if (params.page)          qs.set("page", String(params.page));
     if (params.limit)         qs.set("limit", String(params.limit));
     if (params.school_id)     qs.set("school_id", String(params.school_id));

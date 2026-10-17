@@ -353,7 +353,7 @@ export async function GET(req: NextRequest) {
         name: student.name,
         admission_no: student.admission_no || "N/A",
         class_name: student.class_id
-          ? `${student.class_id.name} - ${student.class_id.section}`
+          ? (student.class_id.section ? `${student.class_id.name} - ${student.class_id.section}` : student.class_id.name)
           : "N/A",
         class_id: studentClassId,
         section: student.class_id?.section || "N/A",

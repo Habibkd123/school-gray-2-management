@@ -481,123 +481,157 @@ export default function ClassHomeWorkPage() {
       </div>
 
       {/* Add Modal */}
-      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Add Homework">
-        <form onSubmit={handleAddSubmit} className="p-6 space-y-5 text-left max-h-[95vh] overflow-y-auto custom-scrollbar">
+      <Modal isOpen={isAddOpen} onClose={() => setIsAddOpen(false)} title="Add Homework" size="lg">
+        <form onSubmit={handleAddSubmit} className="space-y-4 text-left">
 
-          {/* Class */}
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class</label>
-            <div className="relative">
-              <select
-                value={formClassId}
-                onChange={(e) => setFormClassId(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
-                required
-              >
-                <option value="">Select Class</option>
-                {classes.map(c => <option key={c._id} value={c._id}>{c.name} - {c.section}</option>)}
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Subject — filtered by class */}
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Subject</label>
-            <div className="relative">
-              <select
-                value={formSubject}
-                onChange={(e) => setFormSubject(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer disabled:opacity-50"
-                required
-                disabled={!formClassId || availableSubjects.length === 0}
-              >
-                <option value="">Select Subject</option>
-                {availableSubjects.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-            {formClassId && availableSubjects.length === 0 && (
-              <p className="text-[12px] text-slate-400 italic">No subjects available for this class.</p>
-            )}
-          </div>
-
-          {/* Syllabus / Chapter */}
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">
-              Chapter
-              {syllabusLoading && <span className="ml-2 text-[11px] text-slate-400 font-normal italic">Loading...</span>}
-            </label>
-            <div className="relative">
-              {syllabusChapters.length > 0 ? (
+          {/* Row 1: Class & Subject */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Class */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1">
+                Class <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
                 <select
-                  value={formChapterId}
-                  onChange={(e) => setFormChapterId(e.target.value)}
-                  className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
+                  value={formClassId}
+                  onChange={(e) => setFormClassId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-[14px] bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer shadow-xs"
+                  required
                 >
-                  <option value="">Select Chapter (optional)</option>
-                  {syllabusChapters.map(ch => (
-                    <option key={ch._id || ch.chapter_no} value={ch._id || String(ch.chapter_no)}>
-                      Ch {ch.chapter_no}: {ch.chapter_name}
-                    </option>
-                  ))}
+                  <option value="">Select Class</option>
+                  {classes.map(c => <option key={c._id} value={c._id}>{c.name} - {c.section}</option>)}
                 </select>
-              ) : (
-                <div className="card-subtitle w-full px-4 py-2.5 text-[13px] bg-slate-50 dark:bg-slate-800/50 border border-border rounded-lg text-slate-400 dark: italic">
-                  {!formSubject
-                    ? "Select a subject to load chapters"
-                    : syllabusLoading
-                      ? "Loading chapters..."
-                      : "No syllabus found for this subject"}
-                </div>
-              )}
-              {syllabusChapters.length > 0 && (
-                <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Subject — filtered by class */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1">
+                Subject <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  value={formSubject}
+                  onChange={(e) => setFormSubject(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-[14px] bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer disabled:opacity-50 shadow-xs"
+                  required
+                  disabled={!formClassId || availableSubjects.length === 0}
+                >
+                  <option value="">Select Subject</option>
+                  {availableSubjects.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+              {formClassId && availableSubjects.length === 0 && (
+                <p className="text-[11px] text-amber-500 dark:text-amber-400">No subjects available for this class.</p>
               )}
             </div>
           </div>
 
-          {/* Title — auto-filled from chapter, but editable */}
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">
-              Title
-              {formChapterId && <span className="ml-1.5 text-[11px] text-emerald-500 font-normal">(auto-filled from chapter)</span>}
-            </label>
-            <input
-              type="text"
-              value={formTitle}
-              onChange={(e) => setFormTitle(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
-              required
-              placeholder="e.g. Chapter 1 Exercise"
-            />
+          {/* Row 2: Chapter & Title */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Syllabus / Chapter */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 flex items-center justify-between">
+                <span>Chapter</span>
+                {syllabusLoading && <span className="text-[11px] text-slate-400 font-normal italic">Loading...</span>}
+              </label>
+              <div className="relative">
+                {syllabusChapters.length > 0 ? (
+                  <select
+                    value={formChapterId}
+                    onChange={(e) => setFormChapterId(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-[14px] bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer shadow-xs"
+                  >
+                    <option value="">Select Chapter (optional)</option>
+                    {syllabusChapters.map(ch => (
+                      <option key={ch._id || ch.chapter_no} value={ch._id || String(ch.chapter_no)}>
+                        Ch {ch.chapter_no}: {ch.chapter_name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="w-full px-3.5 py-2.5 text-[13px] bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-400 italic">
+                    {!formSubject
+                      ? "Select a subject first"
+                      : syllabusLoading
+                        ? "Loading chapters..."
+                        : "No syllabus chapters found"}
+                  </div>
+                )}
+                {syllabusChapters.length > 0 && (
+                  <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                )}
+              </div>
+            </div>
+
+            {/* Title — auto-filled from chapter, but editable */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 flex items-center justify-between">
+                <span className="flex items-center gap-1">Title <span className="text-rose-500">*</span></span>
+                {formChapterId && <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-normal">(auto-filled)</span>}
+              </label>
+              <input
+                type="text"
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                className="w-full px-3.5 py-2.5 text-[14px] bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors text-slate-700 dark:text-slate-200 placeholder:text-slate-400 shadow-xs"
+                required
+                placeholder="e.g. Chapter 1 Exercise"
+              />
+            </div>
           </div>
 
-          {/* Due Date */}
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Due Date</label>
-            <input
-              type="date"
-              value={formDueDate}
-              onChange={(e) => setFormDueDate(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200 cursor-pointer"
-              required
-            />
+          {/* Row 3: Due Date & Status */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Due Date */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1">
+                Due Date <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={formDueDate}
+                onChange={(e) => setFormDueDate(e.target.value)}
+                className="w-full px-3.5 py-2.5 text-[14px] bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors text-slate-700 dark:text-slate-200 cursor-pointer shadow-xs"
+                required
+              />
+            </div>
+
+            {/* Status Selection */}
+            <div className="space-y-1.5">
+              <label className="text-[13px] font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1">
+                Status <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  value={formStatus}
+                  onChange={(e) => setFormStatus(e.target.value)}
+                  className="w-full px-3.5 py-2.5 text-[14px] bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer shadow-xs"
+                  required
+                >
+                  <option value="published">Publish Now</option>
+                  <option value="draft">Save as Draft</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
           </div>
 
-          {/* Attachment */}
+          {/* Row 4: Attachment */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Attachment (Optional)</label>
-            <div className="flex gap-3">
+            <label className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">Attachment (Optional)</label>
+            <div className="flex gap-2">
               <input
                 type="text"
                 placeholder="Upload file or enter URL..."
                 value={formAttachmentUrl}
                 onChange={(e) => setFormAttachmentUrl(e.target.value)}
-                className="flex-1 px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200"
+                className="flex-1 px-3.5 py-2.5 text-[14px] bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors text-slate-700 dark:text-slate-200 placeholder:text-slate-400 shadow-xs"
               />
-              <label className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg flex items-center gap-2 cursor-pointer transition-colors shadow-sm border border-border flex-shrink-0">
-                <Upload className="w-4 h-4 text-primary" />
+              <label className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg flex items-center gap-2 cursor-pointer transition-colors shadow-xs border border-slate-200 dark:border-slate-700 flex-shrink-0">
+                {uploading ? <Loader2 className="w-4 h-4 text-primary animate-spin" /> : <Upload className="w-4 h-4 text-primary" />}
                 <span>{uploading ? "Uploading..." : "Upload File"}</span>
                 <input
                   type="file"
@@ -617,49 +651,33 @@ export default function ClassHomeWorkPage() {
             </div>
           </div>
 
-          {/* Status Selection */}
+          {/* Row 5: Description */}
           <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Status</label>
-            <div className="relative">
-              <select
-                value={formStatus}
-                onChange={(e) => setFormStatus(e.target.value)}
-                className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors appearance-none text-slate-700 dark:text-slate-200 cursor-pointer"
-                required
-              >
-                <option value="published">Publish Now</option>
-                <option value="draft">Save as Draft</option>
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="space-y-1.5">
-            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Description</label>
+            <label className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">Description (Optional)</label>
             <textarea
               rows={3}
-              placeholder="Optional description"
+              placeholder="Instructions or additional details for students..."
               value={formDescription}
               onChange={(e) => setFormDescription(e.target.value)}
-              className="w-full px-4 py-2.5 text-[14px] bg-white dark:bg-slate-900 border border-border rounded-lg outline-none focus:border-primary transition-colors text-slate-700 dark:text-slate-200 resize-none"
+              className="w-full px-3.5 py-2.5 text-[14px] bg-slate-50/50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors text-slate-700 dark:text-slate-200 placeholder:text-slate-400 resize-none shadow-xs"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={() => setIsAddOpen(false)}
-              className="px-6 py-2.5 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-bold rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+              className="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[14px] font-medium rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2.5 bg-primary text-white text-[14px] font-bold rounded-lg hover:bg-[var(--primary-hover)] transition-colors shadow-sm cursor-pointer disabled:opacity-50"
+              className="px-6 py-2.5 bg-primary text-white text-[14px] font-semibold rounded-lg hover:bg-[var(--primary-hover)] transition-all shadow-sm hover:shadow cursor-pointer disabled:opacity-50 flex items-center gap-2"
             >
-              {submitting ? "Saving..." : "Add Homework"}
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              <span>{submitting ? "Saving..." : "Add Homework"}</span>
             </button>
           </div>
         </form>
@@ -698,7 +716,7 @@ export default function ClassHomeWorkPage() {
 
       {/* Submit Homework Modal */}
       <Modal isOpen={isSubmitOpen} onClose={() => setIsSubmitOpen(false)} title="Submit Assignment">
-        <form onSubmit={handleStudentSubmit} className="p-6 space-y-5 text-left max-h-[80vh] overflow-y-auto custom-scrollbar">
+        <form onSubmit={handleStudentSubmit} className="space-y-4 text-left">
           <div className="space-y-1.5">
             <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Submission Details / URL</label>
             <textarea

@@ -33,6 +33,13 @@ export interface ColumnSetting {
   mandatory?: boolean;
 }
 
+function formatAllOptionLabel(label: string) {
+  const lower = label.toLowerCase();
+  if (lower.endsWith("class") || lower.endsWith("status")) return `All ${label}es`;
+  if (lower.endsWith("s")) return `All ${label}`;
+  return `All ${label}s`;
+}
+
 export interface SearchToolbarProps {
   searchQuery: string;
   onSearchChange: (val: string) => void;
@@ -208,27 +215,40 @@ export function SearchToolbar({
 
             {/* Filter Dropdown */}
             {isFilterOpen && (
-              <div className="absolute right-0 mt-2.5 w-[380px] sm:w-[500px] md:w-[600px] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-2xl shadow-2xl z-50 p-5 flex flex-col gap-5 text-left transform origin-top-right transition-all duration-200 animate-in fade-in slide-in-from-top-2">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-3">
-                  <h4 className="text-sm font-extrabold text-slate-800 dark:text-slate-100">Filter Records</h4>
-                  <button onClick={() => setIsFilterOpen(false)} className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-900 text-slate-400">
+              <div className="absolute right-0 mt-2.5 w-[380px] sm:w-[500px] md:w-[620px] max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xl z-50 p-5 flex flex-col gap-4 text-left transform origin-top-right transition-all duration-200 animate-in fade-in slide-in-from-top-2">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                      <SlidersHorizontal className="w-3.5 h-3.5" />
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">Filter Records</h4>
+                    {activeFiltersCount > 0 && (
+                      <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-primary/10 text-primary">
+                        {activeFiltersCount} active
+                      </span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setIsFilterOpen(false)}
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
                 {/* Filters Fields Grid (2 columns on sm/md/lg) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[350px] overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[360px] overflow-y-auto pr-1">
                   {filters.map((f) => (
                     <div key={f.id} className="flex flex-col gap-1.5">
-                      <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{f.label}</label>
+                      <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">{f.label}</label>
                       {f.type === "select" && (
                         <div className="relative">
                           <select
                             value={tempFilterValues[f.id] || ""}
                             onChange={(e) => handleTempFilterChange(f.id, e.target.value)}
-                            className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-lg outline-none appearance-none cursor-pointer"
+                            className="w-full pl-3.5 pr-8 py-2 bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-medium rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors appearance-none cursor-pointer shadow-xs"
                           >
-                            <option value="">All {f.label}s</option>
+                            <option value="">{formatAllOptionLabel(f.label)}</option>
                             {f.options?.map((opt) => (
                               <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
@@ -242,7 +262,7 @@ export function SearchToolbar({
                           type="date"
                           value={tempFilterValues[f.id] || ""}
                           onChange={(e) => handleTempFilterChange(f.id, e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-lg outline-none"
+                          className="w-full px-3.5 py-2 bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-medium rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors shadow-xs"
                         />
                       )}
 
@@ -250,9 +270,9 @@ export function SearchToolbar({
                         <input
                           type="text"
                           value={tempFilterValues[f.id] || ""}
-                          placeholder={f.placeholder || `Filter by ${f.label}`}
+                          placeholder={f.placeholder || `Filter by ${f.label}...`}
                           onChange={(e) => handleTempFilterChange(f.id, e.target.value)}
-                          className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-lg outline-none"
+                          className="w-full px-3.5 py-2 bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-medium rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 placeholder:text-slate-400 transition-colors shadow-xs"
                         />
                       )}
 
@@ -260,7 +280,7 @@ export function SearchToolbar({
                         <div className="relative">
                           <div
                             onClick={() => setOpenAutocompleteId(openAutocompleteId === f.id ? null : f.id)}
-                            className="w-full px-3 py-2 border border-slate-200 dark:border-slate-850 rounded-lg text-xs font-bold bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 cursor-pointer flex items-center justify-between"
+                            className="w-full px-3.5 py-2 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-medium bg-slate-50/70 dark:bg-slate-950/60 text-slate-800 dark:text-slate-200 cursor-pointer flex items-center justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-colors shadow-xs"
                           >
                             <span className="truncate">
                               {f.options?.find(o => o.value === tempFilterValues[f.id])?.label || tempFilterValues[f.id] || `Select ${f.label}`}
@@ -271,7 +291,7 @@ export function SearchToolbar({
                           {openAutocompleteId === f.id && (
                             <>
                               <div className="fixed inset-0 z-[60]" onClick={() => setOpenAutocompleteId(null)} />
-                              <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl shadow-2xl z-[70] p-2 flex flex-col gap-2 max-h-[220px]">
+                              <div className="absolute top-full left-0 right-0 mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-[70] p-2.5 flex flex-col gap-2 max-h-[220px]">
                                 <div className="relative">
                                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
                                   <input
@@ -283,10 +303,10 @@ export function SearchToolbar({
                                       setAutocompleteSearch(prev => ({ ...prev, [f.id]: val }));
                                       if (f.onSearch) f.onSearch(val);
                                     }}
-                                    className="w-full pl-8 pr-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs outline-none bg-slate-50 dark:bg-slate-900 text-foreground font-bold"
+                                    className="w-full pl-8 pr-3 py-1.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs outline-none bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 font-medium focus:border-primary"
                                   />
                                 </div>
-                                <div className="overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-900">
+                                <div className="overflow-y-auto flex-1 divide-y divide-slate-100 dark:divide-slate-800/60">
                                   <div
                                     onClick={() => {
                                       handleTempFilterChange(f.id, "");
@@ -294,7 +314,7 @@ export function SearchToolbar({
                                       setAutocompleteSearch(prev => ({ ...prev, [f.id]: "" }));
                                       if (f.onSearch) f.onSearch("");
                                     }}
-                                    className="p-2 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 font-bold text-rose-500"
+                                    className="p-2 rounded-lg cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-950/20 text-xs font-semibold text-rose-600 dark:text-rose-400 transition-colors"
                                   >
                                     Clear Selection
                                   </div>
@@ -307,15 +327,15 @@ export function SearchToolbar({
                                         setAutocompleteSearch(prev => ({ ...prev, [f.id]: "" }));
                                         if (f.onSearch) f.onSearch("");
                                       }}
-                                      className={`p-2 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 flex justify-between items-center ${tempFilterValues[f.id] === opt.value ? "bg-primary/10 text-primary" : ""
+                                      className={`p-2 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 flex justify-between items-center transition-colors ${tempFilterValues[f.id] === opt.value ? "bg-primary/10 text-primary font-semibold" : ""
                                         }`}
                                     >
                                       <div className="text-left">
-                                        <p className="font-extrabold text-slate-850 dark:text-slate-200">{opt.label}</p>
-                                        {opt.description && <p className="text-[9px] text-slate-400 mt-0.5">{opt.description}</p>}
+                                        <p className="font-semibold text-xs text-slate-800 dark:text-slate-200">{opt.label}</p>
+                                        {opt.description && <p className="text-[10px] text-slate-400 mt-0.5">{opt.description}</p>}
                                       </div>
                                       {opt.badge && (
-                                        <span className="px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 text-[8px] font-black uppercase">
+                                        <span className="px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 text-[9px] font-bold uppercase">
                                           {opt.badge}
                                         </span>
                                       )}
@@ -332,25 +352,27 @@ export function SearchToolbar({
                 </div>
 
                 {/* Footer Buttons */}
-                <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-850 pt-4 mt-1">
+                <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3.5 mt-1">
                   <button
                     onClick={handleResetFilters}
-                    className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                    className="px-3.5 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                   >
-                    Reset All
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reset All</span>
                   </button>
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
                     <button
                       onClick={() => setIsFilterOpen(false)}
-                      className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold rounded-xl transition-all cursor-pointer"
+                      className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleApplyFilters}
-                      className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-xs font-bold rounded-xl shadow-md transition-all cursor-pointer"
+                      className="px-4.5 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-xs font-semibold rounded-lg shadow-sm hover:shadow transition-all cursor-pointer flex items-center gap-1.5"
                     >
-                      Apply Filters
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Apply Filters</span>
                     </button>
                   </div>
                 </div>
@@ -573,7 +595,7 @@ export function SearchToolbar({
                         onChange={(e) => handleTempFilterChange(f.id, e.target.value)}
                         className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-lg outline-none appearance-none cursor-pointer"
                       >
-                        <option value="">All {f.label}s</option>
+                        <option value="">{formatAllOptionLabel(f.label)}</option>
                         {f.options?.map((opt) => (
                           <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
