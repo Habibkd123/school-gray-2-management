@@ -96,13 +96,26 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
 // DELETE: Remove a class (only if safe)
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
-  if (error) return error;
+  const auth = requireAuth(req, ["school_admin", "super_admin"]);
+  if (auth.error) return auth.error;
+  const { schoolId, user } = auth;
 
   const { id } = await params;
 
   try {
     await connectToDatabase();
+
+    const classQuery: any = { _id: id };
+    if (user.role !== "super_admin" && schoolId) {
+      classQuery.school_id = schoolId;
+    }
+
+    const cls = await Class.findOne(classQuery);
+    if (!cls) {
+      return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
+    }
+
+    const targetSchoolId = cls.school_id;
 
     const [
       students,
@@ -116,16 +129,16 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       classFees,
       documents
     ] = await Promise.all([
-      Student.countDocuments({ class_id: id, school_id: schoolId }),
-      Attendance.countDocuments({ class_id: id, school_id: schoolId }),
-      Exam.countDocuments({ class_id: id, school_id: schoolId }),
-      ClassTest.countDocuments({ class_id: id, school_id: schoolId }),
-      Homework.countDocuments({ class_id: id, school_id: schoolId }),
-      Timetable.countDocuments({ class_id: id, school_id: schoolId }),
-      TeacherAssignment.countDocuments({ class_id: id, school_id: schoolId, is_deleted: false }),
-      FeesStructure.countDocuments({ class_id: id, school_id: schoolId }),
-      ClassFee.countDocuments({ class_id: id, school_id: schoolId }),
-      GeneratedDocument.countDocuments({ class_id: id, school_id: schoolId })
+      Student.countDocuments({ class_id: id, school_id: targetSchoolId }),
+      Attendance.countDocuments({ class_id: id, school_id: targetSchoolId }),
+      Exam.countDocuments({ class_id: id, school_id: targetSchoolId }),
+      ClassTest.countDocuments({ class_id: id, school_id: targetSchoolId }),
+      Homework.countDocuments({ class_id: id, school_id: targetSchoolId }),
+      Timetable.countDocuments({ class_id: id, school_id: targetSchoolId }),
+      TeacherAssignment.countDocuments({ class_id: id, school_id: targetSchoolId, is_deleted: false }),
+      FeesStructure.countDocuments({ class_id: id, school_id: targetSchoolId }),
+      ClassFee.countDocuments({ class_id: id, school_id: targetSchoolId }),
+      GeneratedDocument.countDocuments({ class_id: id, school_id: targetSchoolId })
     ]);
 
     const reasons: string[] = [];
@@ -149,16 +162,13 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const deleted = await Class.findOneAndDelete({
-      _id: id,
-      school_id: schoolId as string,
-    });
+    const deleted = await Class.findOneAndDelete({ _id: id });
 
     if (!deleted) {
       return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
     }
 
-    invalidateServerClassesCache(String(schoolId));
+    invalidateServerClassesCache(String(targetSchoolId));
 
     return NextResponse.json({ success: true, message: "Class deleted successfully" });
   } catch (err: unknown) {

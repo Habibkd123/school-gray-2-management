@@ -171,21 +171,23 @@ export async function GET(req: NextRequest) {
     if (shouldComputeStats && classes.length > 0) {
       const classIds = classes.map((c: any) => c._id);
       const classNames = Array.from(new Set(classes.map((c: any) => c.name)));
-      const schoolObjId = mongoose.Types.ObjectId.isValid(schoolId as string)
+      const schoolObjId = schoolId && mongoose.Types.ObjectId.isValid(schoolId as string)
         ? new mongoose.Types.ObjectId(schoolId as string)
-        : schoolId;
+        : null;
+
+      const schoolMatch = schoolObjId ? { school_id: { $in: [schoolObjId, String(schoolId)] } } : {};
 
       const [studentCounts, subjectCounts, sectionCounts] = await Promise.all([
         Student.aggregate([
-          { $match: { school_id: { $in: [schoolObjId, String(schoolId)] }, class_id: { $in: classIds } } },
+          { $match: { ...schoolMatch, class_id: { $in: classIds } } },
           { $group: { _id: "$class_id", count: { $sum: 1 } } }
         ]),
         SubjectAssignment.aggregate([
-          { $match: { school_id: { $in: [schoolObjId, String(schoolId)] }, class_id: { $in: classIds } } },
+          { $match: { ...schoolMatch, class_id: { $in: classIds } } },
           { $group: { _id: "$class_id", count: { $sum: 1 } } }
         ]),
         Class.aggregate([
-          { $match: { school_id: schoolObjId, name: { $in: classNames }, academic_year: academic_year || { $exists: true } } },
+          { $match: { ...(schoolObjId ? { school_id: schoolObjId } : {}), name: { $in: classNames }, academic_year: academic_year || { $exists: true } } },
           { $group: { _id: { name: "$name", academic_year: "$academic_year" }, count: { $sum: 1 } } }
         ])
       ]);

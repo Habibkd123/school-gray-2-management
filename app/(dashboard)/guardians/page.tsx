@@ -12,7 +12,7 @@ import {
   Search, Filter, ChevronDown, RefreshCw, Printer, Download,
   FileText, Plus, MoreVertical, Edit, Trash2, Loader2,
   Calendar, Mail, Phone, Users, ImageIcon, X, CheckSquare,
-  ShieldAlert, UserCheck, AlertCircle
+  ShieldAlert, UserCheck, AlertCircle, Eye
 } from "lucide-react";
 import { PaginationBar } from "@/app/components/ui/pagination-bar";
 import { getOptimizedAvatar } from "@/lib/utils/image";
@@ -716,43 +716,28 @@ export default function GuardiansPage() {
                       </td>
 
                       <td className="px-4 py-4 text-center">
-                        <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
+                        <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center gap-1">
                           <button
-                            onClick={() => setActiveDropdown(activeDropdown === parent._id ? null : parent._id)}
-                            className="w-7 h-7 rounded-full flex items-center justify-center border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"
+                            onClick={() => router.push(`/guardians/${parent._id}`)}
+                            title="View Profile"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
                           >
-                            <MoreVertical className="w-4 h-4 text-slate-500" />
+                            <Eye className="w-4 h-4" />
                           </button>
-
-                          {activeDropdown === parent._id && (
-                            <>
-                              <div className="fixed inset-0 z-40" onClick={() => setActiveDropdown(null)} />
-                              <div className="absolute right-0 top-8 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-50 py-1.5 text-left">
-                                <button
-                                  onClick={() => { router.push(`/guardians/${parent._id}`); setActiveDropdown(null); }}
-                                  className="w-full px-4 py-2 text-[12px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2.5 font-semibold transition-colors cursor-pointer"
-                                >
-                                  <FileText className="w-4 h-4 text-slate-400" />
-                                  <span>View Profile</span>
-                                </button>
-                                <button
-                                  onClick={() => { openEdit(parent); setActiveDropdown(null); }}
-                                  className="w-full px-4 py-2 text-[12px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2.5 font-semibold transition-colors cursor-pointer"
-                                >
-                                  <Edit className="w-4 h-4 text-slate-400" />
-                                  <span>Edit Parent</span>
-                                </button>
-                                <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
-                                <button
-                                  onClick={() => handleDelete(parent._id)}
-                                  className="w-full px-4 py-2 text-[12px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 flex items-center gap-2.5 font-semibold transition-colors cursor-pointer"
-                                >
-                                  <Trash2 className="w-4 h-4 text-rose-500" />
-                                  <span>Delete</span>
-                                </button>
-                              </div>
-                            </>
-                          )}
+                          <button
+                            onClick={() => openEdit(parent)}
+                            title="Edit Parent"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:text-slate-400 dark:hover:text-amber-400 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(parent._id)}
+                            title="Delete Parent"
+                            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:text-slate-400 dark:hover:text-rose-400 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>

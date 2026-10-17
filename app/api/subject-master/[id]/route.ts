@@ -8,11 +8,17 @@ type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
-  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
-  if (error) return error;
+  const auth = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
+  if (auth.error) return auth.error;
+  const { schoolId, user } = auth;
+
   try {
     await connectToDatabase();
-    const subject = await SubjectMaster.findOne({ _id: id, school_id: schoolId }).lean();
+    const query: any = { _id: id };
+    if (user.role !== "super_admin" && schoolId) {
+      query.school_id = schoolId;
+    }
+    const subject = await SubjectMaster.findOne(query).lean();
     if (!subject) return NextResponse.json({ success: false, message: "Subject not found" }, { status: 404 });
     return NextResponse.json({ success: true, data: subject });
   } catch (err: any) {
@@ -22,8 +28,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
-  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
-  if (error) return error;
+  const auth = requireAuth(req, ["school_admin", "super_admin"]);
+  if (auth.error) return auth.error;
+  const { schoolId, user } = auth;
+
   try {
     await connectToDatabase();
     const { name, subject_code, description, status, allowed_streams } = await req.json();
@@ -34,14 +42,19 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     if (status) update.status = status;
     if (allowed_streams !== undefined) update.allowed_streams = Array.isArray(allowed_streams) ? allowed_streams : [];
 
+    const query: any = { _id: id };
+    if (user.role !== "super_admin" && schoolId) {
+      query.school_id = schoolId;
+    }
+
     const subject = await SubjectMaster.findOneAndUpdate(
-      { _id: id, school_id: schoolId },
+      query,
       { $set: update },
       { new: true, runValidators: true }
     ).lean();
 
     if (!subject) return NextResponse.json({ success: false, message: "Subject not found" }, { status: 404 });
-    invalidateSubjectMasterCache(String(schoolId));
+    invalidateSubjectMasterCache(String(subject.school_id));
     return NextResponse.json({ success: true, data: subject });
   } catch (err: any) {
     if (err.code === 11000) {
@@ -53,20 +66,29 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
-  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
-  if (error) return error;
+  const auth = requireAuth(req, ["school_admin", "super_admin"]);
+  if (auth.error) return auth.error;
+  const { schoolId, user } = auth;
+
   try {
     await connectToDatabase();
 
-    const subject = await SubjectMaster.findOne({ _id: id, school_id: schoolId });
+    const query: any = { _id: id };
+    if (user.role !== "super_admin" && schoolId) {
+      query.school_id = schoolId;
+    }
+
+    const subject = await SubjectMaster.findOne(query);
     if (!subject) return NextResponse.json({ success: false, message: "Subject not found" }, { status: 404 });
+
+    const targetSchoolId = subject.school_id;
 
     const [
       subjectAssignments,
       teacherAssignments
     ] = await Promise.all([
-      SubjectAssignment.countDocuments({ school_id: schoolId, subject_master_id: id }),
-      TeacherAssignment.countDocuments({ school_id: schoolId, subject_master_id: id, is_deleted: false })
+      SubjectAssignment.countDocuments({ school_id: targetSchoolId, subject_master_id: id }),
+      TeacherAssignment.countDocuments({ school_id: targetSchoolId, subject_master_id: id, is_deleted: false })
     ]);
 
     const reasons: string[] = [];
@@ -84,7 +106,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     }
 
     await SubjectMaster.deleteOne({ _id: id });
-    invalidateSubjectMasterCache(String(schoolId));
+    invalidateSubjectMasterCache(String(targetSchoolId));
     return NextResponse.json({ success: true, message: "Subject deleted successfully" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

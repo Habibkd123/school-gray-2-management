@@ -24,8 +24,9 @@ import {
 } from "@/lib/models/index";
 
 export async function GET(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin", "teacher"]);
-  if (error) return error;
+  const auth = requireAuth(req, ["school_admin", "super_admin", "teacher"]);
+  if (auth.error) return auth.error;
+  const { schoolId, user } = auth;
 
   try {
     await connectToDatabase();
@@ -49,10 +50,16 @@ export async function GET(req: NextRequest) {
     };
 
     if (type === "class") {
-      const cls = await Class.findOne({ _id: objectId, school_id: schoolId }).lean();
+      const classQuery: any = { _id: objectId };
+      if (user.role !== "super_admin" && schoolId) {
+        classQuery.school_id = schoolId;
+      }
+      const cls = await Class.findOne(classQuery).lean();
       if (!cls) {
         return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
       }
+
+      const targetSchoolId = cls.school_id;
 
       const [
         students,
@@ -66,16 +73,16 @@ export async function GET(req: NextRequest) {
         classFees,
         documents
       ] = await Promise.all([
-        Student.countDocuments({ class_id: objectId, school_id: schoolId }),
-        Attendance.countDocuments({ class_id: objectId, school_id: schoolId }),
-        Exam.countDocuments({ class_id: objectId, school_id: schoolId }),
-        ClassTest.countDocuments({ class_id: objectId, school_id: schoolId }),
-        Homework.countDocuments({ class_id: objectId, school_id: schoolId }),
-        Timetable.countDocuments({ class_id: objectId, school_id: schoolId }),
-        TeacherAssignment.countDocuments({ class_id: objectId, school_id: schoolId, is_deleted: false }),
-        FeesStructure.countDocuments({ class_id: objectId, school_id: schoolId }),
-        ClassFee.countDocuments({ class_id: objectId, school_id: schoolId }),
-        GeneratedDocument.countDocuments({ class_id: objectId, school_id: schoolId })
+        Student.countDocuments({ class_id: objectId, school_id: targetSchoolId }),
+        Attendance.countDocuments({ class_id: objectId, school_id: targetSchoolId }),
+        Exam.countDocuments({ class_id: objectId, school_id: targetSchoolId }),
+        ClassTest.countDocuments({ class_id: objectId, school_id: targetSchoolId }),
+        Homework.countDocuments({ class_id: objectId, school_id: targetSchoolId }),
+        Timetable.countDocuments({ class_id: objectId, school_id: targetSchoolId }),
+        TeacherAssignment.countDocuments({ class_id: objectId, school_id: targetSchoolId, is_deleted: false }),
+        FeesStructure.countDocuments({ class_id: objectId, school_id: targetSchoolId }),
+        ClassFee.countDocuments({ class_id: objectId, school_id: targetSchoolId }),
+        GeneratedDocument.countDocuments({ class_id: objectId, school_id: targetSchoolId })
       ]);
 
       if (students > 0) {
@@ -193,17 +200,23 @@ export async function GET(req: NextRequest) {
       }
 
     } else if (type === "subject_master") {
-      const subMaster = await SubjectMaster.findOne({ _id: objectId, school_id: schoolId }).lean();
+      const subMasterQuery: any = { _id: objectId };
+      if (user.role !== "super_admin" && schoolId) {
+        subMasterQuery.school_id = schoolId;
+      }
+      const subMaster = await SubjectMaster.findOne(subMasterQuery).lean();
       if (!subMaster) {
         return NextResponse.json({ success: false, message: "Subject Master not found" }, { status: 404 });
       }
+
+      const targetSchoolId = subMaster.school_id;
 
       const [
         subjectAssignments,
         teacherAssignments
       ] = await Promise.all([
-        SubjectAssignment.countDocuments({ school_id: schoolId, subject_master_id: objectId }),
-        TeacherAssignment.countDocuments({ school_id: schoolId, subject_master_id: objectId, is_deleted: false })
+        SubjectAssignment.countDocuments({ school_id: targetSchoolId, subject_master_id: objectId }),
+        TeacherAssignment.countDocuments({ school_id: targetSchoolId, subject_master_id: objectId, is_deleted: false })
       ]);
 
       if (subjectAssignments > 0) {
@@ -218,10 +231,16 @@ export async function GET(req: NextRequest) {
       }
 
     } else if (type === "subject") {
-      const subject = await Subject.findOne({ _id: objectId, school_id: schoolId }).lean();
+      const subjectQuery: any = { _id: objectId };
+      if (user.role !== "super_admin" && schoolId) {
+        subjectQuery.school_id = schoolId;
+      }
+      const subject = await Subject.findOne(subjectQuery).lean();
       if (!subject) {
         return NextResponse.json({ success: false, message: "Subject not found" }, { status: 404 });
       }
+
+      const targetSchoolId = subject.school_id;
 
       const [
         timetables,

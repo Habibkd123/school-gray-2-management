@@ -29,8 +29,9 @@ export function invalidateParentsServerCache(schoolId?: string) {
 
 // ─── GET /api/parents — List all parents ──────────────────────────────
 export async function GET(request: NextRequest) {
-  const { schoolId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin"]);
-  if (error) return error;
+  const auth = requireAuth(request, ["school_admin", "teacher", "super_admin"]);
+  if (auth.error) return auth.error;
+  const { schoolId, user } = auth;
 
   try {
     await connectDB();
@@ -47,20 +48,26 @@ export async function GET(request: NextRequest) {
     const student_id = searchParams.get("student_id");
     const guardian_type = searchParams.get("guardian_type");
     const status = searchParams.get("status");
+    const paramSchoolId = searchParams.get("school_id");
+
+    const effectiveSchoolId = user.role === "super_admin"
+      ? (paramSchoolId && paramSchoolId !== "all" ? paramSchoolId : user.school_id || null)
+      : schoolId;
 
     // ─── Cache check ───────────────────────────────────────
-    const cacheKey = `${schoolId}:${searchParams.toString()}`;
+    const cacheKey = `${effectiveSchoolId || "all"}:${searchParams.toString()}`;
     const cached = _parentsServerCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
       return NextResponse.json(cached.data, { headers: { "Cache-Control": "no-store" } });
     }
 
-    const filter: Record<string, any> = { school_id: schoolId };
+    const filter: Record<string, any> = effectiveSchoolId ? { school_id: effectiveSchoolId } : {};
+    const studentBaseFilter: any = effectiveSchoolId ? { school_id: effectiveSchoolId } : {};
 
     // Search mapping (Part 4)
     if (search) {
       const studentFilter: any = {
-        school_id: schoolId,
+        ...studentBaseFilter,
         $or: [
           { name: { $regex: search, $options: "i" } },
           { father_name: { $regex: search, $options: "i" } },
@@ -81,7 +88,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Student relational filtering (Part 3)
-    const studentFilter: any = { school_id: schoolId };
+    const studentFilter: any = { ...studentBaseFilter };
     let hasStudentFilter = false;
 
     if (academic_year && academic_year !== "all") {
@@ -94,7 +101,7 @@ export async function GET(request: NextRequest) {
     }
     if (section && section !== "all") {
       const sectionClasses = await mongoose.model("Class").find({
-        school_id: schoolId,
+        ...studentBaseFilter,
         section: { $regex: new RegExp(`^${section}$`, "i") }
       }).select("_id").lean();
       studentFilter.class_id = { $in: sectionClasses.map(c => c._id) };
@@ -139,7 +146,10 @@ export async function GET(request: NextRequest) {
     ]);
 
     const parentIds = parents.map((p: any) => p._id);
-    const childrenQuery: any = { parent_id: { $in: parentIds }, school_id: schoolId };
+    const childrenQuery: any = {
+      parent_id: { $in: parentIds },
+      ...(effectiveSchoolId ? { school_id: effectiveSchoolId } : {}),
+    };
 
     const allChildren = await Student.find(childrenQuery)
       .select("_id name roll_no class_id gender photo_url parent_id")

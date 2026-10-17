@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import {
-  Plus, Search, RefreshCcw, MoreVertical, Edit, Trash2,
+  Plus, Search, RefreshCcw, Edit, Trash2,
   Loader2, AlertCircle, BookOpen, ChevronDown
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
@@ -24,7 +24,6 @@ export default function SubjectMasterPage() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selected, setSelected] = useState<ApiSubjectMaster | null>(null);
-  const [actionMenuId, setActionMenuId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
 
@@ -76,13 +75,12 @@ export default function SubjectMasterPage() {
     setFormDesc(s.description || ""); setFormStatus(s.status as any);
     setFormAllowedStreams(s.allowed_streams || []);
     setFormError("");
-    setIsEditOpen(true); setActionMenuId(null);
+    setIsEditOpen(true);
   };
 
   const openDelete = async (s: ApiSubjectMaster) => {
     setSelected(s);
     setIsDeleteOpen(true);
-    setActionMenuId(null);
     setCheckingDependencies(true);
     setDependencyError(null);
     setDependencyReasons([]);
@@ -161,25 +159,25 @@ export default function SubjectMasterPage() {
     { header: "Teachers", accessorKey: "teachersCount", render: (s) => <span className="text-slate-600 dark:text-slate-300">{(s as any).teachersCount ?? 0}</span> },
     { header: "Status", accessorKey: "status", render: (s) => <StatusBadge status={s.status} /> },
     ...(isAdmin ? [{
-      header: "Action", sortable: false,
+      header: "Action",
+      sortable: false,
+      className: "text-center",
       render: (s: ApiSubjectMaster) => (
-        <div className="relative">
-          <button onClick={() => setActionMenuId(actionMenuId === s._id ? null : s._id)} className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors">
-            <MoreVertical className="w-4 h-4" />
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center justify-center gap-1">
+          <button
+            onClick={() => openEdit(s)}
+            title="Edit Subject"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:text-slate-400 dark:hover:text-amber-400 dark:hover:bg-amber-950/40 transition-colors cursor-pointer"
+          >
+            <Edit className="w-4 h-4" />
           </button>
-          {actionMenuId === s._id && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setActionMenuId(null)} />
-              <div className="absolute right-8 top-0 w-32 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-1.5">
-                <button onClick={() => openEdit(s)} className="w-full px-4 py-2 text-[13px] font-semibold text-foreground dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-2 text-left">
-                  <Edit className="w-3.5 h-3.5" /> Edit
-                </button>
-                <button onClick={() => openDelete(s)} className="w-full px-4 py-2 text-[13px] font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2 text-left">
-                  <Trash2 className="w-3.5 h-3.5" /> Delete
-                </button>
-              </div>
-            </>
-          )}
+          <button
+            onClick={() => openDelete(s)}
+            title="Delete Subject"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:text-slate-400 dark:hover:text-rose-400 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
       ),
     } as ColumnDef<ApiSubjectMaster>] : []),
@@ -226,8 +224,22 @@ export default function SubjectMasterPage() {
             <Loader2 className="w-5 h-5 animate-spin" /><span className="text-[14px] font-medium">Loading subjects...</span>
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-red-500">
-            <AlertCircle className="w-6 h-6" /><p className="text-[14px] font-medium">{error}</p>
+          <div className="flex flex-col items-center justify-center py-16 px-4 max-w-md mx-auto text-center">
+            <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 border border-amber-200 dark:border-amber-900/50">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <h4 className="text-[15px] font-bold text-slate-800 dark:text-slate-100 mb-1">
+              Unable to Load Subjects
+            </h4>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+              Could not retrieve the subjects catalog from the server. Please check your connection and try again.
+            </p>
+            <button
+              onClick={() => doFetch()}
+              className="px-5 py-2.5 text-[13px] font-bold bg-primary hover:bg-[var(--primary-hover)] text-white rounded-lg shadow-sm transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <RefreshCcw className="w-4 h-4" /> Try Again
+            </button>
           </div>
         ) : subjects.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
