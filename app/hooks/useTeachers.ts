@@ -672,8 +672,8 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
     }
 
     // 3. Only return cached if it is a complete detail object
-    const isComplete = local && (local.dob || local.address || local.experience_years !== undefined);
-    if (isComplete) {
+    const isComplete = Boolean(local && (local.dob || local.address || local.experience_years !== undefined));
+    if (local && isComplete) {
       return local;
     }
 
