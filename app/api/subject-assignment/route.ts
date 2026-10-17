@@ -29,7 +29,7 @@ const registerModels = () => {
 
 // GET — list subject assignments (DB-level lookup, search, sort, and pagination)
 export async function GET(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
+  const { schoolId, user, error } = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
   if (error) return error;
 
   try {
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     registerModels();
 
     const url = new URL(req.url);
-    const cacheKey = `${schoolId}:${url.searchParams.toString()}`;
+    const cacheKey = `${schoolId || "super"}:${url.searchParams.toString()}`;
     const cached = _cache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
       return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
@@ -57,7 +57,15 @@ export async function GET(req: NextRequest) {
     const skip = isAll ? 0 : (page - 1) * limit;
 
     // Match initial school_id & basic filters
-    const matchStage: any = { school_id: new mongoose.Types.ObjectId(schoolId as string) };
+    const matchStage: any = {};
+    if (user.role === "super_admin") {
+      const paramSchoolId = url.searchParams.get("school_id");
+      if (paramSchoolId && paramSchoolId !== "all" && mongoose.Types.ObjectId.isValid(paramSchoolId)) {
+        matchStage.school_id = new mongoose.Types.ObjectId(paramSchoolId);
+      }
+    } else if (schoolId && mongoose.Types.ObjectId.isValid(schoolId as string)) {
+      matchStage.school_id = new mongoose.Types.ObjectId(schoolId as string);
+    }
     if (academic_year) matchStage.academic_year = academic_year;
     if (class_id && mongoose.Types.ObjectId.isValid(class_id)) {
       matchStage.class_id = new mongoose.Types.ObjectId(class_id as string);
@@ -291,8 +299,11 @@ export async function POST(req: NextRequest) {
     if (!mongoose.Types.ObjectId.isValid(class_id)) {
       return NextResponse.json({ success: false, message: "Invalid Class ID" }, { status: 400 });
     }
-    const cls = await Class.findOne({ _id: class_id, school_id: schoolId }).lean();
+    const clsQuery: any = { _id: class_id };
+    if (schoolId) clsQuery.school_id = schoolId;
+    const cls = await Class.findOne(clsQuery).lean();
     if (!cls) return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
+    const effectiveSchoolId = schoolId || (cls as any).school_id;
 
     const targetSubjectIds: string[] = [];
     if (Array.isArray(subject_master_ids)) {
@@ -311,12 +322,14 @@ export async function POST(req: NextRequest) {
     const createdAssignments: any[] = [];
     for (const subId of targetSubjectIds) {
       if (!mongoose.Types.ObjectId.isValid(subId)) continue;
-      const subject = await SubjectMaster.findOne({ _id: subId, school_id: schoolId }).lean();
+      const subQuery: any = { _id: subId };
+      if (effectiveSchoolId) subQuery.school_id = effectiveSchoolId;
+      const subject = await SubjectMaster.findOne(subQuery).lean();
       if (!subject) continue;
 
       // Check if duplicate assignment exists
       const duplicate = await SubjectAssignment.findOne({
-        school_id: schoolId,
+        school_id: effectiveSchoolId,
         academic_year: academic_year.trim(),
         class_id,
         subject_master_id: subId
@@ -333,7 +346,7 @@ export async function POST(req: NextRequest) {
       }
 
       const newAssignment = await SubjectAssignment.create({
-        school_id: new mongoose.Types.ObjectId(schoolId as string),
+        school_id: new mongoose.Types.ObjectId(effectiveSchoolId as string),
         academic_year: academic_year.trim(),
         class_id: new mongoose.Types.ObjectId(class_id as string),
         stream_id: stream_id ? new mongoose.Types.ObjectId(stream_id as string) : undefined,
@@ -350,7 +363,7 @@ export async function POST(req: NextRequest) {
       if (teacher_id) {
         await TeacherAssignment.findOneAndUpdate(
           {
-            school_id: new mongoose.Types.ObjectId(schoolId as string),
+            school_id: new mongoose.Types.ObjectId(effectiveSchoolId as string),
             academic_year: academic_year.trim(),
             class_id: new mongoose.Types.ObjectId(class_id as string),
             subject_master_id: new mongoose.Types.ObjectId(subId as string)

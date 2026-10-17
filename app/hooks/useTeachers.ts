@@ -490,6 +490,7 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
         const res = await fetch(`/api/teachers?${cacheKey}`, {
           headers: getAuthHeaders(),
           signal: controller.signal,
+          cache: "no-store",
         });
 
         const data = await res.json();
@@ -705,5 +706,6 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
     updateTeacher,
     deleteTeacher,
     getTeacher,
+    mutationVersion,
   };
 }

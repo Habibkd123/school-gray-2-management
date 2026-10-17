@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     return sendConditionalJson(
       req,
       cached.data,
-      { cacheControl: "private, max-age=60, stale-while-revalidate=120" }
+      { cacheControl: "private, no-cache, no-store, must-revalidate" }
     );
   }
 
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
       return sendConditionalJson(
         req,
         data,
-        { cacheControl: "private, max-age=60, stale-while-revalidate=120" }
+        { cacheControl: "private, no-cache, no-store, must-revalidate" }
       );
     } catch {
       // Fall through to retry on error
@@ -157,7 +157,7 @@ export async function GET(req: NextRequest) {
       return sendConditionalJson(
         req,
         resData,
-        { cacheControl: "private, max-age=60, stale-while-revalidate=120" }
+        { cacheControl: "private, no-cache, no-store, must-revalidate" }
       );
     }
 
@@ -228,7 +228,7 @@ export async function GET(req: NextRequest) {
     return sendConditionalJson(
       req,
       responsePayload,
-      { cacheControl: "private, max-age=60, stale-while-revalidate=120" }
+      { cacheControl: "private, no-cache, no-store, must-revalidate" }
     );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";

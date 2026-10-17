@@ -56,6 +56,18 @@ function getStoredSchedules(cacheKey: string): ApiSchedule[] | null {
   return null;
 }
 
+function clearAllSchedulesCaches() {
+  _schedulesClientCache.clear();
+  _schedulesInFlightClient.clear();
+  if (typeof window !== "undefined") {
+    try {
+      Object.keys(sessionStorage)
+        .filter(k => k.startsWith("cache_schedules_"))
+        .forEach(k => sessionStorage.removeItem(k));
+    } catch {}
+  }
+}
+
 function setStoredSchedules(cacheKey: string, data: ApiSchedule[]) {
   _schedulesClientCache.set(cacheKey, { data, timestamp: Date.now() });
   if (typeof window !== "undefined") {
@@ -127,9 +139,14 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
     }
     setError(null);
 
+    if (forceRefresh) {
+      query.set("_t", String(Date.now()));
+    }
+
     const promise = (async () => {
       const res = await fetch(`/api/schedules?${query.toString()}`, {
         headers: getAuthHeaders(),
+        cache: "no-store",
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch schedules");
@@ -185,7 +202,7 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to create schedule" };
 
-      _schedulesClientCache.clear();
+      clearAllSchedulesCaches();
       invalidateCache("schedules");
       setSchedules((prev) => [...prev, data.data].sort((a, b) => a.day.localeCompare(b.day)));
       return { success: true, message: "Schedule created successfully", data: data.data };
@@ -218,7 +235,7 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to update schedule" };
 
-      _schedulesClientCache.clear();
+      clearAllSchedulesCaches();
       invalidateCache("schedules");
       setSchedules((prev) => prev.map((s) => (s._id === id ? data.data : s)));
       return { success: true, message: "Schedule updated successfully", data: data.data };
@@ -236,7 +253,7 @@ export function useSchedules(classId?: string, teacherId?: string, options?: { s
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed to delete" };
 
-      _schedulesClientCache.clear();
+      clearAllSchedulesCaches();
       invalidateCache("schedules");
       setSchedules((prev) => prev.filter((s) => s._id !== id));
       return { success: true, message: "Schedule deleted successfully" };

@@ -466,7 +466,11 @@ export function GenerateDocumentWizard({
       // corrupting the base64 string and making decodeVariablesClient return {}.
       const safeEncoded = encodeURIComponent(encoded);
 
-      const url = `/documents/builder/${selectedTemplate.id}?variables=${safeEncoded}&generatedFor=${encodeURIComponent(selectedRecord?.name || "")}&generatedTitle=${encodeURIComponent(selectedTemplate.name || "")}`;
+      const recordId = selectedRecord?._id || "";
+      const recordType = activeModule;
+      const recordName = selectedRecord?.name || "";
+
+      const url = `/documents/builder/${selectedTemplate.id}?variables=${safeEncoded}&generatedFor=${encodeURIComponent(recordName)}&generatedTitle=${encodeURIComponent(selectedTemplate.name || "")}&recordId=${encodeURIComponent(recordId)}&recordType=${encodeURIComponent(recordType)}&recordName=${encodeURIComponent(recordName)}`;
       setBuilderUrl(url);
       setGenerated(true);
     } catch (e) {

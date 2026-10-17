@@ -28,10 +28,13 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     registerModels();
     const { academic_year, class_id, stream_id, subject_master_id, teacher_id, weekly_periods, description, status } = await req.json();
 
-    const assignment = await SubjectAssignment.findOne({ _id: id, school_id: schoolId });
+    const assignmentQuery: any = { _id: id };
+    if (schoolId) assignmentQuery.school_id = schoolId;
+    const assignment = await SubjectAssignment.findOne(assignmentQuery);
     if (!assignment) {
       return NextResponse.json({ success: false, message: "Subject assignment not found" }, { status: 404 });
     }
+    const effectiveSchoolId = schoolId || assignment.school_id;
 
     const updateData: any = {};
     if (academic_year !== undefined) updateData.academic_year = academic_year.trim();
@@ -43,14 +46,18 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
 
     if (class_id !== undefined) {
-      const cls = await Class.findOne({ _id: class_id, school_id: schoolId }).lean();
+      const clsQuery: any = { _id: class_id };
+      if (effectiveSchoolId) clsQuery.school_id = effectiveSchoolId;
+      const cls = await Class.findOne(clsQuery).lean();
       if (!cls) return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
       updateData.class_id = new mongoose.Types.ObjectId(class_id as string);
 
       const isHigherClass = cls.name.startsWith("Class 11") || cls.name.startsWith("Class 12");
       if (isHigherClass && stream_id) {
         if (mongoose.Types.ObjectId.isValid(stream_id)) {
-          const stream = await Stream.findOne({ _id: stream_id, school_id: schoolId }).lean();
+          const streamQuery: any = { _id: stream_id };
+          if (effectiveSchoolId) streamQuery.school_id = effectiveSchoolId;
+          const stream = await Stream.findOne(streamQuery).lean();
           if (!stream) return NextResponse.json({ success: false, message: "Stream not found" }, { status: 404 });
           updateData.stream_id = new mongoose.Types.ObjectId(stream_id as string);
         } else {
@@ -63,14 +70,16 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     if (subject_master_id !== undefined) {
       if (mongoose.Types.ObjectId.isValid(subject_master_id)) {
-        const subject = await SubjectMaster.findOne({ _id: subject_master_id, school_id: schoolId }).lean();
+        const subQuery: any = { _id: subject_master_id };
+        if (effectiveSchoolId) subQuery.school_id = effectiveSchoolId;
+        const subject = await SubjectMaster.findOne(subQuery).lean();
         if (!subject) return NextResponse.json({ success: false, message: "Subject not found" }, { status: 404 });
         updateData.subject_master_id = new mongoose.Types.ObjectId(subject_master_id as string);
       }
     }
 
     const updated = await SubjectAssignment.findOneAndUpdate(
-      { _id: id, school_id: schoolId },
+      assignmentQuery,
       { $set: updateData },
       { new: true }
     )
@@ -89,7 +98,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     if (finalTeacherId) {
       await TeacherAssignment.findOneAndUpdate(
         {
-          school_id: new mongoose.Types.ObjectId(schoolId as string),
+          school_id: new mongoose.Types.ObjectId(effectiveSchoolId as string),
           academic_year: finalYear,
           class_id: new mongoose.Types.ObjectId(finalClassId as string),
           subject_master_id: new mongoose.Types.ObjectId(finalSubjectId as string)
@@ -102,14 +111,14 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     } else {
       // If teacher is unassigned, delete the matching TeacherAssignment
       await TeacherAssignment.findOneAndDelete({
-        school_id: new mongoose.Types.ObjectId(schoolId as string),
+        school_id: new mongoose.Types.ObjectId(effectiveSchoolId as string),
         academic_year: finalYear,
         class_id: new mongoose.Types.ObjectId(finalClassId as string),
         subject_master_id: new mongoose.Types.ObjectId(finalSubjectId as string)
       });
     }
 
-    invalidateSubjectAssignmentCache(String(schoolId));
+    invalidateSubjectAssignmentCache(effectiveSchoolId ? String(effectiveSchoolId) : undefined);
     return NextResponse.json({ success: true, data: updated });
   } catch (err: any) {
     if (err.code === 11000) {
@@ -132,21 +141,25 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   try {
     await connectToDatabase();
     registerModels();
-    const deleted = await SubjectAssignment.findOneAndDelete({ _id: id, school_id: schoolId });
+    const deleteQuery: any = { _id: id };
+    if (schoolId) deleteQuery.school_id = schoolId;
+    const deleted = await SubjectAssignment.findOneAndDelete(deleteQuery);
     if (!deleted) {
       return NextResponse.json({ success: false, message: "Subject assignment not found" }, { status: 404 });
     }
 
+    const effectiveSchoolId = schoolId || deleted.school_id;
+
     // Clean up associated TeacherAssignment
     await TeacherAssignment.findOneAndDelete({
-      school_id: new mongoose.Types.ObjectId(schoolId as string),
+      school_id: new mongoose.Types.ObjectId(effectiveSchoolId as string),
       academic_year: deleted.academic_year,
       class_id: deleted.class_id,
       subject_master_id: deleted.subject_master_id
     });
 
-    invalidateSubjectAssignmentCache(String(schoolId));
-    return NextResponse.json({ success: true, message: "Subject assignment removed" });
+    invalidateSubjectAssignmentCache(effectiveSchoolId ? String(effectiveSchoolId) : undefined);
+    return NextResponse.json({ success: true, message: "Subject assignment deleted successfully" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }

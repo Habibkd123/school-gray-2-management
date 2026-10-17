@@ -211,6 +211,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
     const promise = (async () => {
       const res = await fetch(`/api/classes?${cacheKey}`, {
         headers: getAuthHeaders(),
+        cache: "no-store",
       });
 
       const data = await res.json();

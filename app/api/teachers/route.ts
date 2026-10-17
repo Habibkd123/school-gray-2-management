@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
     return sendConditionalJson(
       req,
       { success: true, data: cached.data },
-      { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
+      { cacheControl: "no-store, no-cache, must-revalidate" }
     );
   }
 
@@ -278,7 +278,7 @@ export async function GET(req: NextRequest) {
     return sendConditionalJson(
       req,
       { success: true, data: resultData },
-      { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
+      { cacheControl: "no-store, no-cache, must-revalidate" }
     );
   } catch (error: any) {
     return NextResponse.json(

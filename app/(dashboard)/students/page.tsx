@@ -20,6 +20,7 @@ import {
   Search,
   Plus,
   Filter,
+  Eye,
   MoreVertical,
   Edit,
   Trash2,
@@ -499,60 +500,40 @@ export default function StudentsPage() {
     { header: "Date of Join", accessorKey: "joinDateStr" },
     { header: "DOB", accessorKey: "dobStr" },
     {
-      header: "Action", sortable: false, render: (s) => (
-        <div className="flex items-center gap-2 whitespace-nowrap">
+      header: "Action",
+      sortable: false,
+      render: (s) => (
+        <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 whitespace-nowrap">
           <Link
             href={`/fees/collect?studentId=${s._id}`}
-            onClick={(e) => e.stopPropagation()}
             className="px-3 py-1.5 rounded bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-bold hover:bg-[#E2E8F0] dark:hover:bg-slate-700 transition-colors inline-block"
           >
             Collect Fees
           </Link>
-          <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setActiveDropdown(activeDropdown === s._id ? null : s._id);
-              }}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors bg-primary text-white hover:bg-[var(--primary-hover)]`}
-            >
-              <MoreVertical className="w-4 h-4" />
-            </button>
-
-            {/* Dropdown Menu */}
-            {activeDropdown === s._id && (
-              <div className="absolute right-0 top-10 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-border py-2 z-50">
-                <button onClick={() => { router.push(`/students/${s.id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                  <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500" /> View Student
-                </button>
-                <button onClick={() => { router.push(`/students/add?edit=${s.id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                  <Edit className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Edit
-                </button>
-                <button onClick={() => { setSelectedStudent(s as ApiStudent); setLoginModalTarget("student"); setIsLoginDetailsOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                  <User className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Login Details
-                </button>
-                <button onClick={() => {
-                  const studentUser = s.user_id;
-                  const sUid = studentUser && typeof studentUser === "object" ? studentUser._id : undefined;
-                  const sEmail = studentUser && typeof studentUser === "object" ? studentUser.email : s.email || "";
-                  setResetPassTarget({ userId: sUid, name: s.name, email: sEmail });
-                  setIsResetPassModalOpen(true);
-                  setActiveDropdown(null);
-                }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                  <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Reset Password
-                </button>
-                <button onClick={() => { setSelectedStudent(s as ApiStudent); setIsDisableOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                  <XCircle className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Disable
-                </button>
-                <button onClick={() => { router.push(`/students/student-promotion?studentId=${s._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                  <GraduationCap className="w-4 h-4 text-slate-400 dark:text-slate-500" /> Promote Student
-                </button>
-                <button onClick={() => { setSelectedStudent(s as ApiStudent); setIsDeleteOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-rose-600 hover:bg-rose-50 flex items-center gap-3">
-                  <Trash2 className="w-4 h-4 text-rose-400" /> Delete
-                </button>
-              </div>
-            )}
-          </div>
+          <button
+            onClick={() => router.push(`/students/${s.id || s._id}`)}
+            title="View Student"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-950/40 transition-colors"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => router.push(`/students/add?edit=${s.id || s._id}`)}
+            title="Edit Student"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:text-slate-400 dark:hover:text-amber-400 dark:hover:bg-amber-950/40 transition-colors"
+          >
+            <Edit className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => {
+              setSelectedStudent(s as ApiStudent);
+              setIsDeleteOpen(true);
+            }}
+            title="Delete Student"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:text-slate-400 dark:hover:text-rose-400 dark:hover:bg-rose-950/40 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
       )
     }
@@ -1013,45 +994,28 @@ export default function StudentsPage() {
                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${student.is_active ? "bg-success/10 text-success dark:bg-[#1D7F2C]/20 dark:text-success" : "bg-danger/10 text-danger dark:bg-danger/20"}`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${student.is_active ? "bg-success" : "bg-danger"}`} /> {student.is_active ? "Active" : "Inactive"}
                         </span>
-                        <div className="relative">
+                        <div className="flex items-center gap-1">
                           <button
-                            onClick={(e) => { e.stopPropagation(); setActiveDropdown(activeDropdown === student._id ? null : student._id); }}
-                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                            onClick={(e) => { e.stopPropagation(); router.push(`/students/${student._id}`); }}
+                            title="View Student"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-950/40 transition-colors"
                           >
-                            <MoreVertical className="w-4 h-4" />
+                            <Eye className="w-3.5 h-3.5" />
                           </button>
-                          {activeDropdown === student._id && (
-                            <div className="absolute right-0 top-6 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-border py-2 z-50">
-                              <button onClick={() => { router.push(`/students/${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <FileText className="w-4 h-4 text-slate-400" /> View Student
-                              </button>
-                              <button onClick={() => { router.push(`/students/add?edit=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <Edit className="w-4 h-4 text-slate-400" /> Edit
-                              </button>
-                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setLoginModalTarget("student"); setIsLoginDetailsOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <User className="w-4 h-4 text-slate-400" /> Login Details
-                              </button>
-                              <button onClick={() => {
-                                const studentUser = student.user_id;
-                                const sUid = studentUser && typeof studentUser === "object" ? studentUser._id : undefined;
-                                const sEmail = studentUser && typeof studentUser === "object" ? studentUser.email : student.email || "";
-                                setResetPassTarget({ userId: sUid, name: student.name, email: sEmail });
-                                setIsResetPassModalOpen(true);
-                                setActiveDropdown(null);
-                              }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <Lock className="w-4 h-4 text-slate-400" /> Reset Password
-                              </button>
-                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDisableOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <XCircle className="w-4 h-4 text-slate-400" /> Disable
-                              </button>
-                              <button onClick={() => { router.push(`/students/student-promotion?studentId=${student._id}`); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3">
-                                <GraduationCap className="w-4 h-4 text-slate-400" /> Promote Student
-                              </button>
-                              <button onClick={() => { setSelectedStudent(student as unknown as ApiStudent); setIsDeleteOpen(true); setActiveDropdown(null); }} className="w-full px-4 py-2 text-left text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3">
-                                <Trash2 className="w-4 h-4 text-rose-400" /> Delete
-                              </button>
-                            </div>
-                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); router.push(`/students/add?edit=${student._id}`); }}
+                            title="Edit Student"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-amber-600 hover:bg-amber-50 dark:text-slate-400 dark:hover:text-amber-400 dark:hover:bg-amber-950/40 transition-colors"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSelectedStudent(student as unknown as ApiStudent); setIsDeleteOpen(true); }}
+                            title="Delete Student"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:text-slate-400 dark:hover:text-rose-400 dark:hover:bg-rose-950/40 transition-colors"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     </div>

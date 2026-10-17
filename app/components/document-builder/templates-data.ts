@@ -318,13 +318,108 @@ function experiencePage(): CanvasPage {
       divider(uid(), 100, 794),
       heading(uid(), "EXPERIENCE CERTIFICATE", 40, 116, W, 18),
       divider(uid(), 148, 794),
-      paragraph(uid(),
-        "This is to certify that <b>{{teacher_name}}</b> has worked as a <b>[Designation]</b> in this school from <b>__________</b> to <b>__________</b>, a total duration of <b>__ years, __ months</b>.\n\nDuring this tenure, he/she taught <b>[Subject(s)]</b>.\n\nDuring his/her tenure, he/she has been sincere, hard-working and dedicated towards his/her duties. His/Her conduct has always been exemplary.\n\nWe wish him/her every success in all future endeavours.",
-        40, 172, W, 200),
       {
-        id: uid(), type: "paragraph", x: 40, y: 440, width: W, height: 60, zIndex: 1,
+        id: uid(), type: "paragraph", x: 40, y: 156, width: W, height: 30, zIndex: 1,
+        content: "Date: {{current_date}}",
+        textStyle: { ...DEFAULT_TEXT_STYLE, fontSize: 12, textAlign: "right", color: "#5C5D5D" },
+      },
+      paragraph(uid(),
+        "This is to certify that <b>{{teacher_name}}</b> (Employee ID: <b>{{teacher_employee_id}}</b>) has served as <b>{{teacher_designation}}</b> in the Department of <b>{{teacher_department}}</b> at <b>{{school_name}}</b>.\n\nHe/She has been associated with our institution with a total teaching experience of <b>{{teacher_experience}}</b>, specializing in <b>{{teacher_subject}}</b>.\n\nDuring his/her tenure, he/she has been sincere, hardworking, and dedicated towards professional responsibilities. His/Her conduct and character have always been exemplary.\n\nWe appreciate his/her valuable contribution and wish him/her all the best for future endeavours.",
+        40, 192, W, 220),
+      {
+        id: uid(), type: "paragraph", x: 40, y: 480, width: W, height: 60, zIndex: 1,
         content: "________________\nPrincipal / Head Master",
         textStyle: { ...DEFAULT_TEXT_STYLE, textAlign: "right", fontSize: 12 },
+      },
+    ],
+  };
+}
+
+// ─── Appointment Letter ───────────────────────────────────────────────────────
+
+function appointmentPage(): CanvasPage {
+  const W = 714;
+  return {
+    id: uid(),
+    elements: [
+      logo(uid(), 362, 40),
+      heading(uid(), "{{school_name}}", 40, 40, W, 20),
+      subheading(uid(), "School Address, City — Rajasthan", 40, 64, W),
+      divider(uid(), 100, 794),
+      heading(uid(), "APPOINTMENT LETTER", 40, 116, W, 18),
+      divider(uid(), 148, 794),
+      {
+        id: uid(), type: "paragraph", x: 40, y: 156, width: 300, height: 28, zIndex: 1,
+        content: "Ref: {{teacher_employee_id}}\nDate: {{current_date}}",
+        textStyle: { ...DEFAULT_TEXT_STYLE, fontSize: 12 },
+      },
+      {
+        id: uid(), type: "paragraph", x: 40, y: 200, width: W, height: 60, zIndex: 1,
+        content: "To,\n<b>{{teacher_name}}</b>\nAddress: {{teacher_address}}\nPhone: {{teacher_phone}}",
+        textStyle: { ...DEFAULT_TEXT_STYLE, fontSize: 12, lineHeight: 1.5 },
+      },
+      paragraph(uid(),
+        "Dear <b>{{teacher_name}}</b>,\n\nWe are pleased to appoint you as <b>{{teacher_designation}}</b> in the Department of <b>{{teacher_department}}</b> at <b>{{school_name}}</b> with effect from <b>{{teacher_join_date}}</b>.\n\nYour primary subject of instruction will be <b>{{teacher_subject}}</b>. Your employment will be governed by the school rules and regulations in force.\n\nPlease sign and return the duplicate copy of this letter as a token of your acceptance.\n\nWe welcome you to our team and look forward to a fruitful association.",
+        40, 270, W, 220),
+      {
+        id: uid(), type: "paragraph", x: 40, y: 530, width: 250, height: 60, zIndex: 1,
+        content: "_____________________\nAuthorized Signatory\n{{school_name}}",
+        textStyle: { ...DEFAULT_TEXT_STYLE, fontSize: 12, lineHeight: 1.6 },
+      },
+      {
+        id: uid(), type: "paragraph", x: W - 180, y: 530, width: 220, height: 60, zIndex: 1,
+        content: "_____________________\nTeacher's Signature\n(Acceptance)",
+        textStyle: { ...DEFAULT_TEXT_STYLE, fontSize: 12, textAlign: "right", lineHeight: 1.6 },
+      },
+    ],
+  };
+}
+
+// ─── Salary Slip ──────────────────────────────────────────────────────────────
+
+function salarySlipPage(): CanvasPage {
+  const W = 714;
+  return {
+    id: uid(),
+    elements: [
+      logo(uid(), 362, 35),
+      heading(uid(), "{{school_name}}", 40, 35, W, 20),
+      subheading(uid(), "School Address, City — Rajasthan", 40, 58, W),
+      divider(uid(), 90, 794),
+      heading(uid(), "STAFF SALARY SLIP", 40, 102, W, 16),
+      divider(uid(), 130, 794),
+      {
+        id: uid(), type: "table", x: 40, y: 145, width: W, height: 110, zIndex: 1,
+        tableData: {
+          rows: 3, cols: 4, headerRow: false, cellPadding: 8, borderWidth: 1, borderColor: "#E2E8F0",
+          cells: [
+            ["Employee Name:", "{{teacher_name}}", "Employee ID:", "{{teacher_employee_id}}"],
+            ["Designation:", "{{teacher_designation}}", "Department:", "{{teacher_department}}"],
+            ["Date of Joining:", "{{teacher_join_date}}", "Pay Date:", "{{current_date}}"],
+          ],
+        },
+      },
+      {
+        id: uid(), type: "table", x: 40, y: 275, width: W, height: 150, zIndex: 1,
+        tableData: {
+          rows: 4, cols: 2, headerRow: true, cellPadding: 8, borderWidth: 1, borderColor: "#CBD5E1",
+          cells: [
+            ["Salary Component", "Amount (₹)"],
+            ["Basic Salary", "{{teacher_basic_salary}}"],
+            ["Special Allowance / Perks", "₹ 0"],
+            ["Net Payable Salary", "{{teacher_basic_salary}}"],
+          ],
+        },
+      },
+      {
+        id: uid(), type: "paragraph", x: 40, y: 460, width: 220, height: 50, zIndex: 1,
+        content: "___________________\nAccounts Department",
+        textStyle: { ...DEFAULT_TEXT_STYLE, fontSize: 11, textAlign: "center" },
+      },
+      {
+        id: uid(), type: "paragraph", x: 494, y: 460, width: 220, height: 50, zIndex: 1,
+        content: "___________________\nPrincipal Signature",
+        textStyle: { ...DEFAULT_TEXT_STYLE, fontSize: 11, textAlign: "center" },
       },
     ],
   };
@@ -881,6 +976,28 @@ export const TEMPLATE_DEFINITIONS: TemplateDefinition[] = [
     thumbnailBg: "linear-gradient(135deg, #064e3b 0%, #043d2e 100%)",
     thumbnailAccent: "#6ee7b7",
     defaultPages: [experiencePage()],
+  },
+  {
+    id: "appointment-letter",
+    categoryId: "teacher",
+    name: "Appointment Letter",
+    orientation: "portrait",
+    pageSize: "A4",
+    description: "Formal appointment letter for teachers and staff",
+    thumbnailBg: "linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)",
+    thumbnailAccent: "#c7d2fe",
+    defaultPages: [appointmentPage()],
+  },
+  {
+    id: "salary-slip",
+    categoryId: "teacher",
+    name: "Salary Slip",
+    orientation: "portrait",
+    pageSize: "A4",
+    description: "Monthly staff salary statement and pay slip",
+    thumbnailBg: "linear-gradient(135deg, #713f12 0%, #854d0e 100%)",
+    thumbnailAccent: "#fde047",
+    defaultPages: [salarySlipPage()],
   },
   {
     id: "teacher-blank",

@@ -81,7 +81,7 @@ const getSubjectColor = (subjectName: string) => {
 
 export default function ClassRoutinePage() {
   const { academicYear, activeRole } = useAppState();
-  const { classes, isLoading: classesLoading } = useClasses();
+  const { classes, isLoading: classesLoading, fetchClasses } = useClasses();
   const { teachers, isLoading: teachersLoading } = useTeachers();
   const { assignments: teacherAssignments, fetchAssignments: fetchTeacherAssignments } = useTeacherAssignment();
   const { assignments: subjectAssignments, fetchAssignments: fetchSubjectAssignments } = useSubjectAssignment();
@@ -139,7 +139,7 @@ export default function ClassRoutinePage() {
   }, [fetchTeacherAssignments, fetchSubjectAssignments, filterYear]);
 
   // Sync routine parameters list
-  const loadFilteredSchedules = useCallback(() => {
+  const loadFilteredSchedules = useCallback((force = false) => {
     fetchSchedules({
       academicYear: filterYear,
       classId: classes.find(c => c.name === filterClassName && c.section === filterSection)?._id || "",
@@ -147,7 +147,7 @@ export default function ClassRoutinePage() {
       day: filterDay,
       status: filterStatus !== "all" ? filterStatus : "",
       search: searchTerm
-    });
+    }, undefined, force);
   }, [fetchSchedules, filterYear, filterClassName, filterSection, filterTeacherId, filterDay, filterStatus, searchTerm, classes]);
 
   useEffect(() => {
@@ -260,6 +260,7 @@ export default function ClassRoutinePage() {
 
   const handleOpenAdd = () => {
     resetForm();
+    fetchClasses();
     setIsAddOpen(true);
   };
 
@@ -298,7 +299,7 @@ export default function ClassRoutinePage() {
     const newStatus = routine.status === "Inactive" ? "Active" : "Inactive";
     const res = await updateSchedule(routine._id, { status: newStatus as any });
     if (res.success) {
-      loadFilteredSchedules();
+      loadFilteredSchedules(true);
     } else {
       alert(res.message || "Failed to update routine status");
     }
@@ -309,7 +310,7 @@ export default function ClassRoutinePage() {
     if (confirm("Are you sure you want to delete this routine entry? This cannot be undone.")) {
       const res = await deleteSchedule(id);
       if (res.success) {
-        loadFilteredSchedules();
+        loadFilteredSchedules(true);
       } else {
         alert(res.message || "Failed to delete routine");
       }
@@ -356,7 +357,7 @@ export default function ClassRoutinePage() {
     if (res.success) {
       setIsAddOpen(false);
       setIsEditOpen(false);
-      loadFilteredSchedules();
+      loadFilteredSchedules(true);
     } else {
       setFormError(res.message || "Overlap conflict detected or database validation failed.");
     }
@@ -478,7 +479,7 @@ export default function ClassRoutinePage() {
             </button>
           </div>
 
-          <button onClick={() => loadFilteredSchedules()} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
+          <button onClick={() => loadFilteredSchedules(true)} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
 

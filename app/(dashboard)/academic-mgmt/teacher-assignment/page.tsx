@@ -304,7 +304,6 @@ export default function TeacherAssignmentPage() {
 
     const res = await createAssignment(data);
     setSubmitting(false);
-
     if (res.success) {
       setIsAddOpen(false);
       setIsWorkloadWarningOpen(false);
@@ -1082,11 +1081,6 @@ export default function TeacherAssignmentPage() {
       {/* Add Modal */}
       <Modal isOpen={isAddOpen} onClose={() => { setIsAddOpen(false); resetForm(); }} title="Assign Faculty to Class Subject">
         <form onSubmit={handleAddSubmit} className="space-y-4 text-left">
-          {formError && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 dark:bg-rose-955/20 text-rose-600 dark:text-rose-450 text-[13px] font-semibold border border-rose-200/50">
-              <AlertCircle className="w-4 h-4 shrink-0" /> {formError}
-            </div>
-          )}
 
           {/* Custom Searchable Faculty Selection */}
           <div className="flex flex-col gap-1.5 relative">
@@ -1327,6 +1321,11 @@ export default function TeacherAssignmentPage() {
               className="w-full px-3.5 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
             />
           </div>
+          {formError && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 dark:bg-rose-955/20 text-rose-600 dark:text-rose-450 text-[13px] font-semibold border border-rose-200/50">
+              <AlertCircle className="w-4 h-4 shrink-0" /> {formError}
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
             <button

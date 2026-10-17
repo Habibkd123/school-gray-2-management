@@ -60,6 +60,7 @@ export default function SyllabusDetailsPage() {
   const [nodeTitle, setNodeTitle] = useState("");
   const [nodeDescription, setNodeDescription] = useState("");
   const [nodeType, setNodeType] = useState<SyllabusNode["type"]>("chapter");
+  const [nodeToDelete, setNodeToDelete] = useState<{ id: string; title: string } | null>(null);
 
   // Custom resources inside node modal
   const [nodeResources, setNodeResources] = useState<SyllabusResource[]>([]);
@@ -105,9 +106,9 @@ export default function SyllabusDetailsPage() {
     setTimeout(() => setErrorMsg(""), 5000);
   };
 
-  const loadDetails = useCallback(async () => {
+  const loadDetails = useCallback(async (forceFresh: boolean = false) => {
     if (syllabusId) {
-      const details = await getSyllabusDetails(syllabusId);
+      const details = await getSyllabusDetails(syllabusId, forceFresh);
       if (details) {
         setActiveSyllabus(details);
         setAttachments(details.attachments || []);
@@ -242,31 +243,47 @@ export default function SyllabusDetailsPage() {
       }
     }
 
+    // ⚡ Optimistic UI update — displays instantly in UI without waiting
+    setActiveSyllabus((prev: any) => ({ ...prev, nodes: treeCopy }));
+    setIsNodeModalOpen(false);
+
     const res = await updateSyllabus(activeSyllabus._id, { nodes: treeCopy });
     setSubmitting(false);
 
     if (res.success) {
-      setIsNodeModalOpen(false);
       showSuccess("Curriculum tree node saved successfully.");
-      loadDetails();
+      if (res.data) {
+        setActiveSyllabus(res.data);
+      }
     } else {
+      // Rollback to server state on failure
+      loadDetails(true);
       showError(res.message || "Failed to update curriculum structure.");
     }
   };
 
-  const handleDeleteNode = async (nodeId: string) => {
-    if (!confirm("Are you sure you want to delete this topic and all its subtopics?")) return;
+  const confirmDeleteNode = async () => {
+    if (!nodeToDelete) return;
+    const nodeId = nodeToDelete.id;
+    setNodeToDelete(null);
     setSubmitting(true);
     const treeCopy = JSON.parse(JSON.stringify(activeSyllabus.nodes || []));
     deleteNodeFromTree(treeCopy, nodeId);
+
+    // ⚡ Optimistic UI update — deletes instantly in UI without waiting
+    setActiveSyllabus((prev: any) => ({ ...prev, nodes: treeCopy }));
 
     const res = await updateSyllabus(activeSyllabus._id, { nodes: treeCopy });
     setSubmitting(false);
 
     if (res.success) {
       showSuccess("Node deleted successfully.");
-      loadDetails();
+      if (res.data) {
+        setActiveSyllabus(res.data);
+      }
     } else {
+      // Rollback to server state on failure
+      loadDetails(true);
       showError(res.message || "Failed to delete tree node.");
     }
   };
@@ -306,14 +323,23 @@ export default function SyllabusDetailsPage() {
       reference_links: refLinks
     };
 
+    // Optimistic UI update
+    setActiveSyllabus((prev: any) => ({
+      ...prev,
+      ...payload
+    }));
+    setIsMetaModalOpen(false);
+
     const res = await updateSyllabus(activeSyllabus._id, payload);
     setSubmitting(false);
 
     if (res.success) {
-      setIsMetaModalOpen(false);
       showSuccess("Curriculum settings updated successfully.");
-      loadDetails();
+      if (res.data) {
+        setActiveSyllabus(res.data);
+      }
     } else {
+      loadDetails(true);
       showError(res.message || "Failed to update settings.");
     }
   };
@@ -332,7 +358,13 @@ export default function SyllabusDetailsPage() {
       setSelectedHistory(null);
       setRestoreRemarks("");
       showSuccess(`Successfully restored curriculum to version ${selectedHistory.version}`);
-      loadDetails();
+      if (res.data) {
+        setActiveSyllabus(res.data);
+        setAttachments(res.data.attachments || []);
+        setRefLinks(res.data.reference_links || []);
+      } else {
+        loadDetails(true);
+      }
     } else {
       showError(res.message || "Failed to restore version snapshot.");
     }
@@ -425,7 +457,7 @@ export default function SyllabusDetailsPage() {
                 <Edit2 className="w-4 h-4" />
               </button>
               <button
-                onClick={() => handleDeleteNode(node.id)}
+                onClick={() => setNodeToDelete({ id: node.id, title: node.title })}
                 className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-rose-600 rounded transition-colors cursor-pointer"
                 title="Delete"
               >
@@ -1035,6 +1067,37 @@ export default function SyllabusDetailsPage() {
             </button>
           </div>
         </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!nodeToDelete}
+        onClose={() => setNodeToDelete(null)}
+        title="Confirm Deletion"
+      >
+        <div className="space-y-4 text-left p-1">
+          <p className="text-[14px] text-slate-600 dark:text-slate-300">
+            Are you sure you want to delete <span className="font-bold text-slate-900 dark:text-white">&ldquo;{nodeToDelete?.title}&rdquo;</span> and all its nested subtopics?
+          </p>
+          <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
+            <button
+              type="button"
+              onClick={() => setNodeToDelete(null)}
+              className="px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[13px] font-semibold rounded-lg hover:bg-slate-200 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={confirmDeleteNode}
+              disabled={submitting}
+              className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-[13px] font-bold rounded-lg shadow-sm flex items-center gap-2 cursor-pointer"
+            >
+              {submitting && <Loader2 className="w-4 h-4 animate-spin" />}
+              Delete Topic
+            </button>
+          </div>
+        </div>
       </Modal>
 
       {/* Toast Feedbacks */}

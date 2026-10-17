@@ -15,9 +15,9 @@ const _detailCache: Map<string, { data: any; expiresAt: number }> = gs._syllabus
 const DETAIL_TTL = 30_000;
 
 export function invalidateSyllabusDetailCache(id?: string, schoolId?: string) {
-  if (!id) { _detailCache.clear(); return; }
+  if (!id && !schoolId) { _detailCache.clear(); return; }
   for (const k of Array.from(_detailCache.keys())) {
-    if (k === id || k.endsWith(`:${id}`) || (schoolId && k.startsWith(`${schoolId}:`))) {
+    if (!id || k === id || k.includes(`:${id}`) || (schoolId && k.startsWith(`${schoolId}:`))) {
       _detailCache.delete(k);
     }
   }
@@ -35,19 +35,23 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
   // Skip cache for student/parent roles (they need per-user access checks)
   const canCache = user.role !== "student" && user.role !== "parent";
-  const cacheKey = `${schoolId}:${id}`;
+  const cacheKey = `${schoolId || "all"}:${id}`;
   if (canCache) {
     const cached = _detailCache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
-      return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+      return sendCompressedJson(req, cached.data, { cacheControl: "no-store, no-cache, must-revalidate" });
     }
   }
 
   try {
     await connectToDatabase();
     
+    const targetSchoolId = schoolId || (new URL(req.url).searchParams.get("school_id") || null);
+    const syllabusQuery: any = { _id: id };
+    if (targetSchoolId) syllabusQuery.school_id = targetSchoolId;
+
     // Resolve population references
-    let syllabus = await Syllabus.findOne({ _id: id, school_id: schoolId })
+    let syllabus = await Syllabus.findOne(syllabusQuery)
       .populate("class_id", "name section")
       .populate("section_id", "name")
       .populate("stream_id", "name")
@@ -56,7 +60,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       .populate("updated_by", "name");
 
     if (!syllabus) {
-      const assignment = (await TeacherAssignment.findOne({ _id: id, school_id: schoolId })
+      const assignmentQuery: any = { _id: id };
+      if (targetSchoolId) assignmentQuery.school_id = targetSchoolId;
+
+      const assignment = (await TeacherAssignment.findOne(assignmentQuery)
         .populate("class_id", "name section")
         .populate("section_id", "name")
         .populate("stream_id", "name")
@@ -65,20 +72,23 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
         .lean()) as any;
 
       if (assignment) {
+        const effectiveSchool = targetSchoolId || assignment.school_id;
         // Find existing syllabus matching the assignment combination
-        const existingSyllabus = await Syllabus.findOne({
-          school_id: schoolId,
+        const existingSyllabusQuery: any = {
           academic_year: assignment.academic_year,
           class_id: assignment.class_id?._id || assignment.class_id,
           section_id: assignment.section_id?._id || assignment.section_id || null,
           subject_master_id: assignment.subject_master_id?._id || assignment.subject_master_id
-        })
-        .populate("class_id", "name section")
-        .populate("section_id", "name")
-        .populate("stream_id", "name")
-        .populate("subject_master_id", "name subject_code description")
-        .populate("teacher_id", "name employee_id designation photo_url")
-        .populate("updated_by", "name");
+        };
+        if (effectiveSchool) existingSyllabusQuery.school_id = effectiveSchool;
+
+        const existingSyllabus = await Syllabus.findOne(existingSyllabusQuery)
+          .populate("class_id", "name section")
+          .populate("section_id", "name")
+          .populate("stream_id", "name")
+          .populate("subject_master_id", "name subject_code description")
+          .populate("teacher_id", "name employee_id designation photo_url")
+          .populate("updated_by", "name");
 
         if (existingSyllabus) {
           syllabus = existingSyllabus;
@@ -86,7 +96,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           // Construct virtual syllabus record
           const virtualSyllabus = {
             _id: String(assignment._id),
-            school_id: String(schoolId),
+            school_id: String(effectiveSchool || ""),
             academic_year: assignment.academic_year,
             class_id: assignment.class_id ? { _id: String(assignment.class_id._id), name: assignment.class_id.name, section: assignment.class_id.section } : null,
             section_id: assignment.section_id ? { _id: String(assignment.section_id._id), name: assignment.section_id.name } : null,
@@ -151,7 +161,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     if (canCache) {
       _detailCache.set(cacheKey, { data: responseData, expiresAt: Date.now() + DETAIL_TTL });
     }
-    return sendCompressedJson(req, responseData, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+    return sendCompressedJson(req, responseData, { cacheControl: "no-store, no-cache, must-revalidate" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Internal Server Error" }, { status: 500 });
   }
@@ -265,33 +275,43 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const action = url.searchParams.get("action");
     const body = await req.json();
 
-    let syllabus = await Syllabus.findOne({ _id: id, school_id: schoolId });
+    const targetSchoolId = schoolId || (body.school_id || null);
+    const syllabusQuery: any = { _id: id };
+    if (targetSchoolId) syllabusQuery.school_id = targetSchoolId;
+
+    let syllabus = await Syllabus.findOne(syllabusQuery);
     if (!syllabus) {
-      const assignment = await TeacherAssignment.findOne({ _id: id, school_id: schoolId }).lean();
+      const assignmentQuery: any = { _id: id };
+      if (targetSchoolId) assignmentQuery.school_id = targetSchoolId;
+      const assignment = await TeacherAssignment.findOne(assignmentQuery).lean();
       if (!assignment) {
         return NextResponse.json({ success: false, message: "Syllabus context not found" }, { status: 404 });
       }
 
+      const effectiveSchool = targetSchoolId || assignment.school_id;
+
       if (user.role === "teacher") {
-        const teacherProfile = await Teacher.findOne({ user_id: user.user_id, school_id: schoolId }).lean();
+        const teacherProfile = await Teacher.findOne({ user_id: user.user_id, school_id: effectiveSchool }).lean();
         if (!teacherProfile || String(assignment.teacher_id) !== String(teacherProfile._id)) {
           return NextResponse.json({ success: false, message: "Access Denied: You cannot manage syllabus for a class/subject you do not teach." }, { status: 403 });
         }
       }
 
-      const existingSyllabus = await Syllabus.findOne({
-        school_id: schoolId,
+      const existingSyllabusQuery: any = {
         academic_year: assignment.academic_year,
         class_id: assignment.class_id,
         section_id: assignment.section_id || null,
         subject_master_id: assignment.subject_master_id
-      });
+      };
+      if (effectiveSchool) existingSyllabusQuery.school_id = effectiveSchool;
+
+      const existingSyllabus = await Syllabus.findOne(existingSyllabusQuery);
 
       if (existingSyllabus) {
         syllabus = existingSyllabus;
       } else {
         syllabus = new Syllabus({
-          school_id: schoolId,
+          school_id: effectiveSchool,
           academic_year: assignment.academic_year,
           class_id: assignment.class_id,
           section_id: assignment.section_id || null,
@@ -312,6 +332,8 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
           updated_by: new mongoose.Types.ObjectId(user.user_id as string)
         });
         await syllabus.save();
+        invalidateSyllabusServerCache(effectiveSchool ? String(effectiveSchool) : undefined);
+        invalidateSyllabusDetailCache(id, effectiveSchool ? String(effectiveSchool) : undefined);
         return NextResponse.json({ success: true, data: syllabus });
       }
     } else {
@@ -416,8 +438,10 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     syllabus.updated_by = new mongoose.Types.ObjectId(user.user_id as string);
     await syllabus.save();
 
-    invalidateSyllabusServerCache(String(schoolId));
-    invalidateSyllabusDetailCache(id, String(schoolId));
+    const effectiveSchool = targetSchoolId || syllabus.school_id;
+    invalidateSyllabusServerCache(effectiveSchool ? String(effectiveSchool) : undefined);
+    invalidateSyllabusDetailCache(id, effectiveSchool ? String(effectiveSchool) : undefined);
+    if (syllabus._id) invalidateSyllabusDetailCache(String(syllabus._id), effectiveSchool ? String(effectiveSchool) : undefined);
     return NextResponse.json({ success: true, data: syllabus });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Internal Server Error" }, { status: 500 });

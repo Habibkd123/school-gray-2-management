@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
   const cacheKey = `${schoolId}:${user.role}:${user.user_id}:${url.searchParams.toString()}`;
   const cached = _schedulesServerCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
-    return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=15, stale-while-revalidate=30" });
+    return sendCompressedJson(req, cached.data, { cacheControl: "private, no-cache, no-store, must-revalidate" });
   }
 
   if (_schedulesInFlight.has(cacheKey)) {
@@ -241,7 +241,7 @@ export async function GET(req: NextRequest) {
     return sendCompressedJson(
       req,
       responsePayload,
-      { cacheControl: "private, max-age=15, stale-while-revalidate=30" }
+      { cacheControl: "private, no-cache, no-store, must-revalidate" }
     );
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });

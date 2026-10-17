@@ -131,6 +131,9 @@ export default function BuilderPage() {
   const generatedDocId  = searchParams.get("generatedDocId"); // DB record to mark printed
   const generatedFor    = searchParams.get("generatedFor");  // name of the person
   const generatedTitle  = searchParams.get("generatedTitle"); // document title
+  const recordIdParam   = searchParams.get("recordId");
+  const recordTypeParam = searchParams.get("recordType");
+  const recordNameParam = searchParams.get("recordName");
   const isGeneratedMode = !!generatedVars;
 
   // ── Template Mode ────────────────────────────────────────────────────────
@@ -466,7 +469,12 @@ export default function BuilderPage() {
     if (generatedVars) {
       const vars = decodeVariablesClient(generatedVars);
       if (Object.keys(vars).length) {
-        setDoc((d) => d ? applyVariablesToDocument(vars, d) : d);
+        setDoc((d) => d ? {
+          ...applyVariablesToDocument(vars, d),
+          recordId: d.recordId || recordIdParam || undefined,
+          recordType: d.recordType || recordTypeParam || undefined,
+          recordName: d.recordName || recordNameParam || generatedFor || undefined,
+        } : d);
       }
       setVariablesApplied(true);
       setPreviewMode(true);
@@ -515,6 +523,9 @@ export default function BuilderPage() {
           createdAt: now,
           updatedAt: now,
           pages: JSON.parse(JSON.stringify(tmpl.pages)),
+          recordId: recordIdParam || undefined,
+          recordType: recordTypeParam || undefined,
+          recordName: recordNameParam || generatedFor || undefined,
         };
         // Save it to the document store so it is persistent and editable
         saveDocument(tempDoc);

@@ -90,8 +90,8 @@ function InputGroup({
   error?: string;
   id?: string;
 }) {
-  const borderClass = error 
-    ? "border border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500" 
+  const borderClass = error
+    ? "border border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
     : "border border-border focus:border-primary/50";
 
   return (
@@ -350,12 +350,12 @@ export default function EditTeacherPage() {
         {/* Professional Information */}
         <SectionCard icon={<GraduationCap className="w-4 h-4" />} title="Professional Information">
           <div className="p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-5 text-left">
-            <InputGroup
+            {/* <InputGroup
               label="Teacher ID"
               value={editId}
               disabled
               hint="Automatically assigned by the system"
-            />
+            /> */}
             <InputGroup
               label="Employee Code"
               placeholder="e.g. EMP-001"
@@ -391,15 +391,15 @@ export default function EditTeacherPage() {
               value={designation}
               onChange={e => setDesignation(e.target.value)}
             />
-            <InputGroup 
-              label="Class Teacher" 
-              type="select" 
-              value={classId} 
-              onChange={e => setClassId(e.target.value)} 
+            <InputGroup
+              label="Class Teacher"
+              type="select"
+              value={classId}
+              onChange={e => setClassId(e.target.value)}
               options={[
-                { label: "Select Class", value: "" }, 
-                ...classes.map(c => ({ label: `${c.name} - ${c.section}`, value: c._id }))
-              ]} 
+                { label: "Select Class", value: "" },
+                ...classes.map(c => ({ label: `${c.name} ${c.section ? ` - ${c.section}` : ""}`, value: c._id }))
+              ]}
             />
           </div>
         </SectionCard>

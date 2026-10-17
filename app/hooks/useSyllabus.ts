@@ -256,27 +256,42 @@ export function useSyllabus() {
     });
   }, []);
 
-  const getSyllabusDetails = useCallback(async (id: string) => {
-    const memCached = _syllabusDetailCache.get(id);
-    const ssCached = readSessionCacheDetail(id);
-    const cached = memCached ?? (ssCached ? { data: ssCached.data, timestamp: ssCached.timestamp } : null);
-    const now = Date.now();
+  const getSyllabusDetails = useCallback(async (id: string, forceFresh: boolean = false) => {
+    if (!forceFresh) {
+      const memCached = _syllabusDetailCache.get(id);
+      const ssCached = readSessionCacheDetail(id);
+      const cached = memCached ?? (ssCached ? { data: ssCached.data, timestamp: ssCached.timestamp } : null);
+      const now = Date.now();
 
-    if (cached && now - cached.timestamp < CACHE_TTL_MS) {
-      setSyllabus(cached.data);
-      if (!memCached && ssCached) _syllabusDetailCache.set(id, { data: ssCached.data, timestamp: ssCached.timestamp });
-      if (now - cached.timestamp < 15_000) return cached.data;
+      if (cached && now - cached.timestamp < CACHE_TTL_MS) {
+        setSyllabus(cached.data);
+        if (!memCached && ssCached) _syllabusDetailCache.set(id, { data: ssCached.data, timestamp: ssCached.timestamp });
+        if (now - cached.timestamp < 15_000) return cached.data;
+      } else {
+        setIsLoading(true);
+      }
     } else {
       setIsLoading(true);
     }
 
     setError(null);
     try {
-      const res = await fetch(`/api/syllabus/${id}`, { headers: getAuthHeaders() });
+      const url = forceFresh ? `/api/syllabus/${id}?_t=${Date.now()}` : `/api/syllabus/${id}`;
+      const res = await fetch(url, {
+        headers: {
+          ...getAuthHeaders(),
+          "Cache-Control": "no-cache, no-store",
+          "Pragma": "no-cache"
+        },
+        cache: "no-store"
+      });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to load syllabus details.");
       const entry = { data: data.data, timestamp: Date.now() };
       _syllabusDetailCache.set(id, entry);
+      if (data.data?._id && data.data._id !== id) {
+        _syllabusDetailCache.set(data.data._id, entry);
+      }
       writeSessionCacheDetail(id, entry);
       setSyllabus(data.data);
       return data.data;
@@ -344,6 +359,14 @@ export function useSyllabus() {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to update syllabus");
       clearAllSyllabusCaches();
+      if (data.data) {
+        const entry = { data: data.data, timestamp: Date.now() };
+        _syllabusDetailCache.set(id, entry);
+        if (data.data._id && data.data._id !== id) {
+          _syllabusDetailCache.set(data.data._id, entry);
+        }
+        writeSessionCacheDetail(id, entry);
+      }
       setSyllabus(data.data);
       return { success: true, message: "Syllabus updated successfully", data: data.data };
     } catch (err: any) {

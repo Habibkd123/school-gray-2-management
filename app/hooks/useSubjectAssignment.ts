@@ -39,12 +39,12 @@ function readSessionCacheSA(key: string): AssignmentCacheEntry | null {
     if (!raw) return null;
     const p = JSON.parse(raw);
     if (Date.now() - p.timestamp < CACHE_TTL_MS) return p;
-  } catch {}
+  } catch { }
   return null;
 }
 
 function writeSessionCacheSA(key: string, entry: AssignmentCacheEntry) {
-  try { sessionStorage.setItem(SS_PREFIX + key, JSON.stringify(entry)); } catch {}
+  try { sessionStorage.setItem(SS_PREFIX + key, JSON.stringify(entry)); } catch { }
 }
 
 function clearSessionCacheSA() {
@@ -52,7 +52,7 @@ function clearSessionCacheSA() {
     Object.keys(sessionStorage)
       .filter(k => k.startsWith(SS_PREFIX))
       .forEach(k => sessionStorage.removeItem(k));
-  } catch {}
+  } catch { }
 }
 
 export function useSubjectAssignment() {
@@ -107,7 +107,10 @@ export function useSubjectAssignment() {
     try {
       const res = await fetch(`/api/subject-assignment?${qs}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch");
+      if (!res.ok || !data.success) {
+        setError(data.message || "Failed to fetch");
+        return;
+      };
 
       const fetchedAssignments = data.data.assignments || [];
       const fetchedTotal = data.data.total ?? 0;

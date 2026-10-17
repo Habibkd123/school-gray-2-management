@@ -926,83 +926,85 @@ export default function SubjectAssignmentPage() {
                 )}
               </div>
             ) : (
-              <div className="columns-1 md:columns-2 xl:columns-3 gap-6">
+              <>
                 {paginatedGroups.length === 0 ? (
-                  <div className="col-span-full py-20 text-center text-slate-500">
+                  <div className="w-full py-20 flex items-center justify-center text-center text-slate-500">
                     No assignments matching criteria.
                   </div>
                 ) : (
-                  paginatedGroups.map((group, idx) => (
-                    <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm flex flex-col break-inside-avoid mb-6">
-                      <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30 flex items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                          <div className="w-10 h-10 rounded-lg bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
-                            <GraduationCap className="w-5 h-5" />
+                  <div className="columns-1 md:columns-2 xl:columns-3 gap-6">
+                    {paginatedGroups.map((group, idx) => (
+                      <div key={idx} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm flex flex-col break-inside-avoid mb-6">
+                        <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-[#F8FAFC] dark:bg-slate-800/30 flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 overflow-hidden">
+                            <div className="w-10 h-10 rounded-lg bg-blue-100/50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 flex items-center justify-center shrink-0">
+                              <GraduationCap className="w-5 h-5" />
+                            </div>
+                            <div className="truncate">
+                              <h3 className="font-bold text-slate-900 dark:text-white text-[16px] truncate">
+                                {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                              </h3>
+                              <p className="text-[12px] font-medium text-slate-500 mt-0.5 truncate">
+                                {filterYear || academicYear}
+                              </p>
+                            </div>
                           </div>
-                          <div className="truncate">
-                            <h3 className="font-bold text-slate-900 dark:text-white text-[16px] truncate">
-                              {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
-                            </h3>
-                            <p className="text-[12px] font-medium text-slate-500 mt-0.5 truncate">
-                              {filterYear || academicYear}
-                            </p>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Link href={`/academic-mgmt/subject-assignment/${group.class._id}`} className="w-[34px] h-[34px] flex items-center justify-center rounded-lg border border-border bg-white dark:bg-slate-900 text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm cursor-pointer" title="View Details">
+                              <Eye className="w-4 h-4" />
+                            </Link>
+                            {isAdmin && group.assignments.length > 0 && (
+                              <button onClick={() => startEdit(group.assignments[0])} className="w-[34px] h-[34px] flex items-center justify-center rounded-lg border border-border bg-white dark:bg-slate-900 text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm cursor-pointer" title="Edit Assignment">
+                                <Edit className="w-4 h-4" />
+                              </button>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <Link href={`/academic-mgmt/subject-assignment/${group.class._id}`} className="w-[34px] h-[34px] flex items-center justify-center rounded-lg border border-border bg-white dark:bg-slate-900 text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm cursor-pointer" title="View Details">
-                            <Eye className="w-4 h-4" />
-                          </Link>
-                          {isAdmin && group.assignments.length > 0 && (
-                            <button onClick={() => startEdit(group.assignments[0])} className="w-[34px] h-[34px] flex items-center justify-center rounded-lg border border-border bg-white dark:bg-slate-900 text-slate-500 hover:text-primary hover:border-primary/30 transition-colors shadow-sm cursor-pointer" title="Edit Assignment">
-                              <Edit className="w-4 h-4" />
+                        <div className="p-4">
+                          <div className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-wider">
+                            Assigned Subjects ({group.assignments.length})
+                          </div>
+                          <div className="space-y-3">
+                            {(expandedGroups[idx] ? group.assignments : group.assignments.slice(0, 3)).map(assignment => (
+                              <div key={assignment._id} className="group relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-lg p-3.5 flex items-start gap-3 transition-colors">
+                                <div className="mt-0.5">
+                                  <BookOpen className="w-4 h-4 text-slate-400" />
+                                </div>
+                                <div className="flex-1">
+                                  <h4 className="font-bold text-slate-900 dark:text-slate-100 text-[13px] uppercase tracking-wide">
+                                    {assignment.subject_master_id?.name || "Unknown"}
+                                  </h4>
+                                  <div className="text-[11px] font-medium text-slate-500 mt-0.5 font-sans uppercase">
+                                    Code: {assignment.subject_master_id?.subject_code || "—"}
+                                  </div>
+                                </div>
+                                {isAdmin && (
+                                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
+                                    <button onClick={() => startEdit(assignment)} className="text-slate-400 hover:text-primary transition-colors p-1" title="Edit">
+                                      <Edit className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button onClick={() => { setSelectedAssignment(assignment); setIsDeleteOpen(true); }} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Delete">
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          {group.assignments.length > 3 && (
+                            <button
+                              onClick={() => setExpandedGroups(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                              className="w-full mt-3 py-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-1.5 bg-primary/5 hover:bg-primary/10 rounded-lg"
+                            >
+                              {expandedGroups[idx] ? "Show Less" : `+ ${group.assignments.length - 3} More Subjects`}
                             </button>
                           )}
                         </div>
                       </div>
-                      <div className="p-4">
-                        <div className="text-[11px] font-bold text-slate-400 mb-3 uppercase tracking-wider">
-                          Assigned Subjects ({group.assignments.length})
-                        </div>
-                        <div className="space-y-3">
-                          {(expandedGroups[idx] ? group.assignments : group.assignments.slice(0, 3)).map(assignment => (
-                            <div key={assignment._id} className="group relative bg-[#F8FAFC] dark:bg-slate-800/20 hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-lg p-3.5 flex items-start gap-3 transition-colors">
-                              <div className="mt-0.5">
-                                <BookOpen className="w-4 h-4 text-slate-400" />
-                              </div>
-                              <div className="flex-1">
-                                <h4 className="font-bold text-slate-900 dark:text-slate-100 text-[13px] uppercase tracking-wide">
-                                  {assignment.subject_master_id?.name || "Unknown"}
-                                </h4>
-                                <div className="text-[11px] font-medium text-slate-500 mt-0.5 font-sans uppercase">
-                                  Code: {assignment.subject_master_id?.subject_code || "—"}
-                                </div>
-                              </div>
-                              {isAdmin && (
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2">
-                                  <button onClick={() => startEdit(assignment)} className="text-slate-400 hover:text-primary transition-colors p-1" title="Edit">
-                                    <Edit className="w-3.5 h-3.5" />
-                                  </button>
-                                  <button onClick={() => { setSelectedAssignment(assignment); setIsDeleteOpen(true); }} className="text-slate-400 hover:text-red-500 transition-colors p-1" title="Delete">
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                        {group.assignments.length > 3 && (
-                          <button
-                            onClick={() => setExpandedGroups(prev => ({ ...prev, [idx]: !prev[idx] }))}
-                            className="w-full mt-3 py-2 text-xs font-semibold text-primary hover:text-primary/80 transition-colors flex items-center justify-center gap-1.5 bg-primary/5 hover:bg-primary/10 rounded-lg"
-                          >
-                            {expandedGroups[idx] ? "Show Less" : `+ ${group.assignments.length - 3} More Subjects`}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
-              </div>
+              </>
             )}
             <PaginationBar
               currentPage={page}
@@ -1136,18 +1138,16 @@ export default function SubjectAssignmentPage() {
                               type="button"
                               disabled={isAssigned}
                               onClick={() => !isAssigned && toggleSubjectSelection(s._id)}
-                              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-colors ${
-                                isAssigned
-                                  ? "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-800/30"
-                                  : isSelected
+                              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-colors ${isAssigned
+                                ? "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-800/30"
+                                : isSelected
                                   ? "bg-primary/10 text-primary cursor-pointer"
                                   : "hover:bg-slate-50 dark:hover:bg-slate-900 cursor-pointer"
-                              }`}
+                                }`}
                             >
                               <div className="flex items-center gap-2.5">
-                                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-                                  isSelected ? "bg-primary border-primary" : isAssigned ? "bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600" : "border-slate-300 dark:border-slate-600"
-                                }`}>
+                                <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${isSelected ? "bg-primary border-primary" : isAssigned ? "bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600" : "border-slate-300 dark:border-slate-600"
+                                  }`}>
                                   {isSelected && <Check className="w-2.5 h-2.5 text-white" />}
                                 </div>
                                 <div>
@@ -1578,6 +1578,6 @@ export default function SubjectAssignmentPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </div >
   );
 }
