@@ -411,6 +411,7 @@ export default function SystemBackupPage() {
                   <option value="2026-2027">2026-2027 (Current)</option>
                   <option value="2025-2026">2025-2026</option>
                   <option value="2024-2025">2024-2025</option>
+                  <option value="all">All Academic Sessions</option>
                 </select>
               </div>
 

@@ -337,12 +337,12 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await connectDB();
 
     // Soft delete — is_active = false (data preserve rehta hai)
-    const student = await Student.findOneAndUpdate(
-      { _id: id, school_id: schoolId },
-      { $set: { is_active: false } },
-      { new: true }
-    );
-
+    // const student = await Student.findOneAndUpdate(
+    //   { _id: id, school_id: schoolId },
+    //   { $set: { is_active: false } },
+    //   { new: true }
+    // );
+    const student = await Student.findByIdAndDelete({ _id: id, school_id: schoolId })
     if (!student) {
       return NextResponse.json(
         { success: false, message: "Student not found" },
