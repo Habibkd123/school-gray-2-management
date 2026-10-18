@@ -31,6 +31,45 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 }
 
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  const { schoolId, userId, error } = requireAuth(req, ["school_admin", "super_admin"]);
+  if (error) return error;
+  const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id))
+    return NextResponse.json({ success: false, message: "Invalid ID" }, { status: 400 });
+
+  try {
+    await connectToDatabase();
+    const url = new URL(req.url);
+    const isPermanent = url.searchParams.get("permanent") === "true";
+
+    if (isPermanent) {
+      const exam = await Exam.findOneAndDelete({ _id: id, school_id: schoolId });
+      if (!exam) return NextResponse.json({ success: false, message: "Exam not found" }, { status: 404 });
+      invalidateExamsCache(schoolId);
+      return NextResponse.json({ success: true, message: "Exam permanently deleted" });
+    }
+
+    const exam = await Exam.findOneAndUpdate(
+      { _id: id, school_id: schoolId },
+      {
+        $set: {
+          is_deleted: true,
+          deleted_at: new Date(),
+          deleted_by: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+        },
+      },
+      { new: true }
+    );
+
+    if (!exam) return NextResponse.json({ success: false, message: "Exam not found" }, { status: 404 });
+    invalidateExamsCache(schoolId);
+    return NextResponse.json({ success: true, message: "Exam archived (soft-deleted) successfully" });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
   const { id } = await params;
@@ -39,10 +78,27 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
   try {
     await connectToDatabase();
-    const exam = await Exam.findOneAndDelete({ _id: id, school_id: schoolId });
-    if (!exam) return NextResponse.json({ success: false, message: "Exam not found" }, { status: 404 });
-    invalidateExamsCache(schoolId);
-    return NextResponse.json({ success: true, message: "Exam deleted" });
+    const url = new URL(req.url);
+    const action = url.searchParams.get("action") || "restore";
+
+    if (action === "restore") {
+      const exam = await Exam.findOneAndUpdate(
+        { _id: id, school_id: schoolId },
+        {
+          $set: {
+            is_deleted: false,
+            deleted_at: null,
+            deleted_by: null,
+          },
+        },
+        { new: true }
+      );
+      if (!exam) return NextResponse.json({ success: false, message: "Exam not found" }, { status: 404 });
+      invalidateExamsCache(schoolId);
+      return NextResponse.json({ success: true, message: "Exam restored successfully", data: exam });
+    }
+
+    return NextResponse.json({ success: false, message: "Unsupported action" }, { status: 400 });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

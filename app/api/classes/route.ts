@@ -82,6 +82,11 @@ export async function GET(req: NextRequest) {
     } else {
       query.school_id = schoolId as string;
     }
+
+    const showDeleted = url.searchParams.get("show_deleted") === "true";
+    if (!showDeleted) {
+      query.is_deleted = { $ne: true };
+    }
     
     const andFilters: any[] = [];
 

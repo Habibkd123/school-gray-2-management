@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
   const queryPromise = (async () => {
     await connectToDatabase();
-    const query: any = { school_id: schoolId };
+    const query: any = { school_id: schoolId, is_deleted: { $ne: true } };
     if (classId) query.class_id = classId;
     if (academic_year) query.academic_year = academic_year;
 

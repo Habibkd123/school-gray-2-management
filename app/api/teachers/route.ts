@@ -96,6 +96,12 @@ export async function GET(req: NextRequest) {
     const skip = isAll ? 0 : (page - 1) * limit;
 
     const query: any = {};
+    if (url.searchParams.get("show_deleted") === "true") {
+      query.is_deleted = true;
+    } else {
+      query.is_deleted = { $ne: true };
+    }
+
     if (role === "super_admin") {
       const pSchool = url.searchParams.get("school_id");
       if (pSchool && pSchool !== "all") {

@@ -6,6 +6,7 @@ import Parent from "@/lib/models/Parent";
 import { requireAuth } from "@/lib/utils/auth";
 import { paginateQuery } from "@/lib/utils/pagination";
 import { sendCompressedJson } from "@/lib/compression";
+import mongoose from "mongoose";
 
 export async function GET(req: NextRequest) {
   const { schoolId, role, userId, error } = requireAuth(req, ["school_admin", "teacher", "student", "parent", "super_admin"]);
@@ -19,7 +20,11 @@ export async function GET(req: NextRequest) {
     const classId = url.searchParams.get("class_id");
     const academic_year = url.searchParams.get("academic_year");
 
+    const showDeleted = url.searchParams.get("show_deleted") === "true";
     const query: any = { school_id: schoolId };
+    if (!showDeleted) {
+      query.is_deleted = { $ne: true };
+    }
     if (examId) query.exam_id = examId;
 
     // Launch all independent lookup queries in parallel to avoid database query waterfalls
@@ -117,8 +122,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
 }
-
-import mongoose from "mongoose";
 
 export async function POST(req: NextRequest) {
   const { schoolId, role, userId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
@@ -253,7 +256,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
+  const { schoolId, userId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
 
   try {
@@ -263,13 +266,76 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ success: false, message: "Result ID is required" }, { status: 400 });
     }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid ID" }, { status: 400 });
+    }
 
-    const result = await Result.findOneAndDelete({ _id: id, school_id: schoolId });
+    const isPermanent = url.searchParams.get("permanent") === "true";
+    if (isPermanent) {
+      const result = await Result.findOneAndDelete({ _id: id, school_id: schoolId });
+      if (!result) {
+        return NextResponse.json({ success: false, message: "Result not found" }, { status: 404 });
+      }
+      return NextResponse.json({ success: true, message: "Result permanently deleted" });
+    }
+
+    const result = await Result.findOneAndUpdate(
+      { _id: id, school_id: schoolId },
+      {
+        $set: {
+          is_deleted: true,
+          deleted_at: new Date(),
+          deleted_by: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+        },
+      },
+      { new: true }
+    );
     if (!result) {
       return NextResponse.json({ success: false, message: "Result not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, message: "Result deleted successfully" });
+    return NextResponse.json({ success: true, message: "Result deleted successfully (soft-deleted)", data: result });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
+  if (error) return error;
+
+  try {
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+    const action = url.searchParams.get("action") || "restore";
+
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Valid Result ID is required" }, { status: 400 });
+    }
+
+    await connectToDatabase();
+
+    if (action === "restore") {
+      const result = await Result.findOneAndUpdate(
+        { _id: id, school_id: schoolId },
+        {
+          $set: {
+            is_deleted: false,
+            deleted_at: null,
+            deleted_by: null,
+          },
+        },
+        { new: true }
+      );
+
+      if (!result) {
+        return NextResponse.json({ success: false, message: "Result not found" }, { status: 404 });
+      }
+
+      return NextResponse.json({ success: true, message: "Result restored successfully", data: result });
+    }
+
+    return NextResponse.json({ success: false, message: "Unsupported action" }, { status: 400 });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

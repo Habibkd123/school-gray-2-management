@@ -45,12 +45,19 @@ export default function ClassTeacherAssignmentPage() {
   const [classStudentsCount, setClassStudentsCount] = React.useState(0);
 
   // Filters
-  const [filterYear, setFilterYear] = useState(academicYear || "2026");
+  const [filterYear, setFilterYear] = useState(academicYear || "2026-2027");
   const [filterClassId, setFilterClassId] = useState("");
   const [filterSection, setFilterSection] = useState("");
   const [filterTeacherId, setFilterTeacherId] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Sync with global academicYear
+  useEffect(() => {
+    if (academicYear) {
+      setFilterYear(academicYear);
+    }
+  }, [academicYear]);
 
   // Modals state
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -78,6 +85,19 @@ export default function ClassTeacherAssignmentPage() {
   // Active Report Tab State
   const [activeReportTab, setActiveReportTab] = useState<"list" | "workload" | "unassigned">("list");
 
+  // Filter classes according to selected academic session
+  const classesForYear = useMemo(() => {
+    return classes.filter(c => !c.academic_year || c.academic_year === filterYear);
+  }, [classes, filterYear]);
+
+  // Reset selected class if it does not belong to the selected academic session
+  useEffect(() => {
+    if (filterClassId && !classesForYear.some(c => c._id === filterClassId)) {
+      setFilterClassId("");
+      setFilterSection("");
+    }
+  }, [filterYear, classesForYear, filterClassId]);
+
   // Load all assignments in the system for workload calculations and lists
   useEffect(() => {
     if (filterYear) {
@@ -98,9 +118,23 @@ export default function ClassTeacherAssignmentPage() {
     return teachers.filter(t => t.is_active !== false);
   }, [teachers]);
 
+  // Compute available academic year sessions dynamically
+  const yearOptions = useMemo(() => {
+    const set = new Set<string>(["2025-2026", "2026-2027", "2027-2028"]);
+    if (academicYear) set.add(academicYear);
+    if (filterYear) set.add(filterYear);
+    classes.forEach(c => {
+      if (c.academic_year) set.add(c.academic_year);
+    });
+    assignments.forEach(a => {
+      if (a.academic_year) set.add(a.academic_year);
+    });
+    return Array.from(set).sort();
+  }, [classes, assignments, academicYear, filterYear]);
+
   // Compute stats of Class Teacher roles
   const stats = useMemo(() => {
-    const totalClasses = classes.length;
+    const totalClasses = classesForYear.length;
 
     // Class Teacher assignments for selected year
     const activeClassAssignments = assignments.filter(
@@ -122,7 +156,7 @@ export default function ClassTeacherAssignmentPage() {
       assignedTeachers,
       pendingAssignments: unassignedClasses
     };
-  }, [classes, assignments, filterYear, activeTeachers]);
+  }, [classesForYear, assignments, filterYear, activeTeachers]);
 
   // Workload calculator helper for a teacher
   const computeTeacherWorkload = (teacherId: string) => {
@@ -153,11 +187,12 @@ export default function ClassTeacherAssignmentPage() {
   // Sections list for search dropdowns
   const uniqueSections = useMemo(() => {
     const set = new Set<string>();
-    classes.forEach(c => {
+    classesForYear.forEach(c => {
+      if (filterClassId && c._id !== filterClassId) return;
       if (c.section) set.add(c.section);
     });
     return Array.from(set).sort();
-  }, [classes]);
+  }, [classesForYear, filterClassId]);
 
   // Dynamic filter logic for class teacher assignments list
   const filteredAssignments = useMemo(() => {
@@ -166,13 +201,14 @@ export default function ClassTeacherAssignmentPage() {
       const isClassType = a.assignment_type === "Class Teacher" || a.assignment_type === "Co-Class Teacher";
       if (!isClassType) return false;
 
+      if (filterYear && a.academic_year !== filterYear) return false;
       if (filterClassId && a.class_id?._id !== filterClassId) return false;
       if (filterSection && a.class_id?.section !== filterSection) return false;
       if (filterTeacherId && a.teacher_id?._id !== filterTeacherId) return false;
       if (filterStatus && a.status !== filterStatus) return false;
 
       if (searchQuery) {
-        const q = searchQuery.toLowerCase();
+        const q = searchQuery.toLowerCase().trim();
         const tName = a.teacher_id?.name || "";
         const tEmpId = a.teacher_id?.employee_id || "";
         const cName = a.class_id?.name || "";
@@ -186,7 +222,7 @@ export default function ClassTeacherAssignmentPage() {
 
       return true;
     });
-  }, [assignments, filterClassId, filterSection, filterTeacherId, filterStatus, searchQuery]);
+  }, [assignments, filterYear, filterClassId, filterSection, filterTeacherId, filterStatus, searchQuery]);
 
   // Unassigned classes list
   const unassignedClassesList = useMemo(() => {
@@ -194,8 +230,8 @@ export default function ClassTeacherAssignmentPage() {
       a => a.academic_year === filterYear && a.assignment_type === "Class Teacher" && a.status === "Active"
     );
     const assignedClassIds = new Set(activeClassAssignments.map(a => a.class_id?._id).filter(Boolean));
-    return classes.filter(c => !assignedClassIds.has(c._id));
-  }, [classes, assignments, filterYear]);
+    return classesForYear.filter(c => !assignedClassIds.has(c._id));
+  }, [classesForYear, assignments, filterYear]);
 
   // Load edit fields
   const handleOpenEdit = (assign: PopulatedTeacherAssignment) => {
@@ -428,8 +464,9 @@ export default function ClassTeacherAssignmentPage() {
                 onChange={(e) => setFilterYear(e.target.value)}
                 className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none"
               >
-                <option value="2026">Session 2026</option>
-                <option value="2027">Session 2027</option>
+                {yearOptions.map(yr => (
+                  <option key={yr} value={yr}>Session {yr}</option>
+                ))}
               </select>
               <ChevronDown className="w-4 h-4 text-slate-455 absolute right-3 top-2.5 pointer-events-none" />
             </div>
@@ -445,7 +482,7 @@ export default function ClassTeacherAssignmentPage() {
                 className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none"
               >
                 <option value="">All Classes</option>
-                {classes.map(c => (
+                {classesForYear.map(c => (
                   <option key={c._id} value={c._id}>{c.name} {c.section ? `(${c.section})` : ""}</option>
                 ))}
               </select>
@@ -508,41 +545,21 @@ export default function ClassTeacherAssignmentPage() {
 
           {/* Search Input */}
           <div className="flex flex-col gap-1 flex-1 min-w-[200px]">
-            <label className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-455 mb-1">
               Global Query Search
             </label>
 
             <div className="relative">
               <Search
-                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5 pointer-events-none"
               />
 
               <input
                 type="text"
-                placeholder="Search teacher, employee ID, class, section, session..."
+                placeholder="Search teacher, employee ID, class, section..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="
-        h-8
-        w-full
-        rounded-md
-        border
-        border-slate-300
-        bg-slate-50
-        pl-10
-        pr-3
-        text-sm
-        font-medium
-        text-slate-800
-        outline-none
-        placeholder:text-slate-400
-        focus:border-blue-500
-        focus:ring-2
-        focus:ring-blue-100
-        dark:border-slate-700
-        dark:bg-slate-900
-        dark:text-slate-200
-      "
+                className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-955 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none h-[34px] focus:border-primary"
               />
             </div>
           </div>
@@ -591,7 +608,11 @@ export default function ClassTeacherAssignmentPage() {
           ) : filteredAssignments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3 text-slate-400">
               <Users className="w-12 h-12 opacity-20" />
-              <p className="text-xs font-bold">No Class Teacher assignments found matching filters.</p>
+              <p className="text-xs font-bold">
+                {searchQuery || filterClassId || filterSection || filterTeacherId || filterStatus
+                  ? "No Class Teacher assignments found matching filters."
+                  : `No Class Teacher assignments found for Session ${filterYear}.`}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -757,7 +778,11 @@ export default function ClassTeacherAssignmentPage() {
             <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">Unassigned Classes Catalog</h4>
           </div>
 
-          {unassignedClassesList.length === 0 ? (
+          {classesForYear.length === 0 ? (
+            <div className="p-8 text-center text-slate-450 font-bold">
+              No classes configured for Session {filterYear}.
+            </div>
+          ) : unassignedClassesList.length === 0 ? (
             <div className="p-8 text-center text-slate-450 font-bold">
               All active classes have been mapped with a Class Teacher!
             </div>
@@ -865,7 +890,7 @@ export default function ClassTeacherAssignmentPage() {
                       className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-xs font-semibold outline-none focus:border-primary appearance-none bg-white dark:bg-slate-900 disabled:opacity-50 cursor-pointer text-slate-800 dark:text-slate-200"
                     >
                       <option value="">Select Class</option>
-                      {classes.map(c => (
+                      {classesForYear.map(c => (
                         <option key={c._id} value={c._id}>{c.name} {c.section ? `(${c.section})` : ""}</option>
                       ))}
                     </select>

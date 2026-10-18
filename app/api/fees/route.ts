@@ -144,7 +144,7 @@ export async function GET(req: NextRequest) {
     }
 
     // 1. Build Student Query
-    const studentQuery: any = { school_id: schoolId, is_active: true };
+    const studentQuery: any = { school_id: schoolId, is_active: true, is_deleted: { $ne: true } };
     if (studentId) {
       studentQuery._id = studentId;
       if (url.searchParams.has("academic_year")) {
@@ -253,7 +253,8 @@ export async function GET(req: NextRequest) {
 
       const matchingPayments = await StudentFeePayment.find({
         school_id: schoolId,
-        receipt_number: { $regex: search, $options: "i" }
+        receipt_number: { $regex: search, $options: "i" },
+        is_deleted: { $ne: true }
       }).select("student_id").lean();
       const paymentStudentIds = matchingPayments.map((p: any) => p.student_id.toString());
 
@@ -414,6 +415,7 @@ export async function GET(req: NextRequest) {
         StudentFeePayment.find({
           school_id: schoolId,
           student_id: { $in: pageStudentIds },
+          is_deleted: { $ne: true },
         })
           .select("student_id amount_paid payment_date end_date fee_breakdown")
           .sort({ payment_date: -1 })
@@ -471,6 +473,7 @@ export async function GET(req: NextRequest) {
       StudentFeePayment.find({
         school_id: schoolId,
         student_id: { $in: studentIds },
+        is_deleted: { $ne: true },
       })
         .select("student_id amount_paid payment_date end_date fee_breakdown")
         .sort({ payment_date: -1 })
@@ -585,7 +588,7 @@ export async function POST(req: NextRequest) {
           total_amount,
         },
         {
-          new: true,
+          returnDocument: "after",
           upsert: true,
         }
       );
@@ -618,7 +621,7 @@ export async function POST(req: NextRequest) {
         total_amount,
       },
       {
-        new: true,
+        returnDocument: "after",
         upsert: true,
       }
     );

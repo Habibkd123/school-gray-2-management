@@ -73,4 +73,23 @@ describe("Authentication & JWT Helpers", () => {
     expect(authResult.userId).toBe("usr_admin");
     expect(authResult.schoolId).toBe("sch_1001");
   });
+
+  it("should reject non-super_admin without school_id context", () => {
+    const payload = {
+      user_id: "usr_rogue",
+      school_id: null as any,
+      role: "school_admin",
+    };
+    const token = generateAccessToken(payload);
+
+    const req = new NextRequest("http://localhost:3000/api/users/some_id", {
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
+    });
+
+    const authResult = requireAuth(req, ["school_admin"]);
+    expect(authResult.error).not.toBeNull();
+    expect(authResult.schoolId).toBeNull();
+  });
 });

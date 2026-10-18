@@ -84,7 +84,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const { schoolId, error } = requireAuth(req, ["school_admin"]);
+  const { schoolId, userId, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
   if (!schoolId) return NextResponse.json({ success: false, message: "No school context" }, { status: 400 });
 
@@ -95,17 +95,90 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return NextResponse.json({ success: false, message: "Invalid application ID" }, { status: 400 });
     }
 
-    const admission = await Admission.findOneAndDelete({ _id: id, school_id: schoolId });
-    if (!admission) {
+    const url = new URL(req.url);
+    const isPermanent = url.searchParams.get("permanent") === "true";
+
+    if (isPermanent) {
+      const admission = await Admission.findOneAndDelete({ _id: id, school_id: schoolId });
+      if (!admission) {
+        return NextResponse.json({ success: false, message: "Application not found" }, { status: 404 });
+      }
+      invalidateAdmissionsCache(schoolId as string);
+      invalidateAdmissionsStatsCache(schoolId as string);
+      invalidateAdmissionsReportsCache(schoolId as string);
+      return NextResponse.json({ success: true, message: "Application permanently deleted" });
+    }
+
+    const updated = await Admission.findOneAndUpdate(
+      { _id: id, school_id: schoolId },
+      {
+        $set: {
+          is_deleted: true,
+          deleted_at: new Date(),
+          deleted_by: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+          status: "Cancelled",
+        },
+      },
+      { new: true }
+    );
+
+    if (!updated) {
       return NextResponse.json({ success: false, message: "Application not found" }, { status: 404 });
     }
 
     invalidateAdmissionsCache(schoolId as string);
     invalidateAdmissionsStatsCache(schoolId as string);
     invalidateAdmissionsReportsCache(schoolId as string);
-    return NextResponse.json({ success: true, message: "Application deleted successfully" });
+    return NextResponse.json({ success: true, message: "Application cancelled (soft-deleted) successfully" });
   } catch (err: any) {
     console.error("[DELETE /api/admissions/[id]]", err);
+    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
+  if (error) return error;
+  if (!schoolId) return NextResponse.json({ success: false, message: "No school context" }, { status: 400 });
+
+  try {
+    await connectDB();
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid application ID" }, { status: 400 });
+    }
+
+    const url = new URL(req.url);
+    const action = url.searchParams.get("action") || "restore";
+
+    if (action === "restore") {
+      const updated = await Admission.findOneAndUpdate(
+        { _id: id, school_id: schoolId },
+        {
+          $set: {
+            is_deleted: false,
+            deleted_at: null,
+            deleted_by: null,
+            status: "Pending",
+          },
+        },
+        { new: true }
+      );
+
+      if (!updated) {
+        return NextResponse.json({ success: false, message: "Application not found" }, { status: 404 });
+      }
+
+      invalidateAdmissionsCache(schoolId as string);
+      invalidateAdmissionsStatsCache(schoolId as string);
+      invalidateAdmissionsReportsCache(schoolId as string);
+      return NextResponse.json({ success: true, message: "Application restored successfully", data: updated });
+    }
+
+    return NextResponse.json({ success: false, message: "Unsupported action" }, { status: 400 });
+  } catch (err: any) {
+    console.error("[PATCH /api/admissions/[id]]", err);
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
 }

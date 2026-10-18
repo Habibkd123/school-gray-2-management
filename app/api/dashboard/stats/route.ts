@@ -53,15 +53,21 @@ export async function GET(req: NextRequest) {
       totalTeachers,
       activeTeachers,
       totalClasses,
+      activeClasses,
       totalSubjects,
       totalSubjectMasters,
       todaysStudentAttendances,
     ] = await Promise.all([
-      Student.countDocuments({ school_id: schoolId }),
-      Student.countDocuments({ school_id: schoolId, is_active: true }),
-      Teacher.countDocuments({ school_id: schoolId }),
-      Teacher.countDocuments({ school_id: schoolId, is_active: { $ne: false } }),
-      Class.countDocuments({ school_id: schoolId }),
+      Student.countDocuments({ school_id: schoolId, is_deleted: { $ne: true } }),
+      Student.countDocuments({ school_id: schoolId, is_deleted: { $ne: true }, is_active: true }),
+      Teacher.countDocuments({ school_id: schoolId, is_deleted: { $ne: true } }),
+      Teacher.countDocuments({ school_id: schoolId, is_deleted: { $ne: true }, is_active: { $ne: false } }),
+      Class.countDocuments({ school_id: schoolId, is_deleted: { $ne: true } }),
+      Class.countDocuments({
+        school_id: schoolId,
+        is_deleted: { $ne: true },
+        status: { $nin: ["Inactive", "Archived"] },
+      }),
       Subject.countDocuments({ school_id: schoolId }),
       SubjectMaster.countDocuments({ school_id: schoolId }),
       // Fetch today's student attendance records
@@ -109,6 +115,8 @@ export async function GET(req: NextRequest) {
       },
       classes: {
         total: totalClasses,
+        active: activeClasses,
+        inactive: Math.max(0, totalClasses - activeClasses),
       },
       subjects: {
         total: totalSubjectsUnified,

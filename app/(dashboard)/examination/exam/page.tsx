@@ -501,14 +501,13 @@ export default function ExamListPage() {
         </div>
 
         {/* Table / Grid */}
-        {viewMode === "list" ? (
+        {paginatedGroups.length === 0 ? (
+          <div className="py-24 text-center text-slate-500 w-full flex flex-col items-center justify-center">
+            <p className="text-[14px]">No exams matching criteria.</p>
+          </div>
+        ) : viewMode === "list" ? (
           <div className={`custom-page-table-wrap overflow-x-auto ${actionMenuId ? 'pb-28' : ''}`}>
-            {paginatedGroups.length === 0 ? (
-              <div className="py-20 text-center text-slate-500">
-                No exams matching criteria.
-              </div>
-            ) : (
-              <table className="erp-table text-[13px] whitespace-nowrap w-full border-collapse">
+            <table className="erp-table text-[13px] whitespace-nowrap w-full border-collapse">
                 <thead className="bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border-y border-border">
                   <tr>
                     <th className="px-4 py-4 w-8"></th>
@@ -583,17 +582,11 @@ export default function ExamListPage() {
                   })}
                 </tbody>
               </table>
-            )}
           </div>
         ) : (
           <div className="p-5">
             <div className="columns-1 md:columns-2 xl:columns-3 gap-6">
-              {paginatedGroups.length === 0 ? (
-                <div className="col-span-full py-20 text-center text-slate-500">
-                  No exams matching criteria.
-                </div>
-              ) : (
-                paginatedGroups.map((group, idx) => {
+              {paginatedGroups.map((group, idx) => {
                   const upcoming = group.exams.filter(e => calculateStatus(e) === "upcoming").length;
                   const completed = group.exams.filter(e => calculateStatus(e) === "completed").length;
                   const ongoing = group.exams.filter(e => calculateStatus(e) === "ongoing").length;
@@ -666,8 +659,7 @@ export default function ExamListPage() {
                       </div>
                     </div>
                   );
-                })
-              )}
+                })}
             </div>
           </div>
         )}

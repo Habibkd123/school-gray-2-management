@@ -12,7 +12,14 @@ export interface PartnerSchoolItem {
   features: string[];
 }
 
+let _cachedPartnerSchools: { data: PartnerSchoolItem[]; timestamp: number } | null = null;
+const CACHE_TTL_MS = 300_000; // 5 minutes
+
 export async function getPartnerSchools(): Promise<PartnerSchoolItem[]> {
+  if (_cachedPartnerSchools && Date.now() - _cachedPartnerSchools.timestamp < CACHE_TTL_MS) {
+    return _cachedPartnerSchools.data;
+  }
+
   try {
     await connectDB();
     const schools = await School.find({})
@@ -23,7 +30,7 @@ export async function getPartnerSchools(): Promise<PartnerSchoolItem[]> {
       return getFallbackSchools();
     }
 
-    return schools.map((s: any) => {
+    const result: PartnerSchoolItem[] = schools.map((s: any) => {
       const sub = s.subdomain || s.slug || "";
       const city = s.city || s.address?.city || (sub === "bajrang" ? "Rajasthan, India" : "India");
       const students = sub === "bajrang" ? "1,000+" : sub === "greenwood-academy" ? "850+" : "500+";
@@ -39,6 +46,9 @@ export async function getPartnerSchools(): Promise<PartnerSchoolItem[]> {
         features: ["Full ERP", "Online Fees", "Custom Subdomain"],
       };
     });
+
+    _cachedPartnerSchools = { data: result, timestamp: Date.now() };
+    return result;
   } catch (err) {
     console.error("Error fetching partner schools:", err);
     return getFallbackSchools();

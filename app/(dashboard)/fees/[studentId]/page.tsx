@@ -1,20 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
+import { usePublicSchoolInfo } from "@/app/hooks/usePublicSchoolInfo";
 import { Modal } from "@/app/components/ui/modal";
+import { CollectFeesModal } from "@/app/components/modals/CollectFeesModal";
 import {
   ArrowLeft,
   DollarSign,
   Loader2,
   FileText,
   Printer,
-  History,
   AlertCircle,
   CheckCircle2,
-  Calendar,
-  CreditCard
 } from "lucide-react";
 import Link from "next/link";
 import { PrintService } from "@/app/lib/print-service";
@@ -30,8 +29,15 @@ interface PaymentLog {
   amount_paid: number;
   total_amount: number;
   payment_date: string;
+  start_date?: string;
+  end_date?: string;
+  collection_type?: string;
   payment_method: "Cash" | "Cheque" | "Bank Transfer" | "Online";
   remarks?: string;
+  discount?: number;
+  fine?: number;
+  scholarship?: number;
+  waiver?: number;
   student_id: {
     _id: string;
     name: string;
@@ -47,67 +53,83 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
   const resolvedParams = React.use(params);
   const studentId = resolvedParams.studentId;
   const { academicYear } = useAppState();
+  const { schoolInfo } = usePublicSchoolInfo();
 
   const [studentDetails, setStudentDetails] = useState<any | null>(null);
   const [payments, setPayments] = useState<PaymentLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [printedReceipt, setPrintedReceipt] = useState<any | null>(null);
+  const [isCollectFeeOpen, setIsCollectFeeOpen] = useState(false);
+
+  const loadDetailsAndPayments = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      // Fetch dynamic student billing summary
+      const studentRes = await fetch(`/api/fees?student_id=${studentId}${academicYear ? `&academic_year=${encodeURIComponent(academicYear)}` : ""}`, {
+        headers: getAuthHeaders(),
+      });
+      const studentData = await studentRes.json();
+      if (studentData.success && studentData.data.students && studentData.data.students.length > 0) {
+        setStudentDetails(studentData.data.students[0]);
+      }
+
+      // Fetch payments list
+      const paymentsRes = await fetch(`/api/fees/payments?student_id=${studentId}`, { headers: getAuthHeaders() });
+      const paymentsData = await paymentsRes.json();
+      if (paymentsData.success) {
+        setPayments(paymentsData.data.payments);
+      }
+    } catch (e) {
+      console.error("Error loading payment history details", e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [studentId, academicYear]);
 
   useEffect(() => {
-    const loadDetailsAndPayments = async () => {
-      setIsLoading(true);
-      try {
-        // Fetch dynamic student billing summary
-        const studentRes = await fetch(`/api/fees?student_id=${studentId}`, { headers: getAuthHeaders() });
-        const studentData = await studentRes.json();
-        if (studentData.success && studentData.data.students && studentData.data.students.length > 0) {
-          setStudentDetails(studentData.data.students[0]);
-        }
-
-        // Fetch payments list
-        const paymentsRes = await fetch(`/api/fees/payments?student_id=${studentId}`, { headers: getAuthHeaders() });
-        const paymentsData = await paymentsRes.json();
-        if (paymentsData.success) {
-          setPayments(paymentsData.data.payments);
-        }
-      } catch (e) {
-        console.error("Error loading payment history details", e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     loadDetailsAndPayments();
-  }, [studentId]);
+  }, [loadDetailsAndPayments]);
 
-  const money = (val: number) => {
-    return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val);
+  const money = (val: number | undefined | null) => {
+    return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val || 0);
   };
 
-  const fmtDate = (d: string | null) => {
+  const fmtDate = (d: string | null | undefined) => {
     if (!d) return "—";
-    return new Date(d).toLocaleDateString("en-US", {
+    return new Date(d).toLocaleDateString("en-IN", {
       day: "2-digit",
       month: "short",
-      year: "numeric"
+      year: "numeric",
     });
   };
 
   return (
     <div className="space-y-6">
-      {/* Header Back Button */}
-      <div className="flex items-center gap-4 text-left">
-        <Link
-          href="/fees"
-          className="p-2 border border-border bg-white dark:bg-slate-900 rounded-xl hover:bg-slate-50 transition-all text-slate-655"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-        <div>
-          <h1 className="page-title">Dues Payment History</h1>
-          <p className="page-desc mt-1">
-            Browse complete billing ledger and receipts history list.
-          </p>
+      {/* Header Back Button & Action Toolbar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
+        <div className="flex items-center gap-4">
+          <Link
+            href="/fees"
+            className="p-2 border border-border bg-white dark:bg-slate-900 rounded-xl hover:bg-slate-50 transition-all text-slate-600 dark:text-slate-300"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <div>
+            <h1 className="page-title">Dues Payment History</h1>
+            <p className="page-desc mt-1">
+              Browse complete billing ledger and receipts history list.
+            </p>
+          </div>
         </div>
+
+        {studentDetails && (
+          <button
+            onClick={() => setIsCollectFeeOpen(true)}
+            className="px-4 py-2.5 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm transition-all cursor-pointer self-start sm:self-auto"
+          >
+            <DollarSign className="w-4 h-4" /> Collect New Fee
+          </button>
+        )}
       </div>
 
       {isLoading ? (
@@ -115,64 +137,86 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       ) : !studentDetails ? (
-        <div className="bg-white border border-border p-10 rounded-xl text-center font-bold text-slate-450 text-xs">
+        <div className="bg-white border border-border p-10 rounded-xl text-center font-bold text-slate-400 text-xs">
           ⚠️ Unable to load student ledger history details.
         </div>
       ) : (
         <>
           {/* Summary Row cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-3.5 shadow-sm flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-650 flex-shrink-0">
-                <FileText className="w-4.5 h-4.5" />
+            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-600 flex-shrink-0">
+                <FileText className="w-5 h-5" />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Fees Invoice</span>
-                <div className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{money(studentDetails.totalFees)}</div>
+                <div className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">{money(studentDetails.totalFees)}</div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-3.5 shadow-sm flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 flex-shrink-0">
-                <CheckCircle2 className="w-4.5 h-4.5" />
+            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Paid Dues</span>
-                <div className="text-lg font-bold text-emerald-600 mt-0.5">{money(studentDetails.totalPaid)}</div>
+                <div className="text-xl font-bold text-emerald-600 mt-0.5">{money(studentDetails.totalPaid)}</div>
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-3.5 shadow-sm flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-rose-50 dark:bg-rose-950 flex items-center justify-center text-rose-500 flex-shrink-0">
-                <AlertCircle className="w-4.5 h-4.5" />
+            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950 flex items-center justify-center text-rose-500 flex-shrink-0">
+                <AlertCircle className="w-5 h-5" />
               </div>
               <div>
                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Outstanding Dues</span>
-                <div className="text-lg font-bold text-rose-500 mt-0.5">{money(studentDetails.balanceAmount)}</div>
+                <div className="text-xl font-bold text-rose-500 mt-0.5">{money(studentDetails.balanceAmount)}</div>
               </div>
             </div>
           </div>
 
           {/* Student metadata info banner */}
-          <div className="bg-slate-50 dark:bg-slate-800 p-4 border border-border rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
-            <div>Student Name: <span className="text-slate-900 dark:text-white font-extrabold">{studentDetails.name}</span></div>
-            <div>Admission Number: <span className="text-slate-900 dark:text-white font-sans font-extrabold">{studentDetails.admission_no}</span></div>
-            <div>Class & Section: <span className="text-slate-900 dark:text-white font-extrabold">{studentDetails.class_name}</span></div>
-            <div>Status:
-              <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] font-bold ${studentDetails.status === "Paid" ? "bg-emerald-100 text-emerald-700" : studentDetails.status === "Partial" ? "bg-amber-100 text-amber-700" : "bg-rose-100 text-rose-700"
-                }`}>{studentDetails.status}</span>
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-4 border border-border rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
+            <div>
+              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Student Name</span>
+              <span className="text-slate-900 dark:text-white font-bold text-[13px]">{studentDetails.name}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Admission No</span>
+              <span className="text-slate-900 dark:text-white font-mono font-bold text-[13px]">{studentDetails.admission_no}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Class & Section</span>
+              <span className="text-slate-900 dark:text-white font-bold text-[13px]">{studentDetails.class_name}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Payment Status</span>
+              <span
+                className={`inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                  studentDetails.status === "Paid"
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                    : studentDetails.status === "Partial"
+                    ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                    : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                }`}
+              >
+                {studentDetails.status}
+              </span>
             </div>
           </div>
 
           {/* Transaction logs table list */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
-            <div className="p-4 border-b border-border font-bold text-slate-850 dark:text-slate-100">
-              Billing Ledger Transactions Log
+            <div className="p-4 border-b border-border font-bold text-slate-800 dark:text-slate-100 flex items-center justify-between">
+              <span>Billing Ledger Transactions Log</span>
+              <span className="text-xs font-normal text-slate-500">
+                {payments.length} {payments.length === 1 ? "Record" : "Records"}
+              </span>
             </div>
             <div className="overflow-x-auto">
-              <table className="erp-table text-xs">
+              <table className="erp-table text-xs w-full">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-955/50 border-b border-border text-slate-500 font-bold">
+                  <tr className="bg-slate-50 dark:bg-slate-800/40 border-b border-border text-slate-500 font-bold">
                     <th className="px-6 py-3.5">Receipt Number</th>
                     <th className="px-6 py-3.5">Payment Date</th>
                     <th className="px-6 py-3.5">Method</th>
@@ -184,22 +228,22 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                 <tbody className="divide-y divide-border">
                   {payments.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-slate-450 font-bold">
+                      <td colSpan={6} className="px-6 py-12 text-center text-slate-400 font-bold">
                         No transactions recorded in billing history logs.
                       </td>
                     </tr>
                   ) : (
                     payments.map((p) => (
-                      <tr key={p._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td className="px-6 py-4 font-sans font-bold text-primary">{p.receipt_number || p.receipt_no}</td>
-                        <td className="px-6 py-4 font-semibold">{fmtDate(p.payment_date)}</td>
+                      <tr key={p._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="px-6 py-4 font-mono font-bold text-primary">{p.receipt_number || p.receipt_no}</td>
+                        <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">{fmtDate(p.payment_date)}</td>
                         <td className="px-6 py-4">
-                          <span className="px-2.5 py-0.5 rounded bg-slate-100 text-[10px] font-bold">
+                          <span className="px-2.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold">
                             {p.payment_method}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-slate-500">{p.remarks || "—"}</td>
-                        <td className="px-6 py-4 text-right font-sans font-bold text-emerald-600">
+                        <td className="px-6 py-4 text-right font-mono font-bold text-emerald-600">
                           {money(p.amount_paid || p.total_amount)}
                         </td>
                         <td className="px-6 py-4 text-right">
@@ -222,9 +266,9 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                                     admission_no: studentDetails.admission_no,
                                     class_id: {
                                       name: studentDetails.class_name.split(" - ")[0],
-                                      section: studentDetails.class_name.split(" - ")[1] || ""
-                                    }
-                                  }
+                                      section: studentDetails.class_name.split(" - ")[1] || "",
+                                    },
+                                  },
                                 });
                               } catch (err) {
                                 console.error(err);
@@ -235,13 +279,13 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                                     admission_no: studentDetails.admission_no,
                                     class_id: {
                                       name: studentDetails.class_name.split(" - ")[0],
-                                      section: studentDetails.class_name.split(" - ")[1] || ""
-                                    }
-                                  }
+                                      section: studentDetails.class_name.split(" - ")[1] || "",
+                                    },
+                                  },
                                 });
                               }
                             }}
-                            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-lg transition-colors cursor-pointer"
+                            className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold rounded-lg transition-colors cursor-pointer text-xs"
                           >
                             Print Receipt
                           </button>
@@ -258,56 +302,85 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
 
       {/* MODAL: PRINTABLE TRANSACTION RECEIPT */}
       {printedReceipt && (
-        <Modal isOpen={!!printedReceipt} onClose={() => setPrintedReceipt(null)} title="Payment Transaction Receipt">
+        <Modal
+          isOpen={!!printedReceipt}
+          onClose={() => setPrintedReceipt(null)}
+          title="Payment Transaction Receipt"
+          size="xl"
+        >
           <div className="space-y-4">
-            <div className="flex justify-end gap-2 print:hidden border-b border-border pb-2.5">
+            <div className="flex justify-end gap-2 print:hidden border-b border-border pb-3">
               <button
-                onClick={() => PrintService.print('printable-receipt', { pageSize: 'A4' })}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg flex items-center gap-2 transition-colors cursor-pointer"
+                onClick={() => PrintService.print("printable-receipt", { pageSize: "A4" })}
+                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-lg flex items-center gap-2 transition-colors cursor-pointer shadow-sm"
               >
                 <Printer className="w-4 h-4" /> Print / PDF Receipt
               </button>
             </div>
 
             {/* Receipt template container */}
-            <div className="p-8 border border-slate-200 rounded-2xl bg-white text-slate-800 text-left font-serif text-xs relative overflow-hidden" id="printable-receipt" data-print-zone="true">
+            <div
+              className="p-8 border border-slate-200 rounded-2xl bg-white text-slate-800 text-left font-serif text-xs relative overflow-hidden"
+              id="printable-receipt"
+              data-print-zone="true"
+            >
               {/* School branding header */}
-              <div className="text-center border-b-2 border-slate-800 pb-4 mb-5">
-                <h1 className="text-xl font-black uppercase tracking-wider text-slate-900 mb-0.5">My School Life</h1>
-                <p className="text-slate-500 text-[10px] tracking-wide font-sans">Professional ERP Student Invoice Ledger</p>
+              <div className="text-center border-b-2 border-slate-800 pb-4 mb-6">
+                {schoolInfo?.logo_url && (
+                  <img src={schoolInfo.logo_url} alt="Logo" className="w-12 h-12 mx-auto mb-2 object-contain" />
+                )}
+                <h1 className="text-xl font-black uppercase tracking-wider text-slate-900 mb-1">
+                  {schoolInfo?.school_name || "Bajrang Shikshan Sansthan"}
+                </h1>
+                <p className="text-slate-500 text-[11px] tracking-wide font-sans">
+                  {schoolInfo?.school_subtitle || "Official Student Fee Payment Receipt"}
+                </p>
                 <div className="mt-3 inline-block bg-slate-900 text-white px-4 py-1 rounded-full font-bold text-[10px] uppercase tracking-widest font-sans">
                   Fees Payment Receipt
                 </div>
               </div>
 
               {/* Student Metadata fields grid */}
-              <div className="grid grid-cols-2 gap-y-2.5 gap-x-8 mb-6 font-sans text-[11px]">
-                <div className="flex border-b border-dashed border-slate-200 pb-1">
-                  <span className="font-bold text-slate-400 w-28">Student Name:</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-2.5 gap-x-8 mb-6 font-sans text-[11px]">
+                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1.5">
+                  <span className="font-bold text-slate-400">Student Name:</span>
                   <span className="font-bold text-slate-900">{printedReceipt.student_id?.name || "N/A"}</span>
                 </div>
-                <div className="flex border-b border-dashed border-slate-200 pb-1">
-                  <span className="font-bold text-slate-400 w-28">Admission No:</span>
-                  <span className="font-sans font-bold text-slate-900">{printedReceipt.student_id?.admission_no || "N/A"}</span>
+                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1.5">
+                  <span className="font-bold text-slate-400">Admission No:</span>
+                  <span className="font-mono font-bold text-slate-900">{printedReceipt.student_id?.admission_no || "N/A"}</span>
                 </div>
-                <div className="flex border-b border-dashed border-slate-200 pb-1 col-span-2">
-                  <span className="font-bold text-slate-400 w-28">Class Assigned:</span>
+                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1.5">
+                  <span className="font-bold text-slate-400">Class & Section:</span>
                   <span className="font-bold text-slate-900">
                     {printedReceipt.student_id?.class_id?.name
-                      ? `${printedReceipt.student_id.class_id.name} - ${printedReceipt.student_id.class_id.section}`
+                      ? `${printedReceipt.student_id.class_id.name}${printedReceipt.student_id.class_id.section ? ` - ${printedReceipt.student_id.class_id.section}` : ""}`
                       : "N/A"}
                   </span>
                 </div>
-                <div className="flex border-b border-dashed border-slate-200 pb-1">
-                  <span className="font-bold text-slate-400 w-28">Receipt Number:</span>
-                  <span className="font-sans font-bold text-primary">{printedReceipt.receipt_number || printedReceipt.receipt_no}</span>
+                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1.5">
+                  <span className="font-bold text-slate-400">Receipt Number:</span>
+                  <span className="font-mono font-bold text-primary tracking-wide">
+                    {printedReceipt.receipt_number || printedReceipt.receipt_no}
+                  </span>
                 </div>
-                <div className="flex border-b border-dashed border-slate-200 pb-1">
-                  <span className="font-bold text-slate-400 w-28">Payment Date:</span>
+                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1.5">
+                  <span className="font-bold text-slate-400">Payment Date:</span>
                   <span className="font-bold text-slate-900">{fmtDate(printedReceipt.payment_date)}</span>
                 </div>
+                <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1.5">
+                  <span className="font-bold text-slate-400">Payment Method:</span>
+                  <span className="font-bold text-slate-900">{printedReceipt.payment_method || "Cash"}</span>
+                </div>
+                {printedReceipt.start_date && printedReceipt.end_date && (
+                  <div className="flex items-center justify-between border-b border-dashed border-slate-200 pb-1.5 md:col-span-2">
+                    <span className="font-bold text-slate-400">Billing Range:</span>
+                    <span className="font-bold text-slate-800 font-mono">
+                      {fmtDate(printedReceipt.start_date)} – {fmtDate(printedReceipt.end_date)}
+                    </span>
+                  </div>
+                )}
               </div>
-
 
               {/* Enriched Ledger Breakdown Table */}
               {(() => {
@@ -338,7 +411,7 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                     }
                   }
 
-                  const totalAmount = config ? (config.amount * mult) : item.amount_paid;
+                  const totalAmount = config ? config.amount * mult : item.amount_paid;
 
                   // Calculate amount paid BEFORE this transaction
                   let paidBefore = 0;
@@ -368,41 +441,44 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                     paidNow,
                     totalPaid,
                     outstanding,
-                    status
+                    status,
                   };
                 });
 
                 return (
                   <>
-                    <div className="mb-6 font-sans border border-slate-300 rounded-xl overflow-hidden">
-                      <table className="erp-table text-[10px]">
+                    <div className="mb-6 font-sans border border-slate-200 rounded-xl overflow-x-auto shadow-sm">
+                      <table className="w-full text-[11px] whitespace-nowrap border-collapse min-w-[580px]">
                         <thead>
-                          <tr className="bg-slate-100 border-b border-slate-300 text-slate-700 font-extrabold uppercase text-[9px] tracking-wider">
-                            <th className="px-3 py-2">Fee Head</th>
-                            <th className="px-3 py-2 text-right">Total Fee</th>
-                            <th className="px-3 py-2 text-right">Paid Before</th>
-                            <th className="px-3 py-2 text-right text-primary">Paid Now</th>
-                            <th className="px-3 py-2 text-right">Total Paid</th>
-                            <th className="px-3 py-2 text-right text-rose-600">Outstanding</th>
-                            <th className="px-3 py-2 text-center">Status</th>
+                          <tr className="bg-slate-100/80 border-b border-slate-200 text-slate-700 font-extrabold uppercase text-[10px] tracking-wider">
+                            <th className="px-3.5 py-2.5 text-left">Fee Head</th>
+                            <th className="px-3.5 py-2.5 text-right">Total Fee</th>
+                            <th className="px-3.5 py-2.5 text-right">Paid Before</th>
+                            <th className="px-3.5 py-2.5 text-right text-primary font-bold">Paid Now</th>
+                            <th className="px-3.5 py-2.5 text-right">Total Paid</th>
+                            <th className="px-3.5 py-2.5 text-right text-rose-600">Outstanding</th>
+                            <th className="px-3.5 py-2.5 text-center">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-200">
+                        <tbody className="divide-y divide-slate-100">
                           {receiptBreakdown.map((ft: any, i: number) => (
-                            <tr key={i} className="hover:bg-slate-50 transition-colors">
-                              <td className="px-3 py-2.5 font-bold text-slate-800">{ft.name}</td>
-                              <td className="px-3 py-2.5 text-right font-sans text-slate-700">{money(ft.totalAmount)}</td>
-                              <td className="px-3 py-2.5 text-right font-sans text-slate-500">{money(ft.paidBefore)}</td>
-                              <td className="px-3 py-2.5 text-right font-sans font-black text-primary bg-primary/5">{money(ft.paidNow)}</td>
-                              <td className="px-3 py-2.5 text-right font-sans text-slate-800">{money(ft.totalPaid)}</td>
-                              <td className="px-3 py-2.5 text-right font-sans font-bold text-rose-600 bg-rose-50/20">{money(ft.outstanding)}</td>
-                              <td className="px-3 py-2.5 text-center">
-                                <span className={`px-2 py-0.3 rounded text-[8px] font-black uppercase tracking-wider ${ft.status === "Paid"
-                                    ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                    : ft.status === "Partial"
+                            <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="px-3.5 py-2.5 font-bold text-slate-800">{ft.name}</td>
+                              <td className="px-3.5 py-2.5 text-right font-sans text-slate-700">{money(ft.totalAmount)}</td>
+                              <td className="px-3.5 py-2.5 text-right font-sans text-slate-500">{money(ft.paidBefore)}</td>
+                              <td className="px-3.5 py-2.5 text-right font-sans font-bold text-primary bg-primary/5">{money(ft.paidNow)}</td>
+                              <td className="px-3.5 py-2.5 text-right font-sans text-slate-800 font-semibold">{money(ft.totalPaid)}</td>
+                              <td className="px-3.5 py-2.5 text-right font-sans font-bold text-rose-600 bg-rose-50/20">{money(ft.outstanding)}</td>
+                              <td className="px-3.5 py-2.5 text-center">
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                                    ft.status === "Paid"
+                                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                      : ft.status === "Partial"
                                       ? "bg-amber-100 text-amber-800 border border-amber-200"
                                       : "bg-rose-100 text-rose-800 border border-rose-200"
-                                  }`}>
+                                  }`}
+                                >
                                   {ft.status}
                                 </span>
                               </td>
@@ -412,11 +488,43 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                       </table>
                     </div>
 
-                    {/* Summary aggregate details */}
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 font-sans space-y-1.5 mb-6 text-[10px]">
-                      <div className="flex justify-between font-bold text-slate-850">
-                        <span>Total Amount Paid In This Transaction:</span>
-                        <span className="font-sans text-emerald-600 font-black text-sm">
+                    {/* Concessions / Discounts and Summary aggregate details */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 font-sans space-y-2 mb-6 text-[11px]">
+                      {((printedReceipt.discount || 0) > 0 ||
+                        (printedReceipt.scholarship || 0) > 0 ||
+                        (printedReceipt.waiver || 0) > 0 ||
+                        (printedReceipt.fine || 0) > 0) && (
+                        <div className="border-b border-dashed border-slate-200 pb-2 space-y-1 text-slate-600 text-[10px]">
+                          {(printedReceipt.discount || 0) > 0 && (
+                            <div className="flex justify-between">
+                              <span>Concession / Discount:</span>
+                              <span className="font-semibold text-emerald-600 font-mono">- {money(printedReceipt.discount)}</span>
+                            </div>
+                          )}
+                          {(printedReceipt.scholarship || 0) > 0 && (
+                            <div className="flex justify-between">
+                              <span>Scholarship:</span>
+                              <span className="font-semibold text-emerald-600 font-mono">- {money(printedReceipt.scholarship)}</span>
+                            </div>
+                          )}
+                          {(printedReceipt.waiver || 0) > 0 && (
+                            <div className="flex justify-between">
+                              <span>Waiver:</span>
+                              <span className="font-semibold text-emerald-600 font-mono">- {money(printedReceipt.waiver)}</span>
+                            </div>
+                          )}
+                          {(printedReceipt.fine || 0) > 0 && (
+                            <div className="flex justify-between">
+                              <span>Late Fine:</span>
+                              <span className="font-semibold text-rose-600 font-mono">+ {money(printedReceipt.fine)}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center font-bold text-slate-900 pt-0.5">
+                        <span className="text-[12px]">Total Amount Paid In This Transaction:</span>
+                        <span className="font-mono text-emerald-600 font-black text-base">
                           {money(printedReceipt.amount_paid || printedReceipt.total_amount)}
                         </span>
                       </div>
@@ -426,13 +534,13 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
               })()}
 
               {printedReceipt.remarks && (
-                <p className="italic text-[10px] text-slate-450 font-sans mb-8">Remarks: {printedReceipt.remarks}</p>
+                <p className="italic text-[10px] text-slate-500 font-sans mb-6">Remarks: {printedReceipt.remarks}</p>
               )}
 
               {/* Signatures */}
-              <div className="flex justify-between items-end pt-6 font-sans text-[10px] font-bold text-slate-750">
-                <div className="text-center w-32 border-t border-slate-350 pt-1.5">Depositor Signature</div>
-                <div className="text-center w-32 border-t border-slate-350 pt-1.5">Authorized cashier</div>
+              <div className="flex justify-between items-end pt-8 font-sans text-[11px] font-bold text-slate-600">
+                <div className="text-center w-36 border-t-2 border-slate-300 pt-2">Depositor Signature</div>
+                <div className="text-center w-36 border-t-2 border-slate-300 pt-2">Authorized Cashier</div>
               </div>
             </div>
 
@@ -440,13 +548,31 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
               <button
                 type="button"
                 onClick={() => setPrintedReceipt(null)}
-                className="px-4 py-2 border border-border text-xs font-bold rounded-lg hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 border border-border text-xs font-bold rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
               >
                 Close Receipt
               </button>
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* MODAL: COLLECT FEES */}
+      {studentDetails && (
+        <CollectFeesModal
+          isOpen={isCollectFeeOpen}
+          onClose={() => {
+            setIsCollectFeeOpen(false);
+            loadDetailsAndPayments();
+          }}
+          student={{
+            _id: studentId,
+            name: studentDetails.name,
+            admission_no: studentDetails.admission_no,
+            class_id: studentDetails.class_id,
+            class_name: studentDetails.class_name,
+          }}
+        />
       )}
     </div>
   );

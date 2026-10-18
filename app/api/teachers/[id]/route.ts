@@ -210,16 +210,30 @@ export async function DELETE(
       query.school_id = schoolId;
     }
 
-    const teacher = await Teacher.findOneAndDelete(query);
+    const teacher = await Teacher.findOneAndUpdate(
+      { ...query, is_deleted: { $ne: true } },
+      {
+        $set: {
+          is_deleted: true,
+          deleted_at: new Date(),
+          is_active: false,
+        },
+      },
+      { new: true }
+    );
 
     if (!teacher) {
       return NextResponse.json({ success: false, message: "Teacher not found" }, { status: 404 });
     }
 
+    if (teacher.user_id) {
+      await User.findByIdAndUpdate(teacher.user_id, { $set: { is_active: false } });
+    }
+
     _singleTeacherCache.clear();
     invalidateTeachersServerCache();
 
-    return NextResponse.json({ success: true, message: "Teacher deleted successfully" });
+    return NextResponse.json({ success: true, message: "Teacher deleted successfully (archived to trash)" });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, message: error.message || "Internal server error" },

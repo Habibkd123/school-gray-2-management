@@ -537,6 +537,9 @@ export interface INotice extends Document {
   publish_date: Date;
   expiry_date?: Date;
   attachment_url?: string;
+  is_deleted?: boolean;
+  deleted_at?: Date | null;
+  deleted_by?: mongoose.Types.ObjectId | null;
 }
 
 const noticeSchema = new Schema<INotice>(
@@ -551,10 +554,14 @@ const noticeSchema = new Schema<INotice>(
     publish_date: { type: Date, default: Date.now },
     expiry_date: { type: Date, default: null },
     attachment_url: { type: String, default: null },
+    is_deleted: { type: Boolean, default: false },
+    deleted_at: { type: Date, default: null },
+    deleted_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );
 
+noticeSchema.index({ school_id: 1, is_deleted: 1 }, { name: "notice_school_deleted_v1" });
 noticeSchema.index({ school_id: 1, is_published: 1, publish_date: -1 }, { name: "notice_school_published_date_v1" });
 noticeSchema.index({ school_id: 1, target_audience: 1, publish_date: -1 }, { name: "notice_school_audience_date_v1" });
 
@@ -669,6 +676,9 @@ export interface IExam extends Document {
   is_published: boolean;
   description?: string;
   status?: "upcoming" | "ongoing" | "completed";
+  is_deleted?: boolean;
+  deleted_at?: Date | null;
+  deleted_by?: mongoose.Types.ObjectId | null;
 }
 
 const examSchema = new Schema<IExam>(
@@ -683,10 +693,14 @@ const examSchema = new Schema<IExam>(
     is_published: { type: Boolean, default: false },
     description: { type: String, trim: true },
     status: { type: String, enum: ["upcoming", "ongoing", "completed"], default: "upcoming" },
+    is_deleted: { type: Boolean, default: false },
+    deleted_at: { type: Date, default: null },
+    deleted_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );
 
+examSchema.index({ school_id: 1, is_deleted: 1 }, { name: "exam_school_deleted_v1" });
 // Exam listing per class: "show me all exams for Class 10 in 2026-2027 that are active"
 examSchema.index({ school_id: 1, class_id: 1, academic_year: 1, status: 1 }, { name: "exam_school_class_year_status_v1" });
 
@@ -704,6 +718,9 @@ export interface IResult extends Document {
   attendance_status?: "Present" | "Absent" | "Medical" | "Exempted";
   status: "draft" | "final";
   entered_by?: mongoose.Types.ObjectId;
+  is_deleted?: boolean;
+  deleted_at?: Date | null;
+  deleted_by?: mongoose.Types.ObjectId | null;
 }
 
 const resultSchema = new Schema<IResult>(
@@ -721,10 +738,14 @@ const resultSchema = new Schema<IResult>(
     attendance_status: { type: String, enum: ["Present", "Absent", "Medical", "Exempted"], default: "Present" },
     status: { type: String, enum: ["draft", "final"], default: "final" },
     entered_by: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher" },
+    is_deleted: { type: Boolean, default: false },
+    deleted_at: { type: Date, default: null },
+    deleted_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );
 
+resultSchema.index({ school_id: 1, is_deleted: 1 }, { name: "result_school_deleted_v1" });
 resultSchema.index({ school_id: 1, exam_id: 1, student_id: 1, subject_id: 1 }, { unique: true, name: "result_school_exam_student_subject_unique_v1" });
 // Report card query: "get all results for student X across all exams in this year"
 resultSchema.index({ school_id: 1, student_id: 1, exam_id: 1 }, { name: "result_school_student_exam_v1" });
@@ -830,25 +851,13 @@ roomSchema.index({ school_id: 1, room_no: 1 }, { unique: true, name: "room_schoo
 export const Subject: Model<ISubject> = mongoose.models.Subject || mongoose.model("Subject", subjectSchema);
 export const ClassGroup: Model<IClassGroup> = mongoose.models.ClassGroup || mongoose.model("ClassGroup", classGroupSchema);
 export const TeacherAssignment: Model<ITeacherAssignment> =
-  mongoose.models.TeacherAssignment && mongoose.models.TeacherAssignment.schema.indexes().some((idx: any) => idx[1]?.name === "teacher_assignment_school_year_teacher_v1")
-    ? (mongoose.models.TeacherAssignment as Model<ITeacherAssignment>)
-    : (() => {
-        delete mongoose.models.TeacherAssignment;
-        if (mongoose.connection && (mongoose.connection as any).models && (mongoose.connection as any).models.TeacherAssignment) {
-          delete (mongoose.connection as any).models.TeacherAssignment;
-        }
-        return mongoose.model<ITeacherAssignment>("TeacherAssignment", teacherAssignmentSchema);
-      })();
+  (mongoose.models.TeacherAssignment as Model<ITeacherAssignment>) ||
+  mongoose.model<ITeacherAssignment>("TeacherAssignment", teacherAssignmentSchema);
+
 export const Syllabus: Model<ISyllabus> =
-  mongoose.models.Syllabus && mongoose.models.Syllabus.schema.indexes().some((idx: any) => idx[1]?.name === "syllabus_school_year_updated_v1")
-    ? (mongoose.models.Syllabus as Model<ISyllabus>)
-    : (() => {
-        delete mongoose.models.Syllabus;
-        if (mongoose.connection && (mongoose.connection as any).models && (mongoose.connection as any).models.Syllabus) {
-          delete (mongoose.connection as any).models.Syllabus;
-        }
-        return mongoose.model<ISyllabus>("Syllabus", syllabusSchema);
-      })();
+  (mongoose.models.Syllabus as Model<ISyllabus>) ||
+  mongoose.model<ISyllabus>("Syllabus", syllabusSchema);
+
 export const Timetable: Model<ITimetable> = mongoose.models.Timetable || mongoose.model("Timetable", timetableSchema);
 export const Attendance: Model<IAttendance> = mongoose.models.Attendance || mongoose.model("Attendance", attendanceSchema);
 export const Homework: Model<IHomework> = mongoose.models.Homework || mongoose.model("Homework", homeworkSchema);
@@ -857,12 +866,8 @@ export const FeesStructure: Model<IFeesStructure> = mongoose.models.FeesStructur
 
 export const Exam: Model<IExam> = mongoose.models.Exam || mongoose.model("Exam", examSchema);
 export const Result: Model<IResult> =
-  mongoose.models.Result && Object.keys(mongoose.models.Result.schema.paths).includes("attendance_status")
-    ? (mongoose.models.Result as Model<IResult>)
-    : (() => {
-        delete mongoose.models.Result;
-        return mongoose.model<IResult>("Result", resultSchema);
-      })();
+  (mongoose.models.Result as Model<IResult>) ||
+  mongoose.model<IResult>("Result", resultSchema);
 export const ResultAudit: Model<IResultAudit> = mongoose.models.ResultAudit || mongoose.model("ResultAudit", resultAuditSchema);
 export const LeaveRequest: Model<ILeaveRequest> = mongoose.models.LeaveRequest || mongoose.model("LeaveRequest", leaveRequestSchema);
 export const Room: Model<IRoom> = mongoose.models.Room || mongoose.model("Room", roomSchema);
@@ -898,15 +903,8 @@ const subjectMasterSchema = new Schema<ISubjectMaster>(
 subjectMasterSchema.index({ school_id: 1, name: 1 }, { unique: true, name: "subject_master_school_name_unique_v1" });
 
 export const SubjectMaster: Model<ISubjectMaster> =
-  mongoose.models.SubjectMaster && mongoose.models.SubjectMaster.schema.paths.status?.options?.enum?.includes("Archived")
-    ? (mongoose.models.SubjectMaster as Model<ISubjectMaster>)
-    : (() => {
-        delete mongoose.models.SubjectMaster;
-        if (mongoose.connection && (mongoose.connection as any).models && (mongoose.connection as any).models.SubjectMaster) {
-          delete (mongoose.connection as any).models.SubjectMaster;
-        }
-        return mongoose.model<ISubjectMaster>("SubjectMaster", subjectMasterSchema);
-      })();
+  (mongoose.models.SubjectMaster as Model<ISubjectMaster>) ||
+  mongoose.model<ISubjectMaster>("SubjectMaster", subjectMasterSchema);
 
 // ─── Subject Assignment (Class + optional Stream → Subject) ────────
 export interface ISubjectAssignment extends Document {
@@ -969,15 +967,8 @@ subjectAssignmentSchema.index(
 );
 
 export const SubjectAssignment: Model<ISubjectAssignment> =
-  mongoose.models.SubjectAssignment && mongoose.models.SubjectAssignment.schema.indexes().some((idx: any) => idx[1]?.name === "subject_assignment_school_subject_v1")
-    ? (mongoose.models.SubjectAssignment as Model<ISubjectAssignment>)
-    : (() => {
-        delete mongoose.models.SubjectAssignment;
-        if (mongoose.connection && (mongoose.connection as any).models && (mongoose.connection as any).models.SubjectAssignment) {
-          delete (mongoose.connection as any).models.SubjectAssignment;
-        }
-        return mongoose.model<ISubjectAssignment>("SubjectAssignment", subjectAssignmentSchema);
-      })();
+  (mongoose.models.SubjectAssignment as Model<ISubjectAssignment>) ||
+  mongoose.model<ISubjectAssignment>("SubjectAssignment", subjectAssignmentSchema);
 
 
 // ─── Transport Management ─────────────────────────────────────────
@@ -1223,12 +1214,8 @@ classTestSchema.index({ school_id: 1, class_id: 1, test_date: 1 }, { name: "clas
 classTestSchema.index({ school_id: 1, teacher_id: 1 }, { name: "class_test_school_teacher_v1" });
 
 export const ClassTest: Model<IClassTest> =
-  mongoose.models.ClassTest && Object.keys(mongoose.models.ClassTest.schema.paths).includes("assessment_type")
-    ? (mongoose.models.ClassTest as Model<IClassTest>)
-    : (() => {
-        delete mongoose.models.ClassTest;
-        return mongoose.model<IClassTest>("ClassTest", classTestSchema);
-      })();
+  (mongoose.models.ClassTest as Model<IClassTest>) ||
+  mongoose.model<IClassTest>("ClassTest", classTestSchema);
 
 // ─── Class Test Mark (per-student marks entry) ───────────────────────────────
 
@@ -1264,12 +1251,8 @@ const classTestMarkSchema = new Schema<IClassTestMark>(
 classTestMarkSchema.index({ test_id: 1, student_id: 1 }, { unique: true, name: "class_test_mark_test_student_unique_v1" });
 
 export const ClassTestMark: Model<IClassTestMark> =
-  mongoose.models.ClassTestMark && Object.keys(mongoose.models.ClassTestMark.schema.paths).includes("attendance_status")
-    ? (mongoose.models.ClassTestMark as Model<IClassTestMark>)
-    : (() => {
-        delete mongoose.models.ClassTestMark;
-        return mongoose.model<IClassTestMark>("ClassTestMark", classTestMarkSchema);
-      })();
+  (mongoose.models.ClassTestMark as Model<IClassTestMark>) ||
+  mongoose.model<IClassTestMark>("ClassTestMark", classTestMarkSchema);
 
 // ─── Class Test Mark Audit (auditing assessment modifications) ───────────────
 

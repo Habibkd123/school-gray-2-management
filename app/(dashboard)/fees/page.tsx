@@ -36,6 +36,8 @@ import Link from "next/link";
 import { CollectFeesModal } from "../../components/modals/CollectFeesModal";
 import { SearchToolbar, ColumnSetting } from "@/app/components/ui/SearchToolbar";
 import { cacheSync } from "@/lib/utils/cache-sync";
+import { BulkCollectModal } from "./components/BulkCollectModal";
+import { PaymentLedgerModal } from "./components/PaymentLedgerModal";
 
 interface StudentFeeRow {
   _id: string;
@@ -917,11 +919,11 @@ export default function FeesPage() {
     .filter((ft) => ft.is_enabled)
     .reduce((sum, ft) => sum + Number(ft.amount || 0), 0);
 
-  // Load history logs for selected student
+  // Load history logs for selected student (both active and cancelled)
   const fetchHistoryLogs = async (studentId: string) => {
     setIsLoadingHistory(true);
     try {
-      const res = await fetch(`/api/fees/payments?student_id=${studentId}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/fees/payments?student_id=${studentId}&include_deleted=true`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (data.success) {
         setStudentHistoryLogs(data.data.payments);
@@ -937,6 +939,63 @@ export default function FeesPage() {
     setHistoryStudent(student);
     setStudentHistoryLogs([]);
     fetchHistoryLogs(student._id);
+  };
+
+  const handleVoidPayment = async (paymentId: string) => {
+    if (!historyStudent) return;
+    try {
+      const res = await fetch(`/api/fees/payments?id=${paymentId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchHistoryLogs(historyStudent._id);
+        fetchStudents(true);
+      } else {
+        alert(data.message || "Failed to void payment");
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to void payment");
+    }
+  };
+
+  const handleRestorePayment = async (paymentId: string) => {
+    if (!historyStudent) return;
+    try {
+      const res = await fetch(`/api/fees/payments?id=${paymentId}&action=restore`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchHistoryLogs(historyStudent._id);
+        fetchStudents(true);
+      } else {
+        alert(data.message || "Failed to restore payment");
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to restore payment");
+    }
+  };
+
+  const handlePermanentDeletePayment = async (paymentId: string) => {
+    if (!historyStudent) return;
+    try {
+      const res = await fetch(`/api/fees/payments?id=${paymentId}&permanent=true`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await fetchHistoryLogs(historyStudent._id);
+        fetchStudents(true);
+      } else {
+        alert(data.message || "Failed to permanently delete payment");
+      }
+    } catch (err: any) {
+      alert(err.message || "Failed to permanently delete payment");
+    }
   };
 
   const handleOpenPay = (student: StudentFeeRow) => {
@@ -1699,7 +1758,7 @@ export default function FeesPage() {
                   <div className="p-3 bg-rose-50 text-rose-600 rounded-lg"><XCircle className="w-5 h-5" /></div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Total Outstanding</span>
-                    <strong className="text-lg font-sans text-rose-550 mt-0.5 block">{money(reportStats.totalPending)}</strong>
+                    <strong className="text-lg font-sans text-rose-600 mt-0.5 block">{money(reportStats.totalPending)}</strong>
                   </div>
                 </div>
 
@@ -1813,69 +1872,19 @@ export default function FeesPage() {
       )}
 
       {/* MODAL: BULK RECORD PAYMENT COLLECTION */}
-      {isBulkCollectOpen && (
-        <Modal isOpen={isBulkCollectOpen} onClose={() => setIsBulkCollectOpen(false)} title="Record Bulk Payments Collection">
-          <div className="space-y-4 text-left text-xs font-sans">
-            <div className="p-3 bg-amber-50 border border-amber-250 text-amber-700 rounded-xl font-bold flex items-center gap-2">
-              <AlertCircle className="w-4.5 h-4.5 text-amber-600 shrink-0" />
-              <span>You are recording full outstanding dues collection for {selectedStudentIds.length} student(s).</span>
-            </div>
-
-            <div className="flex flex-col gap-1 text-left">
-              <label className="font-bold text-slate-500">Collection Date</label>
-              <input
-                type="date"
-                value={bulkCollectDate}
-                onChange={(e) => setBulkCollectDate(e.target.value)}
-                className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-white outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1 text-left">
-              <label className="font-bold text-slate-500">Payment Method</label>
-              <select
-                value={bulkCollectMethod}
-                onChange={(e) => setBulkCollectMethod(e.target.value as any)}
-                className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-white outline-none cursor-pointer"
-              >
-                <option value="Cash">Cash</option>
-                <option value="Cheque">Cheque</option>
-                <option value="Bank Transfer">Bank Transfer</option>
-                <option value="UPI">UPI</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col gap-1 text-left">
-              <label className="font-bold text-slate-500">Remarks / Reference</label>
-              <textarea
-                value={bulkCollectRemarks}
-                onChange={(e) => setBulkCollectRemarks(e.target.value)}
-                placeholder="Remarks for this bulk transaction log..."
-                className="w-full px-2.5 py-1.5 border border-border rounded-lg bg-white outline-none min-h-[60px]"
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 pt-3 border-t border-border">
-              <button
-                type="button"
-                onClick={() => setIsBulkCollectOpen(false)}
-                className="px-4 py-2 border border-border text-xs font-bold rounded-lg bg-white hover:bg-slate-50 text-slate-700 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleBulkCollectSubmit}
-                disabled={isProcessingBulkCollect}
-                className="px-4 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-lg transition-colors disabled:opacity-60 flex items-center gap-1.5 shadow-sm"
-              >
-                {isProcessingBulkCollect && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                Confirm Collection
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <BulkCollectModal
+        isOpen={isBulkCollectOpen}
+        onClose={() => setIsBulkCollectOpen(false)}
+        selectedCount={selectedStudentIds.length}
+        date={bulkCollectDate}
+        onDateChange={setBulkCollectDate}
+        paymentMethod={bulkCollectMethod}
+        onMethodChange={setBulkCollectMethod}
+        remarks={bulkCollectRemarks}
+        onRemarksChange={setBulkCollectRemarks}
+        onSubmit={handleBulkCollectSubmit}
+        isProcessing={isProcessingBulkCollect}
+      />
 
       {/* MODAL: CLASS FEE SETUP */}
       {isSetupOpen && (
@@ -2316,58 +2325,18 @@ export default function FeesPage() {
 
 
       {/* MODAL: STUDENT HISTORY LOGS QUICKVIEW */}
-      {historyStudent && (
-        <Modal isOpen={!!historyStudent} onClose={() => setHistoryStudent(null)} title={`Payment Ledger - ${historyStudent.name}`}>
-          <div className="space-y-4 text-left">
-            {isLoadingHistory ? (
-              <div className="h-40 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              </div>
-            ) : studentHistoryLogs.length === 0 ? (
-              <div className="py-10 text-center text-slate-455 font-bold text-xs">
-                No past transactions recorded for this student.
-              </div>
-            ) : (
-              <div className="erp-table-wrap overflow-x-auto">
-                <table className="erp-table">
-                  <thead>
-                    <tr>
-                      <th>Receipt No</th>
-                      <th>Payment Date</th>
-                      <th>Method</th>
-                      <th className="col-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {studentHistoryLogs.map((log: any) => (
-                      <tr key={log._id}>
-                        <td className="font-sans font-bold text-primary">{log.receipt_number || log.receipt_no}</td>
-                        <td className="font-semibold">{fmtDate(log.payment_date)}</td>
-                        <td>
-                          <span className="px-2 py-0.5 rounded bg-slate-100 text-[10px] font-bold">
-                            {log.payment_method}
-                          </span>
-                        </td>
-                        <td className="col-right font-sans font-bold text-emerald-600">{money(log.amount_paid || log.total_amount)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            <div className="flex justify-end border-t border-border pt-3.5">
-              <button
-                type="button"
-                onClick={() => setHistoryStudent(null)}
-                className="px-4 py-2 border border-border text-xs font-bold rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                Close Logs
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <PaymentLedgerModal
+        isOpen={!!historyStudent}
+        onClose={() => setHistoryStudent(null)}
+        student={historyStudent}
+        logs={studentHistoryLogs}
+        isLoading={isLoadingHistory}
+        formatDate={fmtDate}
+        formatMoney={money}
+        onVoidPayment={handleVoidPayment}
+        onRestorePayment={handleRestorePayment}
+        onPermanentDeletePayment={handlePermanentDeletePayment}
+      />
     </div>
   );
 }

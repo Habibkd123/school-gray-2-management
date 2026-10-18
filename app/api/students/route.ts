@@ -102,6 +102,11 @@ export async function GET(request: NextRequest) {
 
     // Build filter
     const filter: Record<string, any> = {};
+    if (searchParams.get("show_deleted") === "true") {
+      filter.is_deleted = true;
+    } else {
+      filter.is_deleted = { $ne: true };
+    }
 
     if (role === "super_admin") {
       const paramSchoolId = searchParams.get("school_id");
@@ -148,7 +153,8 @@ export async function GET(request: NextRequest) {
 
     if (classId && classId !== "all") {
       filter.class_id = classId;
-    } else if (academic_year) {
+    }
+    if (academic_year) {
       filter.academic_year = academic_year;
     }
 

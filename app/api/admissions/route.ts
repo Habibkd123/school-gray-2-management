@@ -51,7 +51,9 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(1000, Math.max(1, parseInt(url.searchParams.get("limit") || "10")));
     const skip = (page - 1) * limit;
 
-    const query: Record<string, any> = {};
+    const query: Record<string, any> = {
+      is_deleted: { $ne: true },
+    };
     if (targetSchoolId) {
       query.school_id = targetSchoolId;
     }

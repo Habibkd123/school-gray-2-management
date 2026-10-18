@@ -216,6 +216,7 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      case "fees":
       case "student_fees": {
         options.title = "Student Fee Collection Backup";
         options.subtitle = "Fee Payment Transactions & Receipts";
@@ -294,6 +295,7 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      case "salary":
       case "teacher_fees": {
         options.title = "Teacher Salary Disbursement Backup";
         options.subtitle = "Staff Salary Records & Payment History";
@@ -549,27 +551,60 @@ export async function POST(req: NextRequest) {
         const [
           studentCount,
           teacherCount,
-          studentFeePayments,
-          salaryPayments,
+          feeSumRes,
+          salarySumRes,
           attendanceCount,
           examCount,
         ] = await Promise.all([
           Student.countDocuments({ ...baseFilter }),
           Teacher.countDocuments({ ...baseFilter }),
-          StudentFeePayment.find({ ...baseFilter }).lean(),
-          SalaryPayment.find({ ...baseFilter }).lean(),
+          StudentFeePayment.aggregate([
+            { $match: { ...baseFilter } },
+            {
+              $group: {
+                _id: null,
+                count: { $sum: 1 },
+                total: { $sum: { $toDouble: { $ifNull: ["$amount_paid", 0] } } },
+              },
+            },
+          ]),
+          SalaryPayment.aggregate([
+            { $match: { ...baseFilter } },
+            {
+              $group: {
+                _id: null,
+                count: { $sum: 1 },
+                total: {
+                  $sum: {
+                    $toDouble: {
+                      $ifNull: [
+                        "$final_salary",
+                        {
+                          $ifNull: [
+                            "$payable_amount",
+                            {
+                              $ifNull: [
+                                "$net_salary",
+                                { $ifNull: ["$amount_paid", 0] },
+                              ],
+                            },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ]),
           Attendance.countDocuments({ ...baseFilter }),
           Result.countDocuments({ ...baseFilter }),
         ]);
 
-        const totalFeesCollected = (studentFeePayments as any[]).reduce(
-          (acc, p) => acc + Number(p.amount_paid || 0),
-          0
-        );
-        const totalSalaryPaid = (salaryPayments as any[]).reduce(
-          (acc, s) => acc + Number(s.final_salary ?? s.payable_amount ?? s.net_salary ?? s.amount_paid ?? 0),
-          0
-        );
+        const feePaymentCount = feeSumRes[0]?.count || 0;
+        const totalFeesCollected = feeSumRes[0]?.total || 0;
+        const salaryPaymentCount = salarySumRes[0]?.count || 0;
+        const totalSalaryPaid = salarySumRes[0]?.total || 0;
 
         const modules = [
           {
@@ -592,9 +627,9 @@ export async function POST(req: NextRequest) {
           },
           {
             name: "Student Fees Collection",
-            count: studentFeePayments.length,
+            count: feePaymentCount,
             summary: `Rs. ${totalFeesCollected.toLocaleString("en-IN")} Collected`,
-            status: studentFeePayments.length > 0 ? "Active" : "No Data",
+            status: feePaymentCount > 0 ? "Active" : "No Data",
           },
           {
             name: "Students Management",
@@ -604,9 +639,9 @@ export async function POST(req: NextRequest) {
           },
           {
             name: "Teacher Salary Payroll",
-            count: salaryPayments.length,
+            count: salaryPaymentCount,
             summary: `Rs. ${totalSalaryPaid.toLocaleString("en-IN")} Paid`,
-            status: salaryPayments.length > 0 ? "Active" : "No Data",
+            status: salaryPaymentCount > 0 ? "Active" : "No Data",
           },
         ];
 
@@ -616,8 +651,8 @@ export async function POST(req: NextRequest) {
         const totalAllModules =
           studentCount +
           teacherCount +
-          studentFeePayments.length +
-          salaryPayments.length +
+          feePaymentCount +
+          salaryPaymentCount +
           attendanceCount +
           examCount;
 

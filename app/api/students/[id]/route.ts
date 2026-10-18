@@ -321,7 +321,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 // ─── DELETE /api/students/[id] — Soft delete (is_active = false) ──
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
-  const { schoolId, error } = requireAuth(request, ["school_admin", "super_admin"]);
+  const { schoolId, userId, error } = requireAuth(request, ["school_admin", "super_admin"]);
   if (error) return error;
 
   const { id } = await params;
@@ -336,13 +336,20 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     await connectDB();
 
-    // Soft delete — is_active = false (data preserve rehta hai)
-    // const student = await Student.findOneAndUpdate(
-    //   { _id: id, school_id: schoolId },
-    //   { $set: { is_active: false } },
-    //   { new: true }
-    // );
-    const student = await Student.findByIdAndDelete({ _id: id, school_id: schoolId })
+    // Enterprise Soft Delete — preserves records and audit trails while hiding from active lists
+    const student = await Student.findOneAndUpdate(
+      { _id: id, school_id: schoolId, is_deleted: { $ne: true } },
+      {
+        $set: {
+          is_deleted: true,
+          deleted_at: new Date(),
+          deleted_by: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+          is_active: false,
+        },
+      },
+      { new: true }
+    );
+
     if (!student) {
       return NextResponse.json(
         { success: false, message: "Student not found" },
@@ -350,12 +357,17 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Also deactivate linked user login account
+    if (student.user_id) {
+      await User.findByIdAndUpdate(student.user_id, { $set: { is_active: false } });
+    }
+
     _singleStudentCache.clear();
     invalidateStudentsServerCache();
 
     return NextResponse.json({
       success: true,
-      message: "Student deactivated successfully",
+      message: "Student deleted successfully (archived to trash)",
     });
   } catch (err) {
     console.error("[DELETE /api/students/[id]]", err);

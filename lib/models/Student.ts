@@ -57,6 +57,9 @@ export interface IStudent extends Document {
   permanent_address?: string;
   other_info?: string;
   aadhaar_no?: string;
+  is_deleted?: boolean;
+  deleted_at?: Date | null;
+  deleted_by?: mongoose.Types.ObjectId | null;
 }
 
 const studentSchema = new Schema<IStudent>(
@@ -117,15 +120,19 @@ const studentSchema = new Schema<IStudent>(
     migration_cert: { type: { name: String, url: String }, default: null },
     transfer_cert: { type: { name: String, url: String }, default: null },
     birth_cert: { type: { name: String, url: String }, default: null },
+    is_deleted: { type: Boolean, default: false },
+    deleted_at: { type: Date, default: null },
+    deleted_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );
 
+studentSchema.index({ school_id: 1, is_deleted: 1 }, { name: "student_school_deleted_v1" });
 studentSchema.index({ school_id: 1, class_id: 1, roll_no: 1 }, { name: "student_school_class_roll_v1" });
 studentSchema.index({ school_id: 1, name: 1 }, { name: "student_school_name_v1" });
 studentSchema.index({ school_id: 1, is_active: 1 }, { name: "student_school_is_active_v1" });
 studentSchema.index({ school_id: 1, academic_year: 1 }, { name: "student_school_academic_year_v1" });
-studentSchema.index({ school_id: 1, admission_no: 1 }, { name: "student_school_admission_no_v1" });
+studentSchema.index({ school_id: 1, admission_no: 1 }, { unique: true, sparse: true, name: "student_school_admission_unique_v1" });
 studentSchema.index({ school_id: 1, roll_no: 1 }, { name: "student_school_roll_no_v1" });
 studentSchema.index({ parent_id: 1 }, { name: "student_parent_id_v1" });
 studentSchema.index({ school_id: 1, parent_id: 1 }, { name: "student_school_parent_id_v1" });

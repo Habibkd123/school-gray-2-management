@@ -84,6 +84,9 @@ export interface ITeacher extends Document {
   // File Uploads
   resume_url?: string;
   joining_letter_url?: string;
+  is_deleted?: boolean;
+  deleted_at?: Date | null;
+  deleted_by?: mongoose.Types.ObjectId | null;
 }
 
 const teacherSchema = new Schema<ITeacher>(
@@ -111,6 +114,9 @@ const teacherSchema = new Schema<ITeacher>(
     aadhaar_front_url: { type: String, trim: true },
     aadhaar_back_url: { type: String, trim: true },
     is_active: { type: Boolean, default: true },
+    is_deleted: { type: Boolean, default: false },
+    deleted_at: { type: Date, default: null },
+    deleted_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     designation: { type: String, trim: true, default: "Teacher" },
     department: { type: String, trim: true, default: "Academic" },
 
@@ -176,6 +182,7 @@ const teacherSchema = new Schema<ITeacher>(
 );
 
 teacherSchema.index({ school_id: 1, employee_id: 1 }, { unique: true, sparse: true, name: "teacher_school_employee_unique_v1" });
+teacherSchema.index({ school_id: 1, is_deleted: 1 }, { name: "teacher_school_deleted_v1" });
 teacherSchema.index({ school_id: 1, is_active: 1 }, { name: "teacher_school_is_active_v1" });
 teacherSchema.index({ school_id: 1, is_active: 1, name: 1 }, { name: "teacher_school_active_name_v1" });
 teacherSchema.index({ school_id: 1, name: 1 }, { name: "teacher_school_name_v1" });
@@ -185,17 +192,8 @@ teacherSchema.index({ user_id: 1 }, { name: "teacher_user_id_v1" });
 teacherSchema.index({ school_id: 1, qualification: 1 }, { name: "teacher_school_qualification_v1" });
 teacherSchema.index({ school_id: 1, expertise: 1 }, { name: "teacher_school_expertise_v1" });
 
-if (mongoose.models && mongoose.models.Teacher) {
-  const registeredSchema = mongoose.models.Teacher.schema;
-  if (!registeredSchema.paths.class_ids) {
-    delete mongoose.models.Teacher;
-    if ((mongoose.connection as any).models && (mongoose.connection as any).models.Teacher) {
-      delete (mongoose.connection as any).models.Teacher;
-    }
-  }
-}
-
 const Teacher: Model<ITeacher> =
-  mongoose.models.Teacher || mongoose.model<ITeacher>("Teacher", teacherSchema);
+  (mongoose.models.Teacher as Model<ITeacher>) ||
+  mongoose.model<ITeacher>("Teacher", teacherSchema);
 
 export default Teacher;

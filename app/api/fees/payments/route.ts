@@ -43,7 +43,7 @@ async function generateReceiptNumber(): Promise<string> {
   const counter = await Counter.findOneAndUpdate(
     { _id: counterId },
     { $inc: { seq: 1 } },
-    { new: true, upsert: true }
+    { returnDocument: 'after', upsert: true }
   );
 
   // Zero-pad to 5 digits → up to 99,999 unique receipts per day
@@ -60,7 +60,10 @@ export async function GET(req: NextRequest) {
     const rawLimit = parseInt(url.searchParams.get("limit") || "2000", 10);
     const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 2000 : rawLimit), 5000);
 
-    const cacheKey = `pmt_${schoolId}_${role}_${userId || ""}_${student_id || "all"}_${limit}`;
+    const include_deleted = url.searchParams.get("include_deleted") === "true";
+    const show_deleted = url.searchParams.get("show_deleted") === "true";
+
+    const cacheKey = `pmt_${schoolId}_${role}_${userId || ""}_${student_id || "all"}_${include_deleted ? "all" : show_deleted ? "deleted" : "active"}_${limit}`;
 
     const cached = _feesPaymentsServerCache.get(cacheKey);
     if (cached && Date.now() < cached.expiresAt) {
@@ -82,7 +85,15 @@ export async function GET(req: NextRequest) {
     }
 
     const queryPromise = (async () => {
-      const query: any = { school_id: new mongoose.Types.ObjectId(schoolId as string) };
+      const query: any = {
+        school_id: new mongoose.Types.ObjectId(schoolId as string),
+      };
+
+      if (show_deleted) {
+        query.is_deleted = true;
+      } else if (!include_deleted) {
+        query.is_deleted = { $ne: true };
+      }
 
       await connectDB();
 
@@ -120,6 +131,7 @@ export async function GET(req: NextRequest) {
         populate: { path: "class_id", select: "name section" }
       })
       .populate("collected_by", "name username")
+      .populate("deleted_by", "name username")
       .sort({ payment_date: -1 })
       .limit(limit)
       .lean();
@@ -213,6 +225,7 @@ export async function POST(req: NextRequest) {
       student_id: new mongoose.Types.ObjectId(student_id),
       start_date: { $lte: edDate },
       end_date:   { $gte: sdDate },
+      is_deleted: { $ne: true },
     }).lean();
 
     if (overlapping) {
@@ -299,5 +312,147 @@ export async function POST(req: NextRequest) {
       );
     }
     return NextResponse.json({ success: false, message: err.message || "Failed to record payment" }, { status: 400 });
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const { schoolId, userId, error } = requireAuth(req, ["school_admin", "super_admin"]);
+  if (error) return error;
+
+  try {
+    const url = new URL(req.url);
+    let paymentId = url.searchParams.get("id") || url.searchParams.get("payment_id");
+    const isPermanent = url.searchParams.get("permanent") === "true";
+
+    if (!paymentId) {
+      try {
+        const body = await req.json();
+        paymentId = body.id || body.payment_id;
+      } catch {
+        // Body was empty or not JSON
+      }
+    }
+
+    if (!paymentId) {
+      return NextResponse.json({ success: false, message: "Payment ID is required" }, { status: 400 });
+    }
+
+    await connectDB();
+
+    if (isPermanent) {
+      const deleted = await StudentFeePayment.findOneAndDelete({ _id: paymentId, school_id: schoolId });
+      if (!deleted) {
+        return NextResponse.json({ success: false, message: "Payment record not found" }, { status: 404 });
+      }
+
+      invalidateFeesCache(schoolId);
+      invalidateFeesPaymentsCache(schoolId);
+
+      return NextResponse.json({
+        success: true,
+        message: "Payment permanently deleted",
+        data: { id: deleted._id },
+      });
+    }
+
+    const payment = await StudentFeePayment.findOneAndUpdate(
+      { _id: paymentId, school_id: schoolId },
+      {
+        $set: {
+          is_deleted: true,
+          deleted_at: new Date(),
+          deleted_by: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+        },
+      },
+      { returnDocument: "after" }
+    );
+
+    if (!payment) {
+      return NextResponse.json({ success: false, message: "Payment record not found" }, { status: 404 });
+    }
+
+    invalidateFeesCache(schoolId);
+    invalidateFeesPaymentsCache(schoolId);
+
+    return NextResponse.json({
+      success: true,
+      message: "Payment voided successfully",
+      data: { id: payment._id },
+    });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, message: err.message || "Failed to process payment deletion" }, { status: 500 });
+  }
+}
+
+// PATCH /api/fees/payments - Restore voided/cancelled payments
+export async function PATCH(req: NextRequest) {
+  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
+  if (error) return error;
+
+  try {
+    const url = new URL(req.url);
+    let paymentId = url.searchParams.get("id") || url.searchParams.get("payment_id");
+    let action = url.searchParams.get("action") || "restore";
+
+    if (!paymentId) {
+      try {
+        const body = await req.json();
+        paymentId = body.id || body.payment_id;
+        action = body.action || action;
+      } catch {
+        // Body was empty or not JSON
+      }
+    }
+
+    if (!paymentId) {
+      return NextResponse.json({ success: false, message: "Payment ID is required" }, { status: 400 });
+    }
+
+    await connectDB();
+
+    if (action === "restore") {
+      const payment = await StudentFeePayment.findOne({ _id: paymentId, school_id: schoolId });
+      if (!payment) {
+        return NextResponse.json({ success: false, message: "Payment record not found" }, { status: 404 });
+      }
+
+      // Check for period overlap with existing active payments
+      const overlapping = await StudentFeePayment.findOne({
+        _id: { $ne: payment._id },
+        school_id: new mongoose.Types.ObjectId(schoolId as string),
+        student_id: payment.student_id,
+        start_date: { $lte: payment.end_date },
+        end_date: { $gte: payment.start_date },
+        is_deleted: { $ne: true },
+      }).lean();
+
+      if (overlapping) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: `Cannot restore: An active payment (${(overlapping as any).receipt_number}) already covers this overlapping period.`,
+          },
+          { status: 409 }
+        );
+      }
+
+      payment.is_deleted = false;
+      payment.deleted_at = null;
+      payment.deleted_by = null;
+      await payment.save();
+
+      invalidateFeesCache(schoolId);
+      invalidateFeesPaymentsCache(schoolId);
+
+      return NextResponse.json({
+        success: true,
+        message: "Payment restored successfully",
+        data: { id: payment._id },
+      });
+    }
+
+    return NextResponse.json({ success: false, message: "Invalid action" }, { status: 400 });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, message: err.message || "Failed to restore payment" }, { status: 500 });
   }
 }

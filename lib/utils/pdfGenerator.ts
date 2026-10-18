@@ -29,22 +29,25 @@ export async function generatePDFBuffer(options: PDFBackupOptions): Promise<Buff
       // ── Page Header helper ─────────────────────────────────────
       const drawPageHeader = () => {
         const schoolName = options.schoolName || "School Management System";
-        doc.fillColor("#1e293b").fontSize(18).font("Helvetica-Bold").text(schoolName, { align: "center", lineBreak: false });
-        doc.moveDown(0.2);
-        doc.fillColor("#0284c7").fontSize(13).font("Helvetica-Bold").text(options.title, { align: "center", lineBreak: false });
+        doc.fillColor("#1e293b").fontSize(18).font("Helvetica-Bold").text(schoolName, { align: "center" });
+        doc.moveDown(0.25);
+        doc.fillColor("#0284c7").fontSize(13).font("Helvetica-Bold").text(options.title, { align: "center" });
         if (options.subtitle) {
-          doc.fillColor("#64748b").fontSize(9).font("Helvetica").text(options.subtitle, { align: "center", lineBreak: false });
+          doc.moveDown(0.2);
+          doc.fillColor("#64748b").fontSize(9).font("Helvetica").text(options.subtitle, { align: "center" });
         }
+        doc.moveDown(0.2);
         const dateStr = (options.generatedAt || new Date()).toLocaleString("en-IN", {
           dateStyle: "medium",
           timeStyle: "short",
         });
-        doc.fontSize(8).fillColor("#94a3b8").text(`Generated on: ${dateStr}`, { align: "right", lineBreak: false });
-        doc.moveDown(0.4);
+        doc.fontSize(8).fillColor("#94a3b8").text(`Generated on: ${dateStr}`, { align: "right" });
+        doc.moveDown(0.3);
 
         // Separator
-        doc.moveTo(30, doc.y).lineTo(565, doc.y).strokeColor("#cbd5e1").lineWidth(1).stroke();
-        doc.moveDown(0.6);
+        const sepY = doc.y;
+        doc.moveTo(30, sepY).lineTo(565, sepY).strokeColor("#cbd5e1").lineWidth(1).stroke();
+        doc.y = sepY + 12;
       };
 
       // ── Column Widths helper ───────────────────────────────────

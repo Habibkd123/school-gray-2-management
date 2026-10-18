@@ -706,7 +706,9 @@ export function SaaSPortalPreview() {
                         </div>
                       </div>
                       <div className={`flex items-center justify-between text-[12px] pt-4 border-t ${isLight ? "border-slate-100 text-slate-500" : "border-slate-800 text-slate-400"}`}>
-                        <span>Sections : <strong className={isLight ? "text-slate-900" : "text-white"}>10</strong></span>
+                        <span>Active : <strong className={isLight ? "text-slate-900" : "text-white"}>10</strong></span>
+                        <span className="text-slate-300">|</span>
+                        <span>Inactive : <strong className={isLight ? "text-slate-900" : "text-white"}>0</strong></span>
                       </div>
                     </div>
                   </div>

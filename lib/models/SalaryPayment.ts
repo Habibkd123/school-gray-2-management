@@ -31,6 +31,9 @@ export interface ISalaryPayment extends Document {
   approved_by?: mongoose.Types.ObjectId;
   finalized_by?: mongoose.Types.ObjectId;
   finalized_at?: Date;
+  is_deleted?: boolean;
+  deleted_at?: Date | null;
+  deleted_by?: mongoose.Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -66,12 +69,15 @@ const salaryPaymentSchema = new Schema<ISalaryPayment>(
     generated_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     approved_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     finalized_by: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    finalized_at: { type: Date }
+    finalized_at: { type: Date },
+    is_deleted: { type: Boolean, default: false },
+    deleted_at: { type: Date, default: null },
+    deleted_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );
 
-
+salaryPaymentSchema.index({ school_id: 1, is_deleted: 1 }, { name: "salary_payment_school_deleted_v1" });
 salaryPaymentSchema.index({ school_id: 1, teacher_id: 1, salary_period: 1 }, { unique: true, name: "salary_payment_school_teacher_period_unique_v1" });
 
 const SalaryPayment: Model<ISalaryPayment> =

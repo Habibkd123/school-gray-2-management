@@ -20,14 +20,7 @@ const streamSchema = new Schema<IStream>(
 streamSchema.index({ school_id: 1, name: 1 }, { unique: true, name: "stream_school_name_unique_v1" });
 
 const Stream: Model<IStream> =
-  mongoose.models.Stream && mongoose.models.Stream.schema.paths.status?.options?.enum?.includes("Archived")
-    ? (mongoose.models.Stream as Model<IStream>)
-    : (() => {
-        delete mongoose.models.Stream;
-        if (mongoose.connection && (mongoose.connection as any).models && (mongoose.connection as any).models.Stream) {
-          delete (mongoose.connection as any).models.Stream;
-        }
-        return mongoose.model<IStream>("Stream", streamSchema);
-      })();
+  (mongoose.models.Stream as Model<IStream>) ||
+  mongoose.model<IStream>("Stream", streamSchema);
 
 export default Stream;

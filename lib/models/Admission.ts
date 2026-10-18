@@ -50,6 +50,9 @@ export interface IAdmission extends Document {
   }>;
   submission_date: Date;
   ip_address?: string;
+  is_deleted?: boolean;
+  deleted_at?: Date | null;
+  deleted_by?: mongoose.Types.ObjectId | null;
 }
 
 const fileSubSchema = new Schema(
@@ -129,6 +132,9 @@ const admissionSchema = new Schema<IAdmission>(
     ],
     submission_date: { type: Date, default: Date.now, index: true },
     ip_address: { type: String, trim: true },
+    is_deleted: { type: Boolean, default: false },
+    deleted_at: { type: Date, default: null },
+    deleted_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
   },
   { timestamps: true }
 );
@@ -138,6 +144,7 @@ admissionSchema.index(
   { name: "admission_text_search_v1" }
 );
 
+admissionSchema.index({ school_id: 1, is_deleted: 1 }, { name: "admission_school_deleted_v1" });
 admissionSchema.index({ school_id: 1, status: 1 });
 admissionSchema.index({ school_id: 1, class_id: 1 });
 admissionSchema.index({ school_id: 1, submission_date: -1 });

@@ -544,9 +544,9 @@ export default function SubjectAssignmentPage() {
                         setIsDeleteOpen(true);
                         setActionMenuId(null);
                       }}
-                      className="w-full px-4 py-2.5 text-[14px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-550/10 flex items-center gap-3 font-medium transition-colors"
+                      className="w-full px-4 py-2.5 text-[14px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 font-medium transition-colors"
                     >
-                      <Trash2 className="w-4 h-4 text-rose-450" /> Delete
+                      <Trash2 className="w-4 h-4 text-rose-500" /> Delete
                     </button>
                   </>
                 )}

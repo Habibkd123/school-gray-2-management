@@ -7,6 +7,7 @@ import { validate } from "@/lib/utils/validate";
 import Student from "@/lib/models/Student";
 import Teacher from "@/lib/models/Teacher";
 import Class from "@/lib/models/Class";
+import User from "@/lib/models/User";
 
 // GET /api/schools - List all schools for Super Admin
 export async function GET(request: NextRequest) {
@@ -117,8 +118,44 @@ export async function POST(request: NextRequest) {
       is_active: body.is_active !== false,
     });
 
+    // ─── Automated School Admin Account Creation ───────────────────
+    const adminEmail = (body.admin_email || `admin@${slug}.com`).toLowerCase().trim();
+    const adminName = (body.admin_name || `${body.name.trim()} Admin`).trim();
+    const rawAdminPassword = body.admin_password || "Master#2026";
+    const adminUsername = `admin.${slug}.myschoollife`;
+
+    // Check if an admin with this email exists for this school
+    let adminUser = await User.findOne({ email: adminEmail, school_id: school._id });
+    if (!adminUser) {
+      adminUser = await User.create({
+        school_id: school._id,
+        name: adminName,
+        email: adminEmail,
+        username: adminUsername,
+        password_hash: rawAdminPassword, // pre-save bcrypt hook hashes this
+        plain_password: rawAdminPassword, // set for initial handover
+        role: "school_admin",
+        is_active: true,
+        must_change_password: true,
+      });
+    }
+
     return NextResponse.json(
-      { success: true, message: "School created successfully", data: school },
+      {
+        success: true,
+        message: "School and administrator created successfully",
+        data: {
+          school,
+          admin_user: {
+            id: adminUser._id,
+            name: adminUser.name,
+            email: adminUser.email,
+            username: adminUser.username,
+            temporary_password: rawAdminPassword,
+            must_change_password: adminUser.must_change_password,
+          },
+        },
+      },
       { status: 201 }
     );
   } catch (error: any) {

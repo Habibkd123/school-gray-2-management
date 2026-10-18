@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import Class, { computeSortWeight } from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
+import mongoose from "mongoose";
 import { invalidateServerClassesCache } from "../route";
 import {
   Student,
@@ -98,7 +99,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const auth = requireAuth(req, ["school_admin", "super_admin"]);
   if (auth.error) return auth.error;
-  const { schoolId, user } = auth;
+  const { schoolId, user, userId } = auth;
 
   const { id } = await params;
 
@@ -162,15 +163,82 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const deleted = await Class.findOneAndDelete({ _id: id });
+    const url = new URL(req.url);
+    const isPermanent = url.searchParams.get("permanent") === "true";
 
-    if (!deleted) {
+    if (isPermanent) {
+      const deleted = await Class.findOneAndDelete({ _id: id, school_id: targetSchoolId });
+      if (!deleted) {
+        return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
+      }
+      invalidateServerClassesCache(String(targetSchoolId));
+      return NextResponse.json({ success: true, message: "Class permanently deleted" });
+    }
+
+    const updated = await Class.findOneAndUpdate(
+      { _id: id, school_id: targetSchoolId },
+      {
+        $set: {
+          is_deleted: true,
+          deleted_at: new Date(),
+          deleted_by: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+          status: "Archived",
+        },
+      },
+      { new: true }
+    );
+
+    if (!updated) {
       return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
     }
 
     invalidateServerClassesCache(String(targetSchoolId));
 
-    return NextResponse.json({ success: true, message: "Class deleted successfully" });
+    return NextResponse.json({ success: true, message: "Class archived (soft-deleted) successfully" });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal server error";
+    return NextResponse.json({ success: false, message }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest, { params }: RouteParams) {
+  const auth = requireAuth(req, ["school_admin", "super_admin"]);
+  if (auth.error) return auth.error;
+  const { schoolId, user } = auth;
+  const { id } = await params;
+
+  try {
+    await connectToDatabase();
+    const url = new URL(req.url);
+    const action = url.searchParams.get("action") || "restore";
+
+    const classQuery: any = { _id: id };
+    if (user.role !== "super_admin" && schoolId) {
+      classQuery.school_id = schoolId;
+    }
+
+    if (action === "restore") {
+      const cls = await Class.findOneAndUpdate(
+        classQuery,
+        {
+          $set: {
+            is_deleted: false,
+            deleted_at: null,
+            deleted_by: null,
+            status: "Active",
+          },
+        },
+        { new: true }
+      );
+      if (!cls) {
+        return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
+      }
+
+      invalidateServerClassesCache(String(cls.school_id));
+      return NextResponse.json({ success: true, message: "Class restored successfully", data: cls });
+    }
+
+    return NextResponse.json({ success: false, message: "Unsupported action" }, { status: 400 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ success: false, message }, { status: 500 });

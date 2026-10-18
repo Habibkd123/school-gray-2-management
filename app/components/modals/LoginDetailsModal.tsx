@@ -313,24 +313,32 @@ export function LoginDetailsModal({ isOpen, onClose, student, parent, teacher, t
                       {mustChangePassword ? "Default Password" : "Password"}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-slate-900 dark:text-white font-sans text-[12px] tracking-widest">
-                        {showPassword ? defaultPassword : "••••••••"}
-                      </span>
-                      <button
-                        onClick={() => setShowPassword(v => !v)}
-                        className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-primary transition-colors dark:text-slate-400"
-                        title={showPassword ? "Hide password" : "Show password"}
-                      >
-                        {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                      </button>
-                      {showPassword && (
-                        <button
-                          onClick={() => copyToClipboard(defaultPassword, "password")}
-                          className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-primary transition-colors dark:text-slate-400"
-                          title="Copy password"
-                        >
-                          {copiedField === "password" ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
-                        </button>
+                      {mustChangePassword ? (
+                        <>
+                          <span className="font-bold text-slate-900 dark:text-white font-sans text-[12px] tracking-widest">
+                            {showPassword ? defaultPassword : "••••••••"}
+                          </span>
+                          <button
+                            onClick={() => setShowPassword(v => !v)}
+                            className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-primary transition-colors dark:text-slate-400"
+                            title={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          </button>
+                          {showPassword && (
+                            <button
+                              onClick={() => copyToClipboard(defaultPassword, "password")}
+                              className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md bg-slate-200 dark:bg-slate-700 text-slate-500 hover:text-primary transition-colors dark:text-slate-400"
+                              title="Copy password"
+                            >
+                              {copiedField === "password" ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                            </button>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-[12px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                          Private Password Set
+                        </span>
                       )}
                     </div>
                   </div>

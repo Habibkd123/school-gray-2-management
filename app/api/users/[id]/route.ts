@@ -7,7 +7,7 @@ type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-// GET /api/users/[id] - Fetch live user data (used by LoginDetailsModal to get current password)
+// GET /api/users/[id] - Fetch live user data (used by LoginDetailsModal to get onboarding status)
 export async function GET(request: NextRequest, context: RouteContext) {
   const auth = requireAuth(request, ["school_admin", "super_admin", "teacher"]);
   if (auth.error) return auth.error;
@@ -16,13 +16,27 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
   try {
     await connectDB();
-    const user = await User.findById(id).select("name email username role is_active plain_password must_change_password");
+    const query: Record<string, any> = { _id: id };
+    if (auth.role !== "super_admin") {
+      if (!auth.schoolId) {
+        return NextResponse.json(
+          { success: false, message: "No school context" },
+          { status: 403 }
+        );
+      }
+      query.school_id = auth.schoolId;
+    }
+
+    const user = await User.findOne(query).select("+plain_password name email username role is_active must_change_password");
     if (!user) {
       return NextResponse.json(
         { success: false, message: "User not found" },
         { status: 404 }
       );
     }
+
+    // Only expose default plain_password if user hasn't changed it yet (onboarding phase)
+    const safePlainPassword = user.must_change_password ? (user.plain_password || null) : null;
 
     return NextResponse.json({
       success: true,
@@ -33,7 +47,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         username: user.username,
         role: user.role,
         is_active: user.is_active,
-        plain_password: user.plain_password,
+        plain_password: safePlainPassword,
         must_change_password: user.must_change_password,
       }
     }, {
@@ -54,7 +68,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
 // PUT /api/users/[id] - Update user details/status
 export async function PUT(request: NextRequest, context: RouteContext) {
-  const auth = requireAuth(request, ["super_admin"]);
+  const auth = requireAuth(request, ["super_admin", "school_admin"]);
   if (auth.error) return auth.error;
 
   const { id } = await context.params;
@@ -63,7 +77,18 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     await connectDB();
     const body = await request.json();
 
-    const user = await User.findById(id);
+    const query: Record<string, any> = { _id: id };
+    if (auth.role !== "super_admin") {
+      if (!auth.schoolId) {
+        return NextResponse.json(
+          { success: false, message: "No school context" },
+          { status: 403 }
+        );
+      }
+      query.school_id = auth.schoolId;
+    }
+
+    const user = await User.findOne(query);
     if (!user) {
       return NextResponse.json(
         { success: false, message: "User not found" },
@@ -75,7 +100,10 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     if (body.name !== undefined) user.name = body.name.trim();
     if (body.email !== undefined) user.email = body.email.toLowerCase().trim();
     if (body.is_active !== undefined) user.is_active = !!body.is_active;
-    if (body.schoolId !== undefined) user.school_id = body.schoolId;
+    // Only super_admin can change school assignment
+    if (auth.role === "super_admin" && body.schoolId !== undefined) {
+      user.school_id = body.schoolId;
+    }
 
     await user.save();
 
@@ -86,7 +114,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: "Principal",
+        role: user.role,
         schoolId: user.school_id,
         is_active: user.is_active
       }

@@ -587,11 +587,11 @@ export default function CollectFeesPage() {
                         const isPaid = balance <= 0;
                       const isSelected = selectedFees.includes(ft.name);
 
-                      let statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-rose-50 text-rose-705 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-100 dark:border-rose-550/20">Pending</span>;
+                      let statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-100 dark:border-rose-500/20">Pending</span>;
                       if (isPaid) {
-                        statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-705 dark:bg-emerald-500/10 dark:text-emerald-450 border border-emerald-100 inline-flex items-center gap-0.5">Paid</span>;
+                        statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-100 inline-flex items-center gap-0.5">Paid</span>;
                       } else if (paid > 0) {
-                        statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-705 dark:bg-amber-500/10 dark:text-amber-450 border border-amber-100">Partial</span>;
+                        statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border border-amber-100">Partial</span>;
                       }
 
                       return (

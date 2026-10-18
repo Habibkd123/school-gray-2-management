@@ -23,7 +23,10 @@ export interface IStudentFeePayment extends Document {
   waiver?: number;
   adjustment?: number;
   round_off?: number;
-  collected_by?: mongoose.Types.ObjectId | string | null;
+  collected_by?: mongoose.Types.ObjectId | null;
+  is_deleted?: boolean;
+  deleted_at?: Date | null;
+  deleted_by?: mongoose.Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,11 +57,15 @@ const studentFeePaymentSchema = new Schema<IStudentFeePayment>(
     waiver: { type: Number, default: 0 },
     adjustment: { type: Number, default: 0 },
     round_off: { type: Number, default: 0 },
-    collected_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
+    collected_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
+    is_deleted: { type: Boolean, default: false },
+    deleted_at: { type: Date, default: null },
+    deleted_by: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null }
   },
   { timestamps: true }
 );
 
+studentFeePaymentSchema.index({ school_id: 1, is_deleted: 1 }, { name: "fee_payment_school_deleted_v1" });
 // Fast receipt history lookups: "show me all payments for student X, newest first"
 studentFeePaymentSchema.index({ school_id: 1, student_id: 1, createdAt: -1 }, { name: "fee_payment_school_student_created_v1" });
 // Fast query for student fee calculation sorted by payment_date

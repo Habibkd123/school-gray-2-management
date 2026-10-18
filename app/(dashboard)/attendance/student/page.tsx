@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   GraduationCap,
   User,
+  Users,
   Printer,
   Download,
   Calendar,
@@ -123,7 +124,7 @@ export default function StudentAttendancePage() {
   }, [classes, isTeacher, teacherProfile, assignments, academicYear]);
 
   // Filters
-  const [filterYear, setFilterYear] = useState(academicYear || "2026");
+  const [filterYear, setFilterYear] = useState(academicYear || "2026-2027");
   const [filterDate, setFilterDate] = useState(
     new Date().toISOString().split("T")[0],
   );
@@ -131,6 +132,13 @@ export default function StudentAttendancePage() {
   const [filterStreamId, setFilterStreamId] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Sync filterYear when global academicYear changes
+  useEffect(() => {
+    if (academicYear) {
+      setFilterYear(academicYear);
+    }
+  }, [academicYear]);
 
   // Mode state
   const [mode, setMode] = useState<"take" | "view" | "edit">("take");
@@ -152,7 +160,7 @@ export default function StudentAttendancePage() {
     if (typeof window !== "undefined") {
       try {
         const today = new Date().toISOString().split("T")[0];
-        const yr = academicYear || "2026";
+        const yr = academicYear || "2026-2027";
         const raw = sessionStorage.getItem(`cache_student_att_${yr}_${today}_`);
         if (raw) {
           const parsed = JSON.parse(raw);
@@ -166,7 +174,7 @@ export default function StudentAttendancePage() {
     if (typeof window !== "undefined") {
       try {
         const today = new Date().toISOString().split("T")[0];
-        const yr = academicYear || "2026";
+        const yr = academicYear || "2026-2027";
         const raw = sessionStorage.getItem(`cache_student_att_${yr}_${today}_`);
         if (raw) {
           const parsed = JSON.parse(raw);
@@ -297,10 +305,11 @@ export default function StudentAttendancePage() {
       fetchStudents({
         classId: filterClassId,
         streamId: filterStreamId || undefined,
+        academic_year: filterYear,
         limit: 500,
       });
     }
-  }, [filterClassId, filterStreamId, fetchStudents]);
+  }, [filterClassId, filterStreamId, filterYear, fetchStudents]);
 
   // Fetch existing class attendance record
   useEffect(() => {
@@ -595,21 +604,37 @@ export default function StudentAttendancePage() {
   // Local matching of search query + status filters
   const filteredStudents = useMemo(() => {
     return students.filter((s) => {
-      const matchQuery = !searchQuery
+      const q = searchQuery.toLowerCase().trim();
+      const matchQuery = !q
         ? true
-        : s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (s.admission_no || "")
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        (s.roll_no || "").toLowerCase().includes(searchQuery.toLowerCase());
+        : (s.name || "").toLowerCase().includes(q) ||
+        (s.admission_no || "").toLowerCase().includes(q) ||
+        (s.roll_no || "").toLowerCase().includes(q);
 
-      const matchStatus = !statusFilter
-        ? true
-        : (attendanceRecords[s._id]?.status || "present") === statusFilter;
+      const studentStatus = attendanceRecords[s._id]?.status || "present";
+      let matchStatus = true;
+      if (statusFilter) {
+        if (statusFilter === "leave") {
+          matchStatus = studentStatus === "leave" || studentStatus === "medical_leave";
+        } else {
+          matchStatus = studentStatus === statusFilter;
+        }
+      }
 
       return matchQuery && matchStatus;
     });
   }, [students, searchQuery, statusFilter, attendanceRecords]);
+
+  // Compute available academic year sessions dynamically from classes, global state, and fallbacks
+  const yearOptions = useMemo(() => {
+    const set = new Set<string>(["2025-2026", "2026-2027", "2027-2028"]);
+    if (academicYear) set.add(academicYear);
+    if (filterYear) set.add(filterYear);
+    classes.forEach((c) => {
+      if (c.academic_year) set.add(c.academic_year);
+    });
+    return Array.from(set).sort();
+  }, [classes, academicYear, filterYear]);
 
   return (
     <>
@@ -764,14 +789,17 @@ export default function StudentAttendancePage() {
                   onChange={(e) => setFilterYear(e.target.value)}
                   className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none"
                 >
-                  <option value="2026">Session 2026</option>
-                  <option value="2027">Session 2027</option>
+                  {yearOptions.map((yr) => (
+                    <option key={yr} value={yr}>
+                      Session {yr}
+                    </option>
+                  ))}
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-450 absolute right-3 top-2.5 pointer-events-none" />
               </div>
             </div>
 
-            <div className="flex flex-col gap-1 w-full sm:w-44 p-2">
+            <div className="flex flex-col gap-1 w-full sm:w-44">
               <label className="text-[11px] font-bold uppercase tracking-wider text-slate-450 mb-1">
                 Attendance Date
               </label>
@@ -779,14 +807,7 @@ export default function StudentAttendancePage() {
                 type="date"
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value)}
-                className="
-              bg-slate-50 px-2 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none
-    h-9
-    w-full
-    focus:border-blue-500
-    focus:ring-2
-    focus:ring-blue-100
-  "
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none h-[34px] focus:border-primary"
               />
             </div>
 
@@ -850,6 +871,8 @@ export default function StudentAttendancePage() {
                       <option value="present">Present</option>
                       <option value="absent">Absent</option>
                       <option value="leave">Leave</option>
+                      <option value="late">Late</option>
+                      <option value="half_day">Half Day</option>
                     </select>
                     <ChevronDown className="w-4 h-4 text-slate-455 absolute right-3 top-2.5 pointer-events-none" />
                   </div>
@@ -1024,7 +1047,7 @@ export default function StudentAttendancePage() {
             ) : filteredClasses.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm gap-3 text-slate-400">
                 <GraduationCap className="w-12 h-12 opacity-20" />
-                <p className="text-xs font-bold">No active classes registered.</p>
+                <p className="text-xs font-bold">No active classes registered for Session {filterYear}.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left mb-5">
@@ -1265,9 +1288,11 @@ export default function StudentAttendancePage() {
                           <button
                             onClick={handleSave}
                             disabled={
-                              submitting || !!(attendance && !editReason.trim())
+                              submitting ||
+                              students.length === 0 ||
+                              !!(attendance && !editReason.trim())
                             }
-                            className="px-4 py-2 bg-[#E29013] hover:bg-[#c97f10] text-white text-[13px] font-bold rounded-md shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                            className="px-4 py-2 bg-[#E29013] hover:bg-[#c97f10] text-white text-[13px] font-bold rounded-md shadow-sm transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                           >
                             {submitting ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -1360,9 +1385,19 @@ export default function StudentAttendancePage() {
                           <tr>
                             <td
                               colSpan={7}
-                              className="table-empty px-4 py-4 text-center"
+                              className="table-empty px-4 py-12 text-center"
                             >
-                              No students found matching your criteria.
+                              <div className="flex flex-col items-center justify-center gap-2">
+                                <Users className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                                <p className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                                  No students found
+                                </p>
+                                <p className="text-xs text-slate-400 max-w-sm">
+                                  {searchQuery || statusFilter
+                                    ? "No students match your active search or status filter."
+                                    : `No students are enrolled in this class for Session ${filterYear}.`}
+                                </p>
+                              </div>
                             </td>
                           </tr>
                         ) : (

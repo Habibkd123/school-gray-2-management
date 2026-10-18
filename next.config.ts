@@ -152,9 +152,9 @@ const nextConfig: NextConfig = {
     return [
       { source: "/signup",          destination: "/register",                     permanent: true  },
       { source: "/admin-sign-up",   destination: "/register",                     permanent: false },
-      { source: "/admin-signup",    destination: "/register",                     permanent: false },
-      { source: "/fees-collection", destination: "/fees-collection/collect-fees", permanent: false },
-      { source: "/academic",        destination: "/academic/class-room",           permanent: false },
+      { source: "/admin-signup",    destination: "/register", permanent: false },
+      { source: "/fees-collection", destination: "/fees",     permanent: false },
+      { source: "/academic",        destination: "/academic/class-room", permanent: false },
       { source: "/examination",     destination: "/examination/exam",              permanent: false },
       { source: "/leave",           destination: "/leave/apply",                   permanent: false },
       { source: "/reports",         destination: "/reports/fees-report",           permanent: false },

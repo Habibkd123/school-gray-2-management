@@ -44,7 +44,9 @@ const AdminDashboard = React.memo(function AdminDashboard({ user }: AdminDashboa
   const activeTeachers   = dashboardStats?.teachers.active  ?? 0;
   const inactiveTeachers = dashboardStats?.teachers.inactive ?? 0;
 
-  const totalClasses  = dashboardStats?.classes.total ?? 0;
+  const totalClasses    = dashboardStats?.classes.total ?? 0;
+  const activeClasses   = dashboardStats?.classes.active ?? 0;
+  const inactiveClasses = dashboardStats?.classes.inactive ?? 0;
 
   const emergencyLeaves    = dashboardStats?.attendance?.marked ? (dashboardStats.attendance.leave   ?? 0) : 0;
   const absentLeavesCount  = dashboardStats?.attendance?.marked ? (dashboardStats.attendance.absent  ?? 0) : 0;
@@ -154,7 +156,9 @@ const AdminDashboard = React.memo(function AdminDashboard({ user }: AdminDashboa
                 </div>
               </div>
               <div className="flex items-center justify-between text-[12px] pt-4 border-t border-slate-100 dark:border-slate-800/50">
-                <span className="text-slate-500 dark:text-slate-400">Sections : <strong className="text-slate-900 dark:text-white">{totalClasses}</strong></span>
+                <span className="text-slate-500 dark:text-slate-400">Active : <strong className="text-slate-900 dark:text-white">{activeClasses}</strong></span>
+                <span className="text-slate-300">|</span>
+                <span className="text-slate-500 dark:text-slate-400">Inactive : <strong className="text-slate-900 dark:text-white">{inactiveClasses}</strong></span>
               </div>
             </div>
           </>

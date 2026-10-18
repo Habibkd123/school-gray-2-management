@@ -9,7 +9,7 @@ export interface IUser extends Document {
   email: string;
   username: string;
   password_hash: string;
-  plain_password?: string;
+  plain_password?: string | null;
   role: UserRole;
   is_active: boolean;
   must_change_password: boolean; // true = first login, force password change
@@ -37,7 +37,7 @@ const userSchema = new Schema<IUser>(
       trim: true,
     },
     password_hash: { type: String, required: true, select: false }, // Never returned by default
-    plain_password: { type: String, default: null },
+    plain_password: { type: String, default: null, select: false }, // Hidden by default, only for onboarding phase
     role: {
       type: String,
       enum: ["super_admin", "school_admin", "accountant", "teacher", "student", "parent"],

@@ -139,7 +139,7 @@ export async function GET(req: NextRequest) {
     const queryPromise = (async () => {
       await connectToDatabase();
 
-      let query: any = { school_id: schoolId };
+      let query: any = { school_id: schoolId, is_deleted: { $ne: true } };
 
       // Security check: Teachers can only view their own salary history
       if (role === "teacher") {
@@ -474,7 +474,8 @@ export async function POST(req: NextRequest) {
     const existingPayment = await SalaryPayment.findOne({
       school_id: schoolId,
       teacher_id: teacher_id,
-      salary_period: salary_period
+      salary_period: salary_period,
+      is_deleted: { $ne: true },
     });
 
     if (existingPayment) {

@@ -7,7 +7,7 @@ import { cacheSync } from "@/lib/utils/cache-sync";
 export interface DashboardStats {
   students: { total: number; active: number; inactive: number };
   teachers: { total: number; active: number; inactive: number };
-  classes:  { total: number };
+  classes:  { total: number; active: number; inactive: number };
   subjects: { total: number };
   attendance: {
     total: number;

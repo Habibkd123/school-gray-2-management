@@ -16,9 +16,15 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
     const limit = Math.max(1, parseInt(url.searchParams.get("limit") || "25"));
 
+    const showDeleted = url.searchParams.get("show_deleted") === "true";
+    const query: any = { school_id: schoolId };
+    if (!showDeleted) {
+      query.is_deleted = { $ne: true };
+    }
+
     const { items: notices, total, totalPages } = await paginateQuery(
       Notice,
-      { school_id: schoolId },
+      query,
       {
         page,
         limit,

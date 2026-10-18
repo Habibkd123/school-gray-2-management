@@ -144,8 +144,65 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
   }
 }
 
-// DELETE: Delete a salary payment (acts as Cancel Payment for Paid records)
+// DELETE: Soft delete / cancel a salary payment (permanent=true for hard delete)
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  const { schoolId, userId, error } = requireAuth(req, ["school_admin", "super_admin"]);
+  if (error) return error;
+
+  try {
+    const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid payment ID" }, { status: 400 });
+    }
+
+    await connectToDatabase();
+
+    const url = new URL(req.url);
+    const isPermanent = url.searchParams.get("permanent") === "true";
+
+    if (isPermanent) {
+      const deleted = await SalaryPayment.findOneAndDelete({ _id: id, school_id: schoolId });
+      if (!deleted) {
+        return NextResponse.json({ success: false, message: "Salary record not found" }, { status: 404 });
+      }
+
+      invalidateSalariesCache(schoolId);
+      return NextResponse.json({ success: true, message: "Payroll record permanently deleted." });
+    }
+
+    const updated = await SalaryPayment.findOneAndUpdate(
+      { _id: id, school_id: schoolId },
+      {
+        $set: {
+          is_deleted: true,
+          deleted_at: new Date(),
+          deleted_by: userId ? new mongoose.Types.ObjectId(userId) : undefined,
+          status: "Draft",
+        },
+      },
+      { new: true }
+    );
+
+    if (!updated) {
+      return NextResponse.json({ success: false, message: "Salary record not found" }, { status: 404 });
+    }
+
+    invalidateSalariesCache(schoolId);
+
+    return NextResponse.json({
+      success: true,
+      message: "Payroll payment cancelled successfully (soft deleted)."
+    });
+
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, message: err.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: NextRequest, { params }: RouteParams) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
 
@@ -157,18 +214,37 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
     await connectToDatabase();
 
-    const deleted = await SalaryPayment.findOneAndDelete({ _id: id, school_id: schoolId });
-    if (!deleted) {
-      return NextResponse.json({ success: false, message: "Salary record not found" }, { status: 404 });
+    const url = new URL(req.url);
+    const action = url.searchParams.get("action") || "restore";
+
+    if (action === "restore") {
+      const updated = await SalaryPayment.findOneAndUpdate(
+        { _id: id, school_id: schoolId },
+        {
+          $set: {
+            is_deleted: false,
+            deleted_at: null,
+            deleted_by: null,
+            status: "Draft",
+          },
+        },
+        { new: true }
+      );
+
+      if (!updated) {
+        return NextResponse.json({ success: false, message: "Salary record not found" }, { status: 404 });
+      }
+
+      invalidateSalariesCache(schoolId);
+
+      return NextResponse.json({
+        success: true,
+        message: "Payroll record restored successfully",
+        data: updated,
+      });
     }
 
-    invalidateSalariesCache(schoolId);
-
-    return NextResponse.json({
-      success: true,
-      message: deleted.status === "Paid" ? "Payment canceled and payroll record deleted." : "Payroll record deleted."
-    });
-
+    return NextResponse.json({ success: false, message: "Unsupported action" }, { status: 400 });
   } catch (err: any) {
     return NextResponse.json(
       { success: false, message: err.message || "Internal server error" },
