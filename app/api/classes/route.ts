@@ -263,16 +263,52 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const trimmedName = name.trim();
+    const trimmedSection = section?.trim() || "";
+    const trimmedYear = academic_year.trim();
+
+    // Check if an existing class exists (including soft-deleted)
+    const existingClass = await Class.findOne({
+      school_id: schoolId,
+      name: trimmedName,
+      section: trimmedSection,
+      academic_year: trimmedYear,
+    });
+
+    if (existingClass) {
+      if (existingClass.is_deleted) {
+        // Seamlessly revive the soft-deleted class
+        existingClass.is_deleted = false;
+        existingClass.deleted_at = null;
+        existingClass.deleted_by = null;
+        existingClass.status = status || "Active";
+        existingClass.class_teacher_id = class_teacher_id || null;
+        existingClass.capacity = capacity ? parseInt(capacity) : 40;
+        if (class_code) existingClass.class_code = class_code.trim().toUpperCase();
+        existingClass.sort_weight = computeSortWeight(trimmedName);
+        await existingClass.save();
+
+        const populated = await existingClass.populate("class_teacher_id", "name employee_id");
+        invalidateServerClassesCache(String(schoolId));
+        return NextResponse.json({ success: true, data: populated, message: "Class restored and activated" }, { status: 201 });
+      } else {
+        return NextResponse.json(
+          { success: false, message: "A class with this name, section, and academic year already exists" },
+          { status: 409 }
+        );
+      }
+    }
+
     const newClass = await Class.create({
       school_id:        schoolId as string,
-      name:             name.trim(),
-      section:          section?.trim() || "",
+      name:             trimmedName,
+      section:          trimmedSection,
       class_code:       class_code?.trim().toUpperCase() || undefined,
       status:           status || "Active",
-      academic_year:    academic_year.trim(),
+      academic_year:    trimmedYear,
       class_teacher_id: class_teacher_id || null,
       capacity:         capacity ? parseInt(capacity) : 40,
-      sort_weight:      computeSortWeight(name.trim()),  // set on create too (pre-save also handles it)
+      sort_weight:      computeSortWeight(trimmedName),  // set on create too (pre-save also handles it)
     });
 
     const populated = await newClass.populate("class_teacher_id", "name employee_id");

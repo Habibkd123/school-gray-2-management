@@ -29,17 +29,15 @@ if (!cached) {
 }
 
 const MONGOOSE_OPTS: mongoose.ConnectOptions = {
-  // Connection pool — 10 for serverless (avoids Atlas connection exhaustion), 50 for Node/dev
+  // Connection pool — keep warm connections ready to eliminate TLS handshake latency
   maxPoolSize: process.env.VERCEL ? 10 : 50,
-  minPoolSize: process.env.VERCEL ? 0 : 2,
+  minPoolSize: process.env.VERCEL ? 0 : 5,
 
   // Timeout settings
   serverSelectionTimeoutMS: 5_000, // fast failover after 5s
-  socketTimeoutMS: 30_000,         // close unresponsive sockets after 30s
+  socketTimeoutMS: 45_000,         // keep sockets responsive
   connectTimeoutMS: 10_000,        // TCP connect timeout 10s
-  maxIdleTimeMS: 30_000,           // close idle connections after 30s to keep connection pool fresh
-
-  // Keep connections alive through load-balancer idle timeouts
+  maxIdleTimeMS: 120_000,          // keep connection pool active for 2 minutes before recycling
   heartbeatFrequencyMS: 10_000,
 };
 

@@ -268,8 +268,12 @@ export default function ClassesPage() {
   const handleDelete = async () => {
     if (!selectedClass) return;
     setSubmitting(true);
-    await deleteClass(selectedClass._id);
+    const res = await deleteClass(selectedClass._id);
     setSubmitting(false);
+    if (!res.success) {
+      alert(res.message || "Failed to delete class");
+      return;
+    }
     setIsDeleteOpen(false);
     doFetch();
   };

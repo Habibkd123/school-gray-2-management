@@ -39,21 +39,25 @@ export const ClassService = {
     if (!allClassesPromise) {
       allClassesPromise = (async () => {
         try {
+          const authHeaders = getAuthHeaders();
           const res = await fetch("/api/classes?limit=all&include_stats=false", {
-            headers: getAuthHeaders(),
+            headers: authHeaders,
             cache: "no-store",
           });
           if (!res.ok) throw new Error("Failed to fetch classes from ClassService");
           const json = await res.json();
           if (!json.success) throw new Error(json.message || "Failed to fetch classes");
-          allClassesCache = json.data.classes || [];
-          cacheTime = Date.now();
-          if (allClassesCache && allClassesCache.length > 0 && typeof window !== "undefined") {
-            try {
-              sessionStorage.setItem("sm_classes_cache", JSON.stringify({ classes: allClassesCache, timestamp: cacheTime }));
-            } catch { }
+          const fetchedClasses = json.data?.classes || [];
+          if (fetchedClasses.length > 0) {
+            allClassesCache = fetchedClasses;
+            cacheTime = Date.now();
+            if (typeof window !== "undefined") {
+              try {
+                sessionStorage.setItem("sm_classes_cache", JSON.stringify({ classes: allClassesCache, timestamp: cacheTime }));
+              } catch { }
+            }
           }
-          return allClassesCache!;
+          return fetchedClasses;
         } catch (err) {
           allClassesPromise = null;
           throw err;
@@ -63,6 +67,7 @@ export const ClassService = {
 
     try {
       const classes = await allClassesPromise;
+      allClassesPromise = null; // Always clear in-flight promise after resolution
       return this.filterAndSortClasses(classes, options);
     } catch (err) {
       allClassesPromise = null;
