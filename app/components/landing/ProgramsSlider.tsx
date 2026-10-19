@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Program {
@@ -82,10 +83,13 @@ export default function ProgramsSlider({ programs }: { programs: Program[] }) {
             >
               <div className="bg-white h-full rounded-sm border border-slate-200 shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col dark:bg-slate-900 dark:border-slate-800">
                 <div className="h-48 overflow-hidden relative">
-                  <img 
+                  <Image 
                     src={p.img || "https://images.unsplash.com/photo-1587691592099-24045742c181?q=80&w=600&auto=format&fit=crop"} 
                     alt={p.title} 
-                    className="w-full h-full object-cover" 
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    quality={75}
+                    className="object-cover" 
                   />
                   <div className="absolute top-4 left-4 bg-[var(--sidebar-bg)] text-white px-3 py-1 text-[11px] font-bold tracking-widest uppercase shadow-md">
                     {p.age}

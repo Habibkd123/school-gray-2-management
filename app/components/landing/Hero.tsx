@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Play } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { motion } from "framer-motion";
@@ -66,12 +67,14 @@ export function Hero({ data }: { data?: HeroData | null }) {
       <div className="absolute inset-0 z-0 bg-[#0F2336]">
         {/* Dark gradient rendered immediately — visible before image loads */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0F2336]/90 via-[#1E3A5F]/60 to-[#0F2336]/95 z-10" />
-        <img
+        <Image
           src={imageUrl}
           alt="Campus"
-          fetchPriority="high"
-          loading="eager"
-          className="w-full h-full object-cover opacity-60 scale-105"
+          fill
+          priority
+          sizes="100vw"
+          quality={80}
+          className="object-cover opacity-60 scale-105"
         />
         {/* Dynamic Gradient Overlay on top of image */}
         <div className="absolute inset-0 bg-gradient-to-b from-sidebar/60 via-primary/40 to-sidebar/90 z-20" />

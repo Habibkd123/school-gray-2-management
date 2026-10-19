@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { Calendar, ChevronRight, FileText, Bell, Award } from "lucide-react";
 import { SectionHeading } from "./SectionHeading";
 
@@ -61,10 +62,13 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
               return (
                 <div key={item._id ?? idx} className="bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 dark:bg-slate-900 dark:border-slate-800">
                   <div className="h-56 overflow-hidden relative">
-                    <img 
+                    <Image 
                       src={img} 
                       alt={item.title} 
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      quality={75}
+                      className="object-cover group-hover:scale-110 transition-transform duration-700" 
                     />
                     <div className={`absolute top-4 left-4 ${cfg.color} text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded-sm`}>
                       {cfg.label}
@@ -105,10 +109,13 @@ export function LatestNews({ data }: { data?: NewsItem[] | null }) {
             {DEFAULT_NEWS.map((item, idx) => (
               <div key={idx} className="bg-white rounded-sm shadow-md border border-slate-200 overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 dark:bg-slate-900 dark:border-slate-800">
                 <div className="h-56 overflow-hidden relative">
-                  <img 
+                  <Image 
                     src={item.img} 
                     alt={item.title} 
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    quality={75}
+                    className="object-cover group-hover:scale-110 transition-transform duration-700" 
                   />
                   <div className={`absolute top-4 left-4 ${item.color} text-white px-3 py-1 text-[11px] font-bold uppercase tracking-widest rounded-sm`}>
                     {item.tag}

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, X, Phone, Mail, LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
 import { useAuth } from "@/app/context/auth";
 
@@ -96,8 +97,8 @@ export function Header({ contact, admissions, schoolName, schoolSubtitle, logoUr
 
           {/* Logo — served from server props, zero flash */}
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[var(--primary)] flex items-center justify-center dark:bg-slate-900">
-              <img src={displayLogo} alt={`${displayName} Logo`} className="w-full h-full object-contain p-1" />
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-white shadow-md border-2 border-[var(--primary)] flex items-center justify-center dark:bg-slate-900 relative">
+              <Image src={displayLogo} alt={`${displayName} Logo`} fill sizes="48px" className="object-contain p-1" priority />
             </div>
             <div className="flex flex-col">
               <span className="text-[20px] font-black tracking-tight text-[#231F20] leading-none">

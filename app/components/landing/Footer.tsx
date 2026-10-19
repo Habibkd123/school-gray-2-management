@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, Phone, Mail, ExternalLink } from "lucide-react";
 import { usePublicSchoolInfo } from "@/app/hooks/usePublicSchoolInfo";
 
@@ -113,8 +114,8 @@ export function Footer({ contact, about, admissions }: FooterProps) {
           {/* Brand Column */}
           <div className="col-span-1">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-12 h-12 rounded-full overflow-hidden bg-white shrink-0 flex items-center justify-center p-1 border-2 border-[var(--primary)] dark:bg-slate-900">
-                <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+              <div className="w-12 h-12 rounded-full overflow-hidden bg-white shrink-0 flex items-center justify-center p-1 border-2 border-[var(--primary)] dark:bg-slate-900 relative">
+                <Image src="/logo.png" alt="Logo" fill sizes="48px" className="object-contain p-1" />
               </div>
               <div className="flex flex-col">
                 <span className="text-[20px] font-black tracking-tight text-white leading-none">

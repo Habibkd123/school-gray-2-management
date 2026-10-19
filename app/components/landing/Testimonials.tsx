@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Quote, BookOpen } from "lucide-react";
 
@@ -99,8 +100,15 @@ export function Testimonials({ data }: TestimonialsProps) {
               
               <div className="relative z-10 flex flex-col h-full">
                 <div className="mb-6 relative">
-                  <div className="w-20 h-20 rounded-lg overflow-hidden border-2 border-primary/20 dark:border-white/10 shadow-md">
-                    <img src={test.img} alt={test.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  <div className="w-20 h-20 rounded-lg overflow-hidden border-2 border-primary/20 dark:border-white/10 shadow-md relative">
+                    <Image 
+                      src={test.img} 
+                      alt={test.name} 
+                      fill 
+                      sizes="80px"
+                      quality={80}
+                      className="object-cover group-hover:scale-110 transition-transform duration-500" 
+                    />
                   </div>
                 </div>
 

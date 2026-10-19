@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Flag, Eye, Building2, Users, GraduationCap } from "lucide-react";
 
@@ -67,7 +68,9 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
           {managementTeam.slice(0, 4).map((member) => (
             <div key={member.name} className="flex items-center gap-3 bg-slate-100/50 dark:bg-white/5 p-3 rounded-lg border border-slate-200/50 dark:border-white/10">
               {member.photo_url ? (
-                <img src={member.photo_url} alt={member.name} className="w-12 h-12 rounded-full object-cover border border-slate-200 dark:border-white/20" />
+                <div className="w-12 h-12 rounded-full overflow-hidden relative flex-shrink-0 border border-slate-200 dark:border-white/20">
+                  <Image src={member.photo_url} alt={member.name} fill sizes="48px" quality={80} className="object-cover" />
+                </div>
               ) : (
                 <div className="w-12 h-12 rounded-full bg-primary/10 dark:bg-white/5 flex items-center justify-center border border-primary/20 dark:border-white/10">
                   <GraduationCap className="w-5 h-5 text-primary" />
@@ -162,7 +165,7 @@ export function AboutSchool({ data }: { data?: AboutData | null }) {
 
                       {item.image && (
                         <div className="mt-6 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 h-48 w-full relative">
-                          <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                          <Image src={item.image} alt={item.title} fill sizes="(max-width: 768px) 100vw, 50vw" quality={75} className="object-cover" />
                         </div>
                       )}
 

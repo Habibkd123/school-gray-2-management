@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 
 interface GalleryPhoto {
@@ -48,11 +49,13 @@ export function Gallery({ data }: { data?: GalleryData | null }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {photos.map((img, idx) => (
             <div key={idx} className="relative h-72 rounded-sm overflow-hidden group cursor-pointer border-2 border-transparent hover:border-primary transition-colors">
-              <img 
+              <Image 
                 src={img.src} 
                 alt={img.label} 
-                loading="lazy"
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                quality={75}
+                className="object-cover group-hover:scale-110 transition-transform duration-700" 
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[var(--sidebar-bg)]/90 via-[var(--sidebar-bg)]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
                 <span className="text-white font-bold text-lg tracking-wide">{img.label}</span>
