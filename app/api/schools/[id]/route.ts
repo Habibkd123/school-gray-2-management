@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         { status: 404 }
       );
     }
-    const school = await School.findById(schoolId);
+    const school = await School.findById(schoolId).lean();
     if (!school) {
       return NextResponse.json(
         { success: false, message: "School not found" },

@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
   try {
     await connectToDatabase();
-    const grades = await Grade.find({ school_id: schoolId }).sort({ grade_points: -1 });
+    const grades = await Grade.find({ school_id: schoolId }).sort({ grade_points: -1 }).lean();
     return sendCompressedJson(req, { success: true, data: grades }, { cacheControl: "private, no-cache" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

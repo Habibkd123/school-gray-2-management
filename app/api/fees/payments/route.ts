@@ -132,6 +132,7 @@ export async function GET(req: NextRequest) {
       })
       .populate("collected_by", "name username")
       .populate("deleted_by", "name username")
+      .populate("school_id", "name subtitle logo_url address phone email city state")
       .sort({ payment_date: -1 })
       .limit(limit)
       .lean();
@@ -289,6 +290,7 @@ export async function POST(req: NextRequest) {
     const populatedPayment = await StudentFeePayment.findById(payment._id)
       .populate("student_id", "name admission_no class_id")
       .populate("collected_by", "name username")
+      .populate("school_id", "name subtitle logo_url address phone email city state")
       .lean();
 
     invalidateFeesCache(schoolId);

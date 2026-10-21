@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
+import { useAuth } from "@/app/context/auth";
 import {
   X,
   User,
@@ -23,6 +24,7 @@ interface CollectFeesModalProps {
 
 export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalProps) {
   const { academicYear } = useAppState();
+  const { school, user } = useAuth();
 
   // Loading States
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
@@ -58,6 +60,8 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
   // Flow state
   const [step, setStep] = useState<"form" | "receipt">("form");
   const [lastPaymentResult, setLastPaymentResult] = useState<any | null>(null);
+  const [receiptCopies, setReceiptCopies] = useState<1 | 2 | 3>(1);
+  const [pageMode, setPageMode] = useState<"single" | "separate">("single");
 
   const studentId = student?._id || student?.id;
   const studentClassId = student?.class_id?._id || student?.class_id;
@@ -868,7 +872,20 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
             {/* STEP 2: PRINTABLE FEE RECEIPT */}
             {step === "receipt" && lastPaymentResult && (() => {
               // Build print-ready HTML with inline styles (no Tailwind dependency)
-              const buildReceiptHTML = () => {
+              const buildReceiptHTML = (copiesCount: 1 | 2 | 3 = 1, mode: "single" | "separate" = "single") => {
+                const schoolObj = (lastPaymentResult.school_id && typeof lastPaymentResult.school_id === "object") ? lastPaymentResult.school_id : (school || {});
+                const schoolName = schoolObj.name || lastPaymentResult.school_name || school?.name || "School";
+                const schoolSubtitle = schoolObj.subtitle || school?.subtitle || "";
+                const schoolLogo = schoolObj.logo_url || school?.logo_url || null;
+                const schoolAddress = schoolObj.address || (schoolObj.city ? `${schoolObj.city}, ${schoolObj.state || ""}` : (school?.address || ""));
+                const schoolPhone = schoolObj.phone || school?.phone || "";
+                const schoolEmail = schoolObj.email || school?.email || "";
+                const cashierName = lastPaymentResult.collected_by?.name || lastPaymentResult.collected_by?.username || user?.name || "Authorized ERP Cashier";
+
+                const remarksHtml = notes
+                  ? `<p style="font-style:italic;font-size:9px;color:#64748b;margin-bottom:12px;font-family:sans-serif">Remarks: ${notes}</p>`
+                  : "";
+
                 const rows = receiptBreakdown.map((ft: any) => {
                   const statusColor = ft.status === "Paid"
                     ? "background:#d1fae5;color:#065f46;border:1px solid #a7f3d0"
@@ -878,13 +895,13 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
 
                   return `
                     <tr>
-                      <td style="padding:7px 10px;text-align:left;font-family:sans-serif;font-weight:700;color:#1e293b;border-top:1px solid #e2e8f0">${ft.name}</td>
-                      <td style="padding:7px 10px;text-align:right;font-family:monospace;border-top:1px solid #e2e8f0">${money(ft.totalAmount)}</td>
-                      <td style="padding:7px 10px;text-align:right;font-family:monospace;color:#64748b;border-top:1px solid #e2e8f0">${money(ft.paidBefore)}</td>
-                      <td style="padding:7px 10px;text-align:right;font-family:monospace;font-weight:900;color:#6366f1;border-top:1px solid #e2e8f0">${money(ft.paidNow)}</td>
-                      <td style="padding:7px 10px;text-align:right;font-family:monospace;font-weight:700;border-top:1px solid #e2e8f0">${money(ft.totalPaid)}</td>
-                      <td style="padding:7px 10px;text-align:right;font-family:monospace;font-weight:700;color:#e11d48;border-top:1px solid #e2e8f0">${money(ft.outstanding)}</td>
-                      <td style="padding:7px 10px;text-align:center;border-top:1px solid #e2e8f0">
+                      <td style="padding:${copiesCount > 1 && mode === 'single' ? '4px 8px' : '7px 10px'};text-align:left;font-family:sans-serif;font-weight:700;color:#1e293b;border-top:1px solid #e2e8f0">${ft.name}</td>
+                      <td style="padding:${copiesCount > 1 && mode === 'single' ? '4px 8px' : '7px 10px'};text-align:right;font-family:monospace;border-top:1px solid #e2e8f0">${money(ft.totalAmount)}</td>
+                      <td style="padding:${copiesCount > 1 && mode === 'single' ? '4px 8px' : '7px 10px'};text-align:right;font-family:monospace;color:#64748b;border-top:1px solid #e2e8f0">${money(ft.paidBefore)}</td>
+                      <td style="padding:${copiesCount > 1 && mode === 'single' ? '4px 8px' : '7px 10px'};text-align:right;font-family:monospace;font-weight:900;color:#6366f1;border-top:1px solid #e2e8f0">${money(ft.paidNow)}</td>
+                      <td style="padding:${copiesCount > 1 && mode === 'single' ? '4px 8px' : '7px 10px'};text-align:right;font-family:monospace;font-weight:700;border-top:1px solid #e2e8f0">${money(ft.totalPaid)}</td>
+                      <td style="padding:${copiesCount > 1 && mode === 'single' ? '4px 8px' : '7px 10px'};text-align:right;font-family:monospace;font-weight:700;color:#e11d48;border-top:1px solid #e2e8f0">${money(ft.outstanding)}</td>
+                      <td style="padding:${copiesCount > 1 && mode === 'single' ? '4px 8px' : '7px 10px'};text-align:center;border-top:1px solid #e2e8f0">
                         <span style="display:inline-block;padding:1px 6px;border-radius:4px;font-size:8px;font-weight:900;text-transform:uppercase;letter-spacing:0.05em;${statusColor}">
                           ${ft.status}
                         </span>
@@ -892,9 +909,178 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                     </tr>`;
                 }).join("");
 
-                const remarksHtml = notes
-                  ? `<p style="font-style:italic;font-size:9px;color:#64748b;margin-bottom:20px;font-family:sans-serif">Remarks: ${notes}</p>`
-                  : "";
+                const copiesConfig: Record<number, string[]> = {
+                  1: ["OFFICIAL COPY"],
+                  2: ["STUDENT COPY", "OFFICE COPY"],
+                  3: ["STUDENT COPY", "OFFICE COPY", "BANK / ACCOUNTS COPY"],
+                };
+                const activeCopies = copiesConfig[copiesCount] || ["OFFICIAL COPY"];
+                const isCompact = mode === "single" && copiesCount > 1;
+
+                const slipsHtml = activeCopies.map((copyLabel, idx) => {
+                  const isLast = idx === activeCopies.length - 1;
+
+                  return `
+                    <div style="page-break-inside: avoid; break-inside: avoid; ${!isLast && mode === 'separate' ? 'page-break-after: always; break-after: page;' : ''}">
+                      <!-- Header -->
+                      <div style="border-bottom: 2px solid #0f172a; padding-bottom: ${isCompact ? '8px' : '12px'}; margin-bottom: ${isCompact ? '10px' : '16px'};">
+                        <table style="width: 100%; border-collapse: collapse;">
+                          <tr>
+                            ${schoolLogo ? `
+                            <td style="width: ${isCompact ? '55px' : '75px'}; vertical-align: middle; text-align: left; padding-right: 12px;">
+                              <img src="${schoolLogo}" style="max-height: ${isCompact ? '50px' : '70px'}; max-width: ${isCompact ? '55px' : '75px'}; object-fit: contain; display: block;" alt="School Logo" />
+                            </td>
+                            ` : ""}
+                            <td style="vertical-align: middle; text-align: ${schoolLogo ? "left" : "center"};">
+                              <h1 style="font-size: ${isCompact ? '15px' : '19px'}; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; color: #0f172a; margin: 0 0 2px 0; line-height: 1.2;">${schoolName}</h1>
+                              ${schoolSubtitle ? `<div style="font-size: ${isCompact ? '9.5px' : '11px'}; font-weight: 700; color: #334155; margin-bottom: 2px; font-family: sans-serif;">${schoolSubtitle}</div>` : ""}
+                              ${schoolAddress ? `<div style="font-size: ${isCompact ? '8.5px' : '9.5px'}; color: #475569; margin-bottom: 2px; font-family: sans-serif;">${schoolAddress}</div>` : ""}
+                              ${(schoolPhone || schoolEmail) ? `
+                              <div style="font-size: ${isCompact ? '8px' : '9px'}; color: #64748b; font-family: sans-serif;">
+                                ${[schoolPhone ? `Ph. No.: ${schoolPhone}` : "", schoolEmail ? `Email: ${schoolEmail}` : ""].filter(Boolean).join(" &nbsp;|&nbsp; ")}
+                              </div>` : ""}
+                            </td>
+                          </tr>
+                        </table>
+                        <div style="text-align: center; margin-top: ${isCompact ? '6px' : '10px'};">
+                          <span style="display: inline-block; border: 1.5px solid #0f172a; background: #f8fafc; color: #0f172a; padding: ${isCompact ? '2px 14px' : '3px 18px'}; border-radius: 999px; font-size: ${isCompact ? '8px' : '9px'}; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-family: sans-serif;">
+                            Student Fee Payment Receipt &bull; ${copyLabel}
+                          </span>
+                        </div>
+                      </div>
+
+                      <!-- Details Grid -->
+                      <table style="width:100%;border-collapse:collapse;font-family:sans-serif;font-size:${isCompact ? '9px' : '10px'};margin-bottom:${isCompact ? '10px' : '16px'}">
+                        <tr>
+                          <td style="padding:2.5px 0;width:50%">
+                            <span style="font-weight:700;color:#64748b;display:inline-block;width:100px">Student Name:</span>
+                            <strong>${student.name}</strong>
+                          </td>
+                          <td style="padding:2.5px 0">
+                            <span style="font-weight:700;color:#64748b;display:inline-block;width:100px">Admission No:</span>
+                            <strong style="font-family:monospace">${student.admission_no || "N/A"}</strong>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:2.5px 0">
+                            <span style="font-weight:700;color:#64748b;display:inline-block;width:100px">Class:</span>
+                            <strong>${student.class_name || student.class_id?.name || "N/A"}</strong>
+                          </td>
+                          <td style="padding:2.5px 0">
+                            <span style="font-weight:700;color:#64748b;display:inline-block;width:100px">Receipt No:</span>
+                            <strong style="font-family:monospace;color:#4f46e5">${lastPaymentResult.receipt_number}</strong>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:2.5px 0" colspan="2">
+                            <span style="font-weight:700;color:#64748b;display:inline-block;width:100px">Billing Period:</span>
+                            <strong>${fmtDate(lastPaymentResult.start_date)} – ${fmtDate(lastPaymentResult.end_date)}</strong>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="padding:2.5px 0">
+                            <span style="font-weight:700;color:#64748b;display:inline-block;width:100px">Payment Method:</span>
+                            <strong>${lastPaymentResult.payment_method}</strong>
+                          </td>
+                          <td style="padding:2.5px 0">
+                            <span style="font-weight:700;color:#64748b;display:inline-block;width:100px">Payment Date:</span>
+                            <strong>${fmtDate(lastPaymentResult.payment_date)}</strong>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <!-- Fee Breakdown Table -->
+                      <table style="width:100%;border-collapse:collapse;font-size:${isCompact ? '8.5px' : '9px'};border:1px solid #cbd5e1;margin-bottom:${isCompact ? '10px' : '16px'}">
+                        <thead>
+                          <tr style="background:#f1f5f9;border-bottom:1px solid #cbd5e1">
+                            <th style="padding:${isCompact ? '4px 8px' : '7px 10px'};text-align:left;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569;letter-spacing:0.05em">Fee Head</th>
+                            <th style="padding:${isCompact ? '4px 8px' : '7px 10px'};text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Total Fee</th>
+                            <th style="padding:${isCompact ? '4px 8px' : '7px 10px'};text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Paid Before</th>
+                            <th style="padding:${isCompact ? '4px 8px' : '7px 10px'};text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#4f46e5">Paid Now</th>
+                            <th style="padding:${isCompact ? '4px 8px' : '7px 10px'};text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Total Paid</th>
+                            <th style="padding:${isCompact ? '4px 8px' : '7px 10px'};text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#e11d48">Outstanding</th>
+                            <th style="padding:${isCompact ? '4px 8px' : '7px 10px'};text-align:center;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                      </table>
+
+                      <!-- Total Summary & Adjustments Table -->
+                      <table style="width:100%;border-collapse:collapse;font-family:sans-serif;font-size:${isCompact ? '9px' : '10px'};margin-bottom:${isCompact ? '12px' : '18px'};border-top:1px solid #cbd5e1">
+                        <tr>
+                          <td style="padding:4px 0;text-align:left;color:#64748b">Subtotal Paid Now:</td>
+                          <td style="padding:4px 0;text-align:right;font-family:monospace;font-weight:700">${money(receiptBreakdown.reduce((sum: number, r: any) => sum + r.paidNow, 0))}</td>
+                        </tr>
+                        ${lastPaymentResult.fine > 0 ? `
+                        <tr>
+                          <td style="padding:3px 0;text-align:left;color:#64748b">Fine Added (+):</td>
+                          <td style="padding:3px 0;text-align:right;font-family:monospace;color:#92400e">+${money(lastPaymentResult.fine)}</td>
+                        </tr>` : ""}
+                        ${lastPaymentResult.discount > 0 ? `
+                        <tr>
+                          <td style="padding:3px 0;text-align:left;color:#64748b">Discount Applied (-):</td>
+                          <td style="padding:3px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.discount)}</td>
+                        </tr>` : ""}
+                        ${lastPaymentResult.scholarship > 0 ? `
+                        <tr>
+                          <td style="padding:3px 0;text-align:left;color:#64748b">Scholarship Applied (-):</td>
+                          <td style="padding:3px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.scholarship)}</td>
+                        </tr>` : ""}
+                        ${lastPaymentResult.waiver > 0 ? `
+                        <tr>
+                          <td style="padding:3px 0;text-align:left;color:#64748b">Waiver Applied (-):</td>
+                          <td style="padding:3px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.waiver)}</td>
+                        </tr>` : ""}
+                        ${lastPaymentResult.adjustment > 0 ? `
+                        <tr>
+                          <td style="padding:3px 0;text-align:left;color:#64748b">Adjustment Applied (-):</td>
+                          <td style="padding:3px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.adjustment)}</td>
+                        </tr>` : ""}
+                        ${lastPaymentResult.round_off !== 0 ? `
+                        <tr>
+                          <td style="padding:3px 0;text-align:left;color:#64748b">Round Off:</td>
+                          <td style="padding:3px 0;text-align:right;font-family:monospace;color:#475569">${lastPaymentResult.round_off > 0 ? "+" : ""}${money(lastPaymentResult.round_off)}</td>
+                        </tr>` : ""}
+                        <tr style="border-top:2px solid #1e293b;border-bottom:2px solid #1e293b">
+                          <td style="padding:6px 0;text-align:left;font-weight:900;font-size:${isCompact ? '10px' : '11px'}">GRAND TOTAL PAID (${lastPaymentResult.payment_method}):</td>
+                          <td style="padding:6px 0;text-align:right;font-family:monospace;font-size:${isCompact ? '12px' : '14px'};font-weight:900;color:#059669">${money(lastPaymentResult.amount_paid)}</td>
+                        </tr>
+                      </table>
+
+                      <!-- Audit Trail Line -->
+                      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-top: 1px dashed #cbd5e1; padding-top: 6px; font-family: sans-serif; font-size: ${isCompact ? '7.5px' : '8.5px'}; color: #64748b;">
+                        <span>Collected By: <strong style="color: #1e293b;">${cashierName}</strong></span>
+                        <span>Computer Generated Official Fee Receipt</span>
+                        <span>Date &amp; Time: <strong style="color: #1e293b;">${new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</strong></span>
+                      </div>
+
+                      ${remarksHtml}
+
+                      <!-- Signatures with ample writing space and bottom clearance -->
+                      <div style="display: flex; justify-content: space-between; padding-top: ${isCompact ? '36px' : '56px'}; padding-bottom: ${isCompact ? '12px' : '24px'}; margin-top: 12px;">
+                        <div style="text-align: center; width: 140px; border-top: 1.5px solid #94a3b8; padding-top: 6px; font-family: sans-serif; font-size: 9px; font-weight: 700; color: #475569;">
+                          Depositor Signature
+                        </div>
+                        <div style="text-align: center; width: 140px; border-top: 1.5px solid #94a3b8; padding-top: 6px; font-family: sans-serif; font-size: 9px; font-weight: 700; color: #475569;">
+                          Authorized Cashier
+                        </div>
+                      </div>
+                    </div>
+
+                    ${!isLast ? (
+                      mode === "single" ? `
+                      <!-- Cut Line -->
+                      <div style="margin: 18px 0; display: flex; align-items: center; justify-content: center; text-align: center;">
+                        <div style="flex: 1; border-bottom: 1.5px dashed #94a3b8;"></div>
+                        <span style="padding: 2px 10px; background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 999px; font-size: 8.5px; font-weight: 700; color: #64748b; font-family: sans-serif; margin: 0 8px;">
+                          &#9986; CUT ALONG THIS LINE &#9986;
+                        </span>
+                        <div style="flex: 1; border-bottom: 1.5px dashed #94a3b8;"></div>
+                      </div>
+                      ` : ""
+                    ) : ""}
+                  `;
+                }).join("");
 
                 return `<!DOCTYPE html>
 <html>
@@ -903,149 +1089,22 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
   <meta charset="utf-8" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Georgia, serif; font-size: 11px; color: #1e293b; background: #fff; padding: 32px; }
-    @media print { body { padding: 0; } @page { margin: 14mm; } }
+    body { font-family: Georgia, serif; font-size: 11px; color: #1e293b; background: #fff; padding: 24px; }
+    @media print { body { padding: 0; } @page { margin: 10mm; } }
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <div style="text-align:center;border-bottom:2px solid #1e293b;padding-bottom:14px;margin-bottom:18px">
-    <h1 style="font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px">${lastPaymentResult.school_name || "My School ERP"}</h1>
-    <p style="font-size:9px;letter-spacing:0.05em;font-family:sans-serif;color:#475569">Student Fee Payment Receipt</p>
-    <div style="display:inline-block;background:#1e293b;color:#fff;padding:2px 14px;border-radius:999px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;font-family:sans-serif;margin-top:8px">
-      Official Receipt
-    </div>
-  </div>
-
-  <!-- Details Grid -->
-  <table style="width:100%;border-collapse:collapse;font-family:sans-serif;font-size:10px;margin-bottom:18px">
-    <tr>
-      <td style="padding:3px 0;width:50%">
-        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Student Name:</span>
-        <strong>${student.name}</strong>
-      </td>
-      <td style="padding:3px 0">
-        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Admission No:</span>
-        <strong style="font-family:monospace">${student.admission_no || "N/A"}</strong>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:3px 0">
-        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Class:</span>
-        <strong>${student.class_name || student.class_id?.name || "N/A"}</strong>
-      </td>
-      <td style="padding:3px 0">
-        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Receipt No:</span>
-        <strong style="font-family:monospace;color:#4f46e5">${lastPaymentResult.receipt_number}</strong>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:3px 0" colspan="2">
-        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Billing Period:</span>
-        <strong>${fmtDate(lastPaymentResult.start_date)} – ${fmtDate(lastPaymentResult.end_date)}</strong>
-      </td>
-    </tr>
-    <tr>
-      <td style="padding:3px 0">
-        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Payment Method:</span>
-        <strong>${lastPaymentResult.payment_method}</strong>
-      </td>
-      <td style="padding:3px 0">
-        <span style="font-weight:700;color:#64748b;display:inline-block;width:110px">Payment Date:</span>
-        <strong>${fmtDate(lastPaymentResult.payment_date)}</strong>
-      </td>
-    </tr>
-  </table>
-
-  <!-- Fee Breakdown Table -->
-  <table style="width:100%;border-collapse:collapse;font-size:9px;border:1px solid #cbd5e1;margin-bottom:16px">
-    <thead>
-      <tr style="background:#f1f5f9;border-bottom:1px solid #cbd5e1">
-        <th style="padding:7px 10px;text-align:left;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569;letter-spacing:0.05em">Fee Head</th>
-        <th style="padding:7px 10px;text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Total Fee</th>
-        <th style="padding:7px 10px;text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Paid Before</th>
-        <th style="padding:7px 10px;text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#4f46e5">Paid Now</th>
-        <th style="padding:7px 10px;text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Total Paid</th>
-        <th style="padding:7px 10px;text-align:right;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#e11d48">Outstanding</th>
-        <th style="padding:7px 10px;text-align:center;font-family:sans-serif;font-size:8px;font-weight:800;text-transform:uppercase;color:#475569">Status</th>
-      </tr>
-    </thead>
-    <tbody>${rows}</tbody>
-  </table>
-
-  <!-- Total Summary & Adjustments Table -->
-  <table style="width:100%;border-collapse:collapse;font-family:sans-serif;font-size:10px;margin-bottom:18px;border-top:1px solid #cbd5e1">
-    <tr>
-      <td style="padding:6px 0;text-align:left;color:#64748b">Subtotal Paid Now:</td>
-      <td style="padding:6px 0;text-align:right;font-family:monospace;font-weight:700">${money(receiptBreakdown.reduce((sum: number, r: any) => sum + r.paidNow, 0))}</td>
-    </tr>
-    ${lastPaymentResult.fine > 0 ? `
-    <tr>
-      <td style="padding:4px 0;text-align:left;color:#64748b">Fine Added (+):</td>
-      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#92400e">+${money(lastPaymentResult.fine)}</td>
-    </tr>` : ""}
-    ${lastPaymentResult.discount > 0 ? `
-    <tr>
-      <td style="padding:4px 0;text-align:left;color:#64748b">Discount Applied (-):</td>
-      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.discount)}</td>
-    </tr>` : ""}
-    ${lastPaymentResult.scholarship > 0 ? `
-    <tr>
-      <td style="padding:4px 0;text-align:left;color:#64748b">Scholarship Applied (-):</td>
-      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.scholarship)}</td>
-    </tr>` : ""}
-    ${lastPaymentResult.waiver > 0 ? `
-    <tr>
-      <td style="padding:4px 0;text-align:left;color:#64748b">Waiver Applied (-):</td>
-      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.waiver)}</td>
-    </tr>` : ""}
-    ${lastPaymentResult.adjustment > 0 ? `
-    <tr>
-      <td style="padding:4px 0;text-align:left;color:#64748b">Adjustment Applied (-):</td>
-      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#0f766e">-${money(lastPaymentResult.adjustment)}</td>
-    </tr>` : ""}
-    ${lastPaymentResult.round_off !== 0 ? `
-    <tr>
-      <td style="padding:4px 0;text-align:left;color:#64748b">Round Off:</td>
-      <td style="padding:4px 0;text-align:right;font-family:monospace;color:#475569">${lastPaymentResult.round_off > 0 ? "+" : ""}${money(lastPaymentResult.round_off)}</td>
-    </tr>` : ""}
-    <tr style="border-top:2px solid #1e293b;border-bottom:2px solid #1e293b">
-      <td style="padding:8px 0;text-align:left;font-weight:900;font-size:11px">GRAND TOTAL PAID (${lastPaymentResult.payment_method}):</td>
-      <td style="padding:8px 0;text-align:right;font-family:monospace;font-size:14px;font-weight:900;color:#059669">${money(lastPaymentResult.amount_paid)}</td>
-    </tr>
-  </table>
-
-  <!-- Future Ready QR Code Placeholder & Auditor Audit Info -->
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;border:1px dashed #cbd5e1;border-radius:8px;padding:10px font-family:sans-serif">
-    <div style="font-family:sans-serif;font-size:9px;color:#64748b">
-      <span style="display:block;font-weight:bold;color:#1e293b;margin-bottom:2px">Transaction Audit Trail</span>
-      <span>Collected By: ${lastPaymentResult.collected_by?.name || lastPaymentResult.collected_by?.username || "Authorized ERP Cashier"}</span><br/>
-      <span>System Verification: SUCCESS</span>
-    </div>
-    <!-- Future-Ready QR Code SVG -->
-    <div style="text-align:right">
-      <svg width="45" height="45" viewBox="0 0 29 29" style="display:inline-block">
-        <path d="M0 0h9v9H0zm1 1v7h7V1zm10 0h9v9h-9zm1 1v7h7V1zm10 0h7v7h-7zm0 10h9v9h-9zm1 1v7h7v-7zm-12-1h9v9h-9zm1 1v7h7v-7zm12 10h7v7h-7z" fill="#1e293b"/>
-        <path d="M3 3h3v3H3zm13 0h3v3h-3zM3 16h3v3H3zm23-3h1v1h-1zm-1-1h1v1h-1zm1 3h1v1h-1zm-2 2h1v1h-1zm-1 0h1v1h-1zm3 0h1v1h-1zm-3-1h1v1h-1zm-3 2h1v1h-1zm-1 1h1v1h-1z" fill="#1e293b"/>
-      </svg>
-      <span style="display:block;font-family:sans-serif;font-size:7px;color:#94a3b8;margin-top:2px">Scan to Verify</span>
-    </div>
-  </div>
-
-  ${remarksHtml}
-
-  <!-- Signatures -->
-  <div style="display:flex;justify-content:space-between;padding-top:24px;margin-top:16px">
-    <div style="text-align:center;width:130px;border-top:1px solid #cbd5e1;padding-top:6px;font-family:sans-serif;font-size:9px;font-weight:700;color:#64748b">
-      Depositor Signature
-    </div>
-    <div style="text-align:center;width:130px;border-top:1px solid #cbd5e1;padding-top:6px;font-family:sans-serif;font-size:9px;font-weight:700;color:#64748b">
-      Authorized Cashier
-    </div>
-  </div>
+  ${slipsHtml}
 </body>
 </html>`;
               };
+
+              const previewSchool = (lastPaymentResult.school_id && typeof lastPaymentResult.school_id === "object") ? lastPaymentResult.school_id : (school || {});
+              const previewSchoolName = previewSchool.name || lastPaymentResult.school_name || school?.name || "School";
+              const previewSchoolSubtitle = previewSchool.subtitle || school?.subtitle || "";
+              const previewSchoolLogo = previewSchool.logo_url || school?.logo_url || null;
+              const previewSchoolAddress = previewSchool.address || (previewSchool.city ? `${previewSchool.city}, ${previewSchool.state || ""}` : (school?.address || ""));
+              const previewSchoolPhone = previewSchool.phone || school?.phone || "";
 
               return (
                 <div className="space-y-4">
@@ -1058,8 +1117,17 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                   {/* On-screen preview of key details */}
                   <div className="p-5 border border-slate-200 rounded-2xl bg-white text-slate-800 font-sans text-xs space-y-3 text-left">
                     <div className="text-center border-b border-slate-200 pb-3 mb-3">
-                      <p className="text-base font-black uppercase tracking-widest text-slate-900">Fee Payment Receipt</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5 font-sans">{lastPaymentResult.receipt_number}</p>
+                      {previewSchoolLogo && (
+                        <img src={previewSchoolLogo} alt="Logo" className="w-12 h-12 mx-auto mb-2 object-contain" />
+                      )}
+                      <p className="text-base font-black uppercase tracking-wider text-slate-900">{previewSchoolName}</p>
+                      {previewSchoolSubtitle && <p className="text-[11px] font-semibold text-slate-600">{previewSchoolSubtitle}</p>}
+                      {(previewSchoolAddress || previewSchoolPhone) && (
+                        <p className="text-[10px] text-slate-500 mt-0.5">
+                          {[previewSchoolAddress, previewSchoolPhone ? `Ph: ${previewSchoolPhone}` : ""].filter(Boolean).join(" • ")}
+                        </p>
+                      )}
+                      <p className="text-[10px] font-bold text-primary mt-1 font-mono">Receipt No: {lastPaymentResult.receipt_number}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-[11px]">
@@ -1080,28 +1148,101 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                     </p>
                   </div>
 
-                  <div className="flex justify-end gap-3 pt-1">
-                    <button
-                      onClick={() => {
-                        const html = buildReceiptHTML();
-                        const printWin = window.open("", "_blank", "width=820,height=950");
-                        if (!printWin) {
-                          alert("Pop-up blocked! Please allow pop-ups for this site.");
-                          return;
-                        }
-                        printWin.document.write(html);
-                        printWin.document.close();
-                        printWin.focus();
-                        setTimeout(() => { printWin.print(); printWin.close(); }, 400);
-                      }}
-                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
-                    >
-                      <Printer className="w-3.5 h-3.5" />
-                      <span>Print / Download PDF</span>
-                    </button>
-                    <button onClick={onClose} className="px-4 py-2 border border-border text-xs font-bold rounded-xl bg-white hover:bg-slate-50 text-slate-700 transition-colors">
-                      Close
-                    </button>
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* Copy Selector */}
+                      <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                        <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-2">Copies:</span>
+                        <button
+                          type="button"
+                          onClick={() => setReceiptCopies(1)}
+                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                            receiptCopies === 1
+                              ? "bg-slate-900 text-white shadow-xs"
+                              : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                          }`}
+                        >
+                          1 Copy
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setReceiptCopies(2)}
+                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                            receiptCopies === 2
+                              ? "bg-slate-900 text-white shadow-xs"
+                              : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                          }`}
+                        >
+                          2 Copies
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setReceiptCopies(3)}
+                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                            receiptCopies === 3
+                              ? "bg-slate-900 text-white shadow-xs"
+                              : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                          }`}
+                        >
+                          3 Copies
+                        </button>
+                      </div>
+
+                      {/* Page Mode Selector */}
+                      {receiptCopies > 1 && (
+                        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                          <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-2">Page Mode:</span>
+                          <button
+                            type="button"
+                            onClick={() => setPageMode("single")}
+                            className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                              pageMode === "single"
+                                ? "bg-indigo-600 text-white shadow-xs"
+                                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                            }`}
+                            title="Both copies print on 1 page with a cut line"
+                          >
+                            📄 1 Page
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPageMode("separate")}
+                            className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                              pageMode === "separate"
+                                ? "bg-indigo-600 text-white shadow-xs"
+                                : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                            }`}
+                            title="Each copy prints on its own separate page"
+                          >
+                            📑 Separate Pages
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          const html = buildReceiptHTML(receiptCopies, pageMode);
+                          const printWin = window.open("", "_blank", "width=820,height=950");
+                          if (!printWin) {
+                            alert("Pop-up blocked! Please allow pop-ups for this site.");
+                            return;
+                          }
+                          printWin.document.write(html);
+                          printWin.document.close();
+                          printWin.focus();
+                          setTimeout(() => { printWin.print(); printWin.close(); }, 400);
+                        }}
+                        className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-colors cursor-pointer"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        <span>Print / Download PDF ({receiptCopies} {receiptCopies === 1 ? "Copy" : "Copies"}{receiptCopies > 1 ? ` • ${pageMode === "single" ? "1 Page" : `${receiptCopies} Pages`}` : ""})</span>
+                      </button>
+                      <button onClick={onClose} className="px-4 py-2 border border-border text-xs font-bold rounded-xl bg-white hover:bg-slate-50 text-slate-700 transition-colors">
+                        Close
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

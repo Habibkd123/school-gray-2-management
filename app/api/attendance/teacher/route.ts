@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     };
 
     const [attendanceRecord, activeTeachers] = await Promise.all([
-      Attendance.findOne(query).populate("records.teacher_id", "name employee_id photo_url designation department is_active"),
+      Attendance.findOne(query).populate("records.teacher_id", "name employee_id photo_url designation department is_active").lean(),
       Teacher.find({ school_id: schoolId, is_active: true }).lean()
     ]);
 

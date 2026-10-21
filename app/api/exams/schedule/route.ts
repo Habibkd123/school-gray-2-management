@@ -18,7 +18,8 @@ export async function GET(req: NextRequest) {
 
     const schedules = await ExamSchedule.find(query)
       .populate("subject_id", "name code")
-      .sort({ date: 1, start_time: 1 });
+      .sort({ date: 1, start_time: 1 })
+      .lean();
 
     return sendCompressedJson(req, { success: true, data: schedules }, { cacheControl: "private, no-cache" });
   } catch (err: any) {

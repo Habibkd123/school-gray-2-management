@@ -23,6 +23,9 @@ export interface SchoolInfo {
   subtitle?: string;
   logo_url?: string | null;
   subdomain?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
 }
 
 // ─── Save ─────────────────────────────────────────────────────────

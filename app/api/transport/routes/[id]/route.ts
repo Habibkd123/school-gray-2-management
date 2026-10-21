@@ -14,7 +14,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Invalid ID" }, { status: 400 });
     }
 
-    const oldRoute = await Route.findById(id);
+    const oldRoute = await Route.findById(id).lean();
     const updated = await Route.findByIdAndUpdate(id, body, { new: true, runValidators: true });
     if (!updated) {
       return NextResponse.json({ success: false, error: "Route not found" }, { status: 404 });

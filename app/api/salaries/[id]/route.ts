@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     const payment = await SalaryPayment.findOne({
       _id: id,
       school_id: schoolId
-    }).populate("teacher_id", "name employee_id basic_salary subject department qualification designation");
+    }).populate("teacher_id", "name employee_id basic_salary subject department qualification designation").lean();
 
     if (!payment) {
       return NextResponse.json({ success: false, message: "Salary slip not found" }, { status: 404 });

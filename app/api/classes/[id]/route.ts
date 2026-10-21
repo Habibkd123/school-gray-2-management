@@ -29,10 +29,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   try {
     await connectToDatabase();
 
-    const cls = await Class.findOne({ _id: id, school_id: schoolId as string }).populate(
-      "class_teacher_id",
-      "name employee_id"
-    );
+    const cls = await Class.findOne({ _id: id, school_id: schoolId as string })
+      .populate("class_teacher_id", "name employee_id")
+      .lean();
 
     if (!cls) {
       return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });

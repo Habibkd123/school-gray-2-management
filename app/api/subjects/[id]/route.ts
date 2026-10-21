@@ -19,11 +19,11 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
   try {
     await connectToDatabase();
-    const subject = await Subject.findOne({ _id: id, school_id: schoolId });
+    const subject = await Subject.findOne({ _id: id, school_id: schoolId }).lean();
     if (!subject) return NextResponse.json({ success: false, message: "Subject not found" }, { status: 404 });
 
     if (role === "teacher") {
-      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
+      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId }).lean();
       if (!teacher) {
         return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
       }

@@ -8,6 +8,22 @@ import Student from "@/lib/models/Student";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 
+// In-memory cache for individual student attendance history
+const _studentHistoryCache = new Map<string, { data: any; expiresAt: number }>();
+const HISTORY_CACHE_TTL = 30_000; // 30 seconds
+
+export function invalidateStudentHistoryCache(studentId?: string) {
+  if (studentId) {
+    for (const key of _studentHistoryCache.keys()) {
+      if (key.includes(studentId)) {
+        _studentHistoryCache.delete(key);
+      }
+    }
+  } else {
+    _studentHistoryCache.clear();
+  }
+}
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { schoolId, role, userId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
@@ -26,8 +42,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const startDateParam = url.searchParams.get("startDate");
     const endDateParam = url.searchParams.get("endDate");
 
-    // Fetch Student Profile
+    const cacheKey = `${schoolId}_${role}_${userId || ""}_${studentId}_${academic_year || ""}_${startDateParam || ""}_${endDateParam || ""}`;
+    const cached = _studentHistoryCache.get(cacheKey);
+    if (cached && Date.now() < cached.expiresAt) {
+      return NextResponse.json(cached.data, {
+        headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=30" }
+      });
+    }
+
+    // Fetch Student Profile with minimal projection
     const student = await Student.findOne({ _id: studentId, school_id: schoolId })
+      .select("name admission_no roll_no class_id photo_url")
       .populate("class_id", "name section")
       .lean();
 
@@ -37,7 +62,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Teacher Access Verification
     if (role === "teacher") {
-      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
+      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId }).lean();
       if (!teacher) {
         return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
       }
@@ -82,7 +107,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       query.date = { $gte: startDate, $lte: endDate };
     }
 
-    const attendances = await Attendance.find(query).sort({ date: -1 }).lean();
+    const attendances = await Attendance.find(query)
+      .select("date records edit_history updatedAt")
+      .sort({ date: -1 })
+      .lean();
 
     // Extract student's specific records
     const history = attendances.map((att: any) => {
@@ -136,7 +164,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       ? Math.round(((totalPresent + totalLate + (totalHalfDay * 0.5)) / totalWorkingDays) * 100) 
       : 0;
 
-    return NextResponse.json({
+    const responsePayload = {
       success: true,
       data: {
         student: {
@@ -156,6 +184,12 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         },
         history
       },
+    };
+
+    _studentHistoryCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + HISTORY_CACHE_TTL });
+
+    return NextResponse.json(responsePayload, {
+      headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=30" }
     });
 
   } catch (err: any) {
@@ -252,6 +286,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     existingRecord.edit_history.push(auditLogEntry);
 
     await existingRecord.save();
+
+    invalidateStudentHistoryCache(studentId);
+    try {
+      const { invalidateStudentAttendanceCache } = await import("../route");
+      invalidateStudentAttendanceCache(schoolId as string);
+    } catch {}
 
     return NextResponse.json({ success: true, message: "Attendance updated successfully" });
   } catch (err: any) {

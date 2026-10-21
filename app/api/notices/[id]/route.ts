@@ -15,7 +15,7 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
   try {
     await connectToDatabase();
-    const notice = await Notice.findOne({ _id: id, school_id: schoolId, is_deleted: { $ne: true } });
+    const notice = await Notice.findOne({ _id: id, school_id: schoolId, is_deleted: { $ne: true } }).lean();
     if (!notice) return NextResponse.json({ success: false, message: "Notice not found" }, { status: 404 });
     return NextResponse.json({ success: true, data: notice });
   } catch (err: any) {

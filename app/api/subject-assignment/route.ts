@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
     const limitParam = url.searchParams.get("limit");
     const isAll = limitParam === "all" || (limitParam && parseInt(limitParam) >= 500);
-    const limit = isAll ? 100000 : Math.min(500, Math.max(1, parseInt(limitParam || "10")));
+    const limit = isAll ? 1000 : Math.min(500, Math.max(1, parseInt(limitParam || "10")));
     const skip = isAll ? 0 : (page - 1) * limit;
 
     // Match initial school_id & basic filters

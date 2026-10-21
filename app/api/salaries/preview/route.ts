@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const teacher = await Teacher.findOne({
       _id: teacherId,
       school_id: schoolId,
-    });
+    }).lean();
 
     if (!teacher) {
       return NextResponse.json(
@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
       school_id: schoolId,
       type: "teacher",
       date: { $gte: startDate, $lte: endDate },
-    });
+    }).lean();
 
     let attendanceRecordsCount = 0;
     let presentDays = 0;

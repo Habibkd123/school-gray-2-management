@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       query.school_id = auth.schoolId;
     }
 
-    const user = await User.findOne(query).select("+plain_password name email username role is_active must_change_password");
+    const user = await User.findOne(query).select("+plain_password name email username role is_active must_change_password").lean();
     if (!user) {
       return NextResponse.json(
         { success: false, message: "User not found" },

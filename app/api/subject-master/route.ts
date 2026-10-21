@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
     const limitParam = url.searchParams.get("limit");
     const isAll = limitParam === "all" || (limitParam && parseInt(limitParam) >= 1000);
-    const limit = isAll ? 100000 : parseInt(limitParam || "50");
+    const limit = isAll ? 1000 : parseInt(limitParam || "50");
 
     const query: any = { school_id: schoolId };
     if (search) {
@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
     // Auto-tagging logic: If no streams were manually selected, try to auto-detect based on subject name
     if (finalAllowedStreams.length === 0) {
       const lowerName = name.trim().toLowerCase();
-      
+
       const scienceKeywords = ["physics", "chemistry", "biology", "math", "mathematics", "computer", "botany", "zoology", "science"];
       const artsKeywords = ["history", "geograph", "geography", "political", "sociology", "psychology", "philosophy", "arts", "literature", "social", "civics", "drawing", "music", "home science"];
       const commerceKeywords = ["account", "business", "economics", "commerce", "finance", "accounts", "bookkeeping", "entrepreneurship"];
@@ -123,11 +123,11 @@ export async function POST(req: NextRequest) {
 
       if (targetStreamName) {
         // Find the stream in the database by name (case-insensitive)
-        const matchedStream = await Stream.findOne({ 
-          school_id: schoolId, 
-          name: { $regex: new RegExp(`^${targetStreamName}$`, "i") } 
+        const matchedStream = await Stream.findOne({
+          school_id: schoolId,
+          name: { $regex: new RegExp(`^${targetStreamName}$`, "i") }
         }).lean();
-        
+
         if (matchedStream) {
           finalAllowedStreams = [matchedStream._id.toString()];
         }

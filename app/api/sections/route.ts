@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
     const limitParam = url.searchParams.get("limit");
     const isAll = limitParam === "all" || (limitParam && parseInt(limitParam) >= 1000);
-    const limit = isAll ? 100000 : parseInt(limitParam || "50");
+    const limit = isAll ? 1000 : parseInt(limitParam || "50");
 
     const query: any = { school_id: schoolId };
     if (search) query.name = { $regex: search, $options: "i" };

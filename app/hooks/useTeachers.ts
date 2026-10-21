@@ -205,7 +205,7 @@ function getPagedTeacherQueryCache(key: string): { teachers: ApiTeacher[]; total
           return parsed;
         }
       }
-    } catch {}
+    } catch { }
   }
   return null;
 }
@@ -225,7 +225,7 @@ function invalidateCache(singleId?: string) {
           sessionStorage.removeItem(k);
         }
       });
-    } catch {}
+    } catch { }
   }
 }
 
@@ -256,7 +256,7 @@ export function getStoredTeacher(id: string): ApiTeacher | null {
         }
       }
     }
-  } catch {}
+  } catch { }
   return null;
 }
 
@@ -286,7 +286,7 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
             }
           }
         }
-      } catch {}
+      } catch { }
     }
     return [];
   });
@@ -311,7 +311,7 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
             }
           }
         }
-      } catch {}
+      } catch { }
     }
     return 0;
   });
@@ -413,7 +413,7 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
           teachers: data,
           total: data.length,
           page: 1,
-          limit: 100000,
+          limit: 1000,
         };
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
@@ -505,7 +505,7 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
         if (typeof window !== "undefined") {
           try {
             sessionStorage.setItem(SESSION_TEACHERS_PREFIX + cacheKey, JSON.stringify(queryEntry));
-          } catch {}
+          } catch { }
         }
 
         // Only cache unfiltered results
@@ -612,7 +612,7 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
       if (typeof window !== "undefined" && data.data) {
         try {
           sessionStorage.setItem(SESSION_TEACHER_DETAIL_PREFIX + id, JSON.stringify(data.data));
-        } catch {}
+        } catch { }
       }
 
       setTeachers((prev) => prev.map((t) => (t._id === id ? data.data : t)));
@@ -688,7 +688,7 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
       if (typeof window !== "undefined") {
         try {
           sessionStorage.setItem(SESSION_TEACHER_DETAIL_PREFIX + id, JSON.stringify(data.data));
-        } catch {}
+        } catch { }
       }
       return data.data;
     } catch {

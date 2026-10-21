@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
+import { useAuth } from "@/app/context/auth";
 import {
   ArrowLeft,
   User,
@@ -23,6 +24,7 @@ export default function CollectFeesPage() {
   const router = useRouter();
   const studentId = searchParams.get("studentId");
   const { academicYear } = useAppState();
+  const { school, user } = useAuth();
 
   // Core loading/fetched states
   const [student, setStudent] = useState<any | null>(null);
@@ -950,11 +952,20 @@ export default function CollectFeesPage() {
                   </tr>`;
               }).join("");
 
-              const remarksHtml = notes
-                ? `<p style="font-style:italic;font-size:9px;color:#64748b;margin-bottom:20px;font-family:sans-serif">Remarks: ${notes}</p>`
-                : "";
+                const schoolObj = (lastPaymentResult.school_id && typeof lastPaymentResult.school_id === "object") ? lastPaymentResult.school_id : (school || {});
+                const schoolName = schoolObj.name || lastPaymentResult.school_name || school?.name || "School";
+                const schoolSubtitle = schoolObj.subtitle || school?.subtitle || "";
+                const schoolLogo = schoolObj.logo_url || school?.logo_url || null;
+                const schoolAddress = schoolObj.address || (schoolObj.city ? `${schoolObj.city}, ${schoolObj.state || ""}` : (school?.address || ""));
+                const schoolPhone = schoolObj.phone || school?.phone || "";
+                const schoolEmail = schoolObj.email || school?.email || "";
+                const cashierName = lastPaymentResult.collected_by?.name || lastPaymentResult.collected_by?.username || user?.name || "Authorized ERP Cashier";
 
-              return `<!DOCTYPE html>
+                const remarksHtml = notes
+                  ? `<p style="font-style:italic;font-size:9px;color:#64748b;margin-bottom:20px;font-family:sans-serif">Remarks: ${notes}</p>`
+                  : "";
+
+                return `<!DOCTYPE html>
 <html>
 <head>
   <title>Fee Receipt — ${lastPaymentResult.receipt_number}</title>
@@ -967,11 +978,29 @@ export default function CollectFeesPage() {
 </head>
 <body>
   <!-- Header -->
-  <div style="text-align:center;border-bottom:2px solid #1e293b;padding-bottom:14px;margin-bottom:18px">
-    <h1 style="font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:3px">${lastPaymentResult.school_name || "My School ERP"}</h1>
-    <p style="font-size:9px;letter-spacing:0.05em;font-family:sans-serif;color:#475569">Student Fee Payment Receipt</p>
-    <div style="display:inline-block;background:#1e293b;color:#fff;padding:2px 14px;border-radius:999px;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;font-family:sans-serif;margin-top:8px">
-      Official Receipt
+  <div style="border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <tr>
+        ${schoolLogo ? `
+        <td style="width: 75px; vertical-align: middle; text-align: left; padding-right: 14px;">
+          <img src="${schoolLogo}" style="max-height: 70px; max-width: 75px; object-fit: contain; display: block;" alt="School Logo" />
+        </td>
+        ` : ""}
+        <td style="vertical-align: middle; text-align: ${schoolLogo ? "left" : "center"};">
+          <h1 style="font-size: 19px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; color: #0f172a; margin: 0 0 3px 0; line-height: 1.2;">${schoolName}</h1>
+          ${schoolSubtitle ? `<div style="font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 2px; font-family: sans-serif;">${schoolSubtitle}</div>` : ""}
+          ${schoolAddress ? `<div style="font-size: 9.5px; color: #475569; margin-bottom: 2px; font-family: sans-serif;">${schoolAddress}</div>` : ""}
+          ${(schoolPhone || schoolEmail) ? `
+          <div style="font-size: 9px; color: #64748b; font-family: sans-serif;">
+            ${[schoolPhone ? `Ph. No.: ${schoolPhone}` : "", schoolEmail ? `Email: ${schoolEmail}` : ""].filter(Boolean).join(" &nbsp;|&nbsp; ")}
+          </div>` : ""}
+        </td>
+      </tr>
+    </table>
+    <div style="text-align: center; margin-top: 10px;">
+      <span style="display: inline-block; background: #0f172a; color: #ffffff; padding: 2.5px 16px; border-radius: 999px; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; font-family: sans-serif;">
+        Student Fee Payment Receipt &bull; Official Copy
+      </span>
     </div>
   </div>
 
@@ -1073,36 +1102,34 @@ export default function CollectFeesPage() {
     </tr>
   </table>
 
-  <!-- Future Ready QR Code Placeholder & Auditor Audit Info -->
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;border:1px dashed #cbd5e1;border-radius:8px;padding:10px font-family:sans-serif">
-    <div style="font-family:sans-serif;font-size:9px;color:#64748b">
-      <span style="display:block;font-weight:bold;color:#1e293b;margin-bottom:2px">Transaction Audit Trail</span>
-      <span>Collected By: ${lastPaymentResult.collected_by?.name || lastPaymentResult.collected_by?.username || "Authorized ERP Cashier"}</span><br/>
-      <span>System Verification: SUCCESS</span>
-    </div>
-    <div style="text-align:right">
-      <svg width="45" height="45" viewBox="0 0 29 29" style="display:inline-block">
-        <path d="M0 0h9v9H0zm1 1v7h7V1zm10 0h9v9h-9zm1 1v7h7V1zm10 0h7v7h-7zm0 10h9v9h-9zm1 1v7h7v-7zm-12-1h9v9h-9zm1 1v7h7v-7zm12 10h7v7h-7z" fill="#1e293b"/>
-        <path d="M3 3h3v3H3zm13 0h3v3h-3zM3 16h3v3H3zm23-3h1v1h-1zm-1-1h1v1h-1zm1 3h1v1h-1zm-2 2h1v1h-1zm-1 0h1v1h-1zm3 0h1v1h-1zm-3-1h1v1h-1zm-3 2h1v1h-1zm-1 1h1v1h-1z" fill="#1e293b"/>
-      </svg>
-      <span style="display:block;font-family:sans-serif;font-size:7px;color:#94a3b8;margin-top:2px">Scan to Verify</span>
-    </div>
+  <!-- Audit Trail Line -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-top: 1px dashed #cbd5e1; padding-top: 8px; font-family: sans-serif; font-size: 8.5px; color: #64748b;">
+    <span>Collected By: <strong style="color: #1e293b;">${cashierName}</strong></span>
+    <span>Computer Generated Official Fee Receipt</span>
+    <span>Date &amp; Time: <strong style="color: #1e293b;">${new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</strong></span>
   </div>
 
   ${remarksHtml}
 
   <!-- Signatures -->
-  <div style="display:flex;justify-content:space-between;padding-top:24px;margin-top:16px">
-    <div style="text-align:center;width:130px;border-top:1px solid #cbd5e1;padding-top:6px;font-family:sans-serif;font-size:9px;font-weight:700;color:#64748b">
+  <div style="display: flex; justify-content: space-between; padding-top: 24px; margin-top: 16px;">
+    <div style="text-align: center; width: 140px; border-top: 1.5px solid #94a3b8; padding-top: 6px; font-family: sans-serif; font-size: 9px; font-weight: 700; color: #475569;">
       Depositor Signature
     </div>
-    <div style="text-align:center;width:130px;border-top:1px solid #cbd5e1;padding-top:6px;font-family:sans-serif;font-size:9px;font-weight:700;color:#64748b">
+    <div style="text-align: center; width: 140px; border-top: 1.5px solid #94a3b8; padding-top: 6px; font-family: sans-serif; font-size: 9px; font-weight: 700; color: #475569;">
       Authorized Cashier
     </div>
   </div>
 </body>
 </html>`;
             };
+
+            const previewSchool = (lastPaymentResult.school_id && typeof lastPaymentResult.school_id === "object") ? lastPaymentResult.school_id : (school || {});
+            const previewSchoolName = previewSchool.name || lastPaymentResult.school_name || school?.name || "School";
+            const previewSchoolSubtitle = previewSchool.subtitle || school?.subtitle || "";
+            const previewSchoolLogo = previewSchool.logo_url || school?.logo_url || null;
+            const previewSchoolAddress = previewSchool.address || (previewSchool.city ? `${previewSchool.city}, ${previewSchool.state || ""}` : (school?.address || ""));
+            const previewSchoolPhone = previewSchool.phone || school?.phone || "";
 
             return (
               <div className="space-y-4 max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-border rounded-2xl p-6 shadow-sm">
@@ -1115,8 +1142,17 @@ export default function CollectFeesPage() {
                 {/* On-screen preview of key details */}
                 <div className="p-6 border border-slate-200 rounded-2xl bg-white text-slate-800 font-sans text-xs space-y-4 text-left shadow-sm">
                   <div className="text-center border-b border-slate-200 pb-3 mb-3">
-                    <p className="text-base font-black uppercase tracking-widest text-slate-900">Fee Payment Receipt</p>
-                    <p className="text-[10px] text-slate-500 mt-0.5 font-sans font-bold">{lastPaymentResult.receipt_number}</p>
+                    {previewSchoolLogo && (
+                      <img src={previewSchoolLogo} alt="Logo" className="w-12 h-12 mx-auto mb-2 object-contain" />
+                    )}
+                    <p className="text-base font-black uppercase tracking-wider text-slate-900">{previewSchoolName}</p>
+                    {previewSchoolSubtitle && <p className="text-[11px] font-semibold text-slate-600">{previewSchoolSubtitle}</p>}
+                    {(previewSchoolAddress || previewSchoolPhone) && (
+                      <p className="text-[10px] text-slate-500 mt-0.5">
+                        {[previewSchoolAddress, previewSchoolPhone ? `Ph: ${previewSchoolPhone}` : ""].filter(Boolean).join(" • ")}
+                      </p>
+                    )}
+                    <p className="text-[10px] text-primary font-mono font-bold mt-1">Receipt No: {lastPaymentResult.receipt_number}</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3 text-[11px] font-sans">

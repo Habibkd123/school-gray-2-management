@@ -62,16 +62,16 @@ export async function GET(req: NextRequest) {
   const queryPromise = (async () => {
     await connectToDatabase();
 
-    const search        = url.searchParams.get("search") || "";
+    const search = url.searchParams.get("search") || "";
     const academic_year = url.searchParams.get("academic_year") || "";
-    const section       = url.searchParams.get("section") || "";
-    const status        = url.searchParams.get("status") || "";
-    const sortOrder     = url.searchParams.get("sort") === "desc" ? -1 : 1;
-    const limitParam    = url.searchParams.get("limit");
-    const isAll         = limitParam === "all";
-    const page          = Math.max(1, parseInt(url.searchParams.get("page")  || "1"));
-    const limit         = isAll ? 100000 : Math.min(500, Math.max(1, parseInt(limitParam || "10")));
-    const skip          = isAll ? 0 : (page - 1) * limit;
+    const section = url.searchParams.get("section") || "";
+    const status = url.searchParams.get("status") || "";
+    const sortOrder = url.searchParams.get("sort") === "desc" ? -1 : 1;
+    const limitParam = url.searchParams.get("limit");
+    const isAll = limitParam === "all";
+    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
+    const limit = isAll ? 1000 : Math.min(500, Math.max(1, parseInt(limitParam || "10")));
+    const skip = isAll ? 0 : (page - 1) * limit;
 
     const query: Record<string, any> = {};
     if (user.role === "super_admin") {
@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
     if (!showDeleted) {
       query.is_deleted = { $ne: true };
     }
-    
+
     const andFilters: any[] = [];
 
     // Teacher role: restrict to classes where they are the class teacher OR assigned as Subject/Co-class teacher
@@ -123,20 +123,20 @@ export async function GET(req: NextRequest) {
     if (search) {
       andFilters.push({
         $or: [
-          { name:    { $regex: search, $options: "i" } },
+          { name: { $regex: search, $options: "i" } },
           { section: { $regex: search, $options: "i" } },
         ]
       });
     }
 
     if (academic_year) query.academic_year = academic_year;
-    if (section)       query.section       = section;
+    if (section) query.section = section;
     if (status && status !== "all") {
       query.status = status;
     } else if (status !== "all") {
       query.status = { $ne: "Archived" };
     }
-    if (andFilters.length > 0) query.$and  = andFilters;
+    if (andFilters.length > 0) query.$and = andFilters;
 
     // Run count + paged list in parallel for minimum latency
     const [total, classes] = await Promise.all([
@@ -300,15 +300,15 @@ export async function POST(req: NextRequest) {
     }
 
     const newClass = await Class.create({
-      school_id:        schoolId as string,
-      name:             trimmedName,
-      section:          trimmedSection,
-      class_code:       class_code?.trim().toUpperCase() || undefined,
-      status:           status || "Active",
-      academic_year:    trimmedYear,
+      school_id: schoolId as string,
+      name: trimmedName,
+      section: trimmedSection,
+      class_code: class_code?.trim().toUpperCase() || undefined,
+      status: status || "Active",
+      academic_year: trimmedYear,
       class_teacher_id: class_teacher_id || null,
-      capacity:         capacity ? parseInt(capacity) : 40,
-      sort_weight:      computeSortWeight(trimmedName),  // set on create too (pre-save also handles it)
+      capacity: capacity ? parseInt(capacity) : 40,
+      sort_weight: computeSortWeight(trimmedName),  // set on create too (pre-save also handles it)
     });
 
     const populated = await newClass.populate("class_teacher_id", "name employee_id");

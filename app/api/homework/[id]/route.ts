@@ -38,7 +38,7 @@ export async function GET(
     }
 
     if (role === "teacher") {
-      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
+      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId }).lean();
       if (!teacher) {
         return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
       }

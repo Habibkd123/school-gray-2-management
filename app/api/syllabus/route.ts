@@ -103,16 +103,16 @@ export async function GET(req: NextRequest) {
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const limitParam = url.searchParams.get("limit");
     const isAll = limitParam === "all";
-    const limit = isAll ? 100000 : parseInt(limitParam || "10", 10);
+    const limit = isAll ? 1000 : parseInt(limitParam || "10", 10);
     const skip = isAll ? 0 : (page - 1) * limit;
 
     const query: any = { school_id: new mongoose.Types.ObjectId(schoolId!) };
 
     // Enforce role visibility limits
     if (user.role === "student") {
-      const studentProfile = await Student.findOne({ 
-        user_id: user.user_id ? new mongoose.Types.ObjectId(user.user_id) : undefined, 
-        school_id: new mongoose.Types.ObjectId(schoolId!) 
+      const studentProfile = await Student.findOne({
+        user_id: user.user_id ? new mongoose.Types.ObjectId(user.user_id) : undefined,
+        school_id: new mongoose.Types.ObjectId(schoolId!)
       }).lean();
       if (!studentProfile) {
         return NextResponse.json({ success: false, message: "Student profile not found." }, { status: 404 });
@@ -122,9 +122,9 @@ export async function GET(req: NextRequest) {
       query.status = "Published";
     } else if (user.role === "parent") {
       // Parents see what their children see
-      const parentProfile = await Student.findOne({ 
-        parent_id: user.user_id ? new mongoose.Types.ObjectId(user.user_id) : undefined, 
-        school_id: new mongoose.Types.ObjectId(schoolId!) 
+      const parentProfile = await Student.findOne({
+        parent_id: user.user_id ? new mongoose.Types.ObjectId(user.user_id) : undefined,
+        school_id: new mongoose.Types.ObjectId(schoolId!)
       }).lean();
       if (!parentProfile) {
         return NextResponse.json({ success: false, message: "Associated student profile not found." }, { status: 404 });
@@ -195,12 +195,12 @@ export async function GET(req: NextRequest) {
         .lean(),
       (class_id && academic_year && mongoose.Types.ObjectId.isValid(class_id))
         ? TeacherAssignment.find({
-            school_id: new mongoose.Types.ObjectId(schoolId!),
-            class_id: new mongoose.Types.ObjectId(class_id),
-            academic_year,
-            status: "Active",
-            is_deleted: false
-          })
+          school_id: new mongoose.Types.ObjectId(schoolId!),
+          class_id: new mongoose.Types.ObjectId(class_id),
+          academic_year,
+          status: "Active",
+          is_deleted: false
+        })
           .populate("class_id", "name section")
           .populate("section_id", "name")
           .populate("stream_id", "name")
@@ -254,7 +254,7 @@ export async function GET(req: NextRequest) {
       assignments.forEach((assignment: any) => {
         if (!assignment.subject_master_id) return;
         const subjectIdStr = String(assignment.subject_master_id._id || assignment.subject_master_id);
-        
+
         const exists = mergedSyllabi.some(
           (s: any) => String(s.subject_master_id?._id || s.subject_master_id) === subjectIdStr
         );
@@ -267,11 +267,11 @@ export async function GET(req: NextRequest) {
             class_id: assignment.class_id ? { _id: String(assignment.class_id._id), name: assignment.class_id.name, section: assignment.class_id.section } : null,
             section_id: assignment.section_id ? { _id: String(assignment.section_id._id), name: assignment.section_id.name } : null,
             stream_id: assignment.stream_id ? { _id: String(assignment.stream_id._id), name: assignment.stream_id.name } : null,
-            subject_master_id: assignment.subject_master_id ? { 
-              _id: String(assignment.subject_master_id._id), 
-              name: assignment.subject_master_id.name, 
-              subject_code: assignment.subject_master_id.subject_code || assignment.subject_master_id.code || "—", 
-              description: assignment.subject_master_id.description || "" 
+            subject_master_id: assignment.subject_master_id ? {
+              _id: String(assignment.subject_master_id._id),
+              name: assignment.subject_master_id.name,
+              subject_code: assignment.subject_master_id.subject_code || assignment.subject_master_id.code || "—",
+              description: assignment.subject_master_id.description || ""
             } : null,
             teacher_id: assignment.teacher_id ? { _id: String(assignment.teacher_id._id), name: assignment.teacher_id.name, employee_id: assignment.teacher_id.employee_id, designation: assignment.teacher_id.designation, photo_url: assignment.teacher_id.photo_url } : null,
             title: `${assignment.academic_year} Syllabus`,

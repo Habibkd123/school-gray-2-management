@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
 
     // ─── Step 4: Validate the School (by ID, always available) ──────────
     const schoolDoc = await School.findById(school_id)
-      .select("is_active login_config subdomain name subtitle logo_url")
+      .select("is_active login_config subdomain name subtitle logo_url address phone email")
       .lean();
 
     if (!schoolDoc) {
@@ -316,6 +316,9 @@ export async function POST(request: NextRequest) {
             subtitle: (schoolDoc as any).subtitle?.trim(),
             logo_url: (schoolDoc as any).logo_url,
             subdomain: (schoolDoc as any).subdomain,
+            address: (schoolDoc as any).address?.trim() || null,
+            phone: (schoolDoc as any).phone?.trim() || null,
+            email: (schoolDoc as any).email?.trim() || null,
           } : null,
           school_subdomain: schoolSubdomain,
           access_token: accessToken,

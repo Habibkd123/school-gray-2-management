@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
     }
 
-    const display_id = `H${Math.floor(100000 + Math.random() * 900000)}`;
+    const display_id = `H${Math.floor(1000 + Math.random() * 900000)}`;
 
     const holiday = await Holiday.create({
       school_id: schoolId as string,

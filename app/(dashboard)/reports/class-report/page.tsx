@@ -18,7 +18,7 @@ export default function ClassReportPage() {
   const { students, fetchStudents } = useStudents({ skip: true });
 
   const [globalSchoolId, setGlobalSchoolId] = useState("all");
-  const [topLevelSchools, setTopLevelSchools] = useState<{_id: string, name: string}[]>([]);
+  const [topLevelSchools, setTopLevelSchools] = useState<{ _id: string, name: string }[]>([]);
 
   useEffect(() => {
     fetchClasses({ school_id: globalSchoolId });
@@ -130,7 +130,7 @@ export default function ClassReportPage() {
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         if (Date.now() - parsed.timestamp < 120_000 && parsed.data) return parsed.data;
-      } catch {}
+      } catch { }
       return null;
     })();
 
@@ -151,7 +151,7 @@ export default function ClassReportPage() {
           setClassDetail(data.data);
           try {
             sessionStorage.setItem(cacheKey, JSON.stringify({ data: data.data, timestamp: Date.now() }));
-          } catch {}
+          } catch { }
         }
       } catch (err) {
         console.error(err);
@@ -496,8 +496,8 @@ export default function ClassReportPage() {
                 key={p}
                 onClick={() => setPage(p)}
                 className={`w-7 h-7 rounded-lg text-[13px] font-medium flex items-center justify-center ${page === p
-                    ? "bg-primary text-white"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
+                  ? "bg-primary text-white"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
                   }`}
               >
                 {p}
@@ -517,7 +517,7 @@ export default function ClassReportPage() {
       {/* Class Dashboard Modal */}
       {selectedClassId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-in fade-in duration-200 print:relative print:inset-auto print:bg-transparent print:p-0">
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden text-left border border-border print:border-none print:shadow-none print:max-h-none print:overflow-visible">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-5xl max-h-[95vh] flex flex-col overflow-hidden text-left border border-border print:border-none print:shadow-none print:max-h-none print:overflow-visible">
             {/* Modal Header */}
             <div className="p-5 flex items-center justify-between border-b border-border bg-slate-50/50 dark:bg-slate-800/50 print:hidden">
               <div className="flex items-center gap-2">
@@ -648,8 +648,8 @@ export default function ClassReportPage() {
                         key={t.id}
                         onClick={() => setActiveTab(t.id as any)}
                         className={`px-4 py-2.5 text-xs font-bold border-b-2 transition-all cursor-pointer ${activeTab === t.id
-                            ? "border-primary text-primary"
-                            : "border-transparent text-slate-500 hover:text-slate-700"
+                          ? "border-primary text-primary"
+                          : "border-transparent text-slate-500 hover:text-slate-700"
                           }`}
                       >
                         {t.label}

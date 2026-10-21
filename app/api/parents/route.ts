@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1");
     const limitParam = searchParams.get("limit");
     const isAll = limitParam === "all";
-    const limit = isAll ? 100000 : parseInt(limitParam || "10");
+    const limit = isAll ? 1000 : parseInt(limitParam || "10");
     const academic_year = searchParams.get("academic_year");
     const class_id = searchParams.get("class_id");
     const section = searchParams.get("section");
@@ -229,7 +229,7 @@ export async function POST(request: NextRequest) {
           name: name.trim(),
           email: normalizedEmail,
           role: "parent",
-          password_hash: "Parent@123", 
+          password_hash: "Parent@123",
           plain_password: "Parent@123",
         });
         userId = newUser._id;

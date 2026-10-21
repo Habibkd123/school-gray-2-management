@@ -13,9 +13,9 @@ export async function GET(request: NextRequest) {
     await connectDB();
 
     // ─── Fetch fresh user data from DB ────────────────────────────
-    const dbUser = await User.findById(user!.user_id).select(
-      "-password_hash -reset_token -reset_token_expiry"
-    );
+    const dbUser = await User.findById(user!.user_id)
+      .select("-password_hash -reset_token -reset_token_expiry")
+      .lean();
 
     if (!dbUser || !dbUser.is_active) {
       return NextResponse.json(
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     let schoolData = null;
     if (dbUser.school_id) {
       const schoolDoc = await School.findById(dbUser.school_id)
-        .select("name subtitle logo_url subdomain")
+        .select("name subtitle logo_url subdomain address phone email")
         .lean();
       if (schoolDoc) {
         schoolData = {
@@ -36,6 +36,9 @@ export async function GET(request: NextRequest) {
           subtitle: (schoolDoc as any).subtitle?.trim(),
           logo_url: (schoolDoc as any).logo_url,
           subdomain: (schoolDoc as any).subdomain,
+          address: (schoolDoc as any).address?.trim() || null,
+          phone: (schoolDoc as any).phone?.trim() || null,
+          email: (schoolDoc as any).email?.trim() || null,
         };
       }
     }

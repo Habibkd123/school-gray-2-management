@@ -50,7 +50,8 @@ export async function GET(
     const teacher = await Teacher.findOne(query)
       .populate("user_id", "name email role is_active plain_password")
       .populate("class_id", "name section")
-      .populate("class_ids", "name section");
+      .populate("class_ids", "name section")
+      .lean();
 
     if (!teacher) {
       return NextResponse.json({ success: false, message: "Teacher not found" }, { status: 404 });

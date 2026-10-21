@@ -4,6 +4,8 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import ReportTabs from "../ReportTabs";
 import { useClasses } from "@/app/hooks/useClasses";
 import { getAuthHeaders } from "@/lib/utils/session";
+import { useAuth } from "@/app/context/auth";
+import { useAppState } from "@/app/context/store";
 import { TeacherService } from "@/app/services/TeacherService";
 import {
   BarChart2,
@@ -51,18 +53,18 @@ function getStoredFinanceFees(key: string): any[] | null {
     const raw = sessionStorage.getItem(SS_FINANCE_FEES_PREFIX + key);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
-    if (Date.now() - parsed.timestamp < 60_000 && Array.isArray(parsed.data)) {
+    if (Date.now() - parsed.timestamp < 60_000 && Array.isArray(parsed.data) && parsed.data.length > 0) {
       return parsed.data;
     }
-  } catch {}
+  } catch { }
   return null;
 }
 
 function setStoredFinanceFees(key: string, data: any[]) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !Array.isArray(data) || data.length === 0) return;
   try {
     sessionStorage.setItem(SS_FINANCE_FEES_PREFIX + key, JSON.stringify({ data, timestamp: Date.now() }));
-  } catch {}
+  } catch { }
 }
 
 function getStoredFinanceSalaries(key: string): { payments: any[]; teachers: any[] } | null {
@@ -72,47 +74,65 @@ function getStoredFinanceSalaries(key: string): { payments: any[]; teachers: any
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (Date.now() - parsed.timestamp < 60_000 && parsed.data) {
-      return parsed.data;
+      const rawPayments = parsed.data.payments;
+      const rawTeachers = parsed.data.teachers;
+      const payments = Array.isArray(rawPayments) ? rawPayments : [];
+      const teachers = Array.isArray(rawTeachers)
+        ? rawTeachers
+        : (Array.isArray(rawTeachers?.teachers) ? rawTeachers.teachers : []);
+      if (payments.length === 0 && teachers.length === 0) return null;
+      return { payments, teachers };
     }
-  } catch {}
+  } catch { }
   return null;
 }
 
 function setStoredFinanceSalaries(key: string, data: { payments: any[]; teachers: any[] }) {
   if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(SS_FINANCE_SALARIES_PREFIX + key, JSON.stringify({ data, timestamp: Date.now() }));
-  } catch {}
+    const payments = Array.isArray(data.payments) ? data.payments : [];
+    const teachers = Array.isArray(data.teachers)
+      ? data.teachers
+      : (Array.isArray((data.teachers as any)?.teachers) ? (data.teachers as any).teachers : []);
+    sessionStorage.setItem(SS_FINANCE_SALARIES_PREFIX + key, JSON.stringify({ data: { payments, teachers }, timestamp: Date.now() }));
+  } catch { }
 }
-
-import { useAuth } from "@/app/context/auth";
 
 export default function FinanceReportPage() {
   const { user } = useAuth();
+  const { academicYear: contextAcademicYear } = useAppState();
   const isSuperAdmin = user?.role === "super_admin";
   const [globalSchoolId, setGlobalSchoolId] = useState("all");
-  const [topLevelSchools, setTopLevelSchools] = useState<{_id: string, name: string}[]>([]);
+  const [topLevelSchools, setTopLevelSchools] = useState<{ _id: string, name: string }[]>([]);
   const { classes, isLoading: isClassesLoading } = useClasses();
 
   // Active Tab: student_fees / teacher_salary
   const [activeTab, setActiveTab] = useState<"student_fees" | "teacher_salary">("student_fees");
 
   // Filter states
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<string>("");
+  const effectiveAcademicYear = selectedAcademicYear || contextAcademicYear || "2026-2027";
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
 
-  const cachedFees = getStoredFinanceFees("all");
-  const cachedSal = getStoredFinanceSalaries("all");
+  const cachedFees = getStoredFinanceFees(`${effectiveAcademicYear}_${globalSchoolId}_all_all`);
+  const cachedSal = getStoredFinanceSalaries(`${globalSchoolId}_all_all`);
 
   // Student Dues raw & aggregated stats
-  const [studentsList, setStudentsList] = useState<any[]>(() => cachedFees ?? []);
-  const [isLoadingStudents, setIsLoadingStudents] = useState(() => cachedFees === null);
+  const [studentsList, setStudentsList] = useState<any[]>(() => {
+    return Array.isArray(cachedFees) ? cachedFees : [];
+  });
+  const [isLoadingStudents, setIsLoadingStudents] = useState(() => !cachedFees || cachedFees.length === 0);
 
   // Teacher Salary logs
-  const [salariesList, setSalariesList] = useState<any[]>(() => cachedSal?.payments ?? []);
-  const [teachersList, setTeachersList] = useState<any[]>(() => cachedSal?.teachers ?? []);
+  const [salariesList, setSalariesList] = useState<any[]>(() => {
+    return Array.isArray(cachedSal?.payments) ? cachedSal.payments : [];
+  });
+  const [teachersList, setTeachersList] = useState<any[]>(() => {
+    return Array.isArray(cachedSal?.teachers) ? cachedSal.teachers : [];
+  });
   const [isLoadingSalaries, setIsLoadingSalaries] = useState(() => cachedSal === null);
 
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -125,55 +145,62 @@ export default function FinanceReportPage() {
   useEffect(() => {
     setFeesPage(1);
     setSalaryPage(1);
-  }, [selectedClass, selectedStatus, startDate, endDate, activeTab]);
+  }, [selectedClass, selectedStatus, startDate, endDate, activeTab, selectedAcademicYear, globalSchoolId]);
 
   // Load all student fees data (fetch large limit to compute summaries locally)
-  const fetchStudentFees = useCallback(async () => {
-    const cacheKey = `${selectedClass}_${selectedStatus}`;
-    const cached = getStoredFinanceFees(cacheKey) ?? getStoredFinanceFees("all");
-    if (cached && cached.length > 0) {
-      setStudentsList(cached);
-      setIsLoadingStudents(false);
-    } else if (studentsList.length === 0) {
-      setIsLoadingStudents(true);
+  const fetchStudentFees = useCallback(async (skipCache = false) => {
+    const cacheKey = `${effectiveAcademicYear}_${globalSchoolId}_${selectedClass || "all"}_${selectedStatus || "all"}`;
+    if (!skipCache) {
+      const cached = getStoredFinanceFees(cacheKey);
+      if (cached && Array.isArray(cached) && cached.length > 0) {
+        setStudentsList(cached);
+        setIsLoadingStudents(false);
+        return;
+      }
     }
+    setIsLoadingStudents(true);
 
     try {
       const params = new URLSearchParams({
-        limit: "1000",
+        limit: "2500",
         class_id: selectedClass,
         status: selectedStatus,
       });
+      if (effectiveAcademicYear && effectiveAcademicYear !== "all") {
+        params.set("academic_year", effectiveAcademicYear);
+      }
       if (globalSchoolId && globalSchoolId !== "all") {
         params.set("school_id", globalSchoolId);
       }
       const res = await fetch(`/api/fees?${params.toString()}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      if (data.success) {
-        setStudentsList(data.data.students);
-        setStoredFinanceFees(cacheKey, data.data.students);
-        if (!selectedClass && !selectedStatus) {
-          setStoredFinanceFees("all", data.data.students);
+      if (data.success && data.data) {
+        const students = Array.isArray(data.data.students) ? data.data.students : (Array.isArray(data.data) ? data.data : []);
+        setStudentsList(students);
+        if (students.length > 0) {
+          setStoredFinanceFees(cacheKey, students);
         }
       }
     } catch (e) {
-      console.error(e);
+      console.error("[FinanceReport fetchStudentFees Error]", e);
     } finally {
       setIsLoadingStudents(false);
     }
-  }, [selectedClass, selectedStatus, studentsList.length]);
+  }, [selectedClass, selectedStatus, globalSchoolId, effectiveAcademicYear]);
 
   // Load salaries history & teachers list
-  const fetchTeacherSalaries = useCallback(async () => {
-    const cacheKey = `${startDate}_${endDate}`;
-    const cached = getStoredFinanceSalaries(cacheKey) ?? getStoredFinanceSalaries("all");
-    if (cached) {
-      setSalariesList(cached.payments);
-      setTeachersList(cached.teachers);
-      setIsLoadingSalaries(false);
-    } else if (salariesList.length === 0) {
-      setIsLoadingSalaries(true);
+  const fetchTeacherSalaries = useCallback(async (skipCache = false) => {
+    const cacheKey = `${globalSchoolId}_${startDate || "all"}_${endDate || "all"}`;
+    if (!skipCache) {
+      const cached = getStoredFinanceSalaries(cacheKey);
+      if (cached) {
+        setSalariesList(cached.payments);
+        setTeachersList(cached.teachers);
+        setIsLoadingSalaries(false);
+        return;
+      }
     }
+    setIsLoadingSalaries(true);
 
     try {
       const params = new URLSearchParams();
@@ -184,24 +211,25 @@ export default function FinanceReportPage() {
       if (globalSchoolId && globalSchoolId !== "all") {
         params.set("school_id", globalSchoolId);
       }
-      const [salRes, teachers] = await Promise.all([
+      const [salRes, teachersRes] = await Promise.all([
         fetch(`/api/salaries?${params.toString()}`, { headers: getAuthHeaders() }),
-        fetch(`/api/teachers${globalSchoolId !== "all" ? `?school_id=${globalSchoolId}` : ""}`, { headers: getAuthHeaders() }).then(res => res.json()).then(d => d.data || []),
+        fetch(`/api/teachers?limit=1000${globalSchoolId !== "all" ? `&school_id=${globalSchoolId}` : ""}`, { headers: getAuthHeaders() }),
       ]);
       const salData = await salRes.json();
-      const payments = salData.success ? (salData.data?.payments || salData.data || []) : [];
+      const teachersData = await teachersRes.json();
+      const payments = salData.success ? (Array.isArray(salData.data?.payments) ? salData.data.payments : (Array.isArray(salData.data) ? salData.data : [])) : [];
+      const teachers = teachersData.success ? (Array.isArray(teachersData.data?.teachers) ? teachersData.data.teachers : (Array.isArray(teachersData.data) ? teachersData.data : [])) : [];
       setSalariesList(payments);
       setTeachersList(teachers);
-      setStoredFinanceSalaries(cacheKey, { payments, teachers });
-      if (!startDate && !endDate) {
-        setStoredFinanceSalaries("all", { payments, teachers });
+      if (payments.length > 0 || teachers.length > 0) {
+        setStoredFinanceSalaries(cacheKey, { payments, teachers });
       }
     } catch (e) {
-      console.error(e);
+      console.error("[FinanceReport fetchTeacherSalaries Error]", e);
     } finally {
       setIsLoadingSalaries(false);
     }
-  }, [startDate, endDate, salariesList.length]);
+  }, [startDate, endDate, globalSchoolId]);
 
   useEffect(() => {
     if (activeTab === "student_fees") {
@@ -209,7 +237,7 @@ export default function FinanceReportPage() {
     } else {
       fetchTeacherSalaries();
     }
-  }, [activeTab, fetchStudentFees, fetchTeacherSalaries, globalSchoolId]);
+  }, [activeTab, fetchStudentFees, fetchTeacherSalaries]);
 
   useEffect(() => {
     if (isSuperAdmin) {
@@ -226,28 +254,32 @@ export default function FinanceReportPage() {
 
   // Student Fees aggregates (filtered locally by date if selected)
   const studentDuesAggregates = useMemo(() => {
-    let list = [...studentsList];
+    let list = Array.isArray(studentsList) ? [...studentsList] : [];
 
     // Optional local date filtering on lastPaymentDate
     if (startDate || endDate) {
       list = list.filter((s) => {
-        if (!s.lastPaymentDate) return false;
+        if (!s?.lastPaymentDate) return false;
         const pDate = new Date(s.lastPaymentDate);
+        if (isNaN(pDate.getTime())) return false;
         if (startDate && pDate < new Date(startDate)) return false;
         if (endDate && pDate > new Date(endDate + "T23:59:59")) return false;
         return true;
       });
     }
 
-    const totalFeesCollection = list.reduce((sum, s) => sum + s.totalFees, 0);
-    const paidFees = list.reduce((sum, s) => sum + s.totalPaid, 0);
-    const pendingFees = list.reduce((sum, s) => sum + s.balanceAmount, 0);
+    const totalFeesCollection = list.reduce((sum, s) => sum + (Number(s?.totalFees) || 0), 0);
+    const paidFees = list.reduce((sum, s) => sum + (Number(s?.totalPaid) || 0), 0);
+    const pendingFees = list.reduce((sum, s) => sum + (Number(s?.balanceAmount) || 0), 0);
 
     // Class wise aggregates grouping
     const classSummaryMap = new Map<string, ClassWiseSummary>();
     list.forEach((s) => {
-      const classIdStr = s.class_id || "unassigned";
-      const classNameStr = s.class_name || "Unassigned";
+      if (!s) return;
+      const classIdStr = typeof s.class_id === "object" && s.class_id
+        ? String(s.class_id._id || s.class_id.id || "unassigned")
+        : String(s.class_id || "unassigned");
+      const classNameStr = s.class_name || (typeof s.class_id === "object" && s.class_id ? s.class_id.name : "Unassigned");
       let summary = classSummaryMap.get(classIdStr);
       if (!summary) {
         summary = {
@@ -260,9 +292,9 @@ export default function FinanceReportPage() {
         };
       }
       summary.student_count++;
-      summary.total_fees += s.totalFees;
-      summary.total_paid += s.totalPaid;
-      summary.balance_amount += s.balanceAmount;
+      summary.total_fees += Number(s.totalFees) || 0;
+      summary.total_paid += Number(s.totalPaid) || 0;
+      summary.balance_amount += Number(s.balanceAmount) || 0;
       classSummaryMap.set(classIdStr, summary);
     });
 
@@ -277,13 +309,16 @@ export default function FinanceReportPage() {
 
   // Teacher Salary aggregates
   const teacherSalariesAggregates = useMemo(() => {
+    const safeSalaries = Array.isArray(salariesList) ? salariesList : [];
+    const safeTeachers = Array.isArray(teachersList) ? teachersList : [];
+
     // Total Salary Paid in range
-    const totalPaid = salariesList.reduce((sum, p) => sum + (p.final_salary || 0), 0);
+    const totalPaid = safeSalaries.reduce((sum, p) => sum + (Number(p?.final_salary) || Number(p?.amount_paid) || 0), 0);
 
     // Total Monthly Contract salary for all active teachers
-    const totalContractSalaries = teachersList
-      .filter((t) => t.is_active)
-      .reduce((sum, t) => sum + (t.monthly_salary || 0), 0);
+    const totalContractSalaries = safeTeachers
+      .filter((t) => t && t.is_active)
+      .reduce((sum, t) => sum + (Number(t.monthly_salary) || Number(t.basic_salary) || 0), 0);
 
     // Pending salary = Contract - Paid (clipped to 0)
     const pendingSalary = Math.max(0, totalContractSalaries - totalPaid);
@@ -291,7 +326,7 @@ export default function FinanceReportPage() {
     return {
       totalPaid,
       pendingSalary,
-      historyLogs: salariesList
+      historyLogs: safeSalaries
     };
   }, [salariesList, teachersList]);
 
@@ -334,9 +369,9 @@ export default function FinanceReportPage() {
         p.teacher_id?.employee_id || "N/A",
         p.teacher_id?.designation || "Teacher",
         p.salary_period,
-        p.final_salary || 0,
-        new Date(p.payment_date).toLocaleDateString(),
-        p.payment_method,
+        p.final_salary || p.amount_paid || 0,
+        p.payment_date && !isNaN(new Date(p.payment_date).getTime()) ? new Date(p.payment_date).toLocaleDateString() : "N/A",
+        p.payment_method || "N/A",
         p.remarks || ""
       ]);
       filename = `salary_payroll_report_${new Date().toISOString().slice(0, 10)}`;
@@ -364,8 +399,9 @@ export default function FinanceReportPage() {
     setIsExportOpen(false);
   };
 
-  const money = (val: number) => {
-    return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(val);
+  const money = (val: number | null | undefined) => {
+    const num = Number(val) || 0;
+    return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR" }).format(num);
   };
 
   return (
@@ -402,8 +438,20 @@ export default function FinanceReportPage() {
           )}
           <button
             onClick={() => {
-              if (activeTab === "student_fees") fetchStudentFees();
-              else fetchTeacherSalaries();
+              if (typeof window !== "undefined") {
+                try {
+                  const toRemove: string[] = [];
+                  for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    if (key && (key.startsWith(SS_FINANCE_FEES_PREFIX) || key.startsWith(SS_FINANCE_SALARIES_PREFIX))) {
+                      toRemove.push(key);
+                    }
+                  }
+                  toRemove.forEach((k) => sessionStorage.removeItem(k));
+                } catch { }
+              }
+              if (activeTab === "student_fees") fetchStudentFees(true);
+              else fetchTeacherSalaries(true);
             }}
             className="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer"
             title="Refresh statistics"
@@ -449,7 +497,66 @@ export default function FinanceReportPage() {
       </div>
 
       {/* DATE & FILTERS ROW BLOCK */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-left print:hidden shadow-sm">
+      <div className={`bg-white dark:bg-slate-900 border border-border rounded-xl p-4.5 grid grid-cols-1 sm:grid-cols-2 ${activeTab === "student_fees" ? "md:grid-cols-5" : "md:grid-cols-3"} gap-4 text-left print:hidden shadow-sm`}>
+        {activeTab === "student_fees" && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] uppercase font-bold text-slate-400">Academic Year</label>
+            <div className="relative">
+              <select
+                value={selectedAcademicYear || effectiveAcademicYear}
+                onChange={(e) => setSelectedAcademicYear(e.target.value)}
+                className="w-full pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+              >
+                <option value="2026-2027">2026-2027</option>
+                <option value="2025-2026">2025-2026</option>
+                <option value="2024-2025">2024-2025</option>
+                <option value="all">All Academic Years</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "student_fees" && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] uppercase font-bold text-slate-400">Class filter</label>
+            <div className="relative">
+              <select
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                className="w-full pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+              >
+                <option value="">All Classes</option>
+                {classes.map((cls) => (
+                  <option key={cls._id} value={cls._id}>
+                    {cls.name}{cls.section ? ` - ${cls.section}` : ""}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "student_fees" && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] uppercase font-bold text-slate-400">Status filter</label>
+            <div className="relative">
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
+              >
+                <option value="">All Statuses</option>
+                <option value="Paid">Paid</option>
+                <option value="Partial">Partial</option>
+                <option value="Pending">Pending</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col gap-1.5">
           <label className="text-[10px] uppercase font-bold text-slate-400">Start Date</label>
           <input
@@ -470,52 +577,14 @@ export default function FinanceReportPage() {
           />
         </div>
 
-        {activeTab === "student_fees" ? (
-          <>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] uppercase font-bold text-slate-400">Class filter</label>
-              <div className="relative">
-                <select
-                  value={selectedClass}
-                  onChange={(e) => setSelectedClass(e.target.value)}
-                  className="w-full pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
-                >
-                  <option value="">All Classes</option>
-                  {classes.map((cls) => (
-                    <option key={cls._id} value={cls._id}>
-                      {cls.name}{cls.section ? ` - ${cls.section}` : ""}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] uppercase font-bold text-slate-400">Status filter</label>
-              <div className="relative">
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full pl-3 pr-8 py-2.5 bg-slate-50 dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer"
-                >
-                  <option value="">All Statuses</option>
-                  <option value="Paid">Paid</option>
-                  <option value="Partial">Partial</option>
-                  <option value="Pending">Pending</option>
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="col-span-2 flex items-end">
+        {activeTab === "teacher_salary" && (
+          <div className="flex items-end">
             <button
               onClick={() => {
                 setStartDate("");
                 setEndDate("");
               }}
-              className="px-4 py-2.5 border border-border bg-slate-50 text-slate-500 font-bold text-xs rounded-xl hover:bg-slate-100 transition-colors"
+              className="w-full px-4 py-2.5 border border-border bg-slate-50 text-slate-500 font-bold text-xs rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
             >
               Clear Date Filter
             </button>
@@ -528,8 +597,8 @@ export default function FinanceReportPage() {
         <button
           onClick={() => setActiveTab("student_fees")}
           className={`px-5 py-2.5 text-xs font-extrabold border-b-2 transition-all cursor-pointer ${activeTab === "student_fees"
-              ? "border-primary text-primary"
-              : "border-transparent text-slate-450 hover:text-slate-700"
+            ? "border-primary text-primary"
+            : "border-transparent text-slate-450 hover:text-slate-700"
             }`}
         >
           Student Fees Collection
@@ -537,8 +606,8 @@ export default function FinanceReportPage() {
         <button
           onClick={() => setActiveTab("teacher_salary")}
           className={`px-5 py-2.5 text-xs font-extrabold border-b-2 transition-all cursor-pointer ${activeTab === "teacher_salary"
-              ? "border-primary text-primary"
-              : "border-transparent text-slate-450 hover:text-slate-700"
+            ? "border-primary text-primary"
+            : "border-transparent text-slate-450 hover:text-slate-700"
             }`}
         >
           Teacher Salary Disbursements
@@ -602,35 +671,48 @@ export default function FinanceReportPage() {
 
               {/* Class-wise Collection Table */}
               <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
-                <div className="p-4 border-b border-border font-bold text-slate-800 dark:text-slate-100">
-                  Class-wise Fee Collection Summary
+                <div className="p-4 border-b border-border font-bold text-slate-800 dark:text-slate-100 flex items-center justify-between">
+                  <span>Class-wise Fee Collection Summary</span>
+                  <span className="text-xs font-semibold text-slate-500">
+                    Total Classes: {studentDuesAggregates.classWiseList.length}
+                  </span>
                 </div>
                 <div className="overflow-x-auto">
-                  <table className="erp-table text-xs">
+                  <table className="erp-table text-xs w-full table-fixed">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-slate-950 border-b border-border text-slate-500 font-bold">
-                        <th className="px-6 py-3.5">Class / Grade Name</th>
-                        <th className="px-6 py-3.5 text-center">Student Count</th>
-                        <th className="px-6 py-3.5 text-right">Configured Fees</th>
-                        <th className="px-6 py-3.5 text-right">Collected Amount</th>
-                        <th className="px-6 py-3.5 text-right">Outstanding Balances</th>
+                        <th className="px-6 py-3.5 text-center w-1/5" style={{ textAlign: "center" }}>Class / Grade Name</th>
+                        <th className="px-6 py-3.5 text-center w-1/5" style={{ textAlign: "center" }}>Student Count</th>
+                        <th className="px-6 py-3.5 text-center w-1/5" style={{ textAlign: "center" }}>Configured Fees</th>
+                        <th className="px-6 py-3.5 text-center w-1/5" style={{ textAlign: "center" }}>Collected Amount</th>
+                        <th className="px-6 py-3.5 text-center w-1/5" style={{ textAlign: "center" }}>Outstanding Balances</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {paginatedClassWise.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="px-6 py-12 text-center text-slate-450 font-bold">
+                          <td colSpan={5} className="px-6 py-12 text-center text-slate-450 font-bold" style={{ textAlign: "center" }}>
                             No class fee summaries generated yet.
                           </td>
                         </tr>
                       ) : (
                         paginatedClassWise.map((row) => (
                           <tr key={row.class_id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                            <td className="px-6 py-4 font-bold text-slate-850 dark:text-slate-200">{row.class_name}</td>
-                            <td className="px-6 py-4 text-center font-semibold text-slate-700 dark:text-slate-350">{row.student_count}</td>
-                            <td className="px-6 py-4 text-right font-sans font-bold text-slate-900 dark:text-white">{money(row.total_fees)}</td>
-                            <td className="px-6 py-4 text-right font-sans font-bold text-emerald-600">{money(row.total_paid)}</td>
-                            <td className="px-6 py-4 text-right font-sans font-bold text-rose-500">{money(row.balance_amount)}</td>
+                            <td className="px-6 py-4 font-bold text-slate-850 dark:text-slate-200 text-center" style={{ textAlign: "center" }}>
+                              {row.class_name}
+                            </td>
+                            <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-350 text-center" style={{ textAlign: "center" }}>
+                              {row.student_count}
+                            </td>
+                            <td className="px-6 py-4 font-sans font-bold text-slate-900 dark:text-white text-center" style={{ textAlign: "center" }}>
+                              {money(row.total_fees)}
+                            </td>
+                            <td className="px-6 py-4 font-sans font-bold text-emerald-600 text-center" style={{ textAlign: "center" }}>
+                              {money(row.total_paid)}
+                            </td>
+                            <td className="px-6 py-4 font-sans font-bold text-rose-500 text-center" style={{ textAlign: "center" }}>
+                              {money(row.balance_amount)}
+                            </td>
                           </tr>
                         ))
                       )}
@@ -656,11 +738,10 @@ export default function FinanceReportPage() {
                         <button
                           key={p}
                           onClick={() => setFeesPage(p)}
-                          className={`w-7 h-7 rounded-lg text-[12px] font-bold flex items-center justify-center ${
-                            feesPage === p
-                              ? "bg-primary text-white"
-                              : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
-                          }`}
+                          className={`w-7 h-7 rounded-lg text-[12px] font-bold flex items-center justify-center ${feesPage === p
+                            ? "bg-primary text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
+                            }`}
                         >
                           {p}
                         </button>
@@ -715,7 +796,9 @@ export default function FinanceReportPage() {
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Staff Members Count</span>
-                    <div className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">{teachersList.filter(t => t.is_active).length} Teachers</div>
+                    <div className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">
+                      {(Array.isArray(teachersList) ? teachersList : []).filter(t => t?.is_active).length} Teachers
+                    </div>
                   </div>
                 </div>
               </div>
@@ -729,18 +812,18 @@ export default function FinanceReportPage() {
                   <table className="erp-table text-xs">
                     <thead>
                       <tr className="bg-slate-50 dark:bg-slate-950 border-b border-border text-slate-500 font-bold">
-                        <th className="px-6 py-3.5">Teacher Name</th>
-                        <th className="px-6 py-3.5">Employee ID</th>
-                        <th className="px-6 py-3.5">Period range</th>
-                        <th className="px-6 py-3.5">Payment Date</th>
-                        <th className="px-6 py-3.5">Method</th>
-                        <th className="px-6 py-3.5 text-right">Disbursed Amount</th>
+                        <th className="px-6 py-3.5 text-left">Teacher Name</th>
+                        <th className="px-6 py-3.5 text-center" style={{ textAlign: "center" }}>Employee ID</th>
+                        <th className="px-6 py-3.5 text-center" style={{ textAlign: "center" }}>Period range</th>
+                        <th className="px-6 py-3.5 text-center" style={{ textAlign: "center" }}>Payment Date</th>
+                        <th className="px-6 py-3.5 text-center" style={{ textAlign: "center" }}>Method</th>
+                        <th className="px-6 py-3.5 text-right" style={{ textAlign: "right" }}>Disbursed Amount</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {paginatedHistoryLogs.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="px-6 py-12 text-center text-slate-450 font-bold">
+                          <td colSpan={6} className="px-6 py-12 text-center text-slate-450 font-bold" style={{ textAlign: "center" }}>
                             No salary payments disbursed in this range.
                           </td>
                         </tr>
@@ -748,15 +831,17 @@ export default function FinanceReportPage() {
                         paginatedHistoryLogs.map((row) => (
                           <tr key={row._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
                             <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">{row.teacher_id?.name || "N/A"}</td>
-                            <td className="px-6 py-4 font-sans font-bold text-slate-700 dark:text-slate-350">{row.teacher_id?.employee_id || "N/A"}</td>
-                            <td className="px-6 py-4">{row.salary_period}</td>
-                            <td className="px-6 py-4 font-semibold">{new Date(row.payment_date).toLocaleDateString()}</td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 font-sans font-bold text-slate-700 dark:text-slate-350 text-center" style={{ textAlign: "center" }}>{row.teacher_id?.employee_id || "N/A"}</td>
+                            <td className="px-6 py-4 text-center" style={{ textAlign: "center" }}>{row.salary_period}</td>
+                            <td className="px-6 py-4 font-semibold text-center" style={{ textAlign: "center" }}>
+                              {row.payment_date && !isNaN(new Date(row.payment_date).getTime()) ? new Date(row.payment_date).toLocaleDateString() : "N/A"}
+                            </td>
+                            <td className="px-6 py-4 text-center" style={{ textAlign: "center" }}>
                               <span className="px-2 py-0.5 rounded bg-slate-100 text-[10px] font-bold">
                                 {row.payment_method || "Bank Transfer"}
                               </span>
                             </td>
-                            <td className="px-6 py-4 text-right font-sans font-bold text-emerald-600">{money(row.final_salary || row.amount_paid || 0)}</td>
+                            <td className="px-6 py-4 text-right font-sans font-bold text-emerald-600" style={{ textAlign: "right" }}>{money(row.final_salary || row.amount_paid || 0)}</td>
                           </tr>
                         ))
                       )}
@@ -782,11 +867,10 @@ export default function FinanceReportPage() {
                         <button
                           key={p}
                           onClick={() => setSalaryPage(p)}
-                          className={`w-7 h-7 rounded-lg text-[12px] font-bold flex items-center justify-center ${
-                            salaryPage === p
-                              ? "bg-primary text-white"
-                              : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 hover:bg-slate-200"
-                          }`}
+                          className={`w-7 h-7 rounded-lg text-[12px] font-bold flex items-center justify-center ${salaryPage === p
+                            ? "bg-primary text-white"
+                            : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-350 hover:bg-slate-200"
+                            }`}
                         >
                           {p}
                         </button>

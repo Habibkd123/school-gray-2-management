@@ -108,6 +108,11 @@ export async function GET(req: NextRequest) {
 
   try {
     const url = new URL(req.url);
+    const paramSchoolId = url.searchParams.get("school_id");
+    const effectiveSchoolId = role === "super_admin"
+      ? (paramSchoolId && paramSchoolId !== "all" ? paramSchoolId : null)
+      : schoolId;
+
     const teacherId = url.searchParams.get("teacher_id");
     const period = url.searchParams.get("period"); // format YYYY-MM
     const year = url.searchParams.get("year"); // e.g. "2026"
@@ -115,7 +120,7 @@ export async function GET(req: NextRequest) {
     const endDateParam = url.searchParams.get("end_date");
     const statusParam = url.searchParams.get("status");
 
-    const cacheKey = `salaries_${schoolId}_${role}_${userId || ""}_${teacherId || "all"}_${period || "all"}_${year || "all"}_${startDateParam || ""}_${endDateParam || ""}_${statusParam || "all"}`;
+    const cacheKey = `salaries_${effectiveSchoolId || "all"}_${role}_${userId || ""}_${teacherId || "all"}_${period || "all"}_${year || "all"}_${startDateParam || ""}_${endDateParam || ""}_${statusParam || "all"}`;
 
     const cached = _salariesServerCache.get(cacheKey);
     if (cached && Date.now() < cached.expiresAt) {
@@ -139,7 +144,10 @@ export async function GET(req: NextRequest) {
     const queryPromise = (async () => {
       await connectToDatabase();
 
-      let query: any = { school_id: schoolId, is_deleted: { $ne: true } };
+      let query: any = { is_deleted: { $ne: true } };
+      if (effectiveSchoolId) {
+        query.school_id = effectiveSchoolId;
+      }
 
       // Security check: Teachers can only view their own salary history
       if (role === "teacher") {

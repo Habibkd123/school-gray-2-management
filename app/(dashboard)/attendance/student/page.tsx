@@ -17,6 +17,10 @@ import {
   XCircle,
   Clock,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   RefreshCcw,
   ArrowLeft,
   GraduationCap,
@@ -29,6 +33,7 @@ import {
   Edit,
   History,
   Eye,
+  ExternalLink,
 } from "lucide-react";
 import { useStudentAttendance } from "@/app/hooks/useStudentAttendance";
 import { useClasses } from "@/app/hooks/useClasses";
@@ -188,6 +193,64 @@ export default function StudentAttendancePage() {
 
   // Selected student rows for bulk operations
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+
+  // Table pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number | "all">(20);
+
+  // Quick view student modal state
+  const [quickViewStudent, setQuickViewStudent] = useState<any | null>(null);
+  const [quickViewLoading, setQuickViewLoading] = useState(false);
+  const [quickViewData, setQuickViewData] = useState<any | null>(null);
+  const [quickViewError, setQuickViewError] = useState("");
+  const [highlightedStudentId, setHighlightedStudentId] = useState<string | null>(null);
+
+  // Fetch student quick view details whenever selected
+  useEffect(() => {
+    if (!quickViewStudent) {
+      setQuickViewData(null);
+      setQuickViewError("");
+      return;
+    }
+
+    let isMounted = true;
+    setQuickViewLoading(true);
+    setQuickViewError("");
+
+    const fetchQuickView = async () => {
+      try {
+        const d = new Date(filterDate || new Date());
+        const y = d.getFullYear();
+        const m = d.getMonth() + 1;
+        const start = `${y}-${String(m).padStart(2, "0")}-01`;
+        const lastDay = new Date(y, m, 0).getDate();
+        const end = `${y}-${String(m).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+
+        const res = await fetch(
+          `/api/attendance/student/${quickViewStudent._id}?academic_year=${filterYear}&startDate=${start}&endDate=${end}`,
+          { headers: getAuthHeaders() }
+        );
+        const json = await res.json();
+        if (!isMounted) return;
+        if (json.success && json.data) {
+          setQuickViewData(json.data);
+        } else {
+          setQuickViewError(json.message || "Failed to load student attendance details.");
+        }
+      } catch (err: any) {
+        if (!isMounted) return;
+        setQuickViewError(err.message || "Failed to load student attendance details.");
+      } finally {
+        if (isMounted) setQuickViewLoading(false);
+      }
+    };
+
+    fetchQuickView();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [quickViewStudent, filterYear, filterDate]);
 
   const isInitialLoad = useRef(true);
   useEffect(() => {
@@ -357,8 +420,22 @@ export default function StudentAttendancePage() {
     setAttendanceRecords(newRecords);
   }, [attendance, students]);
 
-  // Calculate dynamic dashboard statistics
+  // Calculate dynamic dashboard statistics (only computed on classes dashboard view)
   const dashboardStats = useMemo(() => {
+    if (filterClassId) {
+      return {
+        totalClasses: filteredClasses.length,
+        completedClasses: 0,
+        pendingClasses: 0,
+        totalStudents: 0,
+        studentsPresent: 0,
+        studentsAbsent: 0,
+        studentsLate: 0,
+        studentsLeave: 0,
+        attendancePercentage: 0,
+      };
+    }
+
     let completedClasses = 0;
     let pendingClasses = 0;
     let totalStudents = 0;
@@ -378,9 +455,7 @@ export default function StudentAttendancePage() {
 
     filteredClasses.forEach((cls) => {
       const att = attendanceMap[cls._id];
-      const classStudentsCount = classStudentCounts[cls._id] ?? (
-        filterClassId === cls._id ? students.length : 0
-      );
+      const classStudentsCount = classStudentCounts[cls._id] ?? 0;
 
       totalStudents += classStudentsCount;
 
@@ -426,7 +501,7 @@ export default function StudentAttendancePage() {
       studentsLeave,
       attendancePercentage,
     };
-  }, [filteredClasses, dailyAttendances, classStudentCounts, students, filterClassId]);
+  }, [filterClassId, filteredClasses, dailyAttendances, classStudentCounts]);
 
   // Date permission helper info
   const dateInfo = useMemo(() => {
@@ -489,12 +564,19 @@ export default function StudentAttendancePage() {
   };
 
   const handleHistoryClick = (student: any) => {
-    router.push(`/attendance/student/${student._id}`);
+    setQuickViewStudent(student);
   };
 
   const handleEditClick = (student: any) => {
     if (teacherPermission.canEdit) {
       setMode("edit");
+      setHighlightedStudentId(student._id);
+      setTimeout(() => {
+        const input = document.getElementById(`note-input-${student._id}`);
+        if (input) input.focus();
+      }, 50);
+    } else {
+      setLocalError(teacherPermission.message || "Editing is restricted for this attendance register.");
     }
   };
 
@@ -503,6 +585,17 @@ export default function StudentAttendancePage() {
       selectedStudentIds.length > 0
         ? selectedStudentIds
         : students.map((s) => s._id);
+    setAttendanceRecords((prev) => {
+      const copy = { ...prev };
+      targetIds.forEach((id) => {
+        if (copy[id]) copy[id].status = status;
+      });
+      return copy;
+    });
+  };
+
+  const markCurrentPage = (status: string) => {
+    const targetIds = paginatedStudents.map((s) => s._id);
     setAttendanceRecords((prev) => {
       const copy = { ...prev };
       targetIds.forEach((id) => {
@@ -601,29 +694,70 @@ export default function StudentAttendancePage() {
     document.body.removeChild(link);
   };
 
-  // Local matching of search query + status filters
+  // Local matching of search query + status filters (optimized to not re-run on note changes)
   const filteredStudents = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
     return students.filter((s) => {
-      const q = searchQuery.toLowerCase().trim();
       const matchQuery = !q
         ? true
         : (s.name || "").toLowerCase().includes(q) ||
         (s.admission_no || "").toLowerCase().includes(q) ||
         (s.roll_no || "").toLowerCase().includes(q);
 
-      const studentStatus = attendanceRecords[s._id]?.status || "present";
-      let matchStatus = true;
-      if (statusFilter) {
-        if (statusFilter === "leave") {
-          matchStatus = studentStatus === "leave" || studentStatus === "medical_leave";
-        } else {
-          matchStatus = studentStatus === statusFilter;
-        }
-      }
+      if (!matchQuery) return false;
+      if (!statusFilter) return true;
 
-      return matchQuery && matchStatus;
+      const studentStatus = attendanceRecords[s._id]?.status || "present";
+      if (statusFilter === "leave") {
+        return studentStatus === "leave" || studentStatus === "medical_leave";
+      }
+      return studentStatus === statusFilter;
     });
-  }, [students, searchQuery, statusFilter, attendanceRecords]);
+  }, [students, searchQuery, statusFilter, statusFilter ? attendanceRecords : null]);
+
+  // Reset pagination when filter criteria change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterClassId, filterDate, filterYear, filterStreamId, searchQuery, statusFilter]);
+
+  // Pagination calculations
+  const totalFilteredStudents = filteredStudents.length;
+  const numPageSize = pageSize === "all" ? (totalFilteredStudents || 1) : pageSize;
+  const totalPages = Math.max(1, Math.ceil(totalFilteredStudents / numPageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const paginatedStudents = useMemo(() => {
+    if (pageSize === "all") return filteredStudents;
+    const start = (safeCurrentPage - 1) * numPageSize;
+    return filteredStudents.slice(start, start + numPageSize);
+  }, [filteredStudents, safeCurrentPage, pageSize, numPageSize]);
+
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages: (number | string)[] = [];
+    if (safeCurrentPage <= 4) {
+      pages.push(1, 2, 3, 4, 5, "...", totalPages);
+    } else if (safeCurrentPage >= totalPages - 3) {
+      pages.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pages.push(1, "...", safeCurrentPage - 1, safeCurrentPage, safeCurrentPage + 1, "...", totalPages);
+    }
+    return pages;
+  }, [totalPages, safeCurrentPage]);
+
+  // Quick view index helpers for instant modal navigation
+  const quickViewIndex = useMemo(() => {
+    if (!quickViewStudent) return -1;
+    return filteredStudents.findIndex((s) => s._id === quickViewStudent._id);
+  }, [quickViewStudent, filteredStudents]);
+
+  const prevStudent = quickViewIndex > 0 ? filteredStudents[quickViewIndex - 1] : null;
+  const nextStudent =
+    quickViewIndex >= 0 && quickViewIndex < filteredStudents.length - 1
+      ? filteredStudents[quickViewIndex + 1]
+      : null;
 
   // Compute available academic year sessions dynamically from classes, global state, and fallbacks
   const yearOptions = useMemo(() => {
@@ -1198,16 +1332,17 @@ export default function StudentAttendancePage() {
                   <div className="px-5 py-4 border-b border-border bg-white dark:bg-slate-900 flex flex-col md:flex-row items-center justify-between gap-4">
                     {/* Left Side: Students count, secondary actions, and bulk actions */}
                     <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                      <div className="text-[13px] font-semibold text-slate-550  px-3 py-2 flex items-center gap-1">
+                      <div className="text-[13px] font-semibold text-slate-550 px-3 py-2 flex items-center gap-1.5">
                         <span>Students:</span>
                         <span className="font-extrabold text-slate-800 dark:text-slate-200">
                           {filteredStudents.length}
                         </span>
+                        {totalPages > 1 && pageSize !== "all" && (
+                          <span className="text-slate-400 font-semibold text-xs ml-1 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                            Page {safeCurrentPage} of {totalPages}
+                          </span>
+                        )}
                       </div>
-
-                      {/* <div className="h-6 w-px bg-border hidden sm:block"></div> */}
-
-
 
                       {selectedStudentIds.length > 0 && (
                         <>
@@ -1252,6 +1387,30 @@ export default function StudentAttendancePage() {
                         <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-500 text-[12px] font-semibold rounded-md uppercase tracking-wider">
                           Viewing Saved Register
                         </span>
+                      )}
+                      {mode === "view" && attendance && teacherPermission.canEdit && (
+                        <button
+                          type="button"
+                          onClick={() => setMode("edit")}
+                          className="px-3 py-1.5 bg-[#E29013]/10 hover:bg-[#E29013]/20 text-[#E29013] border border-[#E29013]/30 text-[12px] font-bold rounded-md transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                          <span>Edit Register</span>
+                        </button>
+                      )}
+                      {mode === "edit" && attendance && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMode("view");
+                            setEditReason("");
+                            setLocalError("");
+                            setHighlightedStudentId(null);
+                          }}
+                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[12px] font-medium rounded-md transition-colors flex items-center gap-1.5 cursor-pointer"
+                        >
+                          <span>Cancel Edit</span>
+                        </button>
                       )}
                       {/* <button
                         onClick={() => {
@@ -1401,7 +1560,7 @@ export default function StudentAttendancePage() {
                             </td>
                           </tr>
                         ) : (
-                          filteredStudents.map((student) => {
+                          paginatedStudents.map((student) => {
                             const status =
                               attendanceRecords[student._id]?.status || "present";
                             const isDisabled =
@@ -1425,21 +1584,19 @@ export default function StudentAttendancePage() {
                                 : "—";
 
                             return (
-                              <tr key={student._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
-                                {/* <td className="px-4 py-4 text-center">
-                                  <input
-                                    type="checkbox"
-                                    checked={selectedStudentIds.includes(
-                                      student._id,
-                                    )}
-                                    onChange={() =>
-                                      handleSelectStudent(student._id)
-                                    }
-                                    className="w-4 h-4 accent-primary cursor-pointer rounded"
-                                    disabled={isDisabled}
-                                  />
-                                </td> */}
-                                <td className="px-4 py-4 text-primary cursor-pointer hover:underline font-medium">
+                              <tr
+                                key={student._id}
+                                className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors ${
+                                  highlightedStudentId === student._id
+                                    ? "bg-amber-50/60 dark:bg-amber-950/30 ring-1 ring-amber-400"
+                                    : ""
+                                }`}
+                              >
+                                <td
+                                  onClick={() => handleHistoryClick(student)}
+                                  className="px-4 py-4 text-primary cursor-pointer hover:underline font-medium"
+                                  title="Click to view attendance details"
+                                >
                                   {student.admission_no || "-"}
                                 </td>
                                 <td className="px-4 py-4 text-slate-600 dark:text-slate-400">
@@ -1461,12 +1618,9 @@ export default function StudentAttendancePage() {
                                       )}
                                     </div>
                                     <span
-                                      className="link cursor-pointer hover:text-primary"
-                                      onClick={() =>
-                                        router.push(
-                                          `/attendance/student/${student._id}`,
-                                        )
-                                      }
+                                      className="link cursor-pointer hover:text-primary font-medium"
+                                      onClick={() => handleHistoryClick(student)}
+                                      title="Click to view attendance details"
                                     >
                                       {student.name}
                                     </span>
@@ -1508,6 +1662,7 @@ export default function StudentAttendancePage() {
                                 <td className="px-4 py-4">
                                   <input
                                     type="text"
+                                    id={`note-input-${student._id}`}
                                     placeholder={
                                       teacherPermission.canEdit && mode !== "view"
                                         ? "Enter Note"
@@ -1528,16 +1683,25 @@ export default function StudentAttendancePage() {
                                 </td>
                                 <td className="px-4 py-4 flex items-center gap-1.5">
                                   <button
+                                    type="button"
                                     onClick={() => handleHistoryClick(student)}
-                                    disabled={isDisabled}
-                                    className="p-2 text-info hover:text-info/80 transition-colors flex items-center gap-1.5 cursor-pointer"
+                                    title="View Attendance Summary"
+                                    className="p-1.5 text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/30 rounded-md transition-colors flex items-center gap-1 cursor-pointer"
                                   >
                                     <Eye className="w-4 h-4" />
                                   </button>
                                   <button
+                                    type="button"
                                     onClick={() => handleEditClick(student)}
-                                    disabled={isDisabled}
-                                    className="p-2 text-warning hover:text-warning/80 transition-colors flex items-center gap-1.5 cursor-pointer"
+                                    disabled={!teacherPermission.canEdit || submitting}
+                                    title={
+                                      !teacherPermission.canEdit
+                                        ? teacherPermission.message || "Editing restricted"
+                                        : mode === "view"
+                                        ? "Enable Edit Mode"
+                                        : "Edit Student Attendance"
+                                    }
+                                    className="p-1.5 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 rounded-md transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                                   >
                                     <Edit className="w-4 h-4" />
                                   </button>
@@ -1550,7 +1714,135 @@ export default function StudentAttendancePage() {
                     </table>
                   </div>
 
-                  {/* Bottom bulk actions and original footer removed as per new Toolbar UI */}
+                  {/* Pagination Toolbar */}
+                  {filteredStudents.length > 0 && (
+                    <div className="px-5 py-3 border-t border-border bg-slate-50/70 dark:bg-slate-900/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                      {/* Left: Summary and Page Size */}
+                      <div className="flex flex-wrap items-center gap-3 text-slate-500 dark:text-slate-400">
+                        <span>
+                          Showing{" "}
+                          <strong className="text-slate-800 dark:text-slate-200">
+                            {Math.min(totalFilteredStudents, (safeCurrentPage - 1) * numPageSize + 1)}
+                          </strong>{" "}
+                          to{" "}
+                          <strong className="text-slate-800 dark:text-slate-200">
+                            {Math.min(totalFilteredStudents, safeCurrentPage * numPageSize)}
+                          </strong>{" "}
+                          of{" "}
+                          <strong className="text-slate-800 dark:text-slate-200">
+                            {totalFilteredStudents}
+                          </strong>{" "}
+                          students
+                        </span>
+
+                        <div className="flex items-center gap-1.5 ml-2">
+                          <span>Rows:</span>
+                          <select
+                            value={pageSize}
+                            onChange={(e) => {
+                              const val = e.target.value === "all" ? "all" : parseInt(e.target.value);
+                              setPageSize(val);
+                              setCurrentPage(1);
+                            }}
+                            className="bg-white dark:bg-slate-950 border border-border text-slate-800 dark:text-slate-200 rounded px-2 py-1 font-semibold outline-none cursor-pointer"
+                          >
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                            <option value="all">All</option>
+                          </select>
+                        </div>
+
+                        {(mode === "take" || mode === "edit") && teacherPermission.canEdit && pageSize !== "all" && (
+                          <div className="flex items-center gap-1.5 ml-1 border-l border-border pl-3">
+                            <span className="text-[11px] text-slate-400">Mark Page:</span>
+                            <button
+                              type="button"
+                              onClick={() => markCurrentPage("present")}
+                              className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 rounded text-[11px] font-semibold cursor-pointer transition-colors"
+                            >
+                              Present
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => markCurrentPage("absent")}
+                              className="px-2 py-0.5 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 text-rose-700 dark:text-rose-300 rounded text-[11px] font-semibold cursor-pointer transition-colors"
+                            >
+                              Absent
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right: Page Navigation */}
+                      {totalPages > 1 && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage(1)}
+                            disabled={safeCurrentPage === 1}
+                            className="p-1.5 rounded border border-border bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                            title="First Page"
+                          >
+                            <ChevronsLeft className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={safeCurrentPage === 1}
+                            className="p-1.5 rounded border border-border bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                            title="Previous Page"
+                          >
+                            <ChevronLeft className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Page pills */}
+                          <div className="flex items-center gap-1 px-1">
+                            {pageNumbers.map((pNum, idx) =>
+                              typeof pNum === "number" ? (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => setCurrentPage(pNum)}
+                                  className={`min-w-[28px] h-7 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
+                                    safeCurrentPage === pNum
+                                      ? "bg-primary text-white shadow-sm"
+                                      : "border border-border bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700"
+                                  }`}
+                                >
+                                  {pNum}
+                                </button>
+                              ) : (
+                                <span key={idx} className="px-1 text-slate-400">
+                                  ...
+                                </span>
+                              )
+                            )}
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={safeCurrentPage === totalPages}
+                            className="p-1.5 rounded border border-border bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                            title="Next Page"
+                          >
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCurrentPage(totalPages)}
+                            disabled={safeCurrentPage === totalPages}
+                            className="p-1.5 rounded border border-border bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                            title="Last Page"
+                          >
+                            <ChevronsRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
 
@@ -1687,6 +1979,213 @@ export default function StudentAttendancePage() {
                     </div>
                   </div>
                 )}
+
+              {/* ── STUDENT QUICK ATTENDANCE VIEW MODAL ── */}
+              {quickViewStudent && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                  <div
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+                    onClick={() => setQuickViewStudent(null)}
+                  />
+                  <div className="bg-white dark:bg-slate-900 border border-border rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col z-50 shadow-2xl text-left animate-in fade-in zoom-in-95 duration-150">
+                    {/* Modal Header */}
+                    <div className="p-5 border-b border-border bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-primary text-sm overflow-hidden shrink-0">
+                          {quickViewStudent.photo_url ? (
+                            <img src={quickViewStudent.photo_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            quickViewStudent.name?.charAt(0) || "S"
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <span>{quickViewStudent.name}</span>
+                            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                              Roll #{quickViewStudent.roll_no || "-"}
+                            </span>
+                          </h3>
+                          <p className="text-xs text-slate-400">
+                            Adm No: {quickViewStudent.admission_no || "-"} • Class:{" "}
+                            {typeof quickViewStudent.class_id === "object" ? quickViewStudent.class_id.name : "Class"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Modal Header Controls: Prev/Next & Close */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center border border-border rounded-lg overflow-hidden mr-1 bg-white dark:bg-slate-800">
+                          <button
+                            type="button"
+                            onClick={() => prevStudent && setQuickViewStudent(prevStudent)}
+                            disabled={!prevStudent}
+                            title="Previous Student"
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          <span className="text-[11px] font-semibold px-2 text-slate-400 select-none">
+                            {quickViewIndex + 1} / {filteredStudents.length}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => nextStudent && setQuickViewStudent(nextStudent)}
+                            disabled={!nextStudent}
+                            title="Next Student"
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setQuickViewStudent(null)}
+                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                        >
+                          <XCircle className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="p-6 overflow-y-auto space-y-5 flex-1">
+                      {quickViewLoading ? (
+                        <div className="flex flex-col items-center justify-center py-14 gap-3 text-slate-400">
+                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                          <p className="text-xs font-semibold">Loading attendance details...</p>
+                        </div>
+                      ) : quickViewError ? (
+                        <div className="p-4 bg-rose-50 dark:bg-rose-950/20 border border-rose-200 text-rose-700 rounded-xl text-xs font-medium">
+                          {quickViewError}
+                        </div>
+                      ) : quickViewData ? (
+                        <>
+                          {/* Quick Stat Highlights */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-border">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Attendance</span>
+                              <p className="text-xl font-extrabold text-primary mt-0.5">
+                                {quickViewData.stats?.attendancePercentage ?? 0}%
+                              </p>
+                              <span className="text-[10px] text-slate-400 font-semibold">
+                                {quickViewData.stats?.totalWorkingDays || 0} Total Days
+                              </span>
+                            </div>
+                            <div className="p-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Present</span>
+                              <p className="text-xl font-extrabold text-emerald-700 dark:text-emerald-400 mt-0.5">
+                                {quickViewData.stats?.totalPresent || 0}
+                              </p>
+                              <span className="text-[10px] text-emerald-600/70 font-semibold">Attended</span>
+                            </div>
+                            <div className="p-3 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200/60">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600">Absent</span>
+                              <p className="text-xl font-extrabold text-rose-700 dark:text-rose-400 mt-0.5">
+                                {quickViewData.stats?.totalAbsent || 0}
+                              </p>
+                              <span className="text-[10px] text-rose-600/70 font-semibold">Unexcused</span>
+                            </div>
+                            <div className="p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60">
+                              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-600">Leave</span>
+                              <p className="text-xl font-extrabold text-amber-700 dark:text-amber-400 mt-0.5">
+                                {quickViewData.stats?.totalLeave || 0}
+                              </p>
+                              <span className="text-[10px] text-amber-600/70 font-semibold">Approved</span>
+                            </div>
+                          </div>
+
+                          {/* Attendance History */}
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2.5">
+                              Monthly Attendance Logs
+                            </h4>
+                            <div className="border border-border rounded-xl overflow-hidden shadow-sm">
+                              <table className="erp-table text-xs w-full">
+                                <thead className="bg-[#F8FAFC] dark:bg-slate-950/40 text-slate-500 font-bold border-b border-border">
+                                  <tr>
+                                    <th className="px-3.5 py-2.5 text-left">Date</th>
+                                    <th className="px-3.5 py-2.5 text-left">Status</th>
+                                    <th className="px-3.5 py-2.5 text-left">Note</th>
+                                    <th className="px-3.5 py-2.5 text-right">Updated By</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border font-medium text-slate-700 dark:text-slate-300">
+                                  {(!quickViewData.history || quickViewData.history.length === 0) ? (
+                                    <tr>
+                                      <td colSpan={4} className="py-8 text-center text-slate-400">
+                                        No attendance records found for this period.
+                                      </td>
+                                    </tr>
+                                  ) : (
+                                    quickViewData.history.slice(0, 15).map((h: any, idx: number) => {
+                                      const dateFormatted = new Date(h.date).toLocaleDateString("en-US", {
+                                        day: "numeric",
+                                        month: "short",
+                                        year: "numeric",
+                                      });
+                                      return (
+                                        <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30">
+                                          <td className="px-3.5 py-2.5 font-bold text-slate-800 dark:text-slate-200">
+                                            {dateFormatted}
+                                          </td>
+                                          <td className="px-3.5 py-2.5">
+                                            <span
+                                              className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase border ${
+                                                h.status === "present"
+                                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                  : h.status === "absent"
+                                                  ? "bg-rose-50 text-rose-700 border-rose-200"
+                                                  : "bg-amber-50 text-amber-700 border-amber-200"
+                                              }`}
+                                            >
+                                              {h.status}
+                                            </span>
+                                          </td>
+                                          <td className="px-3.5 py-2.5 text-slate-500">
+                                            {h.note || "—"}
+                                          </td>
+                                          <td className="px-3.5 py-2.5 text-right text-slate-400 text-[11px]">
+                                            {h.updatedBy || "System"}
+                                          </td>
+                                        </tr>
+                                      );
+                                    })
+                                  )}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="p-4 border-t border-border bg-slate-50/60 dark:bg-slate-950/20 flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const studentId = quickViewStudent._id;
+                          setQuickViewStudent(null);
+                          router.push(`/attendance/student/${studentId}`);
+                        }}
+                        className="text-primary hover:underline text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <span>Open Full Monthly Calendar & Profile</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setQuickViewStudent(null)}
+                        className="px-4 py-2 border border-border text-xs font-bold rounded-lg hover:bg-slate-100 bg-white dark:bg-slate-800 transition-colors cursor-pointer"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </>
         )}

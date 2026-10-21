@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
   const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
   const limitParam = url.searchParams.get("limit");
   const isAll = limitParam === "all" || (limitParam && parseInt(limitParam) >= 500);
-  const limit = isAll ? 100000 : Math.min(500, Math.max(1, parseInt(limitParam || "10")));
+  const limit = isAll ? 1000 : Math.min(500, Math.max(1, parseInt(limitParam || "10")));
   const skip = isAll ? 0 : (page - 1) * limit;
 
   // ─── Cache check ────────────────────────────────────────
@@ -79,7 +79,7 @@ export async function GET(req: NextRequest) {
     registerModels();
 
     // Match school_id & basic filters (non-deleted only)
-    const matchStage: any = { 
+    const matchStage: any = {
       school_id: new mongoose.Types.ObjectId(schoolId as string),
       is_deleted: { $ne: true }
     };
@@ -353,17 +353,17 @@ export async function POST(req: NextRequest) {
     registerModels();
 
     const body = await req.json();
-    const { 
-      academic_year, 
-      teacher_id, 
-      class_id, 
-      stream_id, 
-      subject_master_id, 
-      subject_master_ids, 
-      assignment_type, 
-      effective_date, 
-      status, 
-      remarks 
+    const {
+      academic_year,
+      teacher_id,
+      class_id,
+      stream_id,
+      subject_master_id,
+      subject_master_ids,
+      assignment_type,
+      effective_date,
+      status,
+      remarks
     } = body;
 
     const isClassRole = assignment_type === "Class Teacher" || assignment_type === "Co-Class Teacher";

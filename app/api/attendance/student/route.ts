@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
     // ── Resolve teacher + class access ONCE for teacher role ──────────────────
     let combinedClassIds: string[] = [];
     if (role === "teacher") {
-      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId });
+      const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId }).lean();
       if (!teacher) {
         throw new Error("Teacher record not found");
       }

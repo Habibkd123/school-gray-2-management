@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     }
 
     const school = await School.findOne(query)
-      .select("_id name subtitle logo_url subdomain custom_domain meta_config")
+      .select("_id name subtitle logo_url subdomain custom_domain meta_config address phone email")
       .lean();
 
     if (!school) {
@@ -67,6 +67,9 @@ export async function GET(request: NextRequest) {
         subtitle: (school as any).subtitle?.trim(),
         logo_url: (school as any).logo_url,
         subdomain:(school as any).subdomain,
+        address:  (school as any).address?.trim() || null,
+        phone:    (school as any).phone?.trim() || null,
+        email:    (school as any).email?.trim() || null,
         // SEO metadata
         meta: {
           title:          meta.meta_title       || `${(school as any).name} | Portal`,

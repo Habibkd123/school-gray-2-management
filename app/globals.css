@@ -568,6 +568,14 @@ body {
     color: #d97706 !important;
   }
 
+  /* Receipt badge pill in print: ensure readable dark text on light background with border */
+  [data-print-zone] .receipt-badge,
+  #printable-receipt .receipt-badge {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+    border: 1.5px solid #0f172a !important;
+  }
+
   /* ── 10. Table layout — never split a row across pages ───────────────────── */
   [data-print-zone] table,
   #printable-receipt table,
@@ -609,6 +617,13 @@ body {
     break-inside: avoid !important;
     break-before: avoid !important;
     break-after: auto !important;
+  }
+
+  /* Multi-page receipts: force clean page break between copies when separate pages requested */
+  [data-print-zone] .receipt-page-break,
+  #printable-receipt .receipt-page-break {
+    page-break-after: always !important;
+    break-after: page !important;
   }
 
   /* ── 12. Images — never clip or shrink ───────────────────────────────────── */
@@ -907,12 +922,16 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-.erp-table .col-right {
-  text-align: right;
+.erp-table .col-right,
+.erp-table th.text-right,
+.erp-table td.text-right {
+  text-align: right !important;
 }
 
-.erp-table .col-center {
-  text-align: center;
+.erp-table .col-center,
+.erp-table th.text-center,
+.erp-table td.text-center {
+  text-align: center !important;
 }
 
 .erp-table .table-empty {

@@ -57,7 +57,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       .populate("stream_id", "name")
       .populate("subject_master_id", "name subject_code description")
       .populate("teacher_id", "name employee_id designation photo_url")
-      .populate("updated_by", "name");
+      .populate("updated_by", "name")
+      .lean();
 
     if (!syllabus) {
       const assignmentQuery: any = { _id: id };
@@ -88,7 +89,8 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
           .populate("stream_id", "name")
           .populate("subject_master_id", "name subject_code description")
           .populate("teacher_id", "name employee_id designation photo_url")
-          .populate("updated_by", "name");
+          .populate("updated_by", "name")
+          .lean();
 
         if (existingSyllabus) {
           syllabus = existingSyllabus;
