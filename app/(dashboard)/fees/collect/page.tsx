@@ -104,7 +104,7 @@ export default function CollectFeesPage() {
             class_id: s.class_id,
             class_name: s.class_id ? `${s.class_id.name} - ${s.class_id.section || ""}`.replace(/ - $/, "") : "Unassigned",
             photo_url: s.photo_url,
-            admission_date: s.dob || s.createdAt
+            admission_date: s.admission_date || s.createdAt
           });
         }
       } catch (err) {
@@ -180,6 +180,10 @@ export default function CollectFeesPage() {
 
         const todayStr = new Date().toISOString().split("T")[0];
 
+        // Academic session start date (e.g. 2026-04-01)
+        const sessionYear = parseInt(String(academicYear || "2026").split("-")[0].split("/")[0].trim(), 10) || new Date().getFullYear();
+        const sessionStartDate = `${sessionYear}-04-01`;
+
         if (lastEndPaidStr && !isNaN(new Date(lastEndPaidStr).getTime())) {
           const nextDay = new Date(lastEndPaidStr);
           nextDay.setDate(nextDay.getDate() + 1);
@@ -187,11 +191,15 @@ export default function CollectFeesPage() {
           setStartDate(nextDayStr);
           setEndDate(nextDayStr >= todayStr ? nextDayStr : todayStr);
         } else {
-          // Fallback to student's joined / admission date
+          // Bounded fallback: do not allow billing start date to precede current academic session
           const rawJoin = student.admission_date;
-          const fallbackStart = rawJoin && !isNaN(new Date(rawJoin).getTime()) ? new Date(rawJoin).toISOString().split("T")[0] : "2026-01-01";
+          let fallbackStart = sessionStartDate;
+          if (rawJoin && !isNaN(new Date(rawJoin).getTime())) {
+            const joinStr = new Date(rawJoin).toISOString().split("T")[0];
+            fallbackStart = joinStr >= sessionStartDate ? joinStr : sessionStartDate;
+          }
           setStartDate(fallbackStart);
-          setEndDate(todayStr);
+          setEndDate(todayStr >= fallbackStart ? todayStr : fallbackStart);
         }
 
       } catch (err) {
@@ -224,7 +232,7 @@ export default function CollectFeesPage() {
       case "Half Yearly":
         return Math.max(1, Math.ceil(monthsDiff / 6));
       case "Yearly":
-        return Math.max(1, Math.ceil(monthsDiff / 12));
+        return 1;
       default:
         return 1;
     }
@@ -429,7 +437,7 @@ export default function CollectFeesPage() {
             case "Monthly": mult = Math.max(1, monthsDiff); break;
             case "Quarterly": mult = Math.max(1, Math.ceil(monthsDiff / 3)); break;
             case "Half Yearly": mult = Math.max(1, Math.ceil(monthsDiff / 6)); break;
-            case "Yearly": mult = Math.max(1, Math.ceil(monthsDiff / 12)); break;
+            case "Yearly": mult = 1; break;
           }
         }
       }

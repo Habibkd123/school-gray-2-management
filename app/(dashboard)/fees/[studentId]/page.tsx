@@ -428,7 +428,7 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                           mult = Math.max(1, Math.ceil(monthsDiff / 6));
                           break;
                         case "Yearly":
-                          mult = Math.max(1, Math.ceil(monthsDiff / 12));
+                          mult = 1;
                           break;
                       }
                     }

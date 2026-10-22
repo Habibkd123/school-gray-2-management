@@ -146,6 +146,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
 
         const todayStr = new Date().toISOString().split("T")[0];
 
+        // Academic session start date (e.g. 2026-04-01)
+        const sessionYear = parseInt(String(academicYear || "2026").split("-")[0].split("/")[0].trim(), 10) || new Date().getFullYear();
+        const sessionStartDate = `${sessionYear}-04-01`;
+
         if (lastEndPaidStr && !isNaN(new Date(lastEndPaidStr).getTime())) {
           const nextDay = new Date(lastEndPaidStr);
           nextDay.setDate(nextDay.getDate() + 1);
@@ -155,11 +159,15 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
           // so the form isn't pre-broken (end < start). User can still edit both.
           setEndDate(nextDayStr >= todayStr ? nextDayStr : todayStr);
         } else {
-          // Fallback to student's joined / admission date
-          const rawJoin = student.admission_date || student.joinedDate || student.createdAt;
-          const fallbackStart = rawJoin && !isNaN(new Date(rawJoin).getTime()) ? new Date(rawJoin).toISOString().split("T")[0] : "2026-01-01";
+          // Bounded fallback: do not allow billing start date to precede current academic session
+          const rawJoin = student?.admission_date || student?.joinedDate;
+          let fallbackStart = sessionStartDate;
+          if (rawJoin && !isNaN(new Date(rawJoin).getTime())) {
+            const joinStr = new Date(rawJoin).toISOString().split("T")[0];
+            fallbackStart = joinStr >= sessionStartDate ? joinStr : sessionStartDate;
+          }
           setStartDate(fallbackStart);
-          setEndDate(todayStr);
+          setEndDate(todayStr >= fallbackStart ? todayStr : fallbackStart);
         }
 
       } catch (err) {
@@ -192,7 +200,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
       case "Half Yearly":
         return Math.max(1, Math.ceil(monthsDiff / 6));
       case "Yearly":
-        return Math.max(1, Math.ceil(monthsDiff / 12));
+        return 1;
       default:
         return 1;
     }
@@ -403,7 +411,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
             case "Monthly": mult = Math.max(1, monthsDiff); break;
             case "Quarterly": mult = Math.max(1, Math.ceil(monthsDiff / 3)); break;
             case "Half Yearly": mult = Math.max(1, Math.ceil(monthsDiff / 6)); break;
-            case "Yearly": mult = Math.max(1, Math.ceil(monthsDiff / 12)); break;
+            case "Yearly": mult = 1; break;
           }
         }
       }
