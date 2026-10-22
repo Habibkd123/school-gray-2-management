@@ -245,8 +245,7 @@ export function Footer({ contact, about, admissions }: FooterProps) {
         {/* ── Bottom Bar ─────────────────────────────────── */}
         <div className="pt-6 border-t border-[#5C5D5D]/50 flex flex-col md:flex-row items-center justify-between gap-4 text-[12px]">
           <p className="text-[#828283]">
-            Copyright © {new Date().getFullYear()} {schoolInfo.school_name}
-            {schoolInfo.school_subtitle ? ` ${schoolInfo.school_subtitle}` : ""}. All rights reserved.
+            Copyright © 2026 MySchoolLife School ERP. All rights reserved.
           </p>
           <div className="flex items-center gap-4 text-[#828283]">
             {["Privacy Policy", "Terms of Service", "Sitemap"].map((item, i, arr) => (

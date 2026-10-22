@@ -145,9 +145,9 @@ export default function CollectFeesPage() {
     const fetchData = async () => {
       setIsLoadingDetails(true);
       try {
-        // Enriched config with student overrides / class setup
+        const targetYear = academicYear || student.academic_year || "2026-2027";
         const configRes = await fetch(
-          `/api/fees?config_only=true&student_id=${student.id}&class_id=${studentClassId}&academic_year=${academicYear || "2026"}`,
+          `/api/fees?config_only=true&student_id=${student.id}&class_id=${studentClassId}&academic_year=${targetYear}`,
           { headers: getAuthHeaders() }
         );
         const configData = await configRes.json();

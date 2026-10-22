@@ -514,12 +514,12 @@ export default function AcademicClassesPage() {
         </div>
 
         {/* Table */}
-        {isLoading ? (
+        {isLoading && classes.length === 0 ? (
           <div className="flex items-center justify-center py-20 gap-3 text-slate-400">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span className="text-[14px] font-medium">Loading classes...</span>
           </div>
-        ) : error ? (
+        ) : error && classes.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 px-4 max-w-md mx-auto text-center">
             <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3 border border-amber-200 dark:border-amber-900/50">
               <AlertCircle className="w-6 h-6" />
@@ -545,6 +545,12 @@ export default function AcademicClassesPage() {
           </div>
         ) : (
           <>
+            {error && (
+              <div className="mx-5 my-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-amber-800 dark:text-amber-300 text-xs flex items-center justify-between">
+                <span>{error}</span>
+                <button onClick={() => doFetch()} className="underline font-bold ml-2 cursor-pointer">Retry</button>
+              </div>
+            )}
             <DataTable columns={columns} data={classes}
               selectionHeader={<input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}
               renderSelection={() => <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4" />}

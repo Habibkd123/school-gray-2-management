@@ -116,7 +116,7 @@ export default function RegisterPage() {
 
       {/* Right Side - Form */}
       <div className="flex-1 flex flex-col relative bg-white dark:bg-slate-900 h-screen overflow-y-auto">
-        
+
         {/* Theme Toggle
         {mounted && (
           <button
@@ -281,7 +281,7 @@ export default function RegisterPage() {
 
           <div className="mt-8 text-center">
             <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">
-              Copyright © {new Date().getFullYear()} — {process.env.NEXT_PUBLIC_SCHOOL_NAME || "School ERP"}
+              Copyright © {new Date().getFullYear()} — {process.env.NEXT_PUBLIC_SCHOOL_NAME || "MySchoolLife School ERP"}
             </p>
           </div>
         </div>

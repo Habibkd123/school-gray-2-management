@@ -311,7 +311,7 @@ export default function StudentLoginPage() {
         {/* Footer */}
         <div className="absolute bottom-6 left-0 right-0 text-center">
           <p className="text-[12px] text-slate-400 dark:text-slate-500 font-medium">
-            Copyright © {new Date().getFullYear()} — {process.env.NEXT_PUBLIC_SCHOOL_NAME || "School ERP"}
+            Copyright © {new Date().getFullYear()} — {process.env.NEXT_PUBLIC_SCHOOL_NAME || "MySchoolLife School ERP"}
           </p>
         </div>
       </div>

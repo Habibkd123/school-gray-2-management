@@ -41,9 +41,9 @@ export default function EmailVerificationPage() {
 
   return (
     <div className="min-h-screen w-full flex bg-white dark:bg-slate-900 font-sans">
-      
+
       {/* Left Side - Image & News (Hidden on mobile) */}
-      <div 
+      <div
         className="hidden lg:flex flex-1 relative flex-col justify-center items-center p-12 bg-cover bg-center"
         style={{ backgroundImage: `url('https://preskool.dreamstechnologies.com/html/assets/img/authentication/authentication-01.jpg')` }}
       >
@@ -53,7 +53,7 @@ export default function EmailVerificationPage() {
         {/* Glassmorphism Card */}
         <div className="relative z-10 w-full max-w-full sm:w-[500px] bg-white/20 backdrop-blur-md border border-white/30 rounded-2xl p-6 shadow-2xl">
           <h2 className="text-xl font-bold text-white mb-6">What's New on MySchoolLife !!!</h2>
-          
+
           <div className="space-y-3">
             {newsItems.map((item, idx) => (
               <div key={idx} className="bg-white dark:bg-slate-900 rounded-lg p-4 flex items-center justify-between gap-4 cursor-pointer hover:shadow-md transition-shadow">
@@ -70,7 +70,7 @@ export default function EmailVerificationPage() {
 
       {/* Right Side - Form */}
       <div className="flex-1 flex flex-col relative bg-white dark:bg-slate-900 h-screen overflow-y-auto">
-        
+
         {/* Header Logo */}
         <div className="w-full flex justify-center pt-10 pb-6 lg:pt-20 lg:pb-12 shrink-0">
           <div className="flex items-center gap-3">
@@ -84,9 +84,9 @@ export default function EmailVerificationPage() {
         {/* Main Form Container */}
         <div className="flex-1 flex flex-col justify-start items-center px-6 sm:px-12 lg:px-16 xl:px-24">
           <div className="w-full max-w-full sm:w-[500px] bg-white dark:bg-slate-900 border border-border/60 dark:border-slate-800 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8 text-center">
-            
+
             <h1 className="text-[22px] font-bold text-[#202c4b] dark:text-slate-100 mb-3">Verify your Email</h1>
-            
+
             <p className="card-subtitle text-[13px] leading-relaxed max-w-full sm:w-[400px] mx-auto mb-6">
               We've sent a link to your email test@example.com. Please follow the link inside to continue
             </p>
@@ -109,12 +109,12 @@ export default function EmailVerificationPage() {
                 "Skip Now"
               )}
             </button>
-            
+
           </div>
-          
+
           {/* Footer Copyright */}
           <div className="mt-auto pt-8 text-center shrink-0 w-full mb-8">
-            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Copyright © 2024 - MySchoolLife</p>
+            <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Copyright © 2026 - MySchoolLife School ERP. All rights reserved.</p>
           </div>
         </div>
       </div>

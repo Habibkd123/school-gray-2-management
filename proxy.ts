@@ -9,7 +9,7 @@ const PROTECTED_PREFIXES = [
   "/students",
   "/teachers",
   "/classes",
-  "/attendance",
+  // "/attendance",
   "/homework",
   "/results",
   "/fees",

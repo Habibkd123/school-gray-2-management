@@ -111,9 +111,9 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
     const fetchData = async () => {
       setIsLoadingDetails(true);
       try {
-        // Enriched config with student overrides / class setup
+        const targetYear = academicYear || "2026-2027";
         const configRes = await fetch(
-          `/api/fees?config_only=true&student_id=${studentId}&class_id=${studentClassId}&academic_year=${academicYear || "2026"}`,
+          `/api/fees?config_only=true&student_id=${studentId}&class_id=${studentClassId}&academic_year=${targetYear}`,
           { headers: getAuthHeaders() }
         );
         const configData = await configRes.json();

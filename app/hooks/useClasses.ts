@@ -271,9 +271,11 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
   useEffect(() => {
     return cacheSync.subscribe("classes", () => {
       invalidateCache();
-      fetchClasses();
+      if (!options?.skip) {
+        fetchClasses();
+      }
     });
-  }, [fetchClasses]);
+  }, [fetchClasses, options?.skip]);
 
   // ─── Create class ───────────────────────────────────────────────
   const createClass = async (
@@ -290,7 +292,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
 
       ClassService.invalidateCache();
       const sorted = [...(_classesCache ?? []), data.data].sort((a, b) =>
-        a.name.localeCompare(b.name) || a.section.localeCompare(b.section)
+        (a?.name || "").localeCompare(b?.name || "") || (a?.section || "").localeCompare(b?.section || "")
       );
       _classesCache = sorted;
       _cacheTimestamp = Date.now();

@@ -7,7 +7,7 @@ import { ArrowLeft, Settings, Wrench, AlertTriangle, Monitor } from "lucide-reac
 export default function MaintenancePage() {
   return (
     <div className="min-h-screen w-full flex flex-col items-center bg-white dark:bg-slate-900 font-sans">
-      
+
       {/* Header Logo */}
       <div className="w-full flex justify-center pt-12 pb-8">
         <div className="flex items-center gap-2">
@@ -23,7 +23,7 @@ export default function MaintenancePage() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col items-center justify-center w-full px-4 max-w-full sm:w-[600px] text-center">
-        
+
         {/* Maintenance Illustration Placeholder */}
         <div className="relative w-64 h-48 mb-8 flex items-center justify-center">
           <div className="absolute inset-0 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-800/50 flex items-center justify-center overflow-hidden">
@@ -47,12 +47,12 @@ export default function MaintenancePage() {
         <h1 className="text-[28px] font-bold text-[#202c4b] dark:text-slate-100 mb-4">
           We Are Under Maintenance
         </h1>
-        
+
         <p className="text-[14px] text-slate-500 dark:text-slate-400 mb-8 max-w-full sm:w-[400px] leading-relaxed mx-auto">
           Please check back later, We are working hard to get everything just right.
         </p>
 
-        <Link 
+        <Link
           href="/dashboard"
           className="inline-flex items-center justify-center gap-2 py-2.5 px-6 bg-primary hover:bg-[#4b58ce] text-white rounded-lg text-[13px] font-semibold transition-colors shadow-sm"
         >
@@ -63,7 +63,7 @@ export default function MaintenancePage() {
 
       {/* Footer Copyright */}
       <div className="w-full pb-8 pt-4 text-center">
-        <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Copyright © 2024 - MySchoolLife</p>
+        <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Copyright © 2024 - MySchoolLife  </p>
       </div>
 
     </div>

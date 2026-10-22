@@ -240,11 +240,10 @@ export default function LoginPage() {
                     setUsername("");
                     setPassword("");
                   }}
-                  className={`py-2 text-[11px] font-semibold rounded-lg capitalize transition-all ${
-                    activeTab === role
+                  className={`py-2 text-[11px] font-semibold rounded-lg capitalize transition-all ${activeTab === role
                       ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm"
                       : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
+                    }`}
                 >
                   {role}
                 </button>
@@ -345,7 +344,8 @@ export default function LoginPage() {
 
           <div className="absolute bottom-8 left-0 right-0 text-center">
             <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">
-              Copyright © {new Date().getFullYear()} — {process.env.NEXT_PUBLIC_SCHOOL_NAME || "School ERP"}
+              Copyright © 2026 - MySchoolLife School ERP. All rights reserved.
+              {/* {new Date().getFullYear()} — {process.env.NEXT_PUBLIC_SCHOOL_NAME || "School ERP"} */}
             </p>
           </div>
         </div>

@@ -101,9 +101,11 @@ export function useSubjectMaster(options?: { skip?: boolean; limit?: number }) {
   useEffect(() => {
     return cacheSync.subscribe("subject_master", () => {
       invalidateCache();
-      fetchSubjects({ limit: options?.limit ?? 1000 });
+      if (!options?.skip) {
+        fetchSubjects({ limit: options?.limit ?? 1000 });
+      }
     });
-  }, [fetchSubjects, options?.limit]);
+  }, [fetchSubjects, options?.limit, options?.skip]);
 
   const createSubject = async (input: { name: string; subject_code?: string; description?: string; status?: string; allowed_streams?: string[] }) => {
     try {
@@ -116,7 +118,6 @@ export function useSubjectMaster(options?: { skip?: boolean; limit?: number }) {
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed" };
       invalidateCache();
       syncInvalidateCache("subject_master");
-      fetchSubjects({ limit: 100 });
       return { success: true, message: "Subject created", data: data.data };
     } catch { return { success: false, message: "Network error" }; }
   };

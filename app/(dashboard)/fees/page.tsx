@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Modal } from "../../components/ui/modal";
 import { useClasses } from "@/app/hooks/useClasses";
 import { useTeachers } from "@/app/hooks/useTeachers";
@@ -108,28 +108,33 @@ const DEFAULT_FEE_TYPES: FeeTypeItem[] = [
 ];
 
 export default function FeesPage() {
-  const { classes, isLoading: isClassesLoading } = useClasses();
+  const { classes, isLoading: isClassesLoading, fetchClasses } = useClasses();
   const { teachers, isLoading: isTeachersLoading } = useTeachers();
   const { academicYear } = useAppState();
 
   const [activeTab, setActiveTab] = useState<"ledger" | "reports">("ledger");
 
-  const initialCacheKey = getFeesCacheKey(academicYear || "2026", "", 1);
+  const [academicYearFilter, setAcademicYearFilter] = useState(academicYear || "2026-2027");
+
+  useEffect(() => {
+    if (academicYear && academicYear !== academicYearFilter) {
+      setAcademicYearFilter(academicYear);
+    }
+  }, [academicYear]);
+
+  const initialCacheKey = getFeesCacheKey(academicYear || "2026-2027", "", 1);
   const initialFees = getStoredFees(initialCacheKey);
 
   const [students, setStudents] = useState<StudentFeeRow[]>(initialFees?.students || []);
   const [totalItems, setTotalItems] = useState(initialFees?.totalItems || 0);
   const [totalPages, setTotalPages] = useState(initialFees?.totalPages || 1);
   const [isLoading, setIsLoading] = useState(initialFees ? false : true);
-
+  const hasLoadedRef = useRef(Boolean(initialFees && initialFees.students.length > 0));
   const [allStudentsForReports, setAllStudentsForReports] = useState<StudentFeeRow[]>([]);
   const [allPaymentsForReports, setAllPaymentsForReports] = useState<any[]>([]);
   const [isReportsLoading, setIsReportsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-
-  // Filters and search states
   const [search, setSearch] = useState("");
-  const [academicYearFilter, setAcademicYearFilter] = useState(academicYear || "2026");
   const [classFilter, setClassFilter] = useState("");
   const [sectionFilter, setSectionFilter] = useState("");
   const [teacherFilter, setTeacherFilter] = useState("");
@@ -307,8 +312,9 @@ export default function FeesPage() {
         setCurrentPage(1);
       },
       options: [
-        { label: "Session 2026", value: "2026" },
-        { label: "Session 2027", value: "2027" }
+        { label: "Session 2026 - 2027", value: "2026-2027" },
+        { label: "Session 2025 - 2026", value: "2025-2026" },
+        { label: "Session 2024 - 2025", value: "2024-2025" }
       ]
     },
     {
@@ -698,9 +704,27 @@ export default function FeesPage() {
 
   // Load students & totals with pagination & filters
   const fetchStudents = useCallback(async (background = false) => {
-    if (!background && students.length === 0) {
+    const key = getFeesCacheKey(academicYearFilter, classFilter, currentPage);
+    const hasSpecificFilters = Boolean(
+      search || sectionFilter || teacherFilter || feeTypeFilter || statusFilter || dueStatusFilter || dateFromFilter || dateToFilter
+    );
+
+    // Instant render from local cache if available (0ms instant display)
+    if (!hasSpecificFilters) {
+      const cached = getStoredFees(key);
+      if (cached && cached.students && cached.students.length > 0) {
+        setStudents(cached.students);
+        setTotalItems(cached.totalItems);
+        setTotalPages(cached.totalPages);
+        setIsLoading(false);
+        background = true; // Still refresh in background without locking UI
+      }
+    }
+
+    if (!background && !hasLoadedRef.current) {
       setIsLoading(true);
     }
+
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -724,13 +748,13 @@ export default function FeesPage() {
           totalItems: data.data.pagination.totalItems,
           totalPages: data.data.pagination.totalPages
         };
-        const key = getFeesCacheKey(academicYearFilter, classFilter, currentPage);
         _feesLedgerCache.set(key, payload);
         if (typeof window !== "undefined") {
           try {
             sessionStorage.setItem(`cache_${key}`, JSON.stringify(payload));
           } catch { }
         }
+        hasLoadedRef.current = true;
         setStudents(payload.students);
         setTotalItems(payload.totalItems);
         setTotalPages(payload.totalPages);
@@ -740,10 +764,10 @@ export default function FeesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [currentPage, search, academicYearFilter, classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter, dateFromFilter, dateToFilter, students.length]);
+  }, [currentPage, search, academicYearFilter, classFilter, sectionFilter, teacherFilter, feeTypeFilter, statusFilter, dueStatusFilter, dateFromFilter, dateToFilter]);
 
   useEffect(() => {
-    fetchStudents(students.length > 0);
+    fetchStudents(hasLoadedRef.current);
   }, [fetchStudents]);
 
   useEffect(() => {
@@ -784,6 +808,17 @@ export default function FeesPage() {
       fetchReportsData();
     }
   }, [activeTab, academicYearFilter]);
+
+  // Auto-select first class when Class Fee Setup modal opens or when classes finish loading
+  useEffect(() => {
+    if (isSetupOpen) {
+      if (classes.length === 0) {
+        fetchClasses({ limit: "all" as any });
+      } else if (!setupClassId) {
+        setSetupClassId(classes[0]._id);
+      }
+    }
+  }, [isSetupOpen, setupClassId, classes, fetchClasses]);
 
   // Load configuration when selected class changes in Fee Setup
   useEffect(() => {
@@ -1389,7 +1424,11 @@ export default function FeesPage() {
         <div className="flex flex-wrap gap-2.5">
           <button
             onClick={() => {
-              setSetupClassId(classes[0]?._id || "");
+              const targetClass = setupClassId || classFilter || classes[0]?._id || "";
+              setSetupClassId(targetClass);
+              if (classes.length === 0) {
+                fetchClasses({ limit: "all" as any });
+              }
               setIsSetupOpen(true);
             }}
             className="btn btn-outline flex items-center gap-2"
@@ -1896,17 +1935,27 @@ export default function FeesPage() {
                 <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-450 mb-1.5">Class Selection</label>
                 <div className="relative">
                   <select
-                    value={setupClassId}
+                    value={setupClassId || classes[0]?._id || ""}
                     onChange={(e) => setSetupClassId(e.target.value)}
-                    className="w-full pl-3 pr-8 py-2 bg-white dark:bg-slate-900 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer focus:border-primary/50 transition-colors"
+                    className="w-full pl-3 pr-8 py-2.5 bg-white dark:bg-slate-900 border border-border text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl outline-none appearance-none cursor-pointer focus:border-primary/50 transition-colors"
                   >
-                    {classes.map((cls) => (
-                      <option key={cls._id} value={cls._id}>
-                        {cls.name} - {cls.section}
+                    {classes.length === 0 ? (
+                      <option value="" disabled>
+                        {isClassesLoading ? "Loading classes..." : "No classes found"}
                       </option>
-                    ))}
+                    ) : (
+                      classes.map((cls) => (
+                        <option
+                          key={cls._id}
+                          value={cls._id}
+                          className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 py-1"
+                        >
+                          {cls.name}{cls.section ? ` - ${cls.section}` : ""}
+                        </option>
+                      ))
+                    )}
                   </select>
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-3 pointer-events-none" />
                 </div>
               </div>
 

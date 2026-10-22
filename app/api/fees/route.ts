@@ -39,6 +39,11 @@ export async function GET(req: NextRequest) {
   const configOnly = url.searchParams.get("config_only") === "true";
   const rawAcademicYear = url.searchParams.get("academic_year");
   const academic_year = (rawAcademicYear && rawAcademicYear !== "all") ? rawAcademicYear : null;
+  const cleanYear = academic_year ? academic_year.replace(/\s*\/\s*/g, "-").trim() : null;
+  const yearPrefix = cleanYear ? cleanYear.split("-")[0] : null;
+  const yearRegex = yearPrefix ? new RegExp(`^${yearPrefix}`) : null;
+  const academicYearFilter = yearRegex ? { academic_year: yearRegex } : {};
+
   const statusFilter = url.searchParams.get("status");
   const dueStatusFilter = url.searchParams.get("due_status");
   const feeTypeFilterName = url.searchParams.get("fee_type");
@@ -50,7 +55,63 @@ export async function GET(req: NextRequest) {
   const rawLimit = parseInt(url.searchParams.get("limit") || "10", 10);
   const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 10 : rawLimit), 5000);
 
-  const cacheKey = `fees_${effectiveSchoolId || "all"}_${role}_${userId || ""}_${studentId || "all"}_${classId || "all"}_${academic_year || "all"}_${statusFilter || "all"}_${dueStatusFilter || "all"}_${feeTypeFilterName || "all"}_${dateFrom || ""}_${dateTo || ""}_${page}_${limit}_${search}`;
+  await connectToDatabase();
+  // Strict role ownership bounds
+  if (role === "student") {
+    const studentProfile = await Student.findOne({ school_id: schoolId, user_id: userId }).select("_id").lean();
+    if (!studentProfile || (studentId && studentProfile._id.toString() !== studentId)) {
+      return NextResponse.json({ success: false, message: "Access denied to student record" }, { status: 403 });
+    }
+  } else if (role === "parent") {
+    const parent = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
+    if (!parent) {
+      return NextResponse.json({ success: false, message: "Access denied: Parent not found" }, { status: 403 });
+    }
+    const children = await Student.find({ school_id: schoolId, parent_id: parent._id }).select("_id").lean();
+    const childIds = children.map((c: any) => c._id.toString());
+    if (studentId) {
+      if (!childIds.includes(studentId)) {
+        return NextResponse.json({ success: false, message: "Access denied to student record" }, { status: 403 });
+      }
+    }
+  }
+
+  // ── Special handling for configOnly (Class Fee / Student Fee Assignment) ────────
+  if (configOnly) {
+    const baseFeeQuery: any = { ...academicYearFilter };
+    if (effectiveSchoolId) baseFeeQuery.school_id = effectiveSchoolId;
+
+    if (studentId) {
+      const studentFee = await StudentFeeAssignment.findOne({
+        ...baseFeeQuery,
+        student_id: studentId
+      }).lean();
+      if (studentFee) {
+        return NextResponse.json({ success: true, data: studentFee });
+      }
+    }
+
+    let targetClassId = classId;
+    if (!targetClassId && studentId) {
+      const studentDoc = await Student.findById(studentId).select("class_id").lean();
+      if (studentDoc && studentDoc.class_id) {
+        targetClassId = studentDoc.class_id.toString();
+      }
+    }
+
+    if (!targetClassId) {
+      return NextResponse.json({ success: false, message: "class_id required for config" }, { status: 400 });
+    }
+
+    const classFee = await ClassFee.findOne({
+      ...baseFeeQuery,
+      class_id: targetClassId
+    }).lean();
+
+    return NextResponse.json({ success: true, data: classFee });
+  }
+
+  const cacheKey = `fees_${effectiveSchoolId || "all"}_${role}_${userId || ""}_${studentId || "all"}_${classId || "all"}_${yearPrefix || "all"}_${statusFilter || "all"}_${dueStatusFilter || "all"}_${feeTypeFilterName || "all"}_${dateFrom || ""}_${dateTo || ""}_${page}_${limit}_${search}`;
 
   // ── Serve from cache before touching DB ────────────────────────
   const cached = _feesServerCache.get(cacheKey);
@@ -72,47 +133,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  await connectToDatabase();
-    // Strict role ownership bounds
-    if (role === "student") {
-      const studentProfile = await Student.findOne({ school_id: schoolId, user_id: userId }).select("_id").lean();
-      if (!studentProfile || (studentId && studentProfile._id.toString() !== studentId)) {
-        return NextResponse.json({ success: false, message: "Access denied to student record" }, { status: 403 });
-      }
-    } else if (role === "parent") {
-      const parent = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
-      if (!parent) {
-        return NextResponse.json({ success: false, message: "Access denied: Parent not found" }, { status: 403 });
-      }
-      const children = await Student.find({ school_id: schoolId, parent_id: parent._id }).select("_id").lean();
-      const childIds = children.map((c: any) => c._id.toString());
-      if (studentId) {
-        if (!childIds.includes(studentId)) {
-          return NextResponse.json({ success: false, message: "Access denied to student record" }, { status: 403 });
-        }
-      }
-    }
-
-    if (configOnly) {
-      const configQuery: any = { ...(academic_year ? { academic_year } : {}) };
-      if (effectiveSchoolId) configQuery.school_id = effectiveSchoolId;
-
-      if (studentId) {
-        configQuery.student_id = studentId;
-        const studentFee = await StudentFeeAssignment.findOne(configQuery).lean();
-        if (studentFee) {
-          return NextResponse.json({ success: true, data: studentFee });
-        }
-      }
-      if (!classId) {
-        return NextResponse.json({ success: false, message: "class_id required for config" }, { status: 400 });
-      }
-      configQuery.class_id = classId;
-      const classFee = await ClassFee.findOne(configQuery).lean();
-      return NextResponse.json({ success: true, data: classFee });
-    }
-
-    const queryPromise = (async () => {
+  const queryPromise = (async () => {
 
     // Teacher assignments restriction
     let allowedClassIds: string[] | null = null;
@@ -153,12 +174,12 @@ export async function GET(req: NextRequest) {
     }
     if (studentId) {
       studentQuery._id = studentId;
-      if (url.searchParams.has("academic_year")) {
-        studentQuery.academic_year = academic_year;
+      if (yearRegex) {
+        studentQuery.academic_year = yearRegex;
       }
     } else {
-      if (academic_year) {
-        studentQuery.academic_year = academic_year;
+      if (yearRegex) {
+        studentQuery.academic_year = yearRegex;
       }
       if (role === "parent") {
         const parent = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
@@ -207,7 +228,7 @@ export async function GET(req: NextRequest) {
       const teacherAssignments = await mongoose.model("TeacherAssignment").find({
         ...(effectiveSchoolId ? { school_id: effectiveSchoolId } : {}),
         teacher_id: new mongoose.Types.ObjectId(teacherFilterId),
-        ...(academic_year ? { academic_year } : {}),
+        ...academicYearFilter,
         status: "Active",
         is_deleted: false
       }).select("class_id").lean();
@@ -249,7 +270,7 @@ export async function GET(req: NextRequest) {
       const teacherAssignments = await mongoose.model("TeacherAssignment").find({
         ...(effectiveSchoolId ? { school_id: effectiveSchoolId } : {}),
         teacher_id: { $in: searchedTeacherIds },
-        ...(academic_year ? { academic_year } : {}),
+        ...academicYearFilter,
         status: "Active",
         is_deleted: false
       }).select("class_id").lean();
@@ -411,14 +432,14 @@ export async function GET(req: NextRequest) {
         ClassFee.find({
           ...(effectiveSchoolId ? { school_id: effectiveSchoolId } : {}),
           class_id: { $in: pageClassIds },
-          ...(academic_year ? { academic_year } : {}),
+          ...academicYearFilter,
         })
           .select("class_id fee_types total_amount")
           .lean(),
         StudentFeeAssignment.find({
           ...(effectiveSchoolId ? { school_id: effectiveSchoolId } : {}),
           student_id: { $in: pageStudentIds },
-          ...(academic_year ? { academic_year } : {}),
+          ...academicYearFilter,
         })
           .select("student_id fee_types total_amount")
           .lean(),
@@ -476,13 +497,13 @@ export async function GET(req: NextRequest) {
     const [classFeesList, studentAssignments, allPayments] = await Promise.all([
       ClassFee.find({
         ...(effectiveSchoolId ? { school_id: effectiveSchoolId } : {}),
-        ...(academic_year ? { academic_year } : {})
+        ...academicYearFilter
       })
         .select("class_id fee_types total_amount")
         .lean(),
       StudentFeeAssignment.find({
         ...(effectiveSchoolId ? { school_id: effectiveSchoolId } : {}),
-        ...(academic_year ? { academic_year } : {})
+        ...academicYearFilter
       })
         .select("student_id fee_types total_amount")
         .lean(),

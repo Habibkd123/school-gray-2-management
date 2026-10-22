@@ -268,7 +268,7 @@ export default function ResetPasswordPage() {
 
           <div className="absolute bottom-8 left-0 right-0 text-center">
             <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">
-              Copyright © {new Date().getFullYear()} — {process.env.NEXT_PUBLIC_SCHOOL_NAME || "School ERP"}
+              Copyright © {new Date().getFullYear()} — {process.env.NEXT_PUBLIC_SCHOOL_NAME || "MySchoolLife School ERP"}
             </p>
           </div>
         </div>
