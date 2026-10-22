@@ -71,14 +71,31 @@ export async function GET(req: NextRequest) {
         const classQuery: any = { school_id: schoolId };
         if (classId) classQuery._id = classId;
 
-        const [attendanceRecords, allClasses, studentCounts] = await Promise.all([
-          Attendance.find({
-            school_id: schoolId as string,
-            type: "student",
-            date: { $gte: startOfDay, $lte: endOfDay },
-          })
-            .select("class_id records.status date")
-            .lean(),
+        const attendanceMatch: any = {
+          school_id: new mongoose.Types.ObjectId(schoolId as string),
+          type: "student",
+          date: { $gte: startOfDay, $lte: endOfDay },
+        };
+        if (classId && mongoose.Types.ObjectId.isValid(classId)) {
+          attendanceMatch.class_id = new mongoose.Types.ObjectId(classId);
+        }
+
+        const [attendanceAgg, markedClassIds, allClasses, studentCounts] = await Promise.all([
+          Attendance.aggregate([
+            { $match: attendanceMatch },
+            { $unwind: "$records" },
+            {
+              $group: {
+                _id: "$class_id",
+                present: { $sum: { $cond: [{ $eq: [{ $toLower: "$records.status" }, "present"] }, 1, 0] } },
+                absent:  { $sum: { $cond: [{ $eq: [{ $toLower: "$records.status" }, "absent"] }, 1, 0] } },
+                late:    { $sum: { $cond: [{ $eq: [{ $toLower: "$records.status" }, "late"] }, 1, 0] } },
+                leave:   { $sum: { $cond: [{ $eq: [{ $toLower: "$records.status" }, "leave"] }, 1, 0] } },
+                halfDay: { $sum: { $cond: [{ $eq: [{ $toLower: "$records.status" }, "half_day"] }, 1, 0] } },
+              },
+            },
+          ]),
+          Attendance.find(attendanceMatch).distinct("class_id"),
           Class.find(classQuery).select("_id name section").lean(),
           Student.aggregate([
             { $match: { school_id: new mongoose.Types.ObjectId(schoolId as string), is_active: true } },
@@ -91,27 +108,21 @@ export async function GET(req: NextRequest) {
           if (sc._id) countMap.set(sc._id.toString(), sc.count);
         });
 
+        const markedSet = new Set(markedClassIds.map((id: any) => id?.toString()));
+        const attMap = new Map<string, any>();
+        attendanceAgg.forEach((a: any) => {
+          if (a._id) attMap.set(a._id.toString(), a);
+        });
+
         const classStats = allClasses.map((cls) => {
-          const attDoc = attendanceRecords.find(
-            (r) => r.class_id?.toString() === cls._id.toString()
-          );
+          const att = attMap.get(cls._id.toString());
+          const isMarked = markedSet.has(cls._id.toString());
 
-          let present = 0;
-          let absent = 0;
-          let late = 0;
-          let leave = 0;
-          let halfDay = 0;
-
-          if (attDoc && attDoc.records) {
-            attDoc.records.forEach((rec: any) => {
-              const status = rec.status?.toLowerCase();
-              if (status === "present") present++;
-              else if (status === "absent") absent++;
-              else if (status === "late") late++;
-              else if (status === "leave") leave++;
-              else if (status === "half_day") halfDay++;
-            });
-          }
+          const present = att ? att.present : 0;
+          const absent  = att ? att.absent : 0;
+          const late    = att ? att.late : 0;
+          const leave   = att ? att.leave : 0;
+          const halfDay = att ? att.halfDay : 0;
 
           const totalStudents = countMap.get(cls._id.toString()) || 0;
           const totalMarked = present + absent + late + leave + halfDay;
@@ -126,7 +137,7 @@ export async function GET(req: NextRequest) {
             late,
             leave,
             halfDay,
-            isMarked: !!attDoc,
+            isMarked,
             rate: totalMarked ? Math.round(((present + late + halfDay) / totalMarked) * 100) : 0,
           };
         });
@@ -147,14 +158,41 @@ export async function GET(req: NextRequest) {
         const classQuery: any = { school_id: schoolId };
         if (classId) classQuery._id = classId;
 
-        const [attendanceRecords, allClasses, studentCounts] = await Promise.all([
-          Attendance.find({
-            school_id: schoolId as string,
-            type: "student",
-            date: { $gte: startDate, $lte: endDate },
-          })
-            .select("class_id records.status date")
-            .lean(),
+        const attendanceMatch: any = {
+          school_id: new mongoose.Types.ObjectId(schoolId as string),
+          type: "student",
+          date: { $gte: startDate, $lte: endDate },
+        };
+        if (classId && mongoose.Types.ObjectId.isValid(classId)) {
+          attendanceMatch.class_id = new mongoose.Types.ObjectId(classId);
+        }
+
+        const [monthlyAgg, allClasses, studentCounts] = await Promise.all([
+          Attendance.aggregate([
+            { $match: attendanceMatch },
+            { $unwind: "$records" },
+            {
+              $group: {
+                _id: "$class_id",
+                totalPresent: {
+                  $sum: { $cond: [{ $in: [{ $toLower: "$records.status" }, ["present", "late", "half_day"]] }, 1, 0] },
+                },
+                totalAbsent: {
+                  $sum: { $cond: [{ $eq: [{ $toLower: "$records.status" }, "absent"] }, 1, 0] },
+                },
+                totalRecords: { $sum: 1 },
+                dates: { $addToSet: "$date" },
+              },
+            },
+            {
+              $project: {
+                totalPresent: 1,
+                totalAbsent: 1,
+                totalRecords: 1,
+                workingDays: { $size: "$dates" },
+              },
+            },
+          ]),
           Class.find(classQuery).select("_id name section").lean(),
           Student.aggregate([
             { $match: { school_id: new mongoose.Types.ObjectId(schoolId as string), is_active: true } },
@@ -167,29 +205,17 @@ export async function GET(req: NextRequest) {
           if (sc._id) countMap.set(sc._id.toString(), sc.count);
         });
 
+        const monthlyMap = new Map<string, any>();
+        monthlyAgg.forEach((m: any) => {
+          if (m._id) monthlyMap.set(m._id.toString(), m);
+        });
+
         const monthlyStats = allClasses.map((cls: any) => {
-          const classAttDocs = attendanceRecords.filter(
-            (r: any) => r.class_id?.toString() === cls._id.toString()
-          );
-
-          const workingDays = classAttDocs.length;
-          let totalPresent = 0;
-          let totalAbsent = 0;
-          let totalRecords = 0;
-
-          classAttDocs.forEach((doc: any) => {
-            if (doc.records) {
-              doc.records.forEach((rec: any) => {
-                const status = rec.status?.toLowerCase();
-                totalRecords++;
-                if (["present", "late", "half_day"].includes(status)) {
-                  totalPresent++;
-                } else if (status === "absent") {
-                  totalAbsent++;
-                }
-              });
-            }
-          });
+          const m = monthlyMap.get(cls._id.toString());
+          const workingDays = m ? m.workingDays : 0;
+          const totalPresent = m ? m.totalPresent : 0;
+          const totalAbsent = m ? m.totalAbsent : 0;
+          const totalRecords = m ? m.totalRecords : 0;
 
           const studentCount = countMap.get(cls._id.toString()) || 0;
 

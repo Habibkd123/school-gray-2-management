@@ -21,12 +21,16 @@ export default function AttendanceConfirmationPage() {
 
   useEffect(() => {
     if (academicYear && dateParam && classId) {
-      fetchAttendance({
-        academic_year: academicYear,
-        date: dateParam,
-        classId,
-        streamId: streamId || undefined,
-      });
+      fetchAttendance(
+        {
+          academic_year: academicYear,
+          date: dateParam,
+          classId,
+          streamId: streamId || undefined,
+        },
+        false,
+        true // force fresh fetch from database
+      );
     }
   }, [academicYear, dateParam, classId, streamId, fetchAttendance]);
 
@@ -75,7 +79,7 @@ export default function AttendanceConfirmationPage() {
 
       {/* Main card */}
       <div className="bg-white dark:bg-slate-900 border border-border rounded-2xl p-8 card-shadow flex flex-col items-center text-center space-y-6">
-        {isLoading ? (
+        {isLoading || !academicYear ? (
           <div className="flex flex-col items-center gap-3 py-12 text-slate-400">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <p className="text-sm font-medium">Loading submission summary...</p>

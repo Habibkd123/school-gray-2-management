@@ -108,27 +108,25 @@ export async function GET(req: NextRequest) {
     const endDate = new Date(endDateParam);
     endDate.setUTCHours(23, 59, 59, 999);
 
-    const query: any = {
-      school_id: schoolId as string,
-      date: { $gte: startDate, $lte: endDate },
-      type,
-    };
-    if (type === "student") {
-      if (classId) {
-        query.class_id = classId;
-      }
-      if (recordId) {
-        query["records.student_id"] = recordId;
-      }
-    }
-
     const detail = url.searchParams.get("detail") === "true";
 
-    const attendances = await Attendance.find(query).lean();
-
+    // ── Path 1: Detail view for a specific student/teacher (preserved) ──
     if (detail && recordId) {
+      const detailQuery: any = {
+        school_id: schoolId,
+        date: { $gte: startDate, $lte: endDate },
+        type,
+      };
+      if (type === "student") {
+        if (classId) detailQuery.class_id = classId;
+        detailQuery["records.student_id"] = recordId;
+      } else {
+        detailQuery["records.teacher_id"] = recordId;
+      }
+
+      const attendances = await Attendance.find(detailQuery).lean();
       const dailyRecords = attendances.map((att: any) => {
-        const record = att.records.find((r: any) => {
+        const record = att.records?.find((r: any) => {
           const refId = type === "student" ? r.student_id : r.teacher_id;
           return refId && refId.toString() === recordId;
         });
@@ -145,30 +143,78 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Aggregate results by student_id or teacher_id
+    // ── Path 2: Summary aggregation (Database-level grouping & counting) ──
+    // Replaces transferring entire records[] arrays to Node.js and looping in memory
+    const matchFilter: Record<string, any> = {
+      school_id: new mongoose.Types.ObjectId(schoolId as string),
+      date: { $gte: startDate, $lte: endDate },
+      type,
+    };
+    if (type === "student") {
+      if (classId && mongoose.Types.ObjectId.isValid(classId)) {
+        matchFilter.class_id = new mongoose.Types.ObjectId(classId);
+      }
+      if (recordId && mongoose.Types.ObjectId.isValid(recordId)) {
+        matchFilter["records.student_id"] = new mongoose.Types.ObjectId(recordId);
+      }
+    } else if (type === "teacher" && recordId && mongoose.Types.ObjectId.isValid(recordId)) {
+      matchFilter["records.teacher_id"] = new mongoose.Types.ObjectId(recordId);
+    }
+
+    const pipeline: mongoose.PipelineStage[] = [
+      // STAGE 1: Filter using index (attendance_school_type_date_v1 / attendance_school_class_date_v1)
+      { $match: matchFilter },
+      // STAGE 2: Deconstruct embedded records array
+      { $unwind: "$records" },
+    ];
+
+    // STAGE 3: If student or parent, restrict strictly to their student record ID
+    if (recordId && mongoose.Types.ObjectId.isValid(recordId)) {
+      pipeline.push({
+        $match: {
+          [type === "student" ? "records.student_id" : "records.teacher_id"]: new mongoose.Types.ObjectId(recordId),
+        },
+      });
+    }
+
+    // STAGE 4: Group by student_id or teacher_id and sum counts for standard statuses
+    pipeline.push({
+      $group: {
+        _id:      type === "student" ? "$records.student_id" : "$records.teacher_id",
+        present:  { $sum: { $cond: [{ $eq: ["$records.status", "present"] }, 1, 0] } },
+        absent:   { $sum: { $cond: [{ $eq: ["$records.status", "absent"] }, 1, 0] } },
+        late:     { $sum: { $cond: [{ $eq: ["$records.status", "late"] }, 1, 0] } },
+        holiday:  { $sum: { $cond: [{ $eq: ["$records.status", "holiday"] }, 1, 0] } },
+        half_day: { $sum: { $cond: [{ $eq: ["$records.status", "half_day"] }, 1, 0] } },
+        leave:    { $sum: { $cond: [{ $eq: ["$records.status", "leave"] }, 1, 0] } },
+      },
+    });
+
+    const rawSummary: Array<{
+      _id: mongoose.Types.ObjectId | null;
+      present: number;
+      absent: number;
+      late: number;
+      holiday: number;
+      half_day: number;
+      leave: number;
+    }> = await Attendance.aggregate(pipeline);
+
+    // Reconstruct exact response map: { [id: string]: { present, absent, late, holiday, half_day, leave } }
     const summary: Record<string, { present: number; absent: number; late: number; holiday: number; half_day: number; leave: number }> = {};
 
-    attendances.forEach((att: any) => {
-      att.records.forEach((record: any) => {
-        const refId = type === "student" ? record.student_id : record.teacher_id;
-        if (!refId) return;
-        const id = refId.toString();
-
-        // Security: restrict records to recordId if role is student or parent
-        if ((role === "student" || role === "parent") && id !== recordId) {
-          return;
-        }
-
-        if (!summary[id]) {
-          summary[id] = { present: 0, absent: 0, late: 0, holiday: 0, half_day: 0, leave: 0 };
-        }
-        
-        const status = record.status as keyof typeof summary[string];
-        if (summary[id][status] !== undefined) {
-          summary[id][status] += 1;
-        }
-      });
-    });
+    for (const row of rawSummary) {
+      if (row._id) {
+        summary[row._id.toString()] = {
+          present: row.present,
+          absent: row.absent,
+          late: row.late,
+          holiday: row.holiday,
+          half_day: row.half_day,
+          leave: row.leave,
+        };
+      }
+    }
 
     return sendCompressedJson(req, {
       success: true,

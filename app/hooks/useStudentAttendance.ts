@@ -52,27 +52,29 @@ export function useStudentAttendance() {
     classId: string;
     streamId?: string;
     sectionId?: string;
-  }, background = false) => {
+  }, background = false, forceRefresh = false) => {
     const cacheKey = `${params.academic_year}_${params.date}_${params.classId}_${params.streamId || ""}_${params.sectionId || ""}`;
     const mem = _studentAttClientCache.get(cacheKey);
     const now = Date.now();
 
-    if (mem && (now - mem.timestamp < CLIENT_CACHE_TTL)) {
-      setAttendance(mem.data);
-      if (now - mem.timestamp < 15_000) return; // Super fresh
-      background = true;
-    } else if (typeof window !== "undefined") {
-      try {
-        const raw = sessionStorage.getItem(SS_PREFIX + cacheKey);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (now - parsed.timestamp < CLIENT_CACHE_TTL) {
-            setAttendance(parsed.data);
-            _studentAttClientCache.set(cacheKey, parsed);
-            background = true;
+    if (!forceRefresh) {
+      if (mem && mem.data && (now - mem.timestamp < CLIENT_CACHE_TTL)) {
+        setAttendance(mem.data);
+        if (now - mem.timestamp < 15_000) return; // Super fresh
+        background = true;
+      } else if (typeof window !== "undefined") {
+        try {
+          const raw = sessionStorage.getItem(SS_PREFIX + cacheKey);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed.data && (now - parsed.timestamp < CLIENT_CACHE_TTL)) {
+              setAttendance(parsed.data);
+              _studentAttClientCache.set(cacheKey, parsed);
+              background = true;
+            }
           }
-        }
-      } catch {}
+        } catch {}
+      }
     }
 
     if (!background) {
@@ -88,7 +90,10 @@ export function useStudentAttendance() {
       if (params.streamId) qs.set("streamId", params.streamId);
       if (params.sectionId) qs.set("sectionId", params.sectionId);
 
-      const res = await fetch(`/api/attendance/student?${qs}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/attendance/student?${qs}`, {
+        headers: getAuthHeaders(),
+        cache: forceRefresh ? "no-store" : "default",
+      });
       const data = await res.json();
 
       if (!res.ok) throw new Error(data.message || "Failed to fetch");
@@ -96,12 +101,22 @@ export function useStudentAttendance() {
       const finalData = data.success && data.data ? data.data : null;
       setAttendance(finalData);
 
-      const entry = { data: finalData, timestamp: Date.now() };
-      _studentAttClientCache.set(cacheKey, entry);
-      if (typeof window !== "undefined") {
-        try {
-          sessionStorage.setItem(SS_PREFIX + cacheKey, JSON.stringify(entry));
-        } catch {}
+      if (finalData) {
+        const entry = { data: finalData, timestamp: Date.now() };
+        _studentAttClientCache.set(cacheKey, entry);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(SS_PREFIX + cacheKey, JSON.stringify(entry));
+          } catch {}
+        }
+      } else {
+        // If no attendance submitted yet, do NOT cache null for 45s
+        _studentAttClientCache.delete(cacheKey);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.removeItem(SS_PREFIX + cacheKey);
+          } catch {}
+        }
       }
     } catch (err: any) {
       setError(err.message || "Network error");
@@ -133,12 +148,24 @@ export function useStudentAttendance() {
       if (!res.ok || !data.success) {
         throw new Error(data.message || "Failed to save attendance");
       }
-      setAttendance(data.data);
+      const savedRecord = data.data;
+      setAttendance(savedRecord);
 
-      _studentAttClientCache.clear();
+      // Immediately prime memory and sessionStorage with the freshly saved attendance
+      const cacheKey = `${input.academic_year}_${input.date}_${input.classId}_${input.streamId || ""}_${input.sectionId || ""}`;
+      if (savedRecord) {
+        const entry = { data: savedRecord, timestamp: Date.now() };
+        _studentAttClientCache.set(cacheKey, entry);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(SS_PREFIX + cacheKey, JSON.stringify(entry));
+          } catch {}
+        }
+      }
+
       invalidateCache("attendance");
 
-      return { success: true, message: "Attendance saved successfully" };
+      return { success: true, message: "Attendance saved successfully", data: savedRecord };
     } catch (err: any) {
       setError(err.message || "Network error");
       return { success: false, message: err.message || "Network error" };

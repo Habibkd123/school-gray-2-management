@@ -222,7 +222,9 @@ export async function GET(req: NextRequest) {
       success: true,
       data: attendanceRecord || null,
     };
-    _studentAttServerCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + ATTENDANCE_CACHE_TTL });
+    if (attendanceRecord) {
+      _studentAttServerCache.set(cacheKey, { data: responsePayload, expiresAt: Date.now() + 10_000 });
+    }
     return responsePayload;
   })();
 
@@ -230,8 +232,12 @@ export async function GET(req: NextRequest) {
 
   try {
     const payload = await queryPromise;
+    const cacheControlHeader = (!classId && Array.isArray(payload?.data) && payload.data.length > 0)
+      ? "private, max-age=10, stale-while-revalidate=20"
+      : "no-store, no-cache, must-revalidate";
+
     return sendCompressedJson(req, payload, {
-      cacheControl: "private, max-age=15, stale-while-revalidate=30",
+      cacheControl: cacheControlHeader,
     });
   } catch (err: any) {
     const status = err.message === "Teacher record not found" || err.message === "You are not assigned to this class" ? 403 : 500;

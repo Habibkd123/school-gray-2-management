@@ -7,6 +7,7 @@ import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { useLoginConfig } from "@/app/hooks/useLoginConfig";
 import { cacheSync } from "@/lib/utils/cache-sync";
 import RolesPermissionsPage from "../roles/page";
+import SystemBackupPage from "../backup/page";
 import {
   RefreshCw, Upload, Edit, EyeOff, Eye, Save, X,
   Loader2, CheckCircle2, AlertCircle, User, Lock, MapPin,
@@ -109,7 +110,17 @@ export default function ProfilePage() {
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   // Tab control
-  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login" | "seo" | "upcoming">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login" | "seo" | "upcoming" | "backup">("profile");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab === "backup" || tab === "roles" || tab === "academic" || tab === "login" || tab === "upcoming") {
+        setActiveTab(tab as any);
+      }
+    }
+  }, []);
 
   // Profile state with 0ms SWR instant initialization
   const [profile, setProfile] = useState<any | null>(() => {
@@ -548,7 +559,15 @@ export default function ProfilePage() {
         <div className="page-header mb-2">
           <div>
             <h1 className="page-title">
-              {activeTab === "profile" ? "Profile" : (activeTab === "academic" ? "Academic Settings" : "Login Settings")}
+              {activeTab === "profile"
+                ? "Profile"
+                : activeTab === "academic"
+                ? "Academic Settings"
+                : activeTab === "backup"
+                ? "Data Backup & PDF Export"
+                : activeTab === "upcoming"
+                ? "Upcoming Features"
+                : "Login Settings"}
             </h1>
             <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
               <span>Dashboard</span>
@@ -556,7 +575,15 @@ export default function ProfilePage() {
               <span>Settings</span>
               <span>/</span>
               <span className="text-slate-900 dark:text-white font-medium">
-                {activeTab === "profile" ? "Profile" : (activeTab === "academic" ? "Academic Settings" : (activeTab === "upcoming" ? "Upcoming Features" : "Login Settings"))}
+                {activeTab === "profile"
+                  ? "Profile"
+                  : activeTab === "academic"
+                  ? "Academic Settings"
+                  : activeTab === "backup"
+                  ? "Data Backup & PDF Export"
+                  : activeTab === "upcoming"
+                  ? "Upcoming Features"
+                  : "Login Settings"}
               </span>
             </div>
           </div>
@@ -604,12 +631,13 @@ export default function ProfilePage() {
             >
               SEO Settings
             </button> */}
-            <a
-              href="/settings/backup"
-              className="pb-3 text-[14px] font-semibold border-b-2 border-transparent text-slate-500 hover:text-primary dark:hover:text-slate-300 dark:text-slate-400 whitespace-nowrap transition-all flex items-center gap-1.5"
+            <button
+              type="button"
+              onClick={() => setActiveTab("backup")}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${activeTab === "backup" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
             >
               <ShieldCheck className="w-4 h-4 text-emerald-500" /> Data Backup & PDF Export
-            </a>
+            </button>
           </>
         )}
         <button
@@ -645,6 +673,8 @@ export default function ProfilePage() {
             </div>
           ))}
         </div>
+      ) : activeTab === "backup" && isAdmin ? (
+        <SystemBackupPage isEmbedded={true} />
       ) : activeTab === "roles" && isAdmin ? (
         <RolesPermissionsPage />
       ) : activeTab === "seo" && isAdmin ? (

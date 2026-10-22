@@ -28,6 +28,8 @@ export default function CollectFeesPage() {
   // Receipt Modal
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [lastReceipts, setLastReceipts] = useState<any[]>([]);
+  const [receiptCopies, setReceiptCopies] = useState<1 | 2 | 3>(1);
+  const [pageMode, setPageMode] = useState<"single" | "separate">("single");
 
   // Generate Receipt Wizard
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
@@ -380,102 +382,225 @@ export default function CollectFeesPage() {
       )}
 
       {/* Printable Receipt Modal */}
-      {receiptModalOpen && lastReceipts.length > 0 && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:bg-white print:p-0">
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200 print:shadow-none print:w-full print:max-w-none">
-            
-            {/* Printable Content */}
-            <div className="p-8 print:p-0">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-wider">EduManage School</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Official Payment Receipt</p>
-              </div>
+      {receiptModalOpen && lastReceipts.length > 0 && (() => {
+        const copiesConfig: Record<number, string[]> = {
+          1: ["OFFICIAL COPY"],
+          2: ["STUDENT COPY", "OFFICE COPY"],
+          3: ["STUDENT COPY", "OFFICE COPY", "BANK / ACCOUNTS COPY"],
+        };
+        const activeCopies = copiesConfig[receiptCopies] || ["OFFICIAL COPY"];
+        const isCompact = pageMode === "single" && receiptCopies > 1;
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm print:bg-white print:p-0 overflow-y-auto">
+            <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200 print:shadow-none print:w-full print:max-w-none my-8">
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-sm">
-                <div>
-                  <div className="text-slate-500 mb-1 dark:text-slate-400">Receipt No</div>
-                  <div className="font-bold text-slate-900 dark:text-white">{lastReceipts[0].receipt_number}</div>
+              {/* Header / Selector Controls (Hidden on print) */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/60 border-b border-border flex flex-wrap items-center justify-between gap-3 print:hidden">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Copy Selector */}
+                  <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-2">Copies:</span>
+                    <button
+                      type="button"
+                      onClick={() => setReceiptCopies(1)}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        receiptCopies === 1
+                          ? "bg-slate-900 text-white shadow-xs"
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                      }`}
+                    >
+                      1 Copy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReceiptCopies(2)}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        receiptCopies === 2
+                          ? "bg-slate-900 text-white shadow-xs"
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                      }`}
+                    >
+                      2 Copies
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReceiptCopies(3)}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        receiptCopies === 3
+                          ? "bg-slate-900 text-white shadow-xs"
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                      }`}
+                    >
+                      3 Copies
+                    </button>
+                  </div>
+
+                  {/* Page Mode Selector */}
+                  {receiptCopies > 1 && (
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-2">Page Mode:</span>
+                      <button
+                        type="button"
+                        onClick={() => setPageMode("single")}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                          pageMode === "single"
+                            ? "bg-indigo-600 text-white shadow-xs"
+                            : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                        }`}
+                        title="Both copies print on 1 page with a cut line"
+                      >
+                        📄 1 Page
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPageMode("separate")}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                          pageMode === "separate"
+                            ? "bg-indigo-600 text-white shadow-xs"
+                            : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                        }`}
+                        title="Each copy prints on its own separate page"
+                      >
+                        📑 Separate Pages
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <div className="text-right">
-                  <div className="text-slate-500 mb-1 dark:text-slate-400">Date</div>
-                  <div className="font-bold text-slate-900 dark:text-white">{new Date(lastReceipts[0].transaction_date).toLocaleDateString()}</div>
-                </div>
+
+                <button onClick={() => setReceiptModalOpen(false)} className="px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 dark:hover:text-white rounded-lg transition-colors">
+                  Close
+                </button>
               </div>
 
-              <div className="border-t border-b border-border py-4 mb-6 text-sm">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
-                  <span className="text-slate-500 col-span-1 dark:text-slate-400">Received From:</span>
-                  <span className="font-bold text-slate-900 dark:text-white col-span-2">{selectedStudent.name} (Adm: {selectedStudent.admission_no})</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <span className="text-slate-500 col-span-1 dark:text-slate-400">Payment Method:</span>
-                  <span className="font-bold text-slate-900 dark:text-white col-span-2">{lastReceipts[0].payment_method}</span>
-                </div>
+              {/* Printable Content */}
+              <div className="p-6 md:p-8 print:p-0 space-y-6" id="printable-receipt" data-print-zone="true">
+                {activeCopies.map((copyLabel, idx) => {
+                  const isLast = idx === activeCopies.length - 1;
+
+                  return (
+                    <React.Fragment key={idx}>
+                      <div
+                        className={isCompact ? "space-y-3" : "space-y-4"}
+                        style={
+                          !isLast && pageMode === "separate"
+                            ? { pageBreakAfter: "always", breakAfter: "page" }
+                            : undefined
+                        }
+                      >
+                        <div className="text-center pb-2 border-b-2 border-slate-900">
+                          <h2 className={`font-black text-slate-900 dark:text-white uppercase tracking-wider ${isCompact ? "text-lg" : "text-2xl"}`}>
+                            EduManage School
+                          </h2>
+                          <div className="mt-1">
+                            <span className="inline-block px-3 py-0.5 rounded-full border border-slate-900 bg-slate-50 text-slate-900 font-extrabold text-[10px] uppercase tracking-wider">
+                              Official Payment Receipt • {copyLabel}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 text-xs font-sans">
+                          <div>
+                            <span className="text-slate-400 font-bold block">Receipt No:</span>
+                            <span className="font-bold font-mono text-primary">{lastReceipts[0].receipt_number}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-slate-400 font-bold block">Date:</span>
+                            <span className="font-bold text-slate-900 dark:text-white">{new Date(lastReceipts[0].transaction_date).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-b border-border py-2.5 text-xs font-sans">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5 mb-1">
+                            <span className="text-slate-400 font-bold">Received From:</span>
+                            <span className="font-bold text-slate-900 dark:text-white md:col-span-2">{selectedStudent.name} (Adm: {selectedStudent.admission_no})</span>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5">
+                            <span className="text-slate-400 font-bold">Payment Method:</span>
+                            <span className="font-bold text-slate-900 dark:text-white md:col-span-2">{lastReceipts[0].payment_method}</span>
+                          </div>
+                        </div>
+
+                        {/* Breakdown Table */}
+                        <div>
+                          <table className="erp-table text-xs">
+                            <thead>
+                              <tr className="border-b border-border">
+                                <th className="py-1.5 text-left font-bold text-slate-700 dark:text-slate-300">Fee Particulars</th>
+                                <th className="py-1.5 text-right font-bold text-slate-700 dark:text-slate-300">Amount</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                              {lastReceipts.map(rec => (
+                                <tr key={rec._id}>
+                                  <td className="py-1.5 text-slate-800 dark:text-slate-200">
+                                    {rec.fee_master_id?.fee_type_id?.name || "Fee"} 
+                                    <span className="text-[10px] text-slate-500 block">{rec.fee_master_id?.fee_group_id?.name}</span>
+                                  </td>
+                                  <td className="py-1.5 text-right font-semibold text-slate-900 dark:text-white">₹{rec.amount_paid.toFixed(2)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center print:bg-slate-100 print:text-black">
+                          <span className="font-bold text-slate-700 dark:text-slate-300 text-xs">Total Amount Paid:</span>
+                          <span className={`font-black text-primary ${isCompact ? "text-base" : "text-xl"}`}>
+                            ₹{lastReceipts.reduce((sum, r) => sum + r.amount_paid, 0).toFixed(2)}
+                          </span>
+                        </div>
+
+                        <div className={`border-t border-border flex justify-between items-end ${isCompact ? "pt-5 mt-4" : "pt-8 mt-6"}`}>
+                          <div className="text-center">
+                            <div className="w-28 border-b border-slate-300 mb-1"></div>
+                            <span className="text-[10px] text-slate-500 font-bold">Accountant Signature</span>
+                          </div>
+                          <div className="text-center text-[10px] text-slate-400">
+                            Generated by EduManage System
+                          </div>
+                        </div>
+                      </div>
+
+                      {!isLast && pageMode === "single" && (
+                        <div className="my-4 flex items-center justify-center text-center">
+                          <div className="flex-1 border-b border-dashed border-slate-400"></div>
+                          <span className="px-2 py-0.5 bg-slate-100 border border-dashed border-slate-400 rounded-full text-[9px] font-bold text-slate-500 mx-2">
+                            ✂ CUT ALONG THIS LINE ✂
+                          </span>
+                          <div className="flex-1 border-b border-dashed border-slate-400"></div>
+                        </div>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </div>
 
-              {/* Breakdown Table */}
-              <div className="mb-6">
-                <table className="erp-table">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="py-2 text-left font-bold text-slate-700 dark:text-slate-300">Fee Particulars</th>
-                      <th className="py-2 text-right font-bold text-slate-700 dark:text-slate-300">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {lastReceipts.map(rec => (
-                      <tr key={rec._id}>
-                        <td className="py-2 text-slate-800 dark:text-slate-200">
-                          {rec.fee_master_id?.fee_type_id?.name || "Fee"} 
-                          <span className="text-xs text-slate-500 block">{rec.fee_master_id?.fee_group_id?.name}</span>
-                        </td>
-                        <td className="py-2 text-right font-semibold text-slate-900 dark:text-white">₹{rec.amount_paid.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {/* Action Buttons (Hidden on print) */}
+              <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-border flex flex-wrap justify-end gap-3 print:hidden">
+                <button onClick={() => setReceiptModalOpen(false)} className="px-4 py-2 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    if (lastReceipts[0]?._id) {
+                      setGeneratePaymentId(lastReceipts[0]._id);
+                      setIsGenerateOpen(true);
+                    }
+                  }}
+                  className="px-4 py-2 text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+                  style={{ background: "linear-gradient(90deg, #4338ca, #7c3aed)" }}
+                >
+                  <FileText className="w-4 h-4" /> Generate Receipt (PDF)
+                </button>
+                <button onClick={handlePrintReceipt} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm cursor-pointer">
+                  <Printer className="w-4 h-4" /> Print Receipt ({receiptCopies} {receiptCopies === 1 ? "Copy" : "Copies"}{receiptCopies > 1 ? ` • ${pageMode === "single" ? "1 Page" : `${receiptCopies} Pages`}` : ""})
+                </button>
               </div>
-
-              <div className="bg-slate-50 dark:bg-slate-800 p-4 rounded-lg flex justify-between items-center print:bg-slate-100 print:text-black">
-                <span className="font-bold text-slate-700 dark:text-slate-300">Total Amount Paid:</span>
-                <span className="text-2xl font-black text-primary">
-                  ₹{lastReceipts.reduce((sum, r) => sum + r.amount_paid, 0).toFixed(2)}
-                </span>
-              </div>
-
-              <div className="card-subtitle mt-8 pt-8 border-t border-border flex justify-between items-end">
-                <div className="text-center">
-                  <div className="w-32 border-b border-slate-300 mb-1"></div>
-                  Accountant Signature
-                </div>
-                <div className="text-center text-xs">
-                  Generated by EduManage System
-                </div>
-              </div>
-            </div>
-
-            {/* Action Buttons (Hidden on print) */}
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 border-t border-border flex justify-end gap-3 print:hidden">
-              <button onClick={() => setReceiptModalOpen(false)} className="px-4 py-2 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">Close</button>
-              <button
-                onClick={() => {
-                  if (lastReceipts[0]?._id) {
-                    setGeneratePaymentId(lastReceipts[0]._id);
-                    setIsGenerateOpen(true);
-                  }
-                }}
-                className="px-4 py-2 text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm"
-                style={{ background: "linear-gradient(90deg, #4338ca, #7c3aed)" }}
-              >
-                <FileText className="w-4 h-4" /> Generate Receipt (PDF)
-              </button>
-              <button onClick={handlePrintReceipt} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 transition-colors shadow-sm">
-                <Printer className="w-4 h-4" /> Print Receipt
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Generate Fee Receipt Wizard */}
       <GenerateDocumentWizard

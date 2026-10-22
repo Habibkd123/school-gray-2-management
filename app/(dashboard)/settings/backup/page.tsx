@@ -175,7 +175,7 @@ const BACKUP_MODULES: BackupModule[] = [
 // ── Page ─────────────────────────────────────────────────────────────────────
 import { useAuth } from "@/app/context/auth";
 
-export default function SystemBackupPage() {
+export default function SystemBackupPage({ isEmbedded = false }: { isEmbedded?: boolean } = {}) {
   const { user } = useAuth();
   const isSuperAdmin = user?.role === "super_admin";
   const [globalSchoolId, setGlobalSchoolId] = useState("all");
@@ -296,7 +296,7 @@ export default function SystemBackupPage() {
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-8 space-y-8">
+      <div className={isEmbedded ? "space-y-6" : "min-h-screen bg-slate-50 dark:bg-slate-900 p-4 md:p-8 space-y-8"}>
 
         {/* Header Banner */}
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 md:p-8 shadow-xl border border-slate-800">

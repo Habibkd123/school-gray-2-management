@@ -6,6 +6,7 @@ import Student from "@/lib/models/Student";
 import Teacher from "@/lib/models/Teacher";
 import { Subject, SubjectMaster, Attendance } from "@/lib/models/index";
 import { sendConditionalJson } from "@/lib/etag";
+import mongoose from "mongoose";
 
 const STATS_CACHE_TTL = 10_000; // 10 seconds TTL
 const _statsCache = new Map<string, { data: any; timestamp: number }>();
@@ -70,31 +71,36 @@ export async function GET(req: NextRequest) {
       }),
       Subject.countDocuments({ school_id: schoolId }),
       SubjectMaster.countDocuments({ school_id: schoolId }),
-      // Fetch today's student attendance records
-      Attendance.find({
-        school_id: schoolId,
-        type: "student",
-        date: { $gte: todayStart, $lte: todayEnd },
-      }).select("records").lean(),
+      // Today's student attendance stats computed directly at DB level via aggregation
+      // (Replaces transferring full records[] arrays to Node.js and looping in memory)
+      Attendance.aggregate([
+        {
+          $match: {
+            school_id: new mongoose.Types.ObjectId(schoolId as string),
+            type: "student",
+            date: { $gte: todayStart, $lte: todayEnd },
+          },
+        },
+        { $unwind: "$records" },
+        {
+          $group: {
+            _id:     null,
+            total:   { $sum: 1 },
+            present: { $sum: { $cond: [{ $in: ["$records.status", ["present", "half_day"]] }, 1, 0] } },
+            absent:  { $sum: { $cond: [{ $eq: ["$records.status", "absent"] }, 1, 0] } },
+            late:    { $sum: { $cond: [{ $eq: ["$records.status", "late"] }, 1, 0] } },
+            leave:   { $sum: { $cond: [{ $eq: ["$records.status", "leave"] }, 1, 0] } },
+          },
+        },
+      ]),
     ]);
 
-    // Aggregate today's per-student statuses across all classes
-    let todayPresent = 0;
-    let todayAbsent  = 0;
-    let todayLate    = 0;
-    let todayLeave   = 0;
-    let todayTotal   = 0;
-
-    for (const att of todaysStudentAttendances as any[]) {
-      for (const rec of att.records || []) {
-        todayTotal++;
-        const s = rec.status;
-        if (s === "present" || s === "half_day") todayPresent++;
-        else if (s === "absent") todayAbsent++;
-        else if (s === "late") todayLate++;
-        else if (s === "leave") todayLeave++;
-      }
-    }
+    const todayAtt = todaysStudentAttendances[0];
+    const todayTotal   = todayAtt?.total   || 0;
+    const todayPresent = todayAtt?.present || 0;
+    const todayAbsent  = todayAtt?.absent  || 0;
+    const todayLate    = todayAtt?.late    || 0;
+    const todayLeave   = todayAtt?.leave   || 0;
 
     const attendancePct = todayTotal > 0
       ? parseFloat(((todayPresent / todayTotal) * 100).toFixed(1))

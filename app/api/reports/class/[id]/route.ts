@@ -53,25 +53,84 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         return null;
       }
 
-      // 2. Fetch Students and Gender Split
-      const students = await Student.find({ class_id: classId, school_id: schoolId, is_active: true }).select("gender").lean();
-      const totalStudents = students.length;
-      const boysCount = students.filter((s) => s.gender?.toLowerCase() === "male").length;
-      const girlsCount = students.filter((s) => s.gender?.toLowerCase() === "female").length;
-      const otherGenderCount = totalStudents - boysCount - girlsCount;
-
-      // 3. Daily Attendance for Class
+      // 2. Fetch Students and Gender Split (via aggregation — eliminates loading student docs into Node.js)
       const targetDate = new Date(dateStr);
       const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
       const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
 
-      const dailyAtt = await Attendance.findOne({
-        school_id: schoolId as string,
-        type: "student",
-        class_id: classId,
-        date: { $gte: startOfDay, $lte: endOfDay },
-      }).select("records.status").lean();
+      const [year, month] = monthStr.split("-").map(Number);
+      const startOfMonth = new Date(year, month - 1, 1);
+      const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
 
+      const classObjectId = new mongoose.Types.ObjectId(classId);
+      const schoolObjectId = new mongoose.Types.ObjectId(schoolId as string);
+
+      // Concurrently fetch demographics, daily attendance, monthly attendance agg, and class tests
+      const [genderAggResult, dailyAtt, monthlyAggResult, classTests] = await Promise.all([
+        Student.aggregate([
+          {
+            $match: {
+              school_id: schoolObjectId,
+              class_id: classObjectId,
+              is_active: true,
+            },
+          },
+          {
+            $group: {
+              _id:   null,
+              total: { $sum: 1 },
+              boys:  { $sum: { $cond: [{ $eq: [{ $toLower: "$gender" }, "male"] }, 1, 0] } },
+              girls: { $sum: { $cond: [{ $eq: [{ $toLower: "$gender" }, "female"] }, 1, 0] } },
+            },
+          },
+        ]),
+        Attendance.findOne({
+          school_id: schoolId as string,
+          type: "student",
+          class_id: classId,
+          date: { $gte: startOfDay, $lte: endOfDay },
+        }).select("records.status").lean(),
+        Attendance.aggregate([
+          {
+            $match: {
+              school_id: schoolObjectId,
+              type: "student",
+              class_id: classObjectId,
+              date: { $gte: startOfMonth, $lte: endOfMonth },
+            },
+          },
+          { $unwind: "$records" },
+          {
+            $group: {
+              _id:            null,
+              totalRecords:   { $sum: 1 },
+              monthlyPresent: {
+                $sum: { $cond: [{ $in: [{ $toLower: "$records.status" }, ["present", "late", "half_day"]] }, 1, 0] },
+              },
+              dates: { $addToSet: "$date" },
+            },
+          },
+          {
+            $project: {
+              totalRecords: 1,
+              monthlyPresent: 1,
+              workingDays: { $size: "$dates" },
+            },
+          },
+        ]),
+        ClassTest.find({ class_id: classId, school_id: schoolId })
+          .populate("subject_id", "name")
+          .sort({ test_date: -1 })
+          .lean(),
+      ]);
+
+      const genderStats = genderAggResult[0];
+      const totalStudents    = genderStats?.total || 0;
+      const boysCount        = genderStats?.boys  || 0;
+      const girlsCount       = genderStats?.girls || 0;
+      const otherGenderCount = totalStudents - boysCount - girlsCount;
+
+      // 3. Daily Attendance stats
       let present = 0;
       let absent = 0;
       let late = 0;
@@ -93,67 +152,46 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         ? Math.round(((present + late + halfDay * 0.5) / (present + absent + late + leave + halfDay)) * 100)
         : 0;
 
-      // 4. Monthly Attendance Rate for Class
-      const [year, month] = monthStr.split("-").map(Number);
-      const startOfMonth = new Date(year, month - 1, 1);
-      const endOfMonth = new Date(year, month, 0, 23, 59, 59, 999);
-
-      const monthlyAttDocs = await Attendance.find({
-        school_id: schoolId as string,
-        type: "student",
-        class_id: classId,
-        date: { $gte: startOfMonth, $lte: endOfMonth },
-      }).select("records.status").lean();
-
-      let monthlyTotalRecords = 0;
-      let monthlyPresent = 0;
-
-      monthlyAttDocs.forEach((doc) => {
-        if (doc.records) {
-          doc.records.forEach((rec: any) => {
-            monthlyTotalRecords++;
-            if (["present", "late", "half_day"].includes(rec.status?.toLowerCase())) {
-              monthlyPresent++;
-            }
-          });
-        }
-      });
+      // 4. Monthly Attendance stats
+      const monthlyStats = monthlyAggResult[0];
+      const monthlyTotalRecords = monthlyStats?.totalRecords || 0;
+      const monthlyPresent      = monthlyStats?.monthlyPresent || 0;
+      const workingDays         = monthlyStats?.workingDays || 0;
 
       const monthlyRate = monthlyTotalRecords > 0
         ? Math.round((monthlyPresent / monthlyTotalRecords) * 100)
         : 0;
 
-      // 5. Test Performance for Class
-      const classTests = await ClassTest.find({ class_id: classId, school_id: schoolId })
-        .populate("subject_id", "name")
-        .sort({ test_date: -1 })
-        .lean();
-
+      // 5. Test Performance for Class (aggregated at DB level by test_id)
       const testIds = classTests.map((t: any) => t._id);
-      const allMarks = testIds.length > 0
-        ? await ClassTestMark.find({ test_id: { $in: testIds } }).select("test_id marks_obtained").lean()
+      const marksAgg = testIds.length > 0
+        ? await ClassTestMark.aggregate([
+            {
+              $match: {
+                test_id: { $in: testIds.map((tid: any) => new mongoose.Types.ObjectId(tid.toString())) },
+              },
+            },
+            {
+              $group: {
+                _id:               "$test_id",
+                totalMarksEntered: { $sum: 1 },
+                totalScore:        { $sum: "$marks_obtained" },
+                passCount:         { $sum: { $cond: ["$is_pass", 1, 0] } },
+              },
+            },
+          ])
         : [];
 
-      const marksByTest = new Map<string, any[]>();
-      allMarks.forEach((m: any) => {
-        const tid = m.test_id?.toString();
-        if (!marksByTest.has(tid)) marksByTest.set(tid, []);
-        marksByTest.get(tid)!.push(m);
+      const marksSummaryByTest = new Map<string, any>();
+      marksAgg.forEach((m: any) => {
+        if (m._id) marksSummaryByTest.set(m._id.toString(), m);
       });
 
       const formattedTests = classTests.map((test: any) => {
-        const marks = marksByTest.get(test._id.toString()) || [];
-        const totalMarksEntered = marks.length;
-
-        let totalScore = 0;
-        let passCount = 0;
-
-        marks.forEach((m: any) => {
-          totalScore += m.marks_obtained || 0;
-          if (m.marks_obtained >= (test.passing_marks || 0)) {
-            passCount++;
-          }
-        });
+        const stats = marksSummaryByTest.get(test._id.toString());
+        const totalMarksEntered = stats?.totalMarksEntered || 0;
+        const totalScore = stats?.totalScore || 0;
+        const passCount = stats?.passCount || 0;
 
         const classAverage = totalMarksEntered > 0
           ? parseFloat((totalScore / totalMarksEntered).toFixed(1))
@@ -214,7 +252,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           },
           monthlyAttendance: {
             month: monthStr,
-            workingDays: monthlyAttDocs.length,
+            workingDays,
             rate: monthlyRate,
           },
           tests: {

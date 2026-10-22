@@ -92,6 +92,8 @@ export default function ParentDetailPage() {
   const [paymentsList, setPaymentsList] = useState<any[]>([]);
   const [feesLoading, setFeesLoading] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<any | null>(null);
+  const [receiptCopies, setReceiptCopies] = useState<1 | 2 | 3>(1);
+  const [pageMode, setPageMode] = useState<"single" | "separate">("single");
 
   // Modals
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -779,100 +781,223 @@ export default function ParentDetailPage() {
       </div>
 
       {/* Dynamic Receipt Preview Modal */}
-      {selectedReceipt && (
-        <Modal
-          isOpen={true}
-          onClose={() => setSelectedReceipt(null)}
-          title="Payment Receipt Details"
-          size="md"
-        >
-          <div className="space-y-6 text-left">
-            {/* Printable Area Wrapper (Part 8 Print/PDF) */}
-            <div id="printable-receipt-modal" className="border border-slate-200 rounded-xl p-6 bg-white shadow-sm space-y-4">
-              <div className="flex justify-between items-start pb-4 border-b border-slate-100">
-                <div>
-                  <h3 className="font-bold text-[16px] text-slate-900">MySchoolLife ERP</h3>
-                  <p className="text-[11px] text-slate-400">Payment Transaction Receipt</p>
-                </div>
-                <div className="text-right">
-                  <h4 className="font-sans font-bold text-primary text-[14px]">{selectedReceipt.receipt_number}</h4>
-                  <p className="text-[11px] text-slate-450">Date: {formatDate(selectedReceipt.payment_date)}</p>
-                </div>
-              </div>
+      {selectedReceipt && (() => {
+        const copiesConfig: Record<number, string[]> = {
+          1: ["OFFICIAL COPY"],
+          2: ["STUDENT COPY", "OFFICE COPY"],
+          3: ["STUDENT COPY", "OFFICE COPY", "BANK / ACCOUNTS COPY"],
+        };
+        const activeCopies = copiesConfig[receiptCopies] || ["OFFICIAL COPY"];
+        const isCompact = pageMode === "single" && receiptCopies > 1;
 
-              <div className="grid grid-cols-2 gap-4 text-[12px]">
-                <div>
-                  <span className="text-slate-400 block">Student Name</span>
-                  <span className="font-bold text-slate-800 text-[13px]">{selectedReceipt.student_id?.name || "—"}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block">Class / Section</span>
-                  <span className="font-bold text-slate-800 text-[13px]">{selectedReceipt.student_id?.class_id?.name || "—"} {selectedReceipt.student_id?.class_id?.section || ""}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block">Payment Method</span>
-                  <span className="font-bold text-slate-800 text-[13px]">{selectedReceipt.payment_method}</span>
-                </div>
-                <div>
-                  <span className="text-slate-400 block">Collected By</span>
-                  <span className="font-bold text-slate-800 text-[13px]">{selectedReceipt.collected_by?.name || "Self Portal"}</span>
-                </div>
-              </div>
+        return (
+          <Modal
+            isOpen={true}
+            onClose={() => setSelectedReceipt(null)}
+            title="Payment Receipt Details"
+            size="lg"
+          >
+            <div className="space-y-4 text-left">
+              {/* Controls bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3 print:hidden">
+                <div className="flex flex-wrap items-center gap-2">
+                  {/* Copy Selector */}
+                  <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-2">Copies:</span>
+                    <button
+                      type="button"
+                      onClick={() => setReceiptCopies(1)}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        receiptCopies === 1
+                          ? "bg-slate-900 text-white shadow-xs"
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                      }`}
+                    >
+                      1 Copy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReceiptCopies(2)}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        receiptCopies === 2
+                          ? "bg-slate-900 text-white shadow-xs"
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                      }`}
+                    >
+                      2 Copies
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReceiptCopies(3)}
+                      className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                        receiptCopies === 3
+                          ? "bg-slate-900 text-white shadow-xs"
+                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                      }`}
+                    >
+                      3 Copies
+                    </button>
+                  </div>
 
-              {/* Fee Breakdown itemization */}
-              <div className="border border-slate-150 rounded-lg overflow-hidden bg-slate-50/50 mt-4 text-[12px]">
-                <div className="grid grid-cols-2 px-3 py-2 border-b border-slate-150 bg-slate-100 font-bold">
-                  <span>Fee Category Description</span>
-                  <span className="text-right">Paid Amount</span>
-                </div>
-                <div className="divide-y divide-slate-150 font-medium">
-                  {selectedReceipt.fee_breakdown && selectedReceipt.fee_breakdown.length > 0 ? (
-                    selectedReceipt.fee_breakdown.map((item: any, idx: number) => (
-                      <div key={idx} className="grid grid-cols-2 px-3 py-2 text-slate-700">
-                        <span>{item.name}</span>
-                        <span className="text-right font-sans">₹{item.amount_paid.toLocaleString("en-IN")}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="grid grid-cols-2 px-3 py-2 text-slate-700">
-                      <span>General School Fees</span>
-                      <span className="text-right font-sans">₹{selectedReceipt.amount_paid.toLocaleString("en-IN")}</span>
+                  {/* Page Mode Selector */}
+                  {receiptCopies > 1 && (
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 px-2">Page Mode:</span>
+                      <button
+                        type="button"
+                        onClick={() => setPageMode("single")}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                          pageMode === "single"
+                            ? "bg-indigo-600 text-white shadow-xs"
+                            : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                        }`}
+                        title="Both copies print on 1 page with a cut line"
+                      >
+                        📄 1 Page
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPageMode("separate")}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                          pageMode === "separate"
+                            ? "bg-indigo-600 text-white shadow-xs"
+                            : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70"
+                        }`}
+                        title="Each copy prints on its own separate page"
+                      >
+                        📑 Separate Pages
+                      </button>
                     </div>
                   )}
                 </div>
+
+                <button
+                  onClick={printReceipt}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-xs font-bold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
+                >
+                  <PrinterIcon className="w-3.5 h-3.5" />
+                  <span>Print ({receiptCopies} {receiptCopies === 1 ? "Copy" : "Copies"}{receiptCopies > 1 ? ` • ${pageMode === "single" ? "1 Page" : `${receiptCopies} Pages`}` : ""})</span>
+                </button>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex justify-between items-center text-[14px] font-bold text-slate-900">
-                <span>Total Amount Paid</span>
-                <span className="font-sans text-emerald-600">₹{selectedReceipt.amount_paid.toLocaleString("en-IN")}</span>
+              {/* Printable Area Wrapper */}
+              <div id="printable-receipt-modal" className="border border-slate-200 rounded-xl p-6 bg-white shadow-sm space-y-6">
+                {activeCopies.map((copyLabel, idx) => {
+                  const isLast = idx === activeCopies.length - 1;
+
+                  return (
+                    <React.Fragment key={idx}>
+                      <div
+                        className={isCompact ? "space-y-3" : "space-y-4"}
+                        style={
+                          !isLast && pageMode === "separate"
+                            ? { pageBreakAfter: "always", breakAfter: "page" }
+                            : undefined
+                        }
+                      >
+                        <div className="flex justify-between items-start pb-3 border-b border-slate-200">
+                          <div>
+                            <h3 className={`font-black text-slate-900 uppercase tracking-wider ${isCompact ? "text-sm" : "text-base"}`}>
+                              MySchoolLife ERP
+                            </h3>
+                            <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full border border-slate-900 bg-slate-50 text-slate-900 font-extrabold text-[9px] uppercase tracking-wider">
+                              Payment Receipt &bull; {copyLabel}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <h4 className="font-sans font-bold text-primary text-xs">{selectedReceipt.receipt_number}</h4>
+                            <p className="text-[10px] text-slate-400">Date: {formatDate(selectedReceipt.payment_date)}</p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <span className="text-slate-400 block font-semibold">Student Name:</span>
+                            <span className="font-bold text-slate-800">{selectedReceipt.student_id?.name || "—"}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block font-semibold">Class / Section:</span>
+                            <span className="font-bold text-slate-800">{selectedReceipt.student_id?.class_id?.name || "—"} {selectedReceipt.student_id?.class_id?.section || ""}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block font-semibold">Payment Method:</span>
+                            <span className="font-bold text-slate-800">{selectedReceipt.payment_method}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block font-semibold">Collected By:</span>
+                            <span className="font-bold text-slate-800">{selectedReceipt.collected_by?.name || "Self Portal"}</span>
+                          </div>
+                        </div>
+
+                        {/* Fee Breakdown itemization */}
+                        <div className="border border-slate-150 rounded-lg overflow-hidden bg-slate-50/50 mt-2 text-xs">
+                          <div className="grid grid-cols-2 px-3 py-1.5 border-b border-slate-150 bg-slate-100 font-bold">
+                            <span>Fee Category Description</span>
+                            <span className="text-right">Paid Amount</span>
+                          </div>
+                          <div className="divide-y divide-slate-150 font-medium">
+                            {selectedReceipt.fee_breakdown && selectedReceipt.fee_breakdown.length > 0 ? (
+                              selectedReceipt.fee_breakdown.map((item: any, bIdx: number) => (
+                                <div key={bIdx} className="grid grid-cols-2 px-3 py-1.5 text-slate-700">
+                                  <span>{item.name}</span>
+                                  <span className="text-right font-sans">₹{item.amount_paid.toLocaleString("en-IN")}</span>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="grid grid-cols-2 px-3 py-1.5 text-slate-700">
+                                <span>General School Fees</span>
+                                <span className="text-right font-sans">₹{selectedReceipt.amount_paid.toLocaleString("en-IN")}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-xs font-bold text-slate-900">
+                          <span>Total Amount Paid:</span>
+                          <span className="font-sans text-emerald-600 text-sm">₹{selectedReceipt.amount_paid.toLocaleString("en-IN")}</span>
+                        </div>
+
+                        {selectedReceipt.remarks && (
+                          <div className="text-[10px] text-slate-400 bg-slate-50 rounded p-1.5 italic">
+                            Remarks: {selectedReceipt.remarks}
+                          </div>
+                        )}
+                      </div>
+
+                      {!isLast && pageMode === "single" && (
+                        <div className="my-4 flex items-center justify-center text-center">
+                          <div className="flex-1 border-b border-dashed border-slate-400"></div>
+                          <span className="px-2 py-0.5 bg-slate-100 border border-dashed border-slate-400 rounded-full text-[9px] font-bold text-slate-500 mx-2">
+                            ✂ CUT ALONG THIS LINE ✂
+                          </span>
+                          <div className="flex-1 border-b border-dashed border-slate-400"></div>
+                        </div>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </div>
 
-              {selectedReceipt.remarks && (
-                <div className="text-[11px] text-slate-400 mt-2 bg-slate-50 rounded p-2 italic">
-                  Remarks: {selectedReceipt.remarks}
-                </div>
-              )}
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-200 print:hidden">
+                <button
+                  type="button"
+                  onClick={() => setSelectedReceipt(null)}
+                  className="px-4 py-2 border border-slate-200 text-xs font-semibold rounded-lg bg-white hover:bg-slate-50 text-slate-700 cursor-pointer shadow-sm"
+                >
+                  Close View
+                </button>
+                <button
+                  onClick={printReceipt}
+                  className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-xs font-bold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
+                >
+                  <PrinterIcon className="w-4 h-4" />
+                  <span>Print Receipt ({receiptCopies} {receiptCopies === 1 ? "Copy" : "Copies"})</span>
+                </button>
+              </div>
             </div>
-
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-200">
-              <button
-                type="button"
-                onClick={() => setSelectedReceipt(null)}
-                className="px-4 py-2 border border-slate-200 text-[13px] font-semibold rounded-lg bg-white hover:bg-slate-50 text-slate-700 cursor-pointer shadow-sm"
-              >
-                Close View
-              </button>
-              <button
-                onClick={printReceipt}
-                className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-[13px] font-bold rounded-lg text-white shadow-sm transition-colors cursor-pointer"
-              >
-                <PrinterIcon className="w-4 h-4" />
-                <span>Print Receipt / PDF</span>
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+          </Modal>
+        );
+      })()}
 
       {/* Edit Parent Modal - Restricted from parent role self */}
       {isEditOpen && (

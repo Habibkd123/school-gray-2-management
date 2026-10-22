@@ -23,14 +23,37 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const test = await ClassTest.findOne({ _id: id, school_id: schoolId }).lean();
     if (!test) return NextResponse.json({ success: false, message: "Test not found" }, { status: 404 });
 
-    const marks = await ClassTestMark.find({ test_id: id }).lean();
-    const totalStudents = await Student.countDocuments({
-      school_id: schoolId,
-      class_id: test.class_id,
-      is_active: true,
-    });
+    // ── Aggregation + countDocuments run concurrently (previously sequential) ──
+    // The $group stage computes highest/lowest/sum/pass_count at DB level,
+    // transferring 1 stats document instead of N raw mark documents.
+    // Index used: class_test_mark_test_student_unique_v1 ({ test_id, student_id })
+    const [analyticsResult, totalStudents] = await Promise.all([
+      ClassTestMark.aggregate([
+        // STAGE 1: Filter by test_id — uses the { test_id, student_id } unique index
+        { $match: { test_id: new mongoose.Types.ObjectId(id) } },
+        // STAGE 2: Compute all statistics in a single DB-level pass
+        {
+          $group: {
+            _id:           null,
+            marks_entered: { $sum: 1 },
+            highest:       { $max: "$marks_obtained" },
+            lowest:        { $min: "$marks_obtained" },
+            total_sum:     { $sum: "$marks_obtained" },
+            pass_count:    { $sum: { $cond: ["$is_pass", 1, 0] } },
+          },
+        },
+      ]),
+      Student.countDocuments({
+        school_id: schoolId,
+        class_id: test.class_id,
+        is_active: true,
+      }),
+    ]);
 
-    if (marks.length === 0) {
+    const analytics = analyticsResult[0];
+
+    // Preserve existing empty-marks behavior: all numeric fields default to 0/null
+    if (!analytics || analytics.marks_entered === 0) {
       return sendCompressedJson(req, {
         success: true,
         data: {
@@ -49,14 +72,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       }, { cacheControl: "private, no-cache" });
     }
 
-    const marksArr = marks.map((m) => m.marks_obtained);
-    const highest = Math.max(...marksArr);
-    const lowest = Math.min(...marksArr);
-    const average = marksArr.reduce((a, b) => a + b, 0) / marksArr.length;
-    const passCount = marks.filter((m) => m.is_pass).length;
-    const failCount = marks.length - passCount;
-    const passPercentage = parseFloat(((passCount / marks.length) * 100).toFixed(1));
-    const failPercentage = parseFloat(((failCount / marks.length) * 100).toFixed(1));
+    // Derive remaining fields in JS — same formulas and precision as before
+    const marksEntered    = analytics.marks_entered;
+    const passCount       = analytics.pass_count;
+    const failCount       = marksEntered - passCount;
+    const average         = analytics.total_sum / marksEntered;
+    const passPercentage  = parseFloat(((passCount / marksEntered) * 100).toFixed(1));
+    const failPercentage  = parseFloat(((failCount / marksEntered) * 100).toFixed(1));
 
     // Chapter performance alert: if >50% failed and there's a chapter linked
     let chapterAlert: string | null = null;
@@ -67,19 +89,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return sendCompressedJson(req, {
       success: true,
       data: {
-        total_students: totalStudents,
-        marks_entered: marks.length,
-        highest,
-        lowest,
-        average: parseFloat(average.toFixed(2)),
-        pass_count: passCount,
-        fail_count: failCount,
+        total_students:  totalStudents,
+        marks_entered:   marksEntered,
+        highest:         analytics.highest,
+        lowest:          analytics.lowest,
+        average:         parseFloat(average.toFixed(2)),
+        pass_count:      passCount,
+        fail_count:      failCount,
         pass_percentage: passPercentage,
         fail_percentage: failPercentage,
-        chapter: test.chapter || null,
-        chapter_alert: chapterAlert,
-        total_marks: test.total_marks,
-        passing_marks: test.passing_marks,
+        chapter:         test.chapter || null,
+        chapter_alert:   chapterAlert,
+        total_marks:     test.total_marks,
+        passing_marks:   test.passing_marks,
       },
     }, { cacheControl: "private, no-cache" });
   } catch (err: any) {
