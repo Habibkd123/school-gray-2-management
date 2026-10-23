@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Search, ShieldCheck, Globe, Image, Star,
-  Loader2, CheckCircle2, AlertCircle, Info, ExternalLink, Save, Upload,
+  Loader2, CheckCircle2, AlertCircle, Info, ExternalLink, Save, Upload, Code
 } from "lucide-react";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { WebsitePageHeader } from "../../../components/website/WebsitePageHeader";
@@ -17,6 +17,7 @@ interface SeoForm {
   canonical_url: string;
   google_site_verification: string;
   google_analytics_id: string;
+  custom_head_scripts: string;
 }
 
 const EMPTY_FORM: SeoForm = {
@@ -28,6 +29,7 @@ const EMPTY_FORM: SeoForm = {
   canonical_url: "",
   google_site_verification: "",
   google_analytics_id: "",
+  custom_head_scripts: "",
 };
 
 function CharCounter({ current, max }: { current: number; max: number }) {
@@ -105,6 +107,7 @@ export default function WebsiteSeoPage() {
             canonical_url:            d.canonical_url            || "",
             google_site_verification: d.google_site_verification || "",
             google_analytics_id:      d.google_analytics_id      || "",
+            custom_head_scripts:      d.custom_head_scripts      || "",
           });
         }
       })
@@ -134,6 +137,7 @@ export default function WebsiteSeoPage() {
           canonical_url:            form.canonical_url.trim(),
           google_site_verification: form.google_site_verification.trim(),
           google_analytics_id:      form.google_analytics_id.trim(),
+          custom_head_scripts:      form.custom_head_scripts.trim(),
         }),
       });
 
@@ -451,6 +455,45 @@ export default function WebsiteSeoPage() {
         </div>
       </div>
 
+      {/* Custom Schema Markup & Head Scripts */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+              <Code className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-[15px] font-bold text-slate-800 dark:text-slate-100">
+                Custom Schema Markup & Head Scripts (JSON-LD / Analytics)
+              </h2>
+              <p className="text-[12px] text-slate-500">
+                Inject custom Schema.org structured data, location schema, or tracking tags into your website header.
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-semibold text-slate-400 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800">
+            Optional
+          </span>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="seo-custom-scripts" className="text-[13px] font-bold text-slate-700 dark:text-slate-300">
+            HTML / &lt;script&gt; Code
+          </label>
+          <textarea
+            id="seo-custom-scripts"
+            value={form.custom_head_scripts}
+            onChange={(e) => setForm({ ...form, custom_head_scripts: e.target.value })}
+            placeholder={`<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "School",\n  "name": "School Name"\n}\n</script>`}
+            rows={7}
+            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono outline-none focus:border-indigo-500/50 focus:ring-2 focus:ring-indigo-500/10 transition-all bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 leading-relaxed"
+            spellCheck={false}
+          />
+          <p className="text-[11px] text-slate-400 leading-relaxed">
+            Paste Google Search Schema markup (<code className="text-indigo-500 font-mono text-[10.5px]">&lt;script type="application/ld+json"&gt;</code>) or other verification scripts.
+          </p>
+        </div>
+      </div>
 
       {/* Bottom Save */}
       <div className="flex justify-end gap-3 pt-2">

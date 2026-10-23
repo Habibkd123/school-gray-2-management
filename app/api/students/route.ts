@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import Student from "@/lib/models/Student";
 import School from "@/lib/models/School";
-import { Parent } from "@/lib/models";
+import mongoose from "mongoose";
+import { Parent, ClassFee, StudentFeeAssignment } from "@/lib/models";
 import User from "@/lib/models/User";
 import Class from "@/lib/models/Class";
 import Admission from "@/lib/models/Admission";
 import { requireAuth } from "@/lib/utils/auth";
 import { sendConditionalJson } from "@/lib/etag";
+import { invalidateFeesCache } from "@/app/api/fees/route";
 
 // ─── Helper: generate student login email ──────────────────────
 const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG || "school";
@@ -573,6 +575,34 @@ export async function POST(request: NextRequest) {
       permanent_address: permanent_address?.trim(),
       other_info: other_info?.trim(),
     });
+
+    // Auto-assign Default Class Fees if configured for this class and academic session
+    try {
+      const targetYear = academic_year || "2026-2027";
+      const classFeeConfig = await ClassFee.findOne({
+        school_id: new mongoose.Types.ObjectId(schoolId as string),
+        class_id: new mongoose.Types.ObjectId(class_id),
+        academic_year: targetYear,
+      }).lean();
+
+      if (classFeeConfig && classFeeConfig.fee_types && classFeeConfig.fee_types.length > 0) {
+        await StudentFeeAssignment.findOneAndUpdate(
+          {
+            school_id: new mongoose.Types.ObjectId(schoolId as string),
+            student_id: student._id,
+            academic_year: targetYear,
+          },
+          {
+            fee_types: classFeeConfig.fee_types,
+            total_amount: classFeeConfig.total_amount,
+          },
+          { upsert: true }
+        );
+        invalidateFeesCache(String(schoolId));
+      }
+    } catch (feeAssignErr) {
+      console.warn("[Student Admission] Non-fatal: failed to auto-assign default class fee:", feeAssignErr);
+    }
 
     const populated = await Student.findById(student._id)
       .populate({

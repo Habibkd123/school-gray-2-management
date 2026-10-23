@@ -173,6 +173,23 @@ export default async function WebsiteLayout({
   // ── School Tenant Website Layout ─────────────────────────────────────────
   return (
     <div className="min-h-screen bg-white flex flex-col dark:bg-slate-900">
+      {/* Custom Schema / Head Scripts per School (JSON-LD / Analytics) */}
+      {school?.custom_head_scripts && (
+        school.custom_head_scripts.trim().startsWith("<script") ? (
+          <div
+            id="school-custom-head-scripts"
+            dangerouslySetInnerHTML={{ __html: school.custom_head_scripts }}
+            style={{ display: "none" }}
+          />
+        ) : (
+          <script
+            id="school-custom-json-ld"
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: school.custom_head_scripts }}
+            suppressHydrationWarning
+          />
+        )
+      )}
       <Header
         contact={data?.contact ?? null}
         admissions={data?.admissions ?? null}

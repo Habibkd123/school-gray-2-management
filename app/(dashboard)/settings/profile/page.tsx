@@ -8,6 +8,7 @@ import { useLoginConfig } from "@/app/hooks/useLoginConfig";
 import { cacheSync } from "@/lib/utils/cache-sync";
 import RolesPermissionsPage from "../roles/page";
 import SystemBackupPage from "../backup/page";
+import ClassFeesSettingsTab from "../components/ClassFeesSettingsTab";
 import {
   RefreshCw, Upload, Edit, EyeOff, Eye, Save, X,
   Loader2, CheckCircle2, AlertCircle, User, Lock, MapPin,
@@ -110,13 +111,13 @@ export default function ProfilePage() {
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   // Tab control
-  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login" | "seo" | "upcoming" | "backup">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login" | "class-fees" | "seo" | "upcoming" | "backup">("profile");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
-      if (tab === "backup" || tab === "roles" || tab === "academic" || tab === "login" || tab === "upcoming") {
+      if (tab === "backup" || tab === "roles" || tab === "academic" || tab === "login" || tab === "class-fees" || tab === "upcoming") {
         setActiveTab(tab as any);
       }
     }
@@ -563,6 +564,8 @@ export default function ProfilePage() {
                 ? "Profile"
                 : activeTab === "academic"
                 ? "Academic Settings"
+                : activeTab === "class-fees"
+                ? "Default Class Fees"
                 : activeTab === "backup"
                 ? "Data Backup & PDF Export"
                 : activeTab === "upcoming"
@@ -579,6 +582,8 @@ export default function ProfilePage() {
                   ? "Profile"
                   : activeTab === "academic"
                   ? "Academic Settings"
+                  : activeTab === "class-fees"
+                  ? "Default Class Fees"
                   : activeTab === "backup"
                   ? "Data Backup & PDF Export"
                   : activeTab === "upcoming"
@@ -617,6 +622,12 @@ export default function ProfilePage() {
               className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${activeTab === "academic" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
             >
               Academic Settings
+            </button>
+            <button
+              onClick={() => setActiveTab("class-fees")}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${activeTab === "class-fees" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
+            >
+              Class Fees
             </button>
             <button
               onClick={() => setActiveTab("login")}
@@ -677,6 +688,8 @@ export default function ProfilePage() {
         <SystemBackupPage isEmbedded={true} />
       ) : activeTab === "roles" && isAdmin ? (
         <RolesPermissionsPage />
+      ) : activeTab === "class-fees" && isAdmin ? (
+        <ClassFeesSettingsTab />
       ) : activeTab === "seo" && isAdmin ? (
         /* ── SEO / Meta Settings Tab ─────────────────────────────── */
         <div className="space-y-5 text-left max-w-2xl">

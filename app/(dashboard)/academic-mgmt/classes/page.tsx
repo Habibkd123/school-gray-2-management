@@ -103,6 +103,7 @@ export default function AcademicClassesPage() {
   const [formStatus, setFormStatus] = useState<"Active" | "Inactive">("Active");
   const [formStreams, setFormStreams] = useState<string[]>([]);
   const [formStream, setFormStream] = useState("");
+  const [formDefaultFee, setFormDefaultFee] = useState("");
 
   const [teacherSearchText, setTeacherSearchText] = useState("");
   const [isTeacherDropdownOpen, setIsTeacherDropdownOpen] = useState(false);
@@ -148,7 +149,7 @@ export default function AcademicClassesPage() {
 
   const resetForm = () => {
     setFormName(""); setFormClassCode(""); setFormSection(""); setFormSections([]); setFormAcademicYear(academicYear);
-    setFormTeacherId(""); setFormCapacity("40"); setFormStatus("Active"); setFormError("");
+    setFormTeacherId(""); setFormCapacity("40"); setFormStatus("Active"); setFormError(""); setFormDefaultFee("");
     setQuickSectionName(""); setFormStreams([]); setFormStream("");
     setTeacherSearchText(""); setIsTeacherDropdownOpen(false);
     setDependencyError(null); setDependencyReasons([]); setIsDeletable(true);
@@ -176,9 +177,20 @@ export default function AcademicClassesPage() {
     setFormTeacherId(teacherId);
     setFormCapacity(String(cls.capacity));
     setFormStatus((cls as any).status || "Active");
+    setFormDefaultFee("");
     setFormError("");
     setIsEditOpen(true);
     setActionMenuId(null);
+
+    // Fetch existing default fee
+    fetch(`/api/classes/${cls._id}`, { headers: getAuthHeaders() })
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.data?.default_fee) {
+          setFormDefaultFee(String(d.data.default_fee));
+        }
+      })
+      .catch(() => {});
   };
 
   const openDelete = async (cls: ApiClass) => {
@@ -233,6 +245,7 @@ export default function AcademicClassesPage() {
           capacity: parseInt(formCapacity) || 40,
           ...(formClassCode ? { class_code: formClassCode.trim().toUpperCase() } : {}),
           ...(({ status: formStatus } as any)),
+          ...(formDefaultFee ? { default_fee: Number(formDefaultFee) } : {}),
         } as any);
         if (!result.success) {
           hasError = true;
@@ -271,6 +284,7 @@ export default function AcademicClassesPage() {
       capacity: parseInt(formCapacity) || 40,
       ...(formClassCode ? { class_code: formClassCode.trim().toUpperCase() } : {}),
       ...(({ status: formStatus } as any)),
+      ...(formDefaultFee !== "" ? { default_fee: Number(formDefaultFee) } : {}),
     } as any);
     setSubmitting(false);
     if (result.success) { setIsEditOpen(false); resetForm(); doFetch(); }
@@ -777,11 +791,28 @@ export default function AcademicClassesPage() {
               )}
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Capacity</label>
               <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)} min={1} max={200}
                 className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100 flex items-center justify-between">
+                <span>Default Fee</span>
+                <span className="text-slate-400 font-normal text-[11px]">(optional)</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">₹</span>
+                <input
+                  type="number"
+                  placeholder="e.g. 3500"
+                  value={formDefaultFee}
+                  onChange={(e) => setFormDefaultFee(e.target.value)}
+                  className="w-full pl-7 pr-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900"
+                />
+              </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
@@ -906,6 +937,25 @@ export default function AcademicClassesPage() {
               <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)} min={1} max={200}
                 className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
             </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100 flex items-center justify-between">
+                <span>Default Fee</span>
+                <span className="text-slate-400 font-normal text-[11px]">(optional)</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">₹</span>
+                <input
+                  type="number"
+                  placeholder="e.g. 3500"
+                  value={formDefaultFee}
+                  onChange={(e) => setFormDefaultFee(e.target.value)}
+                  className="w-full pl-7 pr-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-4">
             <div className="flex flex-col gap-1.5 relative">
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100 font-medium">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
               <div

@@ -8,7 +8,7 @@ import {
   Plus, RefreshCcw, Building2, ShieldCheck, Mail, Phone, MapPin,
   CheckCircle, XCircle, Edit, Trash2, Loader2, AlertCircle, Eye,
   Globe, ExternalLink, Copy, Check, Search, Tag, Upload,
-  GraduationCap, Users, ChevronRight, Sparkles, X, Filter
+  GraduationCap, Users, ChevronRight, Sparkles, X, Filter, Code
 } from "lucide-react";
 import Link from "next/link";
 import { Modal } from "../../components/ui/modal";
@@ -66,6 +66,7 @@ export default function SchoolsPage() {
     favicon_url: "",
     google_site_verification: "",
     google_analytics_id: "",
+    custom_head_scripts: "",
   });
   const [uploadingOg, setUploadingOg] = useState(false);
   const [uploadingFavicon, setUploadingFavicon] = useState(false);
@@ -326,6 +327,7 @@ export default function SchoolsPage() {
           favicon_url: json.data.favicon_url || "",
           google_site_verification: json.data.google_site_verification || "",
           google_analytics_id: json.data.google_analytics_id || "",
+          custom_head_scripts: json.data.custom_head_scripts || "",
         });
       } else {
         setMetaForm({
@@ -336,6 +338,7 @@ export default function SchoolsPage() {
           favicon_url: "",
           google_site_verification: "",
           google_analytics_id: "",
+          custom_head_scripts: "",
         });
       }
     } catch {
@@ -347,6 +350,7 @@ export default function SchoolsPage() {
         favicon_url: "",
         google_site_verification: "",
         google_analytics_id: "",
+        custom_head_scripts: "",
       });
     } finally {
       setMetaLoading(false);
@@ -377,6 +381,7 @@ export default function SchoolsPage() {
           favicon_url: metaForm.favicon_url.trim(),
           google_site_verification: metaForm.google_site_verification.trim(),
           google_analytics_id: metaForm.google_analytics_id.trim(),
+          custom_head_scripts: metaForm.custom_head_scripts.trim(),
         }),
       });
 
@@ -1180,6 +1185,7 @@ export default function SchoolsPage() {
       <Modal
         isOpen={isMetaOpen}
         onClose={() => setIsMetaOpen(false)}
+        size="xl"
         title={`SEO & Search Metadata — ${selectedMetaSchool?.name || ""}`}
       >
         {metaLoading ? (
@@ -1433,7 +1439,31 @@ export default function SchoolsPage() {
               </div>
             </div>
 
-
+            {/* Custom Schema Markup & Header Scripts */}
+            <div className="rounded-xl border border-slate-200/90 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/50 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Code className="w-4 h-4 text-indigo-500" />
+                  <label className="text-[13px] font-bold text-slate-700 dark:text-slate-300">
+                    Custom Schema Markup & Head Scripts (JSON-LD / Analytics)
+                  </label>
+                </div>
+                <span className="text-[11px] text-slate-400 font-medium">
+                  HTML / &lt;script&gt; tag
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                Paste your custom Schema.org structured data (e.g. <code className="text-indigo-600 dark:text-indigo-400 font-mono text-[10.5px]">&lt;script type="application/ld+json"&gt;...&lt;/script&gt;</code>) or verification scripts here. It will be injected directly into the school&apos;s website header for Google search crawling.
+              </p>
+              <textarea
+                value={metaForm.custom_head_scripts}
+                onChange={(e) => setMetaForm({ ...metaForm, custom_head_scripts: e.target.value })}
+                placeholder={`<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "School",\n  "name": "${selectedMetaSchool?.name || "School Name"}",\n  "url": "https://${selectedMetaSchool?.subdomain || "school"}.myschoollife.in"\n}\n</script>`}
+                rows={8}
+                className="w-full px-3.5 py-2.5 border border-slate-200 dark:border-slate-800 rounded-lg text-xs font-mono outline-none focus:border-indigo-500/50 transition-colors bg-white dark:bg-slate-950 leading-relaxed text-slate-800 dark:text-slate-200"
+                spellCheck={false}
+              />
+            </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
               <button

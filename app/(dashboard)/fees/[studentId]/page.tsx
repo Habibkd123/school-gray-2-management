@@ -15,6 +15,8 @@ import {
   Printer,
   AlertCircle,
   CheckCircle2,
+  Percent,
+  Gift,
 } from "lucide-react";
 import Link from "next/link";
 import { PrintService } from "@/app/lib/print-service";
@@ -39,6 +41,7 @@ interface PaymentLog {
   fine?: number;
   scholarship?: number;
   waiver?: number;
+  adjustment?: number;
   student_id: {
     _id: string;
     name: string;
@@ -146,68 +149,147 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
         </div>
       ) : (
         <>
-          {/* Summary Row cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-600 flex-shrink-0">
-                <FileText className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Fees Invoice</span>
-                <div className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">{money(studentDetails.totalFees)}</div>
-              </div>
-            </div>
+          {(() => {
+            // Calculate total concessions/discounts given by school across all payments
+            const totalDiscount = payments.reduce((sum, p) => sum + (Number(p.discount) || 0), 0);
+            const totalScholarship = payments.reduce((sum, p) => sum + (Number(p.scholarship) || 0), 0);
+            const totalWaiver = payments.reduce((sum, p) => sum + (Number(p.waiver) || 0), 0);
+            const totalAdjustment = payments.reduce((sum, p) => sum + (Number(p.adjustment) || 0), 0);
+            const totalConcessions = totalDiscount + totalScholarship + totalWaiver + totalAdjustment;
 
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 flex-shrink-0">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Paid Dues</span>
-                <div className="text-xl font-bold text-emerald-600 mt-0.5">{money(studentDetails.totalPaid)}</div>
-              </div>
-            </div>
+            const totalInvoice = Number(studentDetails.totalFees || 0);
+            const totalCashPaid = payments.reduce((sum, p) => sum + (Number(p.amount_paid) || 0), 0);
+            const adjustedBalance = Math.max(0, totalInvoice - (totalCashPaid + totalConcessions));
+            const isSettledWithDiscount = totalInvoice > 0 && adjustedBalance === 0;
 
-            <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950 flex items-center justify-center text-rose-500 flex-shrink-0">
-                <AlertCircle className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Outstanding Dues</span>
-                <div className="text-xl font-bold text-rose-500 mt-0.5">{money(studentDetails.balanceAmount)}</div>
-              </div>
-            </div>
-          </div>
+            return (
+              <>
+                {/* Summary Row cards */}
+                <div className={`grid grid-cols-1 sm:grid-cols-2 ${totalConcessions > 0 ? "lg:grid-cols-4" : "md:grid-cols-3"} gap-4 text-left`}>
+                  {/* Card 1: Total Fees */}
+                  <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center text-blue-600 flex-shrink-0">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Fees Invoice</span>
+                      <div className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">{money(totalInvoice)}</div>
+                    </div>
+                  </div>
 
-          {/* Student metadata info banner */}
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-4 border border-border rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
-            <div>
-              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Student Name</span>
-              <span className="text-slate-900 dark:text-white font-bold text-[13px]">{studentDetails.name}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Admission No</span>
-              <span className="text-slate-900 dark:text-white font-mono font-bold text-[13px]">{studentDetails.admission_no}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Class & Section</span>
-              <span className="text-slate-900 dark:text-white font-bold text-[13px]">{studentDetails.class_name}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Payment Status</span>
-              <span
-                className={`inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  studentDetails.status === "Paid"
-                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                    : studentDetails.status === "Partial"
-                    ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                    : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
-                }`}
-              >
-                {studentDetails.status}
-              </span>
-            </div>
-          </div>
+                  {/* Card 2: Cash Paid */}
+                  <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                      <CheckCircle2 className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Paid (Cash)</span>
+                      <div className="text-xl font-bold text-emerald-600 mt-0.5">{money(totalCashPaid)}</div>
+                    </div>
+                  </div>
+
+                  {/* Card 3: School Discount / Concession (Shown if any discount/scholarship was granted) */}
+                  {totalConcessions > 0 && (
+                    <div className="bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-amber-900/40 rounded-xl p-4 shadow-sm flex items-center gap-3.5">
+                      <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0">
+                        <Percent className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold uppercase tracking-wider">School Discount / Concession</span>
+                        <div className="text-xl font-bold text-amber-600 dark:text-amber-400 mt-0.5">{money(totalConcessions)}</div>
+                        <div className="text-[10px] text-slate-400 font-medium mt-0.5">
+                          {[
+                            totalDiscount > 0 ? `Discount: ${money(totalDiscount)}` : null,
+                            totalScholarship > 0 ? `Scholarship: ${money(totalScholarship)}` : null,
+                            totalWaiver > 0 ? `Waiver: ${money(totalWaiver)}` : null,
+                          ].filter(Boolean).join(" • ")}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Card 4: Outstanding Dues */}
+                  <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center gap-3.5">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${adjustedBalance === 0
+                        ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-600"
+                        : "bg-rose-50 dark:bg-rose-950 text-rose-500"
+                      }`}>
+                      {adjustedBalance === 0 ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Outstanding Dues</span>
+                      <div className={`text-xl font-bold mt-0.5 ${adjustedBalance === 0 ? "text-emerald-600" : "text-rose-500"
+                        }`}>
+                        {money(adjustedBalance)}
+                      </div>
+                      {totalConcessions > 0 && adjustedBalance === 0 && (
+                        <span className="text-[10px] text-emerald-600 font-bold block">
+                          Settled via Discount & Cash
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Explanation Banner when School Discount / Scholarship is Applied */}
+                {totalConcessions > 0 && (
+                  <div className="bg-amber-50/90 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-850 rounded-xl p-3.5 flex items-start gap-3 text-xs text-left">
+                    <div className="w-7 h-7 rounded-lg bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0 mt-0.5">
+                      <Gift className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-bold text-amber-900 dark:text-amber-200">
+                          School Concession Note: {money(totalConcessions)} Fee Concession Applied
+                        </span>
+                        <span className="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold">
+                          {isSettledWithDiscount ? "Full Fees Settled (No Due)" : "Partially Settled"}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-amber-800/90 dark:text-amber-300/80 mt-1 leading-relaxed">
+                        This amount is not an outstanding due. A school concession of {money(totalConcessions)} (
+                        {[
+                          totalDiscount > 0 ? `Discount: ${money(totalDiscount)}` : null,
+                          totalScholarship > 0 ? `Scholarship: ${money(totalScholarship)}` : null,
+                          totalWaiver > 0 ? `Fee Waiver: ${money(totalWaiver)}` : null,
+                        ].filter(Boolean).join(", ")}
+                        ) was approved by the administration during fee collection, settling the total fee of ₹{totalInvoice.toLocaleString("en-IN")} alongside ₹{totalCashPaid.toLocaleString("en-IN")} received in cash.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Student metadata info banner */}
+                <div className="bg-slate-50 dark:bg-slate-800/60 p-4 border border-border rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 grid grid-cols-2 md:grid-cols-4 gap-4 text-left">
+                  <div>
+                    <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Student Name</span>
+                    <span className="text-slate-900 dark:text-white font-bold text-[13px]">{studentDetails.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Admission No</span>
+                    <span className="text-slate-900 dark:text-white font-mono font-bold text-[13px]">{studentDetails.admission_no}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Class & Section</span>
+                    <span className="text-slate-900 dark:text-white font-bold text-[13px]">{studentDetails.class_name}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Payment Status</span>
+                    <span
+                      className={`inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isSettledWithDiscount || studentDetails.status === "Paid"
+                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                          : studentDetails.status === "Partial"
+                            ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                            : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                        }`}
+                    >
+                      {isSettledWithDiscount ? "Paid (Discount Settled)" : studentDetails.status}
+                    </span>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
 
           {/* Transaction logs table list */}
           <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
@@ -224,7 +306,7 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                     <th className="px-6 py-3.5">Receipt Number</th>
                     <th className="px-6 py-3.5">Payment Date</th>
                     <th className="px-6 py-3.5">Method</th>
-                    <th className="px-6 py-3.5">Ledger Remarks</th>
+                    <th className="px-6 py-3.5">Ledger Remarks & Concessions</th>
                     <th className="px-6 py-3.5 text-right">Amount Paid</th>
                     <th className="px-6 py-3.5 text-right">Actions</th>
                   </tr>
@@ -237,65 +319,100 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                       </td>
                     </tr>
                   ) : (
-                    payments.map((p) => (
-                      <tr key={p._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="px-6 py-4 font-mono font-bold text-primary">{p.receipt_number || p.receipt_no}</td>
-                        <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">{fmtDate(p.payment_date)}</td>
-                        <td className="px-6 py-4">
-                          <span className="px-2.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold">
-                            {p.payment_method}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-slate-500">{p.remarks || "—"}</td>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-emerald-600">
-                          {money(p.amount_paid || p.total_amount)}
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button
-                            onClick={async () => {
-                              try {
-                                const configRes = await fetch(
-                                  `/api/fees?config_only=true&student_id=${studentId}`,
-                                  { headers: getAuthHeaders() }
-                                );
-                                const configData = await configRes.json();
-                                const config = configData.success ? configData.data.fee_types : [];
+                    payments.map((p) => {
+                      const pDiscount = Number(p.discount || 0);
+                      const pScholarship = Number(p.scholarship || 0);
+                      const pWaiver = Number(p.waiver || 0);
+                      const pTotalConcession = pDiscount + pScholarship + pWaiver;
 
-                                setPrintedReceipt({
-                                  ...p,
-                                  feeTypesConfig: config,
-                                  paymentsHistory: payments,
-                                  student_id: {
-                                    name: studentDetails.name,
-                                    admission_no: studentDetails.admission_no,
-                                    class_id: {
-                                      name: studentDetails.class_name.split(" - ")[0],
-                                      section: studentDetails.class_name.split(" - ")[1] || "",
+                      return (
+                        <tr key={p._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                          <td className="px-6 py-4 font-mono font-bold text-primary">{p.receipt_number || p.receipt_no}</td>
+                          <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">{fmtDate(p.payment_date)}</td>
+                          <td className="px-6 py-4">
+                            <span className="px-2.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold">
+                              {p.payment_method}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-slate-500">
+                            <div>{p.remarks || "—"}</div>
+                            {pTotalConcession > 0 && (
+                              <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                                {pDiscount > 0 && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] font-semibold border border-blue-200/50">
+                                    Discount: {money(pDiscount)}
+                                  </span>
+                                )}
+                                {pScholarship > 0 && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-[10px] font-semibold border border-purple-200/50">
+                                    Scholarship: {money(pScholarship)}
+                                  </span>
+                                )}
+                                {pWaiver > 0 && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[10px] font-semibold border border-amber-200/50">
+                                    Waiver: {money(pWaiver)}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="font-mono font-bold text-emerald-600">
+                              {money(p.amount_paid || p.total_amount)}
+                            </div>
+                            {pTotalConcession > 0 && (
+                              <div className="text-[10px] text-amber-600 dark:text-amber-400 font-sans mt-0.5 font-medium">
+                                + {money(pTotalConcession)} Concession
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-right">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const configRes = await fetch(
+                                    `/api/fees?config_only=true&student_id=${studentId}`,
+                                    { headers: getAuthHeaders() }
+                                  );
+                                  const configData = await configRes.json();
+                                  const config = configData.success ? configData.data.fee_types : [];
+
+                                  setPrintedReceipt({
+                                    ...p,
+                                    feeTypesConfig: config,
+                                    paymentsHistory: payments,
+                                    student_id: {
+                                      name: studentDetails.name,
+                                      admission_no: studentDetails.admission_no,
+                                      class_id: {
+                                        name: studentDetails.class_name.split(" - ")[0],
+                                        section: studentDetails.class_name.split(" - ")[1] || "",
+                                      },
                                     },
-                                  },
-                                });
-                              } catch (err) {
-                                console.error(err);
-                                setPrintedReceipt({
-                                  ...p,
-                                  student_id: {
-                                    name: studentDetails.name,
-                                    admission_no: studentDetails.admission_no,
-                                    class_id: {
-                                      name: studentDetails.class_name.split(" - ")[0],
-                                      section: studentDetails.class_name.split(" - ")[1] || "",
+                                  });
+                                } catch (err) {
+                                  console.error(err);
+                                  setPrintedReceipt({
+                                    ...p,
+                                    student_id: {
+                                      name: studentDetails.name,
+                                      admission_no: studentDetails.admission_no,
+                                      class_id: {
+                                        name: studentDetails.class_name.split(" - ")[0],
+                                        section: studentDetails.class_name.split(" - ")[1] || "",
+                                      },
                                     },
-                                  },
-                                });
-                              }
-                            }}
-                            className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold rounded-lg transition-colors cursor-pointer text-xs"
-                          >
-                            Print Receipt
-                          </button>
-                        </td>
-                      </tr>
-                    ))
+                                  });
+                                }
+                              }}
+                              className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold rounded-lg transition-colors cursor-pointer text-xs"
+                            >
+                              Print Receipt
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -321,33 +438,30 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                   <button
                     type="button"
                     onClick={() => setReceiptCopies(1)}
-                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                      receiptCopies === 1
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${receiptCopies === 1
                         ? "bg-slate-900 text-white shadow-xs"
                         : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
-                    }`}
+                      }`}
                   >
                     1 Copy
                   </button>
                   <button
                     type="button"
                     onClick={() => setReceiptCopies(2)}
-                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                      receiptCopies === 2
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${receiptCopies === 2
                         ? "bg-slate-900 text-white shadow-xs"
                         : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
-                    }`}
+                      }`}
                   >
                     2 Copies
                   </button>
                   <button
                     type="button"
                     onClick={() => setReceiptCopies(3)}
-                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                      receiptCopies === 3
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${receiptCopies === 3
                         ? "bg-slate-900 text-white shadow-xs"
                         : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
-                    }`}
+                      }`}
                   >
                     3 Copies
                   </button>
@@ -360,11 +474,10 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                     <button
                       type="button"
                       onClick={() => setPageMode("single")}
-                      className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                        pageMode === "single"
+                      className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${pageMode === "single"
                           ? "bg-indigo-600 text-white shadow-xs"
                           : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
-                      }`}
+                        }`}
                       title="Both copies print on 1 page with a cut line"
                     >
                       📄 1 Page (Half Cut)
@@ -372,11 +485,10 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                     <button
                       type="button"
                       onClick={() => setPageMode("separate")}
-                      className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                        pageMode === "separate"
+                      className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${pageMode === "separate"
                           ? "bg-indigo-600 text-white shadow-xs"
                           : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
-                      }`}
+                        }`}
                       title="Each copy prints on its own separate page"
                     >
                       📑 Separate Pages ({receiptCopies} Pages)
@@ -482,9 +594,8 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                       return (
                         <React.Fragment key={copyIdx}>
                           <div
-                            className={`receipt-slip ${isCompact ? "space-y-2.5" : "space-y-4"} ${
-                              !isLast && pageMode === "separate" ? "receipt-page-break" : ""
-                            }`}
+                            className={`receipt-slip ${isCompact ? "space-y-2.5" : "space-y-4"} ${!isLast && pageMode === "separate" ? "receipt-page-break" : ""
+                              }`}
                             style={
                               !isLast && pageMode === "separate"
                                 ? { pageBreakAfter: "always", breakAfter: "page" }
@@ -605,13 +716,12 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                                       <td className={`${isCompact ? "px-2.5 py-1.5" : "px-3.5 py-2.5"} text-right font-sans font-bold text-rose-600 bg-rose-50/20`}>{money(ft.outstanding)}</td>
                                       <td className={`${isCompact ? "px-2.5 py-1.5" : "px-3.5 py-2.5"} text-center`}>
                                         <span
-                                          className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider ${
-                                            ft.status === "Paid"
+                                          className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider ${ft.status === "Paid"
                                               ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
                                               : ft.status === "Partial"
-                                              ? "bg-amber-100 text-amber-800 border border-amber-200"
-                                              : "bg-rose-100 text-rose-800 border border-rose-200"
-                                          }`}
+                                                ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                                : "bg-rose-100 text-rose-800 border border-rose-200"
+                                            }`}
                                         >
                                           {ft.status}
                                         </span>
@@ -628,33 +738,33 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                                 (printedReceipt.scholarship || 0) > 0 ||
                                 (printedReceipt.waiver || 0) > 0 ||
                                 (printedReceipt.fine || 0) > 0) && (
-                                <div className="border-b border-dashed border-slate-200 pb-1.5 space-y-1 text-slate-600 text-[10px]">
-                                  {(printedReceipt.discount || 0) > 0 && (
-                                    <div className="flex justify-between">
-                                      <span>Concession / Discount:</span>
-                                      <span className="font-semibold text-emerald-600 font-mono">- {money(printedReceipt.discount)}</span>
-                                    </div>
-                                  )}
-                                  {(printedReceipt.scholarship || 0) > 0 && (
-                                    <div className="flex justify-between">
-                                      <span>Scholarship:</span>
-                                      <span className="font-semibold text-emerald-600 font-mono">- {money(printedReceipt.scholarship)}</span>
-                                    </div>
-                                  )}
-                                  {(printedReceipt.waiver || 0) > 0 && (
-                                    <div className="flex justify-between">
-                                      <span>Waiver:</span>
-                                      <span className="font-semibold text-emerald-600 font-mono">- {money(printedReceipt.waiver)}</span>
-                                    </div>
-                                  )}
-                                  {(printedReceipt.fine || 0) > 0 && (
-                                    <div className="flex justify-between">
-                                      <span>Late Fine:</span>
-                                      <span className="font-semibold text-rose-600 font-mono">+ {money(printedReceipt.fine)}</span>
-                                    </div>
-                                  )}
-                                </div>
-                              )}
+                                  <div className="border-b border-dashed border-slate-200 pb-1.5 space-y-1 text-slate-600 text-[10px]">
+                                    {(printedReceipt.discount || 0) > 0 && (
+                                      <div className="flex justify-between">
+                                        <span>Concession / Discount:</span>
+                                        <span className="font-semibold text-emerald-600 font-mono">- {money(printedReceipt.discount)}</span>
+                                      </div>
+                                    )}
+                                    {(printedReceipt.scholarship || 0) > 0 && (
+                                      <div className="flex justify-between">
+                                        <span>Scholarship:</span>
+                                        <span className="font-semibold text-emerald-600 font-mono">- {money(printedReceipt.scholarship)}</span>
+                                      </div>
+                                    )}
+                                    {(printedReceipt.waiver || 0) > 0 && (
+                                      <div className="flex justify-between">
+                                        <span>Waiver:</span>
+                                        <span className="font-semibold text-emerald-600 font-mono">- {money(printedReceipt.waiver)}</span>
+                                      </div>
+                                    )}
+                                    {(printedReceipt.fine || 0) > 0 && (
+                                      <div className="flex justify-between">
+                                        <span>Late Fine:</span>
+                                        <span className="font-semibold text-rose-600 font-mono">+ {money(printedReceipt.fine)}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
 
                               <div className="flex justify-between items-center font-bold text-slate-900 pt-0.5">
                                 <span className={isCompact ? "text-[11px]" : "text-[12px]"}>Total Amount Paid In This Transaction:</span>

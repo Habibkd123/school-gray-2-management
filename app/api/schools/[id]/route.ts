@@ -132,6 +132,7 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         "favicon_url",
         "google_site_verification",
         "google_analytics_id",
+        "custom_head_scripts",
       ];
       const existing = (school.meta_config as any) || {};
       const updatedMeta: Record<string, string> = { ...existing };

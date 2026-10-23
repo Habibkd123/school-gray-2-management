@@ -28,6 +28,7 @@ export interface CreateClassInput {
   class_teacher_id?: string;
   capacity?: number;
   status?: "Active" | "Inactive" | "Archived";
+  default_fee?: number | string;
 }
 
 export interface FetchClassesParams {

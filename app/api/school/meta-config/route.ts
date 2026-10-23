@@ -59,6 +59,7 @@ export async function GET(req: NextRequest) {
       favicon_url:              meta.favicon_url              || "",
       google_site_verification: meta.google_site_verification || "",
       google_analytics_id:      meta.google_analytics_id      || "",
+      custom_head_scripts:      meta.custom_head_scripts      || "",
     };
 
     metaConfigCache.set(targetSchoolId, { data, timestamp: Date.now() });
@@ -101,6 +102,7 @@ export async function PUT(req: NextRequest) {
       "favicon_url",
       "google_site_verification",
       "google_analytics_id",
+      "custom_head_scripts",
     ];
 
     const update: Record<string, string> = {};

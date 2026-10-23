@@ -20,6 +20,7 @@ export interface IMetaConfig {
   favicon_url?: string;      // custom favicon per school
   google_site_verification?: string; // Google Search Console verification token/tag
   google_analytics_id?: string;      // Google Analytics Measurement ID (G-XXXXXXXXXX)
+  custom_head_scripts?: string;      // Custom schema (JSON-LD) or tracking scripts
 }
 
 // ─── Login Config Sub-document ─────────────────────────────────────
@@ -110,6 +111,7 @@ const metaConfigSchema = new Schema<IMetaConfig>(
     favicon_url:              { type: String, default: "" },
     google_site_verification: { type: String, trim: true, default: "" },
     google_analytics_id:      { type: String, trim: true, default: "" },
+    custom_head_scripts:      { type: String, default: "" },
   },
   { _id: false }
 );

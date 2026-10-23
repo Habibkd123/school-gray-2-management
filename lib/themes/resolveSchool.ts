@@ -15,6 +15,7 @@ interface SchoolCacheEntry {
   canonical_url: string;
   google_site_verification: string;
   google_analytics_id: string;
+  custom_head_scripts: string;
   expiresAt:  number;
 }
 
@@ -51,7 +52,7 @@ async function fetchSchoolBySlug(slugKey: string): Promise<SchoolCacheEntry> {
     const miss: SchoolCacheEntry = {
       school_id: null, name: "", subtitle: "", logo_url: "", meta_title: "", meta_desc: "",
       meta_kw: "", og_image: "", favicon: "", canonical_url: "",
-      google_site_verification: "", google_analytics_id: "",
+      google_site_verification: "", google_analytics_id: "", custom_head_scripts: "",
       expiresAt: now + MISS_CACHE_MS,
     };
     schoolCache.set(slugKey, miss);
@@ -72,6 +73,7 @@ async function fetchSchoolBySlug(slugKey: string): Promise<SchoolCacheEntry> {
     canonical_url: meta.canonical_url ?? "",
     google_site_verification: meta.google_site_verification ?? "",
     google_analytics_id: meta.google_analytics_id ?? "",
+    custom_head_scripts: meta.custom_head_scripts ?? "",
     expiresAt:  now + CACHE_TTL_MS,
   };
   schoolCache.set(slugKey, entry);
@@ -180,6 +182,7 @@ export async function resolveSchoolMeta(
       canonical_url: meta.canonical_url ?? "",
       google_site_verification: meta.google_site_verification ?? "",
       google_analytics_id: meta.google_analytics_id ?? "",
+      custom_head_scripts: meta.custom_head_scripts ?? "",
       expiresAt:  Date.now() + CACHE_TTL_MS,
     };
     schoolCache.set(key, entry);

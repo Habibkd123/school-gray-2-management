@@ -4,6 +4,7 @@ import Class, { computeSortWeight } from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 import { invalidateServerClassesCache } from "../route";
+import { invalidateFeesCache } from "@/app/api/fees/route";
 import {
   Student,
   Attendance,
@@ -37,7 +38,19 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: cls });
+    const classFee = await ClassFee.findOne({
+      school_id: new mongoose.Types.ObjectId(schoolId as string),
+      class_id: new mongoose.Types.ObjectId(id),
+      academic_year: (cls as any).academic_year || "2026-2027",
+    }).lean();
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        ...cls,
+        default_fee: classFee ? classFee.total_amount : 0,
+      },
+    });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Internal server error";
     return NextResponse.json({ success: false, message }, { status: 500 });
@@ -55,7 +68,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
 
     const body = await req.json();
-    const { name, section, academic_year, class_teacher_id, capacity, class_code, status } = body;
+    const { name, section, academic_year, class_teacher_id, capacity, class_code, status, default_fee } = body;
 
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) {
@@ -77,6 +90,59 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
     if (!updated) {
       return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
+    }
+
+    if (default_fee !== undefined && default_fee !== null && default_fee !== "") {
+      const amount = Math.max(0, Number(default_fee) || 0);
+      const targetYear = updated.academic_year || academic_year || "2026-2027";
+      try {
+        const existingClassFee = await ClassFee.findOne({
+          school_id: new mongoose.Types.ObjectId(schoolId as string),
+          class_id: updated._id,
+          academic_year: targetYear,
+        });
+
+        if (existingClassFee && existingClassFee.fee_types && existingClassFee.fee_types.length > 0) {
+          let updatedFirst = false;
+          const feeTypes = existingClassFee.fee_types.map((ft: any) => {
+            if (!updatedFirst && (ft.name.toLowerCase().includes("tuition") || ft.is_enabled)) {
+              updatedFirst = true;
+              return { ...ft, amount, is_enabled: true };
+            }
+            return ft;
+          });
+          const total_amount = feeTypes
+            .filter((ft: any) => ft.is_enabled)
+            .reduce((sum: number, ft: any) => sum + Number(ft.amount || 0), 0);
+
+          await ClassFee.findByIdAndUpdate(existingClassFee._id, { fee_types: feeTypes, total_amount });
+        } else {
+          await ClassFee.findOneAndUpdate(
+            {
+              school_id: new mongoose.Types.ObjectId(schoolId as string),
+              class_id: updated._id,
+              academic_year: targetYear,
+            },
+            {
+              fee_types: [
+                { name: "Tuition Fees", amount, frequency: "Monthly", is_mandatory: true, is_enabled: true },
+                { name: "Academic Fees", amount: 0, frequency: "Yearly", is_mandatory: true, is_enabled: true },
+                { name: "Exam Fees", amount: 0, frequency: "Quarterly", is_mandatory: true, is_enabled: true },
+                { name: "Computer Fees", amount: 0, frequency: "Monthly", is_mandatory: true, is_enabled: true },
+                { name: "Library Fees", amount: 0, frequency: "Yearly", is_mandatory: true, is_enabled: true },
+                { name: "Transport Fees", amount: 0, frequency: "Monthly", is_mandatory: false, is_enabled: false },
+                { name: "Admission Fees", amount: 0, frequency: "One Time", is_mandatory: false, is_enabled: false },
+                { name: "Other Fees", amount: 0, frequency: "Monthly", is_mandatory: false, is_enabled: false },
+              ],
+              total_amount: amount,
+            },
+            { upsert: true }
+          );
+        }
+        invalidateFeesCache(String(schoolId));
+      } catch (fErr) {
+        console.warn("[Update Class] Non-fatal default fee error:", fErr);
+      }
     }
 
     invalidateServerClassesCache(String(schoolId));

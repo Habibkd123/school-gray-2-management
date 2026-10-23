@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
-import { Admission, Student, School, User } from "@/lib/models/index";
+import { Admission, Student, School, User, ClassFee, StudentFeeAssignment } from "@/lib/models/index";
 import Parent from "@/lib/models/Parent";
 import Class from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
+import { invalidateFeesCache } from "@/app/api/fees/route";
 import mongoose from "mongoose";
 
 const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG || "school";
@@ -180,6 +181,34 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       father_name: admission.father_name,
       mother_name: admission.mother_name,
     });
+
+    // Auto-assign Default Class Fees if configured for this class and academic session
+    try {
+      const targetYear = admission.academic_year || "2026-2027";
+      const classFeeConfig = await ClassFee.findOne({
+        school_id: new mongoose.Types.ObjectId(schoolId as string),
+        class_id: new mongoose.Types.ObjectId(targetClassId),
+        academic_year: targetYear,
+      }).lean();
+
+      if (classFeeConfig && classFeeConfig.fee_types && classFeeConfig.fee_types.length > 0) {
+        await StudentFeeAssignment.findOneAndUpdate(
+          {
+            school_id: new mongoose.Types.ObjectId(schoolId as string),
+            student_id: student._id,
+            academic_year: targetYear,
+          },
+          {
+            fee_types: classFeeConfig.fee_types,
+            total_amount: classFeeConfig.total_amount,
+          },
+          { upsert: true }
+        );
+        invalidateFeesCache(String(schoolId));
+      }
+    } catch (feeAssignErr) {
+      console.warn("[Admission Approve] Non-fatal: failed to auto-assign default class fee:", feeAssignErr);
+    }
 
     // 5. Update Admission application status
     admission.status = "Admission Completed";

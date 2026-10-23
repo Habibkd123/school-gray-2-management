@@ -3,9 +3,10 @@ import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db";
 import Class, { computeSortWeight } from "@/lib/models/Class";
 import Teacher from "@/lib/models/Teacher";
-import { TeacherAssignment, Student, Subject, SubjectAssignment } from "@/lib/models/index";
+import { TeacherAssignment, Student, Subject, SubjectAssignment, ClassFee } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import { sendConditionalJson } from "@/lib/etag";
+import { invalidateFeesCache } from "@/app/api/fees/route";
 
 // ─── Server-side cache on globalThis ──────────────────────────────
 const gs = globalThis as any;
@@ -254,7 +255,7 @@ export async function POST(req: NextRequest) {
     await connectToDatabase();
 
     const body = await req.json();
-    const { name, section, academic_year, class_teacher_id, capacity, class_code, status } = body;
+    const { name, section, academic_year, class_teacher_id, capacity, class_code, status, default_fee } = body;
 
     if (!name || !academic_year) {
       return NextResponse.json(
@@ -288,6 +289,36 @@ export async function POST(req: NextRequest) {
         existingClass.sort_weight = computeSortWeight(trimmedName);
         await existingClass.save();
 
+        if (default_fee !== undefined && default_fee !== null && default_fee !== "") {
+          const amount = Math.max(0, Number(default_fee) || 0);
+          try {
+            await ClassFee.findOneAndUpdate(
+              {
+                school_id: new mongoose.Types.ObjectId(schoolId as string),
+                class_id: existingClass._id,
+                academic_year: trimmedYear,
+              },
+              {
+                fee_types: [
+                  { name: "Tuition Fees", amount, frequency: "Monthly", is_mandatory: true, is_enabled: true },
+                  { name: "Academic Fees", amount: 0, frequency: "Yearly", is_mandatory: true, is_enabled: true },
+                  { name: "Exam Fees", amount: 0, frequency: "Quarterly", is_mandatory: true, is_enabled: true },
+                  { name: "Computer Fees", amount: 0, frequency: "Monthly", is_mandatory: true, is_enabled: true },
+                  { name: "Library Fees", amount: 0, frequency: "Yearly", is_mandatory: true, is_enabled: true },
+                  { name: "Transport Fees", amount: 0, frequency: "Monthly", is_mandatory: false, is_enabled: false },
+                  { name: "Admission Fees", amount: 0, frequency: "One Time", is_mandatory: false, is_enabled: false },
+                  { name: "Other Fees", amount: 0, frequency: "Monthly", is_mandatory: false, is_enabled: false },
+                ],
+                total_amount: amount,
+              },
+              { upsert: true }
+            );
+            invalidateFeesCache(String(schoolId));
+          } catch (fErr) {
+            console.warn("[Revive Class] Non-fatal default fee error:", fErr);
+          }
+        }
+
         const populated = await existingClass.populate("class_teacher_id", "name employee_id");
         invalidateServerClassesCache(String(schoolId));
         return NextResponse.json({ success: true, data: populated, message: "Class restored and activated" }, { status: 201 });
@@ -310,6 +341,36 @@ export async function POST(req: NextRequest) {
       capacity: capacity ? parseInt(capacity) : 40,
       sort_weight: computeSortWeight(trimmedName),  // set on create too (pre-save also handles it)
     });
+
+    if (default_fee !== undefined && default_fee !== null && default_fee !== "") {
+      const amount = Math.max(0, Number(default_fee) || 0);
+      try {
+        await ClassFee.findOneAndUpdate(
+          {
+            school_id: new mongoose.Types.ObjectId(schoolId as string),
+            class_id: newClass._id,
+            academic_year: trimmedYear,
+          },
+          {
+            fee_types: [
+              { name: "Tuition Fees", amount, frequency: "Monthly", is_mandatory: true, is_enabled: true },
+              { name: "Academic Fees", amount: 0, frequency: "Yearly", is_mandatory: true, is_enabled: true },
+              { name: "Exam Fees", amount: 0, frequency: "Quarterly", is_mandatory: true, is_enabled: true },
+              { name: "Computer Fees", amount: 0, frequency: "Monthly", is_mandatory: true, is_enabled: true },
+              { name: "Library Fees", amount: 0, frequency: "Yearly", is_mandatory: true, is_enabled: true },
+              { name: "Transport Fees", amount: 0, frequency: "Monthly", is_mandatory: false, is_enabled: false },
+              { name: "Admission Fees", amount: 0, frequency: "One Time", is_mandatory: false, is_enabled: false },
+              { name: "Other Fees", amount: 0, frequency: "Monthly", is_mandatory: false, is_enabled: false },
+            ],
+            total_amount: amount,
+          },
+          { upsert: true }
+        );
+        invalidateFeesCache(String(schoolId));
+      } catch (fErr) {
+        console.warn("[Create Class] Non-fatal default fee error:", fErr);
+      }
+    }
 
     const populated = await newClass.populate("class_teacher_id", "name employee_id");
 
