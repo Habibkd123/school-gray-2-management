@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ffffff; padding: 30px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: #0f172a; }
+  .doc { border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 28px 32px; background: #ffffff; max-width: 780px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+  .school-header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px; }
+  .school-name { font-size: 20px; font-weight: 900; text-transform: uppercase; color: #0f172a; }
+  .school-sub { font-size: 12px; font-weight: 700; color: #475569; margin-top: 2px; }
+  .badge-wrap { text-align: center; margin: 12px 0 16px 0; }
+  .badge { display: inline-block; padding: 4px 18px; background: #ecfdf5; border: 1.5px solid #059669; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #059669; }
+
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; font-size: 12px; margin-bottom: 20px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+  .meta-row { display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 3px; }
+  .meta-label { font-weight: 700; color: #64748b; }
+  .meta-val { font-weight: 800; color: #0f172a; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 18px; }
+  th { background: #f1f5f9; padding: 8px 12px; font-weight: 800; text-align: left; border: 1px solid #cbd5e1; font-size: 11px; text-transform: uppercase; color: #334155; }
+  td { padding: 9px 12px; border: 1px solid #e2e8f0; }
+  .td-right { text-align: right; font-weight: 700; font-family: monospace; font-size: 12.5px; }
+  .td-center { text-align: center; font-weight: 700; }
+
+  .net-box { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: #ecfdf5; border: 1.5px solid #059669; border-radius: 8px; margin-bottom: 16px; }
+  .net-label { font-size: 13px; font-weight: 800; color: #065f46; }
+  .net-val { font-size: 19px; font-weight: 900; color: #059669; font-family: monospace; }
+  .words-text { font-size: 11px; color: #475569; font-style: italic; margin-bottom: 22px; }
+
+  .sig-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 36px; }
+  .sig-box { text-align: center; width: 170px; }
+  .sig-line { border-top: 1.5px solid #64748b; padding-top: 5px; font-size: 11px; font-weight: 700; color: #334155; }
+  .stamp { display: inline-block; width: 80px; height: 80px; border: 2.5px solid #059669; border-radius: 50%; color: #059669; font-size: 8px; font-weight: 800; text-align: center; padding-top: 18px; text-transform: uppercase; transform: rotate(-8deg); }
+</style>
+</head>
+<body>
+  <div class="doc">
+    <div class="school-header">
+      <div class="school-name">Bajrang Shikshan Sansthan</div>
+      <div class="school-sub">Sec. Sch. Padu Khurd, Nagaur - 341021 (Raj.) | Student Accounts & Clearance</div>
+    </div>
+
+    <div class="badge-wrap">
+      <span class="badge">Caution Money (Security Deposit) Refund Disbursement Voucher</span>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-row"><span class="meta-label">Student Name:</span><span class="meta-val">Ravi Kumar Meghwal</span></div>
+      <div class="meta-row"><span class="meta-label">Refund Voucher No:</span><span class="meta-val">BSS-REF-2026-019</span></div>
+      <div class="meta-row"><span class="meta-label">Last Class Passed:</span><span class="meta-val">Class 10th (Passout 2026)</span></div>
+      <div class="meta-row"><span class="meta-label">Disbursement Date:</span><span class="meta-val">28 Jun 2026</span></div>
+      <div class="meta-row"><span class="meta-label">Admission No:</span><span class="meta-val">ADM-2023-018</span></div>
+      <div class="meta-row"><span class="meta-label">TC Certificate No:</span><span class="meta-val">TC-2026-104</span></div>
+      <div class="meta-row"><span class="meta-label">No Dues Certificate:</span><span class="meta-val">Clear (Library &bull; Lab &bull; Sports)</span></div>
+      <div class="meta-row"><span class="meta-label">Disbursement Mode:</span><span class="meta-val">Cheque / Direct Transfer</span></div>
+    </div>
+
+    <!-- EXACT 4 COLUMNS ONLY -->
+    <table>
+      <thead>
+        <tr>
+          <th class="td-center" style="width: 50px;">S.No</th>
+          <th>Deposit Particulars & Clearance Details</th>
+          <th>Status / Receipt Ref</th>
+          <th style="text-align: right; width: 140px;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="td-center">1</td><td>Original Caution Money Deposited at Admission</td><td>BSS-REC-2023-112</td><td class="td-right">₹2,000.00</td></tr>
+        <tr><td class="td-center">2</td><td>Less: Library Book Overdue Charges / Loss</td><td>No Dues Verified</td><td class="td-right">(-) ₹0.00</td></tr>
+        <tr><td class="td-center">3</td><td>Less: Science Lab Glassware / Equipment Breakage</td><td>No Dues Verified</td><td class="td-right">(-) ₹0.00</td></tr>
+        <tr><td class="td-center">4</td><td>Less: Sports Kit / Uniform Pending Return</td><td>No Dues Verified</td><td class="td-right">(-) ₹0.00</td></tr>
+      </tbody>
+    </table>
+
+    <div class="net-box">
+      <span class="net-label">Net Caution Money Amount Refunded:</span>
+      <span class="net-val">₹2,000.00</span>
+    </div>
+
+    <div class="words-text">Amount in words: Two Thousand Rupees Only (Full refund released upon school clearance).</div>
+
+    <div class="sig-row">
+      <div class="sig-box"><div class="sig-line">Student / Guardian Receiver Sign</div></div>
+      <div class="sig-box"><div class="sig-line">Accountant / Cashier</div></div>
+      <div class="stamp">BSS<br>Padu Khurd<br><b>REFUNDED</b><br>Cleared</div>
+      <div class="sig-box"><div class="sig-line">Headmaster / Principal</div></div>
+    </div>
+  </div>
+</body>
+</html>
+        

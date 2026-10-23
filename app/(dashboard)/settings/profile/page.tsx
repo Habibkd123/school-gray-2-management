@@ -9,11 +9,12 @@ import { cacheSync } from "@/lib/utils/cache-sync";
 import RolesPermissionsPage from "../roles/page";
 import SystemBackupPage from "../backup/page";
 import ClassFeesSettingsTab from "../components/ClassFeesSettingsTab";
+import ReceiptSettingsTab from "../components/ReceiptSettingsTab";
 import {
   RefreshCw, Upload, Edit, EyeOff, Eye, Save, X,
   Loader2, CheckCircle2, AlertCircle, User, Lock, MapPin,
   TrendingUp, ClipboardList, CreditCard, Users, Mail, MessageSquare,
-  PieChart, Wallet, Book, Sparkles, ShieldCheck
+  PieChart, Wallet, Book, Sparkles, ShieldCheck, Receipt
 } from "lucide-react";
 
 interface ParentProfile {
@@ -111,13 +112,13 @@ export default function ProfilePage() {
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   // Tab control
-  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login" | "class-fees" | "seo" | "upcoming" | "backup">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login" | "class-fees" | "seo" | "upcoming" | "backup" | "receipt-settings">("profile");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
-      if (tab === "backup" || tab === "roles" || tab === "academic" || tab === "login" || tab === "class-fees" || tab === "upcoming") {
+      if (tab === "backup" || tab === "roles" || tab === "academic" || tab === "login" || tab === "class-fees" || tab === "upcoming" || tab === "receipt-settings") {
         setActiveTab(tab as any);
       }
     }
@@ -568,6 +569,8 @@ export default function ProfilePage() {
                 ? "Default Class Fees"
                 : activeTab === "backup"
                 ? "Data Backup & PDF Export"
+                : activeTab === "receipt-settings"
+                ? "Receipt Settings"
                 : activeTab === "upcoming"
                 ? "Upcoming Features"
                 : "Login Settings"}
@@ -586,6 +589,8 @@ export default function ProfilePage() {
                   ? "Default Class Fees"
                   : activeTab === "backup"
                   ? "Data Backup & PDF Export"
+                  : activeTab === "receipt-settings"
+                  ? "Receipt Settings"
                   : activeTab === "upcoming"
                   ? "Upcoming Features"
                   : "Login Settings"}
@@ -649,6 +654,13 @@ export default function ProfilePage() {
             >
               <ShieldCheck className="w-4 h-4 text-emerald-500" /> Data Backup & PDF Export
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("receipt-settings")}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${activeTab === "receipt-settings" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
+            >
+              <Receipt className="w-4 h-4 text-primary" /> Receipt Settings
+            </button>
           </>
         )}
         <button
@@ -690,6 +702,8 @@ export default function ProfilePage() {
         <RolesPermissionsPage />
       ) : activeTab === "class-fees" && isAdmin ? (
         <ClassFeesSettingsTab />
+      ) : activeTab === "receipt-settings" && isAdmin ? (
+        <ReceiptSettingsTab />
       ) : activeTab === "seo" && isAdmin ? (
         /* ── SEO / Meta Settings Tab ─────────────────────────────── */
         <div className="space-y-5 text-left max-w-2xl">
