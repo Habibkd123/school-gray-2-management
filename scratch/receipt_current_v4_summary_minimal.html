@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ffffff; padding: 25px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: #0f172a; }
+  .doc { border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 24px 28px; background: #ffffff; max-width: 740px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+  .header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 10px; margin-bottom: 12px; }
+  .title { font-size: 19px; font-weight: 900; text-transform: uppercase; color: #0f172a; }
+  .subtitle { font-size: 11.5px; font-weight: 700; color: #475569; margin-top: 1px; }
+
+  .summary-banner { display: flex; justify-content: space-between; align-items: center; background: #0f172a; color: #ffffff; border-radius: 8px; padding: 12px 18px; margin: 12px 0 16px 0; }
+  .banner-left { font-size: 13px; font-weight: 800; letter-spacing: 0.5px; }
+  .banner-right { font-size: 11px; background: #10b981; padding: 3px 12px; border-radius: 20px; font-weight: 800; text-transform: uppercase; }
+
+  .meta-simple { display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 16px; font-size: 12px; margin-bottom: 16px; }
+  .meta-col { display: flex; flex-direction: column; gap: 4px; }
+  .meta-col span:first-child { color: #64748b; font-weight: 600; font-size: 10.5px; text-transform: uppercase; }
+  .meta-col span:last-child { color: #0f172a; font-weight: 800; font-size: 12.5px; }
+
+  .simple-list { border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; margin-bottom: 16px; font-size: 12px; }
+  .list-row { display: flex; justify-content: space-between; padding: 9px 14px; border-bottom: 1px solid #f1f5f9; }
+  .list-row:nth-child(even) { background: #f8fafc; }
+  .list-row:last-child { border-bottom: none; font-weight: 800; background: #f1f5f9; }
+
+  .big-net { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 8px; margin-bottom: 20px; }
+
+  .sig-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 24px; }
+  .sig-box { text-align: center; width: 160px; }
+  .sig-line { border-top: 1.5px solid #64748b; padding-top: 5px; font-size: 10.5px; font-weight: 700; color: #334155; }
+</style>
+</head>
+<body>
+  <div class="doc">
+    <div class="header">
+      <div class="title">Bajrang Shikshan Sansthan</div>
+      <div class="subtitle">Sec. Sch. Padu Khurd, Nagaur - 341021 (Raj.)</div>
+    </div>
+
+    <div class="summary-banner">
+      <div class="banner-left">FEE PAYMENT SUMMARY RECEIPT</div>
+      <div class="banner-right">PAID IN FULL</div>
+    </div>
+
+    <div class="meta-simple">
+      <div class="meta-col"><span>Student Name</span><span>Aryan Sharma</span></div>
+      <div class="meta-col"><span>Admission No</span><span>ADM-2026-104</span></div>
+      <div class="meta-col"><span>Class</span><span>10th - A</span></div>
+      <div class="meta-col"><span>Receipt No</span><span>BSS-REC-0412</span></div>
+      <div class="meta-col"><span>Date</span><span>23 Oct 2026</span></div>
+    </div>
+
+    <!-- MINIMAL 2-ROW SUMMARY LIST -->
+    <div class="simple-list">
+      <div class="list-row"><span>Academic Tuition & Digital Learning Fees</span><span style="font-family:monospace; font-weight:700;">₹4,500.00</span></div>
+      <div class="list-row"><span>Computer Science Lab Practice Fee</span><span style="font-family:monospace; font-weight:700;">₹800.00</span></div>
+      <div class="list-row"><span>Quarterly Assessment & Examination Charge</span><span style="font-family:monospace; font-weight:700;">₹500.00</span></div>
+      <div class="list-row"><span>Gross Total Fee Paid</span><span style="font-family:monospace; font-weight:800; color:#0f172a;">₹5,800.00</span></div>
+    </div>
+
+    <div class="big-net">
+      <span style="font-size:13px; font-weight:800; color:#065f46;">Net Payment Received (Cash):</span>
+      <span style="font-size:20px; font-weight:900; color:#047857; font-family:monospace;">₹5,800.00</span>
+    </div>
+
+    <div class="sig-row">
+      <div class="sig-box"><div class="sig-line">Depositor Signature</div></div>
+      <div style="font-size:10px; color:#64748b; font-style:italic;">Computer Verified Copy &bull; No physical seal required</div>
+      <div class="sig-box"><div class="sig-line">Cashier Signature</div></div>
+    </div>
+  </div>
+</body>
+</html>
+        

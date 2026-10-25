@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ffffff; padding: 30px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: #0f172a; }
+  .doc { border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 28px 32px; background: #ffffff; max-width: 780px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+  .school-header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px; }
+  .school-name { font-size: 20px; font-weight: 900; text-transform: uppercase; color: #0f172a; }
+  .school-sub { font-size: 12px; font-weight: 700; color: #475569; margin-top: 2px; }
+  .badge-wrap { text-align: center; margin: 12px 0 16px 0; }
+  .badge { display: inline-block; padding: 4px 18px; background: #fef2f2; border: 1.5px solid #dc2626; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #dc2626; }
+
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; font-size: 12px; margin-bottom: 20px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+  .meta-row { display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 3px; }
+  .meta-label { font-weight: 700; color: #64748b; }
+  .meta-val { font-weight: 800; color: #0f172a; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 18px; }
+  th { background: #f1f5f9; padding: 8px 12px; font-weight: 800; text-align: left; border: 1px solid #cbd5e1; font-size: 11px; text-transform: uppercase; color: #334155; }
+  td { padding: 9px 12px; border: 1px solid #e2e8f0; }
+  .td-right { text-align: right; font-weight: 700; font-family: monospace; font-size: 12.5px; }
+  .td-center { text-align: center; font-weight: 700; }
+
+  .net-box { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: #fef2f2; border: 1.5px solid #dc2626; border-radius: 8px; margin-bottom: 16px; }
+  .net-label { font-size: 13px; font-weight: 800; color: #991b1b; }
+  .net-val { font-size: 19px; font-weight: 900; color: #dc2626; font-family: monospace; }
+  .words-text { font-size: 11px; color: #475569; font-style: italic; margin-bottom: 22px; }
+
+  .sig-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 36px; }
+  .sig-box { text-align: center; width: 180px; }
+  .sig-line { border-top: 1.5px solid #64748b; padding-top: 5px; font-size: 11px; font-weight: 700; color: #334155; }
+  .stamp { display: inline-block; width: 80px; height: 80px; border: 2.5px solid #dc2626; border-radius: 50%; color: #dc2626; font-size: 8px; font-weight: 800; text-align: center; padding-top: 18px; text-transform: uppercase; transform: rotate(4deg); }
+</style>
+</head>
+<body>
+  <div class="doc">
+    <div class="school-header">
+      <div class="school-name">Bajrang Shikshan Sansthan</div>
+      <div class="school-sub">Sec. Sch. Padu Khurd, Nagaur - 341021 (Raj.) | Office of Examination Controller</div>
+    </div>
+
+    <div class="badge-wrap">
+      <span class="badge">Board Registration & Annual Examination Fee Receipt</span>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-row"><span class="meta-label">Student Name:</span><span class="meta-val">Neha Gurjar</span></div>
+      <div class="meta-row"><span class="meta-label">Challan / Slip No:</span><span class="meta-val">BSS-EXM-2026-209</span></div>
+      <div class="meta-row"><span class="meta-label">Class & Roll No:</span><span class="meta-val">Class 10th &bull; Roll No: 28</span></div>
+      <div class="meta-row"><span class="meta-label">Date:</span><span class="meta-val">12 Nov 2026</span></div>
+      <div class="meta-row"><span class="meta-label">Admission No:</span><span class="meta-val">ADM-2026-092</span></div>
+      <div class="meta-row"><span class="meta-label">Board / Council:</span><span class="meta-val">RBSE Secondary Board Exam 2027</span></div>
+      <div class="meta-row"><span class="meta-label">Examination Category:</span><span class="meta-val">Regular Candidate</span></div>
+      <div class="meta-row"><span class="meta-label">Payment Mode:</span><span class="meta-val">Cash (Exam Counter)</span></div>
+    </div>
+
+    <!-- EXACT 3 COLUMNS ONLY -->
+    <table>
+      <thead>
+        <tr>
+          <th class="td-center" style="width: 50px;">S.No</th>
+          <th>Examination & Registration Fee Particulars</th>
+          <th style="text-align: right; width: 140px;">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="td-center">1</td><td>RBSE 10th Board Official Enrolment & Registration Fee</td><td class="td-right">₹650.00</td></tr>
+        <tr><td class="td-center">2</td><td>Main Theory Examination & Center Surcharge Fee</td><td class="td-right">₹400.00</td></tr>
+        <tr><td class="td-center">3</td><td>Science & Computer Practical Examination Material Fee</td><td class="td-right">₹250.00</td></tr>
+        <tr><td class="td-center">4</td><td>Pre-Board Mock Exam & Answer Sheet Evaluation Fee</td><td class="td-right">₹200.00</td></tr>
+      </tbody>
+    </table>
+
+    <div class="net-box">
+      <span class="net-label">Total Examination Fee Paid:</span>
+      <span class="net-val">₹1,500.00</span>
+    </div>
+
+    <div class="words-text">Amount in words: One Thousand Five Hundred Rupees Only.</div>
+
+    <div class="sig-row">
+      <div class="sig-box"><div class="sig-line">Candidate / Student Signature</div></div>
+      <div class="stamp">BSS<br>Padu Khurd<br><b>EXAM FORM</b><br>Accepted</div>
+      <div class="sig-box"><div class="sig-line">Controller of Examination</div></div>
+    </div>
+  </div>
+</body>
+</html>
+        

@@ -1,0 +1,92 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #ffffff; padding: 30px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: #0f172a; }
+  .doc { border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 28px 32px; background: #ffffff; max-width: 780px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+  .school-header { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 14px; margin-bottom: 16px; }
+  .school-name { font-size: 20px; font-weight: 900; text-transform: uppercase; color: #0f172a; }
+  .school-sub { font-size: 12px; font-weight: 700; color: #475569; margin-top: 2px; }
+  .badge-wrap { text-align: center; margin: 12px 0 16px 0; }
+  .badge { display: inline-block; padding: 4px 18px; background: #fffbeb; border: 1.5px solid #d97706; border-radius: 20px; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #d97706; }
+
+  .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; font-size: 12px; margin-bottom: 20px; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+  .meta-row { display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 3px; }
+  .meta-label { font-weight: 700; color: #64748b; }
+  .meta-val { font-weight: 800; color: #0f172a; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 18px; }
+  th { background: #f1f5f9; padding: 8px 12px; font-weight: 800; text-align: left; border: 1px solid #cbd5e1; font-size: 11px; text-transform: uppercase; color: #334155; }
+  td { padding: 8px 12px; border: 1px solid #e2e8f0; }
+  .td-right { text-align: right; font-weight: 700; font-family: monospace; font-size: 12px; }
+  .td-center { text-align: center; font-weight: 700; }
+
+  .net-box { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: #fffbeb; border: 1.5px solid #d97706; border-radius: 8px; margin-bottom: 16px; }
+  .net-label { font-size: 13px; font-weight: 800; color: #92400e; }
+  .net-val { font-size: 19px; font-weight: 900; color: #d97706; font-family: monospace; }
+  .words-text { font-size: 11px; color: #475569; font-style: italic; margin-bottom: 22px; }
+
+  .sig-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 36px; }
+  .sig-box { text-align: center; width: 180px; }
+  .sig-line { border-top: 1.5px solid #64748b; padding-top: 5px; font-size: 11px; font-weight: 700; color: #334155; }
+  .stamp { display: inline-block; width: 80px; height: 80px; border: 2.5px solid #d97706; border-radius: 50%; color: #d97706; font-size: 8px; font-weight: 800; text-align: center; padding-top: 18px; text-transform: uppercase; transform: rotate(7deg); }
+</style>
+</head>
+<body>
+  <div class="doc">
+    <div class="school-header">
+      <div class="school-name">Bajrang Shikshan Sansthan</div>
+      <div class="school-sub">Sec. Sch. Padu Khurd, Nagaur - 341021 (Raj.) | Book Store & Uniform Desk</div>
+    </div>
+
+    <div class="badge-wrap">
+      <span class="badge">School Book Store & Stationery Sale Receipt</span>
+    </div>
+
+    <div class="meta-grid">
+      <div class="meta-row"><span class="meta-label">Student Name:</span><span class="meta-val">Mohit Sen</span></div>
+      <div class="meta-row"><span class="meta-label">Bill / Cash Memo No:</span><span class="meta-val">BSS-STR-2026-319</span></div>
+      <div class="meta-row"><span class="meta-label">Class:</span><span class="meta-val">Class 9th</span></div>
+      <div class="meta-row"><span class="meta-label">Date:</span><span class="meta-val">10 Jul 2026</span></div>
+      <div class="meta-row"><span class="meta-label">Admission No:</span><span class="meta-val">ADM-2026-194</span></div>
+      <div class="meta-row"><span class="meta-label">Payment Mode:</span><span class="meta-val">Cash</span></div>
+    </div>
+
+    <!-- EXACT 5 STANDARD RETAIL COLUMNS -->
+    <table>
+      <thead>
+        <tr>
+          <th class="td-center" style="width: 50px;">S.No</th>
+          <th>Item Description</th>
+          <th class="td-center" style="width: 70px;">Qty</th>
+          <th style="text-align: right; width: 110px;">Rate</th>
+          <th style="text-align: right; width: 120px;">Total Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="td-center">1</td><td>NCERT Class 9th Textbook Set (Complete)</td><td class="td-center">1 Set</td><td class="td-right">₹1,250.00</td><td class="td-right">₹1,250.00</td></tr>
+        <tr><td class="td-center">2</td><td>School Customized Notebooks (Pack of 12)</td><td class="td-center">1 Pk</td><td class="td-right">₹480.00</td><td class="td-right">₹480.00</td></tr>
+        <tr><td class="td-center">3</td><td>School Uniform Set (Shirt + Trouser + Tie)</td><td class="td-center">2 Sets</td><td class="td-right">₹900.00</td><td class="td-right">₹1,800.00</td></tr>
+        <tr><td class="td-center">4</td><td>School Belt & House Badge</td><td class="td-center">1 Set</td><td class="td-right">₹150.00</td><td class="td-right">₹150.00</td></tr>
+      </tbody>
+    </table>
+
+    <div class="net-box">
+      <span class="net-label">Grand Total Paid:</span>
+      <span class="net-val">₹3,680.00</span>
+    </div>
+
+    <div class="words-text">Amount in words: Three Thousand Six Hundred Eighty Rupees Only.</div>
+
+    <div class="sig-row">
+      <div class="sig-box"><div class="sig-line">Customer / Student Signature</div></div>
+      <div class="stamp">BSS<br>Padu Khurd<br><b>PAID</b><br>Store Counter</div>
+      <div class="sig-box"><div class="sig-line">Store In-charge</div></div>
+    </div>
+  </div>
+</body>
+</html>
+        

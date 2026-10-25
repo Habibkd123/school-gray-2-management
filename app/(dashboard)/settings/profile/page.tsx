@@ -10,11 +10,12 @@ import RolesPermissionsPage from "../roles/page";
 import SystemBackupPage from "../backup/page";
 import ClassFeesSettingsTab from "../components/ClassFeesSettingsTab";
 import FinanceSettingsTab from "../components/FinanceSettingsTab";
+import ReceiptSettingsTab from "../components/ReceiptSettingsTab";
 import {
   RefreshCw, Upload, Edit, EyeOff, Eye, Save, X,
   Loader2, CheckCircle2, AlertCircle, User, Lock, MapPin,
   TrendingUp, ClipboardList, CreditCard, Users, Mail, MessageSquare,
-  PieChart, Wallet, Book, Sparkles, ShieldCheck, SlidersHorizontal
+  PieChart, Wallet, Book, Sparkles, ShieldCheck, SlidersHorizontal, Receipt
 } from "lucide-react";
 
 interface ParentProfile {
@@ -112,13 +113,13 @@ export default function ProfilePage() {
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   // Tab control
-  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "finance" | "login" | "class-fees" | "seo" | "upcoming" | "backup">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "finance" | "login" | "class-fees" | "seo" | "upcoming" | "backup" | "receipt-settings">("profile");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
-      if (tab === "backup" || tab === "roles" || tab === "academic" || tab === "login" || tab === "finance" || tab === "fees" || tab === "salary" || tab === "class-fees" || tab === "upcoming") {
+      if (tab === "backup" || tab === "roles" || tab === "academic" || tab === "login" || tab === "finance" || tab === "fees" || tab === "salary" || tab === "class-fees" || tab === "upcoming" || tab === "receipt-settings") {
         if (tab === "class-fees" || tab === "fees" || tab === "salary") {
           setActiveTab("finance");
         } else {
@@ -134,7 +135,7 @@ export default function ProfilePage() {
       try {
         const stored = sessionStorage.getItem(`sm_profile_${user.id}`);
         if (stored) return JSON.parse(stored);
-      } catch {}
+      } catch { }
     }
     return null;
   });
@@ -153,7 +154,7 @@ export default function ProfilePage() {
           const parsed = JSON.parse(stored);
           if (parsed.name) return parsed.name;
         }
-      } catch {}
+      } catch { }
     }
     return user?.name || "";
   });
@@ -165,7 +166,7 @@ export default function ProfilePage() {
           const parsed = JSON.parse(stored);
           if (parsed.email) return parsed.email;
         }
-      } catch {}
+      } catch { }
     }
     return user?.email || "";
   });
@@ -177,7 +178,7 @@ export default function ProfilePage() {
           const parsed = JSON.parse(stored);
           if (parsed.phone) return parsed.phone;
         }
-      } catch {}
+      } catch { }
     }
     return "";
   });
@@ -189,7 +190,7 @@ export default function ProfilePage() {
           const parsed = JSON.parse(stored);
           if (parsed.address) return parsed.address;
         }
-      } catch {}
+      } catch { }
     }
     return "";
   });
@@ -201,7 +202,7 @@ export default function ProfilePage() {
           const parsed = JSON.parse(stored);
           if (parsed.occupation) return parsed.occupation;
         }
-      } catch {}
+      } catch { }
     }
     return "";
   });
@@ -226,7 +227,7 @@ export default function ProfilePage() {
           const parsed = JSON.parse(stored);
           if (parsed.photo_url) return parsed.photo_url;
         }
-      } catch {}
+      } catch { }
     }
     return "";
   });
@@ -261,7 +262,7 @@ export default function ProfilePage() {
       try {
         const stored = sessionStorage.getItem("sm_school_meta_config");
         if (stored) return JSON.parse(stored) as MetaFormState;
-      } catch {}
+      } catch { }
     }
     return {
       meta_title: "",
@@ -289,7 +290,7 @@ export default function ProfilePage() {
         if (typeof window !== "undefined") {
           try {
             sessionStorage.setItem("sm_school_meta_config", JSON.stringify(json.data));
-          } catch {}
+          } catch { }
         }
       }
     } catch { /* silently fail */ } finally {
@@ -312,7 +313,7 @@ export default function ProfilePage() {
         if (typeof window !== "undefined") {
           try {
             sessionStorage.setItem("sm_school_meta_config", JSON.stringify(metaForm));
-          } catch {}
+          } catch { }
         }
         setMetaSuccess("SEO settings saved successfully!");
         setTimeout(() => setMetaSuccess(""), 3500);
@@ -353,7 +354,7 @@ export default function ProfilePage() {
           if (typeof window !== "undefined" && user?.id) {
             try {
               sessionStorage.setItem(`sm_profile_${user.id}`, JSON.stringify(data.data));
-            } catch {}
+            } catch { }
           }
         }
       } else if (isTeacher) {
@@ -369,7 +370,7 @@ export default function ProfilePage() {
           if (typeof window !== "undefined" && user?.id) {
             try {
               sessionStorage.setItem(`sm_profile_${user.id}`, JSON.stringify(data.data));
-            } catch {}
+            } catch { }
           }
         }
       } else {
@@ -415,7 +416,7 @@ export default function ProfilePage() {
         if (typeof window !== "undefined" && user?.id) {
           try {
             sessionStorage.setItem(`sm_profile_${user.id}`, JSON.stringify(data.data));
-          } catch {}
+          } catch { }
         }
         cacheSync.invalidate("profile");
         setTimeout(() => setSaveSuccess(false), 3000);
@@ -567,16 +568,18 @@ export default function ProfilePage() {
             {activeTab === "profile"
               ? "Profile"
               : activeTab === "roles"
-              ? "Roles & Permissions"
-              : activeTab === "academic"
-              ? "Academic Settings"
-              : activeTab === "finance" || activeTab === "class-fees"
-              ? "Finance Settings"
-              : activeTab === "backup"
-              ? "Data Backup & PDF Export"
-              : activeTab === "upcoming"
-              ? "Upcoming Features"
-              : "Login Settings"}
+                ? "Roles & Permissions"
+                : activeTab === "academic"
+                  ? "Academic Settings"
+                  : activeTab === "finance" || activeTab === "class-fees"
+                    ? "Finance Settings"
+                    : activeTab === "backup"
+                      ? "Data Backup & PDF Export"
+                      : activeTab === "receipt-settings"
+                        ? "Receipt Settings"
+                        : activeTab === "upcoming"
+                          ? "Upcoming Features"
+                          : "Login Settings"}
           </h1>
           <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
             <span>Dashboard</span>
@@ -587,16 +590,18 @@ export default function ProfilePage() {
               {activeTab === "profile"
                 ? "Profile"
                 : activeTab === "roles"
-                ? "Roles & Permissions"
-                : activeTab === "academic"
-                ? "Academic Settings"
-                : activeTab === "finance" || activeTab === "class-fees"
-                ? "Finance Settings"
-                : activeTab === "backup"
-                ? "Data Backup & PDF Export"
-                : activeTab === "upcoming"
-                ? "Upcoming Features"
-                : "Login Settings"}
+                  ? "Roles & Permissions"
+                  : activeTab === "academic"
+                    ? "Academic Settings"
+                    : activeTab === "finance" || activeTab === "class-fees"
+                      ? "Finance Settings"
+                      : activeTab === "backup"
+                        ? "Data Backup & PDF Export"
+                        : activeTab === "receipt-settings"
+                          ? "Receipt Settings"
+                          : activeTab === "upcoming"
+                            ? "Upcoming Features"
+                            : "Login Settings"}
             </span>
           </div>
         </div>
@@ -658,6 +663,13 @@ export default function ProfilePage() {
             >
               <ShieldCheck className="w-4 h-4 text-emerald-500" /> Data Backup & PDF Export
             </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("receipt-settings")}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${activeTab === "receipt-settings" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
+            >
+              <Receipt className="w-4 h-4 text-primary" /> Receipt Settings
+            </button>
           </>
         )}
         <button
@@ -699,6 +711,8 @@ export default function ProfilePage() {
         <RolesPermissionsPage isEmbedded={true} />
       ) : (activeTab === "finance" || activeTab === "class-fees") && isAdmin ? (
         <FinanceSettingsTab defaultSubTab={activeTab === "class-fees" ? "class-fees" : "fees"} />
+      ) : activeTab === "receipt-settings" && isAdmin ? (
+        <ReceiptSettingsTab />
       ) : activeTab === "seo" && isAdmin ? (
         /* ── SEO / Meta Settings Tab ─────────────────────────────── */
         <div className="space-y-5 text-left max-w-2xl">
