@@ -40,7 +40,7 @@ export default function ClassTeacherAssignmentPage() {
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   const { classes, isLoading: loadingClasses, fetchClasses } = useClasses({ filterByYear: true });
-  const { teachers, isLoading: loadingTeachers, fetchTeachers } = useTeachers();
+  const { teachers, isLoading: loadingTeachers, fetchTeachers } = useTeachers({ limit: "all" });
   const { assignments, isLoading: loadingAssignments, fetchAssignments, createAssignment, updateAssignment, deleteAssignment } = useTeacherAssignment();
   const [classStudentsCount, setClassStudentsCount] = React.useState(0);
 
@@ -85,9 +85,21 @@ export default function ClassTeacherAssignmentPage() {
   // Active Report Tab State
   const [activeReportTab, setActiveReportTab] = useState<"list" | "workload" | "unassigned">("list");
 
-  // Filter classes according to selected academic session
+  // Filter classes according to selected academic session & natural educational order
   const classesForYear = useMemo(() => {
-    return classes.filter(c => !c.academic_year || c.academic_year === filterYear);
+    const earlyGrades = ["playgroup", "nursery", "lkg", "ukg", "kg", "prep"];
+    return classes
+      .filter(c => !c.academic_year || c.academic_year === filterYear)
+      .sort((a, b) => {
+        const aLower = (a.name || "").toLowerCase().trim();
+        const bLower = (b.name || "").toLowerCase().trim();
+        const aEarlyIdx = earlyGrades.findIndex(g => aLower === g || aLower.startsWith(g));
+        const bEarlyIdx = earlyGrades.findIndex(g => bLower === g || bLower.startsWith(g));
+        if (aEarlyIdx !== -1 && bEarlyIdx !== -1) return aEarlyIdx - bEarlyIdx;
+        if (aEarlyIdx !== -1) return -1;
+        if (bEarlyIdx !== -1) return 1;
+        return (a.name || "").localeCompare(b.name || "", undefined, { numeric: true, sensitivity: "base" });
+      });
   }, [classes, filterYear]);
 
   // Reset selected class if it does not belong to the selected academic session
@@ -232,6 +244,39 @@ export default function ClassTeacherAssignmentPage() {
     const assignedClassIds = new Set(activeClassAssignments.map(a => a.class_id?._id).filter(Boolean));
     return classesForYear.filter(c => !assignedClassIds.has(c._id));
   }, [classesForYear, assignments, filterYear]);
+
+  // Filtered unassigned classes matching current filters
+  const filteredUnassignedClasses = useMemo(() => {
+    return unassignedClassesList.filter(c => {
+      if (filterClassId && c._id !== filterClassId) return false;
+      if (filterSection && c.section !== filterSection) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase().trim();
+        const cName = c.name || "";
+        const cSection = c.section || "";
+        const cCode = c.class_code || "";
+        if (!cName.toLowerCase().includes(q) && !cSection.toLowerCase().includes(q) && !cCode.toLowerCase().includes(q)) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [unassignedClassesList, filterClassId, filterSection, searchQuery]);
+
+  // Filtered teachers for workload audit tab
+  const filteredActiveTeachers = useMemo(() => {
+    return activeTeachers.filter(t => {
+      if (filterTeacherId && t._id !== filterTeacherId) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase().trim();
+        const match = t.name.toLowerCase().includes(q) ||
+          (t.employee_id || "").toLowerCase().includes(q) ||
+          (t.department || "").toLowerCase().includes(q);
+        if (!match) return false;
+      }
+      return true;
+    });
+  }, [activeTeachers, filterTeacherId, searchQuery]);
 
   // Load edit fields
   const handleOpenEdit = (assign: PopulatedTeacherAssignment) => {
@@ -593,7 +638,7 @@ export default function ClassTeacherAssignmentPage() {
             : "border-transparent text-slate-500 hover:text-slate-700"
             }`}
         >
-          Unassigned Classes Mapping ({unassignedClassesList.length})
+          Unassigned Classes Mapping ({filteredUnassignedClasses.length})
         </button>
       </div>
 
@@ -744,7 +789,7 @@ export default function ClassTeacherAssignmentPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border font-semibold">
-                {activeTeachers.map(t => {
+                {filteredActiveTeachers.map(t => {
                   const workload = computeTeacherWorkload(t._id);
                   return (
                     <tr key={t._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
@@ -782,9 +827,11 @@ export default function ClassTeacherAssignmentPage() {
             <div className="p-8 text-center text-slate-450 font-bold">
               No classes configured for Session {filterYear}.
             </div>
-          ) : unassignedClassesList.length === 0 ? (
+          ) : filteredUnassignedClasses.length === 0 ? (
             <div className="p-8 text-center text-slate-450 font-bold">
-              All active classes have been mapped with a Class Teacher!
+              {filterClassId || filterSection || searchQuery
+                ? "No unassigned classes match the selected filter."
+                : "All active classes have been mapped with a Class Teacher!"}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -800,7 +847,7 @@ export default function ClassTeacherAssignmentPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {unassignedClassesList.map(c => (
+                  {filteredUnassignedClasses.map(c => (
                     <tr key={c._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="px-4 py-4 font-sans font-bold text-slate-500">{c.class_code || "—"}</td>
                       <td className="px-4 py-4 font-bold text-slate-900 dark:text-white">{c.name}</td>

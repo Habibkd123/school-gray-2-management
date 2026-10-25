@@ -9,11 +9,12 @@ import { cacheSync } from "@/lib/utils/cache-sync";
 import RolesPermissionsPage from "../roles/page";
 import SystemBackupPage from "../backup/page";
 import ClassFeesSettingsTab from "../components/ClassFeesSettingsTab";
+import FinanceSettingsTab from "../components/FinanceSettingsTab";
 import {
   RefreshCw, Upload, Edit, EyeOff, Eye, Save, X,
   Loader2, CheckCircle2, AlertCircle, User, Lock, MapPin,
   TrendingUp, ClipboardList, CreditCard, Users, Mail, MessageSquare,
-  PieChart, Wallet, Book, Sparkles, ShieldCheck
+  PieChart, Wallet, Book, Sparkles, ShieldCheck, SlidersHorizontal
 } from "lucide-react";
 
 interface ParentProfile {
@@ -111,14 +112,18 @@ export default function ProfilePage() {
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   // Tab control
-  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "login" | "class-fees" | "seo" | "upcoming" | "backup">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "roles" | "academic" | "finance" | "login" | "class-fees" | "seo" | "upcoming" | "backup">("profile");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
-      if (tab === "backup" || tab === "roles" || tab === "academic" || tab === "login" || tab === "class-fees" || tab === "upcoming") {
-        setActiveTab(tab as any);
+      if (tab === "backup" || tab === "roles" || tab === "academic" || tab === "login" || tab === "finance" || tab === "fees" || tab === "salary" || tab === "class-fees" || tab === "upcoming") {
+        if (tab === "class-fees" || tab === "fees" || tab === "salary") {
+          setActiveTab("finance");
+        } else {
+          setActiveTab(tab as any);
+        }
       }
     }
   }, []);
@@ -556,50 +561,52 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6">
       {/* Header */}
-      {activeTab !== "roles" && (
-        <div className="page-header mb-2">
-          <div>
-            <h1 className="page-title">
+      <div className="page-header mb-2">
+        <div>
+          <h1 className="page-title">
+            {activeTab === "profile"
+              ? "Profile"
+              : activeTab === "roles"
+              ? "Roles & Permissions"
+              : activeTab === "academic"
+              ? "Academic Settings"
+              : activeTab === "finance" || activeTab === "class-fees"
+              ? "Finance Settings"
+              : activeTab === "backup"
+              ? "Data Backup & PDF Export"
+              : activeTab === "upcoming"
+              ? "Upcoming Features"
+              : "Login Settings"}
+          </h1>
+          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+            <span>Dashboard</span>
+            <span>/</span>
+            <span>Settings</span>
+            <span>/</span>
+            <span className="text-slate-900 dark:text-white font-medium">
               {activeTab === "profile"
                 ? "Profile"
+                : activeTab === "roles"
+                ? "Roles & Permissions"
                 : activeTab === "academic"
                 ? "Academic Settings"
-                : activeTab === "class-fees"
-                ? "Default Class Fees"
+                : activeTab === "finance" || activeTab === "class-fees"
+                ? "Finance Settings"
                 : activeTab === "backup"
                 ? "Data Backup & PDF Export"
                 : activeTab === "upcoming"
                 ? "Upcoming Features"
                 : "Login Settings"}
-            </h1>
-            <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
-              <span>Dashboard</span>
-              <span>/</span>
-              <span>Settings</span>
-              <span>/</span>
-              <span className="text-slate-900 dark:text-white font-medium">
-                {activeTab === "profile"
-                  ? "Profile"
-                  : activeTab === "academic"
-                  ? "Academic Settings"
-                  : activeTab === "class-fees"
-                  ? "Default Class Fees"
-                  : activeTab === "backup"
-                  ? "Data Backup & PDF Export"
-                  : activeTab === "upcoming"
-                  ? "Upcoming Features"
-                  : "Login Settings"}
-              </span>
-            </div>
+            </span>
           </div>
-          <button
-            onClick={handleRefreshClick}
-            className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
         </div>
-      )}
+        <button
+          onClick={handleRefreshClick}
+          className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center"
+        >
+          <RefreshCw className="w-4 h-4" />
+        </button>
+      </div>
 
       {/* Tabs Switcher */}
       <div className="flex border-b border-border gap-6 overflow-x-auto no-scrollbar">
@@ -624,10 +631,12 @@ export default function ProfilePage() {
               Academic Settings
             </button>
             <button
-              onClick={() => setActiveTab("class-fees")}
-              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap ${activeTab === "class-fees" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
+              id="tab-settings-finance"
+              onClick={() => setActiveTab("finance")}
+              className={`pb-3 text-[14px] font-semibold border-b-2 -mb-px transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${activeTab === "finance" || activeTab === "class-fees" ? "border-primary text-primary" : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-300"} dark:text-slate-400`}
             >
-              Class Fees
+              <CreditCard className="w-4 h-4 text-emerald-500" />
+              <span>Finance</span>
             </button>
             <button
               onClick={() => setActiveTab("login")}
@@ -687,9 +696,9 @@ export default function ProfilePage() {
       ) : activeTab === "backup" && isAdmin ? (
         <SystemBackupPage isEmbedded={true} />
       ) : activeTab === "roles" && isAdmin ? (
-        <RolesPermissionsPage />
-      ) : activeTab === "class-fees" && isAdmin ? (
-        <ClassFeesSettingsTab />
+        <RolesPermissionsPage isEmbedded={true} />
+      ) : (activeTab === "finance" || activeTab === "class-fees") && isAdmin ? (
+        <FinanceSettingsTab defaultSubTab={activeTab === "class-fees" ? "class-fees" : "fees"} />
       ) : activeTab === "seo" && isAdmin ? (
         /* ── SEO / Meta Settings Tab ─────────────────────────────── */
         <div className="space-y-5 text-left max-w-2xl">

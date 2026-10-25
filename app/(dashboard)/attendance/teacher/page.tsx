@@ -23,18 +23,26 @@ import { useAppState } from "@/app/context/store";
 import { PrintService } from "@/app/lib/print-service";
 import { cacheSync } from "@/lib/utils/cache-sync";
 
+const ACADEMIC_YEARS = ["2024-2025", "2025-2026", "2026-2027", "2027-2028"];
+
 export default function TeacherAttendancePage() {
   const { academicYear } = useAppState();
 
   const { attendance, isLoading: loadingAttendance, error, fetchAttendance, saveAttendance } = useTeacherAttendance();
-  const { teachers, fetchTeachers, isLoading: loadingTeachers } = useTeachers();
+  const { teachers, fetchTeachers, isLoading: loadingTeachers } = useTeachers({ limit: "all" });
 
   // Filters
-  const [filterYear, setFilterYear] = useState(academicYear || "2026");
+  const [filterYear, setFilterYear] = useState(academicYear || "2026-2027");
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [deptFilter, setDeptFilter] = useState("");
+
+  useEffect(() => {
+    if (academicYear) {
+      setFilterYear(academicYear);
+    }
+  }, [academicYear]);
 
   // Attendance State (0ms instant cache load)
   const [attendanceRecords, setAttendanceRecords] = useState<
@@ -50,7 +58,7 @@ export default function TeacherAttendancePage() {
     if (typeof window !== "undefined") {
       try {
         const today = new Date().toISOString().split("T")[0];
-        const yr = academicYear || "2026";
+        const yr = academicYear || "2026-2027";
         const raw = sessionStorage.getItem(`cache_ta_${yr}_${today}`);
         if (raw) {
           const parsed = JSON.parse(raw);
@@ -96,7 +104,7 @@ export default function TeacherAttendancePage() {
       fetchAttendance({
         academic_year: filterYear,
         date: filterDate,
-      }, Object.keys(attendanceRecords).length > 0);
+      });
     }
   }, [filterYear, filterDate, fetchAttendance]);
 
@@ -305,10 +313,13 @@ export default function TeacherAttendancePage() {
   // Local filter logic
   const filteredTeachers = useMemo(() => {
     return teachers.filter(t => {
-      const matchSearch = !searchQuery
+      const q = searchQuery.toLowerCase().trim();
+      const matchSearch = !q
         ? true
-        : t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (t.employee_id || "").toLowerCase().includes(searchQuery.toLowerCase());
+        : t.name.toLowerCase().includes(q) ||
+          (t.employee_id || "").toLowerCase().includes(q) ||
+          (t.designation || "").toLowerCase().includes(q) ||
+          (t.phone || "").toLowerCase().includes(q);
 
       const rec = attendanceRecords[t._id];
       const matchStatus = !statusFilter
@@ -327,10 +338,11 @@ export default function TeacherAttendancePage() {
   // Extract unique departments for dropdown
   const departments = useMemo(() => {
     const set = new Set<string>();
+    set.add("Academic");
     teachers.forEach(t => {
-      if (t.department) set.add(t.department);
+      if (t.department && t.department.trim()) set.add(t.department.trim());
     });
-    return Array.from(set);
+    return Array.from(set).sort();
   }, [teachers]);
 
   // Attendance metrics summary
@@ -429,8 +441,9 @@ export default function TeacherAttendancePage() {
                 onChange={(e) => setFilterYear(e.target.value)}
                 className="w-full pl-3.5 pr-8 py-2 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] border border-border text-[13px] font-medium rounded-sm outline-none cursor-pointer appearance-none focus:border-primary/50 transition-colors shadow-sm"
               >
-                <option value="2026">Session 2026</option>
-                <option value="2027">Session 2027</option>
+                {ACADEMIC_YEARS.map((yr) => (
+                  <option key={yr} value={yr}>Session {yr}</option>
+                ))}
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
             </div>
@@ -475,6 +488,8 @@ export default function TeacherAttendancePage() {
                 <option value="present">Present</option>
                 <option value="absent">Absent</option>
                 <option value="leave">Leave</option>
+                <option value="late">Late</option>
+                <option value="half_day">Half Day</option>
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
             </div>
@@ -646,8 +661,8 @@ export default function TeacherAttendancePage() {
                             <option value="present">Present</option>
                             <option value="absent">Absent</option>
                             <option value="leave">Leave</option>
-                            {/* <option value="late">Late</option>
-                            <option value="half_day">Half Day</option> */}
+                            <option value="late">Late</option>
+                            <option value="half_day">Half Day</option>
                           </select>
                         </td>
                         {/* <td className="px-4 py-4">

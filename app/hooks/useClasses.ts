@@ -58,7 +58,7 @@ function getStoredClasses(): ApiClass[] | null {
     const raw = sessionStorage.getItem(SESSION_CLASSES_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Date.now() - parsed.timestamp < CACHE_TTL_MS && Array.isArray(parsed.classes) && parsed.classes.length > 0) {
+      if (Array.isArray(parsed.classes) && parsed.classes.length > 0) {
         return parsed.classes;
       }
     }
@@ -120,7 +120,7 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
 
   // ─── Fetch all classes ──────────────────────────────────────────
   const fetchClasses = useCallback(async (params: FetchClassesParams = {}) => {
-    const isFiltered = !!(params.search || params.academic_year || params.section || params.sort || params.page || (params.school_id && params.school_id !== "all") || (params.status && params.status !== "" && params.status !== "Active"));
+    const isFiltered = !!(params.search || params.academic_year || params.section || params.sort || params.page || (params.school_id && params.school_id !== "all") || (params.status && params.status !== "" && params.status !== "all"));
     const isAll = params.limit === "all" || !params.limit;
     const isFresh = _classesCache !== null && _classesCache.length > 0 && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
 
@@ -238,15 +238,29 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       });
       writeSessionQuery(cacheKey, data);
 
-      // Only cache unfiltered ALL results
-      if (isAll && !isFiltered) {
-        _classesCache = data.classes;
-        _cacheTimestamp = Date.now();
-        _listeners.forEach(fn => fn(data.classes));
+      let finalClasses = data.classes;
+      // If year-filtered request returned 0 classes, gracefully fallback to all available classes to prevent empty dropdowns
+      if (params.academic_year && (!finalClasses || finalClasses.length === 0)) {
+        const fallback = _classesCache ?? getStoredClasses();
+        if (fallback && fallback.length > 0) {
+          finalClasses = fallback;
+        }
       }
 
-      setClasses(data.classes);
-      setTotal(data.total);
+      // Only cache unfiltered ALL results
+      if (isAll && !isFiltered) {
+        _classesCache = finalClasses;
+        _cacheTimestamp = Date.now();
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(SESSION_CLASSES_KEY, JSON.stringify({ classes: finalClasses, timestamp: Date.now() }));
+          } catch {}
+        }
+        _listeners.forEach(fn => fn(finalClasses));
+      }
+
+      setClasses(finalClasses);
+      setTotal(finalClasses.length);
       setTotalPages(data.totalPages);
       setCurrentPage(data.currentPage);
     } catch (err) {
@@ -297,6 +311,11 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       );
       _classesCache = sorted;
       _cacheTimestamp = Date.now();
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem(SESSION_CLASSES_KEY, JSON.stringify({ classes: sorted, timestamp: Date.now() }));
+        } catch {}
+      }
       _listeners.forEach(fn => fn(sorted));
       syncInvalidateCache("classes");
 
@@ -325,6 +344,11 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       if (_classesCache) {
         _classesCache = _classesCache.map(c => c._id === id ? data.data : c);
         _cacheTimestamp = Date.now();
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(SESSION_CLASSES_KEY, JSON.stringify({ classes: _classesCache, timestamp: Date.now() }));
+          } catch {}
+        }
         _listeners.forEach(fn => fn(_classesCache!));
       } else {
         invalidateCache();
@@ -352,6 +376,11 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       if (_classesCache) {
         _classesCache = _classesCache.filter(c => c._id !== id);
         _cacheTimestamp = Date.now();
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.setItem(SESSION_CLASSES_KEY, JSON.stringify({ classes: _classesCache, timestamp: Date.now() }));
+          } catch {}
+        }
         _listeners.forEach(fn => fn(_classesCache!));
       } else {
         invalidateCache();

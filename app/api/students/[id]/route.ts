@@ -4,6 +4,7 @@ import Student from "@/lib/models/Student";
 import { Parent } from "@/lib/models";
 import User from "@/lib/models/User";
 import Class from "@/lib/models/Class";
+import StudentFeeAssignment from "@/lib/models/StudentFeeAssignment";
 import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 import { invalidateStudentsServerCache } from "../route";
@@ -294,6 +295,30 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         { success: false, message: "Student not found" },
         { status: 404 }
       );
+    }
+
+    if (body.fee_types && Array.isArray(body.fee_types)) {
+      try {
+        const targetYear = (updateData.academic_year as string) || student.academic_year || "2026-2027";
+        const total_amount = body.fee_types
+          .filter((f: any) => f.is_enabled)
+          .reduce((sum: number, f: any) => sum + Number(f.amount || 0), 0);
+
+        await StudentFeeAssignment.findOneAndUpdate(
+          {
+            school_id: new mongoose.Types.ObjectId(schoolId as string),
+            student_id: new mongoose.Types.ObjectId(id),
+            academic_year: targetYear,
+          },
+          {
+            fee_types: body.fee_types,
+            total_amount,
+          },
+          { upsert: true }
+        );
+      } catch (fErr) {
+        console.warn("[PUT Student] Error updating fee assignment:", fErr);
+      }
     }
 
     _singleStudentCache.clear();

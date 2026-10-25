@@ -95,13 +95,6 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
     },
 
     {
-      name: "Finance", icon: <Building2 className="w-4 h-4" />, subItems: [
-        { name: "Fees", href: "/fees" },
-        { name: "Salary", href: "/salary" }
-      ]
-    },
-
-    {
       name: "Attendance", icon: <Clock className="w-4 h-4" />, subItems: [
         { name: "Student Attendance", href: "/attendance/student" },
         { name: "Teacher Attendance", href: "/attendance/teacher" },
@@ -152,13 +145,7 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Templates", href: "/documents/templates" },
       ]
     },
-    {
-      name: "Settings", href: "/settings/profile", icon: <Settings2 className="w-4 h-4" />,
-      // subItems: [
-      //   { name: "Profile & Config", href: "/settings/profile" },
-      //   { name: "Data Backup & PDF Export", href: "/settings/backup" }
-      // ]
-    }
+    { name: "Settings", href: "/settings/profile", icon: <Settings2 className="w-4 h-4" /> }
   ];
 
   const teacherLinks = [

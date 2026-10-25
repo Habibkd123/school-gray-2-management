@@ -27,7 +27,7 @@ function readSessionCache(): ApiSubjectMaster[] | null {
     const raw = sessionStorage.getItem(SS_KEY);
     if (!raw) return null;
     const p = JSON.parse(raw);
-    if (Date.now() - p.ts < CACHE_TTL_MS) return p.data;
+    if (Array.isArray(p.data) && p.data.length > 0) return p.data;
   } catch {}
   return null;
 }
@@ -67,7 +67,10 @@ export function useSubjectMaster(options?: { skip?: boolean; limit?: number }) {
       if (params.page) qs.set("page", String(params.page));
       if (params.limit) qs.set("limit", String(params.limit));
 
-      const res = await fetch(`/api/subject-master?${qs}`, { headers: getAuthHeaders() });
+      const res = await fetch(`/api/subject-master?${qs}`, {
+        headers: getAuthHeaders(),
+        cache: "no-store",
+      });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch subjects");
 
@@ -92,7 +95,7 @@ export function useSubjectMaster(options?: { skip?: boolean; limit?: number }) {
 
   useEffect(() => {
     if (options?.skip || !authReady) return;
-    const isFresh = (_subjectsCache !== null || readSessionCache() !== null) && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
+    const isFresh = _subjectsCache !== null && (Date.now() - _cacheTimestamp) < CACHE_TTL_MS;
     if (isFresh) return;
     fetchSubjects({ limit: options?.limit ?? 1000 });
   }, [fetchSubjects, options?.skip, options?.limit, authReady]);
@@ -100,7 +103,7 @@ export function useSubjectMaster(options?: { skip?: boolean; limit?: number }) {
   // Central cross-tab cache sync
   useEffect(() => {
     return cacheSync.subscribe("subject_master", () => {
-      invalidateCache();
+      _cacheTimestamp = 0;
       if (!options?.skip) {
         fetchSubjects({ limit: options?.limit ?? 1000 });
       }
@@ -116,7 +119,17 @@ export function useSubjectMaster(options?: { skip?: boolean; limit?: number }) {
       });
       const data = await res.json();
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed" };
-      invalidateCache();
+      if (data.data) {
+        _subjectsCache = [...(_subjectsCache ?? []), data.data];
+        _cacheTimestamp = Date.now();
+        writeSessionCache(_subjectsCache);
+        _listeners.forEach(fn => fn(_subjectsCache!));
+        setSubjects(prev => {
+          if (prev.some(s => s._id === data.data._id)) return prev;
+          return [data.data, ...prev];
+        });
+        setTotal(t => t + 1);
+      }
       syncInvalidateCache("subject_master");
       return { success: true, message: "Subject created", data: data.data };
     } catch { return { success: false, message: "Network error" }; }
@@ -133,11 +146,13 @@ export function useSubjectMaster(options?: { skip?: boolean; limit?: number }) {
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed" };
       if (_subjectsCache) {
         _subjectsCache = _subjectsCache.map(s => s._id === id ? data.data : s);
+        _cacheTimestamp = Date.now();
+        writeSessionCache(_subjectsCache);
         _listeners.forEach(fn => fn(_subjectsCache!));
       }
-      syncInvalidateCache("subject_master");
       setSubjects(prev => prev.map(s => s._id === id ? data.data : s));
-      return { success: true, message: "Subject updated" };
+      syncInvalidateCache("subject_master");
+      return { success: true, message: "Subject updated", data: data.data };
     } catch { return { success: false, message: "Network error" }; }
   };
 
@@ -148,10 +163,13 @@ export function useSubjectMaster(options?: { skip?: boolean; limit?: number }) {
       if (!res.ok || !data.success) return { success: false, message: data.message || "Failed" };
       if (_subjectsCache) {
         _subjectsCache = _subjectsCache.filter(s => s._id !== id);
+        _cacheTimestamp = Date.now();
+        writeSessionCache(_subjectsCache);
         _listeners.forEach(fn => fn(_subjectsCache!));
       }
-      syncInvalidateCache("subject_master");
       setSubjects(prev => prev.filter(s => s._id !== id));
+      setTotal(t => Math.max(0, t - 1));
+      syncInvalidateCache("subject_master");
       return { success: true, message: "Subject deleted" };
     } catch { return { success: false, message: "Network error" }; }
   };

@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback } from "react";
 import {
-  Plus, Search, RefreshCcw, Printer, Download, ChevronDown,
+  Plus, Search, RefreshCcw, Download, ChevronDown,
   MoreVertical, Edit, Trash2, Filter, ArrowUpDown, FileText,
   Loader2, AlertCircle, BookOpen, RotateCcw
 } from "lucide-react";
@@ -49,7 +49,7 @@ export default function AcademicClassesPage() {
 
   // Search / filter / pagination
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
+  const [filterStatus, setFilterStatus] = useState("Active");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(1);
   const [isExportOpen, setIsExportOpen] = useState(false);
@@ -64,7 +64,7 @@ export default function AcademicClassesPage() {
     fetchClasses({
       search: overrides.search ?? searchQuery,
       sort: overrides.sort ?? sortOrder,
-      status: overrides.status !== undefined ? overrides.status : (filterStatus || undefined),
+      status: overrides.status !== undefined ? overrides.status : filterStatus,
       page: overrides.p ?? page,
       limit: PAGE_SIZE,
       academic_year: academicYear,
@@ -75,7 +75,7 @@ export default function AcademicClassesPage() {
 
   React.useEffect(() => {
     if (!authReady) return;
-    fetchClasses({ search: searchQuery, sort: sortOrder, status: filterStatus || undefined, page: 1, limit: PAGE_SIZE, academic_year: academicYear });
+    fetchClasses({ search: searchQuery, sort: sortOrder, status: filterStatus, page: 1, limit: PAGE_SIZE, academic_year: academicYear });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchClasses, academicYear, authReady]);
 
@@ -83,13 +83,13 @@ export default function AcademicClassesPage() {
     setSearchQuery(val); setPage(1);
     clearTimeout(searchRef.current);
     searchRef.current = setTimeout(() => {
-      fetchClasses({ search: val, sort: sortOrder, status: filterStatus || undefined, page: 1, limit: PAGE_SIZE, academic_year: academicYear });
+      fetchClasses({ search: val, sort: sortOrder, status: filterStatus, page: 1, limit: PAGE_SIZE, academic_year: academicYear });
     }, 400);
   };
 
   const handlePageChange = (p: number) => {
     setPage(p);
-    fetchClasses({ search: searchQuery, sort: sortOrder, status: filterStatus || undefined, page: p, limit: PAGE_SIZE, academic_year: academicYear });
+    fetchClasses({ search: searchQuery, sort: sortOrder, status: filterStatus, page: p, limit: PAGE_SIZE, academic_year: academicYear });
   };
 
   // Form state
@@ -396,12 +396,6 @@ export default function AcademicClassesPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => doFetch()} className="btn btn-outline p-2 w-9 h-9">
-            <RefreshCcw className="w-4 h-4" />
-          </button>
-          <button className="btn btn-outline p-2 w-9 h-9">
-            <Printer className="w-4 h-4" />
-          </button>
           <div className="relative">
             <button onClick={() => setIsExportOpen(!isExportOpen)}
               className="btn btn-outline">
@@ -460,7 +454,7 @@ export default function AcademicClassesPage() {
                   <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-44 bg-white dark:bg-slate-900 border border-border rounded-lg shadow-lg z-50 py-1.5 text-left">
                     {[
-                      { label: "Active", value: "" },
+                      { label: "Active", value: "Active" },
                       { label: "Archived", value: "Archived" },
                       { label: "Inactive", value: "Inactive" },
                       { label: "All Classes", value: "all" },
@@ -603,8 +597,8 @@ export default function AcademicClassesPage() {
       </div>
 
       {/* Modals */}
-      <Modal isOpen={isAddOpen} onClose={() => { setIsAddOpen(false); resetForm(); }} title="Add Class">
-        <form onSubmit={handleAddSubmit} className="space-y-5 text-left">
+      <Modal isOpen={isAddOpen} onClose={() => { setIsAddOpen(false); resetForm(); }} title="Add Class" size="lg">
+        <form onSubmit={handleAddSubmit} className="space-y-5 text-left min-h-[460px]">
           {formError && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[13px] font-medium">
               <AlertCircle className="w-4 h-4 shrink-0" /> {formError}
@@ -738,7 +732,7 @@ export default function AcademicClassesPage() {
               {isTeacherDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-[60]" onClick={() => setIsTeacherDropdownOpen(false)} />
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-[70] p-2.5 max-h-[220px] flex flex-col gap-2">
                     <div className="relative">
                       <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                       <input
@@ -750,7 +744,7 @@ export default function AcademicClassesPage() {
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
-                    <div className="overflow-y-auto flex-1 divide-y divide-border/40 custom-scrollbar pr-1 max-h-[200px]">
+                    <div className="overflow-y-auto flex-1 divide-y divide-border/40 custom-scrollbar pr-1 max-h-[140px]">
                       <div
                         onClick={() => {
                           setFormTeacherId("");
@@ -844,8 +838,8 @@ export default function AcademicClassesPage() {
           </div>
         </form>
       </Modal>
-      <Modal isOpen={isEditOpen} onClose={() => { setIsEditOpen(false); resetForm(); }} title="Edit Class">
-        <form onSubmit={handleEditSubmit} className="space-y-5 text-left">
+      <Modal isOpen={isEditOpen} onClose={() => { setIsEditOpen(false); resetForm(); }} title="Edit Class" size="lg">
+        <form onSubmit={handleEditSubmit} className="space-y-5 text-left min-h-[460px]">
           {formError && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[13px] font-medium">
               <AlertCircle className="w-4 h-4 shrink-0" /> {formError}
@@ -914,48 +908,6 @@ export default function AcademicClassesPage() {
                 <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
               </div>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
-              <div className="flex items-center gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setFormStatus(formStatus === "Active" ? "Inactive" : "Active")}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
-                    }`}
-                >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${formStatus === "Active" ? "translate-x-6" : "translate-x-1"
-                    }`} />
-                </button>
-                <span className={`text-[13px] font-semibold ${formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
-                  }`}>{formStatus}</span>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Capacity</label>
-              <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)} min={1} max={200}
-                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100 flex items-center justify-between">
-                <span>Default Fee</span>
-                <span className="text-slate-400 font-normal text-[11px]">(optional)</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">₹</span>
-                <input
-                  type="number"
-                  placeholder="e.g. 3500"
-                  value={formDefaultFee}
-                  onChange={(e) => setFormDefaultFee(e.target.value)}
-                  className="w-full pl-7 pr-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900"
-                />
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 gap-4">
             <div className="flex flex-col gap-1.5 relative">
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100 font-medium">Teacher Assignment <span className="text-slate-400 text-[11px]">(optional)</span></label>
               <div
@@ -974,7 +926,7 @@ export default function AcademicClassesPage() {
               {isTeacherDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-[60]" onClick={() => setIsTeacherDropdownOpen(false)} />
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-[70] p-3 max-h-[300px] flex flex-col gap-2">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded-xl shadow-2xl z-[70] p-2.5 max-h-[220px] flex flex-col gap-2">
                     <div className="relative">
                       <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                       <input
@@ -986,7 +938,7 @@ export default function AcademicClassesPage() {
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
-                    <div className="overflow-y-auto flex-1 divide-y divide-border/40 custom-scrollbar pr-1 max-h-[200px]">
+                    <div className="overflow-y-auto flex-1 divide-y divide-border/40 custom-scrollbar pr-1 max-h-[140px]">
                       <div
                         onClick={() => {
                           setFormTeacherId("");
@@ -1025,6 +977,48 @@ export default function AcademicClassesPage() {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Capacity</label>
+              <input type="number" value={formCapacity} onChange={(e) => setFormCapacity(e.target.value)} min={1} max={200}
+                className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900" />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100 flex items-center justify-between">
+                <span>Default Fee</span>
+                <span className="text-slate-400 font-normal text-[11px]">(optional)</span>
+              </label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">₹</span>
+                <input
+                  type="number"
+                  placeholder="e.g. 3500"
+                  value={formDefaultFee}
+                  onChange={(e) => setFormDefaultFee(e.target.value)}
+                  className="w-full pl-7 pr-3 py-2.5 border border-border rounded-lg text-[13px] outline-none focus:border-primary/50 transition-colors shadow-sm bg-white dark:bg-slate-900"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Status <span className="text-red-500">*</span></label>
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setFormStatus(formStatus === "Active" ? "Inactive" : "Active")}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none ${formStatus === "Active" ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                    }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-200 ${formStatus === "Active" ? "translate-x-6" : "translate-x-1"
+                    }`} />
+                </button>
+                <span className={`text-[13px] font-semibold ${formStatus === "Active" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"
+                  }`}>{formStatus}</span>
+              </div>
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-4 border-t border-border/50">

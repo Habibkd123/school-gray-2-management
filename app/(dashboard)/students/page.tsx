@@ -42,7 +42,8 @@ import {
   ChevronDown,
   ArrowUpDown,
   Upload,
-  CheckSquare
+  CheckSquare,
+  X
 } from "lucide-react";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
 import { getOptimizedAvatar } from "@/lib/utils/image";
@@ -191,7 +192,7 @@ export default function StudentsPage() {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
       setPage(1);
-    }, 400);
+    }, 250);
     return () => clearTimeout(handler);
   }, [search]);
 
@@ -237,7 +238,9 @@ export default function StudentsPage() {
       sort: selectedSort,
       page,
       limit: 12,
-      academic_year: academicYearFilter === "all" ? academicYear : academicYearFilter,
+      academic_year: debouncedSearch.trim()
+        ? (academicYearFilter === "all" ? undefined : academicYearFilter)
+        : (academicYearFilter === "all" ? academicYear : academicYearFilter),
       section: sectionFilter,
       house: houseFilter,
       admissionStatus: admissionStatusFilter,
@@ -922,8 +925,18 @@ export default function StudentsPage() {
               placeholder="Search name, ID, class..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3.5 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900"
+              className="w-full pl-9 pr-8 py-2 border border-border rounded-lg text-[13px] text-slate-700 dark:text-slate-200 outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all bg-white dark:bg-slate-900"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                title="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
 

@@ -64,26 +64,31 @@ export async function GET(request: NextRequest) {
   if (error) return error;
 
   const paramSchool = request.nextUrl.searchParams.get("school_id") || "all";
+  const searchParam = request.nextUrl.searchParams.get("search");
+  const hasSearch = Boolean(searchParam && searchParam.trim());
   const cacheKey = `${role}:${schoolId || paramSchool}:${request.nextUrl.search}`;
-  const cached = _studentsServerQueryCache.get(cacheKey);
-  if (cached && (Date.now() - cached.timestamp) < SERVER_CACHE_TTL_MS) {
-    return sendConditionalJson(
-      request,
-      { success: true, data: cached.data },
-      { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
-    );
-  }
 
-  if (_studentsServerInFlight.has(cacheKey)) {
-    try {
-      const data = await _studentsServerInFlight.get(cacheKey)!;
+  if (!hasSearch) {
+    const cached = _studentsServerQueryCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < SERVER_CACHE_TTL_MS) {
       return sendConditionalJson(
         request,
-        { success: true, data },
+        { success: true, data: cached.data },
         { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
       );
-    } catch {
-      // Fall through to query on error
+    }
+
+    if (_studentsServerInFlight.has(cacheKey)) {
+      try {
+        const data = await _studentsServerInFlight.get(cacheKey)!;
+        return sendConditionalJson(
+          request,
+          { success: true, data },
+          { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
+        );
+      } catch {
+        // Fall through to query on error
+      }
     }
   }
 
@@ -156,7 +161,7 @@ export async function GET(request: NextRequest) {
     if (classId && classId !== "all") {
       filter.class_id = classId;
     }
-    if (academic_year) {
+    if (academic_year && academic_year !== "all") {
       filter.academic_year = academic_year;
     }
 
@@ -245,13 +250,34 @@ export async function GET(request: NextRequest) {
     if (search && search.trim()) {
       const sanitized = search.trim();
       const escaped = escapeRegex(sanitized);
-      const searchRegex = new RegExp(escaped, "i");
+      const flexiblePattern = escaped.split(/\s+/).join("\\s+");
+      const searchRegex = new RegExp(flexiblePattern, "i");
 
-      filter.$or = [
+      // Check if search matches any class name or section
+      const matchingClasses = await Class.find({
+        $or: [{ name: searchRegex }, { section: searchRegex }],
+        ...prereqSchoolFilter,
+      }).select("_id").lean();
+      const matchingClassIds = (matchingClasses as any[]).map((c: any) => c._id);
+
+      const searchOrConditions: any[] = [
         { name: searchRegex },
         { roll_no: searchRegex },
         { admission_no: searchRegex },
+        { phone: searchRegex },
+        { email: searchRegex },
+        { guardian_name: searchRegex },
+        { father_name: searchRegex },
+        { mother_name: searchRegex },
+        { guardian_phone: searchRegex },
+        { father_phone: searchRegex },
       ];
+
+      if (matchingClassIds.length > 0) {
+        searchOrConditions.push({ class_id: { $in: matchingClassIds } });
+      }
+
+      filter.$or = searchOrConditions;
     }
 
     // Sort mapping
@@ -284,16 +310,21 @@ export async function GET(request: NextRequest) {
       queryBuilder = queryBuilder.populate("user_id", "name email role is_active plain_password must_change_password");
     }
 
-    const countKey = `${role}:${schoolId || paramSchool}:${JSON.stringify(filter)}`;
-    const cachedCount = _countCache.get(countKey);
     let totalPromise: Promise<number>;
-    if (cachedCount && (Date.now() - cachedCount.timestamp) < COUNT_CACHE_TTL_MS) {
-      totalPromise = Promise.resolve(cachedCount.count);
+    if (hasSearch) {
+      // Direct count for dynamic search to avoid regex serialization {} collisions in cache
+      totalPromise = Student.countDocuments(filter);
     } else {
-      totalPromise = Student.countDocuments(filter).then((c) => {
-        _countCache.set(countKey, { count: c, timestamp: Date.now() });
-        return c;
-      });
+      const countKey = `${role}:${schoolId || paramSchool}:${JSON.stringify(filter)}`;
+      const cachedCount = _countCache.get(countKey);
+      if (cachedCount && (Date.now() - cachedCount.timestamp) < COUNT_CACHE_TTL_MS) {
+        totalPromise = Promise.resolve(cachedCount.count);
+      } else {
+        totalPromise = Student.countDocuments(filter).then((c) => {
+          _countCache.set(countKey, { count: c, timestamp: Date.now() });
+          return c;
+        });
+      }
     }
 
     const [students, total] = await Promise.all([
@@ -302,12 +333,14 @@ export async function GET(request: NextRequest) {
     ]);
 
     const resultData = { students, total, page, limit };
-    _studentsServerQueryCache.set(cacheKey, { data: resultData, timestamp: Date.now() });
+    if (!hasSearch) {
+      _studentsServerQueryCache.set(cacheKey, { data: resultData, timestamp: Date.now() });
+    }
 
     return sendConditionalJson(
       request,
       { success: true, data: resultData },
-      { cacheControl: "private, max-age=30, stale-while-revalidate=120" }
+      { cacheControl: hasSearch ? "no-store, no-cache, must-revalidate" : "private, max-age=30, stale-while-revalidate=120" }
     );
   } catch (err) {
     console.error("[GET /api/students]", err);
@@ -339,7 +372,7 @@ export async function POST(request: NextRequest) {
       father_name, father_phone, father_email, father_occupation, father_photo,
       mother_name, mother_phone, mother_email, mother_occupation, mother_photo,
       guardian_type, guardian_occupation, guardian_address, permanent_address, other_info,
-      aadhaar_no
+      aadhaar_no, fee_types
     } = body;
 
     if (!name?.trim()) {
@@ -576,16 +609,32 @@ export async function POST(request: NextRequest) {
       other_info: other_info?.trim(),
     });
 
-    // Auto-assign Default Class Fees if configured for this class and academic session
+    // Auto-assign or apply selected Class Fees for this student
     try {
       const targetYear = academic_year || "2026-2027";
-      const classFeeConfig = await ClassFee.findOne({
-        school_id: new mongoose.Types.ObjectId(schoolId as string),
-        class_id: new mongoose.Types.ObjectId(class_id),
-        academic_year: targetYear,
-      }).lean();
+      let finalFeeTypes: any[] | null = null;
+      let finalTotalAmount = 0;
 
-      if (classFeeConfig && classFeeConfig.fee_types && classFeeConfig.fee_types.length > 0) {
+      if (Array.isArray(fee_types) && fee_types.length > 0) {
+        finalFeeTypes = fee_types;
+        finalTotalAmount = fee_types
+          .filter((f: any) => f.is_enabled)
+          .reduce((sum: number, f: any) => sum + Number(f.amount || 0), 0);
+      } else {
+        // Fallback: Auto-assign Default Class Fees configured for this class and session
+        const classFeeConfig = await ClassFee.findOne({
+          school_id: new mongoose.Types.ObjectId(schoolId as string),
+          class_id: new mongoose.Types.ObjectId(class_id),
+          academic_year: targetYear,
+        }).lean();
+
+        if (classFeeConfig && classFeeConfig.fee_types && classFeeConfig.fee_types.length > 0) {
+          finalFeeTypes = classFeeConfig.fee_types;
+          finalTotalAmount = classFeeConfig.total_amount;
+        }
+      }
+
+      if (finalFeeTypes && finalFeeTypes.length > 0) {
         await StudentFeeAssignment.findOneAndUpdate(
           {
             school_id: new mongoose.Types.ObjectId(schoolId as string),
@@ -593,15 +642,15 @@ export async function POST(request: NextRequest) {
             academic_year: targetYear,
           },
           {
-            fee_types: classFeeConfig.fee_types,
-            total_amount: classFeeConfig.total_amount,
+            fee_types: finalFeeTypes,
+            total_amount: finalTotalAmount,
           },
           { upsert: true }
         );
         invalidateFeesCache(String(schoolId));
       }
     } catch (feeAssignErr) {
-      console.warn("[Student Admission] Non-fatal: failed to auto-assign default class fee:", feeAssignErr);
+      console.warn("[Student Admission] Non-fatal: failed to assign fees:", feeAssignErr);
     }
 
     const populated = await Student.findById(student._id)

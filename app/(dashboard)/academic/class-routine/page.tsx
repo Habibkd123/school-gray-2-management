@@ -57,6 +57,19 @@ function parseTimeToMinutes(t: string): number {
   return 0;
 }
 
+// Helper: sort classes in natural educational order (Nursery, Class 1, Class 2 ... Class 9, Class 10)
+function sortClassNames(a: string, b: string): number {
+  const earlyGrades = ["playgroup", "nursery", "lkg", "ukg", "kg", "prep"];
+  const aLower = (a || "").toLowerCase().trim();
+  const bLower = (b || "").toLowerCase().trim();
+  const aEarlyIdx = earlyGrades.findIndex(g => aLower === g || aLower.startsWith(g));
+  const bEarlyIdx = earlyGrades.findIndex(g => bLower === g || bLower.startsWith(g));
+  if (aEarlyIdx !== -1 && bEarlyIdx !== -1) return aEarlyIdx - bEarlyIdx;
+  if (aEarlyIdx !== -1) return -1;
+  if (bEarlyIdx !== -1) return 1;
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+}
+
 const getSubjectColor = (subjectName: string) => {
   const name = subjectName?.toLowerCase() || "";
   if (name.includes("math")) return "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400 border border-rose-100 dark:border-rose-900/30";
@@ -160,7 +173,7 @@ export default function ClassRoutinePage() {
 
   // Derived filter selections lists
   const classNames = useMemo(() => {
-    return Array.from(new Set(classes.map(c => c.name))).sort();
+    return Array.from(new Set(classes.map(c => c.name))).sort(sortClassNames);
   }, [classes]);
 
   const sectionsForClassName = useMemo(() => {
@@ -323,9 +336,11 @@ export default function ClassRoutinePage() {
     e.preventDefault();
     setFormError(null);
 
-    const matchedClass = classes.find(c => c.name === formClassName && c.section === formSection);
+    const matchedClass = classes.find(c =>
+      c.name === formClassName && (formSection ? c.section === formSection : (!c.section || c.name === formClassName))
+    ) || classes.find(c => c.name === formClassName);
     if (!matchedClass) {
-      setFormError(`Selected Class / Section combination "${formClassName} - ${formSection}" does not exist in your School. Please add the Class first.`);
+      setFormError(`Selected Class "${formClassName}" does not exist in your School. Please add the Class first.`);
       return;
     }
 
@@ -427,11 +442,11 @@ export default function ClassRoutinePage() {
       });
     });
 
-    // Sort groups by class name
+    // Sort groups by class name in natural educational order
     return Object.values(groups).sort((a, b) => {
       const nameA = a.class.name || "";
       const nameB = b.class.name || "";
-      return nameA.localeCompare(nameB);
+      return sortClassNames(nameA, nameB);
     });
   }, [schedules]);
 
@@ -499,7 +514,7 @@ export default function ClassRoutinePage() {
       </div>
 
       {/* 2. Unified Advanced Filters Panel */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 items-end mb-6">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-5 card-shadow grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 items-end mb-6">
         <div className="space-y-1.5">
           <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Year</label>
           <div className="relative">
@@ -524,21 +539,6 @@ export default function ClassRoutinePage() {
             >
               <option value="">All Classes</option>
               {classNames.map(name => <option key={name} value={name}>{name}</option>)}
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Section</label>
-          <div className="relative">
-            <select
-              value={filterSection}
-              onChange={(e) => setFilterSection(e.target.value)}
-              disabled={!filterClassName}
-              className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 disabled:opacity-50"
-            >
-              <option value="">All Sections</option>
-              {sectionsForClassName.map(sec => <option key={sec} value={sec}>{sec}</option>)}
             </select>
           </div>
         </div>
@@ -605,7 +605,7 @@ export default function ClassRoutinePage() {
       <div id="printable-timetable" className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden p-5">
         <div className="border-b border-border pb-4 mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4 text-left">
           <h3 className="text-[16px] font-bold text-slate-900 dark:text-white">
-            {filterClassName ? `${filterClassName} - ${filterSection || "All Sections"}` : "Master Academic Timetable"} ({filterYear})
+            {filterClassName ? `${filterClassName}${filterSection ? ` - ${filterSection}` : ""}` : "Master Academic Timetable"} ({filterYear})
             {!isLoading && (
               <span className="ml-2 text-[13px] font-normal text-slate-400">({schedules.length} slots)</span>
             )}
@@ -884,17 +884,6 @@ export default function ClassRoutinePage() {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Section <span className="text-slate-400 text-[11px]">(optional)</span></label>
-                  <div className="relative">
-                    <select value={formSection} onChange={(e) => setFormSection(e.target.value)} disabled={!formClassName} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer disabled:opacity-50 focus:border-primary/50" required>
-                      <option value="">Select Section</option>
-                      {sectionsForFormClassName.map(sec => <option key={sec} value={sec}>{sec}</option>)}
-                    </select>
-                    <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
                   <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Day <span className="text-red-500">*</span></label>
                   <div className="relative">
                     <select value={formDay} onChange={(e) => setFormDay(e.target.value)} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
@@ -926,7 +915,7 @@ export default function ClassRoutinePage() {
             {creationStep === 2 && (
               <div className="space-y-4">
                 <div className="bg-[#F8FAFC] dark:bg-slate-900 p-3 rounded-lg border border-border text-[13px] font-semibold text-slate-600 dark:text-slate-400">
-                  Class Room Target: <strong className="text-slate-800 dark:text-white">{formClassName} - {formSection || "All"}</strong>
+                  Class Room Target: <strong className="text-slate-800 dark:text-white">{formClassName}{formSection ? ` - ${formSection}` : ""}</strong>
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -1076,26 +1065,14 @@ export default function ClassRoutinePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Class Name <span className="text-red-500">*</span></label>
-              <div className="relative">
-                <select value={formClassName} onChange={(e) => { setFormClassName(e.target.value); setFormSection(""); }} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
-                  <option value="">Select Class</option>
-                  {classNames.map(name => <option key={name} value={name}>{name}</option>)}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Section <span className="text-slate-400 text-[11px]">(optional)</span></label>
-              <div className="relative">
-                <select value={formSection} onChange={(e) => setFormSection(e.target.value)} disabled={!formClassName} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer disabled:opacity-50 focus:border-primary/50" required>
-                  <option value="">Select Section</option>
-                  {sectionsForFormClassName.map(sec => <option key={sec} value={sec}>{sec}</option>)}
-                </select>
-                <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
-              </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] font-bold text-foreground dark:text-slate-100">Class Name <span className="text-red-500">*</span></label>
+            <div className="relative">
+              <select value={formClassName} onChange={(e) => { setFormClassName(e.target.value); setFormSection(""); }} className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 font-medium shadow-sm cursor-pointer focus:border-primary/50" required>
+                <option value="">Select Class</option>
+                {classNames.map(name => <option key={name} value={name}>{name}</option>)}
+              </select>
+              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3.5 top-3 pointer-events-none" />
             </div>
           </div>
 

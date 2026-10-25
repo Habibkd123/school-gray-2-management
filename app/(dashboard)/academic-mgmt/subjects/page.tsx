@@ -115,8 +115,13 @@ export default function SubjectMasterPage() {
       allowed_streams: enableStreams ? formAllowedStreams : undefined,
     });
     setSubmitting(false);
-    if (res.success) { setIsAddOpen(false); resetForm(); doFetch(); }
-    else setFormError(res.message);
+    if (res.success) {
+      setIsAddOpen(false);
+      resetForm();
+      doFetch({ p: 1 });
+    } else {
+      setFormError(res.message);
+    }
   };
 
   const handleEdit = async (e: React.FormEvent) => {
@@ -131,15 +136,26 @@ export default function SubjectMasterPage() {
       allowed_streams: enableStreams ? formAllowedStreams : undefined,
     });
     setSubmitting(false);
-    if (res.success) { setIsEditOpen(false); resetForm(); doFetch(); }
-    else setFormError(res.message);
+    if (res.success) {
+      setIsEditOpen(false);
+      resetForm();
+      doFetch();
+    } else {
+      setFormError(res.message);
+    }
   };
 
   const handleDelete = async () => {
     if (!selected) return;
     setSubmitting(true);
-    await deleteSubject(selected._id);
-    setSubmitting(false); setIsDeleteOpen(false); doFetch();
+    const res = await deleteSubject(selected._id);
+    setSubmitting(false);
+    if (res.success) {
+      setIsDeleteOpen(false);
+      doFetch();
+    } else {
+      setDependencyError(res.message || "Failed to delete subject.");
+    }
   };
 
   const StatusBadge = ({ status }: { status: string }) => (

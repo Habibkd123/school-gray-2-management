@@ -232,8 +232,16 @@ export default function ClassReportPage() {
           <button
             onClick={handleRefresh}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer"
+            title="Refresh"
           >
             <RefreshCw className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => PrintService.print('printable-class-report', { pageSize: 'A4-landscape', title: 'Class Report List' })}
+            className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer"
+            title="Print Class Report"
+          >
+            <Printer className="w-4 h-4" />
           </button>
           <div className="relative">
             <button
@@ -282,19 +290,19 @@ export default function ClassReportPage() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left print:hidden">
+      <div id="printable-class-report" className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Class Report List</h2>
           <div className="flex items-center gap-3">
             {/* Filter */}
             <div className="relative">
-              <button
+              {/* <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                 className="px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer"
               >
                 <Filter className="w-4 h-4 text-slate-400" /> Filter{" "}
                 <ChevronDown className="w-3 h-3 text-slate-400" />
-              </button>
+              </button> */}
               {isFilterOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
@@ -522,8 +530,9 @@ export default function ClassReportPage() {
               </div>
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => PrintService.print('printable-area', { pageSize: 'A4' })}
+                  onClick={() => PrintService.print('printable-area', { pageSize: 'A4', title: `Class Performance - ${selectedClass?.name || 'Class'}` })}
                   className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-border text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  title="Print Class Performance Dashboard"
                 >
                   <Printer className="w-3.5 h-3.5" /> Print
                 </button>
@@ -546,7 +555,7 @@ export default function ClassReportPage() {
               ) : !classDetail ? (
                 <div className="py-20 text-center text-slate-500">Failed to load class dashboard data.</div>
               ) : (
-                <div className="space-y-6">
+                <div id="printable-area" className="space-y-6">
                   {/* Print Title Header */}
                   <div className="hidden print:flex items-center justify-between border-b border-slate-300 pb-4 mb-4">
                     <div>

@@ -19,7 +19,7 @@ export interface PopulatedTeacherAssignment {
   class_id?: { _id: string; name: string; section?: string; class_code?: string } | null;
   stream_id?: { _id: string; name: string } | null;
   section_id?: { _id: string; name: string } | null;
-  subject_master_id?: { _id: string; name: string; subject_code?: string; description?: string } | null;
+  subject_master_id?: { _id: string; name: string; subject_code?: string; description?: string; status?: "Active" | "Inactive" } | null;
   assignment_type: "Class Teacher" | "Subject Teacher" | "Co-Class Teacher" | "Temporary Teacher" | "Substitute Teacher";
   effective_date?: string;
   status: "Active" | "Inactive";

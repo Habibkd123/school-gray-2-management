@@ -308,7 +308,7 @@ export default function ClassFeesSettingsTab() {
             <span className="p-2 rounded-xl bg-primary/20 text-primary border border-primary/30">
               <SlidersHorizontal className="w-5 h-5 text-indigo-400" />
             </span>
-            <h2 className="text-lg font-bold">Default Class Fees</h2>
+            <h2 className="text-lg font-bold">Class Fee Setup</h2>
           </div>
           <p className="text-xs text-slate-350 mt-1.5 leading-relaxed">
             Set the default fee structure for each class. Admitted students will automatically inherit these fees.

@@ -5,6 +5,7 @@ import {
   Search, List, Filter, ChevronDown, RefreshCw, Printer, Download, FileText, Calendar, Loader2
 } from "lucide-react";
 import { useLeave } from "../../../hooks/useLeave";
+import { PrintService } from "@/app/lib/print-service";
 
 export default function LeaveReportPage() {
   const { leaveRequests, loading } = useLeave(undefined, undefined, { initialPageSize: 500 });
@@ -35,8 +36,8 @@ export default function LeaveReportPage() {
       const matchSearch =
         user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.id.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchType = !filterType || l.leave_type === filterType;
-      const matchStatus = !filterStatus || l.status === filterStatus;
+      const matchType = !filterType || (l.leave_type || "").toLowerCase() === filterType.toLowerCase();
+      const matchStatus = !filterStatus || (l.status || "").toLowerCase() === filterStatus.toLowerCase();
       return matchSearch && matchType && matchStatus;
     });
   }, [leaveRequests, searchTerm, filterType, filterStatus]);
@@ -61,7 +62,8 @@ export default function LeaveReportPage() {
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary transition-colors shadow-sm cursor-pointer dark:text-slate-400"><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={() => window.location.reload()} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary transition-colors shadow-sm cursor-pointer dark:text-slate-400" title="Refresh"><RefreshCw className="w-4 h-4" /></button>
+          <button onClick={() => PrintService.print('leave-report-table', { pageSize: 'A4', title: 'Leave Report' })} className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 hover:text-primary transition-colors shadow-sm cursor-pointer dark:text-slate-400" title="Print Leave Report"><Printer className="w-4 h-4" /></button>
           <div className="relative">
             <button onClick={() => setIsExportOpen(!isExportOpen)} className="px-4 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer">
               <Download className="w-4 h-4" /> Export <ChevronDown className="w-3 h-3 text-slate-400" />
@@ -94,7 +96,7 @@ export default function LeaveReportPage() {
         ))}
       </div>
 
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
+      <div id="leave-report-table" className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Leave Report List</h2>
           <div className="flex items-center gap-3 flex-wrap">
@@ -111,22 +113,28 @@ export default function LeaveReportPage() {
                     <div className="p-4 space-y-4">
                       <div className="space-y-1.5">
                         <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Leave Type</label>
-                        <select value={filterType} onChange={e => setFilterType(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 cursor-pointer dark:text-slate-300">
-                          <option value="">All Types</option>
-                          <option value="sick">Sick Leave</option>
-                          <option value="casual">Casual Leave</option>
-                          <option value="emergency">Emergency Leave</option>
-                          <option value="other">Other</option>
-                        </select>
+                        <div className="relative">
+                          <select value={filterType} onChange={e => setFilterType(e.target.value)} className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 cursor-pointer">
+                            <option value="">All Types</option>
+                            <option value="sick">Sick Leave</option>
+                            <option value="casual">Casual Leave</option>
+                            <option value="emergency">Emergency Leave</option>
+                            <option value="other">Other</option>
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                        </div>
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Status</label>
-                        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-600 cursor-pointer dark:text-slate-300">
-                          <option value="">All Statuses</option>
-                          <option value="pending">Pending</option>
-                          <option value="approved">Approved</option>
-                          <option value="rejected">Rejected</option>
-                        </select>
+                        <div className="relative">
+                          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] outline-none appearance-none bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 cursor-pointer">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="rejected">Rejected</option>
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                        </div>
                       </div>
                     </div>
                     <div className="p-4 flex justify-end gap-3 border-t border-border">

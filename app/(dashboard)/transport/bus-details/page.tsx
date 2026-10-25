@@ -7,7 +7,7 @@ import { Modal } from "../../../components/ui/modal";
 import {
   Search, Filter, ChevronDown, RefreshCw, Printer, Download,
   Plus, MoreVertical, Edit, Trash2, Loader2, ArrowUpDown,
-  FileText, Bus, User, Phone, Hash, Users, Gauge
+  FileText, Bus, User, Phone, Hash, Users, Gauge, Eye
 } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -150,9 +150,9 @@ export default function BusDetailsPage() {
           <button onClick={() => fetchBuses()} className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
+          {/* <button className="btn btn-outline p-2 w-9 h-9 flex items-center justify-center">
             <Printer className="w-4 h-4" />
-          </button>
+          </button> */}
           <button className="btn btn-outline flex items-center gap-2">
             <Download className="w-4 h-4" /> Export <ChevronDown className="w-3.5 h-3.5" />
           </button>
@@ -188,7 +188,7 @@ export default function BusDetailsPage() {
       </div>
 
       {/* Table Card */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm">
         {/* Toolbar */}
         <div className="p-4 border-b border-border flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">Bus List
@@ -203,28 +203,34 @@ export default function BusDetailsPage() {
               {isFilterOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-xl z-50">
+                  <div className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-2xl z-50">
                     <div className="p-4 border-b border-border font-bold text-[15px] text-slate-900 dark:text-white">Filter</div>
                     <div className="p-4 space-y-4">
                       <div className="flex flex-col gap-1.5">
                         <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Route</label>
-                        <select value={filterRoute} onChange={e => setFilterRoute(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none">
-                          <option value="">All Routes</option>
-                          {routes.map((r: any) => <option key={r.id} value={r.routeName}>{r.routeName}</option>)}
-                        </select>
+                        <div className="relative">
+                          <select value={filterRoute} onChange={e => setFilterRoute(e.target.value)} className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none appearance-none cursor-pointer">
+                            <option value="">All Routes</option>
+                            {routes.map((r: any) => <option key={r.id} value={r.routeName}>{r.routeName}</option>)}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                        </div>
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Status</label>
-                        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none">
-                          <option value="">All</option>
-                          <option value="active">Active</option>
-                          <option value="inactive">Inactive</option>
-                        </select>
+                        <div className="relative">
+                          <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none appearance-none cursor-pointer">
+                            <option value="">All</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                        </div>
                       </div>
                     </div>
                     <div className="p-4 border-t border-border flex justify-end gap-3">
-                      <button onClick={() => { setFilterStatus(""); setFilterRoute(""); }} className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg">Reset</button>
-                      <button onClick={() => setIsFilterOpen(false)} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg">Apply</button>
+                      <button onClick={() => { setFilterStatus(""); setFilterRoute(""); }} className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg cursor-pointer">Reset</button>
+                      <button onClick={() => setIsFilterOpen(false)} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg cursor-pointer">Apply</button>
                     </div>
                   </div>
                 </>
@@ -320,33 +326,36 @@ export default function BusDetailsPage() {
                   </td>
                   <td className="text-slate-655 max-w-full sm:w-[160px] truncate">{bus.assignedRoute}</td>
                   <td>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${
-                      bus.status === "Active" 
-                        ? "bg-emerald-50 text-emerald-755 border-emerald-205" 
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide border ${bus.status === "Active"
+                        ? "bg-emerald-50 text-emerald-755 border-emerald-205"
                         : "bg-rose-50 text-rose-755 border-rose-205"
-                    }`}>
+                      }`}>
                       {bus.status}
                     </span>
                   </td>
-                  <td className="col-center">
-                    <div className="relative" onClick={e => e.stopPropagation()}>
-                      <button onClick={() => setActiveDropdown(activeDropdown === bus.id ? null : bus.id)}
-                        className="w-8 h-8 rounded-full flex items-center justify-center bg-primary hover:bg-[var(--primary-hover)] text-white transition-colors cursor-pointer">
-                        <MoreVertical className="w-4 h-4" />
+                  <td className="px-4 py-4 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={() => setViewBus(bus)}
+                        className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
+                        title="View Details"
+                      >
+                        <Eye className="w-4 h-4" />
                       </button>
-                      {activeDropdown === bus.id && (
-                        <div className="absolute right-0 top-10 w-48 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-lg z-50 py-2">
-                          <button onClick={() => { setViewBus(bus); setActiveDropdown(null); }} className="w-full px-4 py-2.5 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium">
-                            <FileText className="w-4 h-4 text-slate-400" /> View Details
-                          </button>
-                          <button onClick={() => { openEdit(bus); setActiveDropdown(null); }} className="w-full px-4 py-2.5 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium">
-                            <Edit className="w-4 h-4 text-slate-400" /> Edit
-                          </button>
-                          <button onClick={() => { setDeleteTarget(bus); setActiveDropdown(null); }} className="w-full px-4 py-2.5 text-left text-[13px] text-rose-600 hover:bg-rose-50 flex items-center gap-3 font-medium">
-                            <Trash2 className="w-4 h-4 text-rose-400" /> Delete
-                          </button>
-                        </div>
-                      )}
+                      <button
+                        onClick={() => openEdit(bus)}
+                        className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 rounded-lg transition-colors cursor-pointer"
+                        title="Edit Bus"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(bus)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors cursor-pointer"
+                        title="Delete Bus"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -461,7 +470,7 @@ export default function BusDetailsPage() {
               <Trash2 className="w-7 h-7 text-rose-500" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-[16px] mb-1">Delete {deleteTarget.id}?</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white text-[16px] mb-1">Delete {deleteTarget.busNumber}?</h3>
               <p className="card-subtitle text-[13px]">This will permanently remove <strong>{deleteTarget.busNumber}</strong> from the system.</p>
             </div>
             <div className="flex justify-center gap-3">

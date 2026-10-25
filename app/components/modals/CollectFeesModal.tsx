@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 import { useAuth } from "@/app/context/auth";
+import { cacheSync } from "@/lib/utils/cache-sync";
 import {
   X,
   User,
@@ -354,6 +355,7 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
 
       const data = await res.json();
       if (data.success) {
+        cacheSync.invalidate("fees");
         setLastPaymentResult(data.data.payment);
         setStep("receipt");
       } else {

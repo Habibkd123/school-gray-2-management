@@ -103,10 +103,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, message: "class_id required for config" }, { status: 400 });
     }
 
-    const classFee = await ClassFee.findOne({
+    const classIdFilter = mongoose.Types.ObjectId.isValid(targetClassId)
+      ? { $in: [targetClassId, new mongoose.Types.ObjectId(targetClassId)] }
+      : targetClassId;
+
+    let classFee = await ClassFee.findOne({
       ...baseFeeQuery,
-      class_id: targetClassId
+      class_id: classIdFilter
     }).lean();
+
+    if (!classFee) {
+      classFee = await ClassFee.findOne({
+        ...(effectiveSchoolId ? { school_id: effectiveSchoolId } : {}),
+        class_id: classIdFilter
+      }).sort({ createdAt: -1 }).lean();
+    }
 
     return NextResponse.json({ success: true, data: classFee });
   }
@@ -319,6 +330,19 @@ export async function GET(req: NextRequest) {
         enabledFeeTypes.push(...classFeeDoc.fee_types.filter((f: any) => f.is_enabled));
       }
 
+      const getPaymentSettledAmount = (p: any) => {
+        const breakdownSum = Array.isArray(p.fee_breakdown)
+          ? p.fee_breakdown.reduce((bSum: number, fb: any) => bSum + (Number(fb.amount_paid) || 0), 0)
+          : 0;
+        const concessions = (Number(p.discount) || 0) +
+          (Number(p.scholarship) || 0) +
+          (Number(p.waiver) || 0) +
+          (Number(p.adjustment) || 0) +
+          (Number(p.round_off) || 0);
+        const settledFromPayment = (Number(p.amount_paid) || 0) + concessions;
+        return Math.max(settledFromPayment, breakdownSum);
+      };
+
       let totalFees = 0;
       let totalPaid = 0;
 
@@ -331,7 +355,7 @@ export async function GET(req: NextRequest) {
         payments.forEach((p: any) => {
           if (p.fee_breakdown && p.fee_breakdown.length > 0) {
             const match = p.fee_breakdown.find((f: any) => f.name.toLowerCase() === feeTypeFilterName.toLowerCase());
-            if (match) totalPaid += match.amount_paid;
+            if (match) totalPaid += (Number(match.amount_paid) || 0);
           }
         });
       } else {
@@ -342,7 +366,7 @@ export async function GET(req: NextRequest) {
           : 0;
 
         const payments = paymentsByStudentId.get(studentIdStr) || [];
-        totalPaid = payments.reduce((sum: number, p: any) => sum + p.amount_paid, 0);
+        totalPaid = payments.reduce((sum: number, p: any) => sum + getPaymentSettledAmount(p), 0);
 
         if (totalFees === 0 && totalPaid > 0) {
           totalFees = totalPaid;
@@ -353,18 +377,21 @@ export async function GET(req: NextRequest) {
 
       const payments = paymentsByStudentId.get(studentIdStr) || [];
       const lastPayment = payments[0] || null;
-      const lastPaidAmount = lastPayment ? lastPayment.amount_paid : 0;
+      const lastPaidAmount = lastPayment ? (Number(lastPayment.amount_paid) || 0) : 0;
       const lastPaymentDate = lastPayment ? lastPayment.payment_date : null;
 
       let status: "Paid" | "Partial" | "Pending" = "Pending";
-      if (totalFees > 0) {
-        if (totalPaid >= totalFees) status = "Paid";
+      if (totalFees === 0) {
+        status = "Paid";
+      } else {
+        if (balanceAmount <= 0.01) status = "Paid";
         else if (totalPaid > 0) status = "Partial";
+        else status = "Pending";
       }
 
       // Compute Due Status
       let dueStatus: "No Due" | "Overdue" | "Due" = "Due";
-      if (balanceAmount === 0) {
+      if (balanceAmount <= 0.01 || totalFees === 0) {
         dueStatus = "No Due";
       } else {
         const today = new Date();
@@ -448,8 +475,8 @@ export async function GET(req: NextRequest) {
           student_id: { $in: pageStudentIds },
           is_deleted: { $ne: true },
         })
-          .select("student_id amount_paid payment_date end_date fee_breakdown")
-          .sort({ payment_date: -1 })
+          .select("student_id amount_paid payment_date end_date fee_breakdown discount fine scholarship waiver adjustment round_off")
+          .sort({ payment_date: -1, createdAt: -1 })
           .lean(),
       ]);
 
@@ -512,8 +539,8 @@ export async function GET(req: NextRequest) {
         student_id: { $in: studentIds },
         is_deleted: { $ne: true },
       })
-        .select("student_id amount_paid payment_date end_date fee_breakdown")
-        .sort({ payment_date: -1 })
+        .select("student_id amount_paid payment_date end_date fee_breakdown discount fine scholarship waiver adjustment round_off")
+        .sort({ payment_date: -1, createdAt: -1 })
         .lean(),
     ]);
 

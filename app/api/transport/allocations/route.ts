@@ -106,6 +106,47 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     await connectDB();
 
+    const { student_ids, student_id, route_id, bus_id, pickupStop, status } = body;
+    const finalBusId = bus_id || null;
+
+    // Check if bulk allocation is requested via student_ids array
+    if (Array.isArray(student_ids) && student_ids.length > 0) {
+      const results: any[] = [];
+      const skipped: string[] = [];
+
+      for (const sId of student_ids) {
+        try {
+          const doc = await TransportAllocation.findOneAndUpdate(
+            { school_id: schoolId, student_id: sId },
+            {
+              school_id: schoolId,
+              student_id: sId,
+              route_id,
+              bus_id: finalBusId,
+              pickupStop,
+              status: status || "Active",
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
+          results.push(doc);
+        } catch (itemErr: any) {
+          skipped.push(sId);
+        }
+      }
+
+      invalidateAllocationsCache(schoolId as string);
+      return NextResponse.json(
+        {
+          success: true,
+          count: results.length,
+          skippedCount: skipped.length,
+          data: results,
+        },
+        { status: 201 }
+      );
+    }
+
+    // Single student allocation fallback
     const postPayload = { ...body };
     if (!postPayload.bus_id) {
       postPayload.bus_id = null;

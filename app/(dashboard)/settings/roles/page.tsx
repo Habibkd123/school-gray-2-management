@@ -334,7 +334,7 @@ function ComparisonTable({
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────
-export default function RolesPermissionsPage() {
+export default function RolesPermissionsPage({ isEmbedded = false }: { isEmbedded?: boolean } = {}) {
   const { user, permissions, updateRolePermissions } = useAuth();
   const [selectedRole, setSelectedRole] = useState<AppRole>("school_admin");
   const [expandedModule, setExpandedModule] = useState<PermissionModule | null>(null);
@@ -404,28 +404,49 @@ export default function RolesPermissionsPage() {
   return (
     <div className="space-y-8 max-w-7xl mx-auto relative pb-20">
       {/* ── Page Header ─────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div>
-          <h1 className="section-title tracking-tight flex items-center gap-2">
-            <Shield className="w-6 h-6 text-amber-500" />
-            Roles & Permissions
-          </h1>
-          <p className="card-subtitle mt-1">
-            Configure or view access levels for each role in your school management system.
-          </p>
-        </div>
+      {!isEmbedded ? (
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+          <div>
+            <h1 className="section-title tracking-tight flex items-center gap-2">
+              <Shield className="w-6 h-6 text-amber-500" />
+              Roles & Permissions
+            </h1>
+            <p className="card-subtitle mt-1">
+              Configure or view access levels for each role in your school management system.
+            </p>
+          </div>
 
-        {/* Current user badge */}
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 w-fit">
-          <Info className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
-          <span className="text-[12px] text-slate-600 dark:text-slate-400">
-            You are logged in as{" "}
-            <span className={`font-semibold ${roleIconBg[user?.role as AppRole]?.split(" ")[1] ?? "text-slate-900 dark:text-white"}`}>
-              {ROLE_META[user?.role as AppRole]?.label ?? user?.role}
+          {/* Current user badge */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 w-fit">
+            <Info className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
+            <span className="text-[12px] text-slate-600 dark:text-slate-400">
+              You are logged in as{" "}
+              <span className={`font-semibold ${roleIconBg[user?.role as AppRole]?.split(" ")[1] ?? "text-slate-900 dark:text-white"}`}>
+                {ROLE_META[user?.role as AppRole]?.label ?? user?.role}
+              </span>
             </span>
-          </span>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Configure or view access levels for each role in your school management system.
+            </p>
+          </div>
+
+          {/* Current user badge */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 w-fit">
+            <Info className="w-4 h-4 text-slate-500 dark:text-slate-400 shrink-0" />
+            <span className="text-[12px] text-slate-600 dark:text-slate-400">
+              You are logged in as{" "}
+              <span className={`font-semibold ${roleIconBg[user?.role as AppRole]?.split(" ")[1] ?? "text-slate-900 dark:text-white"}`}>
+                {ROLE_META[user?.role as AppRole]?.label ?? user?.role}
+              </span>
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* ── Role Cards ───────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">

@@ -80,6 +80,20 @@ export default function StudentReportPage() {
     return cls ? `${cls.name} ${cls.section}` : "—";
   };
 
+  const sortedClasses = useMemo(() => {
+    const earlyGrades = ["playgroup", "nursery", "lkg", "ukg", "kg", "prep"];
+    return [...classes].sort((a, b) => {
+      const aLower = (a.name || "").toLowerCase().trim();
+      const bLower = (b.name || "").toLowerCase().trim();
+      const aEarlyIdx = earlyGrades.findIndex(g => aLower === g || aLower.startsWith(g));
+      const bEarlyIdx = earlyGrades.findIndex(g => bLower === g || bLower.startsWith(g));
+      if (aEarlyIdx !== -1 && bEarlyIdx !== -1) return aEarlyIdx - bEarlyIdx;
+      if (aEarlyIdx !== -1) return -1;
+      if (bEarlyIdx !== -1) return 1;
+      return (a.name || "").localeCompare(b.name || "", undefined, { numeric: true, sensitivity: "base" });
+    });
+  }, [classes]);
+
   const filteredData = useMemo(() => {
     let list = students.filter((s) => {
       const matchSearch =
@@ -88,13 +102,16 @@ export default function StudentReportPage() {
         (s.roll_no || "").toLowerCase().includes(searchTerm.toLowerCase());
 
       const classId = typeof s.class_id === "object" ? s.class_id?._id : s.class_id;
-      const cls = classes.find((c) => c._id === classId);
+      const studentClassIdStr = classId ? String(classId) : "";
+      const cls = classes.find((c) => String(c._id) === studentClassIdStr);
 
-      const matchClass = !filterClass || classId === filterClass;
-      const matchSection = !filterSection || (cls && cls.section === filterSection);
-      const matchGender = !filterGender || (s.gender || "").toLowerCase() === filterGender.toLowerCase();
+      const matchClass = !filterClass || studentClassIdStr === String(filterClass);
+      const sSection = (cls?.section || (typeof s.class_id === "object" ? s.class_id?.section : "") || "").trim();
+      const matchSection = !filterSection || sSection.toLowerCase() === filterSection.toLowerCase();
+      const sGender = (s.gender || "").toLowerCase().trim();
+      const matchGender = !filterGender || sGender === filterGender.toLowerCase();
       const matchStatus = !filterStatus || (filterStatus === "active" ? s.is_active : !s.is_active);
-      const matchSchool = !filterSchool || (typeof s.school_id === 'object' ? s.school_id?._id === filterSchool : s.school_id === filterSchool);
+      const matchSchool = !filterSchool || (typeof s.school_id === 'object' ? String(s.school_id?._id) === String(filterSchool) : String(s.school_id) === String(filterSchool));
 
       // Date Range Filter on Join Date
       let matchJoinDate = true;
@@ -269,15 +286,17 @@ export default function StudentReportPage() {
           <button
             onClick={() => fetchStudents({ school_id: globalSchoolId, limit: 500 })}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer"
+            title="Refresh"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
-          {/* <button
-            onClick={() => PrintService.print('printable-area', { pageSize: 'A4' })}
+          <button
+            onClick={() => PrintService.print('printable-student-report', { pageSize: 'A4-landscape', title: 'Student Report' })}
             className="w-9 h-9 rounded-full bg-white dark:bg-slate-900 border border-border flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer"
+            title="Print Student Report"
           >
             <Printer className="w-4 h-4" />
-          </button> */}
+          </button>
           <div className="relative">
             <button
               onClick={() => setIsExportOpen(!isExportOpen)}
@@ -327,7 +346,7 @@ export default function StudentReportPage() {
       </div>
 
       {/* Main Content */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left print:hidden">
+      <div id="printable-student-report" className="bg-white dark:bg-slate-900 border border-border rounded-xl shadow-sm overflow-hidden text-left">
         <div className="p-5 border-b border-border flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <h2 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">Student Report List</h2>
           <div className="flex items-center gap-3 flex-wrap">
@@ -371,72 +390,84 @@ export default function StudentReportPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class</label>
-                          <select
-                            value={filterClass}
-                            onChange={(e) => {
-                              setFilterClass(e.target.value);
-                              setPage(1);
-                            }}
-                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
-                          >
-                            <option value="">All</option>
-                            {classes.map((c) => (
-                              <option key={c._id} value={c._id}>
-                                {c.name} {c.section}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="relative">
+                            <select
+                              value={filterClass}
+                              onChange={(e) => {
+                                setFilterClass(e.target.value);
+                                setPage(1);
+                              }}
+                              className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none cursor-pointer appearance-none"
+                            >
+                              <option value="">All Classes</option>
+                              {sortedClasses.map((c) => (
+                                <option key={c._id} value={c._id}>
+                                  {c.name}{c.section ? ` (${c.section})` : ""}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                          </div>
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Section</label>
-                          <select
-                            value={filterSection}
-                            onChange={(e) => {
-                              setFilterSection(e.target.value);
-                              setPage(1);
-                            }}
-                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
-                          >
-                            <option value="">All</option>
-                            {sections.map((s) => (
-                              <option key={s} value={s}>
-                                {s}
-                              </option>
-                            ))}
-                          </select>
+                          <div className="relative">
+                            <select
+                              value={filterSection}
+                              onChange={(e) => {
+                                setFilterSection(e.target.value);
+                                setPage(1);
+                              }}
+                              className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none cursor-pointer appearance-none"
+                            >
+                              <option value="">All</option>
+                              {sections.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                          </div>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
                           <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Gender</label>
-                          <select
-                            value={filterGender}
-                            onChange={(e) => {
-                              setFilterGender(e.target.value);
-                              setPage(1);
-                            }}
-                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
-                          >
-                            <option value="">All</option>
-                            <option value="male">Male</option>
-                            <option value="female">Female</option>
-                            <option value="other">Other</option>
-                          </select>
+                          <div className="relative">
+                            <select
+                              value={filterGender}
+                              onChange={(e) => {
+                                setFilterGender(e.target.value);
+                                setPage(1);
+                              }}
+                              className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none cursor-pointer appearance-none"
+                            >
+                              <option value="">All</option>
+                              <option value="male">Male</option>
+                              <option value="female">Female</option>
+                              <option value="other">Other</option>
+                            </select>
+                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                          </div>
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Status</label>
-                          <select
-                            value={filterStatus}
-                            onChange={(e) => {
-                              setFilterStatus(e.target.value);
-                              setPage(1);
-                            }}
-                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300"
-                          >
-                            <option value="">All</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                          </select>
+                          <div className="relative">
+                            <select
+                              value={filterStatus}
+                              onChange={(e) => {
+                                setFilterStatus(e.target.value);
+                                setPage(1);
+                              }}
+                              className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none cursor-pointer appearance-none"
+                            >
+                              <option value="">All</option>
+                              <option value="active">Active</option>
+                              <option value="inactive">Inactive</option>
+                            </select>
+                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                          </div>
                         </div>
                       </div>
 
@@ -678,12 +709,13 @@ export default function StudentReportPage() {
                 </h3>
               </div>
               <div className="flex items-center gap-3">
-                {/* <button
-                  onClick={printReport}
+                <button
+                  onClick={() => PrintService.print('student-modal-printable', { pageSize: 'A4', title: `${studentDetail?.profile?.name || "Student"} - Academic Report` })}
                   className="px-3 py-1.5 bg-white dark:bg-slate-800 border border-border text-slate-600 dark:text-slate-300 text-xs font-semibold rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  title="Print Report Card"
                 >
                   <Printer className="w-3.5 h-3.5" /> Print
-                </button> */}
+                </button>
                 <button
                   onClick={() => setSelectedStudentId(null)}
                   className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 transition-colors cursor-pointer dark:text-slate-400"
@@ -703,7 +735,7 @@ export default function StudentReportPage() {
               ) : !studentDetail ? (
                 <div className="py-20 text-center text-slate-500">Failed to load detailed stats.</div>
               ) : (
-                <div className="space-y-6">
+                <div id="student-modal-printable" className="space-y-6">
                   {/* Print Friendly Header */}
                   <div className="hidden print:flex items-center justify-between border-b border-slate-300 pb-4 mb-4">
                     <div>

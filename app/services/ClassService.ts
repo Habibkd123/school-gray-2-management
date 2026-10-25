@@ -27,10 +27,12 @@ export const ClassService = {
         const raw = sessionStorage.getItem("sm_classes_cache");
         if (raw) {
           const parsed = JSON.parse(raw);
-          if (now - parsed.timestamp < TTL && Array.isArray(parsed.classes) && parsed.classes.length > 0) {
+          if (Array.isArray(parsed.classes) && parsed.classes.length > 0) {
             allClassesCache = parsed.classes;
-            cacheTime = parsed.timestamp;
-            return this.filterAndSortClasses(allClassesCache!, options);
+            cacheTime = parsed.timestamp || now;
+            if (now - (parsed.timestamp || 0) < TTL) {
+              return this.filterAndSortClasses(allClassesCache!, options);
+            }
           }
         }
       } catch { }
@@ -40,8 +42,18 @@ export const ClassService = {
       allClassesPromise = (async () => {
         try {
           const authHeaders = getAuthHeaders();
+          let schoolIdHeader = "";
+          if (typeof window !== "undefined") {
+            try {
+              const sInfo = localStorage.getItem("sm_school_info");
+              if (sInfo) schoolIdHeader = JSON.parse(sInfo)?.id || "";
+            } catch { }
+          }
+          const headers: Record<string, string> = { ...(authHeaders as any) };
+          if (schoolIdHeader) headers["x-school-id"] = schoolIdHeader;
+
           const res = await fetch("/api/classes?limit=all&include_stats=false", {
-            headers: authHeaders,
+            headers,
             cache: "no-store",
           });
           if (!res.ok) throw new Error("Failed to fetch classes from ClassService");

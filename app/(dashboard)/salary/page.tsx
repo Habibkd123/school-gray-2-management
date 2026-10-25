@@ -26,7 +26,8 @@ import {
   ArrowRight,
   BadgeCheck,
   Banknote,
-  ReceiptText
+  ReceiptText,
+  RefreshCw
 } from "lucide-react";
 import { Modal } from "@/app/components/ui/modal";
 import { getPersistedPageSize, PaginationBar } from "@/app/components/ui/pagination-bar";
@@ -84,8 +85,8 @@ const STATUS_CONFIG = {
   }
 };
 
-export default function SalaryDashboardPage() {
-  const { teachers, isLoading: isTeachersLoading, fetchTeachers } = useTeachers();
+export default function SalaryDashboardPage({ isEmbedded = false }: { isEmbedded?: boolean } = {}) {
+  const { teachers, isLoading: isTeachersLoading, fetchTeachers, updateTeacher } = useTeachers();
 
   // Tab/Search State
   const [activeTab, setActiveTab] = useState<"desk" | "reports">("desk");
@@ -363,17 +364,14 @@ export default function SalaryDashboardPage() {
 
     setIsSavingSetup(true);
     try {
-      const res = await fetch(`/api/teachers/${setupTeacher.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
-        body: JSON.stringify({ basic_salary: amt }),
-      });
-      const result = await res.json();
-      if (result.success) {
-        await fetchTeachers();
+      const res = await updateTeacher(setupTeacher.id, { basic_salary: amt });
+      if (res.success) {
+        // Also trigger payments re-check
+        await fetchPayments(true);
+        await fetchAllPayments();
         setSetupTeacher(null);
       } else {
-        alert(result.message || "Failed to configure base salary.");
+        alert(res.message || "Failed to configure base salary.");
       }
     } catch (err) {
       console.error(err);
@@ -762,11 +760,18 @@ export default function SalaryDashboardPage() {
       header: "Base Contract",
       render: (s) => (
         s.basic > 0 ? (
-          <span className="font-sans font-bold text-slate-800 dark:text-slate-200">{money(s.basic)}</span>
+          <button
+            onClick={() => openSetupSalary(s)}
+            className="group flex items-center gap-1.5 font-sans font-bold text-slate-800 dark:text-slate-200 hover:text-primary transition-colors cursor-pointer text-left"
+            title="Click to edit Base Salary"
+          >
+            <span>{money(s.basic)}</span>
+            <Edit2 className="w-3 h-3 text-slate-400 group-hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+          </button>
         ) : (
           <button
             onClick={() => openSetupSalary(s)}
-            className="px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-250 bg-slate-100 dark:bg-slate-850 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 border border-border"
+            className="px-2.5 py-1 text-[11px] font-bold text-slate-700 dark:text-slate-250 bg-slate-100 dark:bg-slate-850 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 border border-border cursor-pointer transition-colors"
           >
             Configure Salary
           </button>
@@ -1067,38 +1072,121 @@ export default function SalaryDashboardPage() {
   };
 
   return (
-    <div className="space-y-6 bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6 text-left">
+    <div className={`space-y-6 text-left ${isEmbedded ? "" : "bg-[#F8FAFC] dark:bg-[var(--sidebar-bg)] min-h-screen -m-6 p-6"}`}>
       {/* Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-title flex items-center gap-2">
-            <DollarSign className="w-6 h-6 text-primary" /> Payroll Management
-          </h1>
-          <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
-            <span>Dashboard</span>
-            <span>/</span>
-            <span>Finance</span>
-            <span>/</span>
-            <span className="text-slate-905 dark:text-white font-medium">Salaries</span>
+      {!isEmbedded ? (
+        <div className="page-header">
+          <div>
+            <h1 className="page-title flex items-center gap-2">
+              <DollarSign className="w-6 h-6 text-primary" /> Payroll Management
+            </h1>
+            <div className="card-subtitle flex items-center gap-2 text-[13px] mt-1 font-normal">
+              <span>Dashboard</span>
+              <span>/</span>
+              <span>Finance</span>
+              <span>/</span>
+              <span className="text-slate-905 dark:text-white font-medium">Salaries</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={async () => {
+                if (typeof window !== "undefined") {
+                  try {
+                    sessionStorage.removeItem("sm_teachers_all");
+                    sessionStorage.removeItem("cache_salary_all");
+                    sessionStorage.removeItem(`cache_salary_period_${selectedPeriod}`);
+                  } catch {}
+                }
+                cacheSync.invalidate("teachers");
+                cacheSync.invalidate("salaries");
+                await Promise.all([
+                  fetchTeachers({ limit: "all" }),
+                  fetchPayments(false),
+                  fetchAllPayments()
+                ]);
+              }}
+              disabled={isTeachersLoading || isPaymentsLoading}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl border border-border bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm disabled:opacity-60 cursor-pointer"
+              title="Refresh Teachers & Payroll Data"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${(isTeachersLoading || isPaymentsLoading) ? "animate-spin text-primary" : "text-slate-500"}`} />
+              <span>Refresh</span>
+            </button>
+
+            {/* Tab switcher */}
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              {["desk", "reports"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as any)}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all capitalize ${activeTab === tab
+                    ? "bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-850 dark:hover:text-slate-300"
+                    }`}
+                >
+                  {tab} Desk
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-1">
+          <div>
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-primary" /> Staff Salary & Payroll Desk
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Manage teacher contracts, monthly payouts, attendance deductions, and slips.
+            </p>
+          </div>
 
-        {/* Tab switcher */}
-        <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
-          {["desk", "reports"].map((tab) => (
+          <div className="flex items-center gap-3">
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab as any)}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all capitalize ${activeTab === tab
-                ? "bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-sm"
-                : "text-slate-500 hover:text-slate-850 dark:hover:text-slate-300"
-                }`}
+              onClick={async () => {
+                if (typeof window !== "undefined") {
+                  try {
+                    sessionStorage.removeItem("sm_teachers_all");
+                    sessionStorage.removeItem("cache_salary_all");
+                    sessionStorage.removeItem(`cache_salary_period_${selectedPeriod}`);
+                  } catch {}
+                }
+                cacheSync.invalidate("teachers");
+                cacheSync.invalidate("salaries");
+                await Promise.all([
+                  fetchTeachers({ limit: "all" }),
+                  fetchPayments(false),
+                  fetchAllPayments()
+                ]);
+              }}
+              disabled={isTeachersLoading || isPaymentsLoading}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl border border-border bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm disabled:opacity-60 cursor-pointer"
+              title="Refresh Teachers & Payroll Data"
             >
-              {tab} Desk
+              <RefreshCw className={`w-3.5 h-3.5 ${(isTeachersLoading || isPaymentsLoading) ? "animate-spin text-primary" : "text-slate-500"}`} />
+              <span>Refresh</span>
             </button>
-          ))}
+
+            {/* Tab switcher */}
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+              {["desk", "reports"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as any)}
+                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all capitalize ${activeTab === tab
+                    ? "bg-white dark:bg-slate-950 text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-500 hover:text-slate-850 dark:hover:text-slate-300"
+                    }`}
+                >
+                  {tab} Desk
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {(isTeachersLoading || isBulkLoading) && isInitialLoad ? (
         <div className="h-64 flex flex-col items-center justify-center gap-2">

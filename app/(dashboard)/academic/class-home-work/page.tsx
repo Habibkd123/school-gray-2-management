@@ -29,6 +29,21 @@ export default function ClassHomeWorkPage() {
   const { uploading, uploadFile } = useUpload();
   const { classes } = useClasses();
 
+  // Sort classes in natural educational order
+  const sortedClasses = useMemo(() => {
+    const earlyGrades = ["playgroup", "nursery", "lkg", "ukg", "kg", "prep"];
+    return [...classes].sort((a, b) => {
+      const aLower = (a.name || "").toLowerCase().trim();
+      const bLower = (b.name || "").toLowerCase().trim();
+      const aEarlyIdx = earlyGrades.findIndex(g => aLower === g || aLower.startsWith(g));
+      const bEarlyIdx = earlyGrades.findIndex(g => bLower === g || bLower.startsWith(g));
+      if (aEarlyIdx !== -1 && bEarlyIdx !== -1) return aEarlyIdx - bEarlyIdx;
+      if (aEarlyIdx !== -1) return -1;
+      if (bEarlyIdx !== -1) return 1;
+      return (a.name || "").localeCompare(b.name || "", undefined, { numeric: true, sensitivity: "base" });
+    });
+  }, [classes]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterClass, setFilterClass] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -119,9 +134,9 @@ export default function ClassHomeWorkPage() {
 
   const getClassName = (classId: any) => {
     if (!classId) return "—";
-    if (typeof classId === "object") return `${classId.name} - ${classId.section}`;
+    if (typeof classId === "object") return classId.section ? `${classId.name} - ${classId.section}` : classId.name;
     const c = classes.find(x => x._id === classId);
-    return c ? `${c.name} - ${c.section}` : "—";
+    return c ? (c.section ? `${c.name} - ${c.section}` : c.name) : "—";
   };
 
   const getSubjectName = (subjectId: any) => {
@@ -315,7 +330,7 @@ export default function ClassHomeWorkPage() {
             <div className="relative">
               <select value={filterClass} onChange={e => setFilterClass(e.target.value)} className="px-3 py-2 bg-white dark:bg-slate-900 border border-border text-slate-700 dark:text-slate-200 text-[13px] font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors flex items-center gap-2 shadow-sm cursor-pointer outline-none appearance-none pr-8">
                 <option value="">All Classes</option>
-                {classes.map(c => <option key={c._id} value={c._id}>{c.name} - {c.section}</option>)}
+                {sortedClasses.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
@@ -499,7 +514,7 @@ export default function ClassHomeWorkPage() {
                   required
                 >
                   <option value="">Select Class</option>
-                  {classes.map(c => <option key={c._id} value={c._id}>{c.name} - {c.section}</option>)}
+                  {sortedClasses.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
                 </select>
                 <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>

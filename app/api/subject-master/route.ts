@@ -14,10 +14,7 @@ const _cache: Map<string, { data: any; expiresAt: number }> = gs._subjectMasterC
 const TTL = 60_000;
 
 export function invalidateSubjectMasterCache(schoolId?: string) {
-  if (!schoolId) { _cache.clear(); return; }
-  for (const k of Array.from(_cache.keys())) {
-    if (k.startsWith(String(schoolId))) _cache.delete(k);
-  }
+  _cache.clear();
 }
 
 // GET — list subject masters
@@ -31,7 +28,7 @@ export async function GET(req: NextRequest) {
     const cacheKey = `${schoolId}:${url.searchParams.toString()}`;
     const cached = _cache.get(cacheKey);
     if (cached && cached.expiresAt > Date.now()) {
-      return sendCompressedJson(req, cached.data, { cacheControl: "private, max-age=30, stale-while-revalidate=60" });
+      return sendCompressedJson(req, cached.data, { cacheControl: "private, no-cache, no-store, must-revalidate" });
     }
     const search = url.searchParams.get("search") || "";
     const status = url.searchParams.get("status") || "";
@@ -87,7 +84,7 @@ export async function GET(req: NextRequest) {
 
     const responseData = { success: true, data: { subjects: subjectsWithStats, total, page, totalPages: Math.ceil(total / limit) } };
     _cache.set(cacheKey, { data: responseData, expiresAt: Date.now() + TTL });
-    return sendCompressedJson(req, responseData, { cacheControl: "private, max-age=30, stale-while-revalidate=60" });
+    return sendCompressedJson(req, responseData, { cacheControl: "private, no-cache, no-store, must-revalidate" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }

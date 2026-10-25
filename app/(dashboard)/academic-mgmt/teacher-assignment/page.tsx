@@ -25,6 +25,27 @@ const ACADEMIC_YEARS = ["2025-2026", "2026-2027", "2027-2028"];
 const ASSIGNMENT_TYPES = ["Subject Teacher", "Class Teacher", "Co-Class Teacher", "Temporary Teacher", "Substitute Teacher"];
 const PAGE_SIZE = 30;
 
+// Helper: sort classes in natural educational order (Playgroup, Nursery, Class 1 ... Class 10)
+function sortClassNames(a: string, b: string): number {
+  const earlyGrades = ["playgroup", "nursery", "lkg", "ukg", "kg", "prep"];
+  const aLower = (a || "").toLowerCase().trim();
+  const bLower = (b || "").toLowerCase().trim();
+  const aEarlyIdx = earlyGrades.findIndex(g => aLower === g || aLower.startsWith(g));
+  const bEarlyIdx = earlyGrades.findIndex(g => bLower === g || bLower.startsWith(g));
+  if (aEarlyIdx !== -1 && bEarlyIdx !== -1) return aEarlyIdx - bEarlyIdx;
+  if (aEarlyIdx !== -1) return -1;
+  if (bEarlyIdx !== -1) return 1;
+  return (a || "").localeCompare(b || "", undefined, { numeric: true, sensitivity: "base" });
+}
+
+function sortClasses<T extends { name: string; section?: string }>(classesList: T[]): T[] {
+  return [...classesList].sort((a, b) => {
+    const cmp = sortClassNames(a.name || "", b.name || "");
+    if (cmp !== 0) return cmp;
+    return (a.section || "").localeCompare(b.section || "", undefined, { numeric: true, sensitivity: "base" });
+  });
+}
+
 export default function TeacherAssignmentPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -80,8 +101,8 @@ export default function TeacherAssignmentPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-  const { teachers } = useTeachers({ skip: !isAddOpen && !isEditOpen, limit: "all" });
-  const { subjects: subjectList } = useSubjectMaster({ skip: !isAddOpen && !isEditOpen, limit: 1000 });
+  const { teachers } = useTeachers({ limit: "all" });
+  const { subjects: subjectList } = useSubjectMaster({ limit: 1000 });
   const [isWorkloadWarningOpen, setIsWorkloadWarningOpen] = useState(false);
   const [pendingSubmitData, setPendingSubmitData] = useState<any>(null);
 
@@ -151,10 +172,15 @@ export default function TeacherAssignmentPage() {
     doFetch();
   }, [doFetch]);
 
+  // Sorted classes for all dropdowns & filters
+  const sortedClasses = useMemo(() => {
+    return sortClasses(classes);
+  }, [classes]);
+
   // Unique Class Names for Dropdowns
   const uniqueClassNames = useMemo(() => {
     const names = new Set(classes.map(c => c.name));
-    return Array.from(names).sort((a, b) => a.localeCompare(b));
+    return Array.from(names).sort(sortClassNames);
   }, [classes]);
 
   // Dynamic Sections matching selected class name
@@ -189,7 +215,7 @@ export default function TeacherAssignmentPage() {
       const nameA = a.class.name || "";
       const nameB = b.class.name || "";
 
-      const nameComparison = nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+      const nameComparison = sortClassNames(nameA, nameB);
       if (nameComparison !== 0) return nameComparison;
 
       const secA = a.class.section || "";
@@ -212,8 +238,46 @@ export default function TeacherAssignmentPage() {
       return aClassId === classIdStr && a.academic_year === formYear && a.status === "Active";
     });
 
-    return assigned.map(a => a.subject_master_id).filter(Boolean);
+    return assigned
+      .map(a => a.subject_master_id)
+      .filter(Boolean)
+      .filter((s: any) => s.status === "Active" || !s.status);
   }, [resolvedClass, subjectAssignments, formYear]);
+
+  // Available subjects for Edit modal based on the selected class
+  const availableSubjectsForEditClass = useMemo(() => {
+    if (!editClassId) return subjectList.filter(s => s.status === "Active");
+
+    const assigned = subjectAssignments.filter(a => {
+      const aClassId = typeof a.class_id === "object" ? a.class_id?._id : a.class_id;
+      return String(aClassId) === String(editClassId) && a.status === "Active" && (!editYear || a.academic_year === editYear);
+    });
+
+    const classSubs: any[] = assigned
+      .map(a => a.subject_master_id)
+      .filter(Boolean)
+      .filter((s: any) => s.status === "Active" || !s.status);
+
+    // If currently selected subject is not in list (e.g. from existing assignment)
+    if (selectedAssignment?.subject_master_id) {
+      const curSub = selectedAssignment.subject_master_id;
+      if (curSub.status === "Active" || !curSub.status) {
+        if (!classSubs.some((s: any) => String(s._id) === String(curSub._id))) {
+          classSubs.push(curSub);
+        }
+      }
+    }
+
+    const seen = new Set<string>();
+    const uniqueSubs = classSubs.filter(s => {
+      const id = String(s._id);
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+
+    return uniqueSubs.length > 0 ? uniqueSubs : subjectList.filter(s => s.status === "Active");
+  }, [editClassId, editYear, subjectAssignments, selectedAssignment, subjectList]);
 
   // Search/Filter Faculty Dropdown
   const filteredTeachers = useMemo(() => {
@@ -693,7 +757,7 @@ export default function TeacherAssignmentPage() {
                           className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none"
                         >
                           <option value="">All Classes</option>
-                          {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
+                          {sortedClasses.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
                         </select>
                       </div>
 
@@ -705,7 +769,7 @@ export default function TeacherAssignmentPage() {
                           className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none"
                         >
                           <option value="">All Subjects</option>
-                          {subjectList.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+                          {subjectList.filter(s => s.status === "Active").map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
                         </select>
                       </div>
 
@@ -1463,7 +1527,7 @@ export default function TeacherAssignmentPage() {
               onChange={(e) => setEditClassId(e.target.value)}
               className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
             >
-              {classes.map(c => <option key={c._id} value={c._id}>{c.name} {c.section ? ` - ${c.section}` : ""}</option>)}
+              {sortedClasses.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
             </select>
           </div>
 
@@ -1473,9 +1537,9 @@ export default function TeacherAssignmentPage() {
               required
               value={editSubjectId}
               onChange={(e) => setEditSubjectId(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] font-medium bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 outline-none focus:border-primary/50 shadow-sm"
             >
-              {subjectList.map(s => <option key={s._id} value={s._id}>{s.name} {s.subject_code ? `(${s.subject_code})` : ""}</option>)}
+              {availableSubjectsForEditClass.map(s => <option key={s._id} value={s._id}>{s.name} {s.subject_code ? `(${s.subject_code})` : ""}</option>)}
             </select>
           </div>
 

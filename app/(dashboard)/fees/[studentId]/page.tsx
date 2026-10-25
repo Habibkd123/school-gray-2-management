@@ -19,6 +19,7 @@ import {
   Gift,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PrintService } from "@/app/lib/print-service";
 
 interface PaymentHistoryPageProps {
@@ -54,6 +55,11 @@ interface PaymentLog {
 }
 
 export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPageProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromQuery = searchParams.get("from");
+  const backUrl = fromQuery || "/settings/profile?tab=finance&sub=fees";
+
   const resolvedParams = React.use(params);
   const studentId = resolvedParams.studentId;
   const { academicYear } = useAppState();
@@ -116,8 +122,15 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-left">
         <div className="flex items-center gap-4">
           <Link
-            href="/fees"
-            className="p-2 border border-border bg-white dark:bg-slate-900 rounded-xl hover:bg-slate-50 transition-all text-slate-600 dark:text-slate-300"
+            href={backUrl}
+            onClick={(e) => {
+              if (!fromQuery && typeof window !== "undefined" && window.history.length > 1 && document.referrer.includes("/settings")) {
+                e.preventDefault();
+                router.back();
+              }
+            }}
+            className="p-2 border border-border bg-white dark:bg-slate-900 rounded-xl hover:bg-slate-50 transition-all text-slate-600 dark:text-slate-300 flex items-center justify-center shadow-sm"
+            title="Back to Finance Settings"
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
@@ -211,8 +224,8 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                   {/* Card 4: Outstanding Dues */}
                   <div className="bg-white dark:bg-slate-900 border border-border rounded-xl p-4 shadow-sm flex items-center gap-3.5">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${adjustedBalance === 0
-                        ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-600"
-                        : "bg-rose-50 dark:bg-rose-950 text-rose-500"
+                      ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-600"
+                      : "bg-rose-50 dark:bg-rose-950 text-rose-500"
                       }`}>
                       {adjustedBalance === 0 ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
                     </div>
@@ -277,10 +290,10 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                     <span className="text-slate-400 block text-[11px] uppercase tracking-wider">Payment Status</span>
                     <span
                       className={`inline-block mt-0.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${isSettledWithDiscount || studentDetails.status === "Paid"
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-                          : studentDetails.status === "Partial"
-                            ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-                            : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                        : studentDetails.status === "Partial"
+                          ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                          : "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
                         }`}
                     >
                       {isSettledWithDiscount ? "Paid (Discount Settled)" : studentDetails.status}
@@ -439,8 +452,8 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                     type="button"
                     onClick={() => setReceiptCopies(1)}
                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${receiptCopies === 1
-                        ? "bg-slate-900 text-white shadow-xs"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
                       }`}
                   >
                     1 Copy
@@ -449,8 +462,8 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                     type="button"
                     onClick={() => setReceiptCopies(2)}
                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${receiptCopies === 2
-                        ? "bg-slate-900 text-white shadow-xs"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
                       }`}
                   >
                     2 Copies
@@ -459,8 +472,8 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                     type="button"
                     onClick={() => setReceiptCopies(3)}
                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${receiptCopies === 3
-                        ? "bg-slate-900 text-white shadow-xs"
-                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
+                      ? "bg-slate-900 text-white shadow-xs"
+                      : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
                       }`}
                   >
                     3 Copies
@@ -475,8 +488,8 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                       type="button"
                       onClick={() => setPageMode("single")}
                       className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${pageMode === "single"
-                          ? "bg-indigo-600 text-white shadow-xs"
-                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
+                        ? "bg-indigo-600 text-white shadow-xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
                         }`}
                       title="Both copies print on 1 page with a cut line"
                     >
@@ -486,8 +499,8 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                       type="button"
                       onClick={() => setPageMode("separate")}
                       className={`px-2.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${pageMode === "separate"
-                          ? "bg-indigo-600 text-white shadow-xs"
-                          : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
+                        ? "bg-indigo-600 text-white shadow-xs"
+                        : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-200/70 dark:hover:bg-slate-700"
                         }`}
                       title="Each copy prints on its own separate page"
                     >
@@ -717,10 +730,10 @@ export default function StudentPaymentHistoryPage({ params }: PaymentHistoryPage
                                       <td className={`${isCompact ? "px-2.5 py-1.5" : "px-3.5 py-2.5"} text-center`}>
                                         <span
                                           className={`px-2 py-0.5 rounded text-[8.5px] font-black uppercase tracking-wider ${ft.status === "Paid"
-                                              ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                                              : ft.status === "Partial"
-                                                ? "bg-amber-100 text-amber-800 border border-amber-200"
-                                                : "bg-rose-100 text-rose-800 border border-rose-200"
+                                            ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                                            : ft.status === "Partial"
+                                              ? "bg-amber-100 text-amber-800 border border-amber-200"
+                                              : "bg-rose-100 text-rose-800 border border-rose-200"
                                             }`}
                                         >
                                           {ft.status}

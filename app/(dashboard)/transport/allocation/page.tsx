@@ -9,7 +9,7 @@ import { Modal } from "../../../components/ui/modal";
 import {
   Search, Filter, ChevronDown, RefreshCw, Printer, Download,
   Plus, MoreVertical, Edit, Trash2, Loader2, ArrowUpDown,
-  FileText, UserCheck, Bus, MapPin, User
+  FileText, UserCheck, Bus, MapPin, User, Check, Users, Eye
 } from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -59,6 +59,10 @@ export default function AllocationPage() {
   const dynamicClasses = useMemo(() => Array.from(new Set(students.map(s => (typeof s.class_id === 'object' ? s.class_id?.name : "N/A")))), [students]);
 
   const [form, setForm] = useState({ student_id: "", route_id: "", bus_id: "", routeName: "", pickupStop: "", status: "Active" });
+  const [allocationMode, setAllocationMode] = useState<"single" | "multiple">("single");
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [modalStudentSearch, setModalStudentSearch] = useState("");
+  const [modalClassFilter, setModalClassFilter] = useState("");
   const [search, setSearch] = useState("");
   const [filterClass, setFilterClass] = useState("");
   const [filterRoute, setFilterRoute] = useState("");
@@ -84,6 +88,33 @@ export default function AllocationPage() {
     }
   };
 
+  // Filtered students for multiple selection in modal
+  const modalFilteredStudents = useMemo(() => {
+    return students.filter(s => {
+      const q = modalStudentSearch.toLowerCase().trim();
+      const matchQuery = !q || s.name?.toLowerCase().includes(q) || s.admission_no?.toLowerCase().includes(q);
+      const studentClassName = typeof s.class_id === "object" ? s.class_id?.name : "";
+      const matchClass = !modalClassFilter || studentClassName === modalClassFilter;
+      return matchQuery && matchClass;
+    });
+  }, [students, modalStudentSearch, modalClassFilter]);
+
+  const toggleSelectStudent = (id: string) => {
+    setSelectedStudentIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAllVisible = () => {
+    const visibleIds = modalFilteredStudents.map(s => s._id);
+    const allSelected = visibleIds.length > 0 && visibleIds.every(id => selectedStudentIds.includes(id));
+    if (allSelected) {
+      setSelectedStudentIds(prev => prev.filter(id => !visibleIds.includes(id)));
+    } else {
+      setSelectedStudentIds(prev => Array.from(new Set([...prev, ...visibleIds])));
+    }
+  };
+
   const filtered = useMemo(() => {
     let list = allocations.filter(a => {
       const q = search.toLowerCase();
@@ -97,12 +128,40 @@ export default function AllocationPage() {
   }, [allocations, search, filterClass, filterRoute, selectedSort]);
 
   const handleAdd = async () => {
+    if (!form.routeName) {
+      alert("Please select a route.");
+      return;
+    }
+
+    if (allocationMode === "single" && !form.student_id) {
+      alert("Please select a student.");
+      return;
+    }
+
+    if (allocationMode === "multiple" && selectedStudentIds.length === 0) {
+      alert("Please select at least one student.");
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const res = await addAllocation(form);
+      const payload = allocationMode === "multiple"
+        ? {
+          student_ids: selectedStudentIds,
+          route_id: form.route_id,
+          bus_id: form.bus_id,
+          pickupStop: form.pickupStop,
+          status: form.status,
+        }
+        : form;
+
+      const res = await addAllocation(payload);
       if (res.success) {
         setIsAddOpen(false);
         setForm({ student_id: "", route_id: "", bus_id: "", routeName: "", pickupStop: "", status: "Active" });
+        setSelectedStudentIds([]);
+        setModalStudentSearch("");
+        setModalClassFilter("");
       } else {
         alert(res.error || "Failed to add allocation");
       }
@@ -172,11 +231,18 @@ export default function AllocationPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button onClick={() => fetchAllocations()} className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm dark:text-slate-400"><RefreshCw className="w-4 h-4" /></button>
-          <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm dark:text-slate-400"><Printer className="w-4 h-4" /></button>
+          {/* <button className="p-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/50 shadow-sm dark:text-slate-400"><Printer className="w-4 h-4" /></button> */}
           <button className="flex items-center gap-2 px-3 py-2 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 shadow-sm">
             <Download className="w-4 h-4" /> Export <ChevronDown className="w-3.5 h-3.5" />
           </button>
-          <button onClick={() => { setForm({ student_id: "", route_id: "", bus_id: "", routeName: "", pickupStop: "", status: "Active" }); setIsAddOpen(true); }}
+          <button onClick={() => {
+            setForm({ student_id: "", route_id: "", bus_id: "", routeName: "", pickupStop: "", status: "Active" });
+            setAllocationMode("single");
+            setSelectedStudentIds([]);
+            setModalStudentSearch("");
+            setModalClassFilter("");
+            setIsAddOpen(true);
+          }}
             className="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg shadow-sm transition-colors">
             <Plus className="w-4 h-4" /> Allocate Student
           </button>
@@ -219,27 +285,33 @@ export default function AllocationPage() {
               {isFilterOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setIsFilterOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-xl z-50">
+                  <div className="absolute right-0 top-full mt-2 w-72 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-2xl z-50">
                     <div className="p-4 border-b border-border font-bold text-[15px] text-slate-900 dark:text-white">Filter</div>
                     <div className="p-4 space-y-4">
                       <div className="flex flex-col gap-1.5">
                         <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Class</label>
-                        <select value={filterClass} onChange={e => setFilterClass(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none">
-                          <option value="">All Classes</option>
-                          {dynamicClasses.map(c => <option key={c}>{c}</option>)}
-                        </select>
+                        <div className="relative">
+                          <select value={filterClass} onChange={e => setFilterClass(e.target.value)} className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none appearance-none cursor-pointer">
+                            <option value="">All Classes</option>
+                            {dynamicClasses.map(c => <option key={c}>{c}</option>)}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                        </div>
                       </div>
                       <div className="flex flex-col gap-1.5">
                         <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Route</label>
-                        <select value={filterRoute} onChange={e => setFilterRoute(e.target.value)} className="px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none">
-                          <option value="">All Routes</option>
-                          {Object.keys(dynamicRoutesMap).map(r => <option key={r}>{r}</option>)}
-                        </select>
+                        <div className="relative">
+                          <select value={filterRoute} onChange={e => setFilterRoute(e.target.value)} className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none appearance-none cursor-pointer">
+                            <option value="">All Routes</option>
+                            {Object.keys(dynamicRoutesMap).map(r => <option key={r}>{r}</option>)}
+                          </select>
+                          <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                        </div>
                       </div>
                     </div>
                     <div className="p-4 border-t border-border flex justify-end gap-3">
-                      <button onClick={() => { setFilterClass(""); setFilterRoute(""); }} className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg">Reset</button>
-                      <button onClick={() => setIsFilterOpen(false)} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg">Apply</button>
+                      <button onClick={() => { setFilterClass(""); setFilterRoute(""); }} className="px-4 py-2 bg-[#F1F5F9] dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[13px] font-semibold rounded-lg cursor-pointer">Reset</button>
+                      <button onClick={() => setIsFilterOpen(false)} className="px-4 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg cursor-pointer">Apply</button>
                     </div>
                   </div>
                 </>
@@ -341,28 +413,29 @@ export default function AllocationPage() {
                       {alloc.status}
                     </span>
                   </td>
-                  <td className="px-4 py-4">
-                    <div className="relative" onClick={e => e.stopPropagation()}>
-                      <button onClick={() => setActiveDropdown(activeDropdown === alloc.id ? null : alloc.id)}
-                        className="w-8 h-8 rounded-full flex items-center justify-center bg-primary hover:bg-[var(--primary-hover)] text-white transition-colors">
-                        <MoreVertical className="w-4 h-4" />
+                  <td className="px-4 py-4 text-center">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        onClick={() => setViewAlloc(alloc)}
+                        className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
+                        title="View Details"
+                      >
+                        <Eye className="w-4 h-4" />
                       </button>
-                      {activeDropdown === alloc.id && (
-                        <div className="absolute right-0 top-10 w-48 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-lg z-50 py-2">
-                          <button onClick={() => { setViewAlloc(alloc); setActiveDropdown(null); }} className="w-full px-4 py-2.5 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium">
-                            <FileText className="w-4 h-4 text-slate-400" /> View Details
-                          </button>
-                          <button onClick={() => { openEdit(alloc); setActiveDropdown(null); }} className="w-full px-4 py-2.5 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium">
-                            <Edit className="w-4 h-4 text-slate-400" /> Edit
-                          </button>
-                          <button onClick={() => { router.push(`/students/${alloc.studentId}`); setActiveDropdown(null); }} className="w-full px-4 py-2.5 text-left text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 font-medium">
-                            <User className="w-4 h-4 text-slate-400" /> View Student
-                          </button>
-                          <button onClick={() => { setDeleteTarget(alloc); setActiveDropdown(null); }} className="w-full px-4 py-2.5 text-left text-[13px] text-rose-600 hover:bg-rose-50 flex items-center gap-3 font-medium">
-                            <Trash2 className="w-4 h-4 text-rose-400" /> Delete
-                          </button>
-                        </div>
-                      )}
+                      <button
+                        onClick={() => openEdit(alloc)}
+                        className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 rounded-lg transition-colors cursor-pointer"
+                        title="Edit Allocation"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(alloc)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-lg transition-colors cursor-pointer"
+                        title="Delete Allocation"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -432,50 +505,196 @@ export default function AllocationPage() {
         </Modal>
       )}
 
-      {/* ── ADD / EDIT MODAL ── */}
       {(isAddOpen || !!editAlloc) && (
-        <Modal isOpen={isAddOpen || !!editAlloc} onClose={() => { setIsAddOpen(false); setEditAlloc(null); }} title={editAlloc ? "Edit Allocation" : "Allocate Student"} size="md">
+        <Modal
+          isOpen={isAddOpen || !!editAlloc}
+          onClose={() => { setIsAddOpen(false); setEditAlloc(null); }}
+          title={editAlloc ? "Edit Allocation" : (allocationMode === "multiple" ? "Allocate Multiple Students" : "Allocate Student")}
+          size={allocationMode === "multiple" && !editAlloc ? "lg" : "md"}
+        >
           <form onSubmit={e => { e.preventDefault(); editAlloc ? handleEdit() : handleAdd(); }} className="space-y-4">
+
+            {/* Mode Selector (Only during Add) */}
+            {!editAlloc && (
+              <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                <button
+                  type="button"
+                  onClick={() => setAllocationMode("single")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 text-[12px] font-bold rounded-md transition-all ${allocationMode === "single"
+                      ? "bg-white dark:bg-slate-900 text-primary shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                >
+                  <User className="w-3.5 h-3.5" />
+                  <span>Single Student</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAllocationMode("multiple")}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2 text-[12px] font-bold rounded-md transition-all ${allocationMode === "multiple"
+                      ? "bg-white dark:bg-slate-900 text-primary shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                    }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Multiple Students ({selectedStudentIds.length})</span>
+                </button>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              {/* Single Student Selection */}
+              {(editAlloc || allocationMode === "single") ? (
+                <div className="col-span-2 flex flex-col gap-1.5">
+                  <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Student</label>
+                  <select
+                    required
+                    value={form.student_id}
+                    onChange={e => setForm(f => ({ ...f, student_id: e.target.value }))}
+                    className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all cursor-pointer"
+                  >
+                    <option value="">Select a student...</option>
+                    {students.map(s => {
+                      const cName = typeof s.class_id === 'object' ? s.class_id?.name : "";
+                      return (
+                        <option key={s._id} value={s._id}>
+                          {s.name} ({s.admission_no || "No Adm"}) {cName ? `• ${cName}` : ""}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+              ) : (
+                /* Multiple Students Selection */
+                <div className="col-span-2 flex flex-col gap-2 border border-slate-200 dark:border-slate-800 rounded-xl p-3 bg-slate-50/50 dark:bg-slate-900/40">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[11px] font-bold uppercase text-slate-700 dark:text-slate-300">
+                      Select Students ({selectedStudentIds.length} Selected)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={toggleSelectAllVisible}
+                      className="text-[11px] font-semibold text-primary hover:underline"
+                    >
+                      {modalFilteredStudents.length > 0 && modalFilteredStudents.every(s => selectedStudentIds.includes(s._id))
+                        ? "Deselect Filtered"
+                        : "Select All Filtered"}
+                    </button>
+                  </div>
+
+                  {/* Search and Class Filter inside Modal */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="relative">
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                      <input
+                        type="text"
+                        placeholder="Search student or admission no..."
+                        value={modalStudentSearch}
+                        onChange={e => setModalStudentSearch(e.target.value)}
+                        className="w-full pl-8 pr-3 py-1.5 border border-border rounded-lg text-[12px] bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-primary/50"
+                      />
+                    </div>
+                    <div>
+                      <select
+                        value={modalClassFilter}
+                        onChange={e => setModalClassFilter(e.target.value)}
+                        className="w-full px-3 py-1.5 border border-border rounded-lg text-[12px] bg-white dark:bg-slate-900 text-slate-900 dark:text-white outline-none focus:border-primary/50"
+                      >
+                        <option value="">All Classes</option>
+                        {dynamicClasses.filter(c => c && c !== "N/A").map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Student Checklist */}
+                  <div className="max-h-48 overflow-y-auto space-y-1 pr-1 border border-border rounded-lg bg-white dark:bg-slate-900 p-2 divide-y divide-slate-100 dark:divide-slate-800">
+                    {modalFilteredStudents.length === 0 ? (
+                      <div className="py-6 text-center text-[12px] text-slate-400">
+                        No students match the search/filter criteria.
+                      </div>
+                    ) : (
+                      modalFilteredStudents.map(s => {
+                        const isChecked = selectedStudentIds.includes(s._id);
+                        const cName = typeof s.class_id === 'object' ? s.class_id?.name : "";
+                        return (
+                          <label
+                            key={s._id}
+                            className={`flex items-center justify-between p-2 rounded-lg cursor-pointer transition-colors text-[12px] ${isChecked
+                                ? "bg-primary/10 text-primary font-medium"
+                                : "hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                              }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => toggleSelectStudent(s._id)}
+                                className="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer"
+                              />
+                              <div>
+                                <span className="font-semibold text-slate-900 dark:text-white">{s.name}</span>
+                                <span className="text-slate-400 text-[11px] ml-1.5">({s.admission_no || "No Adm"})</span>
+                              </div>
+                            </div>
+                            {cName && (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                {cName}
+                              </span>
+                            )}
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Route */}
               <div className="col-span-2 flex flex-col gap-1.5">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Student</label>
-                <select required value={form.student_id} onChange={e => setForm(f => ({ ...f, student_id: e.target.value }))} className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 transition-all">
-                  <option value="">Select a student...</option>
-                  {students.map(s => <option key={s._id} value={s._id}>{s.name} ({s.admission_no})</option>)}
+                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Route</label>
+                <select required value={form.routeName} onChange={e => handleRouteChange(e.target.value)} className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 cursor-pointer">
+                  <option value="">Select a route...</option>
+                  {Object.keys(dynamicRoutesMap).map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
 
-              <div className="col-span-2 flex flex-col gap-1.5">
-                <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Route</label>
-                <select value={form.routeName} onChange={e => handleRouteChange(e.target.value)} className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none">
-                  <option value="">Select a route...</option>
-                  {Object.keys(dynamicRoutesMap).map(r => <option key={r}>{r}</option>)}
-                </select>
-              </div>
+              {/* Bus (Auto-filled) */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Bus (auto-filled)</label>
                 <input readOnly value={form.routeName ? dynamicRoutesMap[form.routeName]?.bus : ""} className="px-3.5 py-2.5 border border-border rounded-lg bg-slate-50 dark:bg-slate-800 text-[13px] text-slate-600 dark:text-slate-300 outline-none cursor-not-allowed" />
               </div>
+
+              {/* Pickup Stop */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Pickup Stop</label>
-                <select value={form.pickupStop} onChange={e => setForm(f => ({ ...f, pickupStop: e.target.value }))} className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none">
+                <select value={form.pickupStop} onChange={e => setForm(f => ({ ...f, pickupStop: e.target.value }))} className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 cursor-pointer">
                   <option value="">Select stop</option>
-                  {currentStops.map((s: string) => <option key={s}>{s}</option>)}
+                  {currentStops.map((s: string) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
+
+              {/* Status */}
               <div className="col-span-2 flex flex-col gap-1.5">
                 <label className="text-[11px] font-semibold uppercase text-slate-500 dark:text-slate-400">Status</label>
-                <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none">
-                  <option>Active</option><option>Inactive</option>
+                <select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))} className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/50 cursor-pointer">
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
                 </select>
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-2">
+            <div className="flex justify-end gap-3 pt-3 border-t border-border mt-4">
               <button type="button" onClick={() => { setIsAddOpen(false); setEditAlloc(null); }} className="px-4 py-2 border border-border text-[13px] font-semibold rounded-lg bg-white dark:bg-slate-900 text-slate-700 hover:bg-slate-50 transition-colors dark:text-slate-200">Cancel</button>
               <button type="submit" disabled={isSaving} className="px-5 py-2 bg-primary hover:bg-[var(--primary-hover)] text-white text-[13px] font-semibold rounded-lg flex items-center gap-2 disabled:opacity-70 transition-colors">
                 {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                {editAlloc ? "Save Changes" : "Allocate"}
+                {editAlloc
+                  ? "Save Changes"
+                  : allocationMode === "multiple"
+                    ? `Allocate ${selectedStudentIds.length} Student${selectedStudentIds.length === 1 ? "" : "s"}`
+                    : "Allocate Student"}
               </button>
             </div>
           </form>
@@ -488,8 +707,8 @@ export default function AllocationPage() {
           <div className="space-y-4 text-center">
             <div className="w-14 h-14 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center mx-auto"><Trash2 className="w-7 h-7 text-rose-500" /></div>
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-[16px] mb-1">Remove {deleteTarget.id}?</h3>
-              <p className="card-subtitle text-[13px]">This will remove <strong>{deleteTarget.studentName}</strong>'s transport allocation.</p>
+              <h3 className="font-bold text-slate-900 dark:text-white text-[16px] mb-1">Remove {deleteTarget.studentName}&apos;s Allocation?</h3>
+              <p className="card-subtitle text-[13px]">This will remove <strong>{deleteTarget.studentName}</strong>&apos;s transport allocation.</p>
             </div>
             <div className="flex justify-center gap-3">
               <button onClick={() => setDeleteTarget(null)} className="px-5 py-2.5 border border-border text-[13px] font-semibold rounded-lg bg-white dark:bg-slate-900 text-slate-700 hover:bg-slate-50 transition-colors dark:text-slate-200">Cancel</button>

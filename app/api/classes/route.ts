@@ -30,14 +30,34 @@ export function invalidateServerClassesCache(schoolId?: string) {
 
 // GET: Fetch all classes for the school (DB-level pagination & sort_weight ordering)
 export async function GET(req: NextRequest) {
-  const authResult = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
+  const authResult = requireAuth(req, ["school_admin", "teacher", "super_admin", "accountant", "librarian", "receptionist"]);
   if (authResult.error) return authResult.error;
   const { schoolId, user } = authResult;
 
   const url = new URL(req.url);
   const sortedParams = new URLSearchParams(url.searchParams);
   sortedParams.sort();
-  const cacheKey = `${schoolId}__${user.role === "teacher" ? user.user_id : "all"}__${sortedParams.toString()}`;
+
+  // Resolve effectiveSchoolId (including subdomain context for super_admin)
+  let effectiveSchoolId = schoolId;
+  if (user.role === "super_admin") {
+    const paramSchoolId = url.searchParams.get("school_id") || req.headers.get("x-school-id");
+    if (paramSchoolId && paramSchoolId !== "all") {
+      effectiveSchoolId = paramSchoolId;
+    } else {
+      const sub = req.headers.get("x-subdomain");
+      if (sub && sub !== "all") {
+        try {
+          await connectToDatabase();
+          const School = mongoose.models.School || (await import("@/lib/models/School")).default;
+          const s = await School.findOne({ slug: sub }, { _id: 1 }).lean();
+          if (s) effectiveSchoolId = (s as any)._id.toString();
+        } catch { }
+      }
+    }
+  }
+
+  const cacheKey = `${effectiveSchoolId || schoolId || "all"}__${user.role === "teacher" ? user.user_id : "all"}__${sortedParams.toString()}`;
   const cached = _serverClassesCache.get(cacheKey);
   if (cached && cached.expiresAt > Date.now()) {
     return sendConditionalJson(
@@ -75,13 +95,10 @@ export async function GET(req: NextRequest) {
     const skip = isAll ? 0 : (page - 1) * limit;
 
     const query: Record<string, any> = {};
-    if (user.role === "super_admin") {
-      const paramSchoolId = url.searchParams.get("school_id");
-      if (paramSchoolId && paramSchoolId !== "all") {
-        query.school_id = paramSchoolId;
-      }
-    } else {
-      query.school_id = schoolId as string;
+    if (effectiveSchoolId && effectiveSchoolId !== "all") {
+      query.school_id = mongoose.Types.ObjectId.isValid(effectiveSchoolId)
+        ? new mongoose.Types.ObjectId(effectiveSchoolId)
+        : effectiveSchoolId;
     }
 
     const showDeleted = url.searchParams.get("show_deleted") === "true";

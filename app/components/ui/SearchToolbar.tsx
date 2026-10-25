@@ -24,6 +24,7 @@ export interface FilterField {
   placeholder?: string;
   onSearch?: (query: string) => void;
   filteredOptions?: { label: string; value: string; description?: string; badge?: string }[];
+  isLoading?: boolean;
 }
 
 export interface ColumnSetting {
@@ -248,7 +249,11 @@ export function SearchToolbar({
                             onChange={(e) => handleTempFilterChange(f.id, e.target.value)}
                             className="w-full pl-3.5 pr-8 py-2 bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 text-xs font-medium rounded-lg outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900 transition-colors appearance-none cursor-pointer shadow-xs"
                           >
-                            <option value="">{formatAllOptionLabel(f.label)}</option>
+                            <option value="">
+                              {f.isLoading && (!f.options || f.options.length === 0)
+                                ? `Loading ${f.label.toLowerCase()}s...`
+                                : formatAllOptionLabel(f.label)}
+                            </option>
                             {f.options?.map((opt) => (
                               <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}

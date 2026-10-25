@@ -4,7 +4,10 @@ import Class from "@/lib/models/Class";
 import Student from "@/lib/models/Student";
 import User from "@/lib/models/User";
 import { Parent } from "@/lib/models";
+import ClassFee from "@/lib/models/ClassFee";
+import StudentFeeAssignment from "@/lib/models/StudentFeeAssignment";
 import { requireAuth } from "@/lib/utils/auth";
+import mongoose from "mongoose";
 
 const SCHOOL_SLUG = process.env.NEXT_PUBLIC_SCHOOL_SLUG || "school";
 
@@ -145,7 +148,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Create student
-        await Student.create({
+        const createdStudent = await Student.create({
           school_id: schoolId as string,
           user_id: studentUserId,
           parent_id: parentId,
@@ -166,6 +169,32 @@ export async function POST(req: NextRequest) {
           is_active: true,
           aadhaar_no: aadhaar_no || undefined,
         });
+
+        // Auto-assign default class fees
+        try {
+          const classFeeConfig = await ClassFee.findOne({
+            school_id: new mongoose.Types.ObjectId(schoolId as string),
+            class_id: new mongoose.Types.ObjectId(class_id),
+            academic_year: academic_year.trim(),
+          }).lean();
+
+          if (classFeeConfig && classFeeConfig.fee_types && classFeeConfig.fee_types.length > 0) {
+            await StudentFeeAssignment.findOneAndUpdate(
+              {
+                school_id: new mongoose.Types.ObjectId(schoolId as string),
+                student_id: createdStudent._id,
+                academic_year: academic_year.trim(),
+              },
+              {
+                fee_types: classFeeConfig.fee_types,
+                total_amount: classFeeConfig.total_amount,
+              },
+              { upsert: true }
+            );
+          }
+        } catch (feeErr) {
+          console.warn("[Import] Non-fatal: failed to assign class fee:", feeErr);
+        }
 
         successCount++;
       } catch (err: any) {

@@ -86,6 +86,7 @@ export interface CreateStudentInput {
   academic_year?: string;
   photo_url?: string;
   aadhaar_no?: string;
+  fee_types?: any[];
 }
 
 // ─── Module-level cache (shared across all useStudents() instances) ──
@@ -323,7 +324,7 @@ export function useStudents(options?: { skip?: boolean }) {
     if (status && status !== "all" && status !== "Select") params.set("status", status);
     if (dateRange && dateRange !== "All Time") params.set("dateRange", dateRange);
     if (sort) params.set("sort", sort);
-    if (academic_year) params.set("academic_year", academic_year);
+    if (academic_year && academic_year !== "all") params.set("academic_year", academic_year);
     if (section && section !== "all") params.set("section", section);
     if (house && house !== "all") params.set("house", house);
     if (admissionStatus && admissionStatus !== "all") params.set("admission_status", admissionStatus);
@@ -331,7 +332,8 @@ export function useStudents(options?: { skip?: boolean }) {
     params.set("limit", limit.toString());
 
     const cacheKey = params.toString();
-    const cachedQuery = getPagedQueryCache(cacheKey);
+    const hasSearch = Boolean(search && search.trim());
+    const cachedQuery = hasSearch ? null : getPagedQueryCache(cacheKey);
     if (cachedQuery) {
       setStudents(cachedQuery.students);
       setTotal(cachedQuery.total);
@@ -382,11 +384,13 @@ export function useStudents(options?: { skip?: boolean }) {
           total: data.data.total ?? data.data.students.length,
           timestamp: Date.now(),
         };
-        _pagedQueryCache.set(cacheKey, queryEntry);
-        if (typeof window !== "undefined") {
-          try {
-            sessionStorage.setItem(SESSION_STUDENTS_PREFIX + cacheKey, JSON.stringify(queryEntry));
-          } catch { }
+        if (!hasSearch) {
+          _pagedQueryCache.set(cacheKey, queryEntry);
+          if (typeof window !== "undefined") {
+            try {
+              sessionStorage.setItem(SESSION_STUDENTS_PREFIX + cacheKey, JSON.stringify(queryEntry));
+            } catch { }
+          }
         }
 
         // Only cache the full unfiltered legacy list

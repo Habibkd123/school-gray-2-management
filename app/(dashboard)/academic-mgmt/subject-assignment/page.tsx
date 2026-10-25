@@ -12,8 +12,9 @@ import Link from "next/link";
 import { Modal } from "@/app/components/ui/modal";
 import { useSubjectAssignment, PopulatedAssignment } from "@/app/hooks/useSubjectAssignment";
 import { useSubjectMaster } from "@/app/hooks/useSubjectMaster";
-import { useClasses } from "@/app/hooks/useClasses";
+import { useClasses, ApiClass } from "@/app/hooks/useClasses";
 import { useTeachers } from "@/app/hooks/useTeachers";
+import { getAuthHeaders } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 import { useAuth } from "@/app/context/auth";
 import { DataTable, ColumnDef } from "@/app/components/ui/data-table";
@@ -21,6 +22,27 @@ import { PaginationBar } from "@/app/components/ui/pagination-bar";
 
 const ACADEMIC_YEARS = ["2025-2026", "2026-2027", "2027-2028"];
 const PAGE_SIZE = 30;
+
+// Helper: sort classes in natural educational order (Playgroup, Nursery, Class 1 ... Class 10)
+function sortClassNames(a: string, b: string): number {
+  const earlyGrades = ["playgroup", "nursery", "lkg", "ukg", "kg", "prep"];
+  const aLower = (a || "").toLowerCase().trim();
+  const bLower = (b || "").toLowerCase().trim();
+  const aEarlyIdx = earlyGrades.findIndex(g => aLower === g || aLower.startsWith(g));
+  const bEarlyIdx = earlyGrades.findIndex(g => bLower === g || bLower.startsWith(g));
+  if (aEarlyIdx !== -1 && bEarlyIdx !== -1) return aEarlyIdx - bEarlyIdx;
+  if (aEarlyIdx !== -1) return -1;
+  if (bEarlyIdx !== -1) return 1;
+  return (a || "").localeCompare(b || "", undefined, { numeric: true, sensitivity: "base" });
+}
+
+function sortClasses<T extends { name: string; section?: string }>(classesList: T[]): T[] {
+  return [...classesList].sort((a, b) => {
+    const cmp = sortClassNames(a.name || "", b.name || "");
+    if (cmp !== 0) return cmp;
+    return (a.section || "").localeCompare(b.section || "", undefined, { numeric: true, sensitivity: "base" });
+  });
+}
 
 export default function SubjectAssignmentPage() {
   const router = useRouter();
@@ -40,7 +62,77 @@ export default function SubjectAssignmentPage() {
     deleteAssignment
   } = useSubjectAssignment();
 
-  const { classes } = useClasses({ filterByYear: false });
+  const { classes: hookClasses, isLoading: isClassesLoading, fetchClasses } = useClasses({ filterByYear: false });
+  const [directClasses, setDirectClasses] = useState<ApiClass[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const raw = sessionStorage.getItem("sm_classes_cache");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed.classes) && parsed.classes.length > 0) {
+            return parsed.classes;
+          }
+        }
+      } catch { }
+    }
+    return [];
+  });
+
+  // Fallback direct class loader if hook classes are empty
+  const loadClassesDirectly = useCallback(async () => {
+    try {
+      let schoolIdHeader = "";
+      if (typeof window !== "undefined") {
+        try {
+          const sInfo = localStorage.getItem("sm_school_info");
+          if (sInfo) schoolIdHeader = JSON.parse(sInfo)?.id || "";
+        } catch { }
+      }
+      const headers: Record<string, string> = { ...(getAuthHeaders() as any) };
+      if (schoolIdHeader) headers["x-school-id"] = schoolIdHeader;
+
+      const res = await fetch("/api/classes?limit=all&include_stats=false", {
+        headers,
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const fetched = json.data?.classes || json.data || [];
+        if (Array.isArray(fetched) && fetched.length > 0) {
+          setDirectClasses(fetched);
+          if (typeof window !== "undefined") {
+            try {
+              sessionStorage.setItem("sm_classes_cache", JSON.stringify({ classes: fetched, timestamp: Date.now() }));
+            } catch { }
+          }
+        }
+      }
+    } catch { }
+  }, []);
+
+  useEffect(() => {
+    fetchClasses({ limit: "all" });
+    if (!directClasses || directClasses.length === 0) {
+      loadClassesDirectly();
+    }
+  }, [fetchClasses, loadClassesDirectly]);
+
+  const classes = useMemo<ApiClass[]>(() => {
+    if (hookClasses && hookClasses.length > 0) return hookClasses;
+    if (directClasses && directClasses.length > 0) return directClasses;
+    if (typeof window !== "undefined") {
+      try {
+        const raw = sessionStorage.getItem("sm_classes_cache");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed.classes) && parsed.classes.length > 0) {
+            return parsed.classes;
+          }
+        }
+      } catch { }
+    }
+    return [];
+  }, [hookClasses, directClasses]);
 
   // Filtering & Sorting State
   const [search, setSearch] = useState("");
@@ -135,10 +227,15 @@ export default function SubjectAssignmentPage() {
     doFetch();
   }, [doFetch]);
 
+  // Sorted classes for all dropdowns & filters
+  const sortedClasses = useMemo(() => {
+    return sortClasses(classes);
+  }, [classes]);
+
   // Unique Class Names for Dropdowns
   const uniqueClassNames = useMemo(() => {
     const names = new Set(classes.map(c => c.name));
-    return Array.from(names).sort((a, b) => a.localeCompare(b));
+    return Array.from(names).sort(sortClassNames);
   }, [classes]);
 
   // Dynamic Sections matching selected class name
@@ -201,7 +298,7 @@ export default function SubjectAssignmentPage() {
       const nameA = a.class.name || "";
       const nameB = b.class.name || "";
 
-      const nameComparison = nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' });
+      const nameComparison = sortClassNames(nameA, nameB);
       if (nameComparison !== 0) return nameComparison;
 
       const secA = a.class.section || "";
@@ -353,6 +450,10 @@ export default function SubjectAssignmentPage() {
     setEditStatus(item.status || "Active");
     setFormError("");
     setIsEditOpen(true);
+    if (!classes || classes.length === 0) {
+      loadClassesDirectly();
+      fetchClasses({ limit: "all" });
+    }
   };
 
   // Populate Duplicate Fields
@@ -407,70 +508,55 @@ export default function SubjectAssignmentPage() {
       header: "Subject",
       accessorKey: "subject_master_id" as any,
       render: (item) => (
-        <div>
-          <span className="font-medium text-xs text-slate-500 dark:text-white block">
-            {item.subject_master_id?.name || "—"
-            }
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-[13px] text-slate-800 dark:text-slate-100">
+            {item.subject_master_id?.name || "—"}
           </span>
-          {item.subject_master_id?.subject_code && <span className="font-sans text-[9px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-400 dark:text-slate-400 font-medium">
-            {item.subject_master_id?.subject_code}
-          </span>}
+          {item.subject_master_id?.subject_code && (
+            <span className="text-[11px] bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-400 font-medium border border-slate-200/80 dark:border-slate-700">
+              {item.subject_master_id?.subject_code}
+            </span>
+          )}
           {item.description && (
             <span className="text-[11px] text-slate-400 block max-w-xs truncate">{item.description}</span>
           )}
         </div>
       )
     },
-    // {
-    //   header: "Subject Code",
-    //   accessorKey: "subject_master_id" as any,
-    //   render: (item) => (
-    //     item.subject_master_id?.subject_code ? (
-    //       <span className="font-sans text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500 dark:text-slate-400 font-semibold">
-    //         {item.subject_master_id.subject_code}
-    //       </span>
-    //     ) : "—"
-    //   )
-    // },
     {
       header: "Class",
       accessorKey: "class_id" as any,
-      render: (item) => (<>
-        <span className="font-medium text-slate-600 dark:text-slate-200">{item.class_id?.name || "—"}</span>
-        {item.class_id?.section && <span className="font-medium text-slate-800 dark:text-slate-200">{"-" + item.class_id?.section}</span>}</>)
+      render: (item) => (
+        <span className="font-medium text-[13px] text-slate-800 dark:text-slate-200">
+          {item.class_id?.name || "—"}{item.class_id?.section ? ` - ${item.class_id.section}` : ""}
+        </span>
+      )
     },
-    // {
-    //   header: "Section",
-    //   accessorKey: "class_id" as any,
-    //   render: (item) => <span className="font-semibold text-slate-800 dark:text-slate-200">{item.class_id?.section || "—"}</span>
-    // },
     {
       header: "Assigned Teacher",
       accessorKey: "teacher_id" as any,
       render: (item) => (
         item.teacher_id?.name ? (
-          <span className="font-medium text-primary">{item.teacher_id.name}</span>
+          <span className="font-medium text-[13px] text-slate-800 dark:text-slate-200">{item.teacher_id.name}</span>
         ) : (
-          <span className="text-slate-400 dark:text-slate-550 italic">Not Assigned</span>
+          <span className="text-[13px] text-slate-400 font-normal">Not assigned</span>
         )
       )
     },
     {
       header: "Weekly Periods",
       accessorKey: "weekly_periods" as any,
-      render: (item) => <span className="font-medium text-slate-700 dark:text-slate-350">{item.weekly_periods || 0}</span>
+      render: (item) => <span className="font-medium text-[13px] text-slate-700 dark:text-slate-300">{item.weekly_periods ? `${item.weekly_periods} Periods` : "0 Periods"}</span>
     },
-    // {
-    //   header: "Academic Year",
-    //   accessorKey: "academic_year",
-    //   render: (item) => <span className="font-sans text-xs text-slate-500 dark:text-slate-400">{item.academic_year}</span>
-    // },
     {
       header: "Status",
       accessorKey: "status",
       render: (item) => (
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-bold ${item.status === "Active" ? "bg-success/10 text-success" : "bg-[#FFEBEB] text-[#E02424]"}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${item.status === "Active" ? "bg-success" : "bg-[#E02424]"}`} />
+        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+          item.status === "Active"
+            ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+            : "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+        }`}>
           {item.status || "Active"}
         </span>
       )
@@ -655,7 +741,7 @@ export default function SubjectAssignmentPage() {
                           className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none"
                         >
                           <option value="">All Classes</option>
-                          {classes.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
+                          {sortedClasses.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
                         </select>
                       </div>
 
@@ -1367,23 +1453,29 @@ export default function SubjectAssignmentPage() {
               onChange={(e) => setEditClassId(e.target.value)}
               className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
             >
-              {classes.map(c => <option key={c._id} value={c._id}>{c.name} {c.section ? ` - ${c.section}` : ""}</option>)}
+              <option value="">Select Class</option>
+              {selectedAssignment?.class_id && !classes.some(c => c._id === selectedAssignment.class_id?._id) && (
+                <option value={selectedAssignment.class_id._id}>
+                  {selectedAssignment.class_id.name}{selectedAssignment.class_id.section ? ` - ${selectedAssignment.class_id.section}` : ""}
+                </option>
+              )}
+              {sortedClasses.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
             </select>
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Subject <span className="text-red-500">*</span></label>
+            <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Subject <span className="text-red-500">*</span></label>
             <select
               required
               value={editSubjectId}
               onChange={(e) => setEditSubjectId(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50"
+              className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 font-medium outline-none focus:border-primary/50 shadow-sm"
             >
               {subjectList
                 .filter(s => s.status === "Active" || s._id === editSubjectId)
                 .map(s => (
                   <option key={s._id} value={s._id}>
-                    {s.name} {s.subject_code ? `(${s.subject_code})` : ""}{s.status !== "Active" ? " [Inactive]" : ""}
+                    {s.name} {s.subject_code ? `(${s.subject_code})` : ""}
                   </option>
                 ))}
             </select>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useRef, useCallback } from "react";
+import React, { useState, useEffect, Suspense, useRef, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useClasses } from "../../../hooks/useClasses";
@@ -8,11 +8,13 @@ import { useStudents, getStoredStudent } from "../../../hooks/useStudents";
 import { useUpload } from "../../../hooks/useUpload";
 import {
   Upload, User, MapPin, Users,
-  X, Loader2, ImageIcon, Copy, Check, Lock, KeyRound, AlertCircle
+  X, Loader2, ImageIcon, Copy, Check, Lock, KeyRound, AlertCircle,
+  CreditCard, SlidersHorizontal
 } from "lucide-react";
 
 import { validateSequential } from "@/lib/utils/formValidation";
 import { useAppState } from "@/app/context/store";
+import { getAuthHeaders } from "@/lib/utils/session";
 
 // ─── Types ─────────────────────────────────────────────────────────
 interface DocFile { name: string; url: string; }
@@ -222,6 +224,75 @@ function AddStudentContent() {
   const [guardianOccupation, setGuardianOccupation] = useState(() => cachedStudent?.guardian_occupation || parentObj?.occupation || "");
   const [guardianAddress, setGuardianAddress] = useState(() => cachedStudent?.guardian_address || parentObj?.address || "");
   const [guardianType, setGuardianType] = useState(() => cachedStudent?.guardian_type || (parentObj?.relation?.toLowerCase() === "father" ? "father" : parentObj?.relation?.toLowerCase() === "mother" ? "mother" : "father"));
+
+  // ── Applicable Fees State ──────────────────────────────────────
+  interface ApplicableFeeItem {
+    name: string;
+    amount: number;
+    frequency?: "One Time" | "Monthly" | "Quarterly" | "Half Yearly" | "Yearly";
+    is_mandatory?: boolean;
+    is_enabled: boolean;
+  }
+  const [applicableFees, setApplicableFees] = useState<ApplicableFeeItem[]>([]);
+  const [isLoadingFees, setIsLoadingFees] = useState(false);
+  const [hasConfiguredFees, setHasConfiguredFees] = useState(false);
+
+  // Load fee structure when classId or academicYear changes
+  useEffect(() => {
+    let isCurrent = true;
+    if (!classId) {
+      setApplicableFees([]);
+      setHasConfiguredFees(false);
+      return;
+    }
+
+    async function fetchFeeStructure() {
+      setIsLoadingFees(true);
+      try {
+        const url = editId
+          ? `/api/fees?config_only=true&student_id=${editId}&class_id=${classId}&academic_year=${encodeURIComponent(academicYear)}`
+          : `/api/fees?config_only=true&class_id=${classId}&academic_year=${encodeURIComponent(academicYear)}`;
+
+        const res = await fetch(url, { headers: getAuthHeaders() });
+        const json = await res.json();
+
+        if (!isCurrent) return;
+
+        if (json.success && json.data && json.data.fee_types && Array.isArray(json.data.fee_types) && json.data.fee_types.length > 0) {
+          setHasConfiguredFees(true);
+          const items: ApplicableFeeItem[] = json.data.fee_types.map((f: any) => ({
+            name: f.name,
+            amount: Number(f.amount || 0),
+            frequency: f.frequency || "Monthly",
+            is_mandatory: f.is_mandatory !== false,
+            // For new students, all configured class fees are enabled by default
+            is_enabled: f.is_enabled !== false,
+          }));
+          setApplicableFees(items);
+        } else {
+          setHasConfiguredFees(false);
+          setApplicableFees([]);
+        }
+      } catch (err) {
+        console.error("Failed to load class fee structure:", err);
+        if (isCurrent) {
+          setHasConfiguredFees(false);
+          setApplicableFees([]);
+        }
+      } finally {
+        if (isCurrent) setIsLoadingFees(false);
+      }
+    }
+
+    fetchFeeStructure();
+    return () => { isCurrent = false; };
+  }, [classId, academicYear, editId]);
+
+  const totalAppliedFees = useMemo(() => {
+    return applicableFees
+      .filter(f => f.is_enabled)
+      .reduce((sum, f) => sum + Number(f.amount || 0), 0);
+  }, [applicableFees]);
 
   // ── Load edit data ─────────────────────────────────────────────
   useEffect(() => {
@@ -458,6 +529,7 @@ function AddStudentContent() {
         guardian_address: guardianAddress || undefined,
         academic_year: academicYear || undefined,
         aadhaar_no: aadhaarNo || undefined,
+        fee_types: applicableFees.length > 0 ? applicableFees : undefined,
       };
 
       let result;
@@ -624,6 +696,174 @@ function AddStudentContent() {
                 </div>
               </div>
             </div>
+          </div>
+        </SectionCard>
+
+        {/* ── 3. Class Fee Structure & Applicable Fees ── */}
+        <SectionCard
+          icon={<CreditCard className="w-4 h-4 text-primary" />}
+          title="Fee Structure & Applicable Fees"
+        >
+          <div className="p-6 space-y-5 text-left">
+            {!classId ? (
+              <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 text-xs font-medium">
+                <SlidersHorizontal className="w-5 h-5 text-slate-400 shrink-0" />
+                <span>Please select a Class in the Personal Information section above to preview and configure applicable fees for this student.</span>
+              </div>
+            ) : isLoadingFees ? (
+              <div className="flex items-center justify-center py-8 gap-3 text-slate-400">
+                <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                <span className="text-xs font-semibold">Loading class fee structure...</span>
+              </div>
+            ) : applicableFees.length === 0 ? (
+              <div className="p-5 bg-amber-500/10 border border-amber-500/20 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-left">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="text-xs font-bold text-amber-700 dark:text-amber-400">No Default Class Fees Configured</h4>
+                    <p className="text-[12px] text-amber-600/90 dark:text-amber-500 mt-0.5">
+                      No fee heads have been configured for this class for session {academicYear}. Fees can be set up in Settings anytime.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/settings/profile?tab=finance&sub=class-fees"
+                  target="_blank"
+                  className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-lg transition-colors shrink-0 flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+                >
+                  <SlidersHorizontal className="w-3.5 h-3.5" />
+                  <span>Configure Class Fees</span>
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Header banner with instructions & total summary */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-xl shadow-sm border border-slate-800">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold uppercase tracking-wider">
+                        {apiClasses.find(c => c._id === classId)?.name || "Selected Class"}{apiClasses.find(c => c._id === classId)?.section ? ` - ${apiClasses.find(c => c._id === classId)?.section}` : ""} • {academicYear}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-350 mt-1">
+                      Choose which fees apply to this student. By default, all standard class fees are selected.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-4 self-end md:self-auto">
+                    <div className="text-right">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Total Applied Fee</span>
+                      <span className="text-lg font-sans font-bold text-emerald-400">
+                        ₹{totalAppliedFees.toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Selection Actions */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-b border-border pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
+                      Applied Fee Heads ({applicableFees.filter(f => f.is_enabled).length}/{applicableFees.length})
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setApplicableFees(prev => prev.map(f => ({ ...f, is_enabled: true })))}
+                      className="px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/10 rounded-md transition-colors cursor-pointer"
+                    >
+                      Select All
+                    </button>
+                    <span className="text-slate-300">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setApplicableFees(prev => prev.map(f => ({ ...f, is_enabled: f.is_mandatory ? true : false })))}
+                      className="px-2.5 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors cursor-pointer"
+                    >
+                      Mandatory Only
+                    </button>
+                    <span className="text-slate-300">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setApplicableFees(prev => prev.map(f => ({ ...f, is_enabled: false })))}
+                      className="px-2.5 py-1 text-[11px] font-semibold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-md transition-colors cursor-pointer"
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                </div>
+
+                {/* Fees Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[360px] overflow-y-auto pr-1">
+                  {applicableFees.map((fee, index) => {
+                    return (
+                      <div
+                        key={index}
+                        onClick={() => {
+                          setApplicableFees(prev =>
+                            prev.map((f, i) => i === index ? { ...f, is_enabled: !f.is_enabled } : f)
+                          );
+                        }}
+                        className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 text-left ${
+                          fee.is_enabled
+                            ? "bg-indigo-50/40 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-800 shadow-sm"
+                            : "bg-slate-50/60 dark:bg-slate-800/20 border-border opacity-60 hover:opacity-90"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={fee.is_enabled}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              setApplicableFees(prev =>
+                                prev.map((f, i) => i === index ? { ...f, is_enabled: e.target.checked } : f)
+                              );
+                            }}
+                            className="w-4 h-4 accent-primary rounded cursor-pointer shrink-0"
+                          />
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 truncate">
+                                {fee.name}
+                              </span>
+                              {fee.is_mandatory && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                                  Standard
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] text-slate-400 font-medium">
+                              {fee.frequency || "Monthly"}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                          <div className="relative w-28">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">₹</span>
+                            <input
+                              type="number"
+                              min="0"
+                              value={fee.amount}
+                              disabled={!fee.is_enabled}
+                              onChange={(e) => {
+                                const val = Math.max(0, Number(e.target.value) || 0);
+                                setApplicableFees(prev =>
+                                  prev.map((f, i) => i === index ? { ...f, amount: val } : f)
+                                );
+                              }}
+                              className="w-full pl-6 pr-2 py-1.5 text-xs font-bold font-sans text-right rounded-lg border border-border bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none focus:border-primary/50 disabled:opacity-50 disabled:bg-slate-100 dark:disabled:bg-slate-800"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </SectionCard>
 

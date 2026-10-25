@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 import { useAuth } from "@/app/context/auth";
+import { cacheSync } from "@/lib/utils/cache-sync";
 import {
   ArrowLeft,
   User,
@@ -379,6 +380,7 @@ export default function CollectFeesPage() {
 
       const data = await res.json();
       if (data.success) {
+        cacheSync.invalidate("fees");
         setLastPaymentResult(data.data.payment);
         setStep("receipt");
       } else {
