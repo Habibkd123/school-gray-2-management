@@ -10,6 +10,7 @@ import {
 import { useExams } from "@/app/hooks/useExams";
 import { useClasses } from "@/app/hooks/useClasses";
 import { useAppState } from "@/app/context/store";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 
 export default function ClassExamDetailsPage() {
   const params = useParams();
@@ -19,6 +20,7 @@ export default function ClassExamDetailsPage() {
   const { exams, loading, fetchExams } = useExams();
   const { classes } = useClasses();
   const { academicYear } = useAppState();
+  const { enableSections } = useAcademicConfig();
 
   const [isMounted, setIsMounted] = useState(false);
 
@@ -88,7 +90,7 @@ export default function ClassExamDetailsPage() {
           </button>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              {classInfo.name} {classInfo.section ? `- ${classInfo.section}` : ""}
+              {classInfo.name} {enableSections && classInfo.section ? `- ${classInfo.section}` : ""}
             </h1>
             <p className="text-sm font-medium text-slate-500 mt-1 flex items-center gap-2">
               <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wider">

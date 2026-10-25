@@ -62,7 +62,7 @@ const DAILY_CACHE_TTL_MS = 60_000;
 export default function StudentAttendancePage() {
   const router = useRouter();
   const { academicYear } = useAppState();
-  const { enableStreams } = useAcademicConfig();
+  const { enableStreams, enableSections } = useAcademicConfig();
 
   const authReady = useAuthReady();
   const {
@@ -958,7 +958,7 @@ export default function StudentAttendancePage() {
                   <option value="">Select Class</option>
                   {filteredClasses.map((c) => (
                     <option key={c._id} value={c._id}>
-                      {c.name} {c.section ? `- ${c.section}` : ""}
+                      {c.name} {enableSections && c.section ? `- ${c.section}` : ""}
                     </option>
                   ))}
                 </select>
@@ -1224,7 +1224,7 @@ export default function StudentAttendancePage() {
                           <div>
                             <h3 className="text-[14px] font-extrabold text-slate-850 dark:text-white leading-tight group-hover:text-primary transition-colors">
                               {cls.name}{" "}
-                              {cls.section ? (
+                              {enableSections && cls.section ? (
                                 <span className="text-slate-400 font-semibold text-xs">
                                   - {cls.section}
                                 </span>

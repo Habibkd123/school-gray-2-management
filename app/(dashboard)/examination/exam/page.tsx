@@ -14,6 +14,7 @@ import { useExams } from "@/app/hooks/useExams";
 import { useClasses } from "@/app/hooks/useClasses";
 import { usePagination, PaginationBar } from "@/app/components/ui/pagination-bar";
 import { useAppState } from "@/app/context/store";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
 
 const PAGE_SIZE = 30;
@@ -23,6 +24,7 @@ export default function ExamListPage() {
   const { exams, loading, createExam, updateExam, deleteExam } = useExams();
   const { classes } = useClasses();
   const { academicYear } = useAppState();
+  const { enableSections } = useAcademicConfig();
 
   const [menuAnchorRect, setMenuAnchorRect] = useState<DOMRect | null>(null);
   const [activeExam, setActiveExam] = useState<any | null>(null);
@@ -536,7 +538,7 @@ export default function ExamListPage() {
                           <td colSpan={6} className="px-4 py-4">
                             <div className="flex items-center gap-4">
                               <span className="font-bold text-[14px] text-slate-800 dark:text-slate-100">
-                                {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                                {group.class.name} {enableSections && group.class.section ? `- ${group.class.section}` : ""}
                               </span>
                               <div className="flex items-center gap-3 text-[12px] font-medium text-slate-500">
                                 <span className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2.5 py-0.5 rounded-full">
@@ -600,7 +602,7 @@ export default function ExamListPage() {
                           </div>
                           <div className="truncate">
                             <h3 className="font-bold text-slate-900 dark:text-white text-[16px] truncate">
-                              {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                              {group.class.name} {enableSections && group.class.section ? `- ${group.class.section}` : ""}
                             </h3>
                             <p className="text-[12px] font-medium text-slate-500 mt-0.5 truncate">
                               {academicYear}
@@ -694,7 +696,7 @@ export default function ExamListPage() {
                 <span className="block text-[11px] font-bold text-slate-400 uppercase">Class</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-100">
                   {typeof viewingExam.class_id === "object"
-                    ? `${viewingExam.class_id?.name || ""} - ${viewingExam.class_id?.section || ""}`
+                    ? `${viewingExam.class_id?.name || ""}${enableSections && viewingExam.class_id?.section ? ` - ${viewingExam.class_id.section}` : ""}`
                     : "—"}
                 </span>
               </div>
@@ -798,7 +800,7 @@ export default function ExamListPage() {
                     }}
                     className="rounded border-slate-300 text-primary focus:ring-primary"
                   />
-                  <span>{cls.name} - {cls.section}</span>
+                  <span>{cls.name}{enableSections && cls.section ? ` - ${cls.section}` : ""}</span>
                 </label>
               ))}
             </div>
@@ -919,7 +921,7 @@ export default function ExamListPage() {
               >
                 <option value="">Select Class</option>
                 {classes.map((cls) => (
-                  <option key={cls._id} value={cls._id}>{cls.name} - {cls.section}</option>
+                  <option key={cls._id} value={cls._id}>{cls.name}{enableSections && cls.section ? ` - ${cls.section}` : ""}</option>
                 ))}
               </select>
               <ChevronDown className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />

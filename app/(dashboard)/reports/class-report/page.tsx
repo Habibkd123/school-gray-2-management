@@ -8,11 +8,13 @@ import { useClasses } from "../../../hooks/useClasses";
 import { useStudents } from "../../../hooks/useStudents";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAuth } from "@/app/context/auth";
-import ReportTabs from "../ReportTabs";
 import { PrintService } from "@/app/lib/print-service";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
+import ReportTabs from "../ReportTabs";
 
 export default function ClassReportPage() {
   const { user } = useAuth();
+  const { enableSections } = useAcademicConfig();
   const isSuperAdmin = user?.role === "super_admin";
   const { classes, isLoading, fetchClasses } = useClasses();
   const { students, fetchStudents } = useStudents({ skip: true });
@@ -80,13 +82,13 @@ export default function ClassReportPage() {
     return classes.filter((c) => {
       const matchSearch =
         c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.section.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (enableSections && c.section && c.section.toLowerCase().includes(searchTerm.toLowerCase())) ||
         c._id.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchSection = !filterSection || c.section === filterSection;
+      const matchSection = !enableSections || !filterSection || c.section === filterSection;
       const matchSchool = !filterSchool || (typeof c.school_id === 'object' ? c.school_id._id === filterSchool : c.school_id === filterSchool);
       return matchSearch && matchSection && matchSchool;
     });
-  }, [classes, searchTerm, filterSection, filterSchool]);
+  }, [classes, searchTerm, filterSection, filterSchool, enableSections]);
 
   const sortedClasses = useMemo(() => {
     const list = [...filteredClasses];
@@ -331,24 +333,26 @@ export default function ClassReportPage() {
                           </select>
                         </div>
                       )}
-                      <div className="space-y-1.5">
-                        <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Section</label>
-                        <select
-                          value={filterSection}
-                          onChange={(e) => {
-                            setFilterSection(e.target.value);
-                            setPage(1);
-                          }}
-                          className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer"
-                        >
-                          <option value="">All Sections</option>
-                          {sections.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+                      {enableSections && (
+                        <div className="space-y-1.5">
+                          <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Section</label>
+                          <select
+                            value={filterSection}
+                            onChange={(e) => {
+                              setFilterSection(e.target.value);
+                              setPage(1);
+                            }}
+                            className="w-full px-3 py-2 border border-border rounded-lg text-[13px] outline-none bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 cursor-pointer"
+                          >
+                            <option value="">All Sections</option>
+                            {sections.map((s) => (
+                              <option key={s} value={s}>
+                                {s}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
                     <div className="p-4 flex justify-end gap-3 border-t border-border">
                       <button
@@ -434,7 +438,7 @@ export default function ClassReportPage() {
                   <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">School</th>
                 )}
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class</th>
-                <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Section</th>
+                {enableSections && <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Section</th>}
                 <th className="px-6 py-4 text-left font-bold text-slate-700 dark:text-slate-200">No of Students</th>
                 <th className="px-6 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Action</th>
               </tr>
@@ -465,7 +469,7 @@ export default function ClassReportPage() {
                       </td>
                     )}
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-bold">{cls.name}</td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{cls.section}</td>
+                    {enableSections && <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{cls.section || "—"}</td>}
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-semibold">
                       {getStudentsInClass(cls._id).length}
                     </td>
@@ -525,7 +529,7 @@ export default function ClassReportPage() {
               <div className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" />
                 <h3 className="text-[16px] font-bold text-slate-800 dark:text-slate-100">
-                  Class Performance Dashboard: {selectedClass?.name} {selectedClass?.section}
+                  Class Performance Dashboard: {selectedClass?.name}{enableSections && selectedClass?.section ? ` ${selectedClass.section}` : ""}
                 </h3>
               </div>
               <div className="flex items-center gap-3">
@@ -572,7 +576,9 @@ export default function ClassReportPage() {
                   <div className="bg-slate-50 dark:bg-slate-800/30 border border-border rounded-xl p-5 grid grid-cols-1 md:grid-cols-4 gap-4 text-[13px]">
                     <div>
                       <h4 className="font-bold text-[15px] text-slate-800 dark:text-slate-100">Class {classDetail.profile.name}</h4>
-                      <p className="text-slate-500 dark:text-slate-400">Section {classDetail.profile.section} (ID: {classDetail.profile.id.slice(-6).toUpperCase()})</p>
+                      {enableSections && selectedClass?.section && (
+                        <p className="text-slate-500 dark:text-slate-400">Section {classDetail.profile.section} (ID: {classDetail.profile.id.slice(-6).toUpperCase()})</p>
+                      )}
                     </div>
                     <div>
                       <p className="text-slate-400 text-xs uppercase font-bold">Class Teacher</p>

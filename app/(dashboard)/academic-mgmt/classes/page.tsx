@@ -31,10 +31,8 @@ export default function AcademicClassesPage() {
   const { academicYear } = useAppState();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
   const { classes, isLoading, error, total, totalPages, currentPage, fetchClasses, createClass, updateClass, deleteClass } = useClasses({ skip: true });
-  const { config } = useAcademicConfig();
+  const { config, enableSections, enableStreams } = useAcademicConfig();
   const { sections, createSection } = useSections();
-  const enableSections = config.enable_sections;
-  const enableStreams = config.enable_streams;
   const { streams } = useStreams({ skip: !enableStreams });
 
   // Modals
@@ -315,7 +313,7 @@ export default function AcademicClassesPage() {
   const columns: ColumnDef<any>[] = React.useMemo(() => {
     const cols: ColumnDef<any>[] = [
       { header: "#", accessorKey: "_id", render: (_c: ApiClass, i: number) => <span className="text-slate-500 font-medium text-[13px]">{i + 1}</span> },
-      { header: "Class", accessorKey: "name", render: (c) => <span className="font-medium text-slate-800 dark:text-slate-200">{c.name}{c.section ? ` - ${c.section}` : ""}</span> },
+      { header: "Class", accessorKey: "name", render: (c) => <span className="font-medium text-slate-800 dark:text-slate-200">{c.name}{enableSections && c.section ? ` - ${c.section}` : ""}</span> },
     ];
 
     if (enableSections) {

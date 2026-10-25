@@ -6,12 +6,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Info, ArrowRightLeft, ChevronDown, Search, ArrowRight, Check, X, RefreshCcw, Printer, Download, Calendar, Loader2, AlertCircle, AlertTriangle } from "lucide-react";
 import { useClasses, ApiClass } from "../../../hooks/useClasses";
 import { useStudents, ApiStudent } from "../../../hooks/useStudents";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { getAuthHeaders } from "@/lib/utils/session";
 
 function StudentPromotionContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const studentIdParam = searchParams.get("studentId");
+  const { enableSections } = useAcademicConfig();
 
   const { classes, isLoading: classesLoading } = useClasses();
   const { fetchStudents } = useStudents({ skip: true });
@@ -237,9 +239,11 @@ function StudentPromotionContent() {
     setSuccessMessage(null);
 
     // Find current class document ID
-    const fromClass = classes.find(c => c.name === selectedFromClassName && c.section === selectedFromSectionName && c.academic_year === fromSession);
+    const fromClass = enableSections
+      ? classes.find(c => c.name === selectedFromClassName && c.section === selectedFromSectionName && c.academic_year === fromSession)
+      : classes.find(c => c.name === selectedFromClassName && c.academic_year === fromSession);
     if (!fromClass) {
-      setErrorMessage("The selected source class and section was not found in the database. Please verify your selections.");
+      setErrorMessage(enableSections ? "The selected source class and section was not found in the database. Please verify your selections." : "The selected source class was not found in the database. Please verify your selections.");
       return;
     }
 
@@ -288,7 +292,9 @@ function StudentPromotionContent() {
     }
 
     // Resolve target classes
-    const targetClass = classes.find(c => c.name === selectedToClassName && c.section === selectedToSectionName && c.academic_year === promoteToSession);
+    const targetClass = enableSections
+      ? classes.find(c => c.name === selectedToClassName && c.section === selectedToSectionName && c.academic_year === promoteToSession)
+      : classes.find(c => c.name === selectedToClassName && c.academic_year === promoteToSession);
     const repeatClasses: Record<string, ApiClass | undefined> = {};
 
     // Build the promotions payload
@@ -301,7 +307,7 @@ function StudentPromotionContent() {
 
       if (action === "promote") {
         if (!targetClass) {
-          setErrorMessage(`The target class '${selectedToClassName} - ${selectedToSectionName}' does not exist for session '${promoteToSession}'. Please go to Classes settings to create it first.`);
+          setErrorMessage(`The target class '${selectedToClassName}${enableSections && selectedToSectionName ? ` - ${selectedToSectionName}` : ""}' does not exist for session '${promoteToSession}'. Please go to Classes settings to create it first.`);
           return;
         }
         promotionsPayload.push({
@@ -314,7 +320,7 @@ function StudentPromotionContent() {
         const currentClassName = typeof student.class_id === "object" ? student.class_id.name : selectedFromClassName;
         const currentSectionName = typeof student.class_id === "object" ? student.class_id.section : selectedFromSectionName;
 
-        let repeatClass = classes.find(c => c.name === currentClassName && c.section === currentSectionName && c.academic_year === promoteToSession);
+        let repeatClass = classes.find(c => c.name === currentClassName && (!enableSections || c.section === currentSectionName) && c.academic_year === promoteToSession);
 
         if (!repeatClass) {
           // Fallback to same class document if next year's repeating class is not created (to avoid errors)
@@ -482,7 +488,7 @@ function StudentPromotionContent() {
 
                 <div className="space-y-3">
                   <h3 className="text-[13px] font-bold text-slate-900 dark:text-white">Promotion From <span className="text-red-500">*</span></h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className={`grid grid-cols-1 ${enableSections ? "md:grid-cols-2" : ""} gap-4`}>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[12px] font-medium text-slate-600 dark:text-slate-400">Class</label>
                       {studentIdParam ? (
@@ -497,20 +503,22 @@ function StudentPromotionContent() {
                         </select>
                       )}
                     </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[12px] font-medium text-slate-600 dark:text-slate-400">Section</label>
-                      {studentIdParam ? (
-                        <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 px-3.5 py-2.5 border border-border rounded-lg">{selectedFromSectionName}</p>
-                      ) : (
-                        <select
-                          value={selectedFromSectionName}
-                          onChange={(e) => setSelectedFromSectionName(e.target.value)}
-                          className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
-                        >
-                          {sectionsInFromClass.map(s => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      )}
-                    </div>
+                    {enableSections && (
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[12px] font-medium text-slate-600 dark:text-slate-400">Section</label>
+                        {studentIdParam ? (
+                          <p className="text-[13px] font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 px-3.5 py-2.5 border border-border rounded-lg">{selectedFromSectionName}</p>
+                        ) : (
+                          <select
+                            value={selectedFromSectionName}
+                            onChange={(e) => setSelectedFromSectionName(e.target.value)}
+                            className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
+                          >
+                            {sectionsInFromClass.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -538,7 +546,7 @@ function StudentPromotionContent() {
 
                 <div className="space-y-3">
                   <h3 className="text-[13px] font-bold text-slate-900 dark:text-white">Promotion To <span className="text-red-500">*</span></h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className={`grid grid-cols-1 ${enableSections ? "md:grid-cols-2" : ""} gap-4`}>
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[12px] font-medium text-slate-600 dark:text-slate-400">Class</label>
                       <select
@@ -549,25 +557,27 @@ function StudentPromotionContent() {
                         {uniqueClassNamesTo.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[12px] font-medium text-slate-600 dark:text-slate-400">Section</label>
-                      <select
-                        value={selectedToSectionName}
-                        onChange={(e) => setSelectedToSectionName(e.target.value)}
-                        className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
-                      >
-                        {sectionsInToClass.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
+                    {enableSections && (
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[12px] font-medium text-slate-600 dark:text-slate-400">Section</label>
+                        <select
+                          value={selectedToSectionName}
+                          onChange={(e) => setSelectedToSectionName(e.target.value)}
+                          className="px-3.5 py-2.5 border border-border rounded-lg bg-white dark:bg-slate-900 text-[13px] text-slate-700 dark:text-slate-300 outline-none focus:border-primary/50 transition-all appearance-none cursor-pointer"
+                        >
+                          {sectionsInToClass.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Verification Warning for Target Class */}
-            {promoteToSession && selectedToClassName && selectedToSectionName && (
+            {promoteToSession && selectedToClassName && (!enableSections || selectedToSectionName) && (
               <div className="mt-4">
-                {!classes.some(c => c.name === selectedToClassName && c.section === selectedToSectionName && c.academic_year === promoteToSession) && (
+                {!classes.some(c => c.name === selectedToClassName && (!enableSections || c.section === selectedToSectionName) && c.academic_year === promoteToSession) && (
                   <div className="flex items-center gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 rounded-lg text-amber-700 dark:text-amber-300 text-[12.5px]">
                     <AlertTriangle className="w-4 h-4 text-primary shrink-0" />
                     <span>

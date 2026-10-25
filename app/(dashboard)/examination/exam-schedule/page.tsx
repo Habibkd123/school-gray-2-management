@@ -10,10 +10,12 @@ import { Modal } from "../../../components/ui/modal";
 import { useExams } from "../../../hooks/useExams";
 import { useExamSchedule, ApiExamSchedule } from "../../../hooks/useExamSchedule";
 import { useSubjects } from "../../../hooks/useSubjects";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 
 export default function ExamSchedulePage() {
   const searchParams = useSearchParams();
   const examIdParam = searchParams.get("exam_id") || "";
+  const { enableSections } = useAcademicConfig();
 
   const { exams, loading: examsLoading } = useExams();
   const [selectedExamId, setSelectedExamId] = useState(examIdParam);
@@ -220,7 +222,7 @@ export default function ExamSchedulePage() {
               <option value="">Choose an Exam to schedule...</option>
               {exams.map((ex) => (
                 <option key={ex._id} value={ex._id}>
-                  {ex.name} {typeof ex.class_id === "object" ? `(${ex.class_id?.name || ""} - ${ex.class_id?.section || ""})` : ""}
+                  {ex.name} {typeof ex.class_id === "object" ? `(${ex.class_id?.name || ""}${enableSections && ex.class_id?.section ? ` - ${ex.class_id.section}` : ""})` : ""}
                 </option>
               ))}
             </select>
@@ -237,7 +239,7 @@ export default function ExamSchedulePage() {
           </h2>
           {selectedExam && (
             <span className="text-[12px] font-semibold text-slate-500 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1 rounded border border-border">
-              Class: {typeof selectedExam.class_id === "object" ? `${selectedExam.class_id?.name} - ${selectedExam.class_id?.section}` : "—"}
+              Class: {typeof selectedExam.class_id === "object" ? `${selectedExam.class_id?.name}${enableSections && selectedExam.class_id?.section ? ` - ${selectedExam.class_id.section}` : ""}` : "—"}
             </span>
           )}
         </div>

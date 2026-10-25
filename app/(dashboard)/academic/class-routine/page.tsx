@@ -8,6 +8,7 @@ import { useTeachers } from "../../../hooks/useTeachers";
 import { useTeacherAssignment } from "../../../hooks/useTeacherAssignment";
 import { useSubjectAssignment } from "../../../hooks/useSubjectAssignment";
 import { useAppState } from "../../../context/store";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { PrintButton } from "../../../components/ui/PrintButton";
 import { Modal } from "../../../components/ui/modal";
 import {
@@ -94,6 +95,7 @@ const getSubjectColor = (subjectName: string) => {
 
 export default function ClassRoutinePage() {
   const { academicYear, activeRole } = useAppState();
+  const { enableSections } = useAcademicConfig();
   const { classes, isLoading: classesLoading, fetchClasses } = useClasses();
   const { teachers, isLoading: teachersLoading } = useTeachers();
   const { assignments: teacherAssignments, fetchAssignments: fetchTeacherAssignments } = useTeacherAssignment();
@@ -605,7 +607,7 @@ export default function ClassRoutinePage() {
       <div id="printable-timetable" className="bg-white dark:bg-slate-900 border border-border rounded-xl card-shadow overflow-hidden p-5">
         <div className="border-b border-border pb-4 mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4 text-left">
           <h3 className="text-[16px] font-bold text-slate-900 dark:text-white">
-            {filterClassName ? `${filterClassName}${filterSection ? ` - ${filterSection}` : ""}` : "Master Academic Timetable"} ({filterYear})
+            {filterClassName ? `${filterClassName}${enableSections && filterSection ? ` - ${filterSection}` : ""}` : "Master Academic Timetable"} ({filterYear})
             {!isLoading && (
               <span className="ml-2 text-[13px] font-normal text-slate-400">({schedules.length} slots)</span>
             )}
@@ -742,7 +744,7 @@ export default function ClassRoutinePage() {
                         </div>
                         <div>
                           <h3 className="font-bold text-slate-900 dark:text-white text-[16px]">
-                            {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                            {group.class.name} {enableSections && group.class.section ? `- ${group.class.section}` : ""}
                           </h3>
                         </div>
                       </div>
@@ -915,7 +917,7 @@ export default function ClassRoutinePage() {
             {creationStep === 2 && (
               <div className="space-y-4">
                 <div className="bg-[#F8FAFC] dark:bg-slate-900 p-3 rounded-lg border border-border text-[13px] font-semibold text-slate-600 dark:text-slate-400">
-                  Class Room Target: <strong className="text-slate-800 dark:text-white">{formClassName}{formSection ? ` - ${formSection}` : ""}</strong>
+                  Class Room Target: <strong className="text-slate-800 dark:text-white">{formClassName}{enableSections && formSection ? ` - ${formSection}` : ""}</strong>
                 </div>
 
                 <div className="flex flex-col gap-1.5">

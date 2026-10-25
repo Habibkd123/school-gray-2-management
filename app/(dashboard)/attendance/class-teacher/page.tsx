@@ -33,10 +33,12 @@ import { useAppState } from "@/app/context/store";
 import { PrintService } from "@/app/lib/print-service";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { cacheSync } from "@/lib/utils/cache-sync";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 
 export default function ClassTeacherAssignmentPage() {
   const { user } = useAuth();
   const { academicYear } = useAppState();
+  const { enableSections } = useAcademicConfig();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
 
   const { classes, isLoading: loadingClasses, fetchClasses } = useClasses({ filterByYear: true });
@@ -528,7 +530,7 @@ export default function ClassTeacherAssignmentPage() {
               >
                 <option value="">All Classes</option>
                 {classesForYear.map(c => (
-                  <option key={c._id} value={c._id}>{c.name} {c.section ? `(${c.section})` : ""}</option>
+                  <option key={c._id} value={c._id}>{c.name}{enableSections && c.section ? ` (${c.section})` : ""}</option>
                 ))}
               </select>
               <ChevronDown className="w-4 h-4 text-slate-455 absolute right-3 top-2.5 pointer-events-none" />
@@ -536,22 +538,24 @@ export default function ClassTeacherAssignmentPage() {
           </div>
 
           {/* Section Filter */}
-          <div className="flex flex-col gap-1 w-full sm:w-44">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-455 mb-1">Section</label>
-            <div className="relative">
-              <select
-                value={filterSection}
-                onChange={(e) => setFilterSection(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none"
-              >
-                <option value="">All Sections</option>
-                {uniqueSections.map(sec => (
-                  <option key={sec} value={sec}>{sec}</option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-455 absolute right-3 top-2.5 pointer-events-none" />
+          {enableSections && (
+            <div className="flex flex-col gap-1 w-full sm:w-44">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-455 mb-1">Section</label>
+              <div className="relative">
+                <select
+                  value={filterSection}
+                  onChange={(e) => setFilterSection(e.target.value)}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-md outline-none cursor-pointer appearance-none"
+                >
+                  <option value="">All Sections</option>
+                  {uniqueSections.map(sec => (
+                    <option key={sec} value={sec}>{sec}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-455 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Teacher Filter */}
           <div className="flex flex-col gap-1 w-full sm:w-44">
@@ -681,7 +685,7 @@ export default function ClassTeacherAssignmentPage() {
                         <div className="font-extrabold text-slate-900 dark:text-white">
                           {a.class_id?.name || "Class"}
                         </div>
-                        {a.class_id?.section && (
+                        {enableSections && a.class_id?.section && (
                           <div className="text-[10px] text-slate-400 font-bold mt-0.5">Section: {a.class_id.section}</div>
                         )}
                       </td>
@@ -840,7 +844,7 @@ export default function ClassTeacherAssignmentPage() {
                   <tr>
                     <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class Code</th>
                     <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Class Name</th>
-                    <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Section</th>
+                    {enableSections && <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Section</th>}
                     <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Capacity</th>
                     <th className="px-4 py-4 text-left font-bold text-slate-700 dark:text-slate-200">Academic Year</th>
                     <th className="px-4 py-4 text-center font-bold text-slate-700 dark:text-slate-200">Action</th>
@@ -851,7 +855,7 @@ export default function ClassTeacherAssignmentPage() {
                     <tr key={c._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="px-4 py-4 font-sans font-bold text-slate-500">{c.class_code || "—"}</td>
                       <td className="px-4 py-4 font-bold text-slate-900 dark:text-white">{c.name}</td>
-                      <td className="px-4 py-4 font-semibold text-slate-655">{c.section || "—"}</td>
+                      {enableSections && <td className="px-4 py-4 font-semibold text-slate-655">{c.section || "—"}</td>}
                       <td className="px-4 py-4 font-sans">{c.capacity} Students</td>
                       <td className="px-4 py-4">{c.academic_year}</td>
                       <td className="px-4 py-4 text-center">
@@ -928,7 +932,7 @@ export default function ClassTeacherAssignmentPage() {
 
                 {/* Class & Section Selection */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Class & Section *</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{enableSections ? "Class & Section *" : "Class *"}</label>
                   <div className="relative">
                     <select
                       value={formClassId}
@@ -938,7 +942,7 @@ export default function ClassTeacherAssignmentPage() {
                     >
                       <option value="">Select Class</option>
                       {classesForYear.map(c => (
-                        <option key={c._id} value={c._id}>{c.name} {c.section ? `(${c.section})` : ""}</option>
+                        <option key={c._id} value={c._id}>{c.name}{enableSections && c.section ? ` (${c.section})` : ""}</option>
                       ))}
                     </select>
                     <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from "react"
 import { Modal } from "@/app/components/ui/modal";
 import { useClasses, ApiClass } from "@/app/hooks/useClasses";
 import { useTeachers } from "@/app/hooks/useTeachers";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 import {
@@ -186,6 +187,7 @@ export default function FeesManagementView({ isEmbedded = false }: { isEmbedded?
 
   const { teachers, isLoading: isTeachersLoading } = useTeachers();
   const { academicYear } = useAppState();
+  const { enableSections } = useAcademicConfig();
 
   const [activeTab, setActiveTab] = useState<"ledger" | "reports">("ledger");
 
@@ -395,14 +397,14 @@ export default function FeesManagementView({ isEmbedded = false }: { isEmbedded?
       },
       options: classes.map(c => {
         const cid = String(c._id || (c as any).id || "");
-        const sectionSuffix = c.section ? ` - ${c.section}` : "";
+        const sectionSuffix = enableSections && c.section ? ` - ${c.section}` : "";
         return {
           label: `${c.name}${sectionSuffix}`,
           value: cid
         };
       })
     },
-    {
+    ...(enableSections ? [{
       id: "section",
       label: "Section",
       type: "select" as const,
@@ -412,7 +414,7 @@ export default function FeesManagementView({ isEmbedded = false }: { isEmbedded?
         setCurrentPage(1);
       },
       options: sectionsList.map(s => ({ label: `Section ${s}`, value: s }))
-    },
+    }] : []),
     {
       id: "teacher_id",
       label: "Teacher",
@@ -1511,7 +1513,7 @@ export default function FeesManagementView({ isEmbedded = false }: { isEmbedded?
                           )}
                           {isColVisible("class") && (
                             <td className="px-3 py-2 text-slate-655 font-bold whitespace-nowrap">
-                              {student.class_name.split(" - ")[0] + (student.section !== "N/A" ? " - " + student.section : "")}
+                              {student.class_name.split(" - ")[0] + (enableSections && student.section !== "N/A" ? " - " + student.section : "")}
                             </td>
                           )}
                           {/* {isColVisible("section") && (

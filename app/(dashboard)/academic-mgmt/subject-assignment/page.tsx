@@ -14,6 +14,7 @@ import { useSubjectAssignment, PopulatedAssignment } from "@/app/hooks/useSubjec
 import { useSubjectMaster } from "@/app/hooks/useSubjectMaster";
 import { useClasses, ApiClass } from "@/app/hooks/useClasses";
 import { useTeachers } from "@/app/hooks/useTeachers";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
 import { useAuth } from "@/app/context/auth";
@@ -49,6 +50,7 @@ export default function SubjectAssignmentPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
   const { academicYear } = useAppState();
+  const { enableSections } = useAcademicConfig();
 
   const {
     assignments,
@@ -250,9 +252,12 @@ export default function SubjectAssignmentPage() {
   // Resolve Class ID from Class Name + Section Selection
   const resolvedClass = useMemo(() => {
     if (!formClassName) return null;
+    if (!enableSections) {
+      return classes.find(c => c.name === formClassName);
+    }
     const targetSection = formSection === "No Section" ? "" : formSection;
     return classes.find(c => c.name === formClassName && (c.section || "") === targetSection);
-  }, [classes, formClassName, formSection]);
+  }, [classes, formClassName, formSection, enableSections]);
 
   // Already-assigned subject IDs for the selected class + year (for duplicate prevention)
   const alreadyAssignedSubjectIds = useMemo(() => {
@@ -741,7 +746,7 @@ export default function SubjectAssignmentPage() {
                           className="w-full px-3 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-350 outline-none"
                         >
                           <option value="">All Classes</option>
-                          {sortedClasses.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
+                          {sortedClasses.map(c => <option key={c._id} value={c._id}>{c.name}{enableSections && c.section ? ` - ${c.section}` : ""}</option>)}
                         </select>
                       </div>
 
@@ -936,7 +941,7 @@ export default function SubjectAssignmentPage() {
                                   <div className="flex items-center gap-2">
                                     <GraduationCap className="w-4 h-4 text-primary" />
                                     <span className="font-bold text-[14px] text-slate-800 dark:text-slate-100">
-                                      {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                                      {group.class.name} {enableSections && group.class.section ? `- ${group.class.section}` : ""}
                                     </span>
                                   </div>
                                   <div className="flex items-center gap-3 text-[12px] font-medium text-slate-500">
@@ -1028,7 +1033,7 @@ export default function SubjectAssignmentPage() {
                             </div>
                             <div className="truncate">
                               <h3 className="font-bold text-slate-900 dark:text-white text-[16px] truncate">
-                                {group.class.name} {group.class.section ? `- ${group.class.section}` : ""}
+                                {group.class.name} {enableSections && group.class.section ? `- ${group.class.section}` : ""}
                               </h3>
                               <p className="text-[12px] font-medium text-slate-500 mt-0.5 truncate">
                                 {filterYear || academicYear}
@@ -1113,7 +1118,7 @@ export default function SubjectAssignmentPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className={`grid grid-cols-1 ${enableSections ? 'md:grid-cols-2' : ''} gap-4`}>
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Class <span className="text-red-500">*</span></label>
               <div className="relative">
@@ -1129,20 +1134,22 @@ export default function SubjectAssignmentPage() {
               </div>
             </div>
 
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Section</label>
-              <div className="relative">
-                <select
-                  value={formSection}
-                  onChange={(e) => setFormSection(e.target.value)}
-                  disabled={!formClassName}
-                  className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400"
-                >
-                  <option value="">Select Section</option>
-                  {availableSections.map(sec => <option key={sec} value={sec}>{sec}</option>)}
-                </select>
+            {enableSections && (
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[13px] font-semibold text-slate-700 dark:text-slate-205">Section</label>
+                <div className="relative">
+                  <select
+                    value={formSection}
+                    onChange={(e) => setFormSection(e.target.value)}
+                    disabled={!formClassName}
+                    className="w-full px-3.5 py-2.5 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-foreground outline-none focus:border-primary/50 disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-400"
+                  >
+                    <option value="">Select Section</option>
+                    {availableSections.map(sec => <option key={sec} value={sec}>{sec}</option>)}
+                  </select>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Multi-Subject Picker */}
@@ -1459,7 +1466,7 @@ export default function SubjectAssignmentPage() {
                   {selectedAssignment.class_id.name}{selectedAssignment.class_id.section ? ` - ${selectedAssignment.class_id.section}` : ""}
                 </option>
               )}
-              {sortedClasses.map(c => <option key={c._id} value={c._id}>{c.name}{c.section ? ` - ${c.section}` : ""}</option>)}
+              {sortedClasses.map(c => <option key={c._id} value={c._id}>{c.name}{enableSections && c.section ? ` - ${c.section}` : ""}</option>)}
             </select>
           </div>
 

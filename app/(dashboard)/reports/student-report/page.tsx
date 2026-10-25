@@ -8,11 +8,13 @@ import { useStudents } from "../../../hooks/useStudents";
 import { useClasses } from "../../../hooks/useClasses";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAuth } from "@/app/context/auth";
-import ReportTabs from "../ReportTabs";
 import { PrintService } from "@/app/lib/print-service";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
+import ReportTabs from "../ReportTabs";
 
 export default function StudentReportPage() {
   const { user } = useAuth();
+  const { enableSections } = useAcademicConfig();
   const isSuperAdmin = user?.role === "super_admin";
   const { students, isLoading, fetchStudents } = useStudents({ skip: true });
   const { classes } = useClasses();
@@ -75,9 +77,9 @@ export default function StudentReportPage() {
 
   const getClassName = (class_id: any) => {
     if (!class_id) return "—";
-    if (typeof class_id === "object") return `${class_id?.name} ${class_id?.section}`;
+    if (typeof class_id === "object") return `${class_id?.name}${enableSections && class_id?.section ? ` (${class_id?.section})` : ""}`;
     const cls = classes.find((c) => c._id === class_id);
-    return cls ? `${cls.name} ${cls.section}` : "—";
+    return cls ? `${cls.name}${enableSections && cls.section ? ` (${cls.section})` : ""}` : "—";
   };
 
   const sortedClasses = useMemo(() => {
@@ -107,7 +109,7 @@ export default function StudentReportPage() {
 
       const matchClass = !filterClass || studentClassIdStr === String(filterClass);
       const sSection = (cls?.section || (typeof s.class_id === "object" ? s.class_id?.section : "") || "").trim();
-      const matchSection = !filterSection || sSection.toLowerCase() === filterSection.toLowerCase();
+      const matchSection = !enableSections || !filterSection || sSection.toLowerCase() === filterSection.toLowerCase();
       const sGender = (s.gender || "").toLowerCase().trim();
       const matchGender = !filterGender || sGender === filterGender.toLowerCase();
       const matchStatus = !filterStatus || (filterStatus === "active" ? s.is_active : !s.is_active);
@@ -387,7 +389,7 @@ export default function StudentReportPage() {
                           </select>
                         </div>
                       )}
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className={`grid ${enableSections ? 'grid-cols-2' : 'grid-cols-1'} gap-4`}>
                         <div className="space-y-1.5">
                           <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Class</label>
                           <div className="relative">
@@ -402,34 +404,36 @@ export default function StudentReportPage() {
                               <option value="">All Classes</option>
                               {sortedClasses.map((c) => (
                                 <option key={c._id} value={c._id}>
-                                  {c.name}{c.section ? ` (${c.section})` : ""}
+                                  {c.name}{enableSections && c.section ? ` (${c.section})` : ""}
                                 </option>
                               ))}
                             </select>
                             <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
                           </div>
                         </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Section</label>
-                          <div className="relative">
-                            <select
-                              value={filterSection}
-                              onChange={(e) => {
-                                setFilterSection(e.target.value);
-                                setPage(1);
-                              }}
-                              className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none cursor-pointer appearance-none"
-                            >
-                              <option value="">All</option>
-                              {sections.map((s) => (
-                                <option key={s} value={s}>
-                                  {s}
-                                </option>
-                              ))}
-                            </select>
-                            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                        {enableSections && (
+                          <div className="space-y-1.5">
+                            <label className="text-[13px] font-bold text-slate-800 dark:text-slate-100">Section</label>
+                            <div className="relative">
+                              <select
+                                value={filterSection}
+                                onChange={(e) => {
+                                  setFilterSection(e.target.value);
+                                  setPage(1);
+                                }}
+                                className="w-full pl-3 pr-8 py-2 border border-border rounded-lg text-[13px] bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none cursor-pointer appearance-none"
+                              >
+                                <option value="">All</option>
+                                {sections.map((s) => (
+                                  <option key={s} value={s}>
+                                    {s}
+                                  </option>
+                                ))}
+                              </select>
+                              <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" />
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1.5">
@@ -763,7 +767,7 @@ export default function StudentReportPage() {
                     <div className="space-y-1">
                       <p className="text-slate-400 text-xs uppercase font-bold">Academic Details</p>
                       <p className="font-semibold text-slate-800 dark:text-slate-200">
-                        Class: <span className="font-bold text-primary">{studentDetail.profile.className} {studentDetail.profile.section}</span>
+                        Class: <span className="font-bold text-primary">{studentDetail.profile.className}{enableSections && studentDetail.profile.section ? ` (${studentDetail.profile.section})` : ""}</span>
                       </p>
                       <p className="text-slate-500 dark:text-slate-400">Roll No: {studentDetail.profile.rollNo} | Adm No: {studentDetail.profile.admissionNo}</p>
                     </div>

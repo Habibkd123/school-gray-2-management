@@ -33,6 +33,7 @@ import { useResults } from "@/app/hooks/useExams";
 import { useExamSchedule } from "@/app/hooks/useExamSchedule";
 import { useAuth } from "@/app/context/auth";
 import { useAppState } from "@/app/context/store";
+import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { getAuthHeaders } from "@/lib/utils/session";
 
 function resolveId(field: { _id: string } | string | undefined): string {
@@ -43,6 +44,7 @@ function resolveId(field: { _id: string } | string | undefined): string {
 export default function MarksEntryPage() {
   const { user } = useAuth();
   const { academicYear } = useAppState();
+  const { enableSections } = useAcademicConfig();
   const isAdmin = user?.role === "school_admin" || user?.role === "super_admin";
   const isTeacher = user?.role === "teacher";
 
@@ -98,9 +100,13 @@ export default function MarksEntryPage() {
 
   // Resolve target class ID based on Class name + Section selection
   const resolvedClass = useMemo(() => {
-    if (!selectedClassName || !selectedSection) return null;
+    if (!selectedClassName) return null;
+    if (!enableSections) {
+      return classes.find(c => c.name === selectedClassName) || null;
+    }
+    if (!selectedSection) return null;
     return classes.find(c => c.name === selectedClassName && c.section === selectedSection) || null;
-  }, [classes, selectedClassName, selectedSection]);
+  }, [classes, selectedClassName, selectedSection, enableSections]);
 
   const resolvedClassId = resolvedClass?._id || "";
 
@@ -583,26 +589,28 @@ export default function MarksEntryPage() {
           </div>
 
           {/* Section Filter */}
-          <div className="flex flex-col gap-1 w-full sm:w-36">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-455 mb-1">Section</label>
-            <div className="relative">
-              <select
-                value={selectedSection}
-                onChange={(e) => {
-                  setSelectedSection(e.target.value);
-                  setSelectedSubjectId("");
-                }}
-                disabled={!selectedClassName}
-                className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none cursor-pointer appearance-none disabled:opacity-50"
-              >
-                <option value="">Select Section</option>
-                {sectionsForSelectedClass.map(sec => (
-                  <option key={sec} value={sec}>{sec}</option>
-                ))}
-              </select>
-              <ChevronDown className="w-4 h-4 text-slate-455 absolute right-3 top-2.5 pointer-events-none" />
+          {enableSections && (
+            <div className="flex flex-col gap-1 w-full sm:w-36">
+              <label className="text-[11px] font-bold uppercase tracking-wider text-slate-455 mb-1">Section</label>
+              <div className="relative">
+                <select
+                  value={selectedSection}
+                  onChange={(e) => {
+                    setSelectedSection(e.target.value);
+                    setSelectedSubjectId("");
+                  }}
+                  disabled={!selectedClassName}
+                  className="w-full pl-3 pr-8 py-2 bg-slate-50 dark:bg-slate-950 border border-border text-slate-850 dark:text-slate-200 text-xs font-bold rounded-xl outline-none cursor-pointer appearance-none disabled:opacity-50"
+                >
+                  <option value="">Select Section</option>
+                  {sectionsForSelectedClass.map(sec => (
+                    <option key={sec} value={sec}>{sec}</option>
+                  ))}
+                </select>
+                <ChevronDown className="w-4 h-4 text-slate-455 absolute right-3 top-2.5 pointer-events-none" />
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Subject Filter */}
           <div className="flex flex-col gap-1 w-full sm:w-52">
@@ -672,7 +680,7 @@ export default function MarksEntryPage() {
               {(!selectedExamId || !resolvedClassId || !selectedSubjectId) ? (
                 <tr>
                   <td colSpan={9} className="px-6 py-16 text-center text-slate-450 font-bold text-xs">
-                    Please use the filter bar above to select Exam, Class Section, and Subject to start entering marks.
+                    Please use the filter bar above to select Exam, {enableSections ? "Class & Section" : "Class"}, and Subject to start entering marks.
                   </td>
                 </tr>
               ) : (loadingStudents || loadingResults || loadingSchedules) ? (
@@ -685,7 +693,7 @@ export default function MarksEntryPage() {
               ) : filteredStudents.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="px-6 py-16 text-center text-slate-450 font-bold text-xs">
-                    No active students found matching the selected class/section or search filter.
+                    No active students found matching the selected {enableSections ? "class/section" : "class"} or search filter.
                   </td>
                 </tr>
               ) : filteredStudents.map((student, idx) => {

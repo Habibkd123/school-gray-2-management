@@ -6,7 +6,7 @@ import Link from "next/link";
 import {
   Loader2, BookOpen, User, AlertCircle, BarChart3,
   ChevronLeft, ArrowLeft, Search, RefreshCw, ChevronDown,
-  MoreVertical, CheckCircle2, History, Globe, Lock, ArrowRight, Eye, Edit
+  CheckCircle2, History, Globe, Lock, ArrowRight, Eye, Edit, Trash2
 } from "lucide-react";
 import { useSyllabus, SyllabusData } from "@/app/hooks/useSyllabus";
 import { useClasses } from "@/app/hooks/useClasses";
@@ -37,7 +37,6 @@ export default function SyllabusClassSubjectListPage() {
   const { classes } = useClasses({ filterByYear: false });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
 
   // Delete action states
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -249,47 +248,27 @@ export default function SyllabusClassSubjectListPage() {
                       </span>
 
                       {!isStudentOrParent && (
-                        <div className="relative">
+                        <div className="flex items-center gap-1">
                           <button
                             type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveDropdownId(activeDropdownId === s._id ? null : s._id || null);
-                            }}
-                            className="p-1 text-slate-400 hover:text-slate-600 dark:text-slate-550 dark:hover:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                            onClick={() => router.push(`/academic-mgmt/syllabus/${classId}/${s._id}`)}
+                            title="View Syllabus"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:text-slate-400 dark:hover:text-blue-400 dark:hover:bg-blue-950/40 transition-colors cursor-pointer"
                           >
-                            <MoreVertical className="w-4 h-4" />
+                            <Eye className="w-4 h-4" />
                           </button>
-
-                          {activeDropdownId === s._id && (
-                            <>
-                              <div className="fixed inset-0 z-45" onClick={(e) => { e.stopPropagation(); setActiveDropdownId(null); }} />
-                              <div className="absolute right-0 top-7 w-44 bg-white dark:bg-slate-900 border border-border rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] z-50 overflow-hidden py-2 text-left font-medium">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    router.push(`/academic-mgmt/syllabus/${classId}/${s._id}`);
-                                    setActiveDropdownId(null);
-                                  }}
-                                  className="w-full px-4 py-2 text-[13px] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center gap-3 transition-colors cursor-pointer font-bold"
-                                >
-                                  <Eye className="w-4 h-4 text-slate-400" /> View Syllabus
-                                </button>
-                                {isAdmin && (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setSelectedSyllabus(s);
-                                      setIsDeleteOpen(true);
-                                      setActiveDropdownId(null);
-                                    }}
-                                    className="w-full px-4 py-2 text-[13px] text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 flex items-center gap-3 transition-colors cursor-pointer font-bold"
-                                  >
-                                    🗑 Delete
-                                  </button>
-                                )}
-                              </div>
-                            </>
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedSyllabus(s);
+                                setIsDeleteOpen(true);
+                              }}
+                              title="Delete Syllabus"
+                              className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:text-slate-400 dark:hover:text-rose-400 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           )}
                         </div>
                       )}

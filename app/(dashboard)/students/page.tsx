@@ -762,19 +762,21 @@ export default function StudentsPage() {
                         </div>
 
                         {/* Section */}
-                        <div className="flex flex-col gap-1.5 text-left">
-                          <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Section</label>
-                          <select
-                            value={sectionFilter}
-                            onChange={(e) => { setSectionFilter(e.target.value); setPage(1); }}
-                            className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none cursor-pointer bg-white dark:bg-slate-900"
-                          >
-                            <option value="all">All Sections</option>
-                            {filterMetadata.sections.map((s) => (
-                              <option key={s} value={s}>Section {s}</option>
-                            ))}
-                          </select>
-                        </div>
+                        {enableSections && (
+                          <div className="flex flex-col gap-1.5 text-left">
+                            <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">Section</label>
+                            <select
+                              value={sectionFilter}
+                              onChange={(e) => { setSectionFilter(e.target.value); setPage(1); }}
+                              className="w-full px-3 py-2 text-[13px] text-slate-700 dark:text-slate-200 border border-border rounded-lg outline-none cursor-pointer bg-white dark:bg-slate-900"
+                            >
+                              <option value="all">All Sections</option>
+                              {filterMetadata.sections.map((s) => (
+                                <option key={s} value={s}>Section {s}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
 
                         {/* House */}
                         {/* <div className="flex flex-col gap-1.5 text-left">

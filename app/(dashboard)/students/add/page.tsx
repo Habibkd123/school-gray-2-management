@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useClasses } from "../../../hooks/useClasses";
 import { useStudents, getStoredStudent } from "../../../hooks/useStudents";
 import { useUpload } from "../../../hooks/useUpload";
+import { useAcademicConfig } from "../../../hooks/useAcademicConfig";
 import {
   Upload, User, MapPin, Users,
   X, Loader2, ImageIcon, Copy, Check, Lock, KeyRound, AlertCircle,
@@ -152,6 +153,7 @@ function AddStudentContent() {
   const { createStudent, updateStudent, getStudent } = useStudents({ skip: true });
   const { uploadFile } = useUpload();
   const { academicYear: activeAcademicYear } = useAppState();
+  const { enableSections } = useAcademicConfig();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const submittingRef = useRef(false);
@@ -162,7 +164,7 @@ function AddStudentContent() {
   const [uploadingStudentPhoto, setUploadingStudentPhoto] = useState(false);
   const [uploadingGuardianPhoto, setUploadingGuardianPhoto] = useState(false);
 
-  const classOptions = apiClasses.map(c => ({ label: c.section ? `${c.name} - ${c.section}` : c.name, value: c._id }));
+  const classOptions = apiClasses.map(c => ({ label: enableSections && c.section ? `${c.name} - ${c.section}` : c.name, value: c._id }));
   const yearOptions = Array.from(new Set(["2024-2025", "2025-2026", "2026-2027", "2027-2028", activeAcademicYear].filter(Boolean)));
 
   const cachedStudent = editId ? getStoredStudent(editId) : null;
@@ -424,7 +426,7 @@ function AddStudentContent() {
           const selectedClass = apiClasses.find(c => c._id === val);
           if (!selectedClass) return "Selected class is invalid.";
 
-          const sectionsExistForClass = apiClasses.some(
+          const sectionsExistForClass = enableSections && apiClasses.some(
             c => c.name.toLowerCase() === selectedClass.name.toLowerCase() && c.section && c.section.trim() !== ""
           );
           if (sectionsExistForClass && (!selectedClass.section || !selectedClass.section.trim())) {
@@ -608,18 +610,20 @@ function AddStudentContent() {
                 <InputGroup label="Class" type="select" value={classId} onChange={e => setClassId(e.target.value)} options={[{ label: "Select", value: "" }, ...classOptions]} required error={valErrors.classId} id="classId" />
 
                 {/* Section display (read-only) */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">
-                    Section
-                  </label>
-                  <input
-                    type="text"
-                    value={section}
-                    readOnly
-                    disabled
-                    className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800/50 border border-border rounded-lg outline-none cursor-not-allowed font-medium opacity-80"
-                  />
-                </div>
+                {enableSections && (
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[12px] font-semibold text-slate-700 dark:text-slate-200">
+                      Section
+                    </label>
+                    <input
+                      type="text"
+                      value={section}
+                      readOnly
+                      disabled
+                      className="w-full px-3.5 py-2.5 text-[13px] text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800/50 border border-border rounded-lg outline-none cursor-not-allowed font-medium opacity-80"
+                    />
+                  </div>
+                )}
 
                 <InputGroup label="Roll Number" value={rollNo} onChange={e => setRollNo(e.target.value)} />
                 <InputGroup label="Student Name" value={name} onChange={e => setName(e.target.value)} required error={valErrors.name} id="name" />
@@ -742,7 +746,7 @@ function AddStudentContent() {
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold uppercase tracking-wider">
-                        {apiClasses.find(c => c._id === classId)?.name || "Selected Class"}{apiClasses.find(c => c._id === classId)?.section ? ` - ${apiClasses.find(c => c._id === classId)?.section}` : ""} • {academicYear}
+                        {apiClasses.find(c => c._id === classId)?.name || "Selected Class"}{enableSections && apiClasses.find(c => c._id === classId)?.section ? ` - ${apiClasses.find(c => c._id === classId)?.section}` : ""} • {academicYear}
                       </span>
                     </div>
                     <p className="text-xs text-slate-350 mt-1">
