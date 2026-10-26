@@ -376,7 +376,10 @@ const ALL_RECEIPTS: ReceiptItem[] = [
   },
 ];
 
+import ReceiptBuilder from "./ReceiptBuilder";
+
 export default function ReceiptSettingsTab() {
+  const [viewMode, setViewMode] = useState<"builder" | "catalog">("builder");
   const [selectedCategory, setSelectedCategory] = useState<"all" | "fees" | "student" | "staff" | "accounts">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeModalItem, setActiveModalItem] = useState<ReceiptItem | null>(null);
@@ -407,10 +410,52 @@ export default function ReceiptSettingsTab() {
 
   return (
     <div className="space-y-6 text-left">
-      {/* Top Banner / Summary */}
-      <div className="bg-white dark:bg-slate-900 border border-border rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
+      {/* ── Sub Navigation Header: Builder vs Catalog ────────────────── */}
+      <div className="flex items-center justify-between border-b border-border pb-3 flex-wrap gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setViewMode("builder")}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+              viewMode === "builder"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <SlidersHorizontal className="w-4 h-4" />
+            Live Receipt Builder & Customizer
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setViewMode("catalog")}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center gap-2 cursor-pointer ${
+              viewMode === "catalog"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            Template Catalog & Gallery ({ALL_RECEIPTS.length})
+          </button>
+        </div>
+
+        <div className="text-[11px] text-slate-500 hidden sm:block">
+          {viewMode === "builder"
+            ? "Configure layout, positions, paper size & columns in real-time"
+            : "Explore standardized print samples and voucher formats"}
+        </div>
+      </div>
+
+      {/* ── Render Active View ───────────────────────────────────────── */}
+      {viewMode === "builder" ? (
+        <ReceiptBuilder />
+      ) : (
+        <div className="space-y-6">
+          {/* Top Banner / Summary */}
+          <div className="bg-white dark:bg-slate-900 border border-border rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
             <span className="p-2 bg-primary/10 text-primary rounded-xl">
               <Receipt className="w-5 h-5" />
             </span>
@@ -689,6 +734,9 @@ export default function ReceiptSettingsTab() {
           </div>
         </div>
       )}
+        </div>
+      )}
     </div>
   );
 }
+

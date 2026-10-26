@@ -7,6 +7,8 @@ import { useTeachers } from "@/app/hooks/useTeachers";
 import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import { getAuthHeaders } from "@/lib/utils/session";
 import { useAppState } from "@/app/context/store";
+import { useAuth } from "@/app/context/auth";
+import { useReceiptConfig } from "@/app/hooks/useReceiptConfig";
 import {
   DollarSign,
   Plus,
@@ -126,6 +128,8 @@ const DEFAULT_FEE_TYPES: FeeTypeItem[] = [
 ];
 
 export default function FeesManagementView({ isEmbedded = false }: { isEmbedded?: boolean }) {
+  const { school } = useAuth();
+  const { config: receiptConfig, schoolInfo } = useReceiptConfig();
   const { classes: hookClasses, isLoading: isClassesLoading, fetchClasses } = useClasses();
   const [directClasses, setDirectClasses] = useState<ApiClass[]>(() => {
     if (typeof window !== "undefined") {
@@ -1160,7 +1164,12 @@ export default function FeesManagementView({ isEmbedded = false }: { isEmbedded?
   };
 
   const handleBulkPrint = () => {
-    alert("Bulk printable queue generated. Preparing PDF window...");
+    const schoolName = receiptConfig.school_name_custom || school?.name || schoolInfo?.name || "School";
+    const schoolSubtitle = receiptConfig.school_subtitle_custom || school?.subtitle || schoolInfo?.subtitle || "";
+    const schoolLogo = receiptConfig.custom_logo_url || school?.logo_url || schoolInfo?.logo_url || "";
+    const schoolAddress = receiptConfig.address_custom || school?.address || schoolInfo?.address || "";
+    const schoolPhone = receiptConfig.contact_custom || school?.phone || schoolInfo?.phone || "";
+
     const printWin = window.open("", "_blank", "width=820,height=950");
     if (!printWin) {
       alert("Popup blocked! Please allow popups for this site.");
@@ -1170,30 +1179,70 @@ export default function FeesManagementView({ isEmbedded = false }: { isEmbedded?
     let contents = `
       <html>
         <head>
-          <title>Bulk Fee Receipts</title>
+          <title>Bulk Fee Receipts - ${schoolName}</title>
           <style>
             @media print { .page-break { page-break-after: always; } }
-            body { font-family: sans-serif; padding: 20px; color: #333; }
+            body { font-family: system-ui, -apple-system, sans-serif; padding: 24px; color: #1e293b; background: #fff; }
+            .receipt-card { border: 1.5px solid #0f172a; padding: 24px; margin: 30px 0; border-radius: 12px; }
+            .header-box { text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px; }
+            .header-box h1 { font-size: 18px; font-weight: 900; text-transform: uppercase; margin: 0; color: #0f172a; }
+            .header-box p { font-size: 10px; color: #475569; margin: 2px 0 0 0; }
+            .badge { display: inline-block; background: #0f172a; color: #fff; font-size: 8.5px; font-weight: 800; padding: 2px 10px; border-radius: 9999px; text-transform: uppercase; margin-top: 6px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px; margin-bottom: 16px; }
+            .summary-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+            .summary-table th, .summary-table td { border: 1px solid #e2e8f0; padding: 6px 10px; text-align: left; }
+            .summary-table th { background: #f8fafc; font-weight: 700; color: #475569; }
           </style>
         </head>
         <body>
-          <h2 style="text-align:center">Bulk Fees Receipt Documents Bundle</h2>
+          <h2 style="text-align:center; font-size: 16px; margin-bottom: 20px;">Bulk Fee Statement / Receipts Bundle</h2>
     `;
 
     selectedStudentIds.forEach(id => {
       const s = students.find(item => item._id === id);
       if (s) {
         contents += `
-          <div style="border: 2px solid #333; padding: 30px; margin: 40px 0; border-radius: 12px;" class="page-break">
-            <h1 style="text-align:center; margin-bottom:5px">My School ERP Receipt</h1>
-            <p style="text-align:center; font-size:11px; margin-bottom:20px">Bulk Invoice Statement Verification</p>
-            <p><strong>Student Name:</strong> ${s.name}</p>
-            <p><strong>Admission Number:</strong> ${s.admission_no}</p>
-            <p><strong>Class Name:</strong> ${s.class_name}</p>
-            <p><strong>Total Session Fees:</strong> ${money(s.totalFees)}</p>
-            <p><strong>Total Paid Amount:</strong> ${money(s.totalPaid)}</p>
-            <p><strong>Outstanding Balance:</strong> ${money(s.balanceAmount)}</p>
-            <p><strong>Status:</strong> ${s.status}</p>
+          <div class="receipt-card page-break">
+            <div class="header-box">
+              ${schoolLogo ? `<img src="${schoolLogo}" style="max-height: 48px; max-width: 60px; object-fit: contain; margin: 0 auto 6px auto; display: block;" alt="Logo" />` : ""}
+              <h1>${schoolName}</h1>
+              ${schoolSubtitle ? `<p style="font-weight: 600;">${schoolSubtitle}</p>` : ""}
+              ${schoolAddress ? `<p>${schoolAddress}${schoolPhone ? ` • Ph: ${schoolPhone}` : ""}</p>` : ""}
+              <div class="badge">Official Fee Statement & Clearance Slip</div>
+            </div>
+
+            <div class="grid">
+              <div><strong>Student Name:</strong> ${s.name}</div>
+              <div><strong>Admission No:</strong> ${s.admission_no || "N/A"}</div>
+              <div><strong>Class:</strong> ${s.class_name || "N/A"}</div>
+              <div><strong>Guardian:</strong> ${s.guardian_name || "N/A"} (${s.guardian_phone || "N/A"})</div>
+              <div><strong>Session:</strong> 2026-2027</div>
+              <div><strong>Status:</strong> <span style="font-weight: 800; color: ${s.status === 'Paid' ? '#059669' : s.status === 'Partial' ? '#d97706' : '#e11d48'}">${s.status}</span></div>
+            </div>
+
+            <table class="summary-table">
+              <thead>
+                <tr>
+                  <th>Particulars</th>
+                  <th style="text-align: right;">Total Fee</th>
+                  <th style="text-align: right;">Total Paid</th>
+                  <th style="text-align: right;">Outstanding Dues</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Annual Academic / Composite Session Fee</td>
+                  <td style="text-align: right; font-family: monospace; font-weight: 700;">${money(s.totalFees)}</td>
+                  <td style="text-align: right; font-family: monospace; font-weight: 700; color: #059669;">${money(s.totalPaid)}</td>
+                  <td style="text-align: right; font-family: monospace; font-weight: 700; color: #e11d48;">${money(s.balanceAmount)}</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="display: flex; justify-content: space-between; margin-top: 36px; font-size: 9px; color: #64748b;">
+              <div style="border-top: 1px dashed #94a3b8; width: 140px; text-align: center; padding-top: 4px;">Parent / Depositor</div>
+              <div style="border-top: 1px dashed #94a3b8; width: 140px; text-align: center; padding-top: 4px;">Authorized Cashier</div>
+            </div>
           </div>
         `;
       }

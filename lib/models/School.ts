@@ -1,6 +1,7 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 import type { ThemeConfig, ThemePreset } from "@/lib/themes/presets";
 import { getPresetTheme } from "@/lib/themes/presets";
+import { DEFAULT_RECEIPT_CONFIG, ReceiptConfig } from "@/lib/types/receipt-builder";
 
 // ─── Academic Config Sub-document ─────────────────────────────────
 export interface IAcademicConfig {
@@ -51,6 +52,7 @@ export interface ISchool extends Document {
   theme_config: IThemeConfig;
   login_config: ILoginConfig;
   meta_config: IMetaConfig;
+  receipt_config?: ReceiptConfig;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -135,6 +137,7 @@ const schoolSchema = new Schema<ISchool>(
     theme_config: { type: themeConfigSchema, default: () => getPresetTheme("navy_blue") },
     login_config: { type: loginConfigSchema, default: () => ({ disable_student_login: false, disable_teacher_login: false }) },
     meta_config: { type: metaConfigSchema, default: () => ({}) },
+    receipt_config: { type: Schema.Types.Mixed, default: () => ({ ...DEFAULT_RECEIPT_CONFIG }) },
   },
   { timestamps: true }
 );

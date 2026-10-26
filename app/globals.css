@@ -450,8 +450,8 @@ body {
   [role="banner"],
   .command-menu,
   .pagination-container,
-  div[class*="sidebar"],
-  div[class*="header"] {
+  div[class*="sidebar"]:not([data-print-zone] *),
+  div[class*="header"]:not([data-print-zone] *):not(.receipt-branding-box):not(.receipt-branding-box *) {
     display: none !important;
   }
 

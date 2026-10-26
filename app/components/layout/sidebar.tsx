@@ -8,7 +8,7 @@ import { useAcademicConfig } from "@/app/hooks/useAcademicConfig";
 import {
   LayoutDashboard, Users, GraduationCap, Calendar, Clock, BookOpen,
   ClipboardList, Megaphone, ChevronDown, ChevronRight, Building2,
-  BarChart, LogOut, User, ChevronUp, Menu, Bus, X, Globe, Layers, LayoutGrid, Link2, Settings2, FileText
+  BarChart, LogOut, User, ChevronUp, Menu, Bus, X, Globe, Layers, LayoutGrid, Link2, Settings2, FileText, CreditCard
 } from "lucide-react";
 
 // Map DB roles → sidebar role key
@@ -52,6 +52,12 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
     { name: "All Teachers", href: "/teachers", icon: <Users className="w-4 h-4" /> },
     { name: "Admissions", href: "/admissions-admin", icon: <ClipboardList className="w-4 h-4" /> },
     {
+      name: "Finance", icon: <CreditCard className="w-4 h-4" />, subItems: [
+        { name: "Fees", href: "/fees" },
+        { name: "Salary", href: "/salary" }
+      ]
+    },
+    {
       name: "Reports", icon: <BarChart className="w-4 h-4" />, subItems: [
         { name: "Student Reports", href: "/reports/student-report" },
         { name: "Teacher Reports", href: "/reports/teacher-report" },
@@ -91,6 +97,12 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
         { name: "Assessments", href: "/assessments" },
         { name: "Exams", href: "/examination/exam" },
         { name: "Report Cards", href: "/report-cards" }
+      ]
+    },
+    {
+      name: "Finance", icon: <CreditCard className="w-4 h-4" />, subItems: [
+        { name: "Fees", href: "/fees" },
+        { name: "Salary", href: "/salary" }
       ]
     },
 
@@ -230,6 +242,12 @@ export const Sidebar = React.memo(function Sidebar({ isMobileOpen = false, onClo
 
   const accountantLinks = [
     { name: "Overview", href: "/dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
+    {
+      name: "Finance", icon: <CreditCard className="w-4 h-4" />, subItems: [
+        { name: "Fees", href: "/fees" },
+        { name: "Salary", href: "/salary" }
+      ]
+    },
     // ── Accountant Fees Collection hidden (Issue 9) ──────────────────────
     {
       name: "Reports", icon: <BarChart className="w-4 h-4" />, subItems: [

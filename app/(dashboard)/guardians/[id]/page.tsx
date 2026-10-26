@@ -11,6 +11,9 @@ import { ResetPasswordModal } from "@/app/components/modals/ResetPasswordModal";
 import { useAuth } from "../../../context/auth";
 import { useAttendanceSummary } from "@/app/hooks/useAttendanceSummary";
 import { PrintService } from "@/app/lib/print-service";
+import { useReceiptConfig } from "@/app/hooks/useReceiptConfig";
+import { usePublicSchoolInfo } from "@/app/hooks/usePublicSchoolInfo";
+import DynamicReceiptDocument, { formatPaymentReceiptToReceiptData } from "@/app/components/receipts/DynamicReceiptDocument";
 import {
   User, Phone, Mail, FileText, Calendar, Users, MapPin, Lock, Edit,
   ChevronDown, CheckCircle, RefreshCw, X, Loader2, ImageIcon,
@@ -68,7 +71,9 @@ function formatDate(d?: string | Date) {
 }
 
 export default function ParentDetailPage() {
-  const { user } = useAuth();
+  const { user, school } = useAuth();
+  const { schoolInfo } = usePublicSchoolInfo();
+  const { config: receiptConfig } = useReceiptConfig();
   const activeRole = user?.role;
   const params = useParams();
   const router = useRouter();
@@ -314,7 +319,7 @@ export default function ParentDetailPage() {
 
   const printReceipt = () => {
     if (!selectedReceipt) return;
-    PrintService.print("printable-receipt-modal");
+    PrintService.print("printable-receipt-modal", { pageSize: receiptConfig.paper_size === "POS-80mm" ? "thermal" : receiptConfig.paper_size === "A5" ? "A5" : "A4" });
   };
 
   // Error boundary access block (Part 13)
@@ -880,102 +885,23 @@ export default function ParentDetailPage() {
                 </button>
               </div>
 
-              {/* Printable Area Wrapper */}
-              <div id="printable-receipt-modal" className="border border-slate-200 rounded-xl p-6 bg-white shadow-sm space-y-6">
-                {activeCopies.map((copyLabel, idx) => {
-                  const isLast = idx === activeCopies.length - 1;
-
-                  return (
-                    <React.Fragment key={idx}>
-                      <div
-                        className={isCompact ? "space-y-3" : "space-y-4"}
-                        style={
-                          !isLast && pageMode === "separate"
-                            ? { pageBreakAfter: "always", breakAfter: "page" }
-                            : undefined
-                        }
-                      >
-                        <div className="flex justify-between items-start pb-3 border-b border-slate-200">
-                          <div>
-                            <h3 className={`font-black text-slate-900 uppercase tracking-wider ${isCompact ? "text-sm" : "text-base"}`}>
-                              MySchoolLife ERP
-                            </h3>
-                            <span className="inline-block mt-0.5 px-2 py-0.5 rounded-full border border-slate-900 bg-slate-50 text-slate-900 font-extrabold text-[9px] uppercase tracking-wider">
-                              Payment Receipt &bull; {copyLabel}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <h4 className="font-sans font-bold text-primary text-xs">{selectedReceipt.receipt_number}</h4>
-                            <p className="text-[10px] text-slate-400">Date: {formatDate(selectedReceipt.payment_date)}</p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-3 text-xs">
-                          <div>
-                            <span className="text-slate-400 block font-semibold">Student Name:</span>
-                            <span className="font-bold text-slate-800">{selectedReceipt.student_id?.name || "—"}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block font-semibold">Class / Section:</span>
-                            <span className="font-bold text-slate-800">{selectedReceipt.student_id?.class_id?.name || "—"} {selectedReceipt.student_id?.class_id?.section || ""}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block font-semibold">Payment Method:</span>
-                            <span className="font-bold text-slate-800">{selectedReceipt.payment_method}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400 block font-semibold">Collected By:</span>
-                            <span className="font-bold text-slate-800">{selectedReceipt.collected_by?.name || "Self Portal"}</span>
-                          </div>
-                        </div>
-
-                        {/* Fee Breakdown itemization */}
-                        <div className="border border-slate-150 rounded-lg overflow-hidden bg-slate-50/50 mt-2 text-xs">
-                          <div className="grid grid-cols-2 px-3 py-1.5 border-b border-slate-150 bg-slate-100 font-bold">
-                            <span>Fee Category Description</span>
-                            <span className="text-right">Paid Amount</span>
-                          </div>
-                          <div className="divide-y divide-slate-150 font-medium">
-                            {selectedReceipt.fee_breakdown && selectedReceipt.fee_breakdown.length > 0 ? (
-                              selectedReceipt.fee_breakdown.map((item: any, bIdx: number) => (
-                                <div key={bIdx} className="grid grid-cols-2 px-3 py-1.5 text-slate-700">
-                                  <span>{item.name}</span>
-                                  <span className="text-right font-sans">₹{item.amount_paid.toLocaleString("en-IN")}</span>
-                                </div>
-                              ))
-                            ) : (
-                              <div className="grid grid-cols-2 px-3 py-1.5 text-slate-700">
-                                <span>General School Fees</span>
-                                <span className="text-right font-sans">₹{selectedReceipt.amount_paid.toLocaleString("en-IN")}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-xs font-bold text-slate-900">
-                          <span>Total Amount Paid:</span>
-                          <span className="font-sans text-emerald-600 text-sm">₹{selectedReceipt.amount_paid.toLocaleString("en-IN")}</span>
-                        </div>
-
-                        {selectedReceipt.remarks && (
-                          <div className="text-[10px] text-slate-400 bg-slate-50 rounded p-1.5 italic">
-                            Remarks: {selectedReceipt.remarks}
-                          </div>
-                        )}
-                      </div>
-
-                      {!isLast && pageMode === "single" && (
-                        <div className="my-4 flex items-center justify-center text-center">
-                          <div className="flex-1 border-b border-dashed border-slate-400"></div>
-                          <span className="px-2 py-0.5 bg-slate-100 border border-dashed border-slate-400 rounded-full text-[9px] font-bold text-slate-500 mx-2">
-                            ✂ CUT ALONG THIS LINE ✂
-                          </span>
-                          <div className="flex-1 border-b border-dashed border-slate-400"></div>
-                        </div>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
+              {/* Dynamic Receipt Document Container */}
+              <div className="p-4 md:p-6 bg-slate-100 dark:bg-slate-950/60 overflow-x-auto">
+                <DynamicReceiptDocument
+                  targetId="printable-receipt-modal"
+                  config={receiptConfig}
+                  schoolInfo={{
+                    name: school?.name || schoolInfo?.school_name,
+                    subtitle: school?.subtitle || schoolInfo?.school_subtitle,
+                    logo_url: school?.logo_url || schoolInfo?.logo_url,
+                    address: school?.address,
+                    phone: school?.phone,
+                    email: school?.email,
+                  }}
+                  receiptData={formatPaymentReceiptToReceiptData(selectedReceipt, selectedReceipt.student_id)}
+                  forcedCopiesCount={receiptCopies}
+                  pageMode={pageMode}
+                />
               </div>
 
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-200 print:hidden">

@@ -169,39 +169,102 @@ function doPrint(zone: HTMLElement, options: PrintOptions) {
     return;
   }
 
-  // Save original title
-  document.body.dataset.originalTitle = document.title;
-  if (options.title) {
-    document.title = options.title;
-  }
+  const size = options.pageSize ?? "A4";
+  const margin = options.margin ?? (size === "thermal" ? "2mm" : "8mm");
+  const cssSize = PAGE_SIZE_CSS[size] ?? PAGE_SIZE_CSS["A4"];
 
-  // Inject @page CSS
-  injectPageStyle(options);
+  // Create an isolated hidden iframe for printing
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "none";
+  iframe.style.zIndex = "-9999";
+  document.body.appendChild(iframe);
 
-  // Mark element as printable zone
-  zone.setAttribute("data-print-zone", "true");
-
-  // Mark all ancestors as part of the print path
-  let curr: HTMLElement | null = zone.parentElement;
-  while (curr && curr !== document.body) {
-    curr.setAttribute("data-print-path", "true");
-    curr = curr.parentElement;
-  }
-
-  // Mark body as printing
-  document.body.dataset.printing = "true";
-
-  // Set watermark
-  setWatermark(options.watermark);
-
-  // Schedule cleanup after print dialog closes
-  const doCleanup = () => cleanup(zone);
-  _cleanupFn = doCleanup;
-  window.addEventListener("afterprint", doCleanup, { once: true });
-
-  // Delay slightly to allow DOM paint and transition animations to complete
-  setTimeout(() => {
+  const doc = iframe.contentWindow?.document;
+  if (!doc) {
+    _isPrinting = false;
+    iframe.remove();
     window.print();
+    return;
+  }
+
+  // Collect all styles and stylesheet links from parent document
+  const headStyles = Array.from(document.querySelectorAll("link[rel='stylesheet'], style"))
+    .map((el) => el.outerHTML)
+    .join("\n");
+
+  const watermarkHtml = options.watermark
+    ? `<div style="position:fixed;top:40%;left:15%;transform:rotate(-35deg);font-size:72px;font-weight:900;color:rgba(0,0,0,0.06);z-index:9999;pointer-events:none;text-transform:uppercase;">${options.watermark}</div>`
+    : "";
+
+  doc.open();
+  doc.write(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>${options.title || document.title || "Print Document"}</title>
+  ${headStyles}
+  <style>
+    @media print {
+      @page {
+        size: ${cssSize};
+        margin: ${margin};
+      }
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .print\\:hidden, .no-print {
+        display: none !important;
+      }
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        table-layout: fixed !important;
+      }
+    }
+    body {
+      margin: 0;
+      padding: 8px;
+      background: #ffffff !important;
+      color: #0f172a !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  </style>
+</head>
+<body class="bg-white">
+  ${watermarkHtml}
+  ${zone.outerHTML}
+</body>
+</html>`);
+  doc.close();
+
+  const cleanupIframe = () => {
+    if (document.body.contains(iframe)) {
+      iframe.remove();
+    }
+    _isPrinting = false;
+  };
+
+  iframe.contentWindow?.addEventListener("afterprint", cleanupIframe, { once: true });
+
+  setTimeout(() => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } catch (e) {
+      console.error("[PrintService] Error during iframe print:", e);
+    }
+    setTimeout(cleanupIframe, 3000);
   }, 350);
 }
 

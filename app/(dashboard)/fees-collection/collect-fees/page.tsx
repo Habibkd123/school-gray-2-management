@@ -7,8 +7,15 @@ import { useStudents } from "@/app/hooks/useStudents";
 import { useFeeAllocations, useFeeMasters, useFeePayments } from "@/app/hooks/useFees";
 import { GenerateDocumentWizard } from "@/app/components/document-builder/GenerateDocumentWizard";
 import { PrintService } from "@/app/lib/print-service";
+import { useReceiptConfig } from "@/app/hooks/useReceiptConfig";
+import { usePublicSchoolInfo } from "@/app/hooks/usePublicSchoolInfo";
+import { useAuth } from "@/app/context/auth";
+import DynamicReceiptDocument, { formatPaymentReceiptToReceiptData } from "@/app/components/receipts/DynamicReceiptDocument";
 
 export default function CollectFeesPage() {
+  const { config: receiptConfig } = useReceiptConfig();
+  const { school } = useAuth();
+  const { schoolInfo } = usePublicSchoolInfo();
   const { students, isLoading: studentsLoading, fetchStudents: fetchAllStudents } = useStudents({ skip: true });
   const { allocations, loading: allocLoading, fetchAllocations } = useFeeAllocations();
   const { masters, loading: mastersLoading, fetchMasters } = useFeeMasters();
@@ -148,7 +155,7 @@ export default function CollectFeesPage() {
   };
 
   const handlePrintReceipt = () => {
-    PrintService.print('printable-receipt', { pageSize: 'A4' });
+    PrintService.print('printable-receipt', { pageSize: receiptConfig.layout_mode === 'side_by_side' || receiptConfig.template_id === 'bajrang_dual_slip' ? 'A4-landscape' : receiptConfig.paper_size === 'POS-80mm' ? 'thermal' : receiptConfig.paper_size === 'A5' ? 'A5' : 'A4' });
   };
 
   const grandTotal = Object.values(amounts).reduce((sum, val) => sum + Number(val || 0), 0);
@@ -473,107 +480,22 @@ export default function CollectFeesPage() {
                 </button>
               </div>
 
-              {/* Printable Content */}
-              <div className="p-6 md:p-8 print:p-0 space-y-6" id="printable-receipt" data-print-zone="true">
-                {activeCopies.map((copyLabel, idx) => {
-                  const isLast = idx === activeCopies.length - 1;
-
-                  return (
-                    <React.Fragment key={idx}>
-                      <div
-                        className={isCompact ? "space-y-3" : "space-y-4"}
-                        style={
-                          !isLast && pageMode === "separate"
-                            ? { pageBreakAfter: "always", breakAfter: "page" }
-                            : undefined
-                        }
-                      >
-                        <div className="text-center pb-2 border-b-2 border-slate-900">
-                          <h2 className={`font-black text-slate-900 dark:text-white uppercase tracking-wider ${isCompact ? "text-lg" : "text-2xl"}`}>
-                            EduManage School
-                          </h2>
-                          <div className="mt-1">
-                            <span className="inline-block px-3 py-0.5 rounded-full border border-slate-900 bg-slate-50 text-slate-900 font-extrabold text-[10px] uppercase tracking-wider">
-                              Official Payment Receipt • {copyLabel}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4 text-xs font-sans">
-                          <div>
-                            <span className="text-slate-400 font-bold block">Receipt No:</span>
-                            <span className="font-bold font-mono text-primary">{lastReceipts[0].receipt_number}</span>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-slate-400 font-bold block">Date:</span>
-                            <span className="font-bold text-slate-900 dark:text-white">{new Date(lastReceipts[0].transaction_date).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-
-                        <div className="border-t border-b border-border py-2.5 text-xs font-sans">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5 mb-1">
-                            <span className="text-slate-400 font-bold">Received From:</span>
-                            <span className="font-bold text-slate-900 dark:text-white md:col-span-2">{selectedStudent.name} (Adm: {selectedStudent.admission_no})</span>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-1.5">
-                            <span className="text-slate-400 font-bold">Payment Method:</span>
-                            <span className="font-bold text-slate-900 dark:text-white md:col-span-2">{lastReceipts[0].payment_method}</span>
-                          </div>
-                        </div>
-
-                        {/* Breakdown Table */}
-                        <div>
-                          <table className="erp-table text-xs">
-                            <thead>
-                              <tr className="border-b border-border">
-                                <th className="py-1.5 text-left font-bold text-slate-700 dark:text-slate-300">Fee Particulars</th>
-                                <th className="py-1.5 text-right font-bold text-slate-700 dark:text-slate-300">Amount</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-border">
-                              {lastReceipts.map(rec => (
-                                <tr key={rec._id}>
-                                  <td className="py-1.5 text-slate-800 dark:text-slate-200">
-                                    {rec.fee_master_id?.fee_type_id?.name || "Fee"} 
-                                    <span className="text-[10px] text-slate-500 block">{rec.fee_master_id?.fee_group_id?.name}</span>
-                                  </td>
-                                  <td className="py-1.5 text-right font-semibold text-slate-900 dark:text-white">₹{rec.amount_paid.toFixed(2)}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-
-                        <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-lg flex justify-between items-center print:bg-slate-100 print:text-black">
-                          <span className="font-bold text-slate-700 dark:text-slate-300 text-xs">Total Amount Paid:</span>
-                          <span className={`font-black text-primary ${isCompact ? "text-base" : "text-xl"}`}>
-                            ₹{lastReceipts.reduce((sum, r) => sum + r.amount_paid, 0).toFixed(2)}
-                          </span>
-                        </div>
-
-                        <div className={`border-t border-border flex justify-between items-end ${isCompact ? "pt-5 mt-4" : "pt-8 mt-6"}`}>
-                          <div className="text-center">
-                            <div className="w-28 border-b border-slate-300 mb-1"></div>
-                            <span className="text-[10px] text-slate-500 font-bold">Accountant Signature</span>
-                          </div>
-                          <div className="text-center text-[10px] text-slate-400">
-                            Generated by EduManage System
-                          </div>
-                        </div>
-                      </div>
-
-                      {!isLast && pageMode === "single" && (
-                        <div className="my-4 flex items-center justify-center text-center">
-                          <div className="flex-1 border-b border-dashed border-slate-400"></div>
-                          <span className="px-2 py-0.5 bg-slate-100 border border-dashed border-slate-400 rounded-full text-[9px] font-bold text-slate-500 mx-2">
-                            ✂ CUT ALONG THIS LINE ✂
-                          </span>
-                          <div className="flex-1 border-b border-dashed border-slate-400"></div>
-                        </div>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
+              {/* Dynamic Receipt Document Container */}
+              <div className="p-4 md:p-6 bg-slate-100 dark:bg-slate-950/60 overflow-x-auto">
+                <DynamicReceiptDocument
+                  config={receiptConfig}
+                  schoolInfo={{
+                    name: school?.name || schoolInfo?.school_name,
+                    subtitle: school?.subtitle || schoolInfo?.school_subtitle,
+                    logo_url: school?.logo_url || schoolInfo?.logo_url,
+                    address: school?.address,
+                    phone: school?.phone,
+                    email: school?.email,
+                  }}
+                  receiptData={formatPaymentReceiptToReceiptData(lastReceipts, selectedStudent)}
+                  forcedCopiesCount={receiptCopies}
+                  pageMode={pageMode}
+                />
               </div>
 
               {/* Action Buttons (Hidden on print) */}
