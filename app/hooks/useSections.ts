@@ -76,14 +76,20 @@ export function useSections(options?: { skip?: boolean }) {
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch sections");
 
-      _sectionsCache = data.data.sections;
+      const sectionList = Array.isArray(data.data?.sections)
+        ? data.data.sections
+        : Array.isArray(data.data)
+        ? data.data
+        : [];
+
+      _sectionsCache = sectionList;
       _cacheTimestamp = Date.now();
-      writeSessionCache(data.data.sections);
-      _listeners.forEach(fn => fn(data.data.sections));
-      setSections(data.data.sections);
-      setTotal(data.data.total ?? 0);
-      setTotalPages(data.data.totalPages ?? 1);
-      setCurrentPage(data.data.page ?? 1);
+      writeSessionCache(sectionList);
+      _listeners.forEach(fn => fn(sectionList));
+      setSections(sectionList);
+      setTotal(data.data?.total ?? sectionList.length);
+      setTotalPages(data.data?.totalPages ?? 1);
+      setCurrentPage(data.data?.page ?? 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load sections");
     } finally {

@@ -14,6 +14,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "No file provided" }, { status: 400 });
     }
 
+    if (file.size === 0) {
+      return NextResponse.json({ success: false, message: "File cannot be empty" }, { status: 400 });
+    }
+
+    const fileName = file.name || "";
+    // Detect path traversal or null byte injection
+    if (fileName.includes("../") || fileName.includes("..\\") || fileName.includes("\0")) {
+      return NextResponse.json({ success: false, message: "Malicious filename detected" }, { status: 400 });
+    }
+
+    // Detect dangerous executable extensions
+    const dangerousExtensions = /\.(exe|bat|cmd|sh|php|pl|cgi|py|js|vbs|msi|dll|scr)$/i;
+    if (dangerousExtensions.test(fileName)) {
+      return NextResponse.json({ success: false, message: "Executable or script files are strictly prohibited" }, { status: 400 });
+    }
+
     // Validate file type
     const allowedTypes = [
       "image/jpeg",

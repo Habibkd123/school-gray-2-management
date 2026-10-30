@@ -34,6 +34,21 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    if (isNaN(new Date(startDateParam).getTime()) || isNaN(new Date(endDateParam).getTime())) {
+      return NextResponse.json(
+        { success: false, message: "Invalid startDate or endDate format" },
+        { status: 400 }
+      );
+    }
+
+    if (classId && !mongoose.Types.ObjectId.isValid(classId)) {
+      return NextResponse.json({ success: false, message: "Invalid classId format" }, { status: 400 });
+    }
+
+    if (recordId && !mongoose.Types.ObjectId.isValid(recordId)) {
+      return NextResponse.json({ success: false, message: "Invalid recordId format" }, { status: 400 });
+    }
+
     // Role-based restrictions for student role
     if (role === "student") {
       const Student = (await import("@/lib/models/Student")).default;

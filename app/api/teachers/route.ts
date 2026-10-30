@@ -105,7 +105,11 @@ export async function GET(req: NextRequest) {
     if (role === "super_admin") {
       const pSchool = url.searchParams.get("school_id");
       if (pSchool && pSchool !== "all") {
-        query.school_id = pSchool;
+        if (mongoose.isValidObjectId(pSchool)) {
+          query.school_id = pSchool;
+        } else {
+          query.school_id = null;
+        }
       }
     } else {
       query.school_id = schoolId;
@@ -306,7 +310,7 @@ export async function POST(req: NextRequest) {
     const {
       name, employee_id, gender, dob, phone, email, address,
       photo_url, blood_group, qualification, subject_specialization,
-      expertise,
+      expertise, designation, department,
       experience_years, join_date, languages, training_details, password,
       class_id, class_ids,
       father_name, mother_name, marital_status, previous_school_name,
@@ -323,6 +327,22 @@ export async function POST(req: NextRequest) {
 
     if (!name) {
       return NextResponse.json({ success: false, message: "Name is required" }, { status: 400 });
+    }
+
+    if (class_id && !mongoose.isValidObjectId(class_id)) {
+      return NextResponse.json({ success: false, message: "Invalid class ID" }, { status: 400 });
+    }
+
+    if (Array.isArray(class_ids) && class_ids.some((cid: any) => !mongoose.isValidObjectId(cid))) {
+      return NextResponse.json({ success: false, message: "Invalid class IDs" }, { status: 400 });
+    }
+
+    if (employee_id?.trim()) {
+      const normalizedEmp = employee_id.trim();
+      const existingEmp = await Teacher.findOne({ employee_id: normalizedEmp, school_id: schoolId });
+      if (existingEmp) {
+        return NextResponse.json({ success: false, message: "A teacher with this Employee ID already exists in this school" }, { status: 409 });
+      }
     }
 
     if (phone?.trim()) {
@@ -419,6 +439,8 @@ export async function POST(req: NextRequest) {
       twitter_url: twitter_url?.trim(),
       resume_url: resume_url?.trim(),
       joining_letter_url: joining_letter_url?.trim(),
+      designation: designation?.trim() || undefined,
+      department: department?.trim() || undefined,
     });
 
     if (resolvedClassId) {

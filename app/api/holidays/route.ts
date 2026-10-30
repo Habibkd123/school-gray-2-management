@@ -23,7 +23,7 @@ export function invalidateHolidaysCache(schoolId?: string | null) {
 }
 
 export async function GET(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin", "teacher", "student"]);
+  const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin", "teacher", "student", "parent"]);
   if (error) return error;
 
   try {
@@ -97,6 +97,10 @@ export async function POST(req: NextRequest) {
 
     if (!title || !date) {
       return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
+    }
+
+    if (isNaN(new Date(date).getTime())) {
+      return NextResponse.json({ success: false, message: "Invalid date format" }, { status: 400 });
     }
 
     const display_id = `H${Math.floor(1000 + Math.random() * 900000)}`;

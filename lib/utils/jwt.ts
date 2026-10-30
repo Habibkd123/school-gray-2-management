@@ -14,8 +14,13 @@ export const generateAccessToken = (payload: JWTPayload): string => {
   return jwt.sign(payload, getAccessSecret(), options);
 };
 
+import crypto from "crypto";
+
 export const generateRefreshToken = (payload: JWTPayload): string => {
-  const options: SignOptions = { expiresIn: process.env.JWT_REFRESH_EXPIRY || "7d" } as SignOptions;
+  const options: SignOptions = {
+    expiresIn: process.env.JWT_REFRESH_EXPIRY || "7d",
+    jwtid: crypto.randomUUID(),
+  } as SignOptions;
   return jwt.sign(payload, getRefreshSecret(), options);
 };
 

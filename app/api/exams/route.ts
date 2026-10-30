@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db";
 import { Exam } from "@/lib/models/index";
+import Class from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
 import { sendCompressedJson } from "@/lib/compression";
 
@@ -101,6 +103,17 @@ export async function POST(req: NextRequest) {
 
     if (classesToCreate.length === 0) {
       return NextResponse.json({ success: false, message: "Class selection is required" }, { status: 400 });
+    }
+
+    for (const cId of classesToCreate) {
+      if (!mongoose.Types.ObjectId.isValid(cId)) {
+        return NextResponse.json({ success: false, message: `Invalid class ID: ${cId}` }, { status: 400 });
+      }
+    }
+
+    const schoolClasses = await Class.find({ _id: { $in: classesToCreate }, school_id: schoolId }).select("_id").lean();
+    if (schoolClasses.length !== classesToCreate.length) {
+      return NextResponse.json({ success: false, message: "One or more selected classes not found in this school" }, { status: 404 });
     }
 
     const createdExams = [];

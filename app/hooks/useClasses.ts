@@ -220,11 +220,12 @@ export function useClasses(options?: { skip?: boolean; filterByYear?: boolean })
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch");
 
+      const classList = Array.isArray(data.data) ? data.data : (data.data?.classes || []);
       return {
-        classes: data.data.classes,
-        total: data.data.total ?? data.data.classes.length,
-        totalPages: data.data.totalPages ?? 1,
-        currentPage: data.data.page ?? 1,
+        classes: classList,
+        total: data.data?.total ?? classList.length,
+        totalPages: data.data?.totalPages ?? 1,
+        currentPage: data.data?.page ?? 1,
       };
     })();
 

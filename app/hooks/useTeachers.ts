@@ -496,9 +496,12 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch");
 
+        const teacherList = Array.isArray(data.data) ? data.data : (data.data?.teachers || []);
+        const totalCount = Array.isArray(data.data) ? data.data.length : (data.data?.total ?? teacherList.length);
+
         const queryEntry = {
-          teachers: data.data.teachers,
-          total: data.data.total ?? data.data.teachers.length,
+          teachers: teacherList,
+          total: totalCount,
           timestamp: Date.now(),
         };
         _pagedTeacherQueryCache.set(cacheKey, queryEntry);
@@ -510,18 +513,18 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
 
         // Only cache unfiltered results
         if (!isFiltered) {
-          _teachersCache = data.data.teachers;
+          _teachersCache = teacherList;
           _cacheTimestamp = Date.now();
-          _listeners.forEach(fn => fn(data.data.teachers));
+          _listeners.forEach(fn => fn(teacherList));
         }
 
-        setTeachers(data.data.teachers);
-        setTotal(data.data.total ?? data.data.teachers.length);
+        setTeachers(teacherList);
+        setTotal(totalCount);
         return {
-          teachers: data.data.teachers,
-          total: data.data.total ?? data.data.teachers.length,
-          page: data.data.page ?? page,
-          limit: data.data.limit ?? limit,
+          teachers: teacherList,
+          total: totalCount,
+          page: data.data?.page ?? page,
+          limit: data.data?.limit ?? limit,
         };
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
@@ -581,7 +584,7 @@ export function useTeachers(options?: { skip?: boolean; limit?: number | "all" }
       syncInvalidateCache("teachers");
 
       setTeachers((prev) => [data.data, ...prev]);
-      return { success: true, message: "Teacher created successfully", data: data.data, credentials: data.credentials };
+      return { success: true, message: "Teacher created successfully", data: data.data, credentials: data.credentials || data.data?.credentials };
     } catch {
       return { success: false, message: "Network error" };
     }

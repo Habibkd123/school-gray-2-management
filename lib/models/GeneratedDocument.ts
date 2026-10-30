@@ -80,7 +80,7 @@ const generatedDocumentSchema = new Schema<IGeneratedDocument>(
       required: true,
     },
     reference_id: { type: String, default: null },
-    variable_snapshot: { type: Map, of: String, default: {} },
+    variable_snapshot: { type: Schema.Types.Mixed, default: {} },
     pdf_url: { type: String, default: null },
     status: {
       type: String,

@@ -162,7 +162,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Class ID is required and must be valid" }, { status: 400 });
     }
 
+    const cls = await Class.findOne({ _id: class_id, school_id: schoolId });
+    if (!cls) {
+      return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
+    }
+
     const effectiveClassId = class_id;
+
+    const existingSubject = await Subject.findOne({
+      school_id: schoolId as string,
+      class_id: effectiveClassId,
+      name: name.trim()
+    });
+    if (existingSubject) {
+      return NextResponse.json({ success: false, message: "A subject with this name already exists for this class" }, { status: 409 });
+    }
 
     const subject = await Subject.create({
       school_id: schoolId as string,

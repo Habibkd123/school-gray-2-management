@@ -112,10 +112,10 @@ export function useSubjectAssignment() {
         return;
       };
 
-      const fetchedAssignments = data.data.assignments || [];
-      const fetchedTotal = data.data.total ?? 0;
-      const fetchedTotalPages = data.data.totalPages ?? 1;
-      const fetchedPage = data.data.page ?? 1;
+      const fetchedAssignments = Array.isArray(data.data) ? data.data : (data.data?.assignments || []);
+      const fetchedTotal = data.data?.total ?? fetchedAssignments.length;
+      const fetchedTotalPages = data.data?.totalPages ?? 1;
+      const fetchedPage = data.data?.page ?? 1;
 
       const entry: AssignmentCacheEntry = {
         assignments: fetchedAssignments,

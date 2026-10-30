@@ -1,0 +1,1125 @@
+[
+  {
+    "relPath": "api\\academic\\config\\route.ts",
+    "endpoint": "/api\\academic\\config\\route.ts",
+    "methods": [
+      "GET",
+      "PUT"
+    ]
+  },
+  {
+    "relPath": "api\\academic\\dependency-check\\route.ts",
+    "endpoint": "/api\\academic\\dependency-check\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\admissions\\reports\\route.ts",
+    "endpoint": "/api\\admissions\\reports\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\admissions\\route.ts",
+    "endpoint": "/api\\admissions\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\admissions\\stats\\route.ts",
+    "endpoint": "/api\\admissions\\stats\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\admissions\\[id]\\approve\\route.ts",
+    "endpoint": "/api\\admissions\\[id]\\approve\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\admissions\\[id]\\notes\\route.ts",
+    "endpoint": "/api\\admissions\\[id]\\notes\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\admissions\\[id]\\route.ts",
+    "endpoint": "/api\\admissions\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE",
+      "PATCH"
+    ]
+  },
+  {
+    "relPath": "api\\admissions\\[id]\\status\\route.ts",
+    "endpoint": "/api\\admissions\\[id]\\status\\route.ts",
+    "methods": [
+      "PUT"
+    ]
+  },
+  {
+    "relPath": "api\\assessments\\route.ts",
+    "endpoint": "/api\\assessments\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\assessments\\[id]\\analytics\\route.ts",
+    "endpoint": "/api\\assessments\\[id]\\analytics\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\assessments\\[id]\\export\\route.ts",
+    "endpoint": "/api\\assessments\\[id]\\export\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\assessments\\[id]\\marks\\audit\\route.ts",
+    "endpoint": "/api\\assessments\\[id]\\marks\\audit\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\assessments\\[id]\\marks\\route.ts",
+    "endpoint": "/api\\assessments\\[id]\\marks\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\assessments\\[id]\\publish\\route.ts",
+    "endpoint": "/api\\assessments\\[id]\\publish\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\assessments\\[id]\\results\\route.ts",
+    "endpoint": "/api\\assessments\\[id]\\results\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\assessments\\[id]\\route.ts",
+    "endpoint": "/api\\assessments\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\attendance\\student\\route.ts",
+    "endpoint": "/api\\attendance\\student\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\attendance\\student\\[id]\\route.ts",
+    "endpoint": "/api\\attendance\\student\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\attendance\\summary\\route.ts",
+    "endpoint": "/api\\attendance\\summary\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\attendance\\teacher\\route.ts",
+    "endpoint": "/api\\attendance\\teacher\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\attendance\\teacher\\[id]\\route.ts",
+    "endpoint": "/api\\attendance\\teacher\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\auth\\change-password\\route.ts",
+    "endpoint": "/api\\auth\\change-password\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\auth\\forgot-password\\route.ts",
+    "endpoint": "/api\\auth\\forgot-password\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\auth\\login\\route.ts",
+    "endpoint": "/api\\auth\\login\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\auth\\logout\\route.ts",
+    "endpoint": "/api\\auth\\logout\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\auth\\me\\route.ts",
+    "endpoint": "/api\\auth\\me\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\auth\\refresh\\route.ts",
+    "endpoint": "/api\\auth\\refresh\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\auth\\register\\route.ts",
+    "endpoint": "/api\\auth\\register\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\auth\\reset-password\\route.ts",
+    "endpoint": "/api\\auth\\reset-password\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\backup\\export\\route.ts",
+    "endpoint": "/api\\backup\\export\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\backup\\tenant\\route.ts",
+    "endpoint": "/api\\backup\\tenant\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\classes\\route.ts",
+    "endpoint": "/api\\classes\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\classes\\[id]\\route.ts",
+    "endpoint": "/api\\classes\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE",
+      "PATCH"
+    ]
+  },
+  {
+    "relPath": "api\\contact\\route.ts",
+    "endpoint": "/api\\contact\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\dashboard\\stats\\route.ts",
+    "endpoint": "/api\\dashboard\\stats\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\dashboard\\super-analytics\\route.ts",
+    "endpoint": "/api\\dashboard\\super-analytics\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\documents\\generate\\route.ts",
+    "endpoint": "/api\\documents\\generate\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\documents\\generated\\route.ts",
+    "endpoint": "/api\\documents\\generated\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\documents\\generated\\[id]\\route.ts",
+    "endpoint": "/api\\documents\\generated\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PATCH",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\exams\\route.ts",
+    "endpoint": "/api\\exams\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\exams\\schedule\\route.ts",
+    "endpoint": "/api\\exams\\schedule\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\exams\\schedule\\[id]\\route.ts",
+    "endpoint": "/api\\exams\\schedule\\[id]\\route.ts",
+    "methods": [
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\exams\\[id]\\route.ts",
+    "endpoint": "/api\\exams\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE",
+      "PATCH"
+    ]
+  },
+  {
+    "relPath": "api\\fees\\allocations\\route.ts",
+    "endpoint": "/api\\fees\\allocations\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\fees\\class-defaults\\route.ts",
+    "endpoint": "/api\\fees\\class-defaults\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\fees\\groups\\route.ts",
+    "endpoint": "/api\\fees\\groups\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\fees\\groups\\[id]\\route.ts",
+    "endpoint": "/api\\fees\\groups\\[id]\\route.ts",
+    "methods": [
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\fees\\master\\route.ts",
+    "endpoint": "/api\\fees\\master\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\fees\\master\\[id]\\route.ts",
+    "endpoint": "/api\\fees\\master\\[id]\\route.ts",
+    "methods": [
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\fees\\payments\\route.ts",
+    "endpoint": "/api\\fees\\payments\\route.ts",
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE",
+      "PATCH"
+    ]
+  },
+  {
+    "relPath": "api\\fees\\route.ts",
+    "endpoint": "/api\\fees\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\fees\\types\\route.ts",
+    "endpoint": "/api\\fees\\types\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\fees\\types\\[id]\\route.ts",
+    "endpoint": "/api\\fees\\types\\[id]\\route.ts",
+    "methods": [
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\fees\\[id]\\route.ts",
+    "endpoint": "/api\\fees\\[id]\\route.ts",
+    "methods": [
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\grades\\route.ts",
+    "endpoint": "/api\\grades\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\grades\\[id]\\route.ts",
+    "endpoint": "/api\\grades\\[id]\\route.ts",
+    "methods": [
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\holidays\\route.ts",
+    "endpoint": "/api\\holidays\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\holidays\\[id]\\route.ts",
+    "endpoint": "/api\\holidays\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\homework\\route.ts",
+    "endpoint": "/api\\homework\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\homework\\[id]\\route.ts",
+    "endpoint": "/api\\homework\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\landing\\route.ts",
+    "endpoint": "/api\\landing\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "PATCH"
+    ]
+  },
+  {
+    "relPath": "api\\leave\\route.ts",
+    "endpoint": "/api\\leave\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\leave\\[id]\\route.ts",
+    "endpoint": "/api\\leave\\[id]\\route.ts",
+    "methods": [
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\leave-types\\route.ts",
+    "endpoint": "/api\\leave-types\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\leave-types\\[id]\\route.ts",
+    "endpoint": "/api\\leave-types\\[id]\\route.ts",
+    "methods": [
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\notices\\route.ts",
+    "endpoint": "/api\\notices\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\notices\\[id]\\route.ts",
+    "endpoint": "/api\\notices\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE",
+      "PATCH"
+    ]
+  },
+  {
+    "relPath": "api\\parent\\attendance\\route.ts",
+    "endpoint": "/api\\parent\\attendance\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\parent\\children\\route.ts",
+    "endpoint": "/api\\parent\\children\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\parent\\profile\\route.ts",
+    "endpoint": "/api\\parent\\profile\\route.ts",
+    "methods": [
+      "GET",
+      "PATCH"
+    ]
+  },
+  {
+    "relPath": "api\\parents\\filters\\route.ts",
+    "endpoint": "/api\\parents\\filters\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\parents\\route.ts",
+    "endpoint": "/api\\parents\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\parents\\[id]\\route.ts",
+    "endpoint": "/api\\parents\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\public\\admissions\\route.ts",
+    "endpoint": "/api\\public\\admissions\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\public\\classes\\route.ts",
+    "endpoint": "/api\\public\\classes\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\public\\demo-request\\route.ts",
+    "endpoint": "/api\\public\\demo-request\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\public\\landing\\route.ts",
+    "endpoint": "/api\\public\\landing\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\public\\school-info\\route.ts",
+    "endpoint": "/api\\public\\school-info\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\public\\theme\\route.ts",
+    "endpoint": "/api\\public\\theme\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\public\\upload\\route.ts",
+    "endpoint": "/api\\public\\upload\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\reports\\attendance\\route.ts",
+    "endpoint": "/api\\reports\\attendance\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\reports\\class\\[id]\\route.ts",
+    "endpoint": "/api\\reports\\class\\[id]\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\reports\\student\\[id]\\route.ts",
+    "endpoint": "/api\\reports\\student\\[id]\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\reports\\teacher\\[id]\\route.ts",
+    "endpoint": "/api\\reports\\teacher\\[id]\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\results\\audit\\route.ts",
+    "endpoint": "/api\\results\\audit\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\results\\route.ts",
+    "endpoint": "/api\\results\\route.ts",
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE",
+      "PATCH"
+    ]
+  },
+  {
+    "relPath": "api\\rooms\\route.ts",
+    "endpoint": "/api\\rooms\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\rooms\\[id]\\route.ts",
+    "endpoint": "/api\\rooms\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\salaries\\preview\\route.ts",
+    "endpoint": "/api\\salaries\\preview\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\salaries\\route.ts",
+    "endpoint": "/api\\salaries\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\salaries\\[id]\\route.ts",
+    "endpoint": "/api\\salaries\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE",
+      "PATCH"
+    ]
+  },
+  {
+    "relPath": "api\\schedules\\route.ts",
+    "endpoint": "/api\\schedules\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\schedules\\[id]\\route.ts",
+    "endpoint": "/api\\schedules\\[id]\\route.ts",
+    "methods": [
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\school\\login-config\\route.ts",
+    "endpoint": "/api\\school\\login-config\\route.ts",
+    "methods": [
+      "GET",
+      "PUT"
+    ]
+  },
+  {
+    "relPath": "api\\school\\meta-config\\route.ts",
+    "endpoint": "/api\\school\\meta-config\\route.ts",
+    "methods": [
+      "GET",
+      "PUT"
+    ]
+  },
+  {
+    "relPath": "api\\school\\receipt-config\\route.ts",
+    "endpoint": "/api\\school\\receipt-config\\route.ts",
+    "methods": [
+      "GET",
+      "PUT"
+    ]
+  },
+  {
+    "relPath": "api\\schools\\route.ts",
+    "endpoint": "/api\\schools\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\schools\\[id]\\landing\\route.ts",
+    "endpoint": "/api\\schools\\[id]\\landing\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "PATCH"
+    ]
+  },
+  {
+    "relPath": "api\\schools\\[id]\\route.ts",
+    "endpoint": "/api\\schools\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\schools\\[id]\\theme\\route.ts",
+    "endpoint": "/api\\schools\\[id]\\theme\\route.ts",
+    "methods": [
+      "GET",
+      "PUT"
+    ]
+  },
+  {
+    "relPath": "api\\sections\\route.ts",
+    "endpoint": "/api\\sections\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\sections\\[id]\\route.ts",
+    "endpoint": "/api\\sections\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\settings\\permissions\\route.ts",
+    "endpoint": "/api\\settings\\permissions\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\setup\\route.ts",
+    "endpoint": "/api\\setup\\route.ts",
+    "methods": [
+      "POST",
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\streams\\route.ts",
+    "endpoint": "/api\\streams\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\streams\\[id]\\route.ts",
+    "endpoint": "/api\\streams\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\student\\profile\\route.ts",
+    "endpoint": "/api\\student\\profile\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\students\\filters\\route.ts",
+    "endpoint": "/api\\students\\filters\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\students\\import\\route.ts",
+    "endpoint": "/api\\students\\import\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\students\\import\\template\\route.ts",
+    "endpoint": "/api\\students\\import\\template\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\students\\import\\validate\\route.ts",
+    "endpoint": "/api\\students\\import\\validate\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\students\\promote\\route.ts",
+    "endpoint": "/api\\students\\promote\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\students\\route.ts",
+    "endpoint": "/api\\students\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\students\\[id]\\route.ts",
+    "endpoint": "/api\\students\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\subject-assignment\\route.ts",
+    "endpoint": "/api\\subject-assignment\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\subject-assignment\\[id]\\route.ts",
+    "endpoint": "/api\\subject-assignment\\[id]\\route.ts",
+    "methods": [
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\subject-master\\route.ts",
+    "endpoint": "/api\\subject-master\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\subject-master\\[id]\\route.ts",
+    "endpoint": "/api\\subject-master\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\subjects\\route.ts",
+    "endpoint": "/api\\subjects\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\subjects\\[id]\\route.ts",
+    "endpoint": "/api\\subjects\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\syllabus\\route.ts",
+    "endpoint": "/api\\syllabus\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\syllabus\\[id]\\route.ts",
+    "endpoint": "/api\\syllabus\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\syllabus-by-class\\route.ts",
+    "endpoint": "/api\\syllabus-by-class\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\teacher\\profile\\route.ts",
+    "endpoint": "/api\\teacher\\profile\\route.ts",
+    "methods": [
+      "GET",
+      "PATCH"
+    ]
+  },
+  {
+    "relPath": "api\\teacher-assignment\\route.ts",
+    "endpoint": "/api\\teacher-assignment\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\teacher-assignment\\[id]\\route.ts",
+    "endpoint": "/api\\teacher-assignment\\[id]\\route.ts",
+    "methods": [
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\teachers\\filters\\route.ts",
+    "endpoint": "/api\\teachers\\filters\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\teachers\\import\\route.ts",
+    "endpoint": "/api\\teachers\\import\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\teachers\\import\\validate\\route.ts",
+    "endpoint": "/api\\teachers\\import\\validate\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\teachers\\route.ts",
+    "endpoint": "/api\\teachers\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\teachers\\[id]\\route.ts",
+    "endpoint": "/api\\teachers\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\theme\\route.ts",
+    "endpoint": "/api\\theme\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\transport\\allocations\\route.ts",
+    "endpoint": "/api\\transport\\allocations\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\transport\\allocations\\[id]\\route.ts",
+    "endpoint": "/api\\transport\\allocations\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\transport\\buses\\route.ts",
+    "endpoint": "/api\\transport\\buses\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\transport\\buses\\[id]\\route.ts",
+    "endpoint": "/api\\transport\\buses\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\transport\\routes\\route.ts",
+    "endpoint": "/api\\transport\\routes\\route.ts",
+    "methods": [
+      "GET",
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\transport\\routes\\[id]\\route.ts",
+    "endpoint": "/api\\transport\\routes\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  },
+  {
+    "relPath": "api\\upload\\route.ts",
+    "endpoint": "/api\\upload\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\users\\route.ts",
+    "endpoint": "/api\\users\\route.ts",
+    "methods": [
+      "GET"
+    ]
+  },
+  {
+    "relPath": "api\\users\\[id]\\reset-password\\route.ts",
+    "endpoint": "/api\\users\\[id]\\reset-password\\route.ts",
+    "methods": [
+      "POST"
+    ]
+  },
+  {
+    "relPath": "api\\users\\[id]\\route.ts",
+    "endpoint": "/api\\users\\[id]\\route.ts",
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ]
+  }
+]

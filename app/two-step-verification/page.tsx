@@ -31,41 +31,43 @@ export default function TwoStepVerificationPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [otp, setOtp] = useState(["", "", "", ""]);
-  const inputRefs = [
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-    useRef<HTMLInputElement>(null),
-  ];
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleOtpChange = (index: number, value: string) => {
     // Only allow numbers
     if (!/^\d*$/.test(value)) return;
 
-    const newOtp = [...otp];
-    // Take only the last character if they pasted multiple or typed fast
-    newOtp[index] = value.slice(-1);
-    setOtp(newOtp);
+    const char = value.slice(-1);
+    setOtp((prev) => {
+      const next = [...prev];
+      next[index] = char;
+      return next;
+    });
 
     // Auto-advance
-    if (value && index < 3) {
-      inputRefs[index + 1].current?.focus();
+    if (char && index < 3) {
+      inputRefs.current[index + 1]?.focus();
     }
   };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Handle backspace
     if (e.key === 'Backspace') {
+      e.preventDefault();
       if (!otp[index] && index > 0) {
-        // Move to previous input
-        const newOtp = [...otp];
-        newOtp[index - 1] = "";
-        setOtp(newOtp);
-        inputRefs[index - 1].current?.focus();
+        setOtp((prev) => {
+          const next = [...prev];
+          next[index - 1] = "";
+          return next;
+        });
+        requestAnimationFrame(() => {
+          inputRefs.current[index - 1]?.focus();
+        });
       } else {
-        const newOtp = [...otp];
-        newOtp[index] = "";
-        setOtp(newOtp);
+        setOtp((prev) => {
+          const next = [...prev];
+          next[index] = "";
+          return next;
+        });
       }
     }
   };
@@ -139,7 +141,7 @@ export default function TwoStepVerificationPage() {
                 {otp.map((digit, idx) => (
                   <input
                     key={idx}
-                    ref={inputRefs[idx]}
+                    ref={(el) => { inputRefs.current[idx] = el; }}
                     type="text"
                     inputMode="numeric"
                     value={digit}

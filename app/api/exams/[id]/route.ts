@@ -7,6 +7,25 @@ import { invalidateExamsCache } from "../route";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
+export async function GET(req: NextRequest, { params }: RouteParams) {
+  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin", "student", "parent"]);
+  if (error) return error;
+  const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id))
+    return NextResponse.json({ success: false, message: "Invalid ID" }, { status: 400 });
+
+  try {
+    await connectToDatabase();
+    const exam = await Exam.findOne({ _id: id, school_id: schoolId, is_deleted: { $ne: true } })
+      .populate("class_id", "name section")
+      .lean();
+    if (!exam) return NextResponse.json({ success: false, message: "Exam not found" }, { status: 404 });
+    return NextResponse.json({ success: true, data: exam });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  }
+}
+
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { FeesStructure } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
+import mongoose from "mongoose";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -11,6 +12,9 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
   try {
     const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid fee structure ID" }, { status: 400 });
+    }
     await connectToDatabase();
     const body = await req.json();
     const fee = await FeesStructure.findOneAndUpdate(
@@ -31,6 +35,9 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
 
   try {
     const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid fee structure ID" }, { status: 400 });
+    }
     await connectToDatabase();
     const fee = await FeesStructure.findOneAndDelete({ _id: id, school_id: schoolId });
     if (!fee) return NextResponse.json({ success: false, message: "Not found" }, { status: 404 });

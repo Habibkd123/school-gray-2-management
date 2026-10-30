@@ -1149,7 +1149,7 @@ export default function TeacherAssignmentPage() {
 
       {/* Add Modal */}
       <Modal isOpen={isAddOpen} onClose={() => { setIsAddOpen(false); resetForm(); }} title="Assign Faculty to Class Subject">
-        <form onSubmit={handleAddSubmit} className="space-y-4 text-left">
+        <form onSubmit={handleAddSubmit} noValidate className="space-y-4 text-left">
 
           {/* Custom Searchable Faculty Selection */}
           <div className="flex flex-col gap-1.5 relative">
@@ -1420,7 +1420,7 @@ export default function TeacherAssignmentPage() {
 
       {/* Edit Modal */}
       <Modal isOpen={isEditOpen} onClose={() => { setIsEditOpen(false); setSelectedAssignment(null); }} title="Edit Teacher Assignment">
-        <form onSubmit={handleEditSubmit} className="space-y-4 text-left">
+        <form onSubmit={handleEditSubmit} noValidate className="space-y-4 text-left">
           {formError && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-rose-50 dark:bg-rose-955/20 text-rose-600 dark:text-rose-455 text-[13px] font-semibold border border-rose-200/50">
               <AlertCircle className="w-4 h-4 shrink-0" /> {formError}

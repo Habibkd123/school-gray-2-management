@@ -15,12 +15,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid document ID" }, { status: 400 });
+    }
+
     await dbConnect();
     const authResult = requireAuth(req);
     if (authResult.error) return authResult.error;
     const { schoolId } = authResult;
 
-    const { id } = await params;
     const doc = await GeneratedDocument.findOne({
       _id: id,
       ...(schoolId ? { school_id: new mongoose.Types.ObjectId(schoolId) } : {}),
@@ -42,12 +46,16 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid document ID" }, { status: 400 });
+    }
+
     await dbConnect();
     const authResult = requireAuth(req);
     if (authResult.error) return authResult.error;
     const { schoolId } = authResult;
 
-    const { id } = await params;
     const body = await req.json();
     const allowed = ["is_downloaded", "is_printed", "status", "pdf_url", "pages"];
     const update: Record<string, any> = {};
@@ -80,12 +88,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid document ID" }, { status: 400 });
+    }
+
     await dbConnect();
     const authResult = requireAuth(req);
     if (authResult.error) return authResult.error;
     const { schoolId } = authResult;
 
-    const { id } = await params;
     const doc = await GeneratedDocument.findOneAndDelete({
       _id: id,
       ...(schoolId ? { school_id: new mongoose.Types.ObjectId(schoolId) } : {}),

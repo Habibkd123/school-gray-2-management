@@ -104,6 +104,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Stream name is required" }, { status: 400 });
     }
 
+    const existingStream = await Stream.findOne({
+      school_id: String(schoolId),
+      name: name.trim()
+    });
+    if (existingStream) {
+      return NextResponse.json({ success: false, message: "A stream with this name already exists" }, { status: 409 });
+    }
+
     const stream = await Stream.create({
       school_id: String(schoolId),
       name: name.trim(),

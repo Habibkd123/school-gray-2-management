@@ -8,6 +8,14 @@ import { sendCompressedJson } from "@/lib/compression";
 const parentProfileCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL_MS = 60_000;
 
+export function invalidateParentProfileCache(userId?: string) {
+  if (userId) {
+    parentProfileCache.delete(userId);
+  } else {
+    parentProfileCache.clear();
+  }
+}
+
 // GET /api/parent/profile — Get logged-in parent's profile
 export async function GET(request: NextRequest) {
   const { userId, error } = requireAuth(request, ["parent"]);
@@ -44,11 +52,17 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
 
     // Only allow safe fields to be updated
-    const { name, phone, email, address, occupation, photo_url } = body;
+    const updateFields: any = {};
+    if (body.name !== undefined) updateFields.name = body.name;
+    if (body.phone !== undefined) updateFields.phone = body.phone;
+    if (body.email !== undefined) updateFields.email = body.email;
+    if (body.address !== undefined) updateFields.address = body.address;
+    if (body.occupation !== undefined) updateFields.occupation = body.occupation;
+    if (body.photo_url !== undefined) updateFields.photo_url = body.photo_url;
 
     const updated = await Parent.findOneAndUpdate(
       { user_id: userId },
-      { $set: { name, phone, email, address, occupation, photo_url } },
+      { $set: updateFields },
       { new: true, runValidators: true }
     ).lean();
 
@@ -57,7 +71,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Invalidate cache
-    parentProfileCache.delete(userId);
+    invalidateParentProfileCache(userId);
 
     return sendCompressedJson(request, { success: true, message: "Profile updated", data: updated });
   } catch (err) {

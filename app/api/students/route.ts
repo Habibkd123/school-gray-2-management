@@ -137,7 +137,13 @@ export async function GET(request: NextRequest) {
       filter.parent_id = parentDoc._id;
     } else {
       const parentId = searchParams.get("parent_id");
-      if (parentId) filter.parent_id = parentId;
+      if (parentId) {
+        if (mongoose.isValidObjectId(parentId)) {
+          filter.parent_id = parentId;
+        } else {
+          filter.parent_id = null;
+        }
+      }
     }
 
     const section = searchParams.get("section");
@@ -159,7 +165,11 @@ export async function GET(request: NextRequest) {
     ]);
 
     if (classId && classId !== "all") {
-      filter.class_id = classId;
+      if (mongoose.isValidObjectId(classId)) {
+        filter.class_id = classId;
+      } else {
+        filter.class_id = null;
+      }
     }
     if (academic_year && academic_year !== "all") {
       filter.academic_year = academic_year;
@@ -384,6 +394,13 @@ export async function POST(request: NextRequest) {
     if (!class_id) {
       return NextResponse.json(
         { success: false, message: "Class selection is mandatory" },
+        { status: 400 }
+      );
+    }
+
+    if (!mongoose.isValidObjectId(class_id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid Class ID" },
         { status: 400 }
       );
     }

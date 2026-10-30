@@ -84,14 +84,26 @@ export async function GET(req: NextRequest) {
       is_deleted: { $ne: true }
     };
     if (academic_year) matchStage.academic_year = academic_year;
-    if (class_id && mongoose.Types.ObjectId.isValid(class_id)) {
-      matchStage.class_id = new mongoose.Types.ObjectId(class_id as string);
+    if (class_id) {
+      if (mongoose.Types.ObjectId.isValid(class_id)) {
+        matchStage.class_id = new mongoose.Types.ObjectId(class_id as string);
+      } else {
+        matchStage.class_id = null;
+      }
     }
-    if (subject_id && mongoose.Types.ObjectId.isValid(subject_id)) {
-      matchStage.subject_master_id = new mongoose.Types.ObjectId(subject_id as string);
+    if (subject_id) {
+      if (mongoose.Types.ObjectId.isValid(subject_id)) {
+        matchStage.subject_master_id = new mongoose.Types.ObjectId(subject_id as string);
+      } else {
+        matchStage.subject_master_id = null;
+      }
     }
-    if (teacher_id && mongoose.Types.ObjectId.isValid(teacher_id)) {
-      matchStage.teacher_id = new mongoose.Types.ObjectId(teacher_id as string);
+    if (teacher_id) {
+      if (mongoose.Types.ObjectId.isValid(teacher_id)) {
+        matchStage.teacher_id = new mongoose.Types.ObjectId(teacher_id as string);
+      } else {
+        matchStage.teacher_id = null;
+      }
     }
     if (assignment_type) {
       matchStage.assignment_type = assignment_type;
@@ -386,6 +398,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Invalid IDs" }, { status: 400 });
     }
 
+    if (stream_id && !mongoose.Types.ObjectId.isValid(stream_id)) {
+      return NextResponse.json({ success: false, message: "Invalid stream ID" }, { status: 400 });
+    }
+
+    const teacher = await Teacher.findOne({ _id: teacher_id, school_id: schoolId, is_deleted: { $ne: true } });
+    if (!teacher) {
+      return NextResponse.json({ success: false, message: "Teacher not found" }, { status: 404 });
+    }
+
     const cls = await Class.findOne({ _id: class_id, school_id: schoolId });
     if (!cls) {
       return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });
@@ -484,6 +505,15 @@ export async function POST(req: NextRequest) {
       targetSubjectIds.push(...subject_master_ids);
     } else if (subject_master_id) {
       targetSubjectIds.push(subject_master_id);
+    }
+
+    if (targetSubjectIds.some(subId => !mongoose.Types.ObjectId.isValid(subId))) {
+      return NextResponse.json({ success: false, message: "Invalid subject ID" }, { status: 400 });
+    }
+
+    const validSubjects = await SubjectMaster.find({ _id: { $in: targetSubjectIds }, school_id: schoolId }).lean();
+    if (validSubjects.length === 0) {
+      return NextResponse.json({ success: false, message: "Subject not found" }, { status: 404 });
     }
 
     const createdAssignments: any[] = [];

@@ -610,13 +610,17 @@ export function CanvasElement({
     if (isSelected && isEditing) {
       (window as any).__selectedTableSelection = { elementId: element.id, coords: selectedCellCoords };
     } else if (!isSelected) {
-      setSelectedCellCoords([]);
-      setEditingCell(null);
+      if (selectedCellCoords.length > 0) {
+        setSelectedCellCoords([]);
+      }
+      if (editingCell !== null) {
+        setEditingCell(null);
+      }
       if ((window as any).__selectedTableSelection?.elementId === element.id) {
         delete (window as any).__selectedTableSelection;
       }
     }
-  }, [selectedCellCoords, isSelected, isEditing, element.id]);
+  }, [selectedCellCoords, isSelected, isEditing, element.id, editingCell]);
 
   const handleCellClick = (e: React.MouseEvent, r: number, c: number) => {
     if (!isEditing) return;

@@ -281,6 +281,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (class_teacher_id) {
+      if (!mongoose.Types.ObjectId.isValid(class_teacher_id)) {
+        return NextResponse.json({ success: false, message: "Invalid class teacher ID" }, { status: 400 });
+      }
+      const teacher = await Teacher.findOne({ _id: class_teacher_id, school_id: schoolId, is_deleted: { $ne: true } });
+      if (!teacher) {
+        return NextResponse.json({ success: false, message: "Class teacher not found in this school" }, { status: 404 });
+      }
+    }
+
     const trimmedName = name.trim();
     const trimmedSection = section?.trim() || "";
     const trimmedYear = academic_year.trim();

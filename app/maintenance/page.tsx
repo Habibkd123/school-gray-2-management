@@ -63,7 +63,7 @@ export default function MaintenancePage() {
 
       {/* Footer Copyright */}
       <div className="w-full pb-8 pt-4 text-center">
-        <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Copyright © 2024 - MySchoolLife  </p>
+        <p className="text-[12px] text-slate-500 dark:text-slate-400 font-medium">Copyright © 2026 - MySchoolLife School ERP. All rights reserved.</p>
       </div>
 
     </div>

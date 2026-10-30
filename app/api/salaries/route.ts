@@ -120,6 +120,10 @@ export async function GET(req: NextRequest) {
     const endDateParam = url.searchParams.get("end_date");
     const statusParam = url.searchParams.get("status");
 
+    if (teacherId && !mongoose.Types.ObjectId.isValid(teacherId)) {
+      return NextResponse.json({ success: false, message: "Invalid teacher ID" }, { status: 400 });
+    }
+
     const cacheKey = `salaries_${effectiveSchoolId || "all"}_${role}_${userId || ""}_${teacherId || "all"}_${period || "all"}_${year || "all"}_${startDateParam || ""}_${endDateParam || ""}_${statusParam || "all"}`;
 
     const cached = _salariesServerCache.get(cacheKey);
@@ -470,6 +474,19 @@ export async function POST(req: NextRequest) {
 
     if (!mongoose.Types.ObjectId.isValid(teacher_id)) {
       return NextResponse.json({ success: false, message: "Invalid teacher ID" }, { status: 400 });
+    }
+
+    if (
+      (bonus !== undefined && Number(bonus) < 0) ||
+      (deduction !== undefined && Number(deduction) < 0) ||
+      (overtime_amount !== undefined && Number(overtime_amount) < 0) ||
+      (tax_deduction !== undefined && Number(tax_deduction) < 0) ||
+      (final_salary !== undefined && Number(final_salary) < 0)
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Salary components cannot be negative" },
+        { status: 400 }
+      );
     }
 
     // Verify teacher exists

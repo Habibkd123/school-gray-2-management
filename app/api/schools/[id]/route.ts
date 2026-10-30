@@ -82,7 +82,15 @@ export async function PUT(request: NextRequest, context: RouteContext) {
     }
 
     // Toggle status or update fields
-    if (body.name !== undefined) school.name = body.name.trim();
+    if (body.name !== undefined) {
+      if (!body.name.trim()) {
+        return NextResponse.json(
+          { success: false, message: "School name cannot be empty." },
+          { status: 400 }
+        );
+      }
+      school.name = body.name.trim();
+    }
     if (body.address !== undefined) school.address = body.address.trim();
     if (body.phone !== undefined) school.phone = body.phone.trim();
     if (body.email !== undefined) school.email = body.email.toLowerCase().trim();

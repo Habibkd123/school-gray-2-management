@@ -78,16 +78,20 @@ export default function BulkImport({
 
         if (classIdx !== -1) {
           // Use first class for Aarav Sharma (row 0)
-          data[0][classIdx] = apiClasses[0].name;
-          if (sectionIdx !== -1) {
-            data[0][sectionIdx] = apiClasses[0].section || "";
+          if (data[0]) {
+            data[0][classIdx] = apiClasses[0].name;
+            if (sectionIdx !== -1) {
+              data[0][sectionIdx] = apiClasses[0].section || "";
+            }
           }
 
           // Use second class (if exists) or same class for Ananya Patel (row 1)
-          const secondClass = apiClasses[1] || apiClasses[0];
-          data[1][classIdx] = secondClass.name;
-          if (sectionIdx !== -1) {
-            data[1][sectionIdx] = secondClass.section || "";
+          if (data[1]) {
+            const secondClass = apiClasses[1] || apiClasses[0];
+            data[1][classIdx] = secondClass.name;
+            if (sectionIdx !== -1) {
+              data[1][sectionIdx] = secondClass.section || "";
+            }
           }
         }
       } else if (module === "teachers") {
@@ -102,7 +106,9 @@ export default function BulkImport({
           const secondClass = apiClasses[1];
           const secondClassStr = secondClass ? (secondClass.section ? `, ${secondClass.name} - ${secondClass.section}` : `, ${secondClass.name}`) : "";
 
-          data[0][assignedClassIdx] = `${firstClassStr}${secondClassStr}`;
+          if (data[0]) {
+            data[0][assignedClassIdx] = `${firstClassStr}${secondClassStr}`;
+          }
           if (data[1]) {
             data[1][assignedClassIdx] = firstClassStr;
           }
@@ -115,15 +121,16 @@ export default function BulkImport({
   const downloadCSVTemplate = () => {
     const cleanHeaders = sampleHeaders.map(h => h.replace("*", ""));
     const data = getDynamicSampleData();
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + [cleanHeaders.join(","), ...data.map(r => r.map(v => `"${(v || "").replace(/"/g, '""')}"`).join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = [cleanHeaders.join(","), ...data.map(r => r.map(v => `"${(v || "").replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", `${module}_import_template.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const downloadExcelTemplate = async () => {
@@ -417,7 +424,6 @@ export default function BulkImport({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // --- Credentials Download Functions ---
   const downloadCredentialsCSV = () => {
     if (importedCredentials.length === 0) return;
     const headers = ["Student Name", "Admission Number", "Class", "Section", "Username", "Password", "Parent Username", "Parent Password"];
@@ -425,15 +431,16 @@ export default function BulkImport({
       c.studentName, c.admissionNo, c.className, c.section,
       c.studentUsername, c.studentPassword, c.parentUsername, c.parentPassword
     ]);
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + [headers.join(","), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = [headers.join(","), ...rows.map(r => r.map(v => `"${String(v || "").replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", url);
     link.setAttribute("download", `student_credentials_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const downloadCredentialsPDF = () => {

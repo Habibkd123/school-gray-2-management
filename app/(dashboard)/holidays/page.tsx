@@ -176,8 +176,10 @@ export default function HolidaysPage() {
 
   const filteredData = useMemo(() => {
     let list = holidays.filter(item => {
-      const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                            item.display_id.toLowerCase().includes(searchTerm.toLowerCase());
+      const titleStr = item.title || "";
+      const displayIdStr = item.display_id || "";
+      const matchesSearch = titleStr.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            displayIdStr.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = filterStatus ? item.status === filterStatus : true;
       
       let matchesDate = true;
@@ -189,9 +191,9 @@ export default function HolidaysPage() {
     });
 
     if (selectedSort === "Ascending") {
-      list = [...list].sort((a, b) => a.title.localeCompare(b.title));
+      list = [...list].sort((a, b) => (a.title || "").localeCompare(b.title || ""));
     } else if (selectedSort === "Descending") {
-      list = [...list].sort((a, b) => b.title.localeCompare(a.title));
+      list = [...list].sort((a, b) => (b.title || "").localeCompare(a.title || ""));
     } else if (selectedSort === "Recently Added") {
       list = [...list].sort((a, b) => {
         const ad = a.createdAt ? new Date(a.createdAt).getTime() : new Date(a.date).getTime();

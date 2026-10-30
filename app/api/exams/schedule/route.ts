@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { ExamSchedule } from "@/lib/models/index";
+import { ExamSchedule, Exam, Subject } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import { sendCompressedJson } from "@/lib/compression";
+import mongoose from "mongoose";
 
 export async function GET(req: NextRequest) {
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
@@ -40,6 +41,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(exam_id) || !mongoose.Types.ObjectId.isValid(subject_id)) {
+      return NextResponse.json({ success: false, message: "Invalid exam or subject ID" }, { status: 400 });
+    }
+
+    const maxMarksNum = Number(max_marks);
+    const passingMarksNum = Number(passing_marks);
+
+    if (isNaN(maxMarksNum) || maxMarksNum <= 0) {
+      return NextResponse.json({ success: false, message: "Max marks must be greater than 0" }, { status: 400 });
+    }
+    if (isNaN(passingMarksNum) || passingMarksNum < 0 || passingMarksNum > maxMarksNum) {
+      return NextResponse.json({ success: false, message: "Passing marks must be between 0 and max marks" }, { status: 400 });
+    }
+
+    const [exam, subject] = await Promise.all([
+      Exam.findOne({ _id: exam_id, school_id: schoolId }),
+      Subject.findOne({ _id: subject_id, school_id: schoolId }).then(async (s) => s || await mongoose.model("SubjectMaster").findOne({ _id: subject_id, school_id: schoolId })),
+    ]);
+
+    if (!exam) {
+      return NextResponse.json({ success: false, message: "Exam not found in this school" }, { status: 404 });
+    }
+    if (!subject) {
+      return NextResponse.json({ success: false, message: "Subject not found in this school" }, { status: 404 });
+    }
+
+    const existingSchedule = await ExamSchedule.findOne({
+      exam_id,
+      subject_id,
+      date: new Date(date)
+    });
+    if (existingSchedule) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "A schedule for this subject and date already exists for this exam." 
+      }, { status: 400 });
+    }
+
     try {
       const schedule = await ExamSchedule.create({
         school_id: schoolId as string,
@@ -48,8 +87,8 @@ export async function POST(req: NextRequest) {
         date: new Date(date),
         start_time,
         end_time,
-        max_marks: Number(max_marks),
-        passing_marks: Number(passing_marks),
+        max_marks: maxMarksNum,
+        passing_marks: passingMarksNum,
         room: room || undefined
       });
 

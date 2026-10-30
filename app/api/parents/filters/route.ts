@@ -18,8 +18,11 @@ export function invalidateParentsFiltersCache(schoolId?: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const { schoolId, error } = requireAuth(request, ["school_admin", "teacher", "super_admin"]);
+  const { schoolId, role, error } = requireAuth(request, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
+  if (role === "student" || role === "parent") {
+    return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+  }
 
   const cacheKey = String(schoolId);
   const cached = _filterCache.get(cacheKey);

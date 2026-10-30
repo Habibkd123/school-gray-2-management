@@ -57,6 +57,32 @@ export async function POST(req: NextRequest) {
     if (!dob) return NextResponse.json({ success: false, message: "Date of birth is required" }, { status: 400 });
     if (!phone?.trim()) return NextResponse.json({ success: false, message: "Mobile number is required" }, { status: 400 });
 
+    const cleanPhone = phone.trim();
+    if (cleanPhone.replace(/[^0-9]/g, "").length < 7) {
+      return NextResponse.json({ success: false, message: "Please enter a valid mobile number with at least 7 digits." }, { status: 400 });
+    }
+
+    // Duplicate submission prevention: check if an identical application was submitted recently
+    const existing = await Admission.findOne({
+      school_id: schoolId,
+      academic_year,
+      student_name: student_name.trim(),
+      phone: cleanPhone,
+      createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+    }).select("_id application_no").lean();
+
+    if (existing) {
+      return NextResponse.json({
+        success: true,
+        message: "Application already submitted for this student",
+        data: {
+          application_no: (existing as any).application_no,
+          _id: (existing as any)._id,
+          is_duplicate: true,
+        },
+      }, { status: 200 });
+    }
+
     // Generate unique application number ADM-YYYY-XXXXXX
     const yearPart = academic_year.split("-")[0] || new Date().getFullYear().toString();
     const count = await Admission.countDocuments({ school_id: schoolId, academic_year });

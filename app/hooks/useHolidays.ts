@@ -80,11 +80,11 @@ export function useHolidays(options?: { skip?: boolean; initialPage?: number; in
 
     if (cached) {
       // Serve stale/cached data instantly — 0ms loading
-      setHolidays(cached.holidays);
-      setTotal(cached.total);
-      setTotalPages(cached.totalPages);
+      setHolidays(cached.holidays ?? []);
+      setTotal(cached.total ?? 0);
+      setTotalPages(cached.totalPages ?? 1);
       setIsLoading(false);
-    } else if (holidays.length === 0) {
+    } else if (!holidays || holidays.length === 0) {
       setIsLoading(true);
     }
     setError(null);
@@ -92,9 +92,9 @@ export function useHolidays(options?: { skip?: boolean; initialPage?: number; in
     if (_holidayPromises.has(key)) {
       try {
         const result = await _holidayPromises.get(key)!;
-        setHolidays(result.holidays);
-        setTotal(result.total);
-        setTotalPages(result.totalPages);
+        setHolidays(result?.holidays ?? []);
+        setTotal(result?.total ?? 0);
+        setTotalPages(result?.totalPages ?? 1);
       } finally {
         setIsLoading(false);
       }
@@ -111,10 +111,15 @@ export function useHolidays(options?: { skip?: boolean; initialPage?: number; in
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch holidays");
+      const holidayList = Array.isArray(data.data?.holidays)
+        ? data.data.holidays
+        : Array.isArray(data.data)
+        ? data.data
+        : [];
       return {
-        holidays: data.data.holidays,
-        total: data.data.total,
-        totalPages: data.data.totalPages,
+        holidays: holidayList,
+        total: data.data?.total ?? holidayList.length,
+        totalPages: data.data?.totalPages ?? 1,
       };
     })();
 
@@ -124,9 +129,9 @@ export function useHolidays(options?: { skip?: boolean; initialPage?: number; in
       const result = await promise;
       _cache.set(key, result);
       writeSessionHolidays(key, result);
-      setHolidays(result.holidays);
-      setTotal(result.total);
-      setTotalPages(result.totalPages);
+      setHolidays(result?.holidays ?? []);
+      setTotal(result?.total ?? 0);
+      setTotalPages(result?.totalPages ?? 1);
     } catch (err: any) {
       if (err?.name !== "AbortError") {
         setError(err instanceof Error ? err.message : "Failed to load holidays");
@@ -135,7 +140,7 @@ export function useHolidays(options?: { skip?: boolean; initialPage?: number; in
       _holidayPromises.delete(key);
       setIsLoading(false);
     }
-  }, [page, pageSize, holidays.length]);
+  }, [page, pageSize, holidays?.length]);
 
   useEffect(() => {
     if (options?.skip) return;

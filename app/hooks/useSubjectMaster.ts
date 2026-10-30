@@ -76,16 +76,17 @@ export function useSubjectMaster(options?: { skip?: boolean; limit?: number }) {
 
       const isFiltered = !!(params.search || params.page);
       const isAll = (params.limit ?? 0) >= 100;
+      const subjectList = Array.isArray(data.data) ? data.data : (data.data?.subjects || []);
       if (isAll && !isFiltered) {
-        _subjectsCache = data.data.subjects;
+        _subjectsCache = subjectList;
         _cacheTimestamp = Date.now();
-        writeSessionCache(data.data.subjects);
-        _listeners.forEach(fn => fn(data.data.subjects));
+        writeSessionCache(subjectList);
+        _listeners.forEach(fn => fn(subjectList));
       }
-      setSubjects(data.data.subjects);
-      setTotal(data.data.total ?? 0);
-      setTotalPages(data.data.totalPages ?? 1);
-      setCurrentPage(data.data.page ?? 1);
+      setSubjects(subjectList);
+      setTotal(data.data?.total ?? subjectList.length);
+      setTotalPages(data.data?.totalPages ?? 1);
+      setCurrentPage(data.data?.page ?? 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load subjects");
     } finally {

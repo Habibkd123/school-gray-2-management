@@ -29,14 +29,26 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { room_no, capacity, is_active } = body;
 
-    if (!room_no) {
+    if (!room_no || typeof room_no !== "string" || !room_no.trim()) {
       return NextResponse.json({ success: false, message: "Room number is required" }, { status: 400 });
+    }
+
+    if (capacity !== undefined) {
+      const capNum = Number(capacity);
+      if (isNaN(capNum) || capNum <= 0) {
+        return NextResponse.json({ success: false, message: "Capacity must be a positive number" }, { status: 400 });
+      }
+    }
+
+    const existing = await Room.findOne({ school_id: schoolId, room_no: room_no.trim() });
+    if (existing) {
+      return NextResponse.json({ success: false, message: "Room with this number already exists" }, { status: 409 });
     }
 
     const room = await Room.create({
       school_id: schoolId as string,
       room_no: room_no.trim(),
-      capacity: capacity ? parseInt(capacity) : 40,
+      capacity: capacity !== undefined ? Number(capacity) : 40,
       is_active: is_active !== undefined ? is_active : true,
     });
 

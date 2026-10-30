@@ -30,6 +30,10 @@ export async function GET(req: NextRequest) {
   const { schoolId, role, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (error) return error;
 
+  if (role === "student" || role === "parent") {
+    return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+  }
+
   try {
     const url = new URL(req.url);
     const reportType = url.searchParams.get("type") || "daily"; // daily or monthly or teacher-recent
@@ -37,6 +41,26 @@ export async function GET(req: NextRequest) {
     const monthStr = url.searchParams.get("month") || ""; // YYYY-MM
     const classId = url.searchParams.get("classId") || "";
     const sectionId = url.searchParams.get("sectionId") || "";
+
+    if (reportType !== "daily" && reportType !== "monthly" && reportType !== "teacher-recent") {
+      return NextResponse.json({ success: false, message: "Invalid type parameter" }, { status: 400 });
+    }
+
+    if (reportType === "monthly" && !monthStr) {
+      return NextResponse.json({ success: false, message: "Month (YYYY-MM) parameter is required" }, { status: 400 });
+    }
+
+    if (dateStr && isNaN(new Date(dateStr).getTime())) {
+      return NextResponse.json({ success: false, message: "Invalid date format" }, { status: 400 });
+    }
+
+    if (classId && !mongoose.Types.ObjectId.isValid(classId)) {
+      return NextResponse.json({ success: false, message: "Invalid classId format" }, { status: 400 });
+    }
+
+    if (sectionId && !mongoose.Types.ObjectId.isValid(sectionId)) {
+      return NextResponse.json({ success: false, message: "Invalid sectionId format" }, { status: 400 });
+    }
 
     const cacheKey = `att_rep_${schoolId}_${reportType}_${dateStr}_${monthStr}_${classId}_${sectionId}`;
 

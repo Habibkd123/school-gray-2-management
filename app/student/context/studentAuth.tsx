@@ -101,8 +101,14 @@ export function StudentAuthProvider({ children }: { children: React.ReactNode })
     password: string
   ): Promise<{ success: boolean; message: string }> => {
     try {
-      // Resolve school_id from the current subdomain
-      const subdomain = getClientSubdomain();
+      // Resolve school_id from the current subdomain, with fallback to username prefix
+      let subdomain = getClientSubdomain();
+      if (!subdomain && username.includes(".myschoollife")) {
+        const parts = username.split(".");
+        if (parts.length >= 2) {
+          subdomain = parts[0];
+        }
+      }
       const schoolId = subdomain ? await resolveSchoolIdBySubdomain(subdomain) : null;
 
       if (!schoolId) {

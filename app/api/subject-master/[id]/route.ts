@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
 import { SubjectMaster, SubjectAssignment, TeacherAssignment } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
+import mongoose from "mongoose";
 import { invalidateSubjectMasterCache } from "../route";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid ID" }, { status: 400 });
+  }
+
   const auth = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
   if (auth.error) return auth.error;
   const { schoolId, user } = auth;
@@ -28,6 +33,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid ID" }, { status: 400 });
+  }
+
   const auth = requireAuth(req, ["school_admin", "super_admin"]);
   if (auth.error) return auth.error;
   const { schoolId, user } = auth;
@@ -66,6 +75,10 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid ID" }, { status: 400 });
+  }
+
   const auth = requireAuth(req, ["school_admin", "super_admin"]);
   if (auth.error) return auth.error;
   const { schoolId, user } = auth;

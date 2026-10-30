@@ -8,9 +8,25 @@ import mongoose from "mongoose";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: teacherId } = await params;
+  if (!mongoose.Types.ObjectId.isValid(teacherId)) {
+    return NextResponse.json({ success: false, message: "Invalid teacher ID" }, { status: 400 });
+  }
+
   const authResult = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (authResult.error) return authResult.error;
-  const { schoolId } = authResult;
+  const { schoolId, role, userId } = authResult;
+
+  if (role === "student" || role === "parent") {
+    return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+  }
+
+  if (role === "teacher") {
+    await connectToDatabase();
+    const selfTeacher = await Teacher.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
+    if (!selfTeacher || selfTeacher._id.toString() !== teacherId) {
+      return NextResponse.json({ success: false, message: "Access denied: You can only view your own report" }, { status: 403 });
+    }
+  }
 
   try {
     await connectToDatabase();

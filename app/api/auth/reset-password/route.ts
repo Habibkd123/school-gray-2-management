@@ -38,9 +38,12 @@ export async function POST(request: NextRequest) {
 
     // ─── Update password & clear token ───────────────────────────
     user.password_hash = password; // pre-save hook will bcrypt this
-    user.plain_password = password;
+    user.plain_password = null; // Do not store personalized secret password in plaintext
     user.reset_token = undefined;
     user.reset_token_expiry = undefined;
+    if (user.must_change_password) {
+      user.must_change_password = false;
+    }
     await user.save();
 
     return NextResponse.json({

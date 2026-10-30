@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
+  const { schoolId, role, error } = requireAuth(req, ["school_admin", "teacher", "super_admin", "student", "parent"]);
   if (error) return error;
   const { id } = await params;
   if (!mongoose.Types.ObjectId.isValid(id))
@@ -17,6 +17,21 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
     await connectToDatabase();
     const notice = await Notice.findOne({ _id: id, school_id: schoolId, is_deleted: { $ne: true } }).lean();
     if (!notice) return NextResponse.json({ success: false, message: "Notice not found" }, { status: 404 });
+
+    if (role === "student") {
+      if (!notice.is_published || (notice.target_audience !== "all" && notice.target_audience !== "students")) {
+        return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+      }
+    } else if (role === "parent") {
+      if (!notice.is_published || (notice.target_audience !== "all" && notice.target_audience !== "parents")) {
+        return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+      }
+    } else if (role === "teacher") {
+      if (!notice.is_published || (notice.target_audience !== "all" && notice.target_audience !== "teachers" && notice.target_audience !== "staff")) {
+        return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+      }
+    }
+
     return NextResponse.json({ success: true, data: notice });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

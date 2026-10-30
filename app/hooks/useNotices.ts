@@ -61,10 +61,15 @@ export function useNotices(options?: { initialPage?: number; initialPageSize?: n
       });
       const data = await res.json();
       if (data.success) {
+        const noticeList = Array.isArray(data.data?.notices)
+          ? data.data.notices
+          : Array.isArray(data.data)
+          ? data.data
+          : [];
         const result = {
-          notices: data.data.notices,
-          total: data.data.total,
-          totalPages: data.data.totalPages,
+          notices: noticeList,
+          total: data.data?.total ?? noticeList.length,
+          totalPages: data.data?.totalPages ?? 1,
         };
         _cache.set(key, result);
         setNotices(result.notices);

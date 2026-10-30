@@ -126,7 +126,7 @@ export function getPresetTheme(preset: ThemePreset): ThemeConfig {
   if (preset === "custom") {
     return { ...THEME_PRESETS.navy_blue, preset: "custom" };
   }
-  return THEME_PRESETS[preset];
+  return THEME_PRESETS[preset] ?? THEME_PRESETS.navy_blue;
 }
 
 export function resolveThemeConfig(

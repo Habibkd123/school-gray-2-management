@@ -7,7 +7,7 @@ import { sendCompressedJson } from "@/lib/compression";
 
 
 export async function GET(req: NextRequest) {
-  const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "super_admin", "student", "parent"]);
+  const { schoolId, role, error } = requireAuth(req, ["school_admin", "teacher", "super_admin", "student", "parent"]);
   if (error) return error;
 
   try {
@@ -20,6 +20,17 @@ export async function GET(req: NextRequest) {
     const query: any = { school_id: schoolId };
     if (!showDeleted) {
       query.is_deleted = { $ne: true };
+    }
+
+    if (role === "student") {
+      query.target_audience = { $in: ["all", "students"] };
+      query.is_published = true;
+    } else if (role === "parent") {
+      query.target_audience = { $in: ["all", "parents"] };
+      query.is_published = true;
+    } else if (role === "teacher") {
+      query.target_audience = { $in: ["all", "teachers", "staff"] };
+      query.is_published = true;
     }
 
     const { items: notices, total, totalPages } = await paginateQuery(

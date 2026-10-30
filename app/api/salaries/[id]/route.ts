@@ -106,6 +106,19 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       payment.approved_by = new mongoose.Types.ObjectId(userId);
     }
 
+    if (
+      (body.bonus !== undefined && Number(body.bonus) < 0) ||
+      (body.deduction !== undefined && Number(body.deduction) < 0) ||
+      (body.overtime_amount !== undefined && Number(body.overtime_amount) < 0) ||
+      (body.tax_deduction !== undefined && Number(body.tax_deduction) < 0) ||
+      (body.final_salary !== undefined && Number(body.final_salary) < 0)
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Salary components cannot be negative" },
+        { status: 400 }
+      );
+    }
+
     // Update fields
     const allowedFields = [
       "status", "working_days", "present_days", "absent_days", "late_days",

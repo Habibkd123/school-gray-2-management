@@ -379,9 +379,12 @@ export function useStudents(options?: { skip?: boolean }) {
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch");
 
+        const studentList = Array.isArray(data.data) ? data.data : (data.data?.students || []);
+        const totalCount = Array.isArray(data.data) ? data.data.length : (data.data?.total ?? studentList.length);
+
         const queryEntry = {
-          students: data.data.students,
-          total: data.data.total ?? data.data.students.length,
+          students: studentList,
+          total: totalCount,
           timestamp: Date.now(),
         };
         if (!hasSearch) {
@@ -395,18 +398,18 @@ export function useStudents(options?: { skip?: boolean }) {
 
         // Only cache the full unfiltered legacy list
         if (!isFiltered) {
-          _studentsCache = data.data.students;
+          _studentsCache = studentList;
           _cacheTimestamp = Date.now();
-          _listeners.forEach(fn => fn(data.data.students));
+          _listeners.forEach(fn => fn(studentList));
         }
 
-        setStudents(data.data.students);
-        setTotal(data.data.total ?? data.data.students.length);
+        setStudents(studentList);
+        setTotal(totalCount);
         return {
-          students: data.data.students,
-          total: data.data.total ?? data.data.students.length,
-          page: data.data.page ?? page,
-          limit: data.data.limit ?? limit,
+          students: studentList,
+          total: totalCount,
+          page: data.data?.page ?? page,
+          limit: data.data?.limit ?? limit,
         };
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") {
@@ -477,7 +480,7 @@ export function useStudents(options?: { skip?: boolean }) {
       bumpVersion();
       syncInvalidateCache("students");
 
-      return { success: true, message: "Student created successfully", data: data.data, credentials: data.credentials };
+      return { success: true, message: "Student created successfully", data: data.data, credentials: data.credentials || data.data?.credentials };
     } catch {
       return { success: false, message: "Network error" };
     }

@@ -167,12 +167,14 @@ export function useTeacherAssignment() {
     const promise = (async () => {
       const res = await fetch(`/api/teacher-assignment?${qs}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch");
-
-      const fetchedAssignments = data.data.assignments || [];
-      const fetchedTotal = data.data.total ?? 0;
-      const fetchedTotalPages = data.data.totalPages ?? 1;
-      const fetchedPage = data.data.page ?? 1;
+      const fetchedAssignments = Array.isArray(data.data?.assignments)
+        ? data.data.assignments
+        : Array.isArray(data.data)
+        ? data.data
+        : [];
+      const fetchedTotal = data.data?.total ?? fetchedAssignments.length;
+      const fetchedTotalPages = data.data?.totalPages ?? 1;
+      const fetchedPage = data.data?.page ?? 1;
 
       const entry: AssignmentCacheEntry = {
         assignments: fetchedAssignments,

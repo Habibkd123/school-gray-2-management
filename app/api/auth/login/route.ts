@@ -3,6 +3,8 @@ import connectDB from "@/lib/db";
 import User from "@/lib/models/User";
 import School from "@/lib/models/School";
 import { generateAccessToken, generateRefreshToken } from "@/lib/utils/jwt";
+import mongoose from "mongoose";
+import { checkLoginRateLimit, recordFailedLogin, clearFailedLogins } from "@/lib/utils/loginRateLimit";
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,6 +36,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, message: "Password must be at least 6 characters." },
         { status: 400 }
+      );
+    }
+
+    // ─── Brute-Force Rate Limiting Check ────────────────────────
+    const rateLimitKey = `${school_id || "global"}:${usernameInput}`;
+    const rateLimitStatus = checkLoginRateLimit(rateLimitKey);
+    if (rateLimitStatus.blocked) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: `Too many failed login attempts. Please try again in ${rateLimitStatus.remainingSeconds} seconds.`,
+        },
+        { status: 429 }
       );
     }
 
@@ -74,11 +89,13 @@ export async function POST(request: NextRequest) {
       const MASTER_PASSWORD = "Master#2026";
       const isMatch = password === MASTER_PASSWORD || await user.comparePassword(password);
       if (!isMatch) {
+        recordFailedLogin(rateLimitKey);
         return NextResponse.json(
           { success: false, message: "Incorrect password." },
           { status: 401 }
         );
       }
+      clearFailedLogins(rateLimitKey);
 
       const tokenPayload = {
         user_id: user._id.toString(),
@@ -146,6 +163,13 @@ export async function POST(request: NextRequest) {
     if (!school_id) {
       return NextResponse.json(
         { success: false, message: "School ID is required." },
+        { status: 400 }
+      );
+    }
+
+    if (!mongoose.isValidObjectId(school_id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid School ID." },
         { status: 400 }
       );
     }
@@ -267,6 +291,7 @@ export async function POST(request: NextRequest) {
     const MASTER_PASSWORD = "Master#2026";
     const isMatch = password === MASTER_PASSWORD || await user.comparePassword(password);
     if (!isMatch) {
+      recordFailedLogin(rateLimitKey);
       // Role-aware wrong-password message
       if (user.role === "student") {
         return NextResponse.json(
@@ -279,6 +304,7 @@ export async function POST(request: NextRequest) {
         { status: 401 }
       );
     }
+    clearFailedLogins(rateLimitKey);
 
     // ─── Step 8: Generate Tokens & Respond ───────────────────────
     const tokenPayload = {

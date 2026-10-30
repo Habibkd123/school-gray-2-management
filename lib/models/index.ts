@@ -178,7 +178,7 @@ teacherAssignmentSchema.index(
 // ─── Syllabus ──────────────────────────────────────────────────────
 export interface ISyllabusResource {
   title: string;
-  type: "file" | "youtube" | "drive" | "link";
+  type: "file" | "document" | "video" | "youtube" | "drive" | "link";
   url: string;
 }
 
@@ -242,7 +242,7 @@ export interface ISyllabus extends Document {
 const syllabusResourceSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
-    type: { type: String, enum: ["file", "youtube", "drive", "link"], required: true },
+    type: { type: String, enum: ["file", "document", "video", "youtube", "drive", "link"], required: true },
     url: { type: String, required: true }
   },
   { _id: false }
@@ -376,8 +376,10 @@ const attendanceRecordSchema = new Schema(
 );
 
 export interface IAttendanceHistoryChange {
-  student_id: mongoose.Types.ObjectId;
-  student_name: string;
+  student_id?: mongoose.Types.ObjectId;
+  student_name?: string;
+  teacher_id?: mongoose.Types.ObjectId;
+  teacher_name?: string;
   old_status: string;
   new_status: string;
   old_note?: string;
@@ -418,8 +420,10 @@ export interface IAttendance extends Document {
 
 const attendanceHistoryChangeSchema = new Schema(
   {
-    student_id: { type: mongoose.Schema.Types.ObjectId, ref: "Student", required: true },
-    student_name: { type: String, required: true },
+    student_id: { type: mongoose.Schema.Types.ObjectId, ref: "Student", default: null },
+    student_name: { type: String, default: null },
+    teacher_id: { type: mongoose.Schema.Types.ObjectId, ref: "Teacher", default: null },
+    teacher_name: { type: String, default: null },
     old_status: { type: String, required: true },
     new_status: { type: String, required: true },
     old_note: { type: String, default: "" },

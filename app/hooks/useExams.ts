@@ -111,7 +111,7 @@ export function useExams(classId?: string, options?: { skip?: boolean }) {
       params.set("academic_year", academicYear);
       const res = await fetch(`/api/exams?${params.toString()}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      const list: ApiExam[] = data.success ? (data.data.exams || []) : [];
+      const list: ApiExam[] = data.success ? (Array.isArray(data.data) ? data.data : (data.data?.exams || [])) : [];
       setStoredExams(key, list);
       return list;
     })();
@@ -242,7 +242,7 @@ export function useResults(examId?: string, studentId?: string, options?: { skip
       if (academicYear) params.set("academic_year", academicYear);
       const res = await fetch(`/api/results?${params.toString()}`, { headers: getAuthHeaders() });
       const data = await res.json();
-      const list = data.success ? (data.data.results || []) : [];
+      const list = data.success ? (Array.isArray(data.data) ? data.data : (data.data?.results || [])) : [];
       _resultsQueryCache.set(key, { results: list, timestamp: Date.now() });
       return list;
     })();

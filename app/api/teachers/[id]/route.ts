@@ -145,6 +145,13 @@ export async function PUT(
       body.class_ids = [body.class_id];
     }
 
+    if (body.class_id && !mongoose.isValidObjectId(body.class_id)) {
+      return NextResponse.json({ success: false, message: "Invalid class ID" }, { status: 400 });
+    }
+    if (Array.isArray(body.class_ids) && body.class_ids.some((cid: any) => !mongoose.isValidObjectId(cid))) {
+      return NextResponse.json({ success: false, message: "Invalid class IDs" }, { status: 400 });
+    }
+
     const query: any = { _id: id };
     if (role !== "super_admin") {
       query.school_id = schoolId;
@@ -153,7 +160,7 @@ export async function PUT(
     const teacher = await Teacher.findOneAndUpdate(
       query,
       { $set: body },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', new: true, runValidators: true }
     ).populate("class_id", "name section")
      .populate("class_ids", "name section");
 
@@ -220,7 +227,7 @@ export async function DELETE(
           is_active: false,
         },
       },
-      { new: true }
+      { returnDocument: 'after', new: true }
     );
 
     if (!teacher) {

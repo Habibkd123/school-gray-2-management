@@ -18,7 +18,12 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const student = await Student.findOne({ user_id: auth.userId })
+    const query: any = { user_id: auth.userId };
+    if (auth.schoolId) {
+      query.school_id = auth.schoolId;
+    }
+
+    const student = await Student.findOne(query)
       .populate({
         path: "class_id",
         select: "name section class_teacher_id",
@@ -33,6 +38,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { success: false, message: "Student profile not found for this user" },
         { status: 404 }
+      );
+    }
+
+    if (student.is_active === false) {
+      return NextResponse.json(
+        { success: false, message: "Student account is deactivated" },
+        { status: 403 }
       );
     }
 

@@ -101,7 +101,8 @@ export default function ApplicationsListPage() {
       const res = await fetch(`/api/admissions?${key}`, { headers: getAuthHeaders() });
       const json = await res.json();
       if (json.success) {
-        setApps(json.data);
+        const appsList = Array.isArray(json.data) ? json.data : (json.data?.applications || []);
+        setApps(appsList);
         if (json.pagination) {
           setTotalPages(json.pagination.pages || 1);
           setTotalItems(json.pagination.total || 0);

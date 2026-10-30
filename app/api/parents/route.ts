@@ -31,6 +31,9 @@ export function invalidateParentsServerCache(schoolId?: string) {
 export async function GET(request: NextRequest) {
   const auth = requireAuth(request, ["school_admin", "teacher", "super_admin"]);
   if (auth.error) return auth.error;
+  if (auth.user.role === "student" || auth.user.role === "parent") {
+    return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+  }
   const { schoolId, user } = auth;
 
   try {

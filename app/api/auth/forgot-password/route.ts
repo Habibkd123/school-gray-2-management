@@ -4,6 +4,8 @@ import connectDB from "@/lib/db";
 import User from "@/lib/models/User";
 import { getSchoolThemeById } from "@/lib/themes/getSchoolTheme";
 
+import mongoose from "mongoose";
+
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
@@ -11,9 +13,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, school_id } = body as { email: string; school_id: string };
 
-    if (!email || !school_id) {
+    if (!email || !school_id || !mongoose.isValidObjectId(school_id)) {
       return NextResponse.json(
-        { success: false, message: "Email and school_id are required" },
+        { success: false, message: "Valid email and school_id are required" },
         { status: 400 }
       );
     }

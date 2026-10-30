@@ -51,6 +51,9 @@ export async function GET(req: NextRequest) {
   if (existingInFlight) {
     try {
       const payload = await existingInFlight;
+      if (payload instanceof Response) {
+        return payload;
+      }
       return sendCompressedJson(req, payload, {
         cacheControl: "private, max-age=15, stale-while-revalidate=30",
       });
@@ -118,6 +121,7 @@ export async function GET(req: NextRequest) {
       } else {
         query.class_id = sClassId;
       }
+      query.status = { $ne: "draft" };
     } else if (role === "parent") {
       const parent = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
       if (!parent) {
@@ -134,6 +138,7 @@ export async function GET(req: NextRequest) {
       } else {
         query.class_id = { $in: childClassIds };
       }
+      query.status = { $ne: "draft" };
     } else {
       if (classId) {
         query.class_id = classId;
@@ -169,6 +174,9 @@ export async function GET(req: NextRequest) {
 
   try {
     const responsePayload = await queryPromise;
+    if (responsePayload instanceof Response) {
+      return responsePayload;
+    }
     return sendCompressedJson(
       req,
       responsePayload,

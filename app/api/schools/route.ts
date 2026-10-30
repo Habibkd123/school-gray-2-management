@@ -73,8 +73,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check slug uniqueness
+    // Check slug format and uniqueness
     const slug = body.slug.toLowerCase().trim();
+    if (!/^[a-z0-9-]+$/.test(slug)) {
+      return NextResponse.json(
+        { success: false, message: "Slug can only contain lowercase letters, numbers, and hyphens." },
+        { status: 400 }
+      );
+    }
     const existing = await School.findOne({ slug }).lean();
     if (existing) {
       return NextResponse.json(

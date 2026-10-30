@@ -22,6 +22,9 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
   if (error) return error;
 
   const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid ID" }, { status: 400 });
+  }
 
   try {
     await connectToDatabase();
@@ -137,6 +140,9 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   if (error) return error;
 
   const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid ID" }, { status: 400 });
+  }
 
   try {
     await connectToDatabase();

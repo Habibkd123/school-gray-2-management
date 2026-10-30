@@ -57,6 +57,9 @@ export async function GET(req: NextRequest) {
 
     const url = new URL(req.url);
     const student_id = url.searchParams.get("student_id");
+    if (student_id && !mongoose.Types.ObjectId.isValid(student_id)) {
+      return NextResponse.json({ success: false, message: "Invalid student_id format" }, { status: 400 });
+    }
     const rawLimit = parseInt(url.searchParams.get("limit") || "2000", 10);
     const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 2000 : rawLimit), 5000);
 
@@ -76,6 +79,9 @@ export async function GET(req: NextRequest) {
     if (existingInFlight) {
       try {
         const payload = await existingInFlight;
+        if (payload instanceof Response) {
+          return payload;
+        }
         return sendCompressedJson(req, payload, {
           cacheControl: "private, max-age=15, stale-while-revalidate=30"
         });
@@ -100,13 +106,13 @@ export async function GET(req: NextRequest) {
     if (role === "student") {
       const studentProfile = await Student.findOne({ school_id: schoolId, user_id: userId }).select("_id").lean();
       if (!studentProfile) {
-        return sendCompressedJson(req, { success: true, data: { payments: [] } }, { cacheControl: "private, no-cache" });
+        return { success: true, data: { payments: [] } };
       }
       query.student_id = studentProfile._id;
     } else if (role === "parent") {
       const parent = await Parent.findOne({ user_id: userId, school_id: schoolId }).select("_id").lean();
       if (!parent) {
-        return sendCompressedJson(req, { success: true, data: { payments: [] } }, { cacheControl: "private, no-cache" });
+        return { success: true, data: { payments: [] } };
       }
       const children = await Student.find({ school_id: schoolId, parent_id: parent._id }).select("_id").lean();
       const childIds = children.map((c: any) => c._id.toString());
@@ -146,6 +152,9 @@ export async function GET(req: NextRequest) {
 
   try {
     const responsePayload = await queryPromise;
+    if (responsePayload instanceof Response) {
+      return responsePayload;
+    }
     return sendCompressedJson(req, responsePayload, {
       cacheControl: "private, max-age=15, stale-while-revalidate=30"
     });
@@ -186,6 +195,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(student_id)) {
+      return NextResponse.json({ success: false, message: "Invalid student_id format" }, { status: 400 });
+    }
+
+    const VALID_PAYMENT_METHODS = ["Cash", "Cheque", "Bank Transfer", "Online", "UPI"];
+    if (!VALID_PAYMENT_METHODS.includes(payment_method)) {
+      return NextResponse.json(
+        { success: false, message: `Invalid payment_method '${payment_method}'. Allowed: ${VALID_PAYMENT_METHODS.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     // Fix HIGH-4: Reject zero or negative amounts
     const parsedAmount = Number(amount_paid);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
@@ -193,6 +214,20 @@ export async function POST(req: NextRequest) {
         { success: false, message: "Amount paid must be greater than ₹0" },
         { status: 400 }
       );
+    }
+
+    // Validate concessions
+    if (discount !== undefined && (isNaN(Number(discount)) || Number(discount) < 0)) {
+      return NextResponse.json({ success: false, message: "Discount must be a non-negative number" }, { status: 400 });
+    }
+    if (fine !== undefined && (isNaN(Number(fine)) || Number(fine) < 0)) {
+      return NextResponse.json({ success: false, message: "Fine must be a non-negative number" }, { status: 400 });
+    }
+    if (scholarship !== undefined && (isNaN(Number(scholarship)) || Number(scholarship) < 0)) {
+      return NextResponse.json({ success: false, message: "Scholarship must be a non-negative number" }, { status: 400 });
+    }
+    if (waiver !== undefined && (isNaN(Number(waiver)) || Number(waiver) < 0)) {
+      return NextResponse.json({ success: false, message: "Waiver must be a non-negative number" }, { status: 400 });
     }
 
     // Fix MED-2: Validate date range on the server
@@ -247,43 +282,52 @@ export async function POST(req: NextRequest) {
     const receiptNumber = await generateReceiptNumber();
     const transactionDate = payment_date ? new Date(payment_date) : new Date();
 
-    // ── Fix CRIT-3: Wrap in a MongoDB session for transaction safety ──────────
-    // If the server crashes after create but before the response is sent,
-    // the session rolls back automatically so there is no phantom record.
-    const session = await mongoose.startSession();
+    const paymentPayload = {
+      school_id: new mongoose.Types.ObjectId(schoolId as string),
+      student_id: new mongoose.Types.ObjectId(student_id),
+      receipt_number: receiptNumber,
+      amount_paid: parsedAmount,
+      payment_date: transactionDate,
+      payment_method,
+      remarks: remarks || "",
+      start_date: sdDate,
+      end_date: edDate,
+      collection_type: collection_type || "Monthly",
+      fee_breakdown: fee_breakdown || [],
+      discount: Number(discount || 0),
+      fine: Number(fine || 0),
+      scholarship: Number(scholarship || 0),
+      waiver: Number(waiver || 0),
+      adjustment: Number(adjustment || 0),
+      round_off: Number(round_off || 0),
+      collected_by: userId ? new mongoose.Types.ObjectId(userId as string) : null
+    };
+
+    // ── Fix CRIT-3: Wrap in a MongoDB session for transaction safety with standalone fallback ──
+    let session: any = null;
     let payment: any;
 
     try {
+      session = await mongoose.startSession();
       await session.withTransaction(async () => {
-        const [created] = await StudentFeePayment.create(
-          [
-            {
-              school_id: new mongoose.Types.ObjectId(schoolId as string),
-              student_id: new mongoose.Types.ObjectId(student_id),
-              receipt_number: receiptNumber,
-              amount_paid: parsedAmount,
-              payment_date: transactionDate,
-              payment_method,
-              remarks: remarks || "",
-              start_date: sdDate,
-              end_date: edDate,
-              collection_type: collection_type || "Monthly",
-              fee_breakdown: fee_breakdown || [],
-              discount: Number(discount || 0),
-              fine: Number(fine || 0),
-              scholarship: Number(scholarship || 0),
-              waiver: Number(waiver || 0),
-              adjustment: Number(adjustment || 0),
-              round_off: Number(round_off || 0),
-              collected_by: userId ? new mongoose.Types.ObjectId(userId as string) : null
-            },
-          ],
-          { session }
-        );
+        const [created] = await StudentFeePayment.create([paymentPayload], { session });
         payment = created;
       });
+    } catch (txnError: any) {
+      if (
+        txnError?.message?.includes("replica set") ||
+        txnError?.message?.includes("Transaction numbers") ||
+        txnError?.message?.includes("transactions are not supported")
+      ) {
+        // Fallback for standalone MongoDB environments without replica set
+        payment = await StudentFeePayment.create(paymentPayload);
+      } else {
+        throw txnError;
+      }
     } finally {
-      await session.endSession();
+      if (session) {
+        await session.endSession();
+      }
     }
 
     // Populate for the response (outside transaction — read-only)
@@ -337,6 +381,10 @@ export async function DELETE(req: NextRequest) {
 
     if (!paymentId) {
       return NextResponse.json({ success: false, message: "Payment ID is required" }, { status: 400 });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+      return NextResponse.json({ success: false, message: "Invalid payment ID format" }, { status: 400 });
     }
 
     await connectDB();
@@ -408,6 +456,10 @@ export async function PATCH(req: NextRequest) {
 
     if (!paymentId) {
       return NextResponse.json({ success: false, message: "Payment ID is required" }, { status: 400 });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(paymentId)) {
+      return NextResponse.json({ success: false, message: "Invalid payment ID format" }, { status: 400 });
     }
 
     await connectDB();

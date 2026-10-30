@@ -1,0 +1,2198 @@
+[
+  {
+    "filePath": "app/api/academic/config/route.ts",
+    "endpoint": "/api/academic/config",
+    "module": "academic",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "accountant",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/academic/dependency-check/route.ts",
+    "endpoint": "/api/academic/dependency-check",
+    "module": "academic",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/admissions/reports/route.ts",
+    "endpoint": "/api/admissions/reports",
+    "module": "admissions",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/admissions/route.ts",
+    "endpoint": "/api/admissions",
+    "module": "admissions",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/admissions/stats/route.ts",
+    "endpoint": "/api/admissions/stats",
+    "module": "admissions",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/admissions/[id]/approve/route.ts",
+    "endpoint": "/api/admissions/[id]/approve",
+    "module": "admissions",
+    "isDynamic": true,
+    "methods": [
+      "POST"
+    ],
+    "roles": [
+      "school_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/admissions/[id]/notes/route.ts",
+    "endpoint": "/api/admissions/[id]/notes",
+    "module": "admissions",
+    "isDynamic": true,
+    "methods": [
+      "POST"
+    ],
+    "roles": [
+      "school_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/admissions/[id]/route.ts",
+    "endpoint": "/api/admissions/[id]",
+    "module": "admissions",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE",
+      "PATCH"
+    ],
+    "roles": [
+      "school_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/admissions/[id]/status/route.ts",
+    "endpoint": "/api/admissions/[id]/status",
+    "module": "admissions",
+    "isDynamic": true,
+    "methods": [
+      "PUT"
+    ],
+    "roles": [
+      "school_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/assessments/route.ts",
+    "endpoint": "/api/assessments",
+    "module": "assessments",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "student",
+      "parent",
+      ""
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/assessments/[id]/analytics/route.ts",
+    "endpoint": "/api/assessments/[id]/analytics",
+    "module": "assessments",
+    "isDynamic": true,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "student"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/assessments/[id]/export/route.ts",
+    "endpoint": "/api/assessments/[id]/export",
+    "module": "assessments",
+    "isDynamic": true,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/assessments/[id]/marks/audit/route.ts",
+    "endpoint": "/api/assessments/[id]/marks/audit",
+    "module": "assessments",
+    "isDynamic": true,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/assessments/[id]/marks/route.ts",
+    "endpoint": "/api/assessments/[id]/marks",
+    "module": "assessments",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/assessments/[id]/publish/route.ts",
+    "endpoint": "/api/assessments/[id]/publish",
+    "module": "assessments",
+    "isDynamic": true,
+    "methods": [
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/assessments/[id]/results/route.ts",
+    "endpoint": "/api/assessments/[id]/results",
+    "module": "assessments",
+    "isDynamic": true,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "student",
+      "parent",
+      ""
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/assessments/[id]/route.ts",
+    "endpoint": "/api/assessments/[id]",
+    "module": "assessments",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/attendance/student/route.ts",
+    "endpoint": "/api/attendance/student",
+    "module": "attendance",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/attendance/student/[id]/route.ts",
+    "endpoint": "/api/attendance/student/[id]",
+    "module": "attendance",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/attendance/summary/route.ts",
+    "endpoint": "/api/attendance/summary",
+    "module": "attendance",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/attendance/teacher/route.ts",
+    "endpoint": "/api/attendance/teacher",
+    "module": "attendance",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/attendance/teacher/[id]/route.ts",
+    "endpoint": "/api/attendance/teacher/[id]",
+    "module": "attendance",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "principal"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/auth/change-password/route.ts",
+    "endpoint": "/api/auth/change-password",
+    "module": "auth",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/auth/forgot-password/route.ts",
+    "endpoint": "/api/auth/forgot-password",
+    "module": "auth",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/auth/login/route.ts",
+    "endpoint": "/api/auth/login",
+    "module": "auth",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": true
+  },
+  {
+    "filePath": "app/api/auth/logout/route.ts",
+    "endpoint": "/api/auth/logout",
+    "module": "auth",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/auth/me/route.ts",
+    "endpoint": "/api/auth/me",
+    "module": "auth",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/auth/refresh/route.ts",
+    "endpoint": "/api/auth/refresh",
+    "module": "auth",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": true
+  },
+  {
+    "filePath": "app/api/auth/register/route.ts",
+    "endpoint": "/api/auth/register",
+    "module": "auth",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/auth/reset-password/route.ts",
+    "endpoint": "/api/auth/reset-password",
+    "module": "auth",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/backup/export/route.ts",
+    "endpoint": "/api/backup/export",
+    "module": "backup",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/backup/tenant/route.ts",
+    "endpoint": "/api/backup/tenant",
+    "module": "backup",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/classes/route.ts",
+    "endpoint": "/api/classes",
+    "module": "classes",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "accountant",
+      "librarian",
+      "receptionist"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/classes/[id]/route.ts",
+    "endpoint": "/api/classes/[id]",
+    "module": "classes",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE",
+      "PATCH"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/contact/route.ts",
+    "endpoint": "/api/contact",
+    "module": "contact",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": true
+  },
+  {
+    "filePath": "app/api/dashboard/stats/route.ts",
+    "endpoint": "/api/dashboard/stats",
+    "module": "dashboard",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/dashboard/super-analytics/route.ts",
+    "endpoint": "/api/dashboard/super-analytics",
+    "module": "dashboard",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/documents/generate/route.ts",
+    "endpoint": "/api/documents/generate",
+    "module": "documents",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/documents/generated/route.ts",
+    "endpoint": "/api/documents/generated",
+    "module": "documents",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher",
+      "principal",
+      ""
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/documents/generated/[id]/route.ts",
+    "endpoint": "/api/documents/generated/[id]",
+    "module": "documents",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PATCH",
+      "DELETE"
+    ],
+    "roles": [],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/exams/route.ts",
+    "endpoint": "/api/exams",
+    "module": "exams",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/exams/schedule/route.ts",
+    "endpoint": "/api/exams/schedule",
+    "module": "exams",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/exams/schedule/[id]/route.ts",
+    "endpoint": "/api/exams/schedule/[id]",
+    "module": "exams",
+    "isDynamic": true,
+    "methods": [
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/exams/[id]/route.ts",
+    "endpoint": "/api/exams/[id]",
+    "module": "exams",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE",
+      "PATCH"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/fees/allocations/route.ts",
+    "endpoint": "/api/fees/allocations",
+    "module": "fees",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/fees/class-defaults/route.ts",
+    "endpoint": "/api/fees/class-defaults",
+    "module": "fees",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "accountant",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/fees/groups/route.ts",
+    "endpoint": "/api/fees/groups",
+    "module": "fees",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/fees/groups/[id]/route.ts",
+    "endpoint": "/api/fees/groups/[id]",
+    "module": "fees",
+    "isDynamic": true,
+    "methods": [
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/fees/master/route.ts",
+    "endpoint": "/api/fees/master",
+    "module": "fees",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/fees/master/[id]/route.ts",
+    "endpoint": "/api/fees/master/[id]",
+    "module": "fees",
+    "isDynamic": true,
+    "methods": [
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/fees/payments/route.ts",
+    "endpoint": "/api/fees/payments",
+    "module": "fees",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE",
+      "PATCH"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "accountant"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/fees/route.ts",
+    "endpoint": "/api/fees",
+    "module": "fees",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "accountant",
+      "teacher",
+      "parent",
+      "student"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/fees/types/route.ts",
+    "endpoint": "/api/fees/types",
+    "module": "fees",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/fees/types/[id]/route.ts",
+    "endpoint": "/api/fees/types/[id]",
+    "module": "fees",
+    "isDynamic": true,
+    "methods": [
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/fees/[id]/route.ts",
+    "endpoint": "/api/fees/[id]",
+    "module": "fees",
+    "isDynamic": true,
+    "methods": [
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/grades/route.ts",
+    "endpoint": "/api/grades",
+    "module": "grades",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/grades/[id]/route.ts",
+    "endpoint": "/api/grades/[id]",
+    "module": "grades",
+    "isDynamic": true,
+    "methods": [
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/holidays/route.ts",
+    "endpoint": "/api/holidays",
+    "module": "holidays",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/holidays/[id]/route.ts",
+    "endpoint": "/api/holidays/[id]",
+    "module": "holidays",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/homework/route.ts",
+    "endpoint": "/api/homework",
+    "module": "homework",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "student",
+      "parent",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/homework/[id]/route.ts",
+    "endpoint": "/api/homework/[id]",
+    "module": "homework",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "student",
+      "parent",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/landing/route.ts",
+    "endpoint": "/api/landing",
+    "module": "landing",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "PUT",
+      "PATCH"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher",
+      "accountant"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/leave/route.ts",
+    "endpoint": "/api/leave",
+    "module": "leave",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher",
+      "student"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/leave/[id]/route.ts",
+    "endpoint": "/api/leave/[id]",
+    "module": "leave",
+    "isDynamic": true,
+    "methods": [
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/leave-types/route.ts",
+    "endpoint": "/api/leave-types",
+    "module": "leave-types",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher",
+      "student"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/leave-types/[id]/route.ts",
+    "endpoint": "/api/leave-types/[id]",
+    "module": "leave-types",
+    "isDynamic": true,
+    "methods": [
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/notices/route.ts",
+    "endpoint": "/api/notices",
+    "module": "notices",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/notices/[id]/route.ts",
+    "endpoint": "/api/notices/[id]",
+    "module": "notices",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE",
+      "PATCH"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/parent/attendance/route.ts",
+    "endpoint": "/api/parent/attendance",
+    "module": "parent",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/parent/children/route.ts",
+    "endpoint": "/api/parent/children",
+    "module": "parent",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/parent/profile/route.ts",
+    "endpoint": "/api/parent/profile",
+    "module": "parent",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "PATCH"
+    ],
+    "roles": [
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/parents/filters/route.ts",
+    "endpoint": "/api/parents/filters",
+    "module": "parents",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/parents/route.ts",
+    "endpoint": "/api/parents",
+    "module": "parents",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/parents/[id]/route.ts",
+    "endpoint": "/api/parents/[id]",
+    "module": "parents",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/public/admissions/route.ts",
+    "endpoint": "/api/public/admissions",
+    "module": "public",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": true
+  },
+  {
+    "filePath": "app/api/public/classes/route.ts",
+    "endpoint": "/api/public/classes",
+    "module": "public",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [],
+    "isPublic": true
+  },
+  {
+    "filePath": "app/api/public/demo-request/route.ts",
+    "endpoint": "/api/public/demo-request",
+    "module": "public",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": true
+  },
+  {
+    "filePath": "app/api/public/landing/route.ts",
+    "endpoint": "/api/public/landing",
+    "module": "public",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [],
+    "isPublic": true
+  },
+  {
+    "filePath": "app/api/public/school-info/route.ts",
+    "endpoint": "/api/public/school-info",
+    "module": "public",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [],
+    "isPublic": true
+  },
+  {
+    "filePath": "app/api/public/theme/route.ts",
+    "endpoint": "/api/public/theme",
+    "module": "public",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [],
+    "isPublic": true
+  },
+  {
+    "filePath": "app/api/public/upload/route.ts",
+    "endpoint": "/api/public/upload",
+    "module": "public",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [],
+    "isPublic": true
+  },
+  {
+    "filePath": "app/api/reports/attendance/route.ts",
+    "endpoint": "/api/reports/attendance",
+    "module": "reports",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/reports/class/[id]/route.ts",
+    "endpoint": "/api/reports/class/[id]",
+    "module": "reports",
+    "isDynamic": true,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/reports/student/[id]/route.ts",
+    "endpoint": "/api/reports/student/[id]",
+    "module": "reports",
+    "isDynamic": true,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/reports/teacher/[id]/route.ts",
+    "endpoint": "/api/reports/teacher/[id]",
+    "module": "reports",
+    "isDynamic": true,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/results/audit/route.ts",
+    "endpoint": "/api/results/audit",
+    "module": "results",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/results/route.ts",
+    "endpoint": "/api/results",
+    "module": "results",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST",
+      "DELETE",
+      "PATCH"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "student",
+      "parent",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/rooms/route.ts",
+    "endpoint": "/api/rooms",
+    "module": "rooms",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/rooms/[id]/route.ts",
+    "endpoint": "/api/rooms/[id]",
+    "module": "rooms",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/salaries/preview/route.ts",
+    "endpoint": "/api/salaries/preview",
+    "module": "salaries",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/salaries/route.ts",
+    "endpoint": "/api/salaries",
+    "module": "salaries",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/salaries/[id]/route.ts",
+    "endpoint": "/api/salaries/[id]",
+    "module": "salaries",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE",
+      "PATCH"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher",
+      "parent",
+      "student"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/schedules/route.ts",
+    "endpoint": "/api/schedules",
+    "module": "schedules",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "student",
+      "parent",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/schedules/[id]/route.ts",
+    "endpoint": "/api/schedules/[id]",
+    "module": "schedules",
+    "isDynamic": true,
+    "methods": [
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/school/login-config/route.ts",
+    "endpoint": "/api/school/login-config",
+    "module": "school",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/school/meta-config/route.ts",
+    "endpoint": "/api/school/meta-config",
+    "module": "school",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/school/receipt-config/route.ts",
+    "endpoint": "/api/school/receipt-config",
+    "module": "school",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "staff",
+      "accountant"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/schools/route.ts",
+    "endpoint": "/api/schools",
+    "module": "schools",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/schools/[id]/landing/route.ts",
+    "endpoint": "/api/schools/[id]/landing",
+    "module": "schools",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "PATCH"
+    ],
+    "roles": [
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/schools/[id]/route.ts",
+    "endpoint": "/api/schools/[id]",
+    "module": "schools",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/schools/[id]/theme/route.ts",
+    "endpoint": "/api/schools/[id]/theme",
+    "module": "schools",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT"
+    ],
+    "roles": [
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/sections/route.ts",
+    "endpoint": "/api/sections",
+    "module": "sections",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "accountant",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/sections/[id]/route.ts",
+    "endpoint": "/api/sections/[id]",
+    "module": "sections",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "accountant",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/settings/permissions/route.ts",
+    "endpoint": "/api/settings/permissions",
+    "module": "settings",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/setup/route.ts",
+    "endpoint": "/api/setup",
+    "module": "setup",
+    "isDynamic": false,
+    "methods": [
+      "POST",
+      "GET"
+    ],
+    "roles": [],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/streams/route.ts",
+    "endpoint": "/api/streams",
+    "module": "streams",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "accountant",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/streams/[id]/route.ts",
+    "endpoint": "/api/streams/[id]",
+    "module": "streams",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "accountant",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/student/profile/route.ts",
+    "endpoint": "/api/student/profile",
+    "module": "student",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/students/filters/route.ts",
+    "endpoint": "/api/students/filters",
+    "module": "students",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/students/import/route.ts",
+    "endpoint": "/api/students/import",
+    "module": "students",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/students/import/template/route.ts",
+    "endpoint": "/api/students/import/template",
+    "module": "students",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/students/import/validate/route.ts",
+    "endpoint": "/api/students/import/validate",
+    "module": "students",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/students/promote/route.ts",
+    "endpoint": "/api/students/promote",
+    "module": "students",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/students/route.ts",
+    "endpoint": "/api/students",
+    "module": "students",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/students/[id]/route.ts",
+    "endpoint": "/api/students/[id]",
+    "module": "students",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/subject-assignment/route.ts",
+    "endpoint": "/api/subject-assignment",
+    "module": "subject-assignment",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "accountant",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/subject-assignment/[id]/route.ts",
+    "endpoint": "/api/subject-assignment/[id]",
+    "module": "subject-assignment",
+    "isDynamic": true,
+    "methods": [
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/subject-master/route.ts",
+    "endpoint": "/api/subject-master",
+    "module": "subject-master",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "accountant",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/subject-master/[id]/route.ts",
+    "endpoint": "/api/subject-master/[id]",
+    "module": "subject-master",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "accountant",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/subjects/route.ts",
+    "endpoint": "/api/subjects",
+    "module": "subjects",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/subjects/[id]/route.ts",
+    "endpoint": "/api/subjects/[id]",
+    "module": "subjects",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/syllabus/route.ts",
+    "endpoint": "/api/syllabus",
+    "module": "syllabus",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/syllabus/[id]/route.ts",
+    "endpoint": "/api/syllabus/[id]",
+    "module": "syllabus",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/syllabus-by-class/route.ts",
+    "endpoint": "/api/syllabus-by-class",
+    "module": "syllabus-by-class",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/teacher/profile/route.ts",
+    "endpoint": "/api/teacher/profile",
+    "module": "teacher",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "PATCH"
+    ],
+    "roles": [
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/teacher-assignment/route.ts",
+    "endpoint": "/api/teacher-assignment",
+    "module": "teacher-assignment",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "accountant",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/teacher-assignment/[id]/route.ts",
+    "endpoint": "/api/teacher-assignment/[id]",
+    "module": "teacher-assignment",
+    "isDynamic": true,
+    "methods": [
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/teachers/filters/route.ts",
+    "endpoint": "/api/teachers/filters",
+    "module": "teachers",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin",
+      "student",
+      "parent"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/teachers/import/route.ts",
+    "endpoint": "/api/teachers/import",
+    "module": "teachers",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/teachers/import/validate/route.ts",
+    "endpoint": "/api/teachers/import/validate",
+    "module": "teachers",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/teachers/route.ts",
+    "endpoint": "/api/teachers",
+    "module": "teachers",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/teachers/[id]/route.ts",
+    "endpoint": "/api/teachers/[id]",
+    "module": "teachers",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/theme/route.ts",
+    "endpoint": "/api/theme",
+    "module": "theme",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "super_admin",
+      "school_admin",
+      "teacher",
+      "accountant",
+      "student",
+      "parent",
+      ""
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/transport/allocations/route.ts",
+    "endpoint": "/api/transport/allocations",
+    "module": "transport",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/transport/allocations/[id]/route.ts",
+    "endpoint": "/api/transport/allocations/[id]",
+    "module": "transport",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/transport/buses/route.ts",
+    "endpoint": "/api/transport/buses",
+    "module": "transport",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/transport/buses/[id]/route.ts",
+    "endpoint": "/api/transport/buses/[id]",
+    "module": "transport",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/transport/routes/route.ts",
+    "endpoint": "/api/transport/routes",
+    "module": "transport",
+    "isDynamic": false,
+    "methods": [
+      "GET",
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/transport/routes/[id]/route.ts",
+    "endpoint": "/api/transport/routes/[id]",
+    "module": "transport",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/upload/route.ts",
+    "endpoint": "/api/upload",
+    "module": "upload",
+    "isDynamic": false,
+    "methods": [
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "teacher",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/users/route.ts",
+    "endpoint": "/api/users",
+    "module": "users",
+    "isDynamic": false,
+    "methods": [
+      "GET"
+    ],
+    "roles": [
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/users/[id]/reset-password/route.ts",
+    "endpoint": "/api/users/[id]/reset-password",
+    "module": "users",
+    "isDynamic": true,
+    "methods": [
+      "POST"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin"
+    ],
+    "isPublic": false
+  },
+  {
+    "filePath": "app/api/users/[id]/route.ts",
+    "endpoint": "/api/users/[id]",
+    "module": "users",
+    "isDynamic": true,
+    "methods": [
+      "GET",
+      "PUT",
+      "DELETE"
+    ],
+    "roles": [
+      "school_admin",
+      "super_admin",
+      "teacher"
+    ],
+    "isPublic": false
+  }
+]

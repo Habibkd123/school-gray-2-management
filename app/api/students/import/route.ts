@@ -41,6 +41,13 @@ export async function POST(req: NextRequest) {
     const failures: any[] = [];
 
     for (const row of rows) {
+      let studentUserId: any = undefined;
+      let newlyCreatedStudentUser = false;
+      let parentUserId: any = undefined;
+      let newlyCreatedParentUser = false;
+      let parentId: any = undefined;
+      let newlyCreatedParent = false;
+
       try {
         const {
           name, admission_no, roll_no, class_id, gender, dob,
@@ -69,7 +76,6 @@ export async function POST(req: NextRequest) {
         // Generate student login details
         const studentLoginEmail = generateStudentLoginEmail(name.trim(), dob);
 
-        let studentUserId = undefined;
         const existingStudentUser = await User.findOne({ email: studentLoginEmail, school_id: schoolId });
         if (existingStudentUser) {
           studentUserId = existingStudentUser._id;
@@ -96,10 +102,10 @@ export async function POST(req: NextRequest) {
             must_change_password: true,
           });
           studentUserId = user._id;
+          newlyCreatedStudentUser = true;
         }
 
         // Create or link parent
-        let parentId = undefined;
         if (guardian_name?.trim()) {
           const existingParent = await Parent.findOne({
             school_id: schoolId,
@@ -113,7 +119,6 @@ export async function POST(req: NextRequest) {
           if (existingParent) {
             parentId = existingParent._id;
           } else {
-            let parentUserId = undefined;
             if (guardian_email?.trim()) {
               const parentEmail = guardian_email.trim().toLowerCase();
               const existingParentUser = await User.findOne({ email: parentEmail, school_id: schoolId });
@@ -131,6 +136,7 @@ export async function POST(req: NextRequest) {
                   must_change_password: true,
                 });
                 parentUserId = parentUser._id;
+                newlyCreatedParentUser = true;
               }
             }
 
@@ -144,8 +150,11 @@ export async function POST(req: NextRequest) {
               is_active: true,
             });
             parentId = newParent._id;
+            newlyCreatedParent = true;
           }
         }
+
+        const safeAcademicYear = (academic_year || "2026-2027").trim();
 
         // Create student
         const createdStudent = await Student.create({
@@ -165,7 +174,7 @@ export async function POST(req: NextRequest) {
           guardian_relation: guardian_relation.trim(),
           guardian_email: guardian_email || undefined,
           admission_no: admission_no.trim(),
-          academic_year: academic_year.trim(),
+          academic_year: safeAcademicYear,
           is_active: true,
           aadhaar_no: aadhaar_no || undefined,
         });
@@ -175,7 +184,7 @@ export async function POST(req: NextRequest) {
           const classFeeConfig = await ClassFee.findOne({
             school_id: new mongoose.Types.ObjectId(schoolId as string),
             class_id: new mongoose.Types.ObjectId(class_id),
-            academic_year: academic_year.trim(),
+            academic_year: safeAcademicYear,
           }).lean();
 
           if (classFeeConfig && classFeeConfig.fee_types && classFeeConfig.fee_types.length > 0) {
@@ -183,7 +192,7 @@ export async function POST(req: NextRequest) {
               {
                 school_id: new mongoose.Types.ObjectId(schoolId as string),
                 student_id: createdStudent._id,
-                academic_year: academic_year.trim(),
+                academic_year: safeAcademicYear,
               },
               {
                 fee_types: classFeeConfig.fee_types,
@@ -198,6 +207,17 @@ export async function POST(req: NextRequest) {
 
         successCount++;
       } catch (err: any) {
+        // Rollback any newly created orphan records from this failed row
+        if (newlyCreatedStudentUser && studentUserId) {
+          await User.deleteOne({ _id: studentUserId, school_id: schoolId }).catch(() => {});
+        }
+        if (newlyCreatedParent && parentId) {
+          await Parent.deleteOne({ _id: parentId, school_id: schoolId }).catch(() => {});
+        }
+        if (newlyCreatedParentUser && parentUserId) {
+          await User.deleteOne({ _id: parentUserId, school_id: schoolId }).catch(() => {});
+        }
+
         failedCount++;
         failures.push({
           row: row.name || row.admission_no || "Unknown row",

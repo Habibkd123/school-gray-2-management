@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
     } = body;
 
     if (!academic_year) return NextResponse.json({ success: false, message: "Academic year is required" }, { status: 400 });
-    if (!class_id) return NextResponse.json({ success: false, message: "Applying class is required" }, { status: 400 });
+    if (!class_id || !mongoose.isValidObjectId(class_id)) return NextResponse.json({ success: false, message: "Valid applying class is required" }, { status: 400 });
     if (!student_name?.trim()) return NextResponse.json({ success: false, message: "Student Name is required" }, { status: 400 });
     if (!gender) return NextResponse.json({ success: false, message: "Gender is required" }, { status: 400 });
     if (!dob) return NextResponse.json({ success: false, message: "Date of birth is required" }, { status: 400 });

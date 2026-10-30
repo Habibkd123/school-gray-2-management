@@ -62,6 +62,8 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
       if (!mongoose.Types.ObjectId.isValid(teacher_id)) {
         return NextResponse.json({ success: false, message: "Invalid Teacher ID" }, { status: 400 });
       }
+      const teacher = await Teacher.findOne({ _id: teacher_id, school_id: schoolId, is_deleted: { $ne: true } }).lean();
+      if (!teacher) return NextResponse.json({ success: false, message: "Teacher not found" }, { status: 404 });
       updateData.teacher_id = new mongoose.Types.ObjectId(teacher_id as string);
     }
 
@@ -221,7 +223,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
         $set: updateData,
         $push: { history: historyItem }
       },
-      { new: true }
+      { returnDocument: 'after', new: true }
     )
       .populate("teacher_id", "name employee_id")
       .populate("class_id", "name section class_code")
@@ -278,7 +280,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
           }
         }
       },
-      { new: true }
+      { returnDocument: 'after', new: true }
     );
 
     if (!softDeleted) {

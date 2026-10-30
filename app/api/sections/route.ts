@@ -71,6 +71,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Section name is required" }, { status: 400 });
     }
 
+    const existingSection = await Section.findOne({
+      school_id: String(schoolId),
+      name: name.trim()
+    });
+    if (existingSection) {
+      return NextResponse.json({ success: false, message: "A section with this name already exists" }, { status: 409 });
+    }
+
     const section = await Section.create({
       school_id: String(schoolId),
       name: name.trim(),

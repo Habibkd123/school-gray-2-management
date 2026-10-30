@@ -22,7 +22,7 @@ export interface ISalaryPayment extends Document {
   tax_deduction?: number;
   final_salary: number;
   payment_date?: Date;
-  payment_method?: "Cash" | "Bank Transfer" | "Cheque";
+  payment_method?: "Cash" | "Bank Transfer" | "Cheque" | "UPI" | "Online";
   receipt_number: string;
   remarks?: string;
   status: "Draft" | "Under Review" | "Approved" | "Finalized" | "Paid";
@@ -61,7 +61,7 @@ const salaryPaymentSchema = new Schema<ISalaryPayment>(
     tax_deduction: { type: Number, default: 0 },
     final_salary: { type: Number, required: true, min: 0 },
     payment_date: { type: Date },
-    payment_method: { type: String, enum: ["Cash", "Bank Transfer", "Cheque"], default: "Bank Transfer" },
+    payment_method: { type: String, enum: ["Cash", "Bank Transfer", "Cheque", "UPI", "Online"], default: "Bank Transfer" },
     receipt_number: { type: String, required: true, unique: true },
     remarks: { type: String, trim: true },
     status: { type: String, enum: ["Draft", "Under Review", "Approved", "Finalized", "Paid"], default: "Draft" },

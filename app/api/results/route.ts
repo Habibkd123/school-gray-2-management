@@ -15,9 +15,9 @@ export async function GET(req: NextRequest) {
   try {
     await connectToDatabase();
     const url = new URL(req.url);
-    const examId = url.searchParams.get("exam_id");
-    const studentId = url.searchParams.get("student_id");
-    const classId = url.searchParams.get("class_id");
+    const examId = url.searchParams.get("exam_id") || url.searchParams.get("examId");
+    const studentId = url.searchParams.get("student_id") || url.searchParams.get("studentId");
+    const classId = url.searchParams.get("class_id") || url.searchParams.get("classId");
     const academic_year = url.searchParams.get("academic_year");
 
     const showDeleted = url.searchParams.get("show_deleted") === "true";
@@ -133,6 +133,31 @@ export async function POST(req: NextRequest) {
 
     // Support bulk entry: array or single object
     const entries = Array.isArray(body) ? body : [body];
+
+    if (!Array.isArray(entries) || entries.length === 0) {
+      return NextResponse.json({ success: false, message: "No entries provided" }, { status: 400 });
+    }
+
+    for (const entry of entries) {
+      if (!entry.exam_id || !entry.student_id || !entry.subject_id) {
+        return NextResponse.json({ success: false, message: "Exam ID, Student ID, and Subject ID are required" }, { status: 400 });
+      }
+      if (!mongoose.Types.ObjectId.isValid(entry.exam_id) || !mongoose.Types.ObjectId.isValid(entry.student_id) || !mongoose.Types.ObjectId.isValid(entry.subject_id)) {
+        return NextResponse.json({ success: false, message: "Invalid exam, student, or subject ID" }, { status: 400 });
+      }
+      if (entry.total_marks !== undefined && Number(entry.total_marks) <= 0) {
+        return NextResponse.json({ success: false, message: "Total marks must be greater than 0" }, { status: 400 });
+      }
+      if (entry.marks_obtained !== undefined) {
+        const mo = Number(entry.marks_obtained);
+        if (isNaN(mo) || mo < 0) {
+          return NextResponse.json({ success: false, message: "Marks obtained cannot be negative" }, { status: 400 });
+        }
+        if (entry.total_marks !== undefined && mo > Number(entry.total_marks)) {
+          return NextResponse.json({ success: false, message: `Marks obtained (${mo}) cannot exceed total marks (${entry.total_marks})` }, { status: 400 });
+        }
+      }
+    }
 
     if (entries.length > 0) {
       const firstExamId = entries[0].exam_id;

@@ -30,6 +30,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Missing required fields" }, { status: 400 });
     }
 
+    const existingGrade = await Grade.findOne({
+      school_id: schoolId as string,
+      grade_name: grade_name.trim()
+    });
+    if (existingGrade) {
+      return NextResponse.json({ success: false, message: "Grade with this name already exists" }, { status: 409 });
+    }
+
     const grade = await Grade.create({
       school_id: schoolId as string,
       grade_name: grade_name.trim(),
@@ -43,7 +51,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: grade }, { status: 201 });
   } catch (err: any) {
     if (err.code === 11000) {
-      return NextResponse.json({ success: false, message: "Grade with this name already exists" }, { status: 400 });
+      return NextResponse.json({ success: false, message: "Grade with this name already exists" }, { status: 409 });
     }
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

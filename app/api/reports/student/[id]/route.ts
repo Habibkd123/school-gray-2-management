@@ -14,9 +14,17 @@ const STUDENT_REPORT_CACHE_TTL = 60_000;
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: studentId } = await params;
+  if (!mongoose.Types.ObjectId.isValid(studentId)) {
+    return NextResponse.json({ success: false, message: "Invalid student ID" }, { status: 400 });
+  }
+
   const authResult = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (authResult.error) return authResult.error;
-  const { schoolId } = authResult;
+  const { schoolId, role } = authResult;
+
+  if (role === "student" || role === "parent") {
+    return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+  }
 
   try {
     const cacheKey = `student_rep_${schoolId}_${studentId}`;

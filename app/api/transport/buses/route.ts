@@ -73,6 +73,19 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     await connectDB();
 
+    if (!body.busNumber || !body.busNumber.trim()) {
+      return NextResponse.json({ success: false, error: "Bus number is required" }, { status: 400 });
+    }
+
+    if (body.capacity !== undefined && (isNaN(Number(body.capacity)) || Number(body.capacity) <= 0)) {
+      return NextResponse.json({ success: false, error: "Capacity must be a positive number" }, { status: 400 });
+    }
+
+    const existing = await Bus.findOne({ school_id: schoolId, busNumber: body.busNumber.trim() });
+    if (existing) {
+      return NextResponse.json({ success: false, error: "Bus number already exists" }, { status: 400 });
+    }
+
     const newBus = await Bus.create({
       ...body,
       school_id: schoolId,

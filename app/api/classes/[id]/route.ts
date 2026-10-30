@@ -7,6 +7,7 @@ import { invalidateServerClassesCache } from "../route";
 import { invalidateFeesCache } from "@/app/api/fees/route";
 import {
   Student,
+  Teacher,
   Attendance,
   Exam,
   ClassTest,
@@ -26,6 +27,10 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
   if (error) return error;
 
   const { id } = await params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid class ID" }, { status: 400 });
+  }
 
   try {
     await connectToDatabase();
@@ -64,6 +69,10 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
   const { id } = await params;
 
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid class ID" }, { status: 400 });
+  }
+
   try {
     await connectToDatabase();
 
@@ -77,7 +86,18 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     }
     if (section !== undefined)          updateData.section          = section.trim();
     if (academic_year !== undefined)    updateData.academic_year    = academic_year.trim();
-    if (class_teacher_id !== undefined) updateData.class_teacher_id = class_teacher_id || null;
+    if (class_teacher_id) {
+      if (!mongoose.Types.ObjectId.isValid(class_teacher_id)) {
+        return NextResponse.json({ success: false, message: "Invalid class teacher ID" }, { status: 400 });
+      }
+      const teacher = await Teacher.findOne({ _id: class_teacher_id, school_id: schoolId, is_deleted: { $ne: true } });
+      if (!teacher) {
+        return NextResponse.json({ success: false, message: "Class teacher not found in this school" }, { status: 404 });
+      }
+      updateData.class_teacher_id = class_teacher_id;
+    } else if (class_teacher_id === null || class_teacher_id === "") {
+      updateData.class_teacher_id = null;
+    }
     if (capacity !== undefined)         updateData.capacity         = parseInt(capacity);
     if (class_code !== undefined)       updateData.class_code       = class_code?.trim().toUpperCase() || null;
     if (status !== undefined)           updateData.status           = status;
@@ -85,7 +105,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const updated = await Class.findOneAndUpdate(
       { _id: id, school_id: schoolId as string },
       { $set: updateData },
-      { new: true }
+      { returnDocument: 'after', new: true }
     ).populate("class_teacher_id", "name employee_id");
 
     if (!updated) {
@@ -167,6 +187,10 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const { schoolId, user, userId } = auth;
 
   const { id } = await params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid class ID" }, { status: 400 });
+  }
 
   try {
     await connectToDatabase();
@@ -250,7 +274,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
           status: "Archived",
         },
       },
-      { new: true }
+      { returnDocument: 'after', new: true }
     );
 
     if (!updated) {
@@ -271,6 +295,10 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
   if (auth.error) return auth.error;
   const { schoolId, user } = auth;
   const { id } = await params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid class ID" }, { status: 400 });
+  }
 
   try {
     await connectToDatabase();
@@ -293,7 +321,7 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
             status: "Active",
           },
         },
-        { new: true }
+        { returnDocument: 'after', new: true }
       );
       if (!cls) {
         return NextResponse.json({ success: false, message: "Class not found" }, { status: 404 });

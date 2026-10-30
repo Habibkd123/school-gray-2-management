@@ -38,6 +38,9 @@ export async function POST(req: NextRequest) {
     const failures: any[] = [];
 
     for (const row of rows) {
+      let userId: any = undefined;
+      let newlyCreatedUser = false;
+
       try {
         const {
           employee_id, name, gender, dob, phone, email, address,
@@ -59,8 +62,6 @@ export async function POST(req: NextRequest) {
         }
 
         const teacherLoginEmail = generateTeacherLoginEmail(name.trim(), dob);
-
-        let userId = undefined;
         const existingUser = await User.findOne({ email: teacherLoginEmail, school_id: schoolId });
         if (existingUser) {
           userId = existingUser._id;
@@ -77,6 +78,7 @@ export async function POST(req: NextRequest) {
             must_change_password: true,
           });
           userId = user._id;
+          newlyCreatedUser = true;
         }
 
         const resolvedClassIds = Array.isArray(class_ids) ? class_ids : [];
@@ -112,6 +114,10 @@ export async function POST(req: NextRequest) {
 
         successCount++;
       } catch (err: any) {
+        if (newlyCreatedUser && userId) {
+          await User.deleteOne({ _id: userId, school_id: schoolId }).catch(() => {});
+        }
+
         failedCount++;
         failures.push({
           row: row.name || row.employee_id || "Unknown row",

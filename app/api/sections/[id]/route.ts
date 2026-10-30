@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db";
 import Section from "@/lib/models/Section";
 import { requireAuth } from "@/lib/utils/auth";
@@ -8,6 +9,9 @@ type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid section ID" }, { status: 400 });
+  }
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
   if (error) return error;
   try {
@@ -22,6 +26,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid section ID" }, { status: 400 });
+  }
   const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
   try {
@@ -34,7 +41,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const section = await Section.findOneAndUpdate(
       { _id: id, school_id: schoolId },
       { $set: update },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', new: true, runValidators: true }
     ).lean();
 
     if (!section) return NextResponse.json({ success: false, message: "Section not found" }, { status: 404 });
@@ -50,6 +57,9 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid section ID" }, { status: 400 });
+  }
   const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
   try {

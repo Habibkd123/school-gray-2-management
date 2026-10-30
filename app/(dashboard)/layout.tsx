@@ -92,11 +92,12 @@ export default function DashboardLayout({
           allowed = hasPermission(user.role as AppRole, matchedRoute.module, "view");
         }
         if (!allowed) {
-          router.replace("/dashboard");
+          const search = typeof window !== "undefined" ? window.location.search : "";
+          router.replace(`/dashboard${search}`);
         }
       }
     }
-  }, [isAuthenticated, isLoading, router, pathname, user, permissions]);
+  }, [mounted, isAuthenticated, isLoading, router, pathname, user, permissions]);
 
   // Show spinner while checking auth or before client mount to prevent SSR hydration mismatch
   if (!mounted || isLoading) {

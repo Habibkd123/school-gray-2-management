@@ -84,6 +84,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   try {
     await connectDB();
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid ID" }, { status: 400 });
+    }
+
     const test = await ClassTest.findOne({ _id: id, school_id: schoolId });
     if (!test) return NextResponse.json({ success: false, message: "Test not found" }, { status: 404 });
 
@@ -136,6 +140,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
 
   try {
     await connectDB();
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid ID" }, { status: 400 });
+    }
 
     const test = await ClassTest.findOneAndDelete({ _id: id, school_id: schoolId });
     if (!test) return NextResponse.json({ success: false, message: "Test not found" }, { status: 404 });

@@ -216,6 +216,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, message: "date and status are required" }, { status: 400 });
     }
 
+    if (isNaN(new Date(date).getTime())) {
+      return NextResponse.json({ success: false, message: "Invalid date format" }, { status: 400 });
+    }
+
+    const VALID_STATUSES = ["present", "absent", "leave", "late", "half_day", "holiday", "medical_leave", "official_duty"];
+    if (typeof status !== "string" || !VALID_STATUSES.includes(status.toLowerCase().trim())) {
+      return NextResponse.json(
+        { success: false, message: `Invalid status '${status}'. Allowed statuses are: ${VALID_STATUSES.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
     const requestDateStr = date;
     const d = new Date();
     const localToday = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;

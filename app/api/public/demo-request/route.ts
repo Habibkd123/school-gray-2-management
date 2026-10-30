@@ -42,6 +42,28 @@ export async function POST(req: NextRequest) {
     const cleanStudentCount = (studentCount || "").trim();
     const cleanMessage = (message || "").trim();
 
+    if (cleanPhone.replace(/[^0-9]/g, "").length < 7) {
+      return NextResponse.json(
+        { error: "Please enter a valid phone number with at least 7 digits." },
+        { status: 400 }
+      );
+    }
+
+    // Duplicate prevention: throttle repeated demo requests from same phone in last 5 minutes
+    const recentDemo = await DemoRequest.findOne({
+      phone: cleanPhone,
+      createdAt: { $gte: new Date(Date.now() - 5 * 60 * 1000) },
+    }).lean();
+
+    if (recentDemo) {
+      return NextResponse.json({
+        success: true,
+        message: "Your campus walkthrough request has already been received. Our team will contact you shortly.",
+        id: (recentDemo as any)._id,
+        is_duplicate: true,
+      });
+    }
+
     const record = await DemoRequest.create({
       schoolName: cleanSchoolName,
       contactPerson: cleanContactPerson,

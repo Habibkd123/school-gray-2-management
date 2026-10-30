@@ -188,17 +188,37 @@ export default function BuilderPage() {
     const unmatchedKeys     = new Set<string>();
 
     const resolveKey = (key: string): string => {
-      if (variables[key] !== undefined)  return variables[key];
-      const dotKey = key.replace(/_/g, ".");
-      if (variables[dotKey] !== undefined) return variables[dotKey];
-      const underKey = key.replace(".", "_");
-      if (variables[underKey] !== undefined) return variables[underKey];
-      if (key.endsWith("_number") && variables[key.replace(/_number$/, "_no")] !== undefined)
-        return variables[key.replace(/_number$/, "_no")];
-      if (key.endsWith(".number") && variables[key.replace(/\.number$/, "_no")] !== undefined)
-        return variables[key.replace(/\.number$/, "_no")];
-      if (key.endsWith("_no") && variables[key.replace(/_no$/, "_number")] !== undefined)
-        return variables[key.replace(/_no$/, "_number")];
+      if (variables[key] !== undefined) return variables[key];
+
+      const candidates = new Set<string>();
+      candidates.add(key);
+      candidates.add(key.replace(/_/g, "."));
+      candidates.add(key.replace(/\./g, "_"));
+
+      for (const k of Array.from(candidates)) {
+        if (k.endsWith("_number")) {
+          candidates.add(k.replace(/_number$/, "_no"));
+          candidates.add(k.replace(/_number$/, ".no"));
+        } else if (k.endsWith(".number")) {
+          candidates.add(k.replace(/\.number$/, "_no"));
+          candidates.add(k.replace(/\.number$/, ".no"));
+        } else if (k.endsWith("_no")) {
+          candidates.add(k.replace(/_no$/, "_number"));
+          candidates.add(k.replace(/_no$/, ".number"));
+        } else if (k.endsWith(".no")) {
+          candidates.add(k.replace(/\.no$/, "_number"));
+          candidates.add(k.replace(/\.no$/, "_no"));
+        }
+      }
+
+      for (const candidate of candidates) {
+        if (variables[candidate] !== undefined) return variables[candidate];
+        const dot = candidate.replace(/_/g, ".");
+        if (variables[dot] !== undefined) return variables[dot];
+        const under = candidate.replace(/\./g, "_");
+        if (variables[under] !== undefined) return variables[under];
+      }
+
       return "";
     };
 
@@ -588,7 +608,7 @@ export default function BuilderPage() {
         return;
       }
       // Ctrl+S — Save
-      if (ctrl && e.key === "s") {
+      if (ctrl && (e.key === "s" || e.key === "S")) {
         e.preventDefault();
         saveRef.current();
         return;

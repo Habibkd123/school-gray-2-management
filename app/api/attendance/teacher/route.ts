@@ -38,6 +38,10 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  if (isNaN(new Date(dateParam).getTime())) {
+    return NextResponse.json({ success: false, message: "Invalid date format" }, { status: 400 });
+  }
+
   const cacheKey = `att_teacher_${schoolId}_${academic_year}_${dateParam}`;
 
   const cached = _teacherAttServerCache.get(cacheKey);
@@ -153,6 +157,31 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (isNaN(new Date(date).getTime())) {
+      return NextResponse.json({ success: false, message: "Invalid date format" }, { status: 400 });
+    }
+
+    if (!Array.isArray(records)) {
+      return NextResponse.json({ success: false, message: "records must be an array" }, { status: 400 });
+    }
+
+    const VALID_STATUSES = ["present", "absent", "leave", "late", "half_day", "holiday", "medical_leave", "official_duty"];
+    for (const r of records) {
+      if (!r || !r.teacher_id || !mongoose.Types.ObjectId.isValid(r.teacher_id)) {
+        return NextResponse.json({ success: false, message: "Each record must have a valid teacher_id" }, { status: 400 });
+      }
+      if (!r.status || typeof r.status !== "string") {
+        return NextResponse.json({ success: false, message: "Each record must have a valid status" }, { status: 400 });
+      }
+      const st = r.status.toLowerCase().trim();
+      if (!VALID_STATUSES.includes(st)) {
+        return NextResponse.json(
+          { success: false, message: `Invalid status '${r.status}'. Allowed statuses: ${VALID_STATUSES.join(", ")}` },
+          { status: 400 }
+        );
+      }
+    }
+
     const startOfDay = new Date(date);
     startOfDay.setUTCHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
@@ -167,7 +196,7 @@ export async function POST(req: NextRequest) {
 
     const formattedRecords = records.map((r: any) => ({
       teacher_id: new mongoose.Types.ObjectId(r.teacher_id),
-      status: r.status.toLowerCase(),
+      status: r.status.toLowerCase().trim(),
       note: r.note || null,
       check_in: r.check_in || null,
       check_out: r.check_out || null,
@@ -195,6 +224,10 @@ export async function POST(req: NextRequest) {
     });
 
     invalidateTeacherAttendanceCache(schoolId);
+    try {
+      const { invalidateAttendanceReportsCache } = await import("@/app/api/reports/attendance/route");
+      invalidateAttendanceReportsCache(schoolId as string);
+    } catch {}
 
     return NextResponse.json({
       success: true,

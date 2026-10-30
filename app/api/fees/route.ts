@@ -627,6 +627,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { class_id, student_id, fee_types, academic_year } = body;
 
+    if (student_id && !mongoose.Types.ObjectId.isValid(student_id)) {
+      return NextResponse.json({ success: false, message: "Invalid student_id format" }, { status: 400 });
+    }
+
+    if (class_id && !mongoose.Types.ObjectId.isValid(class_id)) {
+      return NextResponse.json({ success: false, message: "Invalid class_id format" }, { status: 400 });
+    }
+
     // 1. If student_id is provided, save as Custom Student Fee Override
     if (student_id) {
       if (!fee_types || !Array.isArray(fee_types) || !academic_year) {

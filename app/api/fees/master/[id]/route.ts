@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import { FeeMaster, FeePayment } from "@/lib/models";
 import { requireAuth } from "@/lib/utils/auth";
+import mongoose from "mongoose";
 
 type RouteParams = { params: Promise<{ id: string }> };
 
@@ -11,6 +12,9 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     if (error) return error;
 
     const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid fee master ID" }, { status: 400 });
+    }
     const body = await req.json();
     await connectDB();
     const master = await FeeMaster.findOneAndUpdate(
@@ -34,6 +38,9 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
     if (error) return error;
 
     const { id } = await params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ success: false, message: "Invalid fee master ID" }, { status: 400 });
+    }
     await connectDB();
     
     // Check if master is used in any payments

@@ -58,11 +58,22 @@ function clearSessionLeave() {
   } catch {}
 }
 
+export function clearLeaveCache() {
+  _leaveQueryCache.clear();
+  _leaveFetchPromises.clear();
+  clearSessionLeave();
+}
+
+if (typeof window !== "undefined") {
+  (window as any).__clearLeaveCache = clearLeaveCache;
+}
+
 export function useLeave(
   statusFilter?: string,
   userId?: string,
   options?: {
     skip?: boolean;
+    skipCache?: boolean;
     initialPage?: number;
     initialPageSize?: number;
     leaveType?: string;
@@ -74,7 +85,7 @@ export function useLeave(
   const initialPage = options?.initialPage ?? 1;
   const initialPageSize = getPersistedPageSize(options?.initialPageSize ?? 25);
   const initialKey = getLeaveCacheKey(statusFilter, userId, options, initialPage, initialPageSize);
-  const initialCached = _leaveQueryCache.get(initialKey)?.data ?? readSessionLeave(initialKey);
+  const initialCached = options?.skipCache ? null : (_leaveQueryCache.get(initialKey)?.data ?? readSessionLeave(initialKey));
 
   const [leaveRequests, setLeaveRequests] = useState<ApiLeaveRequest[]>(() => initialCached?.leaves ?? []);
   const [loading, setLoading] = useState(() => {
@@ -89,11 +100,11 @@ export function useLeave(
 
   const fetchLeave = useCallback(async (pNum = page, pSize = pageSize) => {
     const key = getLeaveCacheKey(statusFilter, userId, options, pNum, pSize);
-    const inMem = _leaveQueryCache.get(key);
-    const sessionData = !inMem ? readSessionLeave(key) : null;
+    const inMem = options?.skipCache ? null : _leaveQueryCache.get(key);
+    const sessionData = !inMem && !options?.skipCache ? readSessionLeave(key) : null;
     const cached = inMem ?? (sessionData ? { data: sessionData, timestamp: Date.now() } : null);
 
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+    if (!options?.skipCache && cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
       setLeaveRequests(cached.data.leaves);
       setTotal(cached.data.total);
       setTotalPages(cached.data.totalPages);
@@ -131,7 +142,16 @@ export function useLeave(
       const res = await fetch(`/api/leave${queryString}`, { headers: getAuthHeaders() });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to fetch leaves");
-      return data.data as { leaves: ApiLeaveRequest[]; total: number; totalPages: number };
+      const leaveList = Array.isArray(data.data?.leaves)
+        ? data.data.leaves
+        : Array.isArray(data.data)
+        ? data.data
+        : [];
+      return {
+        leaves: leaveList,
+        total: data.data?.total ?? leaveList.length,
+        totalPages: data.data?.totalPages ?? 1,
+      };
     })();
 
     _leaveFetchPromises.set(key, promise);
@@ -140,9 +160,9 @@ export function useLeave(
       const data = await promise;
       _leaveQueryCache.set(key, { data, timestamp: Date.now() });
       writeSessionLeave(key, data);
-      setLeaveRequests(data.leaves);
-      setTotal(data.total);
-      setTotalPages(data.totalPages);
+      setLeaveRequests(data.leaves ?? []);
+      setTotal(data.total ?? 0);
+      setTotalPages(data.totalPages ?? 1);
     } catch (e) {
       console.error("useLeave fetch error", e);
     } finally {

@@ -181,8 +181,8 @@ export function useParents(options?: { skip?: boolean; filterByYear?: boolean })
         });
         const data = await res.json();
         if (data.success && data.data) {
-          const list = data.data.parents || [];
-          const tot = data.data.pagination?.totalItems || list.length;
+          const list = Array.isArray(data.data) ? data.data : (data.data?.parents || []);
+          const tot = Array.isArray(data.data) ? data.data.length : (data.data?.pagination?.totalItems ?? data.data?.total ?? list.length);
           setParents(list);
           setTotalParents(tot);
 

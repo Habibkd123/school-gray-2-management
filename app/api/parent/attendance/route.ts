@@ -19,6 +19,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, message: "Missing studentId or month" }, { status: 400 });
     }
 
+    if (!mongoose.Types.ObjectId.isValid(studentId)) {
+      return NextResponse.json({ success: false, message: "Invalid studentId" }, { status: 400 });
+    }
+
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
+      return NextResponse.json({ success: false, message: "Invalid month format. Expected YYYY-MM" }, { status: 400 });
+    }
+
     await connectDB();
 
     const parent = await Parent.findOne({ user_id: user.user_id, school_id: schoolId }).lean();

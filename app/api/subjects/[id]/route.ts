@@ -101,7 +101,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const updatedSubject = await Subject.findOneAndUpdate(
       { _id: id, school_id: schoolId },
       { $set: body },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', new: true, runValidators: true }
     );
 
     return NextResponse.json({ success: true, data: updatedSubject });
@@ -174,7 +174,7 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
       );
     }
 
-    await Subject.deleteOne({ _id: id });
+    await Subject.deleteOne({ _id: id, school_id: schoolId });
     return NextResponse.json({ success: true, message: "Subject deleted successfully" });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

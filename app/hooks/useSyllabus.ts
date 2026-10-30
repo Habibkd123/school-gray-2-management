@@ -287,14 +287,15 @@ export function useSyllabus() {
       });
       const data = await res.json();
       if (!res.ok || !data.success) throw new Error(data.message || "Failed to load syllabus details.");
-      const entry = { data: data.data, timestamp: Date.now() };
+      const record = Array.isArray(data.data) ? data.data[0] : data.data;
+      const entry = { data: record, timestamp: Date.now() };
       _syllabusDetailCache.set(id, entry);
-      if (data.data?._id && data.data._id !== id) {
-        _syllabusDetailCache.set(data.data._id, entry);
+      if (record?._id && record._id !== id) {
+        _syllabusDetailCache.set(record._id, entry);
       }
       writeSessionCacheDetail(id, entry);
-      setSyllabus(data.data);
-      return data.data;
+      setSyllabus(record);
+      return record;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load syllabus details");
       return null;

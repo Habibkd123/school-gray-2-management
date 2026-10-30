@@ -63,6 +63,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   try {
     await connectDB();
     const { id } = await params;
+    if (!mongoose.isValidObjectId(id)) {
+      return NextResponse.json({ success: false, message: "Invalid parent ID" }, { status: 400 });
+    }
     const body = await request.json();
 
     const parent = await Parent.findOneAndUpdate(
@@ -95,6 +98,9 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     await connectDB();
     const { id } = await params;
+    if (!mongoose.isValidObjectId(id)) {
+      return NextResponse.json({ success: false, message: "Invalid parent ID" }, { status: 400 });
+    }
 
     const parent = await Parent.findOneAndDelete({ _id: id, school_id: schoolId });
     if (!parent) {

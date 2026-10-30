@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
 import connectToDatabase from "@/lib/db";
 import Stream from "@/lib/models/Stream";
 import { requireAuth } from "@/lib/utils/auth";
@@ -17,6 +18,9 @@ type RouteParams = { params: Promise<{ id: string }> };
 
 export async function GET(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid stream ID" }, { status: 400 });
+  }
   const { schoolId, error } = requireAuth(req, ["school_admin", "teacher", "accountant", "super_admin"]);
   if (error) return error;
 
@@ -32,6 +36,9 @@ export async function GET(req: NextRequest, { params }: RouteParams) {
 
 export async function PUT(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid stream ID" }, { status: 400 });
+  }
   const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
 
@@ -45,7 +52,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     const stream = await Stream.findOneAndUpdate(
       { _id: id, school_id: schoolId },
       { $set: update },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', new: true, runValidators: true }
     ).lean();
 
     if (!stream) return NextResponse.json({ success: false, message: "Stream not found" }, { status: 404 });
@@ -61,6 +68,9 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(req: NextRequest, { params }: RouteParams) {
   const { id } = await params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ success: false, message: "Invalid stream ID" }, { status: 400 });
+  }
   const { schoolId, error } = requireAuth(req, ["school_admin", "super_admin"]);
   if (error) return error;
 

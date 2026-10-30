@@ -73,6 +73,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     await connectDB();
 
+    if (!body.routeName || !body.routeName.trim()) {
+      return NextResponse.json({ success: false, error: "Route name is required" }, { status: 400 });
+    }
+
+    const existing = await Route.findOne({ school_id: schoolId, routeName: body.routeName.trim() });
+    if (existing) {
+      return NextResponse.json({ success: false, error: "Route name already exists" }, { status: 400 });
+    }
+
     const newRoute = await Route.create({
       ...body,
       school_id: schoolId,

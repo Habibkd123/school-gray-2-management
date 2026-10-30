@@ -70,16 +70,18 @@ function StudentPromotionContent() {
 
   // 1. Initial setup of defaults
   useEffect(() => {
-    if (sessions.length > 0 && !fromSession) {
+    if (studentIdParam) return;
+    if (sessions.length > 0 && (!fromSession || !sessions.includes(fromSession))) {
       setFromSession(sessions[0]);
     }
-  }, [sessions, fromSession]);
+  }, [sessions, fromSession, studentIdParam]);
 
   useEffect(() => {
-    if (fromSession && !promoteToSession) {
+    if (studentIdParam) return;
+    if (fromSession) {
       setPromoteToSession(getNextAcademicYear(fromSession));
     }
-  }, [fromSession, promoteToSession]);
+  }, [fromSession, studentIdParam]);
 
   // Helper to fetch results for a set of students to populate Pass/Fail
   const fetchResultsForStudents = async (students: ApiStudent[]) => {

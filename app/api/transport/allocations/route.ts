@@ -4,6 +4,10 @@ import { TransportAllocation } from "@/lib/models";
 import { requireAuth } from "@/lib/utils/auth";
 import { sendCompressedJson } from "@/lib/compression";
 
+import mongoose from "mongoose";
+import Student from "@/lib/models/Student";
+import { Route, Bus } from "@/lib/models";
+
 // Server cache & in-flight deduplication (keyed by school_id)
 const _allocationsServerCache = new Map<string, { data: any; expiresAt: number }>();
 const _allocationsInFlight = new Map<string, Promise<any>>();
@@ -108,9 +112,67 @@ export async function POST(request: NextRequest) {
 
     const { student_ids, student_id, route_id, bus_id, pickupStop, status } = body;
     const finalBusId = bus_id || null;
+    const allocStatus = status || "Active";
+
+    // 1. Validate route reference
+    if (!route_id || !mongoose.Types.ObjectId.isValid(route_id)) {
+      return NextResponse.json({ success: false, error: "Valid route_id is required" }, { status: 400 });
+    }
+    const route = await Route.findOne({ _id: route_id, school_id: schoolId }).lean();
+    if (!route) {
+      return NextResponse.json({ success: false, error: "Route not found in this school" }, { status: 404 });
+    }
+
+    // 2. Validate bus reference and capacity if bus_id provided
+    let busDoc: any = null;
+    if (finalBusId) {
+      if (!mongoose.Types.ObjectId.isValid(finalBusId)) {
+        return NextResponse.json({ success: false, error: "Invalid bus_id" }, { status: 400 });
+      }
+      busDoc = await Bus.findOne({ _id: finalBusId, school_id: schoolId }).lean();
+      if (!busDoc) {
+        return NextResponse.json({ success: false, error: "Bus not found in this school" }, { status: 404 });
+      }
+    }
 
     // Check if bulk allocation is requested via student_ids array
     if (Array.isArray(student_ids) && student_ids.length > 0) {
+      // Validate all student IDs are valid ObjectIds
+      const invalidIds = student_ids.filter((id: string) => !mongoose.Types.ObjectId.isValid(id));
+      if (invalidIds.length > 0) {
+        return NextResponse.json({ success: false, error: "One or more student_ids are invalid" }, { status: 400 });
+      }
+
+      // Verify students belong to this school
+      const verifiedStudents = await Student.find({
+        _id: { $in: student_ids },
+        school_id: schoolId,
+      }).select("_id").lean();
+
+      if (verifiedStudents.length !== student_ids.length) {
+        return NextResponse.json({
+          success: false,
+          error: "Some students do not belong to this school or do not exist",
+        }, { status: 404 });
+      }
+
+      // Check bus capacity for bulk allocation if bus is assigned and status is Active
+      if (busDoc && allocStatus === "Active") {
+        const currentActiveAllocations = await TransportAllocation.countDocuments({
+          school_id: schoolId,
+          bus_id: finalBusId,
+          status: "Active",
+          student_id: { $nin: student_ids }, // exclude re-assignments of same students
+        });
+
+        if (currentActiveAllocations + student_ids.length > busDoc.capacity) {
+          return NextResponse.json({
+            success: false,
+            error: `Bulk allocation exceeds vehicle capacity. Maximum capacity is ${busDoc.capacity}, currently occupied: ${currentActiveAllocations}, requested: ${student_ids.length}`,
+          }, { status: 400 });
+        }
+      }
+
       const results: any[] = [];
       const skipped: string[] = [];
 
@@ -124,7 +186,7 @@ export async function POST(request: NextRequest) {
               route_id,
               bus_id: finalBusId,
               pickupStop,
-              status: status || "Active",
+              status: allocStatus,
             },
             { upsert: true, new: true, setDefaultsOnInsert: true }
           );
@@ -146,15 +208,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Single student allocation fallback
-    const postPayload = { ...body };
-    if (!postPayload.bus_id) {
-      postPayload.bus_id = null;
+    // Single student allocation validation
+    if (!student_id || !mongoose.Types.ObjectId.isValid(student_id)) {
+      return NextResponse.json({ success: false, error: "Valid student_id is required" }, { status: 400 });
+    }
+
+    const student = await Student.findOne({ _id: student_id, school_id: schoolId }).lean();
+    if (!student) {
+      return NextResponse.json({ success: false, error: "Student not found in this school" }, { status: 404 });
+    }
+
+    // Check duplicate student allocation
+    const existingAlloc = await TransportAllocation.findOne({
+      school_id: schoolId,
+      student_id: student_id,
+    }).lean();
+
+    if (existingAlloc) {
+      return NextResponse.json({
+        success: false,
+        error: "Student is already allocated to a transport route",
+      }, { status: 409 });
+    }
+
+    // Check bus capacity for single allocation
+    if (busDoc && allocStatus === "Active") {
+      const activeCount = await TransportAllocation.countDocuments({
+        school_id: schoolId,
+        bus_id: finalBusId,
+        status: "Active",
+      });
+
+      if (activeCount >= busDoc.capacity) {
+        return NextResponse.json({
+          success: false,
+          error: `Bus capacity exceeded. Maximum capacity is ${busDoc.capacity}`,
+        }, { status: 400 });
+      }
     }
 
     const newAlloc = await TransportAllocation.create({
-      ...postPayload,
-      school_id: schoolId,
+      school_id: schoolId as string,
+      student_id,
+      route_id,
+      bus_id: finalBusId,
+      pickupStop: pickupStop || "",
+      status: allocStatus,
     });
 
     invalidateAllocationsCache(schoolId as string);
@@ -162,7 +261,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: newAlloc }, { status: 201 });
   } catch (error: any) {
     if (error.code === 11000) {
-      return NextResponse.json({ success: false, error: "Student is already allocated to a transport route" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Student is already allocated to a transport route" }, { status: 409 });
     }
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

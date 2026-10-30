@@ -221,8 +221,8 @@ export default function AcademicClassesPage() {
       setFormError("Class name and academic year are required."); return;
     }
     const isHigherClass = formName === "Class 11" || formName === "Class 12";
-    // Stream is mandatory for Class 11 and Class 12
-    if (isHigherClass && formStreams.length === 0) {
+    // Stream is mandatory for Class 11 and Class 12 when streams are enabled
+    if (enableStreams && isHigherClass && formStreams.length === 0) {
       setFormError("Stream is required for Class 11 and Class 12."); return;
     }
     setSubmitting(true);
@@ -268,8 +268,8 @@ export default function AcademicClassesPage() {
       setFormError("Class name and academic year are required."); return;
     }
     const isHigherClass = formName === "Class 11" || formName === "Class 12";
-    // Stream is mandatory for Class 11 and Class 12
-    if (isHigherClass && !formStream.trim()) {
+    // Stream is mandatory for Class 11 and Class 12 when streams are enabled
+    if (enableStreams && isHigherClass && !formStream.trim()) {
       setFormError("Stream is required for Class 11 and Class 12."); return;
     }
     setSubmitting(true);
@@ -670,7 +670,7 @@ export default function AcademicClassesPage() {
             </div>
           )}
 
-          {(formName === "Class 11" || formName === "Class 12") && (
+          {enableStreams && (formName === "Class 11" || formName === "Class 12") && (
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Streams <span className="text-red-500">*</span> <span className="text-slate-400 text-[11px]">(select one or more)</span></label>
               <div className="space-y-3 p-3 border border-border rounded-lg bg-[#F8FAFC] dark:bg-slate-900/50">
@@ -878,7 +878,7 @@ export default function AcademicClassesPage() {
             )}
           </div>
 
-          {(formName === "Class 11" || formName === "Class 12") && (
+          {enableStreams && (formName === "Class 11" || formName === "Class 12") && (
             <div className="flex flex-col gap-1.5">
               <label className="text-[13px] font-semibold text-foreground dark:text-slate-100">Stream <span className="text-red-500">*</span></label>
               <div className="relative">

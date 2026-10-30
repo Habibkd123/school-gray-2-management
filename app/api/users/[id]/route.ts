@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
+import mongoose from "mongoose";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -13,6 +14,13 @@ export async function GET(request: NextRequest, context: RouteContext) {
   if (auth.error) return auth.error;
 
   const { id } = await context.params;
+
+  if (!mongoose.isValidObjectId(id)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid user ID" },
+      { status: 400 }
+    );
+  }
 
   try {
     await connectDB();
@@ -72,6 +80,13 @@ export async function PUT(request: NextRequest, context: RouteContext) {
   if (auth.error) return auth.error;
 
   const { id } = await context.params;
+
+  if (!mongoose.isValidObjectId(id)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid user ID" },
+      { status: 400 }
+    );
+  }
 
   try {
     await connectDB();
@@ -134,6 +149,13 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
   if (auth.error) return auth.error;
 
   const { id } = await context.params;
+
+  if (!mongoose.isValidObjectId(id)) {
+    return NextResponse.json(
+      { success: false, message: "Invalid user ID" },
+      { status: 400 }
+    );
+  }
 
   try {
     await connectDB();

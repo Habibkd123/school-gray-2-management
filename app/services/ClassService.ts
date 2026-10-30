@@ -59,7 +59,7 @@ export const ClassService = {
           if (!res.ok) throw new Error("Failed to fetch classes from ClassService");
           const json = await res.json();
           if (!json.success) throw new Error(json.message || "Failed to fetch classes");
-          const fetchedClasses = json.data?.classes || [];
+          const fetchedClasses = Array.isArray(json.data) ? json.data : (json.data?.classes || []);
           if (fetchedClasses.length > 0) {
             allClassesCache = fetchedClasses;
             cacheTime = Date.now();

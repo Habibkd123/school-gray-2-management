@@ -56,7 +56,7 @@ export function FileUploadField({
 
       const json = await res.json();
       if (json.success) {
-        onChange(json.url);
+        onChange(json.url || json.data?.url || "");
         setMode("url");
       } else {
         setError(json.message || "Upload failed");

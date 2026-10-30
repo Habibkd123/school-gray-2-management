@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import connectToDatabase from "@/lib/db";
-import { Attendance, ClassTest, ClassTestMark } from "@/lib/models/index";
+import { Attendance, ClassTest, ClassTestMark, Timetable } from "@/lib/models/index";
 import Student from "@/lib/models/Student";
+import Teacher from "@/lib/models/Teacher";
 import Class from "@/lib/models/Class";
 import { requireAuth } from "@/lib/utils/auth";
 import { sendCompressedJson } from "@/lib/compression";
@@ -14,9 +15,38 @@ const CLASS_REPORT_CACHE_TTL = 60_000;
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: classId } = await params;
+  if (!mongoose.Types.ObjectId.isValid(classId)) {
+    return NextResponse.json({ success: false, message: "Invalid class ID" }, { status: 400 });
+  }
+
   const authResult = requireAuth(req, ["school_admin", "teacher", "super_admin"]);
   if (authResult.error) return authResult.error;
-  const { schoolId } = authResult;
+  const { schoolId, role, userId } = authResult;
+
+  if (role === "student" || role === "parent") {
+    return NextResponse.json({ success: false, message: "Access denied" }, { status: 403 });
+  }
+
+  if (role === "teacher") {
+    await connectToDatabase();
+    const teacher = await Teacher.findOne({ user_id: userId, school_id: schoolId }).lean();
+    if (!teacher) {
+      return NextResponse.json({ success: false, message: "Teacher record not found" }, { status: 403 });
+    }
+    const classIdsFromTimetable = await Timetable.find({ teacher_id: teacher._id, school_id: schoolId }).distinct("class_id");
+    const teacherClassIds = await Class.find({
+      school_id: schoolId,
+      $or: [
+        { class_teacher_id: teacher._id },
+        { _id: { $in: classIdsFromTimetable } }
+      ]
+    }).distinct("_id");
+
+    const hasAccess = teacherClassIds.some((id: any) => id.toString() === classId);
+    if (!hasAccess) {
+      return NextResponse.json({ success: false, message: "You are not assigned to this class" }, { status: 403 });
+    }
+  }
 
   try {
     const url = new URL(req.url);

@@ -424,6 +424,7 @@ export async function POST(req: NextRequest) {
     });
 
     const isPublished = status === "Published";
+    const isNew = !syllabusRecord;
 
     if (!syllabusRecord) {
       // Create new syllabus
@@ -445,8 +446,8 @@ export async function POST(req: NextRequest) {
         reference_links: reference_links || [],
         nodes: finalNodes,
         history: [],
-        created_by: user.user_id,
-        updated_by: user.user_id
+        created_by: user?.user_id && mongoose.Types.ObjectId.isValid(user.user_id) ? new mongoose.Types.ObjectId(user.user_id as string) : null,
+        updated_by: user?.user_id && mongoose.Types.ObjectId.isValid(user.user_id) ? new mongoose.Types.ObjectId(user.user_id as string) : null
       });
       await syllabusRecord.save();
     } else {
@@ -461,7 +462,7 @@ export async function POST(req: NextRequest) {
           nodes: syllabusRecord.nodes,
           attachments: syllabusRecord.attachments,
           reference_links: syllabusRecord.reference_links,
-          updated_by: new mongoose.Types.ObjectId(user.user_id as string),
+          updated_by: user?.user_id && mongoose.Types.ObjectId.isValid(user.user_id) ? new mongoose.Types.ObjectId(user.user_id as string) : null,
           updated_at: new Date(),
           remarks: remarks || `Archived version ${syllabusRecord.version}`
         };
@@ -482,15 +483,17 @@ export async function POST(req: NextRequest) {
       if (attachments) syllabusRecord.attachments = attachments;
       if (reference_links) syllabusRecord.reference_links = reference_links;
       if (finalNodes) syllabusRecord.nodes = finalNodes;
-      if (finalTeacherId) syllabusRecord.teacher_id = new mongoose.Types.ObjectId(finalTeacherId);
+      if (finalTeacherId && mongoose.Types.ObjectId.isValid(finalTeacherId)) syllabusRecord.teacher_id = new mongoose.Types.ObjectId(finalTeacherId);
 
-      syllabusRecord.updated_by = new mongoose.Types.ObjectId(user.user_id as string);
+      if (user?.user_id && mongoose.Types.ObjectId.isValid(user.user_id)) {
+        syllabusRecord.updated_by = new mongoose.Types.ObjectId(user.user_id as string);
+      }
       await syllabusRecord.save();
     }
 
     invalidateSyllabusServerCache(schoolId || undefined);
     invalidateSyllabusDetailCache(String(syllabusRecord._id), schoolId || undefined);
-    return NextResponse.json({ success: true, data: syllabusRecord });
+    return NextResponse.json({ success: true, data: syllabusRecord }, { status: isNew ? 201 : 200 });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message || "Server error" }, { status: 500 });
   }

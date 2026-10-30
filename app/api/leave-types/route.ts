@@ -84,6 +84,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Leave type name is required" }, { status: 400 });
     }
 
+    const existing = await LeaveType.findOne({
+      school_id: schoolId,
+      leave_type: { $regex: new RegExp(`^${leave_type.trim()}$`, "i") },
+    });
+    if (existing) {
+      return NextResponse.json({ success: false, message: "Leave type with this name already exists" }, { status: 400 });
+    }
+
     const leaveType = await LeaveType.create({
       school_id: schoolId as string,
       leave_type: leave_type.trim(),

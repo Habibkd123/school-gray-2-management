@@ -78,16 +78,17 @@ export function useStreams(options?: { skip?: boolean }) {
 
       const isFiltered = !!(params.search || params.page);
       const isAll = (params.limit ?? 0) >= 100;
+      const streamList = Array.isArray(data.data) ? data.data : (data.data?.streams || []);
       if (isAll && !isFiltered) {
-        _streamsCache = data.data.streams;
+        _streamsCache = streamList;
         _cacheTimestamp = Date.now();
-        writeSessionCache(data.data.streams);
-        _listeners.forEach(fn => fn(data.data.streams));
+        writeSessionCache(streamList);
+        _listeners.forEach(fn => fn(streamList));
       }
-      setStreams(data.data.streams);
-      setTotal(data.data.total ?? 0);
-      setTotalPages(data.data.totalPages ?? 1);
-      setCurrentPage(data.data.page ?? 1);
+      setStreams(streamList);
+      setTotal(data.data?.total ?? streamList.length);
+      setTotalPages(data.data?.totalPages ?? 1);
+      setCurrentPage(data.data?.page ?? 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load streams");
     } finally {
