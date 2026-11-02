@@ -192,6 +192,7 @@ describe("2. DataTable Sorting Algorithms & Virtualization Calculations", () => 
 
 describe("3. EnhancedTable Multi-Key Search & Filter Composition", () => {
   interface StudentRow {
+    [key: string]: unknown;
     id: string;
     name: string;
     rollNo: string;

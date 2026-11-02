@@ -12,8 +12,9 @@ import LandingContent from "./LandingContent";
 import GeneratedDocument from "./GeneratedDocument";
 import Admission from "./Admission";
 import RolePermissionModel from "./RolePermission";
+import WhatsAppLog from "./WhatsAppLog";
 
-export { Class, Student, School, User, Stream, Section, Teacher, LandingContent, GeneratedDocument, Admission };
+export { Class, Student, School, User, Stream, Section, Teacher, LandingContent, GeneratedDocument, Admission, WhatsAppLog };
 
 // ─── Subject ──────────────────────────────────────────────────────
 export interface ISubject extends Document {
@@ -1344,3 +1345,7 @@ export const ExamSchedule: Model<IExamSchedule> =
 // ─── Re-export GeneratedDocument (used by the Document Generation Engine) ─────
 import _GeneratedDocument from "./GeneratedDocument";
 export { _GeneratedDocument as GeneratedDocumentModel };
+
+import SecurityOTP from "./SecurityOTP";
+export { SecurityOTP };
+

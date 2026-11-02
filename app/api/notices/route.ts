@@ -4,6 +4,7 @@ import { Notice } from "@/lib/models/index";
 import { requireAuth } from "@/lib/utils/auth";
 import { paginateQuery } from "@/lib/utils/pagination";
 import { sendCompressedJson } from "@/lib/compression";
+import { triggerNoticeWhatsAppAlert } from "@/lib/services/whatsapp";
 
 
 export async function GET(req: NextRequest) {
@@ -77,6 +78,15 @@ export async function POST(req: NextRequest) {
       attachment_url: attachment_url || null,
       is_published: true,
     });
+
+    // Trigger instant WhatsApp announcements asynchronously
+    triggerNoticeWhatsAppAlert({
+      schoolId: schoolId as string,
+      title: notice.title,
+      content: notice.content,
+      targetAudience: notice.target_audience,
+      publishDate: notice.publish_date,
+    }).catch((waErr) => console.error("WhatsApp notice alert error:", waErr));
 
     return NextResponse.json({ success: true, data: notice }, { status: 201 });
   } catch (err: any) {

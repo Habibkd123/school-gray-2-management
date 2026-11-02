@@ -14,8 +14,12 @@ import {
   CheckSquare,
   Square,
   CheckCircle2,
-  Calendar
+  Calendar,
+  ShieldCheck,
+  Lock,
+  RotateCcw
 } from "lucide-react";
+
 import DynamicReceiptDocument, { formatPaymentReceiptToReceiptData } from "@/app/components/receipts/DynamicReceiptDocument";
 import { useReceiptConfig } from "@/app/hooks/useReceiptConfig";
 import { PrintService } from "@/app/lib/print-service";
@@ -68,8 +72,29 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
   const [receiptCopies, setReceiptCopies] = useState<1 | 2 | 3>(1);
   const [pageMode, setPageMode] = useState<"single" | "separate">("single");
 
+  // Principal Security OTP Modal states
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpCode, setOtpCode] = useState(["", "", "", ""]);
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpError, setOtpError] = useState<string | null>(null);
+  const [otpPrincipalPhone, setOtpPrincipalPhone] = useState("+91 7851974625");
+  const [devOtp, setDevOtp] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const otpInputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
+
+  // Resend countdown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
   const studentId = student?._id || student?.id;
   const studentClassId = student?.class_id?._id || student?.class_id;
+
 
   // Fallback avatar helper
   const getAvatar = (name: string) => {
@@ -316,8 +341,131 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
     return "";
   }, [selectedFees, collectionDate, paymentMethod, referenceNo, amounts, feeTypesConfig, paymentsHistory, startDate, endDate]);
 
-  const handleCollectFeesSubmit = async () => {
+  // Request OTP from API and send to Principal WhatsApp
+  const requestPrincipalOtp = async () => {
+    setOtpSending(true);
+    setOtpError(null);
+    try {
+      const res = await fetch("/api/fees/payments/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({
+          action: "send",
+          student_id: studentId,
+          amount: grandTotalCollecting,
+          payment_method: paymentMethod,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.principalPhone) setOtpPrincipalPhone(data.principalPhone);
+        if (data.devOtp) setDevOtp(data.devOtp);
+        setResendCooldown(30);
+      } else {
+        setOtpError(data.message || "Failed to send WhatsApp OTP to Principal.");
+      }
+    } catch (err: any) {
+      setOtpError("Network connection error sending OTP to Principal.");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  // Step 1: Click "Authorize & Collect Fees" -> Open OTP Modal & Send to Principal
+  const handleInitiateCollectFees = async () => {
     if (validationMessage) return;
+
+    const subtotal = selectedFees.reduce((sum, name) => sum + Number(amounts[name] || 0), 0);
+    const breakdownPayload = selectedFees.map(name => ({
+      name,
+      amount_paid: Number(amounts[name] || 0)
+    })).filter(item => item.amount_paid > 0);
+
+    if (breakdownPayload.length === 0) {
+      alert("Please select at least one fee type and enter an amount.");
+      return;
+    }
+
+    setOtpCode(["", "", "", ""]);
+    setOtpError(null);
+    setShowOtpModal(true);
+    requestPrincipalOtp();
+  };
+
+  const handleOtpChange = (index: number, value: string) => {
+    const cleaned = value.replace(/\D/g, "");
+    if (!cleaned) {
+      const next = [...otpCode];
+      next[index] = "";
+      setOtpCode(next);
+      return;
+    }
+
+    if (cleaned.length > 1) {
+      const digits = cleaned.slice(0, 4).split("");
+      const next = [...otpCode];
+      digits.forEach((d, i) => {
+        if (i < 4) next[i] = d;
+      });
+      setOtpCode(next);
+      const nextFocus = Math.min(digits.length, 3);
+      otpInputRefs.current[nextFocus]?.focus();
+      return;
+    }
+
+    const next = [...otpCode];
+    next[index] = cleaned[0];
+    setOtpCode(next);
+
+    if (index < 3) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !otpCode[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  // Step 2: Verify OTP
+  const handleVerifyOtpAndProceed = async () => {
+    const fullOtp = otpCode.join("").trim();
+    if (fullOtp.length < 4) {
+      setOtpError("Please enter the complete 4-digit security code.");
+      return;
+    }
+
+    setOtpLoading(true);
+    setOtpError(null);
+    try {
+      const res = await fetch("/api/fees/payments/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders() },
+        body: JSON.stringify({
+          action: "verify",
+          student_id: studentId,
+          otp: fullOtp,
+        }),
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        setOtpError(data.message || "Invalid or expired authorization code.");
+        setOtpLoading(false);
+        return;
+      }
+
+      setShowOtpModal(false);
+      await executePaymentRecording();
+    } catch (e: any) {
+      setOtpError("Network error verifying authorization.");
+      setOtpLoading(false);
+    }
+  };
+
+  // Step 3: Record payment in DB
+  const executePaymentRecording = async () => {
     setIsRecording(true);
 
     const subtotal = selectedFees.reduce((sum, name) => sum + Number(amounts[name] || 0), 0);
@@ -327,12 +475,6 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
       name,
       amount_paid: Number(amounts[name] || 0)
     })).filter(item => item.amount_paid > 0);
-
-    if (breakdownPayload.length === 0) {
-      alert("Please select at least one fee type and enter an amount.");
-      setIsRecording(false);
-      return;
-    }
 
     try {
       const res = await fetch("/api/fees/payments", {
@@ -370,8 +512,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
       alert("Network connection failure recording fee collection");
     } finally {
       setIsRecording(false);
+      setOtpLoading(false);
     }
   };
+
 
 
   // Grand summary aggregates
@@ -561,87 +705,87 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                         .map(ft => {
                           const { total, paid, balance } = getFeeHeadStats(ft);
                           const isPaid = balance <= 0;
-                        const isSelected = selectedFees.includes(ft.name);
+                          const isSelected = selectedFees.includes(ft.name);
 
-                        let statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">Pending</span>;
-                        if (isPaid) {
-                          statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-450 inline-flex items-center gap-0.5">Paid</span>;
-                        } else if (paid > 0) {
-                          statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-emerald-450">Partial</span>;
-                        }
+                          let statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400">Pending</span>;
+                          if (isPaid) {
+                            statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-450 inline-flex items-center gap-0.5">Paid</span>;
+                          } else if (paid > 0) {
+                            statusBadge = <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-emerald-450">Partial</span>;
+                          }
 
-                        return (
-                          <div
-                            key={ft._id || ft.name}
-                            onClick={() => !isPaid && toggleFee(ft.name, balance)}
-                            className={`p-4 border rounded-xl shadow-sm transition-all text-left flex flex-col justify-between relative cursor-pointer group ${isPaid
-                              ? "bg-slate-50/50 dark:bg-slate-900/30 border-border opacity-70 cursor-not-allowed"
-                              : isSelected
-                                ? "bg-primary/[0.02] border-primary ring-2 ring-primary/10"
-                                : "bg-white dark:bg-slate-900 border-border hover:border-slate-350 dark:hover:border-slate-700"
-                              }`}
-                          >
-                            {/* Selection Icon */}
-                            {!isPaid && (
-                              <div className="absolute top-4 right-4">
-                                {isSelected ? (
-                                  <CheckSquare className="w-5 h-5 text-primary" />
-                                ) : (
-                                  <Square className="w-5 h-5 text-slate-300 dark:text-slate-700 group-hover:text-slate-400" />
-                                )}
-                              </div>
-                            )}
-
-                            <div>
-                              <div>
-                                <span className="font-extrabold text-slate-800 dark:text-slate-100 text-[13px] block truncate pr-8" title={ft.name}>
-                                  {ft.name}
-                                </span>
-                                <span className="text-[10px] text-slate-450 font-bold block mt-0.5 uppercase tracking-wider">
-                                  {ft.frequency || "Monthly"} • {ft.is_mandatory ? "Mandatory" : "Optional"}
-                                </span>
-                              </div>
-
-                              <div className="grid grid-cols-3 gap-2 border-t border-border mt-3.5 pt-3.5 text-[11px] font-sans">
-                                <div>
-                                  <span className="text-slate-400 block font-bold text-[9px] uppercase">Total Due</span>
-                                  <span className="font-sans font-bold text-slate-700 dark:text-slate-300">{money(total)}</span>
-                                </div>
-                                <div>
-                                  <span className="text-slate-455 block font-bold text-[9px] uppercase">Paid</span>
-                                  <span className="font-sans font-bold text-emerald-600">{money(paid)}</span>
-                                </div>
-                                <div>
-                                  <span className="text-slate-455 block font-bold text-[9px] uppercase">Balance</span>
-                                  <span className="font-sans font-bold text-rose-500">{money(balance)}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between border-t border-border mt-3.5 pt-3.5">
-                              <div>{statusBadge}</div>
-
-                              {!isPaid && isSelected && (
-                                <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                                  <span className="text-[10px] font-bold text-slate-455 uppercase">Collect:</span>
-                                  <div className="relative w-28">
-                                    <span className="absolute left-2.5 top-1.5 text-slate-450 font-bold">₹</span>
-                                    <input
-                                      type="number"
-                                      min="0.01"
-                                      max={balance}
-                                      step="0.01"
-                                      value={amounts[ft.name] || ""}
-                                      onChange={e => handleAmountChange(ft.name, e.target.value)}
-                                      className="w-full pl-5 pr-1.5 py-1 border border-border rounded bg-white dark:bg-slate-900 font-sans font-bold text-slate-800 dark:text-white outline-none focus:border-primary text-right"
-                                    />
-                                  </div>
+                          return (
+                            <div
+                              key={ft._id || ft.name}
+                              onClick={() => !isPaid && toggleFee(ft.name, balance)}
+                              className={`p-4 border rounded-xl shadow-sm transition-all text-left flex flex-col justify-between relative cursor-pointer group ${isPaid
+                                ? "bg-slate-50/50 dark:bg-slate-900/30 border-border opacity-70 cursor-not-allowed"
+                                : isSelected
+                                  ? "bg-primary/[0.02] border-primary ring-2 ring-primary/10"
+                                  : "bg-white dark:bg-slate-900 border-border hover:border-slate-350 dark:hover:border-slate-700"
+                                }`}
+                            >
+                              {/* Selection Icon */}
+                              {!isPaid && (
+                                <div className="absolute top-4 right-4">
+                                  {isSelected ? (
+                                    <CheckSquare className="w-5 h-5 text-primary" />
+                                  ) : (
+                                    <Square className="w-5 h-5 text-slate-300 dark:text-slate-700 group-hover:text-slate-400" />
+                                  )}
                                 </div>
                               )}
+
+                              <div>
+                                <div>
+                                  <span className="font-extrabold text-slate-800 dark:text-slate-100 text-[13px] block truncate pr-8" title={ft.name}>
+                                    {ft.name}
+                                  </span>
+                                  <span className="text-[10px] text-slate-450 font-bold block mt-0.5 uppercase tracking-wider">
+                                    {ft.frequency || "Monthly"} • {ft.is_mandatory ? "Mandatory" : "Optional"}
+                                  </span>
+                                </div>
+
+                                <div className="grid grid-cols-3 gap-2 border-t border-border mt-3.5 pt-3.5 text-[11px] font-sans">
+                                  <div>
+                                    <span className="text-slate-400 block font-bold text-[9px] uppercase">Total Due</span>
+                                    <span className="font-sans font-bold text-slate-700 dark:text-slate-300">{money(total)}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-455 block font-bold text-[9px] uppercase">Paid</span>
+                                    <span className="font-sans font-bold text-emerald-600">{money(paid)}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-slate-455 block font-bold text-[9px] uppercase">Balance</span>
+                                    <span className="font-sans font-bold text-rose-500">{money(balance)}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between border-t border-border mt-3.5 pt-3.5">
+                                <div>{statusBadge}</div>
+
+                                {!isPaid && isSelected && (
+                                  <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                    <span className="text-[10px] font-bold text-slate-455 uppercase">Collect:</span>
+                                    <div className="relative w-28">
+                                      <span className="absolute left-2.5 top-1.5 text-slate-450 font-bold">₹</span>
+                                      <input
+                                        type="number"
+                                        min="0.01"
+                                        max={balance}
+                                        step="0.01"
+                                        value={amounts[ft.name] || ""}
+                                        onChange={e => handleAmountChange(ft.name, e.target.value)}
+                                        className="w-full pl-5 pr-1.5 py-1 border border-border rounded bg-white dark:bg-slate-900 font-sans font-bold text-slate-800 dark:text-white outline-none focus:border-primary text-right"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })
+                          );
+                        })
                     )}
                   </div>
                 </div>
@@ -907,11 +1051,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                           key={num}
                           type="button"
                           onClick={() => setReceiptCopies(num)}
-                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                            receiptCopies === num
+                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${receiptCopies === num
                               ? "bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-900"
                               : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
-                          }`}
+                            }`}
                         >
                           {num} {num === 1 ? "Copy" : "Copies"}
                         </button>
@@ -923,11 +1066,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                         <button
                           type="button"
                           onClick={() => setPageMode("single")}
-                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                            pageMode === "single"
+                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${pageMode === "single"
                               ? "bg-indigo-600 text-white shadow-xs"
                               : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
-                          }`}
+                            }`}
                           title="Both copies print on 1 page with a cut line"
                         >
                           📄 1 Page (Cut-line)
@@ -935,11 +1077,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                         <button
                           type="button"
                           onClick={() => setPageMode("separate")}
-                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
-                            pageMode === "separate"
+                          className={`px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${pageMode === "separate"
                               ? "bg-indigo-600 text-white shadow-xs"
                               : "text-slate-600 dark:text-slate-300 hover:text-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800"
-                          }`}
+                            }`}
                           title="Each copy prints on its own separate page"
                         >
                           📑 Separate Pages
@@ -957,10 +1098,10 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
                             receiptConfig.layout_mode === "side_by_side" || receiptConfig.template_id === "bajrang_dual_slip"
                               ? "A4-landscape"
                               : receiptConfig.paper_size === "POS-80mm"
-                              ? "thermal"
-                              : receiptConfig.paper_size === "A5"
-                              ? "A5"
-                              : "A4",
+                                ? "thermal"
+                                : receiptConfig.paper_size === "A5"
+                                  ? "A5"
+                                  : "A4",
                         })
                       }
                       className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-colors cursor-pointer shadow-sm"
@@ -1022,16 +1163,164 @@ export function CollectFeesModal({ isOpen, onClose, student }: CollectFeesModalP
               Cancel
             </button>
             <button
-              onClick={handleCollectFeesSubmit}
+              onClick={handleInitiateCollectFees}
               disabled={isRecording || grandTotalCollecting <= 0 || !!validationMessage}
-              className="px-4 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-xl transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm"
+              className="px-4 py-2 bg-primary hover:bg-primary/95 text-white text-xs font-bold rounded-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
               {isRecording && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>Collect Fees</span>
+              <Lock className="w-3.5 h-3.5" />
+              <span>Authorize & Collect Fees</span>
             </button>
           </div>
         )}
       </div>
+
+      {/* PRINCIPAL SECURITY AUTHORIZATION OTP MODAL */}
+      {showOtpModal && (
+        <div className="fixed inset-0 z-[60] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl relative space-y-5">
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                if (!otpLoading) setShowOtpModal(false);
+              }}
+              className="absolute top-5 right-5 p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header Icon & Title */}
+            <div className="flex flex-col items-center text-center space-y-2">
+              <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm">
+                <ShieldCheck className="w-7 h-7" />
+              </div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Principal Security Authorization
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs leading-relaxed">
+                Before collecting balance and generating receipt, enter the 4-digit security code sent to Principal's WhatsApp.
+              </p>
+            </div>
+
+            {/* Transaction Summary Card */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500">Student:</span>
+                <span className="font-bold text-slate-900 dark:text-white truncate max-w-[200px]">
+                  {student?.name || "Student"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-500">Amount Collecting:</span>
+                <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono text-sm">
+                  {money(grandTotalCollecting)} ({paymentMethod})
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
+                <span className="text-slate-500 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  Principal WhatsApp:
+                </span>
+                <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 text-[11px]">
+                  {otpPrincipalPhone}
+                </span>
+              </div>
+            </div>
+
+            {/* OTP Digit Inputs */}
+            <div className="space-y-2.5">
+              <label className="block text-center text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Enter 4-Digit Security Code
+              </label>
+              <div className="flex items-center justify-center gap-2.5">
+                {otpCode.map((digit, idx) => (
+                  <input
+                    key={idx}
+                    ref={(el) => { otpInputRefs.current[idx] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={idx === 0 ? 4 : 1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(idx, e.target.value)}
+                    onKeyDown={(e) => handleOtpKeyDown(idx, e)}
+                    disabled={otpLoading}
+                    autoFocus={idx === 0}
+                    className="w-13 h-14 sm:w-14 sm:h-15 text-center text-2xl font-bold font-mono rounded-2xl border-2 border-slate-250 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm"
+                  />
+                ))}
+              </div>
+              {otpError && (
+                <div className="flex items-center justify-center gap-1.5 text-xs text-rose-500 font-medium pt-1">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  <span>{otpError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Dev Mode quick-fill helper */}
+            {/* {devOtp && (
+              <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 flex items-center justify-between text-xs">
+                <span className="text-amber-800 dark:text-amber-300 font-medium">
+                  Testing Hint: <strong>{devOtp}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpCode(devOtp.split(""));
+                    setOtpError(null);
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-amber-200 dark:bg-amber-800 text-amber-900 dark:text-amber-100 font-bold text-[11px] hover:bg-amber-300 transition-colors cursor-pointer"
+                >
+                  Quick Fill
+                </button>
+              </div>
+            )} */}
+
+            {/* Resend Action */}
+            <div className="flex items-center justify-between text-xs pt-0.5 text-slate-500">
+              <span>Didn't receive code?</span>
+              <button
+                type="button"
+                disabled={otpSending || resendCooldown > 0}
+                onClick={requestPrincipalOtp}
+                className="font-bold text-emerald-600 dark:text-emerald-400 hover:underline disabled:opacity-50 disabled:no-underline flex items-center gap-1 cursor-pointer"
+              >
+                {otpSending ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <RotateCcw className="w-3 h-3" />
+                )}
+                <span>
+                  {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend OTP"}
+                </span>
+              </button>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => setShowOtpModal(false)}
+                disabled={otpLoading}
+                className="w-1/3 py-2.5 border border-border text-xs font-bold rounded-xl bg-white hover:bg-slate-50 text-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors shadow-sm cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleVerifyOtpAndProceed}
+                disabled={otpLoading || otpCode.join("").length < 4}
+                className="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {otpLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <CheckCircle className="w-3.5 h-3.5" />
+                <span>Verify & Issue Receipt</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

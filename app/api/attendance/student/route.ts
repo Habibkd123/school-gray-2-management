@@ -7,6 +7,7 @@ import User from "@/lib/models/User";
 import { requireAuth } from "@/lib/utils/auth";
 import { sendCompressedJson } from "@/lib/compression";
 import mongoose from "mongoose";
+import { triggerAttendanceWhatsAppAlerts } from "@/lib/services/whatsapp";
 
 // In-memory cache for class student counts and attendance results
 const studentCountsCache = new Map<string, { counts: Record<string, number>; expiresAt: number }>();
@@ -482,6 +483,18 @@ export async function POST(req: NextRequest) {
       const { invalidateAttendanceReportsCache } = await import("@/app/api/reports/attendance/route");
       invalidateAttendanceReportsCache(schoolId as string);
     } catch {}
+
+    // Automatic background WhatsApp blast disabled per school configuration
+    // (WhatsApp notifications are triggered on-demand via the Attendance WhatsApp Modal)
+    if (process.env.ENABLE_BACKGROUND_ATTENDANCE_WHATSAPP === "true") {
+      triggerAttendanceWhatsAppAlerts({
+        schoolId: schoolId as string,
+        classId,
+        date: requestDateStr,
+        records: formattedRecords,
+      }).catch((waErr) => console.error("WhatsApp attendance alert error:", waErr));
+    }
+
 
     return NextResponse.json({
       success: true,

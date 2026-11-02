@@ -7,6 +7,7 @@ import { requireAuth } from "@/lib/utils/auth";
 import mongoose from "mongoose";
 import { sendCompressedJson } from "@/lib/compression";
 import { invalidateFeesCache } from "../route";
+import { triggerFeePaymentWhatsAppAlert } from "@/lib/services/whatsapp";
 
 // Server cache & in-flight deduplication for payments
 const _feesPaymentsServerCache = new Map<string, { data: any; expiresAt: number }>();
@@ -339,6 +340,16 @@ export async function POST(req: NextRequest) {
 
     invalidateFeesCache(schoolId);
     invalidateFeesPaymentsCache(schoolId);
+
+    // Trigger instant WhatsApp fee receipt alert asynchronously
+    triggerFeePaymentWhatsAppAlert({
+      schoolId: schoolId as string,
+      studentId: student_id,
+      amount: parsedAmount,
+      receiptNo: receiptNumber,
+      paymentDate: payment_date,
+      paymentMode: payment_method,
+    }).catch((waErr) => console.error("WhatsApp fee receipt alert error:", waErr));
 
     return NextResponse.json(
       {
