@@ -171,17 +171,12 @@ export async function GET(req: NextRequest) {
     const includeStatsParam = url.searchParams.get("include_stats");
     // Fast return if no stats requested
     if (includeStatsParam === "false") {
-      _classesInFlight.delete(cacheKey);
       const resData = {
         success: true,
         data: { classes, total, page, limit, totalPages: Math.ceil(total / limit) }
       };
       _serverClassesCache.set(cacheKey, { data: resData, expiresAt: Date.now() + CLASSES_CACHE_TTL_MS });
-      return sendConditionalJson(
-        req,
-        resData,
-        { cacheControl: "private, no-cache, no-store, must-revalidate" }
-      );
+      return resData;
     }
 
     // Only compute stats if explicitly requested, or for paged table requests where stats are displayed

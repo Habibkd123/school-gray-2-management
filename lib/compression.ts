@@ -90,6 +90,10 @@ export function sendCompressedJson(
   data?: unknown,
   options?: CompressionOptions
 ): NextResponse {
+  if (data instanceof NextResponse) {
+    return data;
+  }
+
   const status = options?.status || 200;
   const isString = typeof data === "string";
   const bodyString = isString ? (data as string) : JSON.stringify(data ?? {});
